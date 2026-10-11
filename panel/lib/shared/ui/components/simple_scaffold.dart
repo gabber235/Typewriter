@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Arranges an optional app bar above a body without imposing scaffold chrome.
 ///

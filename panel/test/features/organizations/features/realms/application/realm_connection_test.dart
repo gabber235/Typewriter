@@ -1,7 +1,6 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -11,16 +10,14 @@ void main() {
     final container =
         ProviderContainer.test(
           overrides: [
-            hostConnectedProvider(recordId("service_host:host"))
+            hostConnectedProvider(skir.recordId("service_host:host"))
                 .overrideWithValue(true),
             routeParamProvider("realmId").overrideWithValue("test"),
-            organizationTopologyStreamProvider.overrideWith(
-              (ref) => Stream.value(
-                OrganizationTopology(
-                  hosts: [],
-                  realmInstances: [realm],
-                  engineInstances: [],
-                ),
+            organizationTopologyProvider.overrideWith(
+              (ref) async => OrganizationTopology(
+                hosts: [],
+                realmInstances: [realm],
+                engineInstances: [],
               ),
             ),
           ],
@@ -39,11 +36,13 @@ void main() {
   test("suspends an active Realm when its host connection expires", () async {
     var connected = true;
     final states = <RealmConnectionState>[];
-    final provider = hostConnectedProvider(recordId("service_host:host"));
+    final provider = hostConnectedProvider(skir.recordId("service_host:host"));
     final container =
         ProviderContainer.test(
           overrides: [
-            realmIdProvider.overrideWithValue(recordId("realm_instance:test")),
+            realmIdProvider.overrideWithValue(
+              skir.recordId("realm_instance:test"),
+            ),
             selectedRealmProvider.overrideWith((ref) async => _realm()),
             provider.overrideWith((ref) => connected),
           ],
@@ -62,7 +61,7 @@ void main() {
     final states = <RealmConnectionState>[];
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(recordId("service_host:host"))
+        hostConnectedProvider(skir.recordId("service_host:host"))
             .overrideWithValue(true),
         realmIdProvider.overrideWithValue(null),
       ],
@@ -81,21 +80,24 @@ void main() {
     expect(states.last, RealmConnectionState.notSelected);
   });
 
-  test("moves from checking to online", () async {
+  test("remains loading while checking, then resolves online", () async {
     final states = <RealmConnectionState>[];
+    final phases = <AsyncValue<RealmConnectionState>>[];
     final container = _containerWithRealm(_realm());
     addTearDown(container.dispose);
     final subscription = container.listen(realmConnectionProvider, (
       previous,
       next,
     ) {
+      phases.add(next);
       if (next.hasValue) states.add(next.requireValue);
     }, fireImmediately: true);
     addTearDown(subscription.close);
 
     await _waitForState(states, RealmConnectionState.online);
 
-    expect(states, contains(RealmConnectionState.checking));
+    expect(phases.first, isA<AsyncLoading<RealmConnectionState>>());
+    expect(states, isNot(contains(RealmConnectionState.checking)));
     expect(states.last, RealmConnectionState.online);
   });
 
@@ -137,10 +139,10 @@ void main() {
 
   test("reports unavailable when realm resolution fails", () async {
     final states = <RealmConnectionState>[];
-    final id = recordId("realm_instance:test");
+    final id = skir.recordId("realm_instance:test");
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(recordId("service_host:host"))
+        hostConnectedProvider(skir.recordId("service_host:host"))
             .overrideWithValue(true),
         realmIdProvider.overrideWithValue(id),
         selectedRealmProvider.overrideWith(
@@ -164,11 +166,11 @@ void main() {
 
   test("resumes when the selected Realm becomes active", () async {
     final states = <RealmConnectionState>[];
-    final id = recordId("realm_instance:test");
+    final id = skir.recordId("realm_instance:test");
     var selected = _realm(status: TopologyRuntimeStatus.failed);
     final container = ProviderContainer(
       overrides: [
-        hostConnectedProvider(recordId("service_host:host"))
+        hostConnectedProvider(skir.recordId("service_host:host"))
             .overrideWithValue(true),
         realmIdProvider.overrideWithValue(id),
         selectedRealmProvider.overrideWith((ref) async => selected),
@@ -191,18 +193,22 @@ void main() {
     container
       ..invalidate(selectedRealmProvider)
       ..invalidate(realmConnectionProvider);
+    expect(
+      container.read(realmInteractionProvider).connectionState,
+      RealmConnectionState.checking,
+    );
     await _waitForState(states, RealmConnectionState.online);
 
-    expect(states, contains(RealmConnectionState.checking));
+    expect(states, isNot(contains(RealmConnectionState.checking)));
     expect(states.last, RealmConnectionState.online);
   });
 }
 
 ProviderContainer _containerWithRealm(TopologyRealm? realm) {
-  final id = recordId("realm_instance:test");
+  final id = skir.recordId("realm_instance:test");
   return ProviderContainer(
     overrides: [
-      hostConnectedProvider(recordId("service_host:host"))
+      hostConnectedProvider(skir.recordId("service_host:host"))
           .overrideWithValue(true),
       realmIdProvider.overrideWithValue(id),
       selectedRealmProvider.overrideWith((ref) async => realm),
@@ -213,9 +219,9 @@ ProviderContainer _containerWithRealm(TopologyRealm? realm) {
 TopologyRealm _realm({
   TopologyRuntimeStatus status = TopologyRuntimeStatus.active,
 }) => TopologyRealm(
-  realmId: recordId("realm_instance:test"),
+  realmId: skir.recordId("realm_instance:test"),
   ownerHost: TopologyOwnerHost(
-    id: recordId("service_host:host"),
+    id: skir.recordId("service_host:host"),
     name: "test_realm",
   ),
   revision: 1,

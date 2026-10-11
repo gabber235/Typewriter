@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Lets the user switch from the active book to another book in the realm.
@@ -12,11 +9,11 @@ class BookSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final booksAsync = ref.watch(projectedBooksProvider);
+    final booksAsync = ref.watch(workingBooksProvider);
     final bookId = ref.watch(bookIdProvider);
     final selectedBookAsync = bookId == null
         ? const AsyncValue<Book?>.data(null)
-        : ref.watch(projectedBookProvider(bookId));
+        : ref.watch(workingBookProvider(bookId));
 
     return SelectorPopupWithSelection<Book>(
       itemsAsync: booksAsync,
@@ -106,7 +103,10 @@ class _BookMenuItem extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final onColor = book.color.on(context);
+    final onColor = Color.alphaBlend(
+      book.color,
+      Surface.colorOf(context),
+    ).on(context);
 
     return Padding(
       padding: EdgeInsets.symmetric(
@@ -118,38 +118,44 @@ class _BookMenuItem extends HookConsumerWidget {
         color: isSelected ? book.color : null,
         child: Surface(
           color: isSelected ? book.color : Surface.colorOf(context),
-          child: ListTile(
-            dense: true,
-            leading: Icones(
-              book.icon,
-              size: 20,
-              color: isSelected ? onColor : book.color,
+          foreground: isSelected ? onColor : null,
+          secondaryForeground: isSelected
+              ? onColor.withValues(alpha: 0.7)
+              : null,
+          child: Builder(
+            builder: (context) => ListTileTheme.merge(
+              textColor: Surface.foregroundOf(context),
+              iconColor: Surface.foregroundOf(context),
+              child: ListTile(
+                dense: true,
+                leading: Icones(
+                  book.icon,
+                  size: 20,
+                  color: isSelected ? null : book.color,
+                ),
+                title: Text(
+                  book.title.formatted,
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(fontSize: 14),
+                ),
+                trailing: Icon(Icons.arrow_forward_ios, size: 14),
+                onTap: () {
+                  final organizationId = ref.read(organizationIdProvider);
+                  final realmId = ref.read(realmIdProvider);
+                  if (organizationId == null || realmId == null) return;
+                  ref
+                      .read(appRouterProvider)
+                      .navigate(
+                        BookRoute(
+                          organizationId: organizationId.id,
+                          realmId: realmId.id,
+                          bookId: book.bookId.id,
+                        ),
+                      );
+                  onDismiss(book);
+                },
+              ),
             ),
-            title: Text(
-              book.title.formatted,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(fontSize: 14, color: isSelected ? onColor : null),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              size: 14,
-              color: isSelected ? onColor : null,
-            ),
-            onTap: () {
-              final organizationId = ref.read(organizationIdProvider);
-              final realmId = ref.read(realmIdProvider);
-              if (organizationId == null || realmId == null) return;
-              ref
-                  .read(appRouterProvider)
-                  .navigate(
-                    BookRoute(
-                      organizationId: organizationId.id,
-                      realmId: realmId.id,
-                      bookId: book.bookId.id,
-                    ),
-                  );
-              onDismiss(book);
-            },
           ),
         ),
       ),

@@ -1,6 +1,3 @@
-import "dart:collection";
-import "dart:math";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Computes stable, non overlapping grid placements for a service topology.

@@ -1,29 +1,26 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-final _position = DataPath.root.field("position");
-final _title = DataPath.root.field("title");
-RecordValue _value(String title, int position) => RecordValue({
-  "title": StringValue(title),
-  "position": IntegerValue(BigInt.from(position)),
+import "../../../support/editor_fixture.dart";
+
+final _position = editorRootPath.field("position");
+final _title = editorRootPath.field("title");
+skir.DataValue _value(String title, int position) => recordEditorValue({
+  "title": skir.DataValue.wrapStringValue(title),
+  "position": skir.DataValue.wrapInteger("$position"),
 });
 TransactionalEditorSource _source() => TransactionalEditorSource(
-  document: EditorDocument(
-    rootType: RecordType(
-      fields: const {
-        "title": TypeField(name: "title", type: StringType()),
-        "position": TypeField(
-          name: "position",
-          type: IntegerType(width: IntegerWidth.signed32),
-        ),
-      },
-    ),
-    typeCatalog: const TypeCatalog([]),
-    confirmedValue: _value("Original", 0),
-    revision: 1,
+  document: recordEditorDocument(
+    {
+      "title": skir.DataValue.wrapStringValue("Original"),
+      "position": skir.DataValue.wrapInteger("0"),
+    },
+    _fieldTypes,
+    1,
   ),
+  validation: (path, value) => EditorMutationResult.applied(value),
   debounce: const Duration(days: 1),
   commit: (commit) async =>
       MutationSuccess(revision: 3, value: commit.rootValue),
@@ -37,13 +34,13 @@ void main() {
       final second = _source();
       addTearDown(first.dispose);
       addTearDown(second.dispose);
-      first.update(_title, const StringValue("Draft"));
+      first.update(_title, skir.DataValue.wrapStringValue("Draft"));
       final response = Completer<void>();
 
       final batch = EditorBatch.submit(
         changes: {
-          first: {_position: IntegerValue(BigInt.one)},
-          second: {_position: IntegerValue(BigInt.two)},
+          first: {_position: skir.DataValue.wrapInteger("1")},
+          second: {_position: skir.DataValue.wrapInteger("2")},
         },
         send: (commits) async {
           expect(commits.length, 2);
@@ -58,11 +55,11 @@ void main() {
           };
         },
       );
-      first.update(_position, IntegerValue(BigInt.from(3)));
+      first.update(_position, skir.DataValue.wrapInteger("3"));
       response.complete();
       await batch;
       expect(first.document.confirmedValue, _value("Original", 1));
-      expect(first.value(DataPath.root).valueOrNull, _value("Draft", 3));
+      expect(first.value(editorRootPath).valueOrNull, _value("Draft", 3));
 
       expect(second.hasWork, isFalse);
     },
@@ -76,8 +73,8 @@ void main() {
     var sends = 0;
     await EditorBatch.submit(
       changes: {
-        first: {_position: IntegerValue(BigInt.one)},
-        second: {_position: IntegerValue(BigInt.two)},
+        first: {_position: skir.DataValue.wrapInteger("1")},
+        second: {_position: skir.DataValue.wrapInteger("2")},
       },
       send: (commits) async {
         final submission = MutationSubmission<int>(
@@ -106,8 +103,8 @@ void main() {
       },
     );
 
-    expect(first.saveState(DataPath.root).phase, EditorSavePhase.uncertain);
-    expect(second.saveState(DataPath.root).phase, EditorSavePhase.uncertain);
+    expect(first.saveState(editorRootPath).phase, EditorSavePhase.uncertain);
+    expect(second.saveState(editorRootPath).phase, EditorSavePhase.uncertain);
     await first.flush();
     expect(sends, 2);
     expect(first.hasWork, isFalse);
@@ -122,8 +119,8 @@ void main() {
     var sends = 0;
     await EditorBatch.submit(
       changes: {
-        first: {_position: IntegerValue(BigInt.one)},
-        second: {_position: IntegerValue(BigInt.two)},
+        first: {_position: skir.DataValue.wrapInteger("1")},
+        second: {_position: skir.DataValue.wrapInteger("2")},
       },
       send: (commits) async {
         sends++;
@@ -149,12 +146,22 @@ void main() {
     final source = _source();
     addTearDown(source.dispose);
     final earlier = source.beginInteraction(_title);
-    source.update(_title, const StringValue("Earlier"));
+    source.update(_title, skir.DataValue.wrapStringValue("Earlier"));
     final later = source.beginInteraction(_title);
-    source.update(_title, const StringValue("Later"));
+    source.update(_title, skir.DataValue.wrapStringValue("Later"));
 
     await later.commit();
     earlier.cancel();
-    expect(source.value(_title).valueOrNull, const StringValue("Later"));
+    expect(
+      source.value(_title).valueOrNull,
+      skir.DataValue.wrapStringValue("Later"),
+    );
   });
 }
+
+final _fieldTypes = {
+  "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  "position": skir.TypeTemplate.wrapScalar(
+    skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedThirtyTwo),
+  ),
+};

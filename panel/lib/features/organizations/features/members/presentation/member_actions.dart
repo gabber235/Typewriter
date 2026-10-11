@@ -1,8 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -43,11 +38,13 @@ class BulkMemberActions extends HookConsumerWidget {
     Future<void> applyRoles() async {
       if (isApplying.value) return;
       isApplying.value = true;
-      final members = ref.read(organizationMembersProvider.notifier);
       final roles = List<OrganizationRole>.unmodifiable(bulkRoles.value);
       final ids = Set<skir.RecordId>.unmodifiable(selectedIds);
       try {
-        await members.updateMemberRoles(ids, roles);
+        await ref.executeMembership(
+          ref.membershipCommands.updateRoles(ids, roles),
+          (response) => response.requireAccepted(),
+        );
         if (context.mounted) {
           if (listEquals(bulkRoles.value, roles)) bulkRoles.value = [];
           onUnselect(ids);

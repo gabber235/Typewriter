@@ -1,8 +1,6 @@
 // ignore_for_file: cascade_invocations
 
-import "package:flutter/material.dart" hide SearchController;
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
@@ -144,6 +142,47 @@ void main() {
       await tester.pump();
 
       expect(find.text("Second selected: 1"), findsOneWidget);
+    });
+
+    testWidgets("default root disposes its owned controller source", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      await tester.pumpTestApp(
+        child: SearchRoot(
+          create: (_) => SearchController(
+            session: testSearchSession(source),
+            baseSelectors: const [],
+          ),
+          child: const _SearchSelectionText(label: "Owned"),
+        ),
+      );
+
+      await tester.pumpWidget(const SizedBox());
+
+      expect(source.disposeCount, 1);
+    });
+
+    testWidgets("borrowed root leaves controller disposal to its caller", (
+      tester,
+    ) async {
+      final source = FakeSearchSource();
+      final controller = SearchController(
+        session: testSearchSession(source),
+        baseSelectors: const [],
+      );
+      await tester.pumpTestApp(
+        child: SearchRoot.borrowed(
+          controller: controller,
+          child: const _SearchSelectionText(label: "Borrowed"),
+        ),
+      );
+
+      await tester.pumpWidget(const SizedBox());
+
+      expect(source.disposeCount, 0);
+      controller.dispose();
+      expect(source.disposeCount, 1);
     });
   });
 }

@@ -6,5 +6,6 @@ plugins {
 
 dependencies {
     api(project(":typewriter-api"))
+    implementation(libs.kotlin.serialize.json)
     implementation(libs.semver)
 }

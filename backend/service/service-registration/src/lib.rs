@@ -17,8 +17,10 @@ wit_bindgen::generate!({
 mod bind;
 mod configure_topology;
 mod heartbeat;
+mod host_configuration_input;
 mod host_execution;
 mod messaging_scope;
+mod publication;
 mod register_host;
 mod shutdown;
 mod status;
@@ -29,8 +31,15 @@ mod watch;
 mod watch_topology;
 
 use wasmcloud_utils::{
-    dispatch_actions,
-    wasmcloud::messaging::{core_handler::Guest, parse_subject, types},
+    dispatch_event_route, dispatch_route,
+    transport_routes::{
+        HostExecutionReportRoute, HostExecutionWatchRoute, OrganizationServiceUpdateRoute,
+        OrganizationServicesWatchRoute, OrganizationTopologyWatchRoute,
+        RegistrationLeaseEnsureRoute, ServiceBindRoute, ServiceBindingQueryRoute,
+        ServiceHeartbeatRoute, ServiceHostRegisterRoute, ServiceMessagingScopeRoute,
+        ServiceShutdownRoute, ServiceTopologyConfigureRoute, ServiceUnbindRoute, unmatched_route,
+    },
+    wasmcloud::messaging::{core_handler::Guest, types},
 };
 
 struct Component;
@@ -43,42 +52,31 @@ impl Guest for Component {
     }
 }
 
-/// Routes lifecycle subjects before delegating request and watch subjects to their handlers.
-///
-/// Heartbeat and shutdown are matched explicitly because they have no request response. All
-/// other subjects are expanded by `dispatch_actions!`, which supplies the path parameters used by
-/// the handlers.
+/// Routes generated request and event contracts to their typed handlers.
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    if let Ok(params) = parse_subject(
-        "[typewriter.from.]service.<service_id>.heartbeat",
-        &msg.subject,
-    ) {
-        return heartbeat::handle_heartbeat(msg, params).await;
-    }
-
-    if let Ok(params) = parse_subject(
-        "[typewriter.from.]service.<service_id>.shutdown",
-        &msg.subject,
-    ) {
-        return shutdown::handle_shutdown(msg, params).await;
-    }
-
-    dispatch_actions!(
+    dispatch_event_route!(msg, ServiceHeartbeatRoute, heartbeat::handle_heartbeat);
+    dispatch_route!(msg, ServiceBindingQueryRoute, status::handle_binding);
+    dispatch_route!(msg, RegistrationLeaseEnsureRoute, status::handle_lease);
+    dispatch_route!(msg, ServiceMessagingScopeRoute, messaging_scope::handle);
+    dispatch_route!(msg, ServiceHostRegisterRoute, register_host::handle);
+    dispatch_route!(msg, HostExecutionWatchRoute, host_execution::handle_watch);
+    dispatch_route!(msg, HostExecutionReportRoute, host_execution::handle_report);
+    dispatch_route!(msg, ServiceBindRoute, bind::handle_bind);
+    dispatch_route!(msg, OrganizationServicesWatchRoute, watch::handle_watch);
+    dispatch_route!(msg, OrganizationServiceUpdateRoute, update::handle_update);
+    dispatch_route!(msg, ServiceUnbindRoute, unbind::handle_unbind);
+    dispatch_route!(
         msg,
-        services: "[typewriter.from.]service.<service_id>",
-        user_services: "[typewriter.from.]user.<user_id>.organization.<org_id>.services",
-        user_topology: "[typewriter.from.]user.<user_id>.organization.<org_id>.topology",
-        host_execution: "[typewriter.from.]service.<service_id>.execution";
-        "{services}.status" => async status::handle_status,
-        "{services}.messaging.scope" => async messaging_scope::handle,
-        "{user_services}.bind" => async bind::handle_bind,
-        "{user_services}.watch" => async watch::handle_watch,
-        "{user_services}.update" => async update::handle_update,
-        "{user_services}.unbind" => async unbind::handle_unbind,
-        "{user_topology}.configure" => async configure_topology::handle_configure,
-        "{user_topology}.watch" => async watch_topology::handle_watch,
-        "{host_execution}.register" => async register_host::handle,
-        "{host_execution}.watch" => async host_execution::handle_watch,
-        "{host_execution}.report" => async host_execution::handle_report,
-    )
+        ServiceTopologyConfigureRoute,
+        configure_topology::handle_configure
+    );
+    dispatch_route!(
+        msg,
+        OrganizationTopologyWatchRoute,
+        watch_topology::handle_watch
+    );
+
+    dispatch_event_route!(msg, ServiceShutdownRoute, shutdown::handle_shutdown);
+
+    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

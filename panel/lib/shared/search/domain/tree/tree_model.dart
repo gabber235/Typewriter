@@ -1,64 +1,47 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "tree_model.freezed.dart";
+
 /// A visible row in the flattened result tree.
 ///
 /// Rows keep stable keys and source depth so animated list state can survive
 /// snapshot updates while presentation supplies the actual widgets.
-sealed class SearchTreeRow {
-  const SearchTreeRow({required this.key, required this.depth});
-
-  final String key;
-  final int depth;
-}
-
-/// Visible projection of a section, including its expansion state and count.
-class SearchTreeSectionRow extends SearchTreeRow {
-  const SearchTreeSectionRow({
-    required super.key,
-    required super.depth,
-    required this.id,
-    required this.title,
-    required this.subtitle,
-    required this.expanded,
-    required this.resultCount,
-    required this.topLevel,
-  });
-
-  final String id;
-  final String title;
-  final String? subtitle;
-  final bool expanded;
-  final int resultCount;
-  final bool topLevel;
-}
-
-/// Visible projection of a search result with its keyboard shortcut number.
-class SearchTreeResultRow extends SearchTreeRow {
-  const SearchTreeResultRow({
-    required super.key,
-    required super.depth,
-    required this.result,
-    required this.shortcutNumber,
-  });
-
-  final SearchResult result;
-  final int? shortcutNumber;
+@freezed
+sealed class SearchTreeRow with _$SearchTreeRow {
+  const factory SearchTreeRow.section({
+    required String key,
+    required int depth,
+    required String id,
+    required String title,
+    required String? subtitle,
+    required bool expanded,
+    required int resultCount,
+    required bool topLevel,
+  }) = SearchTreeSectionRow;
+  const factory SearchTreeRow.result({
+    required String key,
+    required int depth,
+    required SearchResult result,
+    required int? shortcutNumber,
+  }) = SearchTreeResultRow;
 }
 
 /// One top level sliver group, with an optional pinned section header.
-class SearchTreeTopLevelGroup {
-  const SearchTreeTopLevelGroup({required this.section, required this.rows});
-
-  final SearchTreeSectionRow? section;
-  final List<SearchTreeRow> rows;
+@freezed
+abstract class SearchTreeTopLevelGroup with _$SearchTreeTopLevelGroup {
+  const factory SearchTreeTopLevelGroup({
+    required SearchTreeSectionRow? section,
+    required List<SearchTreeRow> rows,
+  }) = _SearchTreeTopLevelGroup;
 }
 
 /// Flattened tree projection consumed by the animated result list.
-class SearchTreeViewModel {
-  const SearchTreeViewModel({required this.groups, required this.rowCount});
-
-  final List<SearchTreeTopLevelGroup> groups;
-  final int rowCount;
+@freezed
+abstract class SearchTreeViewModel with _$SearchTreeViewModel {
+  const factory SearchTreeViewModel({
+    required List<SearchTreeTopLevelGroup> groups,
+    required int rowCount,
+  }) = _SearchTreeViewModel;
 }
 
 /// Builds the stable key used for a section row.

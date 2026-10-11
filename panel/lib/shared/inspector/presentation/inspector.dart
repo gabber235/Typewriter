@@ -1,11 +1,5 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspector.g.dart";
@@ -36,35 +30,25 @@ class InspectorSize extends _$InspectorSize {
 
 /// Places the inspector beside or below [child] according to available width.
 ///
-/// The scaffold creates the inspector's provider scope, including the optional
-/// realm runtime used by editor capabilities. It does not own selection or
-/// focus.
+/// The scaffold does not own selection or focus.
 class InspectorScaffold extends HookConsumerWidget {
   const InspectorScaffold({
     required this.child,
     this.margin = const EdgeInsets.only(top: 8, bottom: 8, right: 8),
-    this.realmRuntime,
     super.key,
   });
 
   final EdgeInsets margin;
 
   final Widget child;
-  final EditorRealmRuntime? realmRuntime;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return ProviderScope(
-      overrides: [editorRealmRuntimeProvider.overrideWithValue(realmRuntime)],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return constraints.maxWidth < 3 * kInspectorMinSize
-              ? MobileInspector(child: child)
-              : DesktopInspector(margin: margin, child: child);
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context, WidgetRef ref) => LayoutBuilder(
+    builder: (context, constraints) =>
+        constraints.maxWidth < 3 * kInspectorMinSize
+        ? MobileInspector(child: child)
+        : DesktopInspector(margin: margin, child: child),
+  );
 }
 
 /// Renders the inspector as a draggable bottom sheet on narrow layouts.
@@ -163,27 +147,24 @@ class MobileInspector extends HookConsumerWidget {
                     borderRadius: context.shapes.mediumBorderRadius,
                   ),
                   child: Section(
-                    child: DepthContainer(
-                      depth: 0,
-                      child: CustomScrollView(
-                        controller: scrollController,
-                        slivers: [
-                          const SliverPersistentHeader(
-                            pinned: true,
-                            delegate: DraggableSheetHandleDelegate(),
-                          ),
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                left: context.spacing.space3,
-                                right: context.spacing.space3,
-                                bottom: context.spacing.space3,
-                              ),
-                              child: _InspectorContent(),
+                    child: CustomScrollView(
+                      controller: scrollController,
+                      slivers: [
+                        const SliverPersistentHeader(
+                          pinned: true,
+                          delegate: DraggableSheetHandleDelegate(),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: context.spacing.space3,
+                              right: context.spacing.space3,
+                              bottom: context.spacing.space3,
                             ),
+                            child: _InspectorContent(),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -231,6 +212,7 @@ class DesktopInspector extends HookConsumerWidget {
             Expanded(child: child),
             if (hasSelection)
               DragHandle(
+                semanticLabel: "Inspector width",
                 axis: Axis.horizontal,
                 minSize: minSize,
                 maxSize: maxSize,
@@ -345,31 +327,26 @@ class DesktopInspector extends HookConsumerWidget {
                     margin: null,
                     child: Section(
                       margin: EdgeInsets.zero,
-                      child: DepthContainer(
-                        depth: 0,
-                        child: AnimatedContainer(
-                          duration: isDragging.value
-                              ? 0.ms
-                              : hasSelection
-                              ? 1000.ms
-                              : 750.ms,
-                          curve: hasSelection
-                              ? ElasticOutCurve(0.9)
-                              : Curves.fastEaseInToSlowEaseOut,
-                          width: hasSelection ? effectiveSize : 0,
-                          height: double.infinity,
-                          child: ClipRect(
-                            child: OverflowBox(
-                              alignment: Alignment.centerLeft,
-                              minWidth: effectiveSize,
-                              maxWidth: effectiveSize,
-                              child: SingleChildScrollView(
-                                child: Padding(
-                                  padding: EdgeInsets.all(
-                                    context.spacing.space3,
-                                  ),
-                                  child: _InspectorContent(),
-                                ),
+                      child: AnimatedContainer(
+                        duration: isDragging.value
+                            ? 0.ms
+                            : hasSelection
+                            ? 1000.ms
+                            : 750.ms,
+                        curve: hasSelection
+                            ? ElasticOutCurve(0.9)
+                            : Curves.fastEaseInToSlowEaseOut,
+                        width: hasSelection ? effectiveSize : 0,
+                        height: double.infinity,
+                        child: ClipRect(
+                          child: OverflowBox(
+                            alignment: Alignment.centerLeft,
+                            minWidth: effectiveSize,
+                            maxWidth: effectiveSize,
+                            child: SingleChildScrollView(
+                              child: Padding(
+                                padding: EdgeInsets.all(context.spacing.space3),
+                                child: _InspectorContent(),
                               ),
                             ),
                           ),
@@ -394,30 +371,37 @@ class _InspectorContent extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // TODO: Add shimmer when loading.
     final session = ref.watch(inspectionSessionProvider);
-    final runtime = ref.watch(editorRealmRuntimeProvider);
 
-    return ListenableBuilder(
-      listenable: session,
-      builder: (context, _) {
-        final model = session.model;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: context.spacing.space3,
-          children: [
-            ?session.header,
-            if (model != null)
-              ComposedEditor(
-                key: ValueKey(ref.watch(selectionProvider)),
-                model: model,
-                host: runtime?.host() ?? const EditorHostCapabilities(),
-              ),
-            const SizedBox(height: 5),
-            InspectorOperations(),
-            const SizedBox(height: 30),
-          ],
-        );
+    final selection = ref.watch(selectionProvider);
+    return PresentationEnvironment(
+      bindings: {
+        presentationSelectionCountBindingId: PortableExpressionBinding(
+          value: skir.DataValue.wrapInteger(selection.length.toString()),
+        ),
       },
+      child: ListenableBuilder(
+        listenable: session,
+        builder: (context, _) {
+          final hosts = session.hosts;
+          final body = session.body;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: context.spacing.space3,
+            children: [
+              ?body,
+              for (var index = 0; index < hosts.length; index++)
+                PortablePresentationRenderer(
+                  key: ValueKey((selection, index)),
+                  host: hosts[index],
+                ),
+              const SizedBox(height: 5),
+              InspectorOperations(),
+              const SizedBox(height: 30),
+            ],
+          );
+        },
+      ),
     );
   }
 }

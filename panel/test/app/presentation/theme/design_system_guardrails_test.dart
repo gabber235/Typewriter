@@ -1,6 +1,3 @@
-import "dart:io";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -43,6 +40,7 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/protocol/renderers/content/chip_renderer.dart",
     "lib/shared/editors/presentation/protocol/renderers/content/text_renderer.dart",
     "lib/shared/editors/presentation/components/search_input/search_input_row.dart",
+    "lib/shared/editors/presentation/portable_renderer/expression_resolution.dart",
   ])
     Exemption(
       path,
@@ -73,6 +71,31 @@ final exemptions = <Exemption>[
     "lib/shared/editors/presentation/components/color_picker/color_value.dart",
     RegExp(r"Color\.fromARGB\("),
     "color value conversion",
+  ),
+  Exemption(
+    "lib/shared/ui/components/surface_container.dart",
+    RegExp(r"Colors\.transparent"),
+    "transparent fill lets the inherited surface show through",
+  ),
+  Exemption(
+    "lib/shared/ui/components/admonition.dart",
+    RegExp(r"Colors\.transparent"),
+    "transparent material preserves the admonition surface",
+  ),
+  Exemption(
+    "lib/shared/ui/components/surface.dart",
+    RegExp(r"TextStyle\s*\(\s*color:\s*selectedForeground\s*\)"),
+    "computed foreground is supplied by the surface state",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/portable_renderer/appearance.dart",
+    RegExp(r"Colors\.transparent"),
+    "missing presentation fill preserves inherited appearance",
+  ),
+  Exemption(
+    "lib/shared/editors/presentation/presentation_color.dart",
+    RegExp(r"Colors\.(?:white|black)"),
+    "focus outline and monochrome colors are defined by the presentation protocol",
   ),
   Exemption(
     "lib/shared/graph/presentation/graph.dart",
@@ -117,7 +140,7 @@ final exemptions = <Exemption>[
     "lib/shared/graph/presentation/resizable_element.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/search/presentation/result_item/search_result_card.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/scene/presentation/entry_timeline_editor.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
+    "lib/shared/editors/presentation/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/books/features/pages/features/editor/presentation/selector_popup.dart",
     "lib/features/organizations/features/realms/features/books/presentation/book/route.dart",
     "lib/features/organizations/features/realms/features/books/presentation/book/page_actions.dart",
@@ -149,8 +172,8 @@ final exemptions = <Exemption>[
     "lib/app/presentation/shell/custom_appbar.dart",
     "lib/app/presentation/shell/panes.dart",
     "lib/shared/graph/presentation/graph_group.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_segment_surface.dart",
-    "lib/features/organizations/features/realms/features/books/features/pages/features/editor/features/timeline/presentation/timeline_plane.dart",
+    "lib/shared/editors/presentation/timeline/presentation/timeline_segment_surface.dart",
+    "lib/shared/editors/presentation/timeline/presentation/timeline_plane.dart",
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/preset_chip.dart",
     "lib/shared/ui/components/countdown_badge.dart",
@@ -164,6 +187,11 @@ final exemptions = <Exemption>[
 ];
 
 final layoutSpacingExemptions = <Exemption>[
+  Exemption(
+    "lib/shared/editors/presentation/portable_presentation_expressions.dart",
+    RegExp("spacing: 8"),
+    "portable layout data cannot depend on theme context",
+  ),
   Exemption(
     "lib/app/presentation/shell/custom_appbar.dart",
     RegExp(r"SizedBox\(width: 40\)"),
@@ -319,7 +347,7 @@ void main() {
         final checks = <RegExp>[
           if (path != "lib/app/presentation/theme/typography.dart")
             RegExp(
-              r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\(",
+              r"fontFamily\s*:|(?<![A-Za-z0-9_])(?<!Default)(?<!AnimatedDefault)TextStyle\s*\([^)]*\)",
             ),
           if (!path.contains("/theme/"))
             RegExp(

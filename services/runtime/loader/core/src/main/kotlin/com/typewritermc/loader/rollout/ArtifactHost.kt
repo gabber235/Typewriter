@@ -11,7 +11,6 @@ import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.DigestProtectionState
 import com.typewritermc.loader.artifact.FileCandidateRepository
 import com.typewritermc.loader.artifact.FileDigestBlobStore
-import com.typewritermc.loader.artifact.RealmArtifactAddress
 import com.typewritermc.loader.artifact.ReconnectingSharedArtifactAccess
 import com.typewritermc.loader.artifact.StableRealmArtifactRoutes
 import com.typewritermc.loader.artifact.VerifiedArtifactCache
@@ -21,10 +20,11 @@ import com.typewritermc.loader.deployment.DeploymentContentCodec
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
+import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.RealmLoaderIntent
-import com.typewritermc.loader.deployment.RealmTopology
 import com.typewritermc.loader.deployment.ResolutionResult
 import com.typewritermc.loader.deployment.resolveDeployment
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
@@ -32,9 +32,10 @@ import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
@@ -122,6 +124,7 @@ class ArtifactHost(
     private var sessionJob: Job? = null
 
     suspend fun start() {
+        withContext(Dispatchers.IO) { inbox.reconcile() }
         inboxJob = scope.launch { inbox.run() }
         sessionJob =
             scope.launch {
@@ -144,7 +147,7 @@ class ArtifactHost(
                             }
                             break
                         } catch (failure: Throwable) {
-                            rethrowExceptionalThrowable(failure)
+                            failure.rethrowExceptional()
                             delay(1.seconds)
                         }
                     }
@@ -192,7 +195,7 @@ class ArtifactHost(
                                 }
                             }
                         } catch (failure: Throwable) {
-                            rethrowExceptionalThrowable(failure)
+                            failure.rethrowExceptional()
                         }
                     }
                     delay(1.seconds)
@@ -319,8 +322,11 @@ internal class AssignmentRuntime(
     }
 
     private fun createRouter(session: HostedMessagingSession): CommunicatorRouter {
-        val broadcastAddress = RealmBroadcastAddress(session.organizationId, assignment.realmId)
-        val artifactAddress = RealmArtifactAddress(assignment.realmId.value, session.organizationId)
+        val artifactAddress =
+            RealmRouteScope(
+                organizationId = session.organizationId,
+                realmId = assignment.realmId.value,
+            )
         val routes =
             communicatorRoutes {
                 RolloutHostRoutes(
@@ -338,8 +344,8 @@ internal class AssignmentRuntime(
                         }
                     },
                     participant = participant,
-                ).register(this, broadcastAddress)
-                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, broadcastAddress) }
+                ).register(this, artifactAddress)
+                rolloutState?.let { RolloutCoordinatorRoutes(it).register(this, artifactAddress) }
                 if (RuntimePlacement.REALM in assignment.roles) {
                     StableRealmArtifactRoutes(sharedArtifacts).register(this, artifactAddress)
                 }
@@ -355,8 +361,8 @@ internal class AssignmentRuntime(
         val intent = requireNotNull(assignment.intent)
         val messenger = CommunicatorRolloutMessenger(session.organizationId, session.communicator)
         while (true) {
-            val topology = discoverTopology(assignment.realmId, messenger)
-            if (topology == null) {
+            val selection = discoverDeploymentSelection(assignment.realmId, messenger)
+            if (selection == null) {
                 delay(1.seconds)
                 continue
             }
@@ -369,7 +375,7 @@ internal class AssignmentRuntime(
                         attribute("realm.id", assignment.realmId.value)
                         attribute("service.id", serviceId.value)
                     }
-                    resolveDeployment(CandidateIndex(candidates.candidates()), topology, primaryEngine, intent)
+                    resolveDeployment(CandidateIndex(candidates.candidates()), selection, primaryEngine, intent)
                 }
             if (resolution is ResolutionResult.Resolved) {
                 val digest = DeploymentContentCodec.digest(resolution.content)
@@ -377,7 +383,7 @@ internal class AssignmentRuntime(
                 val rollout =
                     CoordinatedRollout(
                         assignment.realmId,
-                        topology,
+                        selection,
                         resolution.manifests,
                         messenger,
                         projections,
@@ -404,20 +410,20 @@ internal class AssignmentRuntime(
         try {
             block()
         } catch (failure: Throwable) {
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
         }
     }
 
-    private suspend fun discoverTopology(
+    private suspend fun discoverDeploymentSelection(
         realmId: RealmId,
         messenger: RolloutMessenger,
-    ): RealmTopology? {
+    ): RealmDeploymentSelection? {
         val probe = ProbeRealmHosts(realmId)
         val responses =
             messenger
                 .discover(probe, emptySet(), 5.seconds)
                 .filter { it.probeId == probe.probeId }
-        return responses.toReadyTopology()
+        return responses.deploymentSelectionOrNull()
     }
 
     override suspend fun close() {
@@ -465,20 +471,21 @@ internal class AssignmentRuntime(
     }
 }
 
-internal fun List<RealmHostPresence>.toReadyTopology(): RealmTopology? {
+/** Derives artifact selection from unambiguous responding hosts without inferring absent assignments. */
+internal fun List<RealmHostPresence>.deploymentSelectionOrNull(): RealmDeploymentSelection? {
     val responsesByService = groupBy(RealmHostPresence::serviceId)
     if (responsesByService.values.any { it.size != 1 }) return null
-    val active = responsesByService.mapValues { it.value.single() }
-    val realmHosts = active.values.filter { RuntimePlacement.REALM in it.assignedRoles }
+    val observations = responsesByService.mapValues { it.value.single() }
+    val realmHosts = observations.values.filter { RuntimePlacement.REALM in it.assignedRoles }
     if (realmHosts.size != 1) return null
     val primaryHosts =
-        active.values
+        observations.values
             .filter { RuntimePlacement.PRIMARY_ENGINE in it.assignedRoles }
             .mapTo(linkedSetOf(), RealmHostPresence::serviceId)
-    return RealmTopology(
+    return RealmDeploymentSelection(
         realmService = realmHosts.single().serviceId,
         primaryEngineServices = primaryHosts,
-        serviceApis = active.mapValues { it.value.hostApi },
+        serviceApis = observations.mapValues { it.value.hostApi },
     )
 }
 

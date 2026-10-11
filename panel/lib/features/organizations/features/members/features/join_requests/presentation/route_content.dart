@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Bridges the live moderation projection into route content states.
@@ -12,7 +10,7 @@ class JoinRequestsTab extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final requestsAsync = ref.watch(organizationJoinRequestsProvider);
+    final requestsAsync = ref.watch(visibleOrganizationJoinRequestsProvider);
 
     return requestsAsync(
       name: "Join Requests",

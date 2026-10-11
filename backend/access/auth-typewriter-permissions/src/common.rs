@@ -6,7 +6,9 @@
 //! authorization facts.
 
 use serde::{Deserialize, Serialize};
-use wasmcloud_utils::skir::base::access::v1::permission::{Permission, Permissions};
+use wasmcloud_utils::skir::base::access::v1::permission::{
+    Permission, Permissions, ResponsePermission,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 /// Optional identity provider data used to enrich a durable Typewriter user record.
@@ -39,6 +41,35 @@ pub struct AuthentikClaims {
     pub avatar_url: Option<String>,
 }
 
+/// Profile fields projected from claims that were admitted by the authentication boundary.
+pub struct TrustedUserProfile {
+    pub name: String,
+    pub email: Option<String>,
+    pub avatar_url: Option<String>,
+}
+
+impl AuthentikClaims {
+    /// Project durable profile values while preserving the established provider fallback order.
+    pub fn user_profile(&self) -> TrustedUserProfile {
+        TrustedUserProfile {
+            name: self
+                .name
+                .clone()
+                .or_else(|| self.discord.as_ref().map(|value| value.username.clone()))
+                .unwrap_or_else(|| "Unknown".to_owned()),
+            email: self
+                .email
+                .clone()
+                .or_else(|| self.discord.as_ref().and_then(|value| value.email.clone())),
+            avatar_url: self.avatar_url.clone().or_else(|| {
+                self.discord
+                    .as_ref()
+                    .and_then(|value| value.avatar_url.clone())
+            }),
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 /// Durable user fields written when a panel identity authenticates.
 pub struct User {
@@ -52,7 +83,11 @@ pub struct User {
 ///
 /// NATS receives this value only after the route has derived all subject scopes. The auth callout
 /// converts it to NATS permissions, so this helper must not be treated as an identity check.
-pub fn build_permissions(allow_publish: Vec<String>, allow_subscribe: Vec<String>) -> Permissions {
+pub fn build_permissions(
+    allow_publish: Vec<String>,
+    allow_subscribe: Vec<String>,
+    response: Option<ResponsePermission>,
+) -> Permissions {
     Permissions {
         publish: Permission {
             allow: allow_publish,
@@ -64,7 +99,7 @@ pub fn build_permissions(allow_publish: Vec<String>, allow_subscribe: Vec<String
             deny: vec![],
             _unrecognized: None,
         },
-        response: None,
+        response,
         _unrecognized: None,
     }
 }

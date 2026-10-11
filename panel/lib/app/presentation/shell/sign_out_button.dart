@@ -1,6 +1,16 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+extension VoluntarySignOut on WidgetRef {
+  /// Signs out after confirming any protected local work session loss.
+  Future<void> signOutVoluntarily(BuildContext context) async {
+    final allowed = await read(workSessionLossProvider).allowScopeLoss(
+      destination: const LocalWorkScope(userId: null, organizationId: null),
+      confirm: () => showWorkSessionLossConfirmation(context),
+    );
+    if (!allowed || !context.mounted) return;
+    await read(authProvider.notifier).signOut();
+  }
+}
 
 /// Signs out the current user and reports failure without exposing its cause.
 ///
@@ -14,7 +24,7 @@ class SignOutButton extends HookConsumerWidget {
     return ElevatedButton(
       onPressed: () async {
         try {
-          await ref.read(authProvider.notifier).signOut();
+          await ref.signOutVoluntarily(context);
         } on Object catch (_) {
           if (!context.mounted) return;
           showErrorSnackBar(context, "Could not sign out. Please try again.");

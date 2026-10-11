@@ -1,6 +1,7 @@
 package com.typewritermc.services.libs.communicator.contract
 
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
+import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.transport.Payload
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlin.time.Duration
@@ -169,11 +170,41 @@ class WatchContract<Address : Any, Request : Any, Initial : Any, Update : Any>(
     val timeout: Duration = 10.seconds,
     val failureSlug: ErrorSlug,
     val updateFilter: (Request, Update) -> Boolean = { _, _ -> true },
+    private val updateAddressResolver: ((Address, Request) -> MessageAddress)? = null,
 ) {
     init {
         require(timeout.isPositive() && timeout.isFinite()) { "Watch timeout must be positive and finite" }
     }
+
+    /** Resolves the concrete update subject for one request. */
+    fun updateDestination(
+        address: Address,
+        request: Request,
+    ): MessageAddress {
+        val base = updateAddress.render(address)
+        val resolver = updateAddressResolver ?: return base
+        val resolved = resolver(address, request)
+        val prefix = "${base.value}."
+        require(resolved.value.startsWith(prefix)) { "Scoped watch destination must extend its update address" }
+        val segment = resolved.value.removePrefix(prefix)
+        require(segment.matches(Regex("[A-Za-z0-9_-]{1,64}"))) {
+            "Scoped watch destination must add one safe segment"
+        }
+        return resolved
+    }
 }
+
+/** Uses the initial request portion of this watch without opening an update subscription. */
+fun <Address : Any, Request : Any, Initial : Any, Update : Any> WatchContract<Address, Request, Initial, Update>.initialRequest() =
+    UnaryContract(
+        name = name,
+        requestAddress = requestAddress,
+        requestCodec = requestCodec,
+        responseCodec = initialCodec,
+        responsePolicy = initialPolicy,
+        timeout = timeout,
+        failureSlug = failureSlug,
+    )
 
 /** A watch item that identifies whether a value is the initial snapshot or a later update. */
 sealed interface WatchMessage<out Initial : Any, out Update : Any> {

@@ -1,12 +1,17 @@
 package com.typewritermc.engine.conformance
 
+import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.elements.Element
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.pages.GraphDirection
-import com.typewritermc.pages.PageEditorDefinition
-import com.typewritermc.pages.PageSpec
-import com.typewritermc.pages.TypewriterPage
-import com.typewritermc.pages.page
+import com.typewritermc.library.Book
+import com.typewritermc.library.BookPages
+import com.typewritermc.library.ChapterPath
+import com.typewritermc.library.Page
+import com.typewritermc.library.PageElements
+import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterType
 
 /**
  * Defines the element role exported by the conformance capability.
@@ -15,14 +20,24 @@ import com.typewritermc.pages.page
  * composition.
  */
 interface CapabilityElement : Element {
-    override val id: ElementInstanceId
+    override val placement: GraphPlacement
 }
 
-/** Declares the conformance page used to verify capability supplied editor roles. */
-@TypewriterPage(id = "019d3a87002070008000000000000020", revision = 1)
-fun capabilityPage(): PageSpec =
-    page(
-        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(CapabilityElement::class)),
-        icon = "material-symbols:extension",
-        color = "#607D8B",
-    )
+/** Concrete Page accepting the capability supplied element role. */
+@TypewriterType(id = "019d3a87002070008000000000000020")
+@TypewriterDisplay(name = "Capability", icon = "material-symbols:extension", color = "#607D8B")
+data class CapabilityPage(
+    override val book: Ref<BookPages.Page, Book>,
+    override val name: String = "",
+    override val chapter: ChapterPath = ChapterPath.Root,
+    override val priority: Int = 0,
+    override val elements: List<Ref<PageElements.Page, CapabilityElement>> = emptyList(),
+) : Page
+
+object CapabilityPageEditor : CapabilityPagePresentation {
+    override val roles = setOf(PresentationRole.EDITOR)
+
+    override fun CapabilityPagePresentationScope.present() {
+        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+    }
+}

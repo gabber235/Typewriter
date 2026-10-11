@@ -1,9 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Binds row focus to the standard selection, copy, and revoke actions.
@@ -96,9 +90,10 @@ class JoinCodeTableRowShortcuts extends ConsumerWidget {
       content: "Are you sure you want to revoke this join code? It will no longer work for new members.",
       confirmText: "Revoke",
       confirmIcon: Fa6Solid.link_slash,
-      onConfirm: () => ref
-          .read(organizationJoinCodesProvider.notifier)
-          .revokeCode(code.code),
+      onConfirm: () => ref.executeMembership(
+        ref.membershipCommands.revoke(code.code),
+        (response) => response.requireAccepted(),
+      ),
     );
   }
 }

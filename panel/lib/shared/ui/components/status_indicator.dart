@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents connection state and, when offline, the age of the last sighting.
@@ -30,12 +28,11 @@ class StatusIndicator extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final description = lastSeen == null
-        ? null
-        : describeRelativeTime(value: lastSeen!, now: now);
+    final description = lastSeen?.describeRelativeTo(now: now);
     final effectiveDotColor =
         dotColor ?? (isOnline ? context.colors.online : context.colors.offline);
-    final effectiveTextColor = textColor ?? context.colors.contentSecondary;
+    final effectiveTextColor =
+        textColor ?? Surface.secondaryForegroundOf(context);
 
     useRefreshAt(
       isOnline

@@ -1,8 +1,3 @@
-import "package:dotted_border/dotted_border.dart";
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -16,11 +11,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class TagNode extends HookConsumerWidget {
   const TagNode({required this.tagId, super.key});
 
-  final skir.RecordId tagId;
+  final skir.ResourceId tagId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncTag = ref.watch(projectedTagProvider(tagId));
+    final asyncTag = ref.watch(workingTagProvider(tagId));
 
     return asyncTag(
       name: "Tag",
@@ -44,30 +39,26 @@ class _TagNode extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-
-    final tagColor = tag.color.toARGB32() != 0
-        ? tag.color
-        : context.colors.contentDisabled;
+    final scope = ref.watch(selectedAuthoringScopeProvider);
 
     final graphDrag = GraphDrag.maybeOf(context);
     useListenable(graphDrag?.draggingInsideGraph);
+    if (scope == null) return const SizedBox.shrink();
+    final identifier = AuthoringResourceIdentifier.inScope(scope, tag.tagId);
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return Selector(
-          selectableId: TagIdentifier(tag.tagId),
+          selectableId: identifier,
           focusNode: focusNode,
           builder: (isSelected, isFocused, isHovered) {
             final content = _TagNodeContent(
               tag: tag,
-              tagColor: tagColor,
               isSelected: isSelected,
               isFocused: isFocused,
               isHovered: isHovered,
             );
-            final identifier = TagIdentifier(tag.tagId);
-
-            return Draggable<TagIdentifier>(
+            return Draggable<AuthoringResourceIdentifier>(
               data: identifier,
               onDragStarted: () => graphDrag?.beginDrag(identifier),
               onDragEnd: (_) => graphDrag?.endDrag(),
@@ -79,30 +70,59 @@ class _TagNode extends HookConsumerWidget {
                       : SizedBox(
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
-                          child: FeedbackTagNode(tag: tag, tagColor: tagColor),
+                          child: FeedbackTagNode(tag: tag),
                         );
                 },
               ),
               childWhenDragging: graphDrag?.draggingInsideGraph.value ?? false
                   ? content
-                  : PlaceholderTagNode(name: tag.name, color: tagColor),
+                  : const PlaceholderTagNode(),
               child: GraphDragTargetRegion(
                 targetId: identifier.graphId,
-                child: DragTarget<TagIdentifier>(
+                child: DragTarget<AuthoringResourceIdentifier>(
                   onWillAcceptWithDetails: (details) =>
+                      details.data.scope == scope &&
                       tagParentDropAction(
-                        ref.read(projectedTagsProvider).value ?? const [],
-                        childId: tag.tagId,
-                        parentId: details.data.tagId,
-                      ) !=
-                      null,
-                  onAcceptWithDetails: (details) => ref
-                      .read(canonicalTagsProvider.notifier)
-                      .toggleTagParent(
-                        ref.read(projectedTagsProvider).value ?? const [],
-                        tag.tagId,
-                        details.data.tagId,
-                      ),
+                            ref.read(workingTagsProvider).value ?? const [],
+                            childId: tag.tagId,
+                            parentId: details.data.resourceId,
+                          ) !=
+                          null,
+                  onAcceptWithDetails: (details) {
+                    final tags = ref.read(workingTagsProvider).requireValue;
+                    final action = tagParentDropAction(
+                      tags,
+                      childId: tag.tagId,
+                      parentId: details.data.resourceId,
+                    );
+                    if (action == null) return;
+                    final child = tags.firstWhere(
+                      (value) => value.tagId == tag.tagId,
+                    );
+                    final parents = action == TagParentDropAction.link
+                        ? [...child.parentIds, details.data.resourceId]
+                        : child.parentIds
+                              .where((id) => id != details.data.resourceId)
+                              .toList();
+                    final workspace = ref.read(
+                      authoringWorkspaceProvider(scope),
+                    );
+                    workspace
+                        .edit(
+                          label: "Change tag parents",
+                          apply: (edit) {
+                            replacePortableLinkCollection(
+                              draft: edit,
+                              catalog: workspace.document.catalog,
+                              resource: child.tagId,
+                              field: "parents",
+                              expected: child.parentIds,
+                              proposed: parents,
+                            );
+                          },
+                        )
+                        .report(context);
+                  },
                   builder: (context, candidateData, rejectedData) {
                     final isDropTarget = candidateData.isNotEmpty;
                     final isRejected = rejectedData.isNotEmpty;
@@ -112,7 +132,6 @@ class _TagNode extends HookConsumerWidget {
                     if (isDropTarget) {
                       return _TagNodeContent(
                         tag: tag,
-                        tagColor: tagColor,
                         isSelected: true,
                         isFocused: true,
                         isHovered: true,
@@ -133,81 +152,52 @@ class _TagNode extends HookConsumerWidget {
 class _TagNodeContent extends StatelessWidget {
   const _TagNodeContent({
     required this.tag,
-    required this.tagColor,
     required this.isSelected,
     required this.isFocused,
     required this.isHovered,
   });
 
   final Tag tag;
-  final Color tagColor;
   final bool isSelected;
   final bool isFocused;
   final bool isHovered;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    final backgroundColor = Color.alphaBlend(
-      tagColor.withValues(
-        alpha: switch ((isHovered, isSelected)) {
-          (false, false) => 0.2,
-          (true, false) => 0.5,
-          (false, true) => 1.0,
-          (true, true) => 0.7,
-        },
+    return PresentationInteractionScope(
+      value: PresentationInteraction(
+        selected: isSelected,
+        focused: isFocused,
+        hovered: isHovered,
       ),
-      Surface.colorOf(context),
-    );
-
-    final textColor = isHovered
-        ? ThemeData.estimateBrightnessForColor(backgroundColor) ==
-                  Brightness.dark
-              ? Colors.white
-              : Colors.black
-        : isSelected
-        ? backgroundColor.on(context)
-        : tagColor;
-
-    return AnimatedContainer(
-      duration: 100.ms,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: context.shapes.largeBorderRadius,
-        border: Border.all(
-          color: isFocused
-              ? theme.brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black
-              : isSelected
-              ? Colors.transparent
-              : tagColor,
-          width: 2,
-        ),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: context.spacing.space3,
-        vertical: context.spacing.space2,
-      ),
-      child: Center(
-        child: Text(
-          tag.name.formatted,
-          style: Theme.of(context).textTheme.bodyMedium!
-              .copyWith(color: textColor, fontWeight: FontWeight.w500),
-          overflow: TextOverflow.ellipsis,
+      child: SizedBox.expand(
+        child: AuthoringSubjectRole(
+          resourceId: tag.tagId,
+          role: skir.PresentationRole.graphNode,
+          fillAvailableSpace: true,
         ),
       ),
     );
   }
 }
 
+class _TagRoleNode extends StatelessWidget {
+  const _TagRoleNode({required this.tagId});
+
+  final skir.ResourceId tagId;
+
+  @override
+  Widget build(BuildContext context) => AuthoringSubjectRole(
+    resourceId: tagId,
+    role: skir.PresentationRole.graphNode,
+  );
+}
+
 /// Visual representation shown while a tag is dragged outside the graph.
 class FeedbackTagNode extends StatelessWidget {
-  const FeedbackTagNode({required this.tag, required this.tagColor, super.key});
+  const FeedbackTagNode({required this.tag, super.key});
 
   final Tag tag;
-  final Color tagColor;
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +211,7 @@ class FeedbackTagNode extends StatelessWidget {
             vertical: context.spacing.space2,
           ),
           decoration: BoxDecoration(
-            color: tagColor.withValues(alpha: 0.9),
+            color: Surface.colorOf(context),
             borderRadius: context.shapes.largeBorderRadius,
             boxShadow: [
               BoxShadow(
@@ -231,19 +221,7 @@ class FeedbackTagNode extends StatelessWidget {
               ),
             ],
           ),
-          child: Center(
-            child: Text(
-              tag.name.formatted,
-              style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                color:
-                    ThemeData.estimateBrightnessForColor(tagColor) ==
-                        Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+          child: Center(child: _TagRoleNode(tagId: tag.tagId)),
         ),
       ),
     );
@@ -252,14 +230,7 @@ class FeedbackTagNode extends StatelessWidget {
 
 /// Preserves the graph node footprint while its source is being dragged.
 class PlaceholderTagNode extends StatelessWidget {
-  const PlaceholderTagNode({
-    required this.name,
-    required this.color,
-    super.key,
-  });
-
-  final String name;
-  final Color color;
+  const PlaceholderTagNode({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -271,28 +242,21 @@ class PlaceholderTagNode extends StatelessWidget {
         color: surfaceColor,
         child: DottedBorder(
           options: RoundedRectDottedBorderOptions(
-            color: color,
+            color: Theme.of(context).colorScheme.outline,
             strokeWidth: 2,
             dashPattern: const [5, 5],
             radius: const Radius.circular(12),
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
+              color: Theme.of(context).colorScheme.surfaceContainerLow,
               borderRadius: context.shapes.largeBorderRadius,
             ),
             padding: EdgeInsets.symmetric(
               horizontal: context.spacing.space3,
               vertical: context.spacing.space2,
             ),
-            child: Center(
-              child: Text(
-                name.formatted,
-                style: Theme.of(context).textTheme.bodyMedium!
-                    .copyWith(color: color, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
+            child: const SizedBox.expand(),
           ),
         ),
       ),

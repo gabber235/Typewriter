@@ -27,7 +27,7 @@ sealed interface OrganizationPresence_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OrganizationPresence private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.OrganizationPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.OrganizationPresence>? =
         null,
 ): skirout.organization.v1.presence.OrganizationPresence_OrMutable {
     constructor(
@@ -56,7 +56,7 @@ class OrganizationPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.OrganizationPresence.serializerImpl,
+            _SerializerRegistry.OrganizationPresenceSerializerImpl,
         )
     }
 
@@ -92,25 +92,11 @@ class OrganizationPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:OrganizationPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OrganizationPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OrganizationPresenceSerializer;
 
         /** Describes the [OrganizationPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OrganizationPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -121,7 +107,7 @@ sealed interface MembersPresence_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class MembersPresence private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.MembersPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.MembersPresence>? =
         null,
 ): skirout.organization.v1.presence.MembersPresence_OrMutable {
     constructor(
@@ -150,7 +136,7 @@ class MembersPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.MembersPresence.serializerImpl,
+            _SerializerRegistry.MembersPresenceSerializerImpl,
         )
     }
 
@@ -186,25 +172,11 @@ class MembersPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:MembersPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [MembersPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.MembersPresenceSerializer;
 
         /** Describes the [MembersPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.MembersPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -215,7 +187,7 @@ sealed interface ServicesPresence_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ServicesPresence private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ServicesPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ServicesPresence>? =
         null,
 ): skirout.organization.v1.presence.ServicesPresence_OrMutable {
     constructor(
@@ -244,7 +216,7 @@ class ServicesPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.ServicesPresence.serializerImpl,
+            _SerializerRegistry.ServicesPresenceSerializerImpl,
         )
     }
 
@@ -280,25 +252,11 @@ class ServicesPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:ServicesPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServicesPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServicesPresenceSerializer;
 
         /** Describes the [ServicesPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServicesPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -312,7 +270,7 @@ sealed interface ServicePresence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ServicePresence private constructor(
     override val serviceId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ServicePresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.ServicePresence>? =
         null,
 ): skirout.organization.v1.presence.ServicePresence_OrMutable {
     constructor(
@@ -359,7 +317,7 @@ class ServicePresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.ServicePresence.serializerImpl,
+            _SerializerRegistry.ServicePresenceSerializerImpl,
         )
     }
 
@@ -379,7 +337,7 @@ class ServicePresence private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as-is.
+         * If the value of [serviceId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -419,34 +377,11 @@ class ServicePresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:ServicePresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServicePresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServicePresenceSerializer;
 
         /** Describes the [ServicePresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "service_id",
-                "serviceId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.serviceId },
-                { mut, v -> mut.serviceId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServicePresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -457,7 +392,7 @@ sealed interface RealmsPresence_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmsPresence private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmsPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmsPresence>? =
         null,
 ): skirout.organization.v1.presence.RealmsPresence_OrMutable {
     constructor(
@@ -486,7 +421,7 @@ class RealmsPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.RealmsPresence.serializerImpl,
+            _SerializerRegistry.RealmsPresenceSerializerImpl,
         )
     }
 
@@ -522,25 +457,11 @@ class RealmsPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:RealmsPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmsPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmsPresenceSerializer;
 
         /** Describes the [RealmsPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmsPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -554,7 +475,7 @@ sealed interface RealmPresence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmPresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmPresence>? =
         null,
 ): skirout.organization.v1.presence.RealmPresence_OrMutable {
     constructor(
@@ -601,7 +522,7 @@ class RealmPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.RealmPresence.serializerImpl,
+            _SerializerRegistry.RealmPresenceSerializerImpl,
         )
     }
 
@@ -621,7 +542,7 @@ class RealmPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -661,34 +582,11 @@ class RealmPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:RealmPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmPresenceSerializer;
 
         /** Describes the [RealmPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -702,7 +600,7 @@ sealed interface RealmLibraryPresence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmLibraryPresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmLibraryPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmLibraryPresence>? =
         null,
 ): skirout.organization.v1.presence.RealmLibraryPresence_OrMutable {
     constructor(
@@ -749,7 +647,7 @@ class RealmLibraryPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.RealmLibraryPresence.serializerImpl,
+            _SerializerRegistry.RealmLibraryPresenceSerializerImpl,
         )
     }
 
@@ -769,7 +667,7 @@ class RealmLibraryPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -809,34 +707,11 @@ class RealmLibraryPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:RealmLibraryPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmLibraryPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmLibraryPresenceSerializer;
 
         /** Describes the [RealmLibraryPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmLibraryPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -850,7 +725,7 @@ sealed interface RealmTagsPresence_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmTagsPresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmTagsPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.RealmTagsPresence>? =
         null,
 ): skirout.organization.v1.presence.RealmTagsPresence_OrMutable {
     constructor(
@@ -897,7 +772,7 @@ class RealmTagsPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.RealmTagsPresence.serializerImpl,
+            _SerializerRegistry.RealmTagsPresenceSerializerImpl,
         )
     }
 
@@ -917,7 +792,7 @@ class RealmTagsPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -957,34 +832,11 @@ class RealmTagsPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:RealmTagsPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmTagsPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmTagsPresenceSerializer;
 
         /** Describes the [RealmTagsPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmTagsPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1000,7 +852,7 @@ sealed interface BookPresence_OrMutable {
 class BookPresence private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
     override val bookId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.BookPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.BookPresence>? =
         null,
 ): skirout.organization.v1.presence.BookPresence_OrMutable {
     constructor(
@@ -1053,7 +905,7 @@ class BookPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.BookPresence.serializerImpl,
+            _SerializerRegistry.BookPresenceSerializerImpl,
         )
     }
 
@@ -1076,7 +928,7 @@ class BookPresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1092,7 +944,7 @@ class BookPresence private constructor(
         }
 
         /**
-         * If the value of [bookId] is already mutable, returns it as-is.
+         * If the value of [bookId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
          */
         val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1136,43 +988,11 @@ class BookPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:BookPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [BookPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.BookPresenceSerializer;
 
         /** Describes the [BookPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.addField(
-                "book_id",
-                "bookId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.bookId },
-                { mut, v -> mut.bookId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.BookPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1212,10 +1032,6 @@ sealed class PageActivity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.OVERVIEW_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object GRAPH : skirout.organization.v1.presence.PageActivity() {
@@ -1227,10 +1043,6 @@ sealed class PageActivity private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.GRAPH_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -1244,10 +1056,6 @@ sealed class PageActivity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.TIMELINE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object INSPECTOR : skirout.organization.v1.presence.PageActivity() {
@@ -1260,10 +1068,6 @@ sealed class PageActivity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.INSPECTOR_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.organization.v1.presence.PageActivity>? get() = null;
@@ -1273,7 +1077,7 @@ sealed class PageActivity private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PageActivity._serializerImpl,
+            _SerializerRegistry.PageActivitySerializerImpl,
         )
     }
 
@@ -1284,67 +1088,11 @@ sealed class PageActivity private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PageActivity, Unknown>(
-                recordId = "organization/v1/presence.skir:PageActivity",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [PageActivity] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.PageActivitySerializer;
 
         /** Describes the [PageActivity] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            OVERVIEW;
-            GRAPH;
-            TIMELINE;
-            INSPECTOR;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 5) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "overview",
-                    Kind.OVERVIEW_CONST.ordinal,
-                    "",
-                    OVERVIEW,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "graph",
-                    Kind.GRAPH_CONST.ordinal,
-                    "",
-                    GRAPH,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "timeline",
-                    Kind.TIMELINE_CONST.ordinal,
-                    "",
-                    TIMELINE,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "inspector",
-                    Kind.INSPECTOR_CONST.ordinal,
-                    "",
-                    INSPECTOR,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.PageActivitySerializerImpl.typeDescriptor;
     }
 }
 
@@ -1364,7 +1112,7 @@ class PagePresence private constructor(
     override val bookId: skirout.kernel.v1.record_id.RecordId,
     override val pageId: skirout.kernel.v1.record_id.RecordId,
     override val activity: skirout.organization.v1.presence.PageActivity,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PagePresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PagePresence>? =
         null,
 ): skirout.organization.v1.presence.PagePresence_OrMutable {
     constructor(
@@ -1429,7 +1177,7 @@ class PagePresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PagePresence.serializerImpl,
+            _SerializerRegistry.PagePresenceSerializerImpl,
         )
     }
 
@@ -1458,7 +1206,7 @@ class PagePresence private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1474,7 +1222,7 @@ class PagePresence private constructor(
         }
 
         /**
-         * If the value of [bookId] is already mutable, returns it as-is.
+         * If the value of [bookId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bookId] and returns it.
          */
         val mutableBookId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1490,7 +1238,7 @@ class PagePresence private constructor(
         }
 
         /**
-         * If the value of [pageId] is already mutable, returns it as-is.
+         * If the value of [pageId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [pageId] and returns it.
          */
         val mutablePageId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1542,61 +1290,11 @@ class PagePresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:PagePresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [PagePresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.PagePresenceSerializer;
 
         /** Describes the [PagePresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.addField(
-                "book_id",
-                "bookId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.bookId },
-                { mut, v -> mut.bookId = v },
-            );
-            serializerImpl.addField(
-                "page_id",
-                "pageId",
-                2,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.pageId },
-                { mut, v -> mut.pageId = v },
-            );
-            serializerImpl.addField(
-                "activity",
-                "activity",
-                3,
-                skirout.organization.v1.presence.PageActivity.serializer,
-                "",
-                { it.activity },
-                { mut, v -> mut.activity = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.PagePresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1819,7 +1517,7 @@ sealed class PresenceLocation private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PresenceLocation._serializerImpl,
+            _SerializerRegistry.PresenceLocationSerializerImpl,
         )
     }
 
@@ -1946,125 +1644,11 @@ sealed class PresenceLocation private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PresenceLocation, Unknown>(
-                recordId = "organization/v1/presence.skir:PresenceLocation",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [PresenceLocation] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.PresenceLocationSerializer;
 
         /** Describes the [PresenceLocation] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "organization",
-                    Kind.ORGANIZATION_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.OrganizationPresence.serializer,
-                    "",
-                    { OrganizationWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "members",
-                    Kind.MEMBERS_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.MembersPresence.serializer,
-                    "",
-                    { MembersWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "services",
-                    Kind.SERVICES_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.ServicesPresence.serializer,
-                    "",
-                    { ServicesWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "service",
-                    Kind.SERVICE_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.ServicePresence.serializer,
-                    "",
-                    { ServiceWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "realms",
-                    Kind.REALMS_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.RealmsPresence.serializer,
-                    "",
-                    { RealmsWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "realm",
-                    Kind.REALM_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.RealmPresence.serializer,
-                    "",
-                    { RealmWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "realm_library",
-                    Kind.REALM_LIBRARY_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.RealmLibraryPresence.serializer,
-                    "",
-                    { RealmLibraryWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "realm_tags",
-                    Kind.REALM_TAGS_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.RealmTagsPresence.serializer,
-                    "",
-                    { RealmTagsWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "book",
-                    Kind.BOOK_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.BookPresence.serializer,
-                    "",
-                    { BookWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    10,
-                    "page",
-                    Kind.PAGE_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.PagePresence.serializer,
-                    "",
-                    { PageWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.PresenceLocationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2082,7 +1666,7 @@ class PanelPresence private constructor(
     override val sessionId: kotlin.String,
     override val sequence: kotlin.Long,
     override val location: skirout.organization.v1.presence.PresenceLocation,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PanelPresence>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PanelPresence>? =
         null,
 ): skirout.organization.v1.presence.PanelPresence_OrMutable {
     constructor(
@@ -2141,7 +1725,7 @@ class PanelPresence private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PanelPresence.serializerImpl,
+            _SerializerRegistry.PanelPresenceSerializerImpl,
         )
     }
 
@@ -2199,52 +1783,11 @@ class PanelPresence private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:PanelPresence",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [PanelPresence] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.PanelPresenceSerializer;
 
         /** Describes the [PanelPresence] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "session_id",
-                "sessionId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.sessionId },
-                { mut, v -> mut.sessionId = v },
-            );
-            serializerImpl.addField(
-                "sequence",
-                "sequence",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.sequence },
-                { mut, v -> mut.sequence = v },
-            );
-            serializerImpl.addField(
-                "location",
-                "location",
-                2,
-                skirout.organization.v1.presence.PresenceLocation.serializer,
-                "",
-                { it.location },
-                { mut, v -> mut.location = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.PanelPresenceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2258,7 +1801,7 @@ sealed interface PresenceLeft_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresenceLeft private constructor(
     override val sessionId: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PresenceLeft>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.presence.PresenceLeft>? =
         null,
 ): skirout.organization.v1.presence.PresenceLeft_OrMutable {
     constructor(
@@ -2305,7 +1848,7 @@ class PresenceLeft private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PresenceLeft.serializerImpl,
+            _SerializerRegistry.PresenceLeftSerializerImpl,
         )
     }
 
@@ -2349,34 +1892,11 @@ class PresenceLeft private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "organization/v1/presence.skir:PresenceLeft",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [PresenceLeft] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.PresenceLeftSerializer;
 
         /** Describes the [PresenceLeft] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "session_id",
-                "sessionId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.sessionId },
-                { mut, v -> mut.sessionId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.PresenceLeftSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2447,7 +1967,7 @@ sealed class PresenceEvent private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.organization.v1.presence.PresenceEvent._serializerImpl,
+            _SerializerRegistry.PresenceEventSerializerImpl,
         )
     }
 
@@ -2486,52 +2006,489 @@ sealed class PresenceEvent private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PresenceEvent, Unknown>(
-                recordId = "organization/v1/presence.skir:PresenceEvent",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [PresenceEvent] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.PresenceEventSerializer;
 
         /** Describes the [PresenceEvent] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.PresenceEventSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            _maybeFinalizeSerializer();
-        }
+private object _SerializerRegistry {
+    val BookPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:BookPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.BookPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.BookPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-        private var _finalizationCounter = 0;
+    val BookPresenceSerializer = build.skir.internal.makeSerializer(BookPresenceSerializerImpl);
 
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "active",
-                    Kind.ACTIVE_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.PanelPresence.serializer,
-                    "",
-                    { ActiveWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "left",
-                    Kind.LEFT_WRAPPER.ordinal,
-                    skirout.organization.v1.presence.PresenceLeft.serializer,
-                    "",
-                    { LeftWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+    val MembersPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:MembersPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.MembersPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.MembersPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val MembersPresenceSerializer = build.skir.internal.makeSerializer(MembersPresenceSerializerImpl);
+
+    val OrganizationPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:OrganizationPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.OrganizationPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.OrganizationPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationPresenceSerializer = build.skir.internal.makeSerializer(OrganizationPresenceSerializerImpl);
+
+    val PageActivitySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PageActivity, skirout.organization.v1.presence.PageActivity.Unknown>(
+            recordId = "organization/v1/presence.skir:PageActivity",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.presence.PageActivity.Kind.values().size,
+            unknownInstance = skirout.organization.v1.presence.PageActivity.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.presence.PageActivity.Unknown(skirout.organization.v1.presence.PageActivity.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PageActivitySerializer = build.skir.internal.makeSerializer(PageActivitySerializerImpl);
+
+    val PagePresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:PagePresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.PagePresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.PagePresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PagePresenceSerializer = build.skir.internal.makeSerializer(PagePresenceSerializerImpl);
+
+    val PanelPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:PanelPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.PanelPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.PanelPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PanelPresenceSerializer = build.skir.internal.makeSerializer(PanelPresenceSerializerImpl);
+
+    val PresenceEventSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PresenceEvent, skirout.organization.v1.presence.PresenceEvent.Unknown>(
+            recordId = "organization/v1/presence.skir:PresenceEvent",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.presence.PresenceEvent.Kind.values().size,
+            unknownInstance = skirout.organization.v1.presence.PresenceEvent.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.presence.PresenceEvent.Unknown(skirout.organization.v1.presence.PresenceEvent.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresenceEventSerializer = build.skir.internal.makeSerializer(PresenceEventSerializerImpl);
+
+    val PresenceLeftSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:PresenceLeft",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.PresenceLeft.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.PresenceLeft.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PresenceLeftSerializer = build.skir.internal.makeSerializer(PresenceLeftSerializerImpl);
+
+    val PresenceLocationSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.organization.v1.presence.PresenceLocation, skirout.organization.v1.presence.PresenceLocation.Unknown>(
+            recordId = "organization/v1/presence.skir:PresenceLocation",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.organization.v1.presence.PresenceLocation.Kind.values().size,
+            unknownInstance = skirout.organization.v1.presence.PresenceLocation.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.organization.v1.presence.PresenceLocation.Unknown(skirout.organization.v1.presence.PresenceLocation.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PresenceLocationSerializer = build.skir.internal.makeSerializer(PresenceLocationSerializerImpl);
+
+    val RealmLibraryPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:RealmLibraryPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.RealmLibraryPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmLibraryPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmLibraryPresenceSerializer = build.skir.internal.makeSerializer(RealmLibraryPresenceSerializerImpl);
+
+    val RealmPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:RealmPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.RealmPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmPresenceSerializer = build.skir.internal.makeSerializer(RealmPresenceSerializerImpl);
+
+    val RealmsPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:RealmsPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.RealmsPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmsPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmsPresenceSerializer = build.skir.internal.makeSerializer(RealmsPresenceSerializerImpl);
+
+    val RealmTagsPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:RealmTagsPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.RealmTagsPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.RealmTagsPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmTagsPresenceSerializer = build.skir.internal.makeSerializer(RealmTagsPresenceSerializerImpl);
+
+    val ServicePresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:ServicePresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.ServicePresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.ServicePresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServicePresenceSerializer = build.skir.internal.makeSerializer(ServicePresenceSerializerImpl);
+
+    val ServicesPresenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "organization/v1/presence.skir:ServicesPresence",
+        doc = "",
+        defaultInstance = skirout.organization.v1.presence.ServicesPresence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.presence.ServicesPresence.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServicesPresenceSerializer = build.skir.internal.makeSerializer(ServicesPresenceSerializerImpl);
+
+    init {
+        BookPresenceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        BookPresenceSerializerImpl.addField(
+            "book_id",
+            "bookId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.bookId },
+            { mut, v -> mut.bookId = v },
+        );
+        BookPresenceSerializerImpl.finalizeStruct();
+
+        MembersPresenceSerializerImpl.finalizeStruct();
+
+        OrganizationPresenceSerializerImpl.finalizeStruct();
+
+        PageActivitySerializerImpl.addConstantVariant(
+            1,
+            "overview",
+            skirout.organization.v1.presence.PageActivity.Kind.OVERVIEW_CONST.ordinal,
+            "",
+            skirout.organization.v1.presence.PageActivity.OVERVIEW,
+        );
+        PageActivitySerializerImpl.addConstantVariant(
+            2,
+            "graph",
+            skirout.organization.v1.presence.PageActivity.Kind.GRAPH_CONST.ordinal,
+            "",
+            skirout.organization.v1.presence.PageActivity.GRAPH,
+        );
+        PageActivitySerializerImpl.addConstantVariant(
+            3,
+            "timeline",
+            skirout.organization.v1.presence.PageActivity.Kind.TIMELINE_CONST.ordinal,
+            "",
+            skirout.organization.v1.presence.PageActivity.TIMELINE,
+        );
+        PageActivitySerializerImpl.addConstantVariant(
+            4,
+            "inspector",
+            skirout.organization.v1.presence.PageActivity.Kind.INSPECTOR_CONST.ordinal,
+            "",
+            skirout.organization.v1.presence.PageActivity.INSPECTOR,
+        );
+        PageActivitySerializerImpl.finalizeEnum();
+
+        PagePresenceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        PagePresenceSerializerImpl.addField(
+            "book_id",
+            "bookId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.bookId },
+            { mut, v -> mut.bookId = v },
+        );
+        PagePresenceSerializerImpl.addField(
+            "page_id",
+            "pageId",
+            2,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.pageId },
+            { mut, v -> mut.pageId = v },
+        );
+        PagePresenceSerializerImpl.addField(
+            "activity",
+            "activity",
+            3,
+            _SerializerRegistry.PageActivitySerializer,
+            "",
+            { it.activity },
+            { mut, v -> mut.activity = v },
+        );
+        PagePresenceSerializerImpl.finalizeStruct();
+
+        PanelPresenceSerializerImpl.addField(
+            "session_id",
+            "sessionId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.sessionId },
+            { mut, v -> mut.sessionId = v },
+        );
+        PanelPresenceSerializerImpl.addField(
+            "sequence",
+            "sequence",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.sequence },
+            { mut, v -> mut.sequence = v },
+        );
+        PanelPresenceSerializerImpl.addField(
+            "location",
+            "location",
+            2,
+            _SerializerRegistry.PresenceLocationSerializer,
+            "",
+            { it.location },
+            { mut, v -> mut.location = v },
+        );
+        PanelPresenceSerializerImpl.finalizeStruct();
+
+        PresenceEventSerializerImpl.addWrapperVariant(
+            1,
+            "active",
+            skirout.organization.v1.presence.PresenceEvent.Kind.ACTIVE_WRAPPER.ordinal,
+            _SerializerRegistry.PanelPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceEvent.ActiveWrapper(it) },
+            { it.value },
+        );
+        PresenceEventSerializerImpl.addWrapperVariant(
+            2,
+            "left",
+            skirout.organization.v1.presence.PresenceEvent.Kind.LEFT_WRAPPER.ordinal,
+            _SerializerRegistry.PresenceLeftSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceEvent.LeftWrapper(it) },
+            { it.value },
+        );
+        PresenceEventSerializerImpl.finalizeEnum();
+
+        PresenceLeftSerializerImpl.addField(
+            "session_id",
+            "sessionId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.sessionId },
+            { mut, v -> mut.sessionId = v },
+        );
+        PresenceLeftSerializerImpl.finalizeStruct();
+
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            1,
+            "organization",
+            skirout.organization.v1.presence.PresenceLocation.Kind.ORGANIZATION_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.OrganizationWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            2,
+            "members",
+            skirout.organization.v1.presence.PresenceLocation.Kind.MEMBERS_WRAPPER.ordinal,
+            _SerializerRegistry.MembersPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.MembersWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            3,
+            "services",
+            skirout.organization.v1.presence.PresenceLocation.Kind.SERVICES_WRAPPER.ordinal,
+            _SerializerRegistry.ServicesPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.ServicesWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            4,
+            "service",
+            skirout.organization.v1.presence.PresenceLocation.Kind.SERVICE_WRAPPER.ordinal,
+            _SerializerRegistry.ServicePresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.ServiceWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            5,
+            "realms",
+            skirout.organization.v1.presence.PresenceLocation.Kind.REALMS_WRAPPER.ordinal,
+            _SerializerRegistry.RealmsPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.RealmsWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            6,
+            "realm",
+            skirout.organization.v1.presence.PresenceLocation.Kind.REALM_WRAPPER.ordinal,
+            _SerializerRegistry.RealmPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.RealmWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            7,
+            "realm_library",
+            skirout.organization.v1.presence.PresenceLocation.Kind.REALM_LIBRARY_WRAPPER.ordinal,
+            _SerializerRegistry.RealmLibraryPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.RealmLibraryWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            8,
+            "realm_tags",
+            skirout.organization.v1.presence.PresenceLocation.Kind.REALM_TAGS_WRAPPER.ordinal,
+            _SerializerRegistry.RealmTagsPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.RealmTagsWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            9,
+            "book",
+            skirout.organization.v1.presence.PresenceLocation.Kind.BOOK_WRAPPER.ordinal,
+            _SerializerRegistry.BookPresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.BookWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.addWrapperVariant(
+            10,
+            "page",
+            skirout.organization.v1.presence.PresenceLocation.Kind.PAGE_WRAPPER.ordinal,
+            _SerializerRegistry.PagePresenceSerializer,
+            "",
+            { skirout.organization.v1.presence.PresenceLocation.PageWrapper(it) },
+            { it.value },
+        );
+        PresenceLocationSerializerImpl.finalizeEnum();
+
+        RealmLibraryPresenceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmLibraryPresenceSerializerImpl.finalizeStruct();
+
+        RealmPresenceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmPresenceSerializerImpl.finalizeStruct();
+
+        RealmsPresenceSerializerImpl.finalizeStruct();
+
+        RealmTagsPresenceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmTagsPresenceSerializerImpl.finalizeStruct();
+
+        ServicePresenceSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        ServicePresenceSerializerImpl.finalizeStruct();
+
+        ServicesPresenceSerializerImpl.finalizeStruct();
     }
 }

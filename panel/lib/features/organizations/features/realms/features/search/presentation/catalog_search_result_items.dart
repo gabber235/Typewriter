@@ -1,78 +1,64 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Builds the shared element type row used by global and contextual search.
-Widget buildElementTypeSearchResultItem(SearchResultRowContext context) =>
-    ElementTypeSearchResultItem(
-      definition: context.result.payload as ElementDefinition,
-      focused: context.focused,
-      selected: context.selected,
-      loading: context.loading,
-      onTap: context.onTap,
-      shortcutActivator: context.shortcutActivator,
-    );
+Widget buildAuthoringCreationSearchResultItem(SearchResultRowContext context) {
+  return AuthoringCreationSearchResultItem(
+    option: context.result.payload as AuthoringCreationOption,
+    selected: context.selected,
+    focused: context.focused,
+    onTap: context.onTap,
+    shortcutActivator: context.shortcutActivator,
+  );
+}
 
-class PageKindSearchResultItem extends StatelessWidget {
-  const PageKindSearchResultItem({
-    required this.definition,
+class AuthoringCreationSearchResultItem extends StatelessWidget {
+  const AuthoringCreationSearchResultItem({
+    required this.option,
     required this.selected,
     required this.focused,
-    required this.loading,
     required this.onTap,
     required this.shortcutActivator,
     super.key,
   });
 
-  final RealmPageDefinition definition;
+  final AuthoringCreationOption option;
   final bool selected;
   final bool focused;
-  final bool loading;
   final VoidCallback? onTap;
   final ShortcutActivator? shortcutActivator;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final display = option.display;
+    final color =
+        display?.color.parsedDisplayColor ?? theme.colorScheme.primary;
+    final icon = display?.icon.trim();
+    final description = display?.description.trim();
     return SearchResultCard(
-      color: definition.color,
+      color: color,
       prefix: SearchResultIconTile(
-        color: definition.color,
-        onColor: definition.color.on(context),
-        icon: Icones.value(definition.icon),
+        color: color,
+        onColor: color.on(context),
+        icon: icon == null || icon.isEmpty
+            ? const Icon(Icons.add)
+            : Icones(icon),
         focused: focused,
-        loading: loading,
       ),
       selected: selected,
       focused: focused,
       onTap: onTap,
       content: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: context.spacing.space2,
+        mainAxisSize: MainAxisSize.min,
+        spacing: context.spacing.space1,
         children: [
-          SearchResultTitle(title: definition.name.formatted),
-          Row(
-            spacing: context.spacing.space2,
-            children: [
-              SearchResultTags(
-                tags: [
-                  switch (definition.editor) {
-                    RealmGraphPageEditor() => "graph",
-                    RealmTimelinePageEditor() => "timeline",
-                  },
-                ],
-                selected: selected,
-                focused: focused,
-                color: definition.color,
-              ),
-              if (definition.description case final description?
-                  when description.isNotEmpty)
-                SearchResultDescription(description: description),
-            ],
-          ),
+          SearchResultTitle(title: option.label),
+          if (description != null && description.isNotEmpty)
+            SearchResultDescription(description: description),
         ],
       ),
       suffix: SearchResultSuffix(
-        label: "page kind",
+        label: "resource",
         shortcutActivator: shortcutActivator,
         selected: selected,
       ),
@@ -80,53 +66,13 @@ class PageKindSearchResultItem extends StatelessWidget {
   }
 }
 
-class ElementTypeSearchResultItem extends StatelessWidget {
-  const ElementTypeSearchResultItem({
-    required this.definition,
-    required this.selected,
-    required this.focused,
-    required this.loading,
-    required this.onTap,
-    required this.shortcutActivator,
-    super.key,
-  });
-
-  final ElementDefinition definition;
-  final bool selected;
-  final bool focused;
-  final bool loading;
-  final VoidCallback? onTap;
-  final ShortcutActivator? shortcutActivator;
-
-  @override
-  Widget build(BuildContext context) {
-    return SearchResultCard(
-      color: definition.color,
-      prefix: SearchResultIconTile(
-        color: definition.color,
-        onColor: definition.color.on(context),
-        icon: Icones.value(definition.icon),
-        focused: focused,
-        loading: loading,
-      ),
-      selected: selected,
-      focused: focused,
-      onTap: onTap,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: context.spacing.space2,
-        children: [
-          SearchResultTitle(title: definition.name.formatted),
-          if (definition.description.isNotEmpty)
-            SearchResultDescription(description: definition.description),
-        ],
-      ),
-      suffix: SearchResultSuffix(
-        label: "element type",
-        shortcutActivator: shortcutActivator,
-        selected: selected,
-      ),
-    );
+extension on String {
+  Color? get parsedDisplayColor {
+    if (trim().isEmpty) return null;
+    try {
+      return parseColorHex(this, includeAlpha: true);
+    } on FormatException {
+      return null;
+    }
   }
 }

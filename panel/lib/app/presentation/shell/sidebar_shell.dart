@@ -54,6 +54,8 @@ class _SidebarView extends StatelessWidget {
                     padding: EdgeInsets.all(context.spacing.space1),
                     child: Surface(
                       color: Theme.of(context).colorScheme.surface,
+                      foreground: context.colors.contentPrimary,
+                      secondaryForeground: context.colors.contentSecondary,
                       child: child,
                     ),
                   ),
@@ -61,6 +63,7 @@ class _SidebarView extends StatelessWidget {
               ),
             ),
             DragHandle(
+              semanticLabel: "Sidebar width",
               axis: Axis.horizontal,
               minSize: kSidebarMinSize,
               maxSize: controller.maxSize,

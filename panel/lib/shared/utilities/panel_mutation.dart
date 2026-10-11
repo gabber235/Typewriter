@@ -1,25 +1,13 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// User visible operation context attached to an unexpected panel mutation error.
-enum PanelMutationOperation {
-  createTag,
-  deleteService,
-  deleteTag,
-  signOut,
-  updateService,
-  updateTag,
-}
+enum PanelMutationOperation { deleteService, signOut, updateService }
 
 extension on PanelMutationOperation {
   String get description => switch (this) {
-    PanelMutationOperation.createTag => "creating a tag",
     PanelMutationOperation.deleteService => "deleting a service",
-    PanelMutationOperation.deleteTag => "deleting a tag",
     PanelMutationOperation.signOut => "signing out",
     PanelMutationOperation.updateService => "updating a service",
-    PanelMutationOperation.updateTag => "updating a tag",
   };
 }
 

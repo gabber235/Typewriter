@@ -1,11 +1,12 @@
 use wasmcloud_utils::database::RecordId;
 use wasmcloud_utils::skir::base::service::v1::identity::*;
-use wasmcloud_utils::skir::base::service::v1::service::*;
 use wasmcloud_utils::{
-    SkirDomainResult, SkirDomainResultExt, SkirResponse,
+    SkirResponse,
     database::service::{ServiceRoleRecord, ServiceRoleTypeRecord},
     skir_variant,
 };
+
+pub use crate::repository::ValidatedServiceRole;
 
 /// Credentials and provider identifier returned after an external account is provisioned.
 ///
@@ -26,7 +27,90 @@ pub struct ProvisionedAccount {
 pub struct NewIdentity {
     pub service_id: String,
     pub display_name: String,
-    pub role: ServiceRoleRecord,
+    pub role: ValidatedServiceRole,
+}
+
+/// Domain rejections returned by repository policy and schema admission.
+pub enum IdentityRejection {
+    RoleUnknownProperty,
+    RoleTypeInvalid,
+    RoleVersionInvalid,
+    CustomRoleNameRequired,
+    CustomRoleNameInvalid,
+    BuiltinRoleNameForbidden,
+}
+
+impl IdentityRejection {
+    fn from_slug(slug: &str) -> Option<Self> {
+        match slug.trim_start_matches("An error occurred: ") {
+            "role-unknown-property-error" => Some(Self::RoleUnknownProperty),
+            "role-type-invalid-error" => Some(Self::RoleTypeInvalid),
+            "role-version-invalid-error" => Some(Self::RoleVersionInvalid),
+            "custom-role-name-required-error" => Some(Self::CustomRoleNameRequired),
+            "custom-role-name-invalid-error" => Some(Self::CustomRoleNameInvalid),
+            "builtin-role-name-forbidden-error" => Some(Self::BuiltinRoleNameForbidden),
+            _ => None,
+        }
+    }
+
+    fn into_response(self) -> IssueServiceIdentityResponse {
+        match self {
+            Self::RoleUnknownProperty => {
+                skir_variant!(IssueServiceIdentityResponse::RoleUnknownPropertyError {})
+            }
+            Self::RoleTypeInvalid => {
+                skir_variant!(IssueServiceIdentityResponse::RoleTypeInvalidError {})
+            }
+            Self::RoleVersionInvalid => {
+                skir_variant!(IssueServiceIdentityResponse::RoleVersionInvalidError {})
+            }
+            Self::CustomRoleNameRequired => {
+                skir_variant!(IssueServiceIdentityResponse::CustomRoleNameRequiredError {})
+            }
+            Self::CustomRoleNameInvalid => {
+                skir_variant!(IssueServiceIdentityResponse::CustomRoleNameInvalidError {})
+            }
+            Self::BuiltinRoleNameForbidden => {
+                skir_variant!(IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError {})
+            }
+        }
+    }
+}
+
+/// Repository failures preserve domain rejection identity through compensation.
+pub enum IdentityRepositoryError {
+    Domain(IdentityRejection),
+    Infrastructure(RepositoryError),
+    UnrecognizedDomain(String),
+}
+
+impl IdentityRepositoryError {
+    pub(crate) fn rejected(message: &str) -> Self {
+        match IdentityRejection::from_slug(message) {
+            Some(rejection) => Self::Domain(rejection),
+            None => Self::UnrecognizedDomain(message.to_owned()),
+        }
+    }
+
+    fn into_response(self) -> Result<IssueServiceIdentityResponse, otel_wasi::Error> {
+        match self {
+            Self::Domain(rejection) => Ok(rejection.into_response()),
+            Self::Infrastructure(error) => {
+                otel_wasi::main_attribute!(
+                    "error" = true,
+                    "exception.slug" = "service-identity-repository-failed",
+                    "exception.message" = error.to_string(),
+                    "identity.persistence.outcome" = "infrastructure_error",
+                    "identity.outcome" = "internal_error",
+                );
+                Ok(IssueServiceIdentityResponse::internal_error())
+            }
+            Self::UnrecognizedDomain(slug) => Err(otel_wasi::Error::new(
+                "skir-domain-error-unknown",
+                format!("unknown SKIR domain error slug `{slug}`"),
+            )),
+        }
+    }
 }
 
 /// Failure categories exposed by the external account boundary.
@@ -79,14 +163,14 @@ pub trait IdentityRepository {
     /// Applies database role policy before any account is provisioned.
     async fn validate_role(
         &self,
-        role: &ServiceRoleRecord,
-    ) -> Result<Result<bool, String>, RepositoryError>;
+        role: ServiceRoleRecord,
+    ) -> Result<ValidatedServiceRole, IdentityRepositoryError>;
 
     /// Atomically creates the service record inside the repository database.
     async fn create_identity(
         &self,
         identity: &NewIdentity,
-    ) -> Result<Result<RecordId, String>, RepositoryError>;
+    ) -> Result<RecordId, IdentityRepositoryError>;
 }
 
 /// Boundary for obtaining the names used by the provider and service record.
@@ -96,14 +180,6 @@ pub trait IdentityRepository {
 pub trait NameSource {
     /// Produces a provider username and a human readable service name.
     fn generate(&self) -> Result<crate::names::GeneratedNames, NamingError>;
-}
-
-/// Converts a contract role into the repository representation accepted by policy checks.
-///
-/// Unknown contract variants are rejected before name generation or any external side
-/// effect occurs.
-pub fn role_record(role: ServiceRole) -> Result<ServiceRoleRecord, ()> {
-    role.try_into().map_err(|_| ())
 }
 
 /// Coordinates issuance of a service identity across policy, naming, provider, and storage boundaries.
@@ -125,9 +201,9 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
     name_source: &N,
     request: IssueServiceIdentityRequest,
 ) -> Result<IssueServiceIdentityResponse, otel_wasi::Error> {
-    let role = match role_record(request.role) {
+    let role = match ServiceRoleRecord::try_from(request.role) {
         Ok(role) => role,
-        Err(()) => {
+        Err(_) => {
             otel_wasi::main_attribute!("identity.outcome" = "unknown-role-error");
             return Ok(skir_variant!(
                 IssueServiceIdentityResponse::UnknownRoleError {}
@@ -141,32 +217,10 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
         },
     );
 
-    let validated = match repository.validate_role(&role).await {
-        Ok(result) => result,
-        Err(_) => {
-            otel_wasi::main_attribute!(
-                "error" = true,
-                "exception.slug" = "service-identity-role-validation-failed",
-                "identity.validation.outcome" = "infrastructure_error",
-                "identity.outcome" = "internal_error",
-            );
-            return Ok(IssueServiceIdentityResponse::internal_error());
-        }
+    let admitted = match repository.validate_role(role).await {
+        Ok(admitted) => admitted,
+        Err(error) => return error.into_response(),
     };
-
-    if let Err(slug) = &validated {
-        otel_wasi::main_attribute!(
-            "identity.validation.outcome" = slug.clone(),
-            "identity.outcome" = slug.clone(),
-        );
-    }
-
-    let validated = match validated.into_skir_domain_result()? {
-        SkirDomainResult::Value(value) => value,
-        SkirDomainResult::Response(response) => return Ok(response),
-    };
-
-    let _ = validated;
     otel_wasi::main_attribute!("identity.validation.outcome" = "success");
 
     let names = match name_source.generate() {
@@ -209,59 +263,34 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
     let identity = NewIdentity {
         service_id: account.user_uid.clone(),
         display_name: names.display_name.clone(),
-        role,
+        role: admitted,
     };
 
-    let created = repository.create_identity(&identity).await;
-    if matches!(created, Ok(Ok(_))) {
-        otel_wasi::main_attribute!(
-            "identity.persistence.outcome" = "success",
-            "identity.compensation.outcome" = "not_required",
-            "identity.outcome" = "success",
-            "identity.service.id" = account.user_uid.clone(),
-        );
-        return Ok(skir_variant!(IssueServiceIdentityResponse::Success {
-            service_id: account.user_uid,
-            display_name: names.display_name,
-            username: account.username,
-            token: account.token,
-        }));
-    }
-
-    if let Ok(Err(slug)) = &created {
-        otel_wasi::main_attribute!(
-            "identity.persistence.outcome" = slug.clone(),
-            "identity.outcome" = slug.clone(),
-        );
-    }
-
-    let compensation = provider.delete_account(account.user_pk).await;
-    match compensation {
-        Ok(()) => {
-            otel_wasi::main_attribute!("identity.compensation.outcome" = "success");
-        }
-        Err(_) => {
+    match repository.create_identity(&identity).await {
+        Ok(_) => {
             otel_wasi::main_attribute!(
-                "error" = true,
-                "exception.slug" = "service-identity-compensation-failed",
-                "identity.compensation.outcome" = "failed",
+                "identity.persistence.outcome" = "success",
+                "identity.compensation.outcome" = "not_required",
+                "identity.outcome" = "success",
+                "identity.service.id" = account.user_uid.clone(),
             );
+            Ok(skir_variant!(IssueServiceIdentityResponse::Success {
+                service_id: account.user_uid,
+                display_name: names.display_name,
+                username: account.username,
+                token: account.token,
+            }))
         }
-    }
-
-    match created {
-        Ok(result) => match result.into_skir_domain_result()? {
-            SkirDomainResult::Value(_) => unreachable!(),
-            SkirDomainResult::Response(response) => Ok(response),
-        },
-        Err(_) => {
-            otel_wasi::main_attribute!(
-                "error" = true,
-                "exception.slug" = "service-identity-persistence-create-failed",
-                "identity.persistence.outcome" = "infrastructure_error",
-                "identity.outcome" = "internal_error",
-            );
-            Ok(IssueServiceIdentityResponse::internal_error())
+        Err(original) => {
+            match provider.delete_account(account.user_pk).await {
+                Ok(()) => otel_wasi::main_attribute!("identity.compensation.outcome" = "success"),
+                Err(_) => otel_wasi::main_attribute!(
+                    "error" = true,
+                    "exception.slug" = "service-identity-compensation-failed",
+                    "identity.compensation.outcome" = "failed",
+                ),
+            }
+            original.into_response()
         }
     }
 }
@@ -270,6 +299,7 @@ pub async fn issue_identity<P: AccountProvider, R: IdentityRepository, N: NameSo
 mod tests {
     use super::*;
     use std::cell::RefCell;
+    use wasmcloud_utils::skir::base::service::v1::service::{ServiceRole, ServiceRole_Host};
 
     #[derive(Clone, Copy)]
     enum RepoMode {
@@ -289,29 +319,41 @@ mod tests {
     impl IdentityRepository for MockRepo {
         async fn validate_role(
             &self,
-            _: &ServiceRoleRecord,
-        ) -> Result<Result<bool, String>, RepositoryError> {
+            role: ServiceRoleRecord,
+        ) -> Result<ValidatedServiceRole, IdentityRepositoryError> {
             *self.validation_calls.borrow_mut() += 1;
             match self.mode {
-                RepoMode::ValidationDomain => Ok(Err("role-type-invalid-error".into())),
-                RepoMode::ValidationInfra => Err(RepositoryError("mock repository failure".into())),
-                RepoMode::ValidationUnknownDomain => Ok(Err("future-error".into())),
-                _ => Ok(Ok(true)),
+                RepoMode::ValidationDomain => {
+                    Err(IdentityRepositoryError::rejected("role-type-invalid-error"))
+                }
+                RepoMode::ValidationInfra => Err(IdentityRepositoryError::Infrastructure(
+                    RepositoryError("mock repository failure".into()),
+                )),
+                RepoMode::ValidationUnknownDomain => {
+                    Err(IdentityRepositoryError::rejected("future-error"))
+                }
+                _ => Ok(ValidatedServiceRole::admit_for_test(role)),
             }
         }
         async fn create_identity(
             &self,
             _: &NewIdentity,
-        ) -> Result<Result<RecordId, String>, RepositoryError> {
+        ) -> Result<RecordId, IdentityRepositoryError> {
             *self.create_calls.borrow_mut() += 1;
             match self.mode {
-                RepoMode::CreateDomain => Ok(Err("role-version-invalid-error".into())),
-                RepoMode::CreateUnknownDomain => Ok(Err("future-error".into())),
-                RepoMode::CreateInfra => Err(RepositoryError("mock repository failure".into())),
-                _ => Ok(Ok(RecordId {
+                RepoMode::CreateDomain => Err(IdentityRepositoryError::rejected(
+                    "role-version-invalid-error",
+                )),
+                RepoMode::CreateUnknownDomain => {
+                    Err(IdentityRepositoryError::rejected("future-error"))
+                }
+                RepoMode::CreateInfra => Err(IdentityRepositoryError::Infrastructure(
+                    RepositoryError("mock repository failure".into()),
+                )),
+                _ => Ok(RecordId {
                     table: "service".into(),
                     key: "uid".into(),
-                })),
+                }),
             }
         }
     }

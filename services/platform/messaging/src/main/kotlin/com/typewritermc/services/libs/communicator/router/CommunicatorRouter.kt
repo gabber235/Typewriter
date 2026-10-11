@@ -29,6 +29,8 @@ import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SluggedException
 import com.typewritermc.services.libs.telemetry.consumerSpan
+import com.typewritermc.services.libs.utils.findExceptional
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -53,8 +55,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import com.typewritermc.services.libs.utils.findExceptionalThrowable as exceptionalCause
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable as rethrowExceptional
 
 /** Marks the typed communicator routes DSL. */
 @DslMarker
@@ -112,7 +112,13 @@ data class IncomingWatchCall<Address : Any, Request : Any, Initial : Any, Update
     val concreteAddress: MessageAddress,
     val contract: WatchContract<Address, Request, Initial, Update>,
     val communicator: Communicator,
-)
+) {
+    /** Publishes one update on the subject resolved from this exact request. */
+    suspend fun publishUpdate(
+        update: Update,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ): CommunicationResult<Unit> = communicator.publishUpdate(contract, address, request, update, headers)
+}
 
 /**
  * Bounds global in flight work, per route worker concurrency, buffering, and shutdown draining.
@@ -361,7 +367,9 @@ class CommunicatorRouter internal constructor(
                     job.cancel()
                     failures
                 }
-            val exceptional = (listOf(failure) + closeFailures).firstNotNullOfOrNull(::exceptionalCause)
+            val exceptional =
+                (listOf(failure) + closeFailures)
+                    .firstNotNullOfOrNull { it.findExceptional() }
             if (exceptional != null) {
                 (listOf(startupFailure) + closeFailures).forEach { if (it !== exceptional) exceptional.addSuppressed(it) }
                 throw exceptional
@@ -427,10 +435,10 @@ class CommunicatorRouter internal constructor(
                     } == true
                 if (!drained) snapshot.forEach(Runtime::cancel)
 
-                exceptional = closeFailures.firstNotNullOfOrNull { exceptionalCause(it.second) }
+                exceptional = closeFailures.firstNotNullOfOrNull { it.second.findExceptional() }
                 val ordinaryCloseFailures =
                     closeFailures
-                        .filter { exceptionalCause(it.second) == null }
+                        .filter { it.second.findExceptional() == null }
                         .map { (route, failure) -> sluggedClose(route, failure) }
                 var closeFailure: Throwable? = null
                 ordinaryCloseFailures.forEach { closeFailure = aggregate(closeFailure, it) }
@@ -485,7 +493,7 @@ class CommunicatorRouter internal constructor(
                         try {
                             route.process(this@CommunicatorRouter, message)
                         } catch (failure: Throwable) {
-                            val exceptional = exceptionalCause(failure)
+                            val exceptional = failure.findExceptional()
                             if (exceptional != null) {
                                 shutdownRouter()
                                 throw exceptional
@@ -551,7 +559,7 @@ class CommunicatorRouter internal constructor(
                 throw SluggedException.wrap(ROUTE_TRANSPORT_SLUG, cause)
             }
         } catch (failure: Throwable) {
-            rethrowExceptional(failure)
+            failure.rethrowExceptional()
         }
         shutdownRouter()
     }
@@ -615,7 +623,7 @@ class CommunicatorRouter internal constructor(
                     contract.requestCodec.decode(message.payload),
                 )
             } catch (original: Throwable) {
-                rethrowExceptional(original)
+                original.rethrowExceptional()
                 sendInternalFailure(
                     main,
                     contract.name,
@@ -719,7 +727,7 @@ class CommunicatorRouter internal constructor(
             try {
                 handler(main, requireNotNull(template.match(message.address)), requestCodec.decode(message.payload))
             } catch (original: Throwable) {
-                rethrowExceptional(original)
+                original.rethrowExceptional()
                 sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
                 throw original
             }
@@ -727,7 +735,7 @@ class CommunicatorRouter internal constructor(
             try {
                 policy.classify(response)
             } catch (original: Throwable) {
-                rethrowExceptional(original)
+                original.rethrowExceptional()
                 sendInternalFailure(main, name, responseTemplate, responseCodec, policy, slug, replyTo, original)
                 throw original
             }
@@ -752,7 +760,7 @@ class CommunicatorRouter internal constructor(
             annotateResponse(main, classification)
             sendReply(name, template, codec, slug, replyTo, response, classification)
         } catch (secondary: Throwable) {
-            rethrowExceptional(secondary)
+            secondary.rethrowExceptional()
             val wrapped = SluggedException.wrap(slug, secondary)
             if (wrapped !== original) original.addSuppressed(wrapped)
         }

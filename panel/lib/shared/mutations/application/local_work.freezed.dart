@@ -13,7 +13,7 @@ part of 'local_work.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$LocalWorkScope implements DiagnosticableTreeMixin {
+mixin _$LocalWorkScope {
 
  String? get userId; skir.RecordId? get organizationId;
 /// Create a copy of LocalWorkScope
@@ -23,13 +23,6 @@ mixin _$LocalWorkScope implements DiagnosticableTreeMixin {
 $LocalWorkScopeCopyWith<LocalWorkScope> get copyWith => _$LocalWorkScopeCopyWithImpl<LocalWorkScope>(this as LocalWorkScope, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as LocalWorkScope;
-  properties
-    ..add(DiagnosticsProperty('type', 'LocalWorkScope'))
-    ..add(DiagnosticsProperty('userId', _this.userId))..add(DiagnosticsProperty('organizationId', _this.organizationId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as LocalWorkScope;
   return 'LocalWorkScope(userId: ${_this.userId}, organizationId: ${_this.organizationId})';
 }
@@ -219,7 +212,7 @@ return $default(_that.userId,_that.organizationId);case _:
 /// @nodoc
 
 
-class _LocalWorkScope with DiagnosticableTreeMixin implements LocalWorkScope {
+class _LocalWorkScope implements LocalWorkScope {
   const _LocalWorkScope({required this.userId, required this.organizationId});
   
 
@@ -233,12 +226,6 @@ class _LocalWorkScope with DiagnosticableTreeMixin implements LocalWorkScope {
 _$LocalWorkScopeCopyWith<_LocalWorkScope> get copyWith => __$LocalWorkScopeCopyWithImpl<_LocalWorkScope>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'LocalWorkScope'))
-    ..add(DiagnosticsProperty('userId', userId))..add(DiagnosticsProperty('organizationId', organizationId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -252,7 +239,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'LocalWorkScope(userId: $userId, organizationId: $organizationId)';
 }
 
@@ -293,7 +280,7 @@ as skir.RecordId?,
 }
 
 /// @nodoc
-mixin _$EditorResourceScope implements DiagnosticableTreeMixin {
+mixin _$EditorResourceScope {
 
  skir.RecordId get organizationId; skir.RecordId? get realmId;
 /// Create a copy of EditorResourceScope
@@ -303,13 +290,6 @@ mixin _$EditorResourceScope implements DiagnosticableTreeMixin {
 $EditorResourceScopeCopyWith<EditorResourceScope> get copyWith => _$EditorResourceScopeCopyWithImpl<EditorResourceScope>(this as EditorResourceScope, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as EditorResourceScope;
-  properties
-    ..add(DiagnosticsProperty('type', 'EditorResourceScope'))
-    ..add(DiagnosticsProperty('organizationId', _this.organizationId))..add(DiagnosticsProperty('realmId', _this.realmId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -325,7 +305,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as EditorResourceScope;
   return 'EditorResourceScope(organizationId: ${_this.organizationId}, realmId: ${_this.realmId})';
 }
@@ -499,7 +479,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 /// @nodoc
 
 
-class _EditorResourceScope with DiagnosticableTreeMixin implements EditorResourceScope {
+class _EditorResourceScope implements EditorResourceScope {
   const _EditorResourceScope({required this.organizationId, this.realmId});
   
 
@@ -513,12 +493,6 @@ class _EditorResourceScope with DiagnosticableTreeMixin implements EditorResourc
 _$EditorResourceScopeCopyWith<_EditorResourceScope> get copyWith => __$EditorResourceScopeCopyWithImpl<_EditorResourceScope>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'EditorResourceScope'))
-    ..add(DiagnosticsProperty('organizationId', organizationId))..add(DiagnosticsProperty('realmId', realmId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -532,7 +506,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'EditorResourceScope(organizationId: $organizationId, realmId: $realmId)';
 }
 
@@ -573,7 +547,7 @@ as skir.RecordId?,
 }
 
 /// @nodoc
-mixin _$EditorResourceKey implements DiagnosticableTreeMixin {
+mixin _$EditorResourceKey {
 
  Object? get scope; Object get identity;
 /// Create a copy of EditorResourceKey
@@ -583,13 +557,6 @@ mixin _$EditorResourceKey implements DiagnosticableTreeMixin {
 $EditorResourceKeyCopyWith<EditorResourceKey> get copyWith => _$EditorResourceKeyCopyWithImpl<EditorResourceKey>(this as EditorResourceKey, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as EditorResourceKey;
-  properties
-    ..add(DiagnosticsProperty('type', 'EditorResourceKey'))
-    ..add(DiagnosticsProperty('scope', _this.scope))..add(DiagnosticsProperty('identity', _this.identity));
-}
 
 @override
 bool operator ==(Object other) {
@@ -605,7 +572,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as EditorResourceKey;
   return 'EditorResourceKey(scope: ${_this.scope}, identity: ${_this.identity})';
 }
@@ -777,7 +744,7 @@ return $default(_that.scope,_that.identity);case _:
 /// @nodoc
 
 
-class _EditorResourceKey with DiagnosticableTreeMixin implements EditorResourceKey {
+class _EditorResourceKey implements EditorResourceKey {
   const _EditorResourceKey({required this.scope, required this.identity});
   
 
@@ -791,12 +758,6 @@ class _EditorResourceKey with DiagnosticableTreeMixin implements EditorResourceK
 _$EditorResourceKeyCopyWith<_EditorResourceKey> get copyWith => __$EditorResourceKeyCopyWithImpl<_EditorResourceKey>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'EditorResourceKey'))
-    ..add(DiagnosticsProperty('scope', scope))..add(DiagnosticsProperty('identity', identity));
-}
 
 @override
 bool operator ==(Object other) {
@@ -810,7 +771,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'EditorResourceKey(scope: $scope, identity: $identity)';
 }
 

@@ -5,7 +5,7 @@ part of "local_work_session.dart";
 /// Expiry timers belong to the session and are created only for settled
 /// submissions. Resource and editor projections are rebuilt from their current
 /// sources, so stale snapshots cannot become authoritative.
-extension _LocalWorkSnapshot on LocalWorkSession {
+extension _LocalWorkSnapshot on ScopedWorkSession {
   void _publish() {
     if (_disposed) return;
     for (final submission in _submissions.values) {
@@ -19,16 +19,27 @@ extension _LocalWorkSnapshot on LocalWorkSession {
       }
     }
     final next = LocalWorkState(
-      resources: {
-        for (final entry in _resources.entries)
-          if (entry.value.source.hasWork)
-            entry.key: _resourceState(entry.key, entry.value),
+      entries: {
+        for (final owned in _drivers.values)
+          for (final entry in owned.driver.snapshot.entries)
+            if (entry.retained || entry.hasWork)
+              entry.id: entry.copyWith(
+                destination: owned.driver is DocumentWorkDriver
+                    ? entry.destination
+                    : owned.destination == null
+                    ? LocalWorkDestinationState.unavailable
+                    : owned.destination!.isCurrent
+                    ? LocalWorkDestinationState.current
+                    : LocalWorkDestinationState.available,
+              ),
       },
       editorValues: {
         for (final entry in _resources.entries)
           if (entry.value.source.editedPaths case final paths
               when paths.isNotEmpty)
-            if (entry.value.source.value(DataPath.root).valueOrNull
+            if (entry.value.source
+                    .value(skir.ValuePath(segments: []))
+                    .valueOrNull
                 case final value?)
               entry.key: LocalEditorValue(value: value, editedPaths: paths),
       },
@@ -38,19 +49,6 @@ extension _LocalWorkSnapshot on LocalWorkSession {
     _state = next;
     _changes.add(next);
   }
-
-  LocalWorkResourceState _resourceState(
-    EditorResourceKey key,
-    EditorResource resource,
-  ) => LocalWorkResourceState(
-    key: key,
-    label: resource.label,
-    commitPolicy: resource.source.commitPolicy,
-    savePhase: resource.source.saveState(DataPath.root).phase,
-    readOnly: resource.source.readOnly,
-    hasDiagnostics: resource.source.draftDiagnostics.isNotEmpty,
-    destination: resource.destinationState,
-  );
 
   LocalWorkSubmissionState _submissionState(
     MutationSubmission<Object?> submission,

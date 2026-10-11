@@ -25,4 +25,9 @@ tracing.workspace = true
 tracing-opentelemetry.workspace = true
 
 [dev-dependencies]
+anyhow = "1"
+async-nats = "0.49.1"
+futures-util = "0.3"
 rstest.workspace = true
+tempfile = "3"
+tokio = { version = "1", features = ["io-util", "macros", "process", "rt-multi-thread", "sync", "time"] }

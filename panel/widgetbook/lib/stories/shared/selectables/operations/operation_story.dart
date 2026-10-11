@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -24,7 +23,6 @@ Future<void> delayedSnack(
 }) async {
   await Future.delayed(delay);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(text), action: action));
+  ScaffoldMessenger.of(context)
+      .showSnackBar(SnackBar(content: Text(text), action: action));
 }

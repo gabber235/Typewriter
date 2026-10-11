@@ -1,7 +1,7 @@
 part of "services.dart";
 
-ResolvedTypeRef _draftType(String name) => ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel.host", name: name),
+skir.TypeDefinitionId _draftType(String name) => skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "panel.host", name: name),
   revision: 1,
 );
 
@@ -12,56 +12,122 @@ final _engineDraft = _draftType("Engine");
 final _engineDisabled = _draftType("EngineDisabled");
 final _engineEnabled = _draftType("EngineEnabled");
 
-PolymorphicValue _draftVariant(
-  ResolvedTypeRef type, [
-  Map<String, DataValue> fields = const {},
-]) => PolymorphicValue(concreteType: type, value: RecordValue(fields));
+skir.NamedTypeUse _draftUse(skir.TypeDefinitionId type) =>
+    skir.NamedTypeUse(definition: type, arguments: const []);
 
-TypeField _draftField(
+skir.DataValue _draftVariant(
+  skir.TypeDefinitionId type, [
+  Map<String, skir.DataValue> fields = const {},
+]) => skir.DataValue.createNamed(
+  actualType: _draftUse(type),
+  payload: skir.DataValue.createRecord(
+    fields: fields.entries.map(
+      (entry) => skir.FieldValue(name: entry.key, value: entry.value),
+    ),
+  ),
+);
+
+final _hostConfigurationDefinition = _draftType("HostConfiguration");
+final _hostConfigurationType = skir.TypeUse.wrapNamed(
+  _draftUse(_hostConfigurationDefinition),
+);
+
+skir.NamedTypeTemplate _draftTemplate(skir.TypeDefinitionId definition) =>
+    skir.NamedTypeTemplate(definition: definition, arguments: const []);
+
+skir.TypeTemplate _draftNamedTemplate(skir.TypeDefinitionId definition) =>
+    skir.TypeTemplate.wrapNamed(_draftTemplate(definition));
+
+final _hostConfigurationTextTemplate = skir.TypeTemplate.wrapScalar(
+  skir.ScalarKind.text,
+);
+
+skir.EffectiveFieldTemplate _draftField(
+  skir.TypeDefinitionId definition,
   String name,
-  ResolvedTypeRef type,
-  ResolvedTypeRef initial,
-) => TypeField(
-  name: name,
-  type: NamedType(type),
-  initialValue: _draftVariant(initial),
+  skir.TypeTemplate type,
+) => skir.EffectiveFieldTemplate(
+  key: name,
+  owner: skir.FieldOwner(definition: definition, name: name),
+  type: type,
+  rules: const [],
 );
 
-final _hostConfigurationType = RecordType(
-  fields: {
-    "realm": _draftField("realm", _realmDraft, _realmDisabled),
-    "engine": _draftField("engine", _engineDraft, _engineDisabled),
-  },
+skir.PublishedType _draftPublished(
+  skir.TypeDefinitionId definition, {
+  bool abstract = false,
+  List<skir.NamedTypeTemplate> parents = const [],
+  List<skir.EffectiveFieldTemplate> fields = const [],
+}) => skir.PublishedType(
+  definition: skir.TypeDefinition(
+    id: definition,
+    parameters: const [],
+    representation: skir.RepresentationTemplate.createRecord(
+      fields: fields.map(
+        (field) => skir.FieldDeclaration(
+          owner: field.owner,
+          type: field.type,
+          overrides: const [],
+          hasConstructorDefault: false,
+        ),
+      ),
+      abstract_: abstract,
+    ),
+    parents: parents,
+  ),
+  status: skir.DeclarationStatus.ready,
+  effectiveFields: fields,
+  ancestorTemplates: parents,
+  display: null,
 );
 
-final _hostConfigurationDefinitions = [
-  for (final type in [_realmDraft, _engineDraft])
-    TypeDefinition(id: type, kind: NominalTypeKind.sealedAbstract),
-  for (final (type, parent) in [
-    (_realmDisabled, _realmDraft),
-    (_engineDisabled, _engineDraft),
-  ])
-    TypeDefinition(
-      id: type,
-      kind: NominalTypeKind.concrete,
-      parents: [parent],
-      representation: const RecordType(fields: {}),
+final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
+  generation: skir.CatalogGeneration(value: "panel.host.configuration"),
+  types: [
+    _draftPublished(
+      _hostConfigurationDefinition,
+      fields: [
+        _draftField(
+          _hostConfigurationDefinition,
+          "realm",
+          _draftNamedTemplate(_realmDraft),
+        ),
+        _draftField(
+          _hostConfigurationDefinition,
+          "engine",
+          _draftNamedTemplate(_engineDraft),
+        ),
+      ],
     ),
-  TypeDefinition(
-    id: _realmHosted,
-    kind: NominalTypeKind.concrete,
-    parents: [_realmDraft],
-    representation: RecordType(fields: {"target": _stringField("target")}),
-  ),
-  TypeDefinition(
-    id: _engineEnabled,
-    kind: NominalTypeKind.concrete,
-    parents: [_engineDraft],
-    representation: RecordType(
-      fields: {
-        "target": _stringField("target"),
-        "realm": _stringField("realm"),
-      },
+    _draftPublished(_realmDraft, abstract: true),
+    _draftPublished(_realmDisabled, parents: [_draftTemplate(_realmDraft)]),
+    _draftPublished(
+      _realmHosted,
+      parents: [_draftTemplate(_realmDraft)],
+      fields: [
+        _draftField(_realmHosted, "target", _hostConfigurationTextTemplate),
+      ],
     ),
-  ),
-];
+    _draftPublished(_engineDraft, abstract: true),
+    _draftPublished(_engineDisabled, parents: [_draftTemplate(_engineDraft)]),
+    _draftPublished(
+      _engineEnabled,
+      parents: [_draftTemplate(_engineDraft)],
+      fields: [
+        _draftField(_engineEnabled, "target", _hostConfigurationTextTemplate),
+        _draftField(_engineEnabled, "realm", _hostConfigurationTextTemplate),
+      ],
+    ),
+  ],
+  presentations: const [],
+  presentationMaterials: const [],
+  configuration: const [],
+  capabilities: const [],
+  relations: const [],
+  endpointBindings: const [],
+  resourceDefinitions: const [],
+  recommendations: const [],
+  roleFallbacks: const [],
+  initialization: const [],
+  diagnostics: const [],
+).asTrustedLocalCatalog();

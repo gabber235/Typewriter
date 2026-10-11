@@ -44,7 +44,7 @@ class Service private constructor(
     override val organization: skirout.kernel.v1.record_id.RecordId?,
     override val registration: skirout.service.v1.service.ServiceRegistration?,
     override val state: skirout.service.v1.service.ServiceState?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.Service>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.Service>? =
         null,
 ): skirout.service.v1.service.Service_OrMutable {
     constructor(
@@ -133,7 +133,7 @@ class Service private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.service.Service.serializerImpl,
+            _SerializerRegistry.ServiceSerializerImpl,
         )
     }
 
@@ -174,7 +174,7 @@ class Service private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as-is.
+         * If the value of [serviceId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -242,103 +242,11 @@ class Service private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/service.skir:Service",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [Service] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceSerializer;
 
         /** Describes the [Service] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "service_id",
-                "serviceId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.serviceId },
-                { mut, v -> mut.serviceId = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "name",
-                "name",
-                2,
-                build.skir.Serializers.string,
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.addField(
-                "role",
-                "role",
-                3,
-                skirout.service.v1.service.ServiceRole.serializer,
-                "",
-                { it.role },
-                { mut, v -> mut.role = v },
-            );
-            serializerImpl.addField(
-                "created_at",
-                "createdAt",
-                4,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.createdAt },
-                { mut, v -> mut.createdAt = v },
-            );
-            serializerImpl.addField(
-                "organization",
-                "organization",
-                5,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.organization },
-                { mut, v -> mut.organization = v },
-            );
-            serializerImpl.addField(
-                "registration",
-                "registration",
-                6,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.service.ServiceRegistration.serializer,
-                ),
-                "",
-                { it.registration },
-                { mut, v -> mut.registration = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                7,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.service.ServiceState.serializer,
-                ),
-                "",
-                { it.state },
-                { mut, v -> mut.state = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -409,7 +317,7 @@ sealed class ServiceRole private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.service.ServiceRole._serializerImpl,
+            _SerializerRegistry.ServiceRoleSerializerImpl,
         )
     }
 
@@ -446,53 +354,11 @@ sealed class ServiceRole private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.service.ServiceRole, Unknown>(
-                recordId = "service/v1/service.skir:ServiceRole",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ServiceRole] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceRoleSerializer;
 
         /** Describes the [ServiceRole] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "host",
-                    Kind.HOST_WRAPPER.ordinal,
-                    skirout.service.v1.service.ServiceRole.Host.serializer,
-                    "",
-                    { HostWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "custom",
-                    Kind.CUSTOM_WRAPPER.ordinal,
-                    skirout.service.v1.service.ServiceRole.Custom.serializer,
-                    "",
-                    { CustomWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceRoleSerializerImpl.typeDescriptor;
     }
 
     sealed interface Host_OrMutable {
@@ -505,7 +371,7 @@ sealed class ServiceRole private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Host private constructor(
         override val version: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Host>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Host>? =
             null,
     ): skirout.service.v1.service.ServiceRole.Host_OrMutable {
         constructor(
@@ -552,7 +418,7 @@ sealed class ServiceRole private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.service.ServiceRole.Host.serializerImpl,
+                _SerializerRegistry.ServiceRole_HostSerializerImpl,
             )
         }
 
@@ -596,34 +462,11 @@ sealed class ServiceRole private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/service.skir:ServiceRole.Host",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Host] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ServiceRole_HostSerializer;
 
             /** Describes the [Host] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "version",
-                    "version",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.version },
-                    { mut, v -> mut.version = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ServiceRole_HostSerializerImpl.typeDescriptor;
         }
     }
 
@@ -639,7 +482,7 @@ sealed class ServiceRole private constructor() {
     class Custom private constructor(
         override val name: kotlin.String,
         override val version: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Custom>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRole.Custom>? =
             null,
     ): skirout.service.v1.service.ServiceRole.Custom_OrMutable {
         constructor(
@@ -692,7 +535,7 @@ sealed class ServiceRole private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.service.ServiceRole.Custom.serializerImpl,
+                _SerializerRegistry.ServiceRole_CustomSerializerImpl,
             )
         }
 
@@ -743,43 +586,11 @@ sealed class ServiceRole private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/service.skir:ServiceRole.Custom",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Custom] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ServiceRole_CustomSerializer;
 
             /** Describes the [Custom] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "name",
-                    "name",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.name },
-                    { mut, v -> mut.name = v },
-                );
-                serializerImpl.addField(
-                    "version",
-                    "version",
-                    1,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.version },
-                    { mut, v -> mut.version = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ServiceRole_CustomSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -818,10 +629,6 @@ sealed class ServiceStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.ONLINE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object OFFLINE : skirout.service.v1.service.ServiceStatus() {
@@ -834,10 +641,6 @@ sealed class ServiceStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.OFFLINE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.service.ServiceStatus>? get() = null;
@@ -847,7 +650,7 @@ sealed class ServiceStatus private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.service.ServiceStatus._serializerImpl,
+            _SerializerRegistry.ServiceStatusSerializerImpl,
         )
     }
 
@@ -858,51 +661,11 @@ sealed class ServiceStatus private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.service.ServiceStatus, Unknown>(
-                recordId = "service/v1/service.skir:ServiceStatus",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ServiceStatus] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceStatusSerializer;
 
         /** Describes the [ServiceStatus] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            ONLINE;
-            OFFLINE;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "online",
-                    Kind.ONLINE_CONST.ordinal,
-                    "",
-                    ONLINE,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "offline",
-                    Kind.OFFLINE_CONST.ordinal,
-                    "",
-                    OFFLINE,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceStatusSerializerImpl.typeDescriptor;
     }
 }
 
@@ -918,7 +681,7 @@ sealed interface ServiceState_OrMutable {
 class ServiceState private constructor(
     override val status: skirout.service.v1.service.ServiceStatus,
     override val lastSeen: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceState>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceState>? =
         null,
 ): skirout.service.v1.service.ServiceState_OrMutable {
     constructor(
@@ -971,7 +734,7 @@ class ServiceState private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.service.ServiceState.serializerImpl,
+            _SerializerRegistry.ServiceStateSerializerImpl,
         )
     }
 
@@ -1022,43 +785,11 @@ class ServiceState private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/service.skir:ServiceState",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceState] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceStateSerializer;
 
         /** Describes the [ServiceState] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "status",
-                "status",
-                0,
-                skirout.service.v1.service.ServiceStatus.serializer,
-                "",
-                { it.status },
-                { mut, v -> mut.status = v },
-            );
-            serializerImpl.addField(
-                "last_seen",
-                "lastSeen",
-                1,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.lastSeen },
-                { mut, v -> mut.lastSeen = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceStateSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1074,7 +805,7 @@ sealed interface ServiceRegistration_OrMutable {
 class ServiceRegistration private constructor(
     override val token: kotlin.String,
     override val expiresAt: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRegistration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.service.ServiceRegistration>? =
         null,
 ): skirout.service.v1.service.ServiceRegistration_OrMutable {
     constructor(
@@ -1127,7 +858,7 @@ class ServiceRegistration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.service.ServiceRegistration.serializerImpl,
+            _SerializerRegistry.ServiceRegistrationSerializerImpl,
         )
     }
 
@@ -1178,42 +909,287 @@ class ServiceRegistration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/service.skir:ServiceRegistration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceRegistration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceRegistrationSerializer;
 
         /** Describes the [ServiceRegistration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ServiceRegistrationSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "token",
-                "token",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.token },
-                { mut, v -> mut.token = v },
-            );
-            serializerImpl.addField(
-                "expires_at",
-                "expiresAt",
-                1,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.expiresAt },
-                { mut, v -> mut.expiresAt = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+private object _SerializerRegistry {
+    val ServiceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/service.skir:Service",
+        doc = "",
+        defaultInstance = skirout.service.v1.service.Service.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.service.Service.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceSerializer = build.skir.internal.makeSerializer(ServiceSerializerImpl);
+
+    val ServiceRegistrationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/service.skir:ServiceRegistration",
+        doc = "",
+        defaultInstance = skirout.service.v1.service.ServiceRegistration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.service.ServiceRegistration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceRegistrationSerializer = build.skir.internal.makeSerializer(ServiceRegistrationSerializerImpl);
+
+    val ServiceRoleSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.service.ServiceRole, skirout.service.v1.service.ServiceRole.Unknown>(
+            recordId = "service/v1/service.skir:ServiceRole",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.service.ServiceRole.Kind.values().size,
+            unknownInstance = skirout.service.v1.service.ServiceRole.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.service.ServiceRole.Unknown(skirout.service.v1.service.ServiceRole.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ServiceRoleSerializer = build.skir.internal.makeSerializer(ServiceRoleSerializerImpl);
+
+    val ServiceRole_CustomSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/service.skir:ServiceRole.Custom",
+        doc = "",
+        defaultInstance = skirout.service.v1.service.ServiceRole.Custom.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.service.ServiceRole.Custom.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceRole_CustomSerializer = build.skir.internal.makeSerializer(ServiceRole_CustomSerializerImpl);
+
+    val ServiceRole_HostSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/service.skir:ServiceRole.Host",
+        doc = "",
+        defaultInstance = skirout.service.v1.service.ServiceRole.Host.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.service.ServiceRole.Host.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceRole_HostSerializer = build.skir.internal.makeSerializer(ServiceRole_HostSerializerImpl);
+
+    val ServiceStateSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/service.skir:ServiceState",
+        doc = "",
+        defaultInstance = skirout.service.v1.service.ServiceState.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.service.ServiceState.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceStateSerializer = build.skir.internal.makeSerializer(ServiceStateSerializerImpl);
+
+    val ServiceStatusSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.service.ServiceStatus, skirout.service.v1.service.ServiceStatus.Unknown>(
+            recordId = "service/v1/service.skir:ServiceStatus",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.service.ServiceStatus.Kind.values().size,
+            unknownInstance = skirout.service.v1.service.ServiceStatus.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.service.ServiceStatus.Unknown(skirout.service.v1.service.ServiceStatus.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ServiceStatusSerializer = build.skir.internal.makeSerializer(ServiceStatusSerializerImpl);
+
+    init {
+        ServiceSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        ServiceSerializerImpl.addField(
+            "revision",
+            "revision",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.revision },
+            { mut, v -> mut.revision = v },
+        );
+        ServiceSerializerImpl.addField(
+            "name",
+            "name",
+            2,
+            build.skir.Serializers.string,
+            "",
+            { it.name },
+            { mut, v -> mut.name = v },
+        );
+        ServiceSerializerImpl.addField(
+            "role",
+            "role",
+            3,
+            _SerializerRegistry.ServiceRoleSerializer,
+            "",
+            { it.role },
+            { mut, v -> mut.role = v },
+        );
+        ServiceSerializerImpl.addField(
+            "created_at",
+            "createdAt",
+            4,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.createdAt },
+            { mut, v -> mut.createdAt = v },
+        );
+        ServiceSerializerImpl.addField(
+            "organization",
+            "organization",
+            5,
+            build.skir.Serializers.optional(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.organization },
+            { mut, v -> mut.organization = v },
+        );
+        ServiceSerializerImpl.addField(
+            "registration",
+            "registration",
+            6,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ServiceRegistrationSerializer,
+            ),
+            "",
+            { it.registration },
+            { mut, v -> mut.registration = v },
+        );
+        ServiceSerializerImpl.addField(
+            "state",
+            "state",
+            7,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ServiceStateSerializer,
+            ),
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        ServiceSerializerImpl.finalizeStruct();
+
+        ServiceRegistrationSerializerImpl.addField(
+            "token",
+            "token",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.token },
+            { mut, v -> mut.token = v },
+        );
+        ServiceRegistrationSerializerImpl.addField(
+            "expires_at",
+            "expiresAt",
+            1,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.expiresAt },
+            { mut, v -> mut.expiresAt = v },
+        );
+        ServiceRegistrationSerializerImpl.finalizeStruct();
+
+        ServiceRoleSerializerImpl.addWrapperVariant(
+            1,
+            "host",
+            skirout.service.v1.service.ServiceRole.Kind.HOST_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceRole_HostSerializer,
+            "",
+            { skirout.service.v1.service.ServiceRole.HostWrapper(it) },
+            { it.value },
+        );
+        ServiceRoleSerializerImpl.addWrapperVariant(
+            2,
+            "custom",
+            skirout.service.v1.service.ServiceRole.Kind.CUSTOM_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceRole_CustomSerializer,
+            "",
+            { skirout.service.v1.service.ServiceRole.CustomWrapper(it) },
+            { it.value },
+        );
+        ServiceRoleSerializerImpl.finalizeEnum();
+
+        ServiceRole_CustomSerializerImpl.addField(
+            "name",
+            "name",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.name },
+            { mut, v -> mut.name = v },
+        );
+        ServiceRole_CustomSerializerImpl.addField(
+            "version",
+            "version",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.version },
+            { mut, v -> mut.version = v },
+        );
+        ServiceRole_CustomSerializerImpl.finalizeStruct();
+
+        ServiceRole_HostSerializerImpl.addField(
+            "version",
+            "version",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.version },
+            { mut, v -> mut.version = v },
+        );
+        ServiceRole_HostSerializerImpl.finalizeStruct();
+
+        ServiceStateSerializerImpl.addField(
+            "status",
+            "status",
+            0,
+            _SerializerRegistry.ServiceStatusSerializer,
+            "",
+            { it.status },
+            { mut, v -> mut.status = v },
+        );
+        ServiceStateSerializerImpl.addField(
+            "last_seen",
+            "lastSeen",
+            1,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.lastSeen },
+            { mut, v -> mut.lastSeen = v },
+        );
+        ServiceStateSerializerImpl.finalizeStruct();
+
+        ServiceStatusSerializerImpl.addConstantVariant(
+            1,
+            "online",
+            skirout.service.v1.service.ServiceStatus.Kind.ONLINE_CONST.ordinal,
+            "",
+            skirout.service.v1.service.ServiceStatus.ONLINE,
+        );
+        ServiceStatusSerializerImpl.addConstantVariant(
+            2,
+            "offline",
+            skirout.service.v1.service.ServiceStatus.Kind.OFFLINE_CONST.ordinal,
+            "",
+            skirout.service.v1.service.ServiceStatus.OFFLINE,
+        );
+        ServiceStatusSerializerImpl.finalizeEnum();
     }
 }

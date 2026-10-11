@@ -1,308 +1,348 @@
-import "dart:typed_data";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
-const _batchSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.batch.apply";
-const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
+import "../../../../../../../../../support/test_utils.dart";
 
 void main() {
-  test("page creation input builds and submits one page", () async {
-    final nats = FakeNatsClient();
-    late skir.ApplyAuthoringBatchRequest submitted;
-    nats.registerHandler(_batchSubject, (bytes) {
-      submitted = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(bytes);
-      return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
-        skir.ApplyAuthoringBatchResponse.createApplied(
-          sequence: 1,
-          batchId: submitted.batchId,
-          changes: const [],
-          indirectlyAffectedResources: const [],
-        ),
-      );
-    });
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
+  test("page copying can clear its Book owner", () {
+    final page = Page(
+      pageId: _page,
+      bookId: _book,
+      name: "Page",
+      configuration: skir.TypeSelection.unknown,
+      chapter: "",
+      priority: 0,
     );
-    final provider = authoringSessionProvider(_organization, _realm);
-    final subscription = container.listen(provider, (_, _) {});
 
-    final page = await container
-        .read(provider.notifier)
-        .createPageFromInput(
-          _book,
-          const PageCreationInput(
-            name: "Created",
-            kind: PageKindRef(id: "test", revision: 2),
-            chapter: "chapter",
-            priority: 3,
-          ),
-        );
-
-    final operation =
-        submitted.operations.single
-            as skir.AuthoringOperation_createPageWrapper;
-    expect(operation.value.page.id, page.pageId);
-    expect(operation.value.page.book, _book);
-    expect(operation.value.page.name, "Created");
-    expect(operation.value.page.kind.revision, 2);
-    expect(operation.value.page.chapter, "chapter");
-    expect(operation.value.page.priority, 3);
-
-    subscription.close();
-    container.dispose();
-    await nats.dispose();
+    expect(page.copyWith(bookId: null).bookId, isNull);
   });
 
-  test(
-    "metadata commands submit without a page provider or snapshot",
-    () async {
-      final nats = FakeNatsClient();
-      final submitted = <skir.ApplyAuthoringBatchRequest>[];
-      nats.registerHandler(_batchSubject, (bytes) {
-        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
-          bytes,
-        );
-        submitted.add(request);
-        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
-          skir.ApplyAuthoringBatchResponse.createApplied(
-            sequence: submitted.length,
-            batchId: request.batchId,
-            changes: const [],
-            indirectlyAffectedResources: const [],
-          ),
-        );
+  testWidgets(
+    "sidebar Edit keyboard action inspects the page without toggling it",
+    (tester) async {
+      final image = await tester.runAsync(() async {
+        final recorder = PictureRecorder();
+        Canvas(recorder);
+        return recorder.endRecording().toImage(1, 1);
       });
-      final container = ProviderContainer.test(
+      final avatar = NetworkImage(mockUserInfo.avatarUrl!);
+      PaintingBinding.instance.imageCache.putIfAbsent(
+        avatar,
+        () => OneFrameImageStreamCompleter(
+          Future.value(ImageInfo(image: image!)),
+        ),
+      );
+      addTearDown(() => PaintingBinding.instance.imageCache.evict(avatar));
+      await tester.binding.setSurfaceSize(const Size(1200, 1200));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final state = _state(chapter: skir.DataValue.unfilled);
+      final page = Page.fromAuthoring(state.snapshot!.resources.single);
+      late WidgetRef ref;
+      await tester.pumpTestApp(
         overrides: [
-          natsProvider.overrideWithValue(nats),
-          panelTelemetryProvider.overrideWithValue(
-            const AsyncData(NoopPanelTelemetry()),
+          ...appearanceProviderOverrides(),
+          ...authProviderOverrides(),
+          organizationIdProvider.overrideWithValue(_organization),
+          realmIdProvider.overrideWithValue(_realm),
+          bookIdProvider.overrideWith((ref) => _book),
+          pageIdProvider.overrideWith((ref) => null),
+          ...authoringFixtureOverrides(
+            document: fixtureAuthoringDocument(
+              books: [
+                Book(
+                  bookId: _book,
+                  title: "Book",
+                  color: Colors.blue,
+                  icon: "mdi:book",
+                  tagIds: const [],
+                ),
+              ],
+              pages: [page.copyWith(bookId: _book)],
+            ),
           ),
         ],
+        child: Consumer(
+          builder: (context, value, child) {
+            ref = value;
+            value.watch(selectionProvider);
+            return const Scaffold(
+              body: SizedBox(width: 320, child: BookSidebarContent()),
+            );
+          },
+        ),
       );
-      final provider = authoringSessionProvider(_organization, _realm);
-      final subscription = container.listen(provider, (_, _) {});
-
-      final session = container.read(provider.notifier);
-      final nameResult = await session.patchPage(
-        id: _page,
-        name: skir.StringChange(expected: "Initial", value: "Renamed"),
-      );
-      final priorityResult = await session.patchPage(
-        id: _page,
-        priority: skir.Int32Change(expected: 2, value: 5),
-      );
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+      FocusManager.instance.primaryFocus?.unfocus();
+      for (var tab = 0; tab < 12; tab++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+        if (ref
+            .read(actionShortcutsProvider)
+            .containsKey("book_sidebar_page_edit")) {
+          break;
+        }
+      }
       expect(
-        nameResult,
-        isA<skir.ApplyAuthoringBatchResponse_appliedWrapper>(),
+        ref.read(actionShortcutsProvider).containsKey("book_sidebar_page_edit"),
+        isTrue,
       );
-      expect(
-        priorityResult,
-        isA<skir.ApplyAuthoringBatchResponse_appliedWrapper>(),
-      );
-      final rename =
-          submitted.first.operations.single
-              as skir.AuthoringOperation_patchPageWrapper;
-
-      final priority =
-          submitted.last.operations.single
-              as skir.AuthoringOperation_patchPageWrapper;
-      expect(rename.value.name?.expected, "Initial");
-      expect(rename.value.priority, isNull);
-      expect(priority.value.priority?.expected, 2);
-      expect(priority.value.priority?.value, 5);
-      expect(priority.value.name, isNull);
-
-      expect(
-        nats.requests.map((request) => request.subject),
-        everyElement(_batchSubject),
-      );
-      subscription.close();
-      container.dispose();
-      await nats.dispose();
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(ref.read(selectionProvider), [
+        AuthoringResourceIdentifier(
+          organizationId: _organization,
+          realmId: _realm,
+          resourceId: _page,
+        ),
+      ]);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+      await tester.pump();
+      expect(ref.read(selectionProvider), hasLength(1));
+      ref.read(selectionProvider.notifier).selectAll([]);
+      await tester.pump();
+      await tester.longPress(find.byType(AuthoringSubjectRole));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Edit"));
+      await tester.pumpAndSettle();
+      expect(ref.read(selectionProvider), [
+        AuthoringResourceIdentifier(
+          organizationId: _organization,
+          realmId: _realm,
+          resourceId: _page,
+        ),
+      ]);
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
     },
   );
 
-  test("page metadata rejection retains the draft for review", () async {
-    final nats = FakeNatsClient()
-      ..registerHandler(_snapshotSubject, (_) => _snapshot("Initial", 1))
-      ..registerHandler(_batchSubject, (bytes) {
-        final request = skir.ApplyAuthoringBatchRequest.serializer.fromBytes(
-          bytes,
-        );
-        final patch =
-            (request.operations.single
-                    as skir.AuthoringOperation_patchPageWrapper)
-                .value;
-        expect(patch.name?.expected, "Initial");
-        expect(patch.name?.value, "Retained");
-        expect(patch.priority, isNull);
-        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
-          skir.ApplyAuthoringBatchResponse.createInvalid(
-            diagnostics: [
-              skir.AuthoringDiagnostic(
-                code: "invalid",
-                message: "Rejected",
-                resource: null,
-                path: null,
-              ),
-            ],
-          ),
-        );
-      });
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
+  testWidgets(
+    "Edit selects the scoped page and repeated Edit keeps it selected",
+    (tester) async {
+      final harness = await _mount(tester, _state());
+      harness.ref.inspectPage(_page);
+      await tester.pump();
+      final expected = AuthoringResourceIdentifier(
+        organizationId: _organization,
+        realmId: _realm,
+        resourceId: _page,
+      );
+      expect(harness.ref.read(selectionProvider), [expected]);
+      final resolved =
+          harness.ref.read(selectedProvider).requireValue.single
+              as AuthoringSelectableResource;
+      expect(resolved.id, expected);
+      expect(resolved.resource.id, _page);
+      harness.ref.inspectPage(_page);
+      await tester.pump();
+      expect(harness.ref.read(selectionProvider), [expected]);
+      expect(harness.transport.requests, isEmpty);
+    },
+  );
+
+  for (final chapter in [
+    skir.DataValue.unfilled,
+    skir.DataValue.wrapStringValue(""),
+    _namedChapter("old"),
+  ]) {
+    testWidgets("chapter changes preserve the exact authored expectation", (
+      tester,
+    ) async {
+      final harness = await _mount(tester, _state(chapter: chapter));
+      final result = harness.workspace.edit(
+        label: "Move page to chapter",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) => edit.setFieldPayload(
+          resource: _page,
+          fields: ["chapter"],
+          payload: skir.DataValue.wrapStringValue("new"),
         ),
-      ],
-    );
-    final workspace = LocalWorkSession();
-    final provider = authoringSessionProvider(_organization, _realm);
-    final subscription = container.listen(provider, (_, _) {});
-    final result =
-        await PageEditing(
-          container.read(provider.notifier),
-          workspace,
-          container
-              .read(resourceRepositoriesProvider)
-              .authoring(_organization, _realm),
-        ).edit({
-          _page: {DataPath.root.field("name"): const StringValue("Retained")},
-        });
+      ) as AuthoringEditStaged;
+      unawaited(harness.workspace.save(result.group));
+      await tester.pump();
+      final submitted = harness.transport.requests.single.edit;
+      final set = submitted.intents.single as skir.EditIntent_setValueWrapper;
+      expect(set.value.value.authoredString, "new");
+      expect(set.value.value.authoredActualType, chapter.authoredActualType);
+      expect(
+        submitted.expectations
+            .whereType<skir.EditExpectation_valueWrapper>()
+            .single
+            .value
+            .expected,
+        chapter,
+      );
+      expect(
+        harness.workspace.document
+            .resource(_page)!
+            .authoredField("chapter")!
+            .authoredString,
+        "new",
+      );
+    });
+  }
 
-    expect(result, isA<MutationInvalid>());
-    final owner = workspace.resources.values.single.source;
-    expect(
-      owner.value(DataPath.root.field("name")).valueOrNull,
-      const StringValue("Retained"),
+  testWidgets("chapter batch is atomic when a participating page is missing", (
+    tester,
+  ) async {
+    final harness = await _mount(tester, _state());
+    final result = harness.workspace.edit(
+      label: "Rename chapter",
+      apply: (edit) {
+        for (final id in [_page, _second]) {
+          edit.setFieldPayload(
+            resource: id,
+            fields: ["chapter"],
+            payload: skir.DataValue.wrapStringValue("new"),
+          );
+        }
+      },
     );
+    expect(result, isA<AuthoringEditRejected>());
     expect(
-      owner.document.confirmedValue
-          .readEditorValue(DataPath.root.field("name"))
-          .valueOrNull,
-      const StringValue("Initial"),
+      harness.workspace.document
+          .resource(_page)!
+          .authoredField("chapter")!
+          .authoredString,
+      "old",
     );
-    workspace.dispose();
-    subscription.close();
-
-    container.dispose();
-    await nats.dispose();
+    expect(harness.workspace.state.groups, isEmpty);
   });
 
-  test("rejected page update preserves a concurrent remote value", () async {
-    final nats = FakeNatsClient();
-    nats
-      ..registerHandler(_snapshotSubject, (_) => _snapshot("Initial", 1))
-      ..registerHandler(_batchSubject, (_) {
-        nats.emitMessageOnSubject(
-          _eventSubject,
-          skir.AuthoringChanged.serializer.toBytes(
-            skir.AuthoringChanged(
-              sequence: 2,
-              batchId: "remote-2",
-              changes: [
-                skir.AuthoringResourceChange.wrapUpsertPage(
-                  _wirePage("Remote"),
-                ),
-              ],
-              indirectlyAffectedResources: const [],
-            ),
-          ),
-        );
-        return skir.ApplyAuthoringBatchResponse.serializer.toBytes(
-          skir.ApplyAuthoringBatchResponse.createInvalid(
-            diagnostics: [
-              skir.AuthoringDiagnostic(
-                code: "invalid",
-                message: "Rejected",
-                resource: null,
-                path: null,
-              ),
-            ],
-          ),
-        );
-      });
-    final container = ProviderContainer.test(
-      overrides: [
-        natsProvider.overrideWithValue(nats),
-        organizationIdProvider.overrideWithValue(_organization),
-        realmIdProvider.overrideWithValue(_realm),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
-        ),
-      ],
+  testWidgets("chapter batch groups every participating resource", (
+    tester,
+  ) async {
+    final harness = await _mount(
+      tester,
+      _state(second: skir.DataValue.wrapStringValue("old")),
     );
-    final provider = canonicalPageProvider(_page);
-    final subscription = container.listen(provider, (_, _) {});
-    await container.read(provider.future);
-
-    final result = await container
-        .read(authoringSessionProvider(_organization, _realm).notifier)
-        .patchPage(
-          id: _page,
-          name: skir.StringChange(expected: "Initial", value: "Local"),
-        );
-    expect(result, isA<skir.ApplyAuthoringBatchResponse_invalidWrapper>());
-
-    expect(container.read(provider).requireValue.name, "Remote");
-    expect(
-      container.read(authoringSessionProvider(_organization, _realm)).sequence,
-      2,
-    );
-
-    subscription.close();
-    container.dispose();
-    await nats.dispose();
+    final result = harness.workspace.edit(
+      label: "Rename chapter",
+      policy: EditorCommitPolicy.applyResource,
+      apply: (edit) {
+        for (final id in [_page, _second]) {
+          edit.setFieldPayload(
+            resource: id,
+            fields: ["chapter"],
+            payload: skir.DataValue.wrapStringValue("new"),
+          );
+        }
+      },
+    ) as AuthoringEditStaged;
+    expect(harness.workspace.state.groups[result.group]!.resources, {
+      _page,
+      _second,
+    });
+    unawaited(harness.workspace.save(result.group));
+    await tester.pump();
+    expect(harness.transport.requests.single.edit.intents, hasLength(2));
   });
 }
 
-final _organization = recordId("organization:org1");
-final _realm = recordId("service:realm1");
-final _book = recordId("book:book1");
-final _page = recordId("page:page1");
+Future<_Harness> _mount(
+  WidgetTester tester,
+  AuthoringSessionState state,
+) async {
+  final transport = ScriptedAuthoringTransport(
+    AsyncData(state.confirmedDocument!),
+  );
+  addTearDown(transport.dispose);
+  final harness = _Harness(transport);
+  await tester.pumpTestApp(
+    overrides: [
+      organizationIdProvider.overrideWithValue(_organization),
+      realmIdProvider.overrideWithValue(_realm),
+      ...authoringFixtureOverrides(initial: state, transport: transport),
+    ],
+    child: Consumer(
+      builder: (context, ref, _) {
+        harness.ref = ref;
+        ref
+          ..watch(selectionProvider)
+          ..watch(selectedProvider);
+        harness.workspace = ref.watch(
+          authoringWorkspaceProvider(
+            AuthoringScope(organizationId: _organization, realmId: _realm),
+          ),
+        );
+        return const SizedBox();
+      },
+    ),
+  );
+  return harness;
+}
 
-skir.Page _wirePage(String name) => skir.Page(
-  id: _page,
-  book: _book,
-  name: name,
-  kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
-  chapter: "",
-  priority: 0,
+final class _Harness {
+  _Harness(this.transport);
+  final ScriptedAuthoringTransport transport;
+  late WidgetRef ref;
+  late AuthoringWorkspace workspace;
+}
+
+AuthoringSessionState _state({
+  skir.DataValue? chapter,
+  skir.DataValue? second,
+  bool missingChapter = false,
+}) => AuthoringSessionState(
+  catalog: receivedCheckedEditorCatalog(generation: _generation),
+  snapshot: skir.AuthoringState(
+    generation: _generation,
+    resources: [
+      _resource(
+        _page,
+        chapter ?? skir.DataValue.wrapStringValue("old"),
+        missingChapter: missingChapter,
+      ),
+      if (second != null) _resource(_second, second),
+    ],
+    links: const [],
+    findings: const [],
+  ),
 );
 
-Uint8List _snapshot(String name, int sequence) =>
-    skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-      skir.GetAuthoringSnapshotResponse.createSuccess(
-        sequence: sequence,
-        slices: [
-          skir.AuthoringSnapshotSlice.createPage(
-            pageId: _page,
-            document: skir.PageDocument(
-              page: _wirePage(name),
-              elements: const [],
-              references: const [],
-              crossPageTargets: const [],
-              crossPageSources: const [],
-              diagnostics: const [],
-              compileStatus: skir.PageCompileStatus.notCompiled,
-            ),
+skir.AuthoringResource _resource(
+  skir.ResourceId id,
+  skir.DataValue chapter, {
+  bool missingChapter = false,
+}) => skir.AuthoringResource(
+  id: id,
+  definition: skir.ResourceDefinitionId(value: "typewriter.page"),
+  content: skir.AuthoringRecord(
+    configuration: skir.TypeSelection.unknown,
+    fields: [
+      skir.FieldValue(name: "name", value: skir.DataValue.unfilled),
+      if (!missingChapter) skir.FieldValue(name: "chapter", value: chapter),
+      skir.FieldValue(name: "priority", value: skir.DataValue.unfilled),
+    ],
+  ),
+);
+
+skir.DataValue _namedChapter(String text, {String type = "Chapter"}) =>
+    skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: skir.TypeDefinitionId(
+          typeId: skir.TypeId.wrapQualified(
+            skir.QualifiedTypeId(namespace: "test", name: type),
           ),
-        ],
+          revision: 1,
+        ),
+        arguments: const [],
       ),
+      payload: skir.DataValue.wrapStringValue(text),
     );
+
+final _page = skir.ResourceId(value: "page:test");
+final _second = skir.ResourceId(value: "page:second");
+final _generation = skir.CatalogGeneration(value: "catalog:page");
+final _organization = skir.recordId("organization:test");
+final _realm = skir.recordId("realm:test");
+
+final _book = skir.ResourceId(value: "book:test");

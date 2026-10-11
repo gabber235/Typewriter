@@ -10,6 +10,8 @@ import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.VersionConstraint
+import com.typewritermc.loader.api.EngineImplementationArtifact
+import com.typewritermc.loader.api.EngineImplementationTarget
 import com.typewritermc.loader.api.HostedArtifact
 import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
@@ -20,7 +22,6 @@ import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.api.StagedHostedRuntime
-import com.typewritermc.loader.api.artifact.ArtifactDigest
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.DeploymentArtifact
 import com.typewritermc.loader.artifact.FileDigestBlobStore
@@ -32,8 +33,10 @@ import com.typewritermc.loader.deployment.ProjectedSourcePart
 import com.typewritermc.loader.rollout.HostRolloutParticipant
 import com.typewritermc.loader.rollout.ParticipantStateChanged
 import com.typewritermc.loader.rollout.ParticipantStatus
-import com.typewritermc.loader.rollout.ParticipantStatusContract
 import com.typewritermc.loader.rollout.ParticipantStatusReply
+import com.typewritermc.loader.rollout.PresenceReply
+import com.typewritermc.loader.rollout.ProbeParticipantStatus
+import com.typewritermc.loader.rollout.ProbeRealmHosts
 import com.typewritermc.loader.rollout.ProjectionReference
 import com.typewritermc.loader.rollout.ProjectionSource
 import com.typewritermc.loader.rollout.RealmId
@@ -42,29 +45,58 @@ import com.typewritermc.loader.rollout.RolloutAttempt
 import com.typewritermc.loader.rollout.RolloutCommand
 import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
+import com.typewritermc.loader.rollout.commandResponsePolicy
+import com.typewritermc.loader.rollout.participantStatusResponsePolicy
+import com.typewritermc.loader.rollout.presenceResponsePolicy
+import com.typewritermc.loader.rollout.realmHostsProbe
+import com.typewritermc.loader.rollout.realmHostsStatus
+import com.typewritermc.loader.rollout.realmRolloutCommand
 import com.typewritermc.loader.runtime.HostedRuntimeLoader
 import com.typewritermc.loader.runtime.HostedRuntimeStager
 import com.typewritermc.loader.runtime.LoadedHostedRuntime
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.services.libs.communicator.address.MessageAddress
+import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
+import com.typewritermc.services.libs.communicator.router.RouterResult
+import com.typewritermc.services.libs.communicator.router.RouterState
+import com.typewritermc.services.libs.communicator.router.communicatorRoutes
+import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
+import com.typewritermc.services.libs.communicator.transport.InboundMessage
+import com.typewritermc.services.libs.communicator.transport.TransportDelivery
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.registrar.ServiceId
+import com.typewritermc.services.libs.telemetry.serviceTelemetry
+import com.typewritermc.services.libs.utils.findExceptional
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.context.propagation.ContextPropagators
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import java.net.URLClassLoader
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.TimeoutException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -140,7 +172,7 @@ val HostRolloutParticipantTest by testSuite {
     }
 
     test("participant status contract classifies its typed internal failure") {
-        val policy = ParticipantStatusContract.responsePolicy
+        val policy = participantStatusResponsePolicy
         policy.classify(policy.internalFailureResponse).outcome shouldBe ResponseOutcome.INTERNAL_ERROR
         policy
             .classify(
@@ -164,6 +196,8 @@ val HostRolloutParticipantTest by testSuite {
             fixture.participant.handle(stage).accepted shouldBe true
             fixture.participant.handle(stage).accepted shouldBe true
             fixture.stagedContexts.size shouldBe 1
+            fixture.stagedContexts.single().publicationTarget shouldBe projection.publicationTarget
+            fixture.stagedContexts.single().engineImplementation shouldBe projection.runtimes.single().implementation
 
             fixture.participant.handle(commit).accepted shouldBe true
             fixture.participant.handle(commit).accepted shouldBe true
@@ -260,6 +294,248 @@ val HostRolloutParticipantTest by testSuite {
             active.current.health shouldBe
                 com.typewritermc.loader.rollout.RuntimeHealthSnapshot
                     .Unhealthy(listOf("fixture failure"))
+            fixture.participant.close()
+        }
+    }
+
+    test("owned activation timeout reports failure without cancelling its caller") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val reference = fixture.reference("deadline")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.runtimes.single().suspendOn += "activate"
+            try {
+                val result = fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
+                result.accepted shouldBe false
+                result.internalFailure shouldBe true
+                (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
+                currentCoroutineContext().isActive shouldBe true
+                fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
+                fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            } finally {
+                fixture.participant.close()
+            }
+        }
+    }
+
+    test("caller cancellation during activation propagates and cleans up its candidate") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val reference = fixture.reference("caller cancellation")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.runtimes.single().suspendOn += "activate"
+            val command = async { fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit)) }
+            runCurrent()
+            command.cancelAndJoin()
+            shouldThrow<CancellationException> { command.await() }
+            currentCoroutineContext().isActive shouldBe true
+            fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
+            fixture.events.none { it.status is ParticipantStatus.Failed } shouldBe true
+            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            fixture.participant.close()
+        }
+    }
+
+    test("owned activation timeout preserves rollout status and presence routes") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val reference = fixture.reference("router deadline")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.runtimes.single().suspendOn += "activate"
+            val fake = FakeMessageTransport()
+            val telemetry = OpenTelemetry.noop().serviceTelemetry("participant deadline test")
+            val communicator = Communicator(fake, telemetry, ContextPropagators.noop())
+            val address = RealmRouteScope(organizationId = "organization", realmId = fixture.realmId.value)
+            val commandContract = address.realmRolloutCommand(commandResponsePolicy)
+            val statusContract = address.realmHostsStatus(participantStatusResponsePolicy)
+            val probeContract = address.realmHostsProbe(presenceResponsePolicy)
+            val routes =
+                communicatorRoutes {
+                    scatterAt(commandContract, address) { fixture.participant.handle(it.request) }
+                    scatterAt(statusContract, address) {
+                        ParticipantStatusReply.Status(fixture.serviceId, fixture.participant.currentStatus(it.request.attempt))
+                    }
+                    scatterAt(probeContract, address) { PresenceReply.Failed("presence route responded") }
+                }
+            val router = communicator.createRouter(routes, backgroundScope)
+            router.start() shouldBe RouterResult.Success
+            try {
+                val command = fixture.envelope(attempt, reference, RolloutCommand.Commit)
+                fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(
+                            commandContract.requestAddress.render(address),
+                            commandContract.requestCodec.encode(command).toByteArray(),
+                            MessageAddress.of("reply.command"),
+                        ),
+                    ),
+                )
+                runCurrent()
+                advanceTimeBy(1000)
+                runCurrent()
+                router.state shouldBe RouterState.RUNNING
+                (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
+                fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(
+                            statusContract.requestAddress.render(address),
+                            statusContract.requestCodec.encode(ProbeParticipantStatus(fixture.realmId, attempt)).toByteArray(),
+                            MessageAddress.of("reply.status"),
+                        ),
+                    ),
+                )
+                fake.deliver(
+                    TransportDelivery.Message(
+                        InboundMessage(
+                            probeContract.requestAddress.render(address),
+                            probeContract.requestCodec.encode(ProbeRealmHosts(fixture.realmId)).toByteArray(),
+                            MessageAddress.of("reply.presence"),
+                        ),
+                    ),
+                )
+                runCurrent()
+                fake.actions
+                    .filterIsInstance<FakeMessageTransport.Action.Publish>()
+                    .map { it.message.address.value }
+                    .toSet() shouldBe setOf("reply.command", "reply.status", "reply.presence")
+            } finally {
+                router.stop()
+                fixture.participant.close()
+                fake.close()
+            }
+        }
+    }
+
+    test("owned activation timeout restores the baseline and reports failure") {
+        runTest {
+            val fixture = participantFixture(this)
+            val baselineAttempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val baseline = fixture.reference("deadline baseline")
+            fixture.projections[baseline] = fixture.projection(baseline)
+            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Stage))
+            fixture.participant.handle(fixture.envelope(baselineAttempt, baseline, RolloutCommand.Commit))
+            val attempt = RolloutAttempt(2, DeploymentGeneration(2))
+            val candidate = fixture.reference("deadline replacement")
+            fixture.projections[candidate] = fixture.projection(candidate)
+            fixture.participant.handle(fixture.envelope(attempt, candidate, RolloutCommand.Stage))
+            fixture.runtimes[1].suspendOn += "activate"
+            val result = fixture.participant.handle(fixture.envelope(attempt, candidate, RolloutCommand.Commit))
+            result.accepted shouldBe false
+            result.internalFailure shouldBe true
+            (fixture.events.last().status is ParticipantStatus.Failed) shouldBe true
+            (fixture.participant.currentStatus(attempt) as ParticipantStatus.Active).current.projection shouldBe baseline
+            fixture.runtimes[0].operations shouldContainExactly listOf("activate", "quiesce", "resume")
+            fixture.runtimes[1].operations shouldContainExactly listOf("activate", "close")
+            currentCoroutineContext().isActive shouldBe true
+            fixture.participant.close()
+        }
+    }
+
+    for (operationName in listOf("quiesce", "resume")) {
+        test("owned $operationName deadline is an ordinary lifecycle failure") {
+            runTest {
+                val runtime = RecordingRuntime()
+                runtime.suspendOn += operationName
+                val projection =
+                    HostRolloutParticipant.LocalProjection(
+                        listOf(LoadedHostedRuntime(runtime, URLClassLoader(emptyArray<java.net.URL>()))),
+                        this,
+                        1.seconds,
+                    )
+                try {
+                    val failure =
+                        shouldThrow<TimeoutException> {
+                            when (operationName) {
+                                "quiesce" -> projection.quiesce()
+                                else -> projection.resume()
+                            }
+                        }
+                    failure.message shouldBe "Hosted runtime $operationName exceeded lifecycle deadline of 1s"
+                    failure.cause shouldBe null
+                    failure.suppressed.size shouldBe 0
+                    failure.findExceptional() shouldBe null
+                    currentCoroutineContext().isActive shouldBe true
+                } finally {
+                    projection.close()
+                }
+            }
+        }
+    }
+
+    test("owned close deadline preserves unfinished runtime ownership for retry") {
+        runTest {
+            val unfinished = RecordingRuntime()
+            val finished = RecordingRuntime()
+            unfinished.suspendOn += "close"
+            val projection =
+                HostRolloutParticipant.LocalProjection(
+                    listOf(unfinished, finished).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    this,
+                    1.seconds,
+                )
+            val failure = shouldThrow<TimeoutException> { projection.close() }
+            failure.message shouldBe "Hosted runtime close exceeded lifecycle deadline of 1s"
+            failure.findExceptional() shouldBe null
+            unfinished.suspendOn.clear()
+            projection.close()
+            projection.close()
+            unfinished.operations shouldContainExactly listOf("close", "close")
+            finished.operations shouldContainExactly listOf("close")
+            currentCoroutineContext().isActive shouldBe true
+        }
+    }
+
+    test("owned compensation deadline remains an ordinary suppressed failure") {
+        runTest {
+            val completed = RecordingRuntime()
+            val failing = RecordingRuntime()
+            completed.suspendOn += "quiesce"
+            failing.failOn += "activate"
+            val projection =
+                HostRolloutParticipant.LocalProjection(
+                    listOf(completed, failing).map { LoadedHostedRuntime(it, URLClassLoader(emptyArray<java.net.URL>())) },
+                    this,
+                    1.seconds,
+                )
+            try {
+                val failure = shouldThrow<IllegalStateException> { projection.activate() }
+                failure.message shouldBe "Fixture activate failure"
+                failure.suppressed.size shouldBe 1
+                (failure.suppressed.single() is TimeoutException) shouldBe true
+                failure.suppressed.single().message shouldBe "Hosted runtime quiesce compensation exceeded lifecycle deadline of 1s"
+                failure.findExceptional() shouldBe null
+                completed.operations shouldContainExactly listOf("activate", "quiesce")
+                failing.operations shouldContainExactly listOf("activate")
+                currentCoroutineContext().isActive shouldBe true
+            } finally {
+                projection.close()
+            }
+        }
+    }
+
+    test("external caller deadline remains cancellation rather than lifecycle failure") {
+        runTest {
+            val fixture = participantFixture(this)
+            val attempt = RolloutAttempt(1, DeploymentGeneration(1))
+            val reference = fixture.reference("external deadline")
+            fixture.projections[reference] = fixture.projection(reference)
+            fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Stage))
+            fixture.runtimes.single().suspendOn += "activate"
+            shouldThrow<kotlinx.coroutines.TimeoutCancellationException> {
+                withTimeout(100.milliseconds) {
+                    fixture.participant.handle(fixture.envelope(attempt, reference, RolloutCommand.Commit))
+                }
+            }
+            fixture.events.none { it.status is ParticipantStatus.Failed } shouldBe true
+            fixture.runtimes.single().operations shouldContainExactly listOf("activate", "close")
+            fixture.participant.currentStatus(attempt) shouldBe ParticipantStatus.Idle(attempt, fixture.serviceId)
+            currentCoroutineContext().isActive shouldBe true
             fixture.participant.close()
         }
     }
@@ -434,6 +710,8 @@ private class ParticipantFixture(
                 root.resolve("deployment"),
             ),
         artifacts = HostedArtifactPackage(HostedArtifact(artifact, manifest), emptyList(), emptyList()),
+        publicationTarget = implementationTarget(manifest.id, manifest.version, ArtifactDigest.sha256("runtime".encodeToByteArray())),
+        engineImplementation = implementationTarget(manifest.id, manifest.version, ArtifactDigest.sha256("runtime".encodeToByteArray())),
         facts = emptyMap(),
         host = host,
     )
@@ -469,12 +747,14 @@ private class ParticipantFixture(
             } else {
                 emptyList()
             }
+        val implementation = implementationTarget(runtime.coordinate.id, runtime.coordinate.version, runtime.digest)
         return HostDeploymentProjection(
             realmId.value,
             reference.generation,
             serviceId,
-            listOf(ProjectedRuntime.primaryEngine(runtime)),
+            listOf(ProjectedRuntime.primaryEngine(runtime).copy(implementation = implementation)),
             extensions,
+            implementation,
             emptyMap(),
         )
     }
@@ -493,6 +773,22 @@ private class ParticipantFixture(
         )
     }
 }
+
+private fun implementationTarget(
+    id: ArtifactId,
+    version: ArtifactVersion,
+    digest: ArtifactDigest,
+) = EngineImplementationTarget(
+    placement = RuntimePlacement.PRIMARY_ENGINE,
+    engine =
+        EngineImplementationArtifact(
+            id,
+            version,
+            digest,
+            emptyList(),
+        ),
+    extensions = emptyList(),
+)
 
 private fun participantFixture(scope: TestScope): ParticipantFixture {
     val root = Files.createTempDirectory("participant")
@@ -593,6 +889,7 @@ private class RecordingRuntime : StagedHostedRuntime {
     override val health: StateFlow<RuntimeHealth> = healthState
     val operations = mutableListOf<String>()
     val failOn = mutableSetOf<String>()
+    val suspendOn = mutableSetOf<String>()
 
     override suspend fun activate() {
         operations += "activate"
@@ -616,7 +913,8 @@ private class RecordingRuntime : StagedHostedRuntime {
         failIfRequested("close")
     }
 
-    private fun failIfRequested(operation: String) {
+    private suspend fun failIfRequested(operation: String) {
+        if (operation in suspendOn) awaitCancellation()
         if (operation in failOn) error("Fixture $operation failure")
     }
 }

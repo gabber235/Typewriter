@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Selects a calendar date while retaining keyboard navigation state locally.
@@ -36,15 +34,15 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
   @override
   void initState() {
     super.initState();
-    _focusedDate = dateOnly(widget.value);
+    _focusedDate = widget.value.calendarDate;
     _visibleMonth = DateTime.utc(widget.value.year, widget.value.month);
   }
 
   @override
   void didUpdateWidget(covariant DateTimeCalendar oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!sameCalendarDate(oldWidget.value, widget.value)) {
-      _focusedDate = dateOnly(widget.value);
+    if (!oldWidget.value.hasSameCalendarDate(widget.value)) {
+      _focusedDate = widget.value.calendarDate;
       _visibleMonth = DateTime.utc(widget.value.year, widget.value.month);
     }
   }
@@ -56,7 +54,7 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
     });
   }
 
-  void _moveMonth(int delta) => _focus(moveMonth(_focusedDate, delta));
+  void _moveMonth(int delta) => _focus(_focusedDate.moveMonth(delta));
 
   void _selectMonth(int month) {
     _focus(
@@ -226,7 +224,7 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
                 focusable: true,
                 focused: focused,
                 label: "Calendar date",
-                value: semanticCalendarDate(_focusedDate),
+                value: _focusedDate.semanticCalendarLabel,
                 hint: widget.enabled
                     ? "Use arrow keys to move and Enter to select"
                     : "Use arrow keys to inspect dates",
@@ -253,18 +251,12 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
                                   date: gridStart.add(
                                     Duration(days: week * 7 + day),
                                   ),
-                                  selected: sameCalendarDate(
-                                    gridStart.add(
-                                      Duration(days: week * 7 + day),
-                                    ),
-                                    widget.value,
-                                  ),
-                                  focused: sameCalendarDate(
-                                    gridStart.add(
-                                      Duration(days: week * 7 + day),
-                                    ),
-                                    _focusedDate,
-                                  ),
+                                  selected: gridStart
+                                      .add(Duration(days: week * 7 + day))
+                                      .hasSameCalendarDate(widget.value),
+                                  focused: gridStart
+                                      .add(Duration(days: week * 7 + day))
+                                      .hasSameCalendarDate(_focusedDate),
                                   inMonth:
                                       gridStart
                                           .add(Duration(days: week * 7 + day))

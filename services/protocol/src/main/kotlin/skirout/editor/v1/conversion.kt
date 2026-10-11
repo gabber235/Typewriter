@@ -54,10 +54,6 @@ sealed class ConversionSafety private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.LOSSLESS_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object LOSSY : skirout.editor.v1.conversion.ConversionSafety() {
@@ -70,10 +66,6 @@ sealed class ConversionSafety private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.LOSSY_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.conversion.ConversionSafety>? get() = null;
@@ -83,7 +75,7 @@ sealed class ConversionSafety private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionSafety._serializerImpl,
+            _SerializerRegistry.ConversionSafetySerializerImpl,
         )
     }
 
@@ -94,51 +86,11 @@ sealed class ConversionSafety private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionSafety, Unknown>(
-                recordId = "editor/v1/conversion.skir:ConversionSafety",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ConversionSafety] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionSafetySerializer;
 
         /** Describes the [ConversionSafety] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            LOSSLESS;
-            LOSSY;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "lossless",
-                    Kind.LOSSLESS_CONST.ordinal,
-                    "",
-                    LOSSLESS,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "lossy",
-                    Kind.LOSSY_CONST.ordinal,
-                    "",
-                    LOSSY,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConversionSafetySerializerImpl.typeDescriptor;
     }
 }
 
@@ -176,10 +128,6 @@ sealed class ConversionFallibility private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.INFALLIBLE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object FALLIBLE : skirout.editor.v1.conversion.ConversionFallibility() {
@@ -192,10 +140,6 @@ sealed class ConversionFallibility private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.FALLIBLE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.conversion.ConversionFallibility>? get() = null;
@@ -205,7 +149,7 @@ sealed class ConversionFallibility private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionFallibility._serializerImpl,
+            _SerializerRegistry.ConversionFallibilitySerializerImpl,
         )
     }
 
@@ -216,51 +160,11 @@ sealed class ConversionFallibility private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionFallibility, Unknown>(
-                recordId = "editor/v1/conversion.skir:ConversionFallibility",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ConversionFallibility] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionFallibilitySerializer;
 
         /** Describes the [ConversionFallibility] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            INFALLIBLE;
-            FALLIBLE;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "infallible",
-                    Kind.INFALLIBLE_CONST.ordinal,
-                    "",
-                    INFALLIBLE,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "fallible",
-                    Kind.FALLIBLE_CONST.ordinal,
-                    "",
-                    FALLIBLE,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConversionFallibilitySerializerImpl.typeDescriptor;
     }
 }
 
@@ -298,10 +202,6 @@ sealed class ConversionLocality private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.LOCAL_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object REALM : skirout.editor.v1.conversion.ConversionLocality() {
@@ -314,10 +214,6 @@ sealed class ConversionLocality private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.REALM_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.conversion.ConversionLocality>? get() = null;
@@ -327,7 +223,7 @@ sealed class ConversionLocality private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionLocality._serializerImpl,
+            _SerializerRegistry.ConversionLocalitySerializerImpl,
         )
     }
 
@@ -338,51 +234,11 @@ sealed class ConversionLocality private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionLocality, Unknown>(
-                recordId = "editor/v1/conversion.skir:ConversionLocality",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ConversionLocality] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionLocalitySerializer;
 
         /** Describes the [ConversionLocality] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            LOCAL;
-            REALM;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 3) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "local",
-                    Kind.LOCAL_CONST.ordinal,
-                    "",
-                    LOCAL,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "realm",
-                    Kind.REALM_CONST.ordinal,
-                    "",
-                    REALM,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConversionLocalitySerializerImpl.typeDescriptor;
     }
 }
 
@@ -430,10 +286,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.SIGNED_WIDEN_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object SIGNED_NARROW : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -445,10 +297,6 @@ sealed class ScalarCastKind private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.SIGNED_NARROW_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -462,10 +310,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.UNSIGNED_WIDEN_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object UNSIGNED_NARROW : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -477,10 +321,6 @@ sealed class ScalarCastKind private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.UNSIGNED_NARROW_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -494,10 +334,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.INTEGER_TO_FLOAT_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object FLOAT_TO_INTEGER : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -509,10 +345,6 @@ sealed class ScalarCastKind private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.FLOAT_TO_INTEGER_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -526,10 +358,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.NUMERIC_TO_DECIMAL_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object DECIMAL_TO_NUMERIC : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -541,10 +369,6 @@ sealed class ScalarCastKind private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.DECIMAL_TO_NUMERIC_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -558,10 +382,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.TIMESTAMP_TO_STRING_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object STRING_TO_TIMESTAMP : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -573,10 +393,6 @@ sealed class ScalarCastKind private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.STRING_TO_TIMESTAMP_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -590,10 +406,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.DURATION_TO_STRING_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object STRING_TO_DURATION : skirout.editor.v1.conversion.ScalarCastKind() {
@@ -606,10 +418,6 @@ sealed class ScalarCastKind private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.STRING_TO_DURATION_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.conversion.ScalarCastKind>? get() = null;
@@ -619,7 +427,7 @@ sealed class ScalarCastKind private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ScalarCastKind._serializerImpl,
+            _SerializerRegistry.ScalarCastKindSerializerImpl,
         )
     }
 
@@ -630,137 +438,17 @@ sealed class ScalarCastKind private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ScalarCastKind, Unknown>(
-                recordId = "editor/v1/conversion.skir:ScalarCastKind",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ScalarCastKind] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ScalarCastKindSerializer;
 
         /** Describes the [ScalarCastKind] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            SIGNED_WIDEN;
-            SIGNED_NARROW;
-            UNSIGNED_WIDEN;
-            UNSIGNED_NARROW;
-            INTEGER_TO_FLOAT;
-            FLOAT_TO_INTEGER;
-            NUMERIC_TO_DECIMAL;
-            DECIMAL_TO_NUMERIC;
-            TIMESTAMP_TO_STRING;
-            STRING_TO_TIMESTAMP;
-            DURATION_TO_STRING;
-            STRING_TO_DURATION;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 13) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "signed_widen",
-                    Kind.SIGNED_WIDEN_CONST.ordinal,
-                    "",
-                    SIGNED_WIDEN,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "signed_narrow",
-                    Kind.SIGNED_NARROW_CONST.ordinal,
-                    "",
-                    SIGNED_NARROW,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "unsigned_widen",
-                    Kind.UNSIGNED_WIDEN_CONST.ordinal,
-                    "",
-                    UNSIGNED_WIDEN,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "unsigned_narrow",
-                    Kind.UNSIGNED_NARROW_CONST.ordinal,
-                    "",
-                    UNSIGNED_NARROW,
-                );
-                _serializerImpl.addConstantVariant(
-                    5,
-                    "integer_to_float",
-                    Kind.INTEGER_TO_FLOAT_CONST.ordinal,
-                    "",
-                    INTEGER_TO_FLOAT,
-                );
-                _serializerImpl.addConstantVariant(
-                    6,
-                    "float_to_integer",
-                    Kind.FLOAT_TO_INTEGER_CONST.ordinal,
-                    "",
-                    FLOAT_TO_INTEGER,
-                );
-                _serializerImpl.addConstantVariant(
-                    7,
-                    "numeric_to_decimal",
-                    Kind.NUMERIC_TO_DECIMAL_CONST.ordinal,
-                    "",
-                    NUMERIC_TO_DECIMAL,
-                );
-                _serializerImpl.addConstantVariant(
-                    8,
-                    "decimal_to_numeric",
-                    Kind.DECIMAL_TO_NUMERIC_CONST.ordinal,
-                    "",
-                    DECIMAL_TO_NUMERIC,
-                );
-                _serializerImpl.addConstantVariant(
-                    9,
-                    "timestamp_to_string",
-                    Kind.TIMESTAMP_TO_STRING_CONST.ordinal,
-                    "",
-                    TIMESTAMP_TO_STRING,
-                );
-                _serializerImpl.addConstantVariant(
-                    10,
-                    "string_to_timestamp",
-                    Kind.STRING_TO_TIMESTAMP_CONST.ordinal,
-                    "",
-                    STRING_TO_TIMESTAMP,
-                );
-                _serializerImpl.addConstantVariant(
-                    11,
-                    "duration_to_string",
-                    Kind.DURATION_TO_STRING_CONST.ordinal,
-                    "",
-                    DURATION_TO_STRING,
-                );
-                _serializerImpl.addConstantVariant(
-                    12,
-                    "string_to_duration",
-                    Kind.STRING_TO_DURATION_CONST.ordinal,
-                    "",
-                    STRING_TO_DURATION,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ScalarCastKindSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface RecordProjectionField_OrMutable {
-    val source: skirout.editor.v1.path.DataPath_OrMutable;
-    val target: skirout.editor.v1.path.DataPath_OrMutable;
+    val source: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val target: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
     val conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.conversion.RecordProjectionField;
@@ -769,17 +457,17 @@ sealed interface RecordProjectionField_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RecordProjectionField private constructor(
-    override val source: skirout.editor.v1.path.DataPath,
-    override val target: skirout.editor.v1.path.DataPath,
+    override val source: skirout.editor.v1.type_catalog.ValuePath,
+    override val target: skirout.editor.v1.type_catalog.ValuePath,
     override val conversionId: skirout.editor.v1.type_catalog.ConversionId?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionField>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionField>? =
         null,
 ): skirout.editor.v1.conversion.RecordProjectionField_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.path.DataPath_OrMutable,
-        target: skirout.editor.v1.path.DataPath_OrMutable,
+        source: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        target: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionField>? =
             null,
@@ -804,9 +492,9 @@ class RecordProjectionField private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.path.DataPath_OrMutable =
+        source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
             this.source,
-        target: skirout.editor.v1.path.DataPath_OrMutable =
+        target: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
             this.target,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
             this.conversionId,
@@ -831,7 +519,7 @@ class RecordProjectionField private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.RecordProjectionField.serializerImpl,
+            _SerializerRegistry.RecordProjectionFieldSerializerImpl,
         )
     }
 
@@ -839,10 +527,10 @@ class RecordProjectionField private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.path.DataPath_OrMutable =
-            skirout.editor.v1.path.DataPath.partial(),
-        override var target: skirout.editor.v1.path.DataPath_OrMutable =
-            skirout.editor.v1.path.DataPath.partial(),
+        override var source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var target: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
         override var conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionField>? =
@@ -857,34 +545,34 @@ class RecordProjectionField private constructor(
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
+         * If the value of [source] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
-        val mutableSource: skirout.editor.v1.path.DataPath.Mutable get() {
+        val mutableSource: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
             var value = this.source;
             return when (value) {
-                is skirout.editor.v1.path.DataPath -> {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
                     value = value.toMutable();
                     this.source = value;
                     return value;
                 }
-                is skirout.editor.v1.path.DataPath.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
-        val mutableTarget: skirout.editor.v1.path.DataPath.Mutable get() {
+        val mutableTarget: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
             var value = this.target;
             return when (value) {
-                is skirout.editor.v1.path.DataPath -> {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
                     value = value.toMutable();
                     this.target = value;
                     return value;
                 }
-                is skirout.editor.v1.path.DataPath.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
             }
         }
     }
@@ -892,8 +580,8 @@ class RecordProjectionField private constructor(
     companion object {
         private val default =
             skirout.editor.v1.conversion.RecordProjectionField(
-                skirout.editor.v1.path.DataPath.partial(),
-                skirout.editor.v1.path.DataPath.partial(),
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
                 null,
             );
 
@@ -908,10 +596,10 @@ class RecordProjectionField private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.path.DataPath_OrMutable =
-                skirout.editor.v1.path.DataPath.partial(),
-            target: skirout.editor.v1.path.DataPath_OrMutable =
-                skirout.editor.v1.path.DataPath.partial(),
+            source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            target: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
             conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
                 null,
         ) = skirout.editor.v1.conversion.RecordProjectionField(
@@ -921,54 +609,11 @@ class RecordProjectionField private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:RecordProjectionField",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RecordProjectionField] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordProjectionFieldSerializer;
 
         /** Describes the [RecordProjectionField] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "source",
-                "source",
-                0,
-                skirout.editor.v1.path.DataPath.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.addField(
-                "target",
-                "target",
-                1,
-                skirout.editor.v1.path.DataPath.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "conversion_id",
-                "conversionId",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.type_catalog.ConversionId.serializer,
-                ),
-                "",
-                { it.conversionId },
-                { mut, v -> mut.conversionId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordProjectionFieldSerializerImpl.typeDescriptor;
     }
 }
 
@@ -982,7 +627,7 @@ sealed interface RecordProjectionRule_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RecordProjectionRule private constructor(
     override val fields: kotlin.collections.List<skirout.editor.v1.conversion.RecordProjectionField>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionRule>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordProjectionRule>? =
         null,
 ): skirout.editor.v1.conversion.RecordProjectionRule_OrMutable {
     constructor(
@@ -1029,7 +674,7 @@ class RecordProjectionRule private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.RecordProjectionRule.serializerImpl,
+            _SerializerRegistry.RecordProjectionRuleSerializerImpl,
         )
     }
 
@@ -1049,7 +694,7 @@ class RecordProjectionRule private constructor(
         );
 
         /**
-         * If the value of [fields] is already mutable, returns it as-is.
+         * If the value of [fields] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
          */
         val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.conversion.RecordProjectionField_OrMutable> get() {
@@ -1089,42 +734,17 @@ class RecordProjectionRule private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:RecordProjectionRule",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RecordProjectionRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordProjectionRuleSerializer;
 
         /** Describes the [RecordProjectionRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "fields",
-                "fields",
-                0,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.conversion.RecordProjectionField.serializer,
-                ),
-                "",
-                { it.fields },
-                { mut, v -> mut.fields = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordProjectionRuleSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface RecordConstructionField_OrMutable {
     val targetField: kotlin.String;
-    val source: skirout.editor.v1.path.DataPath_OrMutable;
+    val source: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
     val conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.conversion.RecordConstructionField;
@@ -1134,16 +754,16 @@ sealed interface RecordConstructionField_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RecordConstructionField private constructor(
     override val targetField: kotlin.String,
-    override val source: skirout.editor.v1.path.DataPath,
+    override val source: skirout.editor.v1.type_catalog.ValuePath,
     override val conversionId: skirout.editor.v1.type_catalog.ConversionId?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionField>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionField>? =
         null,
 ): skirout.editor.v1.conversion.RecordConstructionField_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         targetField: kotlin.String,
-        source: skirout.editor.v1.path.DataPath_OrMutable,
+        source: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionField>? =
             null,
@@ -1170,7 +790,7 @@ class RecordConstructionField private constructor(
             _MustNameArguments,
         targetField: kotlin.String =
             this.targetField,
-        source: skirout.editor.v1.path.DataPath_OrMutable =
+        source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
             this.source,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
             this.conversionId,
@@ -1195,7 +815,7 @@ class RecordConstructionField private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.RecordConstructionField.serializerImpl,
+            _SerializerRegistry.RecordConstructionFieldSerializerImpl,
         )
     }
 
@@ -1205,8 +825,8 @@ class RecordConstructionField private constructor(
             _MustNameArguments,
         override var targetField: kotlin.String =
             "",
-        override var source: skirout.editor.v1.path.DataPath_OrMutable =
-            skirout.editor.v1.path.DataPath.partial(),
+        override var source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
         override var conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionField>? =
@@ -1221,18 +841,18 @@ class RecordConstructionField private constructor(
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
+         * If the value of [source] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
          */
-        val mutableSource: skirout.editor.v1.path.DataPath.Mutable get() {
+        val mutableSource: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
             var value = this.source;
             return when (value) {
-                is skirout.editor.v1.path.DataPath -> {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
                     value = value.toMutable();
                     this.source = value;
                     return value;
                 }
-                is skirout.editor.v1.path.DataPath.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
             }
         }
     }
@@ -1241,7 +861,7 @@ class RecordConstructionField private constructor(
         private val default =
             skirout.editor.v1.conversion.RecordConstructionField(
                 "",
-                skirout.editor.v1.path.DataPath.partial(),
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
                 null,
             );
 
@@ -1258,8 +878,8 @@ class RecordConstructionField private constructor(
                 _MustNameArguments,
             targetField: kotlin.String =
                 "",
-            source: skirout.editor.v1.path.DataPath_OrMutable =
-                skirout.editor.v1.path.DataPath.partial(),
+            source: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
             conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable? =
                 null,
         ) = skirout.editor.v1.conversion.RecordConstructionField(
@@ -1269,54 +889,11 @@ class RecordConstructionField private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:RecordConstructionField",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RecordConstructionField] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordConstructionFieldSerializer;
 
         /** Describes the [RecordConstructionField] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target_field",
-                "targetField",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.targetField },
-                { mut, v -> mut.targetField = v },
-            );
-            serializerImpl.addField(
-                "source",
-                "source",
-                1,
-                skirout.editor.v1.path.DataPath.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.addField(
-                "conversion_id",
-                "conversionId",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.type_catalog.ConversionId.serializer,
-                ),
-                "",
-                { it.conversionId },
-                { mut, v -> mut.conversionId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordConstructionFieldSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1330,7 +907,7 @@ sealed interface RecordConstructionRule_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RecordConstructionRule private constructor(
     override val fields: build.skir.KeyedList<skirout.editor.v1.conversion.RecordConstructionField, kotlin.String>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionRule>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RecordConstructionRule>? =
         null,
 ): skirout.editor.v1.conversion.RecordConstructionRule_OrMutable {
     constructor(
@@ -1377,7 +954,7 @@ class RecordConstructionRule private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.RecordConstructionRule.serializerImpl,
+            _SerializerRegistry.RecordConstructionRuleSerializerImpl,
         )
     }
 
@@ -1397,7 +974,7 @@ class RecordConstructionRule private constructor(
         );
 
         /**
-         * If the value of [fields] is already mutable, returns it as-is.
+         * If the value of [fields] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [fields] and returns it.
          */
         val mutableFields: kotlin.collections.MutableList<skirout.editor.v1.conversion.RecordConstructionField_OrMutable> get() {
@@ -1437,38 +1014,11 @@ class RecordConstructionRule private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:RecordConstructionRule",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RecordConstructionRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordConstructionRuleSerializer;
 
         /** Describes the [RecordConstructionRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "fields",
-                "fields",
-                0,
-                build.skir.internal.keyedListSerializer(
-                    skirout.editor.v1.conversion.RecordConstructionField.serializer,
-                    "target_field",
-                    { it.targetField },
-                ),
-                "",
-                { it.fields },
-                { mut, v -> mut.fields = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordConstructionRuleSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1482,7 +1032,7 @@ sealed interface CollectionMappingRule_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CollectionMappingRule private constructor(
     override val elementConversionId: skirout.editor.v1.type_catalog.ConversionId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.CollectionMappingRule>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.CollectionMappingRule>? =
         null,
 ): skirout.editor.v1.conversion.CollectionMappingRule_OrMutable {
     constructor(
@@ -1529,7 +1079,7 @@ class CollectionMappingRule private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.CollectionMappingRule.serializerImpl,
+            _SerializerRegistry.CollectionMappingRuleSerializerImpl,
         )
     }
 
@@ -1549,7 +1099,7 @@ class CollectionMappingRule private constructor(
         );
 
         /**
-         * If the value of [elementConversionId] is already mutable, returns it as-is.
+         * If the value of [elementConversionId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [elementConversionId] and returns it.
          */
         val mutableElementConversionId: skirout.editor.v1.type_catalog.ConversionId.Mutable get() {
@@ -1589,34 +1139,11 @@ class CollectionMappingRule private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:CollectionMappingRule",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CollectionMappingRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CollectionMappingRuleSerializer;
 
         /** Describes the [CollectionMappingRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "element_conversion_id",
-                "elementConversionId",
-                0,
-                skirout.editor.v1.type_catalog.ConversionId.serializer,
-                "",
-                { it.elementConversionId },
-                { mut, v -> mut.elementConversionId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CollectionMappingRuleSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1630,7 +1157,7 @@ sealed interface ConversionCompositionRule_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConversionCompositionRule private constructor(
     override val steps: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.ConversionCompositionRule>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.ConversionCompositionRule>? =
         null,
 ): skirout.editor.v1.conversion.ConversionCompositionRule_OrMutable {
     constructor(
@@ -1677,7 +1204,7 @@ class ConversionCompositionRule private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionCompositionRule.serializerImpl,
+            _SerializerRegistry.ConversionCompositionRuleSerializerImpl,
         )
     }
 
@@ -1697,7 +1224,7 @@ class ConversionCompositionRule private constructor(
         );
 
         /**
-         * If the value of [steps] is already mutable, returns it as-is.
+         * If the value of [steps] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [steps] and returns it.
          */
         val mutableSteps: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ConversionId_OrMutable> get() {
@@ -1737,36 +1264,11 @@ class ConversionCompositionRule private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:ConversionCompositionRule",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ConversionCompositionRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionCompositionRuleSerializer;
 
         /** Describes the [ConversionCompositionRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "steps",
-                "steps",
-                0,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.type_catalog.ConversionId.serializer,
-                ),
-                "",
-                { it.steps },
-                { mut, v -> mut.steps = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConversionCompositionRuleSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1777,7 +1279,7 @@ sealed interface RealmConversionRule_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmConversionRule private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RealmConversionRule>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.RealmConversionRule>? =
         null,
 ): skirout.editor.v1.conversion.RealmConversionRule_OrMutable {
     constructor(
@@ -1806,7 +1308,7 @@ class RealmConversionRule private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.RealmConversionRule.serializerImpl,
+            _SerializerRegistry.RealmConversionRuleSerializerImpl,
         )
     }
 
@@ -1842,25 +1344,11 @@ class RealmConversionRule private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:RealmConversionRule",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmConversionRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmConversionRuleSerializer;
 
         /** Describes the [RealmConversionRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmConversionRuleSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1905,10 +1393,6 @@ sealed class ConversionRule private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.IDENTITY_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object INHERITANCE_UPCAST : skirout.editor.v1.conversion.ConversionRule() {
@@ -1921,10 +1405,6 @@ sealed class ConversionRule private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.INHERITANCE_UPCAST_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object VALIDATED_DOWNCAST : skirout.editor.v1.conversion.ConversionRule() {
@@ -1936,10 +1416,6 @@ sealed class ConversionRule private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.VALIDATED_DOWNCAST_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -2054,7 +1530,7 @@ sealed class ConversionRule private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionRule._serializerImpl,
+            _SerializerRegistry.ConversionRuleSerializerImpl,
         )
     }
 
@@ -2122,120 +1598,18 @@ sealed class ConversionRule private constructor() {
             skirout.editor.v1.conversion.RealmConversionRule()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionRule, Unknown>(
-                recordId = "editor/v1/conversion.skir:ConversionRule",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ConversionRule] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionRuleSerializer;
 
         /** Describes the [ConversionRule] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            IDENTITY;
-            INHERITANCE_UPCAST;
-            VALIDATED_DOWNCAST;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 4) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "identity",
-                    Kind.IDENTITY_CONST.ordinal,
-                    "",
-                    IDENTITY,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "inheritance_upcast",
-                    Kind.INHERITANCE_UPCAST_CONST.ordinal,
-                    "",
-                    INHERITANCE_UPCAST,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "validated_downcast",
-                    Kind.VALIDATED_DOWNCAST_CONST.ordinal,
-                    "",
-                    VALIDATED_DOWNCAST,
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "scalar_cast",
-                    Kind.SCALAR_CAST_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.ScalarCastKind.serializer,
-                    "",
-                    { ScalarCastWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "record_projection",
-                    Kind.RECORD_PROJECTION_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.RecordProjectionRule.serializer,
-                    "",
-                    { RecordProjectionWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "record_construction",
-                    Kind.RECORD_CONSTRUCTION_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.RecordConstructionRule.serializer,
-                    "",
-                    { RecordConstructionWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "collection_mapping",
-                    Kind.COLLECTION_MAPPING_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.CollectionMappingRule.serializer,
-                    "",
-                    { CollectionMappingWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "composition",
-                    Kind.COMPOSITION_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.ConversionCompositionRule.serializer,
-                    "",
-                    { CompositionWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "realm",
-                    Kind.REALM_WRAPPER.ordinal,
-                    skirout.editor.v1.conversion.RealmConversionRule.serializer,
-                    "",
-                    { RealmWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConversionRuleSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ConversionDefinition_OrMutable {
     val conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable;
-    val source: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+    val source: skirout.editor.v1.type_catalog.TypeUse;
+    val target: skirout.editor.v1.type_catalog.TypeUse;
     val safety: skirout.editor.v1.conversion.ConversionSafety;
     val fallibility: skirout.editor.v1.conversion.ConversionFallibility;
     val locality: skirout.editor.v1.conversion.ConversionLocality;
@@ -2249,22 +1623,22 @@ sealed interface ConversionDefinition_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConversionDefinition private constructor(
     override val conversionId: skirout.editor.v1.type_catalog.ConversionId,
-    override val source: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val target: skirout.editor.v1.type_catalog.ResolvedTypeRef,
+    override val source: skirout.editor.v1.type_catalog.TypeUse,
+    override val target: skirout.editor.v1.type_catalog.TypeUse,
     override val safety: skirout.editor.v1.conversion.ConversionSafety,
     override val fallibility: skirout.editor.v1.conversion.ConversionFallibility,
     override val locality: skirout.editor.v1.conversion.ConversionLocality,
     override val cost: kotlin.Int,
     override val rule: skirout.editor.v1.conversion.ConversionRule,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.ConversionDefinition>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.conversion.ConversionDefinition>? =
         null,
 ): skirout.editor.v1.conversion.ConversionDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable,
-        source: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        source: skirout.editor.v1.type_catalog.TypeUse,
+        target: skirout.editor.v1.type_catalog.TypeUse,
         safety: skirout.editor.v1.conversion.ConversionSafety,
         fallibility: skirout.editor.v1.conversion.ConversionFallibility,
         locality: skirout.editor.v1.conversion.ConversionLocality,
@@ -2274,8 +1648,8 @@ class ConversionDefinition private constructor(
             null,
     ): this(
         conversionId.toFrozen(),
-        source.toFrozen(),
-        target.toFrozen(),
+        source,
+        target,
         safety,
         fallibility,
         locality,
@@ -2305,9 +1679,9 @@ class ConversionDefinition private constructor(
             _MustNameArguments,
         conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable =
             this.conversionId,
-        source: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        source: skirout.editor.v1.type_catalog.TypeUse =
             this.source,
-        target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        target: skirout.editor.v1.type_catalog.TypeUse =
             this.target,
         safety: skirout.editor.v1.conversion.ConversionSafety =
             this.safety,
@@ -2321,8 +1695,8 @@ class ConversionDefinition private constructor(
             this.rule,
     ) = skirout.editor.v1.conversion.ConversionDefinition(
         conversionId.toFrozen(),
-        source.toFrozen(),
-        target.toFrozen(),
+        source,
+        target,
         safety,
         fallibility,
         locality,
@@ -2345,7 +1719,7 @@ class ConversionDefinition private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.conversion.ConversionDefinition.serializerImpl,
+            _SerializerRegistry.ConversionDefinitionSerializerImpl,
         )
     }
 
@@ -2355,10 +1729,10 @@ class ConversionDefinition private constructor(
             _MustNameArguments,
         override var conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable =
             skirout.editor.v1.type_catalog.ConversionId.partial(),
-        override var source: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        override var source: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var target: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         override var safety: skirout.editor.v1.conversion.ConversionSafety =
             skirout.editor.v1.conversion.ConversionSafety.UNKNOWN,
         override var fallibility: skirout.editor.v1.conversion.ConversionFallibility =
@@ -2386,7 +1760,7 @@ class ConversionDefinition private constructor(
         );
 
         /**
-         * If the value of [conversionId] is already mutable, returns it as-is.
+         * If the value of [conversionId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [conversionId] and returns it.
          */
         val mutableConversionId: skirout.editor.v1.type_catalog.ConversionId.Mutable get() {
@@ -2400,46 +1774,14 @@ class ConversionDefinition private constructor(
                 is skirout.editor.v1.type_catalog.ConversionId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [source] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
-         */
-        val mutableSource: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.source;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.source = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [target] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-         */
-        val mutableTarget: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.target;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.target = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.conversion.ConversionDefinition(
                 skirout.editor.v1.type_catalog.ConversionId.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
                 skirout.editor.v1.conversion.ConversionSafety.UNKNOWN,
                 skirout.editor.v1.conversion.ConversionFallibility.UNKNOWN,
                 skirout.editor.v1.conversion.ConversionLocality.UNKNOWN,
@@ -2460,10 +1802,10 @@ class ConversionDefinition private constructor(
                 _MustNameArguments,
             conversionId: skirout.editor.v1.type_catalog.ConversionId_OrMutable =
                 skirout.editor.v1.type_catalog.ConversionId.partial(),
-            source: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            target: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            source: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            target: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             safety: skirout.editor.v1.conversion.ConversionSafety =
                 skirout.editor.v1.conversion.ConversionSafety.UNKNOWN,
             fallibility: skirout.editor.v1.conversion.ConversionFallibility =
@@ -2486,96 +1828,576 @@ class ConversionDefinition private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/conversion.skir:ConversionDefinition",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ConversionDefinition] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ConversionDefinitionSerializer;
 
         /** Describes the [ConversionDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ConversionDefinitionSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "conversion_id",
-                "conversionId",
-                0,
+private object _SerializerRegistry {
+    val CollectionMappingRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:CollectionMappingRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.CollectionMappingRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.CollectionMappingRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CollectionMappingRuleSerializer = build.skir.internal.makeSerializer(CollectionMappingRuleSerializerImpl);
+
+    val ConversionCompositionRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:ConversionCompositionRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.ConversionCompositionRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.ConversionCompositionRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConversionCompositionRuleSerializer = build.skir.internal.makeSerializer(ConversionCompositionRuleSerializerImpl);
+
+    val ConversionDefinitionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:ConversionDefinition",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.ConversionDefinition.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.ConversionDefinition.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConversionDefinitionSerializer = build.skir.internal.makeSerializer(ConversionDefinitionSerializerImpl);
+
+    val ConversionFallibilitySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionFallibility, skirout.editor.v1.conversion.ConversionFallibility.Unknown>(
+            recordId = "editor/v1/conversion.skir:ConversionFallibility",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.conversion.ConversionFallibility.Kind.values().size,
+            unknownInstance = skirout.editor.v1.conversion.ConversionFallibility.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.conversion.ConversionFallibility.Unknown(skirout.editor.v1.conversion.ConversionFallibility.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ConversionFallibilitySerializer = build.skir.internal.makeSerializer(ConversionFallibilitySerializerImpl);
+
+    val ConversionLocalitySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionLocality, skirout.editor.v1.conversion.ConversionLocality.Unknown>(
+            recordId = "editor/v1/conversion.skir:ConversionLocality",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.conversion.ConversionLocality.Kind.values().size,
+            unknownInstance = skirout.editor.v1.conversion.ConversionLocality.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.conversion.ConversionLocality.Unknown(skirout.editor.v1.conversion.ConversionLocality.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ConversionLocalitySerializer = build.skir.internal.makeSerializer(ConversionLocalitySerializerImpl);
+
+    val ConversionRuleSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionRule, skirout.editor.v1.conversion.ConversionRule.Unknown>(
+            recordId = "editor/v1/conversion.skir:ConversionRule",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.conversion.ConversionRule.Kind.values().size,
+            unknownInstance = skirout.editor.v1.conversion.ConversionRule.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.conversion.ConversionRule.Unknown(skirout.editor.v1.conversion.ConversionRule.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ConversionRuleSerializer = build.skir.internal.makeSerializer(ConversionRuleSerializerImpl);
+
+    val ConversionSafetySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ConversionSafety, skirout.editor.v1.conversion.ConversionSafety.Unknown>(
+            recordId = "editor/v1/conversion.skir:ConversionSafety",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.conversion.ConversionSafety.Kind.values().size,
+            unknownInstance = skirout.editor.v1.conversion.ConversionSafety.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.conversion.ConversionSafety.Unknown(skirout.editor.v1.conversion.ConversionSafety.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ConversionSafetySerializer = build.skir.internal.makeSerializer(ConversionSafetySerializerImpl);
+
+    val RealmConversionRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:RealmConversionRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.RealmConversionRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.RealmConversionRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmConversionRuleSerializer = build.skir.internal.makeSerializer(RealmConversionRuleSerializerImpl);
+
+    val RecordConstructionFieldSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:RecordConstructionField",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.RecordConstructionField.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.RecordConstructionField.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RecordConstructionFieldSerializer = build.skir.internal.makeSerializer(RecordConstructionFieldSerializerImpl);
+
+    val RecordConstructionRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:RecordConstructionRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.RecordConstructionRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.RecordConstructionRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RecordConstructionRuleSerializer = build.skir.internal.makeSerializer(RecordConstructionRuleSerializerImpl);
+
+    val RecordProjectionFieldSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:RecordProjectionField",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.RecordProjectionField.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.RecordProjectionField.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RecordProjectionFieldSerializer = build.skir.internal.makeSerializer(RecordProjectionFieldSerializerImpl);
+
+    val RecordProjectionRuleSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/conversion.skir:RecordProjectionRule",
+        doc = "",
+        defaultInstance = skirout.editor.v1.conversion.RecordProjectionRule.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.RecordProjectionRule.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RecordProjectionRuleSerializer = build.skir.internal.makeSerializer(RecordProjectionRuleSerializerImpl);
+
+    val ScalarCastKindSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.conversion.ScalarCastKind, skirout.editor.v1.conversion.ScalarCastKind.Unknown>(
+            recordId = "editor/v1/conversion.skir:ScalarCastKind",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.conversion.ScalarCastKind.Kind.values().size,
+            unknownInstance = skirout.editor.v1.conversion.ScalarCastKind.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.conversion.ScalarCastKind.Unknown(skirout.editor.v1.conversion.ScalarCastKind.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ScalarCastKindSerializer = build.skir.internal.makeSerializer(ScalarCastKindSerializerImpl);
+
+    init {
+        CollectionMappingRuleSerializerImpl.addField(
+            "element_conversion_id",
+            "elementConversionId",
+            0,
+            skirout.editor.v1.type_catalog.ConversionId.serializer,
+            "",
+            { it.elementConversionId },
+            { mut, v -> mut.elementConversionId = v },
+        );
+        CollectionMappingRuleSerializerImpl.finalizeStruct();
+
+        ConversionCompositionRuleSerializerImpl.addField(
+            "steps",
+            "steps",
+            0,
+            build.skir.Serializers.list(
                 skirout.editor.v1.type_catalog.ConversionId.serializer,
-                "",
-                { it.conversionId },
-                { mut, v -> mut.conversionId = v },
-            );
-            serializerImpl.addField(
-                "source",
-                "source",
-                1,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.addField(
-                "target",
-                "target",
-                2,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "safety",
-                "safety",
-                3,
-                skirout.editor.v1.conversion.ConversionSafety.serializer,
-                "",
-                { it.safety },
-                { mut, v -> mut.safety = v },
-            );
-            serializerImpl.addField(
-                "fallibility",
-                "fallibility",
-                4,
-                skirout.editor.v1.conversion.ConversionFallibility.serializer,
-                "",
-                { it.fallibility },
-                { mut, v -> mut.fallibility = v },
-            );
-            serializerImpl.addField(
-                "locality",
-                "locality",
-                5,
-                skirout.editor.v1.conversion.ConversionLocality.serializer,
-                "",
-                { it.locality },
-                { mut, v -> mut.locality = v },
-            );
-            serializerImpl.addField(
-                "cost",
-                "cost",
-                6,
-                build.skir.Serializers.int32,
-                "",
-                { it.cost },
-                { mut, v -> mut.cost = v },
-            );
-            serializerImpl.addField(
-                "rule",
-                "rule",
-                7,
-                skirout.editor.v1.conversion.ConversionRule.serializer,
-                "",
-                { it.rule },
-                { mut, v -> mut.rule = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+            ),
+            "",
+            { it.steps },
+            { mut, v -> mut.steps = v },
+        );
+        ConversionCompositionRuleSerializerImpl.finalizeStruct();
+
+        ConversionDefinitionSerializerImpl.addField(
+            "conversion_id",
+            "conversionId",
+            0,
+            skirout.editor.v1.type_catalog.ConversionId.serializer,
+            "",
+            { it.conversionId },
+            { mut, v -> mut.conversionId = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "source",
+            "source",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "target",
+            "target",
+            2,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "safety",
+            "safety",
+            3,
+            _SerializerRegistry.ConversionSafetySerializer,
+            "",
+            { it.safety },
+            { mut, v -> mut.safety = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "fallibility",
+            "fallibility",
+            4,
+            _SerializerRegistry.ConversionFallibilitySerializer,
+            "",
+            { it.fallibility },
+            { mut, v -> mut.fallibility = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "locality",
+            "locality",
+            5,
+            _SerializerRegistry.ConversionLocalitySerializer,
+            "",
+            { it.locality },
+            { mut, v -> mut.locality = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "cost",
+            "cost",
+            6,
+            build.skir.Serializers.int32,
+            "",
+            { it.cost },
+            { mut, v -> mut.cost = v },
+        );
+        ConversionDefinitionSerializerImpl.addField(
+            "rule",
+            "rule",
+            7,
+            _SerializerRegistry.ConversionRuleSerializer,
+            "",
+            { it.rule },
+            { mut, v -> mut.rule = v },
+        );
+        ConversionDefinitionSerializerImpl.finalizeStruct();
+
+        ConversionFallibilitySerializerImpl.addConstantVariant(
+            1,
+            "infallible",
+            skirout.editor.v1.conversion.ConversionFallibility.Kind.INFALLIBLE_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionFallibility.INFALLIBLE,
+        );
+        ConversionFallibilitySerializerImpl.addConstantVariant(
+            2,
+            "fallible",
+            skirout.editor.v1.conversion.ConversionFallibility.Kind.FALLIBLE_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionFallibility.FALLIBLE,
+        );
+        ConversionFallibilitySerializerImpl.finalizeEnum();
+
+        ConversionLocalitySerializerImpl.addConstantVariant(
+            1,
+            "local",
+            skirout.editor.v1.conversion.ConversionLocality.Kind.LOCAL_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionLocality.LOCAL,
+        );
+        ConversionLocalitySerializerImpl.addConstantVariant(
+            2,
+            "realm",
+            skirout.editor.v1.conversion.ConversionLocality.Kind.REALM_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionLocality.REALM,
+        );
+        ConversionLocalitySerializerImpl.finalizeEnum();
+
+        ConversionRuleSerializerImpl.addConstantVariant(
+            1,
+            "identity",
+            skirout.editor.v1.conversion.ConversionRule.Kind.IDENTITY_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionRule.IDENTITY,
+        );
+        ConversionRuleSerializerImpl.addConstantVariant(
+            2,
+            "inheritance_upcast",
+            skirout.editor.v1.conversion.ConversionRule.Kind.INHERITANCE_UPCAST_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionRule.INHERITANCE_UPCAST,
+        );
+        ConversionRuleSerializerImpl.addConstantVariant(
+            3,
+            "validated_downcast",
+            skirout.editor.v1.conversion.ConversionRule.Kind.VALIDATED_DOWNCAST_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionRule.VALIDATED_DOWNCAST,
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            4,
+            "scalar_cast",
+            skirout.editor.v1.conversion.ConversionRule.Kind.SCALAR_CAST_WRAPPER.ordinal,
+            _SerializerRegistry.ScalarCastKindSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.ScalarCastWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            5,
+            "record_projection",
+            skirout.editor.v1.conversion.ConversionRule.Kind.RECORD_PROJECTION_WRAPPER.ordinal,
+            _SerializerRegistry.RecordProjectionRuleSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.RecordProjectionWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            6,
+            "record_construction",
+            skirout.editor.v1.conversion.ConversionRule.Kind.RECORD_CONSTRUCTION_WRAPPER.ordinal,
+            _SerializerRegistry.RecordConstructionRuleSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.RecordConstructionWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            7,
+            "collection_mapping",
+            skirout.editor.v1.conversion.ConversionRule.Kind.COLLECTION_MAPPING_WRAPPER.ordinal,
+            _SerializerRegistry.CollectionMappingRuleSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.CollectionMappingWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            8,
+            "composition",
+            skirout.editor.v1.conversion.ConversionRule.Kind.COMPOSITION_WRAPPER.ordinal,
+            _SerializerRegistry.ConversionCompositionRuleSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.CompositionWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.addWrapperVariant(
+            9,
+            "realm",
+            skirout.editor.v1.conversion.ConversionRule.Kind.REALM_WRAPPER.ordinal,
+            _SerializerRegistry.RealmConversionRuleSerializer,
+            "",
+            { skirout.editor.v1.conversion.ConversionRule.RealmWrapper(it) },
+            { it.value },
+        );
+        ConversionRuleSerializerImpl.finalizeEnum();
+
+        ConversionSafetySerializerImpl.addConstantVariant(
+            1,
+            "lossless",
+            skirout.editor.v1.conversion.ConversionSafety.Kind.LOSSLESS_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionSafety.LOSSLESS,
+        );
+        ConversionSafetySerializerImpl.addConstantVariant(
+            2,
+            "lossy",
+            skirout.editor.v1.conversion.ConversionSafety.Kind.LOSSY_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ConversionSafety.LOSSY,
+        );
+        ConversionSafetySerializerImpl.finalizeEnum();
+
+        RealmConversionRuleSerializerImpl.finalizeStruct();
+
+        RecordConstructionFieldSerializerImpl.addField(
+            "target_field",
+            "targetField",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.targetField },
+            { mut, v -> mut.targetField = v },
+        );
+        RecordConstructionFieldSerializerImpl.addField(
+            "source",
+            "source",
+            1,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        RecordConstructionFieldSerializerImpl.addField(
+            "conversion_id",
+            "conversionId",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ConversionId.serializer,
+            ),
+            "",
+            { it.conversionId },
+            { mut, v -> mut.conversionId = v },
+        );
+        RecordConstructionFieldSerializerImpl.finalizeStruct();
+
+        RecordConstructionRuleSerializerImpl.addField(
+            "fields",
+            "fields",
+            0,
+            build.skir.internal.keyedListSerializer(
+                _SerializerRegistry.RecordConstructionFieldSerializer,
+                "target_field",
+                { it.targetField },
+            ),
+            "",
+            { it.fields },
+            { mut, v -> mut.fields = v },
+        );
+        RecordConstructionRuleSerializerImpl.finalizeStruct();
+
+        RecordProjectionFieldSerializerImpl.addField(
+            "source",
+            "source",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.source },
+            { mut, v -> mut.source = v },
+        );
+        RecordProjectionFieldSerializerImpl.addField(
+            "target",
+            "target",
+            1,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        RecordProjectionFieldSerializerImpl.addField(
+            "conversion_id",
+            "conversionId",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ConversionId.serializer,
+            ),
+            "",
+            { it.conversionId },
+            { mut, v -> mut.conversionId = v },
+        );
+        RecordProjectionFieldSerializerImpl.finalizeStruct();
+
+        RecordProjectionRuleSerializerImpl.addField(
+            "fields",
+            "fields",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RecordProjectionFieldSerializer,
+            ),
+            "",
+            { it.fields },
+            { mut, v -> mut.fields = v },
+        );
+        RecordProjectionRuleSerializerImpl.finalizeStruct();
+
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            1,
+            "signed_widen",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.SIGNED_WIDEN_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.SIGNED_WIDEN,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            2,
+            "signed_narrow",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.SIGNED_NARROW_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.SIGNED_NARROW,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            3,
+            "unsigned_widen",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.UNSIGNED_WIDEN_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.UNSIGNED_WIDEN,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            4,
+            "unsigned_narrow",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.UNSIGNED_NARROW_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.UNSIGNED_NARROW,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            5,
+            "integer_to_float",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.INTEGER_TO_FLOAT_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.INTEGER_TO_FLOAT,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            6,
+            "float_to_integer",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.FLOAT_TO_INTEGER_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.FLOAT_TO_INTEGER,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            7,
+            "numeric_to_decimal",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.NUMERIC_TO_DECIMAL_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.NUMERIC_TO_DECIMAL,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            8,
+            "decimal_to_numeric",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.DECIMAL_TO_NUMERIC_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.DECIMAL_TO_NUMERIC,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            9,
+            "timestamp_to_string",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.TIMESTAMP_TO_STRING_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.TIMESTAMP_TO_STRING,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            10,
+            "string_to_timestamp",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.STRING_TO_TIMESTAMP_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.STRING_TO_TIMESTAMP,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            11,
+            "duration_to_string",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.DURATION_TO_STRING_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.DURATION_TO_STRING,
+        );
+        ScalarCastKindSerializerImpl.addConstantVariant(
+            12,
+            "string_to_duration",
+            skirout.editor.v1.conversion.ScalarCastKind.Kind.STRING_TO_DURATION_CONST.ordinal,
+            "",
+            skirout.editor.v1.conversion.ScalarCastKind.STRING_TO_DURATION,
+        );
+        ScalarCastKindSerializerImpl.finalizeEnum();
     }
 }

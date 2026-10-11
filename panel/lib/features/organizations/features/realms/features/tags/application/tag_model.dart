@@ -1,136 +1,53 @@
 part of "tags.dart";
 
-/// Persistent graph coordinates and dimensions for a tag node.
-///
-/// Coordinates are grid units interpreted by the tag graph. Width and height
-/// must remain positive because the inspector and graph require a visible
-/// node; [TagEditorSnapshot] enforces that rule for draft changes.
-@freezed
-abstract class Placement with _$Placement {
-  const factory Placement({
-    required int x,
-    required int y,
-    required int width,
-    required int height,
-  }) = _Placement;
-
-  const Placement._();
-
-  factory Placement.fromWire(skir.GraphPlacement placement) => Placement(
-    x: placement.x,
-    y: placement.y,
-    width: placement.width,
-    height: placement.height,
-  );
-
-  skir.GraphPlacement toWire() =>
-      skir.GraphPlacement(x: x, y: y, width: width, height: height);
-}
-
 /// Immutable panel model of the wire level Realm tag.
 ///
 /// [parentIds] names direct parents. The relationship is treated as a directed
 /// acyclic graph by the panel, and drag validation rejects self links, cycles,
-/// and unknown nodes. Wire conversion is lossless for the fields represented
-/// here. Inspector values omit the identity because the editor resource owns it.
+/// and unknown nodes. Unfinished authored fields receive display values here
+/// without changing the authoring record. Inspector values omit the identity
+/// because the editor resource owns it.
 @freezed
 abstract class Tag with _$Tag {
   @Assert("name != \"\"", "Name must not be empty.")
   const factory Tag({
-    required skir.RecordId tagId,
+    required skir.ResourceId tagId,
     required String name,
     required Color color,
-    required List<skir.RecordId> parentIds,
-    required Placement placement,
+    required List<skir.ResourceId> parentIds,
+    required GraphPlacement placement,
   }) = _Tag;
 
   const Tag._();
 
-  factory Tag.fromWire(skir.Tag tag) => Tag(
-    tagId: tag.id,
-    name: tag.name,
-    color: tag.color.toFlutterColor(),
-    parentIds: tag.parents.toList(),
-    placement: Placement.fromWire(tag.placement),
-  );
-
-  skir.Tag toWire() => skir.Tag(
-    id: tagId,
-    name: name,
-    color: color.toSkirColor(),
-    parents: parentIds,
-    placement: placement.toWire(),
-  );
-}
-
-/// Converts a tag to and from the structural value used by the editor.
-///
-/// Decoding is deliberately strict. Wrong field types, malformed parent IDs,
-/// invalid colors, or nonpositive dimensions return null, allowing the shared
-/// editor to keep an invalid draft visible without creating an invalid Tag.
-extension TagInspectorValue on Tag {
-  RecordValue get inspectorValue => RecordValue({
-    "name": name.asValue,
-    "color": color.asValue,
-    "parents": ListValue(parentIds.map(ReferenceValue.new).toList()),
-    "layout": RecordValue({
-      "x": placement.x.asValue,
-      "y": placement.y.asValue,
-      "width": placement.width.asValue,
-      "height": placement.height.asValue,
-    }),
-  });
-
-  Tag? withInspectorValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final name = value.fields["name"];
-    final color = value.fields["color"];
-    final parents = value.fields["parents"];
-    final layout = value.fields["layout"];
-    if (name is! StringValue ||
-        name.value.trim().isEmpty ||
-        color is! IntegerValue ||
-        parents is! ListValue ||
-        layout is! RecordValue) {
-      return null;
-    }
-
-    final decodedColor = color.asColorOrNull;
-    final parentIds = parents.values
-        .whereType<ReferenceValue>()
-        .map((parent) => parent.id)
-        .toList();
-    final x = layout.fields["x"];
-    final y = layout.fields["y"];
-    final width = layout.fields["width"];
-    final height = layout.fields["height"];
-
-    if (decodedColor == null ||
-        parentIds.length != parents.values.length ||
-        x is! IntegerValue ||
-        y is! IntegerValue ||
-        width is! IntegerValue ||
-        height is! IntegerValue ||
-        width.value < BigInt.one ||
-        height.value < BigInt.one) {
-      return null;
-    }
-    return copyWith(
-      name: name.value,
-      color: decodedColor,
-      parentIds: parentIds,
-      placement: Placement(
-        x: x.value.toInt(),
-        y: y.value.toInt(),
-        width: width.value.toInt(),
-        height: height.value.toInt(),
+  factory Tag.fromAuthoring(skir.AuthoringResource resource) {
+    final content = resource.content;
+    final color = content.authoredField("color")?.authoredInteger;
+    final parents =
+        content.authoredField("parents")?.authoredItems ??
+        const <skir.ListItem>[];
+    final placement = content.authoredField("placement");
+    final x = placement?.authoredField("x")?.authoredInteger;
+    final y = placement?.authoredField("y")?.authoredInteger;
+    final width = placement?.authoredField("width")?.authoredInteger;
+    final height = placement?.authoredField("height")?.authoredInteger;
+    return Tag(
+      tagId: resource.id,
+      name: (content.authoredField("name")?.authoredString).displayLabel(
+        "Unnamed Tag",
+      ),
+      color: Color((color ?? BigInt.from(0xff9e9e9e)).toUnsigned(32).toInt()),
+      parentIds: parents
+          .map((item) => item.value.authoredLink?.target.resource)
+          .nonNulls
+          .toList(growable: false),
+      placement: GraphPlacement(
+        x: x?.toInt() ?? 0,
+        y: y?.toInt() ?? 0,
+        width: width == null || width < BigInt.one ? 1 : width.toInt(),
+        height: height == null || height < BigInt.one ? 1 : height.toInt(),
       ),
     );
-  }
-
-  Tag projected(LocalEditorValue? local) {
-    if (local == null) return this;
-    return withInspectorValue(local.projectOnto(inspectorValue)) ?? this;
   }
 }
 
@@ -145,8 +62,8 @@ enum TagParentDropAction { link, unlink }
 /// conservatively because accepting it could create a cycle.
 TagParentDropAction? tagParentDropAction(
   Iterable<Tag> tags, {
-  required skir.RecordId childId,
-  required skir.RecordId parentId,
+  required skir.ResourceId childId,
+  required skir.ResourceId parentId,
 }) {
   final tagsById = {for (final tag in tags) tag.tagId: tag};
   final child = tagsById[childId];
@@ -172,12 +89,12 @@ TagParentDropAction? tagParentDropAction(
 }
 
 bool? _isAncestor(
-  Map<skir.RecordId, Tag> tagsById, {
-  required skir.RecordId tagId,
-  required skir.RecordId ancestorId,
+  Map<skir.ResourceId, Tag> tagsById, {
+  required skir.ResourceId tagId,
+  required skir.ResourceId ancestorId,
 }) {
   final pendingIds = [tagId];
-  final visitedIds = <skir.RecordId>{};
+  final visitedIds = <skir.ResourceId>{};
   while (pendingIds.isNotEmpty) {
     final currentId = pendingIds.removeLast();
     if (!visitedIds.add(currentId)) continue;

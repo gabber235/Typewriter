@@ -1,15 +1,17 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
-EditorSnapshot _snapshot() => const DocumentEditorSnapshot(
+EditorSnapshot _snapshot() => FakeEditorSnapshot(
   EditorDocument(
-    rootType: StringType(),
-    typeCatalog: TypeCatalog([]),
-    confirmedValue: StringValue("Original"),
+    rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+    catalog: _emptyCatalog,
+    confirmedValue: skir.DataValue.wrapStringValue("Original"),
     revision: 1,
   ),
+  validation: acceptTestEditorMutation,
 );
 
 typedef _Operation = (EditorResourceKey, EditorCommit);
@@ -55,8 +57,8 @@ final class _BatchResource implements EditableResource {
           case SubmissionRejected(:final message):
             accept(
               MutationUnavailable([
-                TypeDiagnostic(
-                  code: TypeDiagnosticCode.invalidValue,
+                EditorDiagnostic(
+                  code: EditorDiagnosticCode.invalidValue,
                   message: message,
                 ),
               ]),
@@ -70,7 +72,7 @@ final class _BatchResource implements EditableResource {
 }
 
 TransactionalEditorSource _source(
-  LocalWorkSession workspace,
+  ScopedWorkSession workspace,
   _BatchResource resource, {
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.applyResource,
 }) {
@@ -89,7 +91,7 @@ TransactionalEditorSource _source(
 
 void main() {
   test("resource batch publishes accepted drafts before refresh", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final refreshStarted = Completer<void>();
     final refreshBarrier = Completer<void>();
@@ -108,14 +110,14 @@ void main() {
 
     final batch = EditorBatch.submit(
       changes: {
-        source: {DataPath.root: const StringValue("Draft")},
+        source: {editorRootPath: skir.DataValue.wrapStringValue("Draft")},
       },
     );
     await refreshStarted.future;
 
     final projected = workspace.state.editorValues[resource.key];
-    expect(projected?.value, const StringValue("Draft"));
-    expect(projected?.editedPaths, {DataPath.root});
+    expect(projected?.value, skir.DataValue.wrapStringValue("Draft"));
+    expect(projected?.editedPaths, {editorRootPath});
 
     refreshBarrier.complete();
     expect((await batch).values, everyElement(isA<MutationSuccess>()));
@@ -125,7 +127,7 @@ void main() {
   test(
     "multi interaction sends one batch for every selected resource",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final requests = <List<_Operation>>[];
       final combiner = MutationCombiner<_Operation, List<_Operation>>(
@@ -151,15 +153,15 @@ void main() {
       );
       final owner = MultiEditOwner(
         owners: [first, second],
-        rootType: const StringType(),
-        typeCatalog: const TypeCatalog([]),
+        rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        catalog: _emptyCatalog,
         commitInteractions: (interactions) => interactions.commitAtomically(),
       );
       addTearDown(owner.dispose);
 
-      final interaction = owner.beginInteraction(DataPath.root);
+      final interaction = owner.beginInteraction(editorRootPath);
       expect(
-        owner.update(DataPath.root, const StringValue("Shared")),
+        owner.update(editorRootPath, skir.DataValue.wrapStringValue("Shared")),
         isA<AppliedEditorMutation>(),
       );
       await interaction.commit();
@@ -168,7 +170,7 @@ void main() {
       expect(requests.single, hasLength(2));
       expect(
         requests.single.map((operation) => operation.$2.rootValue),
-        everyElement(const StringValue("Shared")),
+        everyElement(skir.DataValue.wrapStringValue("Shared")),
       );
       expect(first.hasWork, isFalse);
       expect(second.hasWork, isFalse);
@@ -176,7 +178,7 @@ void main() {
   );
 
   test("rejected multi interaction retry does not replay mutations", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final requests = <List<_Operation>>[];
     var reject = true;
@@ -205,14 +207,14 @@ void main() {
     );
     final owner = MultiEditOwner(
       owners: [first, second],
-      rootType: const StringType(),
-      typeCatalog: const TypeCatalog([]),
+      rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      catalog: _emptyCatalog,
       commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     addTearDown(owner.dispose);
 
-    final interaction = owner.beginInteraction(DataPath.root);
-    owner.update(DataPath.root, const StringValue("Shared"));
+    final interaction = owner.beginInteraction(editorRootPath);
+    owner.update(editorRootPath, skir.DataValue.wrapStringValue("Shared"));
     await interaction.commit();
     final rejected = requests.single;
 
@@ -230,7 +232,7 @@ void main() {
   });
 
   test("apply resource interaction releases gates without saving", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final requests = <List<_Operation>>[];
     final combiner = MutationCombiner<_Operation, List<_Operation>>(
@@ -248,14 +250,14 @@ void main() {
     final second = _source(workspace, _BatchResource("second", combiner));
     final owner = MultiEditOwner(
       owners: [first, second],
-      rootType: const StringType(),
-      typeCatalog: const TypeCatalog([]),
+      rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      catalog: _emptyCatalog,
       commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     addTearDown(owner.dispose);
 
-    final interaction = owner.beginInteraction(DataPath.root);
-    owner.update(DataPath.root, const StringValue("Shared"));
+    final interaction = owner.beginInteraction(editorRootPath);
+    owner.update(editorRootPath, skir.DataValue.wrapStringValue("Shared"));
     await interaction.commit();
 
     expect(interaction.active, isFalse);
@@ -265,7 +267,7 @@ void main() {
   });
 
   test("cancelling a multi interaction restores every draft", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final requests = <List<_Operation>>[];
     final combiner = MutationCombiner<_Operation, List<_Operation>>(
@@ -291,25 +293,25 @@ void main() {
     );
     final owner = MultiEditOwner(
       owners: [first, second],
-      rootType: const StringType(),
-      typeCatalog: const TypeCatalog([]),
+      rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      catalog: _emptyCatalog,
       commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     addTearDown(owner.dispose);
 
-    final interaction = owner.beginInteraction(DataPath.root);
-    owner.update(DataPath.root, const StringValue("Shared"));
+    final interaction = owner.beginInteraction(editorRootPath);
+    owner.update(editorRootPath, skir.DataValue.wrapStringValue("Shared"));
     interaction.cancel();
 
     expect(interaction.active, isFalse);
     expect(requests, isEmpty);
     expect(
-      first.value(DataPath.root).valueOrNull,
-      const StringValue("Original"),
+      first.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Original"),
     );
     expect(
-      second.value(DataPath.root).valueOrNull,
-      const StringValue("Original"),
+      second.value(editorRootPath).valueOrNull,
+      skir.DataValue.wrapStringValue("Original"),
     );
     expect(first.hasWork, isFalse);
     expect(second.hasWork, isFalse);
@@ -318,7 +320,7 @@ void main() {
   test(
     "partially closed atomic cohort cancels every remaining member",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final requests = <List<_Operation>>[];
       final combiner = MutationCombiner<_Operation, List<_Operation>>(
@@ -342,29 +344,29 @@ void main() {
         _BatchResource("second", combiner),
         commitPolicy: EditorCommitPolicy.autosaveChanges,
       );
-      final firstInteraction = first.beginInteraction(DataPath.root);
-      final secondInteraction = second.beginInteraction(DataPath.root);
-      first.update(DataPath.root, const StringValue("First"));
-      second.update(DataPath.root, const StringValue("Second"));
+      final firstInteraction = first.beginInteraction(editorRootPath);
+      final secondInteraction = second.beginInteraction(editorRootPath);
+      first.update(editorRootPath, skir.DataValue.wrapStringValue("First"));
+      second.update(editorRootPath, skir.DataValue.wrapStringValue("Second"));
       firstInteraction.cancel();
 
       await [firstInteraction, secondInteraction].commitAtomically();
 
       expect(requests, isEmpty);
       expect(
-        first.value(DataPath.root).valueOrNull,
-        const StringValue("Original"),
+        first.value(editorRootPath).valueOrNull,
+        skir.DataValue.wrapStringValue("Original"),
       );
       expect(
-        second.value(DataPath.root).valueOrNull,
-        const StringValue("Original"),
+        second.value(editorRootPath).valueOrNull,
+        skir.DataValue.wrapStringValue("Original"),
       );
       expect(secondInteraction.active, isFalse);
     },
   );
 
   test("atomic commit rejects duplicate resource interactions", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final combiner = MutationCombiner<_Operation, List<_Operation>>(
       prepare: (operations) => PreparedCommit(
@@ -379,7 +381,7 @@ void main() {
       _BatchResource("first", combiner),
       commitPolicy: EditorCommitPolicy.autosaveChanges,
     );
-    final interaction = source.beginInteraction(DataPath.root);
+    final interaction = source.beginInteraction(editorRootPath);
     addTearDown(interaction.cancel);
 
     await expectLater(
@@ -392,7 +394,7 @@ void main() {
     test(
       "retrying one member preserves the complete batch after ${failRefresh ? "refresh failure" : "rejection"}",
       () async {
-        final workspace = LocalWorkSession();
+        final workspace = ScopedWorkSession();
         addTearDown(workspace.dispose);
         final requests = <List<_Operation>>[];
         var reject = !failRefresh;
@@ -416,8 +418,8 @@ void main() {
         final second = _source(workspace, secondResource);
         final result = await EditorBatch.submit(
           changes: {
-            first: {DataPath.root: const StringValue("First")},
-            second: {DataPath.root: const StringValue("Second")},
+            first: {editorRootPath: skir.DataValue.wrapStringValue("First")},
+            second: {editorRootPath: skir.DataValue.wrapStringValue("Second")},
           },
         );
         expect(result.values, everyElement(isA<MutationUnavailable>()));
@@ -434,8 +436,8 @@ void main() {
           secondResource.key,
         ]);
         expect(requests.last.map((operation) => operation.$2.rootValue), [
-          const StringValue("First"),
-          const StringValue("Second"),
+          skir.DataValue.wrapStringValue("First"),
+          skir.DataValue.wrapStringValue("Second"),
         ]);
         expect(firstResource.reads, 2);
 
@@ -449,7 +451,7 @@ void main() {
   test(
     "one uncertain batch replays the same request and settles every member",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final requests = <List<_Operation>>[];
       final combiner = MutationCombiner<_Operation, List<_Operation>>(
@@ -478,8 +480,8 @@ void main() {
       final second = _source(workspace, secondResource);
       final result = await EditorBatch.submit(
         changes: {
-          first: {DataPath.root: const StringValue("First")},
-          second: {DataPath.root: const StringValue("Second")},
+          first: {editorRootPath: skir.DataValue.wrapStringValue("First")},
+          second: {editorRootPath: skir.DataValue.wrapStringValue("Second")},
         },
       );
       expect(result.values, everyElement(isA<MutationUncertain>()));
@@ -494,3 +496,7 @@ void main() {
     },
   );
 }
+
+final _emptyCatalog = CheckedEditorCatalog(
+  skir.EditorCatalogWireSnapshot.defaultInstance,
+);

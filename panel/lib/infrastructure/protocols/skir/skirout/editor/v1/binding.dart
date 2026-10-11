@@ -12,127 +12,16 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
-import "./path.dart" as _lib_editor_v1_path;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
-// struct BindingId
-// -----------------------------------------------------------------------------
-
-sealed class BindingId_orMutable {
-  _core.int get value;
-
-  BindingId toFrozen();
-}
-
-/// Deeply immutable.
-final class BindingId implements BindingId_orMutable {
-  @_core.override
-  final _core.int value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory BindingId({
-    required _core.int value,
-  }) => BindingId._(
-    value,
-  );
-
-  BindingId._(
-    this.value,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = BindingId._(
-    0,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static BindingId_mutable mutable() => BindingId_mutable._(
-    0,
-  );
-
-  /// Returns this instance (no-op).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  BindingId toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  BindingId_mutable toMutable() => BindingId_mutable._(
-    this.value,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! BindingId) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.value,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `BindingId` instances.
-  static _skir.StructSerializer<BindingId, BindingId_mutable> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        0,
-        _skir.Serializers.int64,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/binding.skir:BindingId",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (BindingId_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [BindingId].
-final class BindingId_mutable implements BindingId_orMutable {
-  _core.int value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  BindingId_mutable._(
-    this.value,
-  );
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  BindingId toFrozen() => BindingId(
-    value: this.value,
-  ).._u = this._u;
-}
-
-// -----------------------------------------------------------------------------
 // struct BindingRef
-// -----------------------------------------------------------------------------
 
 sealed class BindingRef_orMutable {
-  _lib_editor_v1_path.DataPath_orMutable get path;
-  BindingId_orMutable get bindingId;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable get bindingId;
 
   BindingRef toFrozen();
 }
@@ -140,62 +29,55 @@ sealed class BindingRef_orMutable {
 /// Deeply immutable.
 final class BindingRef implements BindingRef_orMutable {
   @_core.override
-  final _lib_editor_v1_path.DataPath path;
+  final _lib_editor_v1_type_catalog.ValuePath path;
   @_core.override
-  final BindingId bindingId;
+  final _lib_editor_v1_type_catalog.ExpressionBindingId bindingId;
   _skir.internal__UnrecognizedFields? _u;
 
   factory BindingRef({
-    required _lib_editor_v1_path.DataPath_orMutable path,
-    required BindingId_orMutable bindingId,
-  }) => BindingRef._(
-    path.toFrozen(),
-    bindingId.toFrozen(),
-  );
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable
+    bindingId,
+  }) => BindingRef._(path.toFrozen(), bindingId.toFrozen());
 
-  BindingRef._(
-    this.path,
-    this.bindingId,
-  );
+  BindingRef._(this.path, this.bindingId);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = BindingRef._(
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static BindingRef_mutable mutable() => BindingRef_mutable._(
-    _lib_editor_v1_path.DataPath.defaultInstance,
-    BindingId.defaultInstance,
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.ExpressionBindingId.defaultInstance,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   BindingRef toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  BindingRef_mutable toMutable() => BindingRef_mutable._(
-    this.path,
-    this.bindingId,
-  );
+  BindingRef_mutable toMutable() =>
+      BindingRef_mutable._(this.path, this.bindingId);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! BindingRef) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.path,
-    this.bindingId,
-  ];
+  _core.List get _equality_proxy => [this.path, this.bindingId];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -207,7 +89,7 @@ final class BindingRef implements BindingRef_orMutable {
         "path",
         "path",
         0,
-        _lib_editor_v1_path.DataPath.serializer,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
         "",
         (it) => it.path,
         (it, v) => it.path = v,
@@ -216,7 +98,7 @@ final class BindingRef implements BindingRef_orMutable {
         "binding_id",
         "bindingId",
         1,
-        BindingId.serializer,
+        _lib_editor_v1_type_catalog.ExpressionBindingId.serializer,
         "",
         (it) => it.bindingId,
         (it, v) => it.bindingId = v,
@@ -239,53 +121,49 @@ final class BindingRef implements BindingRef_orMutable {
 
 /// Mutable version of [BindingRef].
 final class BindingRef_mutable implements BindingRef_orMutable {
-  _lib_editor_v1_path.DataPath_orMutable path;
-  BindingId_orMutable bindingId;
+  _lib_editor_v1_type_catalog.ValuePath_orMutable path;
+  _lib_editor_v1_type_catalog.ExpressionBindingId_orMutable bindingId;
   _skir.internal__UnrecognizedFields? _u;
 
-  BindingRef_mutable._(
-    this.path,
-    this.bindingId,
-  );
+  BindingRef_mutable._(this.path, this.bindingId);
 
-  /// If the value of [path] is already mutable, returns it as-is.
+  /// If the value of [path] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
-  _lib_editor_v1_path.DataPath_mutable get mutablePath {
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
     final value = this.path;
-    if (value is _lib_editor_v1_path.DataPath_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
       return value;
     } else {
-      return this.path = (value as _lib_editor_v1_path.DataPath).toMutable();
+      return this.path = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
     }
   }
 
-  /// If the value of [bindingId] is already mutable, returns it as-is.
+  /// If the value of [bindingId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
-  BindingId_mutable get mutableBindingId {
+  _lib_editor_v1_type_catalog.ExpressionBindingId_mutable get mutableBindingId {
     final value = this.bindingId;
-    if (value is BindingId_mutable) {
+    if (value is _lib_editor_v1_type_catalog.ExpressionBindingId_mutable) {
       return value;
     } else {
-      return this.bindingId = (value as BindingId).toMutable();
+      return this.bindingId =
+          (value as _lib_editor_v1_type_catalog.ExpressionBindingId)
+              .toMutable();
     }
   }
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  BindingRef toFrozen() => BindingRef(
-    path: this.path,
-    bindingId: this.bindingId,
-  ).._u = this._u;
+  BindingRef toFrozen() =>
+      BindingRef(path: this.path, bindingId: this.bindingId).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ResolvedBinding
-// -----------------------------------------------------------------------------
 
 sealed class ResolvedBinding_orMutable {
   BindingRef_orMutable get reference;
-  _lib_editor_v1_type_catalog.TypeExpression get valueType;
-  _lib_editor_v1_type_catalog.TypedValue get value;
+  _lib_editor_v1_type_catalog.TypeUse get valueType;
+  _lib_editor_v1_type_catalog.DataValue get value;
   _core.bool get writable;
   _core.int get revision;
 
@@ -297,9 +175,9 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   @_core.override
   final BindingRef reference;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression valueType;
+  final _lib_editor_v1_type_catalog.TypeUse valueType;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue value;
+  final _lib_editor_v1_type_catalog.DataValue value;
   @_core.override
   final _core.bool writable;
   @_core.override
@@ -308,8 +186,8 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
 
   factory ResolvedBinding({
     required BindingRef_orMutable reference,
-    required _lib_editor_v1_type_catalog.TypeExpression valueType,
-    required _lib_editor_v1_type_catalog.TypedValue value,
+    required _lib_editor_v1_type_catalog.TypeUse valueType,
+    required _lib_editor_v1_type_catalog.DataValue value,
     required _core.bool writable,
     required _core.int revision,
   }) => ResolvedBinding._(
@@ -331,8 +209,8 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResolvedBinding._(
     BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     false,
     0,
   );
@@ -341,13 +219,13 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   /// Fields are initialized to their default values.
   static ResolvedBinding_mutable mutable() => ResolvedBinding_mutable._(
     BindingRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypeExpression.unknown,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     false,
     0,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResolvedBinding toFrozen() => this;
@@ -365,7 +243,10 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ResolvedBinding) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -383,7 +264,8 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ResolvedBinding` instances.
-  static _skir.StructSerializer<ResolvedBinding, ResolvedBinding_mutable> get serializer {
+  static _skir.StructSerializer<ResolvedBinding, ResolvedBinding_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "reference",
@@ -398,7 +280,7 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
         "value_type",
         "valueType",
         1,
-        _lib_editor_v1_type_catalog.TypeExpression.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.valueType,
         (it, v) => it.valueType = v,
@@ -407,7 +289,7 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
         "value",
         "value",
         2,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -449,8 +331,8 @@ final class ResolvedBinding implements ResolvedBinding_orMutable {
 /// Mutable version of [ResolvedBinding].
 final class ResolvedBinding_mutable implements ResolvedBinding_orMutable {
   BindingRef_orMutable reference;
-  _lib_editor_v1_type_catalog.TypeExpression valueType;
-  _lib_editor_v1_type_catalog.TypedValue value;
+  _lib_editor_v1_type_catalog.TypeUse valueType;
+  _lib_editor_v1_type_catalog.DataValue value;
   _core.bool writable;
   _core.int revision;
   _skir.internal__UnrecognizedFields? _u;
@@ -463,7 +345,7 @@ final class ResolvedBinding_mutable implements ResolvedBinding_orMutable {
     this.revision,
   );
 
-  /// If the value of [reference] is already mutable, returns it as-is.
+  /// If the value of [reference] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
   BindingRef_mutable get mutableReference {
     final value = this.reference;
@@ -485,9 +367,118 @@ final class ResolvedBinding_mutable implements ResolvedBinding_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
+// struct BindingDiagnostic
+
+sealed class BindingDiagnostic_orMutable {
+  _core.String get code;
+  _core.String get message;
+
+  BindingDiagnostic toFrozen();
+}
+
+/// Deeply immutable.
+final class BindingDiagnostic implements BindingDiagnostic_orMutable {
+  @_core.override
+  final _core.String code;
+  @_core.override
+  final _core.String message;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory BindingDiagnostic({
+    required _core.String code,
+    required _core.String message,
+  }) => BindingDiagnostic._(code, message);
+
+  BindingDiagnostic._(this.code, this.message);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = BindingDiagnostic._("", "");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static BindingDiagnostic_mutable mutable() =>
+      BindingDiagnostic_mutable._("", "");
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  BindingDiagnostic toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  BindingDiagnostic_mutable toMutable() =>
+      BindingDiagnostic_mutable._(this.code, this.message);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! BindingDiagnostic) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.code, this.message];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `BindingDiagnostic` instances.
+  static _skir.StructSerializer<BindingDiagnostic, BindingDiagnostic_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "code",
+        "code",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.code,
+        (it, v) => it.code = v,
+      );
+      _serializerBuilder.addField(
+        "message",
+        "message",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.message,
+        (it, v) => it.message = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/binding.skir:BindingDiagnostic",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (BindingDiagnostic_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [BindingDiagnostic].
+final class BindingDiagnostic_mutable implements BindingDiagnostic_orMutable {
+  _core.String code;
+  _core.String message;
+  _skir.internal__UnrecognizedFields? _u;
+
+  BindingDiagnostic_mutable._(this.code, this.message);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  BindingDiagnostic toFrozen() =>
+      BindingDiagnostic(code: this.code, message: this.message).._u = this._u;
+}
+
 // enum BindingResolution
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -505,15 +496,14 @@ sealed class BindingResolution {
   static const BindingResolution unknown = BindingResolution_unknown._instance;
 
   /// Create a 'resolved' variant wrapping around the given value.
-  factory BindingResolution.wrapResolved(
-    ResolvedBinding value
-  ) => BindingResolution_resolvedWrapper._(value);
+  factory BindingResolution.wrapResolved(ResolvedBinding value) =>
+      BindingResolution_resolvedWrapper._(value);
 
   /// Same as `wrapResolved(ResolvedBinding(...))`.
   factory BindingResolution.createResolved({
     required BindingRef_orMutable reference,
-    required _lib_editor_v1_type_catalog.TypeExpression valueType,
-    required _lib_editor_v1_type_catalog.TypedValue value,
+    required _lib_editor_v1_type_catalog.TypeUse valueType,
+    required _lib_editor_v1_type_catalog.DataValue value,
     required _core.bool writable,
     required _core.int revision,
   }) => BindingResolution.wrapResolved(
@@ -523,12 +513,12 @@ sealed class BindingResolution {
       value: value,
       writable: writable,
       revision: revision,
-    )
+    ),
   );
 
   /// Create a 'diagnostics' variant wrapping around the given value.
   factory BindingResolution.wrapDiagnostics(
-    _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> value
+    _core.Iterable<BindingDiagnostic> value,
   ) => BindingResolution_diagnosticsWrapper._(value);
 
   /// Returns the kind of variant held by this BindingResolution.
@@ -551,9 +541,7 @@ sealed class BindingResolution {
         2,
         "diagnostics",
         "wrapDiagnostics",
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.TypeDiagnostic.serializer,
-        ),
+        _skir.Serializers.iterable(BindingDiagnostic.serializer),
         "",
         BindingResolution_diagnosticsWrapper._,
         (it) => it.value,
@@ -564,15 +552,16 @@ sealed class BindingResolution {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/binding.skir:BindingResolution",
-    doc: "",
-    unknownInstance: BindingResolution_unknown._instance,
-    enumInstance: BindingResolution.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: BindingResolution_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/binding.skir:BindingResolution",
+        doc: "",
+        unknownInstance: BindingResolution_unknown._instance,
+        enumInstance: BindingResolution.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: BindingResolution_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `BindingResolution`.
@@ -601,7 +590,8 @@ final class BindingResolution_unknown implements BindingResolution {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BindingResolution.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BindingResolution.serializer);
 }
 
 sealed class _BindingResolution_wrapper implements BindingResolution {
@@ -617,10 +607,12 @@ sealed class _BindingResolution_wrapper implements BindingResolution {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, BindingResolution.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, BindingResolution.serializer);
 }
 
-final class BindingResolution_resolvedWrapper extends _BindingResolution_wrapper {
+final class BindingResolution_resolvedWrapper
+    extends _BindingResolution_wrapper {
   final ResolvedBinding value;
 
   BindingResolution_resolvedWrapper._(this.value);
@@ -629,8 +621,9 @@ final class BindingResolution_resolvedWrapper extends _BindingResolution_wrapper
   BindingResolution_kind get kind => BindingResolution_kind.resolvedWrapper;
 }
 
-final class BindingResolution_diagnosticsWrapper extends _BindingResolution_wrapper {
-  final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> value;
+final class BindingResolution_diagnosticsWrapper
+    extends _BindingResolution_wrapper {
+  final _core.Iterable<BindingDiagnostic> value;
 
   BindingResolution_diagnosticsWrapper._(this.value);
 

@@ -1,5 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 Service service({
@@ -7,7 +8,7 @@ Service service({
   ServiceRole? role,
   ServiceState? state,
 }) => Service(
-  serviceId: recordId("service:test"),
+  serviceId: skir.recordId("service:test"),
   revision: 1,
   name: name,
   role: role ?? HostServiceRole(version: "1"),

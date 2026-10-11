@@ -22,7 +22,7 @@ final class EditorBatch {
   EditorBatch._(
     this._commits,
     this._send, {
-    Map<TransactionalEditorSource, Set<DataPath>>? paths,
+    Map<TransactionalEditorSource, Set<skir.ValuePath>>? paths,
   }) : _paths =
            paths ??
            {
@@ -31,7 +31,7 @@ final class EditorBatch {
            };
   final EditorBatchSender? _send;
   final Map<TransactionalEditorSource, EditorCommit> _commits;
-  final Map<TransactionalEditorSource, Set<DataPath>> _paths;
+  final Map<TransactionalEditorSource, Set<skir.ValuePath>> _paths;
   Map<TransactionalEditorSource, TypedMutationResult> _results = {};
   Future<Map<TransactionalEditorSource, TypedMutationResult>>? _recovery;
 
@@ -44,7 +44,8 @@ final class EditorBatch {
   /// projected consumers observe them immediately. An unconfirmable submission
   /// returns [MutationUncertain].
   static Future<Map<TransactionalEditorSource, TypedMutationResult>> submit({
-    required Map<TransactionalEditorSource, Map<DataPath, DataValue>> changes,
+    required Map<TransactionalEditorSource, Map<skir.ValuePath, skir.DataValue>>
+    changes,
     EditorBatchSender? send,
   }) async {
     while (changes.keys.any((source) => source._activeCommit != null)) {
@@ -63,9 +64,10 @@ final class EditorBatch {
       throw StateError("A local editor batch requires a sender");
     }
 
-    final invalid = <TypeDiagnostic>[];
+    final invalid = <EditorDiagnostic>[];
 
-    final accepted = <TransactionalEditorSource, Map<DataPath, DataValue>>{};
+    final accepted =
+        <TransactionalEditorSource, Map<skir.ValuePath, skir.DataValue>>{};
     for (final entry in changes.entries) {
       if (entry.value.isEmpty ||
           entry.value.keys.any(
@@ -116,9 +118,9 @@ final class EditorBatch {
     for (final entry in changes.entries) {
       final source = entry.key;
       for (final change in accepted[source]!.entries) {
-        source._draft = change.key
-            .replace(source._draft, change.value)
-            .valueOrNull!;
+        source._draft =
+            source._draft.replacingEditorValue(change.key, change.value) ??
+            source._draft;
         source._localRevision++;
         source._pendingMutations.add(
           _PendingStructuralMutation(
@@ -184,7 +186,7 @@ final class EditorBatch {
 
   static Future<Map<TransactionalEditorSource, TypedMutationResult>>
   _flushPrepared(
-    Map<TransactionalEditorSource, Set<DataPath>> paths, {
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths, {
     EditorBatchSender? send,
   }) async {
     final resourceBatch = _validatePreparedPaths(paths, send: send);
@@ -201,7 +203,7 @@ final class EditorBatch {
 
   static Future<Map<TransactionalEditorSource, TypedMutationResult>>
   _flushPreparedClaimed(
-    Map<TransactionalEditorSource, Set<DataPath>> paths,
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths,
     Map<TransactionalEditorSource, Completer<TypedMutationResult>>
     completions, {
     EditorBatchSender? send,
@@ -239,7 +241,7 @@ final class EditorBatch {
 
   static Future<Map<TransactionalEditorSource, TypedMutationResult>>
   _flushLocalPreparedClaimed(
-    Map<TransactionalEditorSource, Set<DataPath>> paths,
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths,
     Map<TransactionalEditorSource, Completer<TypedMutationResult>> completions,
     EditorBatchSender send,
   ) async {
@@ -315,7 +317,7 @@ final class EditorBatch {
   }
 
   static bool _validatePreparedPaths(
-    Map<TransactionalEditorSource, Set<DataPath>> paths, {
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths, {
     EditorBatchSender? send,
   }) {
     if (paths.isEmpty || paths.values.any((value) => value.isEmpty)) {
@@ -343,8 +345,8 @@ final class EditorBatch {
     return true;
   }
 
-  static Map<TransactionalEditorSource, Set<DataPath>> _immutablePaths(
-    Map<TransactionalEditorSource, Set<DataPath>> paths,
+  static Map<TransactionalEditorSource, Set<skir.ValuePath>> _immutablePaths(
+    Map<TransactionalEditorSource, Set<skir.ValuePath>> paths,
   ) => Map.unmodifiable({
     for (final entry in paths.entries) entry.key: Set.unmodifiable(entry.value),
   });

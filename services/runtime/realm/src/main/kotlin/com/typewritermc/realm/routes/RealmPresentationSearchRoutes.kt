@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
@@ -12,8 +13,8 @@ import skirout.editor.v1.search.RealmPresentationSearchUpdate
  */
 internal class RealmPresentationSearchRoutes(
     private val source: RealmPresentationSearchSource,
-    private val contracts: LibraryContracts,
-    private val realmAddress: RealmAddress,
+    private val contracts: EditorContracts,
+    private val realmAddress: RealmRouteScope,
 ) {
     /**
      * Registers search startup and cancellation on the current Realm router.

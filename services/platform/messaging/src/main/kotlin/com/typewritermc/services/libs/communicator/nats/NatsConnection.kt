@@ -1,6 +1,8 @@
 package com.typewritermc.services.libs.communicator.nats
 
-import com.typewritermc.services.libs.utils.findExceptionalThrowable
+import com.typewritermc.services.libs.utils.findExceptional
+import com.typewritermc.services.libs.utils.rethrowExceptional
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -102,7 +104,7 @@ class NatsConnection internal constructor(
                 } finally {
                     clearConnection()
                 }
-                exceptionalCause(failure)?.let { throw it }
+                failure.findExceptional()?.let { throw it }
                 return@withLock NatsLifecycleResult.Failure(NatsLifecycleError.Connection(failure))
             }
             clearConnection()
@@ -129,7 +131,7 @@ class NatsConnection internal constructor(
                 primary = combineFailures(primary, failure)
             }
             primary?.let {
-                exceptionalCause(it)?.let { exceptional -> throw exceptional }
+                it.findExceptional()?.let { exceptional -> throw exceptional }
                 NatsLifecycleResult.Failure(NatsLifecycleError.Shutdown(it))
             } ?: NatsLifecycleResult.Success
         }
@@ -151,7 +153,7 @@ class NatsConnection internal constructor(
                 configurationProvider.configuration()
             } catch (failure: Throwable) {
                 clearConnection()
-                rethrowExceptional(failure)
+                failure.rethrowExceptional()
                 return NatsLifecycleResult.Failure(NatsLifecycleError.Configuration(failure))
             }
         val authenticationFailure = AtomicReference<Throwable?>(null)
@@ -161,13 +163,14 @@ class NatsConnection internal constructor(
                     try {
                         authenticationProvider.authenticate(NatsAuthenticationChallenge(hasNonce, signer))
                     } catch (failure: Throwable) {
-                        authenticationFailure.compareAndSet(null, failure)
+                        // The client cancels its own authentication job when a connection attempt times out.
+                        if (failure !is CancellationException) authenticationFailure.compareAndSet(null, failure)
                         throw failure
                     }
                 }
             } catch (failure: Throwable) {
                 clearConnection()
-                rethrowExceptional(authenticationFailure.get() ?: failure)
+                (authenticationFailure.get() ?: failure).rethrowExceptional()
                 return NatsLifecycleResult.Failure(classifyConnectionFailure(failure, authenticationFailure.get()))
             }
         return try {
@@ -184,7 +187,7 @@ class NatsConnection internal constructor(
             } catch (cleanupFailure: Throwable) {
                 throw combineFailures(original, cleanupFailure)
             }
-            rethrowExceptional(original)
+            original.rethrowExceptional()
             NatsLifecycleResult.Failure(classifyConnectionFailure(failure, authenticationFailure.get()))
         }
     }
@@ -225,7 +228,7 @@ class NatsConnection internal constructor(
             try {
                 client.disconnect()
             } catch (cleanupFailure: Throwable) {
-                rethrowExceptional(cleanupFailure)
+                cleanupFailure.rethrowExceptional()
             } finally {
                 clearConnection()
             }
@@ -238,22 +241,16 @@ private fun classifyConnectionFailure(
     authenticationFailure: Throwable?,
 ): NatsLifecycleError = authenticationFailure?.let(NatsLifecycleError::Authentication) ?: NatsLifecycleError.Connection(failure)
 
-internal fun exceptionalCause(failure: Throwable): Throwable? = findExceptionalThrowable(failure)
-
 internal fun combineFailures(
     primary: Throwable?,
     cleanup: Throwable,
 ): Throwable {
     if (primary == null) return cleanup
-    val exceptionalCleanup = exceptionalCause(cleanup)
+    val exceptionalCleanup = cleanup.findExceptional()
     if (exceptionalCleanup != null) {
         if (exceptionalCleanup !== primary) exceptionalCleanup.addSuppressed(primary)
         return exceptionalCleanup
     }
     if (cleanup !== primary) primary.addSuppressed(cleanup)
     return primary
-}
-
-internal fun rethrowExceptional(failure: Throwable) {
-    exceptionalCause(failure)?.let { throw it }
 }

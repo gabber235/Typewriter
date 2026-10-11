@@ -53,19 +53,12 @@ struct SharedArtifactCatalog(812100007) {
   artifacts: [SharedArtifactDescriptor] = 1;
 }
 
-// A committed descriptor change. Consumers compare catalog_revision with their last observed revision and refresh after a gap.
-struct SharedArtifactChanged(812100008) {
-  realm_id: string = 0;
-  artifact: SharedArtifactDescriptor = 1;
-  catalog_revision: int64 = 2;
-}
-
-struct ProducerMetadataEntry(812100009) {
+struct ProducerMetadataEntry(812100008) {
   key: string = 0;
   value: string = 1;
 }
 
-struct ProducerMetadata(812100010) {
+struct ProducerMetadata(812100009) {
   entries: [ProducerMetadataEntry] = 0;
 }
 

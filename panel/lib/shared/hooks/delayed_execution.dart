@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Runs [function] after the current widget tree has completed a frame.
 ///

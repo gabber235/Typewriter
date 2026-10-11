@@ -25,28 +25,33 @@ pub struct ServiceHeartbeatNotification {
 
 impl ServiceHeartbeatNotification {
     pub fn default_ref() -> &'static ServiceHeartbeatNotification {
-        static D: std::sync::LazyLock<ServiceHeartbeatNotification> = std::sync::LazyLock::new(ServiceHeartbeatNotification::default);
+        static D: std::sync::LazyLock<ServiceHeartbeatNotification> =
+            std::sync::LazyLock::new(ServiceHeartbeatNotification::default);
         &D
     }
 }
 
 impl ServiceHeartbeatNotification {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/lifecycle.skir",
-                    "ServiceHeartbeatNotification",
-                    "",
-                    |x: &ServiceHeartbeatNotification| &x._unrecognized,
-                    |x: &mut ServiceHeartbeatNotification, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/lifecycle.skir",
+                "ServiceHeartbeatNotification",
+                "",
+                |x: &ServiceHeartbeatNotification| &x._unrecognized,
+                |x: &mut ServiceHeartbeatNotification, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceHeartbeatNotification> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceHeartbeatNotification::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ServiceHeartbeatNotification::_adapter(),
+        )
     }
 }
 
@@ -62,28 +67,33 @@ pub struct ServiceShutdownNotification {
 
 impl ServiceShutdownNotification {
     pub fn default_ref() -> &'static ServiceShutdownNotification {
-        static D: std::sync::LazyLock<ServiceShutdownNotification> = std::sync::LazyLock::new(ServiceShutdownNotification::default);
+        static D: std::sync::LazyLock<ServiceShutdownNotification> =
+            std::sync::LazyLock::new(ServiceShutdownNotification::default);
         &D
     }
 }
 
 impl ServiceShutdownNotification {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceShutdownNotification> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceShutdownNotification>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/lifecycle.skir",
-                    "ServiceShutdownNotification",
-                    "",
-                    |x: &ServiceShutdownNotification| &x._unrecognized,
-                    |x: &mut ServiceShutdownNotification, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ServiceShutdownNotification> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceShutdownNotification>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/lifecycle.skir",
+                "ServiceShutdownNotification",
+                "",
+                |x: &ServiceShutdownNotification| &x._unrecognized,
+                |x: &mut ServiceShutdownNotification, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceShutdownNotification> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ServiceShutdownNotification::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ServiceShutdownNotification::_adapter(),
+        )
     }
 }
 
@@ -92,16 +102,17 @@ impl ServiceShutdownNotification {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification> = ServiceHeartbeatNotification::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceShutdownNotification> = ServiceShutdownNotification::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceHeartbeatNotification> =
+                ServiceHeartbeatNotification::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceShutdownNotification> =
+                ServiceShutdownNotification::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

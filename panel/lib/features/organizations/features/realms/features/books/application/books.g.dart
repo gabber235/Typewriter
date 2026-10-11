@@ -8,78 +8,139 @@ part of 'books.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Owns the confirmed book collection for the selected organization and realm.
-///
-/// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
-/// immutable [Book] values and listens for later session sequences. Consumers
-/// that render or edit immediately should choose [projectedBooksProvider] or
-/// [projectedBookProvider] when local editor values must be visible.
+/// Typed book views of the shared working document.
 
-@ProviderFor(CanonicalBooks)
-final canonicalBooksProvider = CanonicalBooksProvider._();
+@ProviderFor(workingBooks)
+final workingBooksProvider = WorkingBooksProvider._();
 
-/// Owns the confirmed book collection for the selected organization and realm.
-///
-/// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
-/// immutable [Book] values and listens for later session sequences. Consumers
-/// that render or edit immediately should choose [projectedBooksProvider] or
-/// [projectedBookProvider] when local editor values must be visible.
-final class CanonicalBooksProvider
-    extends $AsyncNotifierProvider<CanonicalBooks, List<Book>> {
-  /// Owns the confirmed book collection for the selected organization and realm.
-  ///
-  /// The realm authoring session remains the source of truth. This provider waits
-  /// for the library scope to become ready, then projects session records into
-  /// immutable [Book] values and listens for later session sequences. Consumers
-  /// that render or edit immediately should choose [projectedBooksProvider] or
-  /// [projectedBookProvider] when local editor values must be visible.
-  CanonicalBooksProvider._()
+/// Typed book views of the shared working document.
+
+final class WorkingBooksProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Book>>,
+          AsyncValue<List<Book>>,
+          AsyncValue<List<Book>>
+        >
+    with $Provider<AsyncValue<List<Book>>> {
+  /// Typed book views of the shared working document.
+  WorkingBooksProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'canonicalBooksProvider',
+        name: r'workingBooksProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$canonicalBooksHash();
+  String debugGetCreateSourceHash() => _$workingBooksHash();
 
   @$internal
   @override
-  CanonicalBooks create() => CanonicalBooks();
+  $ProviderElement<AsyncValue<List<Book>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AsyncValue<List<Book>> create(Ref ref) {
+    return workingBooks(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<Book>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<Book>>>(value),
+    );
+  }
 }
 
-String _$canonicalBooksHash() => r'd95efa451697da113c10971a7585b60cc27cd470';
+String _$workingBooksHash() => r'f4bf928031fcce20a2a79012e8e9e0f48fba8ce9';
 
-/// Owns the confirmed book collection for the selected organization and realm.
-///
-/// The realm authoring session remains the source of truth. This provider waits
-/// for the library scope to become ready, then projects session records into
-/// immutable [Book] values and listens for later session sequences. Consumers
-/// that render or edit immediately should choose [projectedBooksProvider] or
-/// [projectedBookProvider] when local editor values must be visible.
+@ProviderFor(workingBook)
+final workingBookProvider = WorkingBookFamily._();
 
-abstract class _$CanonicalBooks extends $AsyncNotifier<List<Book>> {
-  FutureOr<List<Book>> build();
-  @$mustCallSuper
+final class WorkingBookProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Book?>,
+          AsyncValue<Book?>,
+          AsyncValue<Book?>
+        >
+    with $Provider<AsyncValue<Book?>> {
+  WorkingBookProvider._({
+    required WorkingBookFamily super.from,
+    required skir.ResourceId super.argument,
+  }) : super(
+         retry: null,
+         name: r'workingBookProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
   @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Book>>, List<Book>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Book>>, List<Book>>,
-              AsyncValue<List<Book>>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
+  String debugGetCreateSourceHash() => _$workingBookHash();
+
+  @override
+  String toString() {
+    return r'workingBookProvider'
+        ''
+        '($argument)';
   }
+
+  @$internal
+  @override
+  $ProviderElement<AsyncValue<Book?>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AsyncValue<Book?> create(Ref ref) {
+    final argument = this.argument as skir.ResourceId;
+    return workingBook(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<Book?> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<Book?>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is WorkingBookProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$workingBookHash() => r'b105a2d6a53aea2d96953ab177d5b581c9f7d13b';
+
+final class WorkingBookFamily extends $Family
+    with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.ResourceId> {
+  WorkingBookFamily._()
+    : super(
+        retry: null,
+        name: r'workingBookProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  WorkingBookProvider call(skir.ResourceId bookId) =>
+      WorkingBookProvider._(argument: bookId, from: this);
+
+  @override
+  String toString() => r'workingBookProvider';
 }
 
 /// Filters confirmed or locally projected books for the library search.
@@ -162,7 +223,7 @@ final class FilteredBooksProvider
   }
 }
 
-String _$filteredBooksHash() => r'0e92e57f11f3e60af7c06e43862d13346de4854b';
+String _$filteredBooksHash() => r'e92a3c4dc7faf64afc05700c6142259011daf013';
 
 /// Filters confirmed or locally projected books for the library search.
 ///
@@ -202,8 +263,13 @@ final bookIdProvider = BookIdProvider._();
 /// Resolves the current route parameter into the typed book record identity.
 
 final class BookIdProvider
-    extends $FunctionalProvider<skir.RecordId?, skir.RecordId?, skir.RecordId?>
-    with $Provider<skir.RecordId?> {
+    extends
+        $FunctionalProvider<
+          skir.ResourceId?,
+          skir.ResourceId?,
+          skir.ResourceId?
+        >
+    with $Provider<skir.ResourceId?> {
   /// Resolves the current route parameter into the typed book record identity.
   BookIdProvider._()
     : super(
@@ -221,275 +287,21 @@ final class BookIdProvider
 
   @$internal
   @override
-  $ProviderElement<skir.RecordId?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<skir.ResourceId?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  skir.RecordId? create(Ref ref) {
+  skir.ResourceId? create(Ref ref) {
     return bookId(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(skir.RecordId? value) {
+  Override overrideWithValue(skir.ResourceId? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<skir.RecordId?>(value),
+      providerOverride: $SyncValueProvider<skir.ResourceId?>(value),
     );
   }
 }
 
-String _$bookIdHash() => r'167ce138e263f44eb212912668031e5954892725';
-
-/// Finds one confirmed book in the authoritative realm session.
-
-@ProviderFor(canonicalBook)
-final canonicalBookProvider = CanonicalBookFamily._();
-
-/// Finds one confirmed book in the authoritative realm session.
-
-final class CanonicalBookProvider
-    extends $FunctionalProvider<AsyncValue<Book?>, Book?, FutureOr<Book?>>
-    with $FutureModifier<Book?>, $FutureProvider<Book?> {
-  /// Finds one confirmed book in the authoritative realm session.
-  CanonicalBookProvider._({
-    required CanonicalBookFamily super.from,
-    required skir.RecordId super.argument,
-  }) : super(
-         retry: null,
-         name: r'canonicalBookProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$canonicalBookHash();
-
-  @override
-  String toString() {
-    return r'canonicalBookProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $FutureProviderElement<Book?> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<Book?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
-    return canonicalBook(ref, argument);
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is CanonicalBookProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$canonicalBookHash() => r'4792d2e5ec03050b83447ee8f7f590c7e94ee241';
-
-/// Finds one confirmed book in the authoritative realm session.
-
-final class CanonicalBookFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<Book?>, skir.RecordId> {
-  CanonicalBookFamily._()
-    : super(
-        retry: null,
-        name: r'canonicalBookProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Finds one confirmed book in the authoritative realm session.
-
-  CanonicalBookProvider call(skir.RecordId bookId) =>
-      CanonicalBookProvider._(argument: bookId, from: this);
-
-  @override
-  String toString() => r'canonicalBookProvider';
-}
-
-/// Overlays local editor values on the confirmed book collection.
-///
-/// The authoring session remains canonical. Local values belong to the
-/// resource key for the current organization and realm. An invalid projection
-/// is ignored, leaving the confirmed value visible to this view.
-
-@ProviderFor(projectedBooks)
-final projectedBooksProvider = ProjectedBooksProvider._();
-
-/// Overlays local editor values on the confirmed book collection.
-///
-/// The authoring session remains canonical. Local values belong to the
-/// resource key for the current organization and realm. An invalid projection
-/// is ignored, leaving the confirmed value visible to this view.
-
-final class ProjectedBooksProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Book>>,
-          AsyncValue<List<Book>>,
-          AsyncValue<List<Book>>
-        >
-    with $Provider<AsyncValue<List<Book>>> {
-  /// Overlays local editor values on the confirmed book collection.
-  ///
-  /// The authoring session remains canonical. Local values belong to the
-  /// resource key for the current organization and realm. An invalid projection
-  /// is ignored, leaving the confirmed value visible to this view.
-  ProjectedBooksProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'projectedBooksProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$projectedBooksHash();
-
-  @$internal
-  @override
-  $ProviderElement<AsyncValue<List<Book>>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  AsyncValue<List<Book>> create(Ref ref) {
-    return projectedBooks(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<List<Book>> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AsyncValue<List<Book>>>(value),
-    );
-  }
-}
-
-String _$projectedBooksHash() => r'e54b3aacde4ddc90b0a34b08879e9bf735e80152';
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
-
-@ProviderFor(projectedBook)
-final projectedBookProvider = ProjectedBookFamily._();
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
-
-final class ProjectedBookProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<Book?>,
-          AsyncValue<Book?>,
-          AsyncValue<Book?>
-        >
-    with $Provider<AsyncValue<Book?>> {
-  /// Returns one book with its local editor projection, if present.
-  ///
-  /// This is the read model for consumers that need edits before confirmation.
-  /// It retains the canonical loading or missing value state until the local
-  /// overlay can be applied.
-  ProjectedBookProvider._({
-    required ProjectedBookFamily super.from,
-    required skir.RecordId super.argument,
-  }) : super(
-         retry: null,
-         name: r'projectedBookProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$projectedBookHash();
-
-  @override
-  String toString() {
-    return r'projectedBookProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<AsyncValue<Book?>> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  AsyncValue<Book?> create(Ref ref) {
-    final argument = this.argument as skir.RecordId;
-    return projectedBook(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AsyncValue<Book?> value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AsyncValue<Book?>>(value),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is ProjectedBookProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$projectedBookHash() => r'a9305728db6040d2333f7f9b751fbea6584ddf01';
-
-/// Returns one book with its local editor projection, if present.
-///
-/// This is the read model for consumers that need edits before confirmation.
-/// It retains the canonical loading or missing value state until the local
-/// overlay can be applied.
-
-final class ProjectedBookFamily extends $Family
-    with $FunctionalFamilyOverride<AsyncValue<Book?>, skir.RecordId> {
-  ProjectedBookFamily._()
-    : super(
-        retry: null,
-        name: r'projectedBookProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Returns one book with its local editor projection, if present.
-  ///
-  /// This is the read model for consumers that need edits before confirmation.
-  /// It retains the canonical loading or missing value state until the local
-  /// overlay can be applied.
-
-  ProjectedBookProvider call(skir.RecordId bookId) =>
-      ProjectedBookProvider._(argument: bookId, from: this);
-
-  @override
-  String toString() => r'projectedBookProvider';
-}
+String _$bookIdHash() => r'902a2e5fe4f162247509d29a7f1d9e6dbdfbbf79';

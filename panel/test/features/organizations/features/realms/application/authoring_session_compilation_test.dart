@@ -1,212 +1,220 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
-
-import "../../../../../support/provider_test_utils.dart";
-
-const _snapshotSubject =
-    "service.to.realm1.organization.org1.realm.library.authoring.snapshot.get";
-const _eventSubject =
-    "service.from.realm1.organization.org1.realm.library.authoring.changed";
-const _compiledSubject =
-    "service.from.realm1.organization.org1.realm.compiled.content.watch";
 
 void main() {
-  test("direct page changes update an acquired document", () async {
-    final nats = FakeNatsClient();
-    var snapshotSequence = 1;
-    var snapshotRequests = 0;
-    var pageName = "Initial";
-    final snapshotScopes = <List<skir.AuthoringSnapshotScope_kind>>[];
-    skir.PageCompileStatus compileStatus = skir.PageCompileStatus.notCompiled;
-
-    nats.registerHandler(_snapshotSubject, (payload) {
-      final request = skir.GetAuthoringSnapshotRequest.serializer.fromBytes(
-        payload,
-      );
-      snapshotScopes.add(request.scopes.map((scope) => scope.kind).toList());
-      snapshotRequests++;
-      if (snapshotRequests == 4) {
-        pageName = "During refresh";
-        nats.emitMessageOnSubject(
-          _eventSubject,
-          skir.AuthoringChanged.serializer.toBytes(
-            skir.AuthoringChanged(
-              sequence: 3,
-              batchId: "during-compile-refresh",
-              changes: [
-                skir.AuthoringResourceChange.wrapUpsertPage(
-                  _wirePage("During refresh"),
-                ),
-              ],
-              indirectlyAffectedResources: const [],
-            ),
-          ),
-        );
-      }
-      return skir.GetAuthoringSnapshotResponse.serializer.toBytes(
-        skir.GetAuthoringSnapshotResponse.createSuccess(
-          sequence: snapshotSequence,
-          slices: [
-            for (final scope in request.scopes)
-              switch (scope) {
-                skir.AuthoringSnapshotScope.library_ =>
-                  skir.AuthoringSnapshotSlice.createLibrary(
-                    books: [_wireBook()],
-                    tags: const [],
-                  ),
-                skir.AuthoringSnapshotScope_bookWrapper() =>
-                  skir.AuthoringSnapshotSlice.createBook(
-                    bookId: _book,
-                    book: _wireBook(),
-                    pages: [_wirePage(pageName)],
-                  ),
-                skir.AuthoringSnapshotScope_pageWrapper() =>
-                  skir.AuthoringSnapshotSlice.createPage(
-                    pageId: _page,
-                    document: skir.PageDocument(
-                      page: _wirePage(pageName),
-                      elements: const [],
-                      references: const [],
-                      crossPageTargets: const [],
-                      crossPageSources: const [],
-                      diagnostics: const [],
-                      compileStatus: compileStatus,
-                    ),
-                  ),
-                skir.AuthoringSnapshotScope_unknown() => throw StateError(
-                  "Unknown authoring scope",
-                ),
-              },
-          ],
-        ),
-      );
-    });
-
+  test("publication reports server transitions and rejects another pending request", () async {
+    final source = _PublicationSource();
     final container = ProviderContainer.test(
       overrides: [
-        natsProvider.overrideWithValue(nats),
-        organizationIdProvider.overrideWithValue(_org),
-        realmIdProvider.overrideWithValue(_realm),
-        panelTelemetryProvider.overrideWithValue(
-          const AsyncData(NoopPanelTelemetry()),
+        localWorkScopeProvider.overrideWithValue(
+          LocalWorkScope(userId: "fixture", organizationId: _organization),
         ),
+        realmPublicationRepositoryProvider(
+          _organization,
+          _realm,
+        ).overrideWithValue(source),
       ],
     );
-
-    final provider = authoringSessionProvider(_org, _realm);
+    final provider = realmPublicationProvider(_organization, _realm);
     final subscription = container.listen(provider, (_, _) {});
-    final libraryLease = container.read(provider.notifier).acquireLibrary();
-    await libraryLease.ready;
-    final bookLease = container.read(provider.notifier).acquireBook(_book);
-    await bookLease.ready;
+    await _waitUntil(() => source.hasListener);
+    source.emit(skir.PublicationReport.defaultInstance);
+    await _waitUntil(() => container.read(provider).hasValue);
 
-    final pageLease = container.read(provider.notifier).acquirePage(_page);
-    await pageLease.ready;
+    final notifier = container.read(provider.notifier);
+    expect(
+      await notifier.states(
+        skir.CompilationStatusSelection.wrapSuppliedRoots(const []),
+      ),
+      isEmpty,
+    );
+    final first = await notifier.publish();
+    source.emit(_attempt(skir.PublicationState.checking));
+    await _waitUntil(
+      () =>
+          container.read(provider).value?.report?.state ==
+          skir.PublicationState.checking,
+    );
+    final activeView = container.read(provider).requireValue;
+    expect(activeView.canPublish, isFalse);
+    expect(activeView.entry.phase, "Checking saved content");
+    expect(activeView.entry.retained, isTrue);
+    expect(activeView.entry.blocksNavigation, isFalse);
+    final second = await notifier.publish();
+    expect(first, skir.PublicationResult.publishing);
+    expect(second, skir.PublicationResult.publishing);
+    expect(source.requests, hasLength(1));
 
-    nats.emitMessageOnSubject(
-      _eventSubject,
-      skir.AuthoringChanged.serializer.toBytes(
-        skir.AuthoringChanged(
-          sequence: 2,
-          batchId: "page-update",
-          changes: [
-            skir.AuthoringResourceChange.wrapUpsertPage(_wirePage("Updated")),
-          ],
-          indirectlyAffectedResources: const [],
-        ),
+    for (final state in [
+      skir.PublicationState.checking,
+      skir.PublicationState.compiling,
+      skir.PublicationState.activating,
+      skir.PublicationState.complete,
+    ]) {
+      source.emit(_attempt(state));
+    }
+    await _waitUntil(
+      () =>
+          container.read(provider).value?.report?.state ==
+          skir.PublicationState.complete,
+    );
+
+    expect(container.read(provider).requireValue.canPublish, isTrue);
+    await notifier.publish();
+    source.emit(
+      _attempt(
+        skir.PublicationState.wrapBlocked([skir.Diagnostic.defaultInstance]),
+        id: "publication:blocked",
+        snapshot: "realm:2",
       ),
     );
-    await waitForProvider(
-      container,
-      provider,
-      (state) => state.sequence == 2,
-      description: "direct page change sequence 2",
+    await _waitUntil(
+      () =>
+          container.read(provider).value?.report?.state
+              is skir.PublicationState_blockedWrapper,
     );
+    final blocked =
+        container.read(provider).value!.report!.state
+            as skir.PublicationState_blockedWrapper;
+    expect(blocked.value, hasLength(1));
+    expect(source.requests, hasLength(2));
 
-    expect(container.read(provider).pages[_page]?.name, "Updated");
-    expect(container.read(provider).documents[_page]?.page.name, "Updated");
-
-    snapshotSequence = 4;
-    compileStatus = skir.PageCompileStatus.createBlocked(
-      lastActiveManifestId: null,
-      diagnosticCount: 1,
-    );
-    nats.emitMessageOnSubject(
-      _compiledSubject,
-      skir.WatchCompiledContentResponse.serializer.toBytes(
-        skir.WatchCompiledContentResponse.createBlocked(),
-      ),
-    );
-
-    await waitForProvider(
-      container,
-      provider,
-      (state) =>
-          state.documents[_page]?.compileStatus
-              is skir.PageCompileStatus_blockedWrapper,
-      description: "blocked page compile status",
-    );
-
-    await waitForProvider(
-      container,
-      provider,
-      (state) => state.sequence == 4,
-      description: "full recovery sequence 4",
-    );
-
-    expect(container.read(provider).pages[_page]?.name, "During refresh");
-    expect(snapshotRequests, 4);
-    expect(snapshotScopes.last, [
-      skir.AuthoringSnapshotScope_kind.libraryConst,
-      skir.AuthoringSnapshotScope_kind.bookWrapper,
-      skir.AuthoringSnapshotScope_kind.pageWrapper,
-    ]);
-
-    final pageOnlyRequestBytes = skir.GetAuthoringSnapshotRequest.serializer
-        .toBytes(
-          skir.GetAuthoringSnapshotRequest(
-            scopes: [skir.AuthoringSnapshotScope.createPage(pageId: _page)],
-          ),
-        )
-        .length;
-    final compilationRequestBytes = nats.requests
-        .where((request) => request.subject == _snapshotSubject)
-        .last
-        .payload
-        .length;
-    expect(compilationRequestBytes, greaterThan(pageOnlyRequestBytes));
-
-    pageLease.release();
-    bookLease.release();
-    libraryLease.release();
     subscription.close();
     container.dispose();
-    await nats.dispose();
+    await source.close();
   });
+
+  test(
+    "an old terminal update cannot release a newer publication request",
+    () async {
+      final source = _PublicationSource();
+      final container = ProviderContainer.test(
+        overrides: [
+          localWorkScopeProvider.overrideWithValue(
+            LocalWorkScope(userId: "fixture", organizationId: _organization),
+          ),
+          realmPublicationRepositoryProvider(
+            _organization,
+            _realm,
+          ).overrideWithValue(source),
+        ],
+      );
+      final provider = realmPublicationProvider(_organization, _realm);
+      final subscription = container.listen(provider, (_, _) {});
+      await _waitUntil(() => source.hasListener);
+      source.emit(
+        _attempt(
+          skir.PublicationState.complete,
+          id: "publication:old",
+          snapshot: "realm:0",
+        ),
+      );
+      await _waitUntil(() => container.read(provider).hasValue);
+
+      final delayed = Completer<skir.PublicationResult>();
+      source.nextResult = delayed.future;
+      final notifier = container.read(provider.notifier);
+      final first = notifier.publish();
+      await _waitUntil(() => source.requests.length == 1);
+      source.emit(
+        _attempt(
+          skir.PublicationState.complete,
+          id: "publication:old",
+          snapshot: "realm:0",
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final second = await notifier.publish();
+      expect(second, skir.PublicationResult.publishing);
+      expect(source.requests, hasLength(1));
+
+      delayed.complete(skir.PublicationResult.publishing);
+      expect(await first, skir.PublicationResult.publishing);
+      source.emit(
+        _attempt(
+          skir.PublicationState.complete,
+          id: "publication:new",
+          snapshot: "realm:1",
+        ),
+      );
+      await _waitUntil(
+        () =>
+            container.read(provider).value?.report?.id.value ==
+            "publication:new",
+      );
+
+      subscription.close();
+      container.dispose();
+      await source.close();
+    },
+  );
 }
 
-final _org = recordId("organization:org1");
-final _realm = recordId("service:realm1");
-final _book = recordId("book:book1");
-final _page = recordId("page:page1");
+final _organization = skir.recordId("organization:org1");
+final _realm = skir.recordId("service:realm1");
 
-skir.Page _wirePage(String name) => skir.Page(
-  id: _page,
-  book: _book,
-  name: name,
-  kind: skir.PageKindRef(id: skir.PageKindId(value: "test"), revision: 1),
-  chapter: "",
-  priority: 0,
+skir.PublicationReport _attempt(
+  skir.PublicationState state, {
+  String id = "publication:first",
+  String snapshot = "realm:1",
+}) => skir.PublicationReport(
+  id: skir.PublicationId(value: id),
+  findings: const [],
+  state: state,
 );
 
-skir.Book _wireBook() => skir.Book(
-  id: _book,
-  title: "Book",
-  icon: "mdi:book",
-  color: skir.Color(argb: 0xFF000000.toSigned(32)),
-  tags: const [],
-);
+final class _PublicationSource implements RealmPublicationRepository {
+  final controller = StreamController<skir.PublicationReport>.broadcast(
+    sync: true,
+  );
+  final requests = <skir.PublicationReport>[];
+  Future<skir.PublicationResult>? nextResult;
+
+  bool get hasListener => controller.hasListener;
+
+  void emit(skir.PublicationReport attempt) => controller.add(attempt);
+
+  Future<void> close() => controller.close();
+
+  @override
+  PreparedCommit<skir.PublishAuthoringResponse> preparePublish() =>
+      PreparedCommit(
+        id: Object(),
+        label: "Publish saved content",
+        resources: {
+          WorkDriverId(
+            domain: "publication",
+            scope: AuthoringScope(
+              organizationId: _organization,
+              realmId: _realm,
+            ),
+          ),
+        },
+        send: () async {
+          requests.add(skir.PublicationReport.defaultInstance);
+          final result =
+              await (nextResult ??
+                  Future.value(skir.PublicationResult.publishing));
+          return SubmissionConfirmed(
+            skir.PublishAuthoringResponse.wrapResult(result),
+          );
+        },
+      );
+  @override
+  Future<List<skir.CompiledResourceStatus>> states(
+    skir.CompilationStatusSelection selection,
+  ) async => [];
+
+  @override
+  Stream<skir.PublicationReport> watch() => controller.stream;
+}
+
+Future<void> _waitUntil(bool Function() predicate) async {
+  for (var index = 0; index < 100 && !predicate(); index++) {
+    await Future<void>.delayed(Duration.zero);
+  }
+  expect(predicate(), isTrue);
+}

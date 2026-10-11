@@ -1,6 +1,3 @@
-import "package:dartastic_opentelemetry/dartastic_opentelemetry.dart";
-import "package:http/http.dart" as http;
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "telemetry.g.dart";
@@ -25,11 +22,10 @@ abstract interface class PanelTelemetry {
 
   /// Traces one HTTP operation and injects its context headers. HTTP status
   /// handling remains with the caller because status is response data here.
-  Future<http.Response> traceHttp({
+  Future<Response> traceHttp({
     required String method,
     required Uri uri,
-    required Future<http.Response> Function(Map<String, String> headers)
-    operation,
+    required Future<Response> Function(Map<String, String> headers) operation,
   });
 }
 
@@ -46,11 +42,10 @@ final class NoopPanelTelemetry implements PanelTelemetry {
   }) => operation(const {});
 
   @override
-  Future<http.Response> traceHttp({
+  Future<Response> traceHttp({
     required String method,
     required Uri uri,
-    required Future<http.Response> Function(Map<String, String> headers)
-    operation,
+    required Future<Response> Function(Map<String, String> headers) operation,
   }) => operation(const {});
 }
 
@@ -95,11 +90,10 @@ final class OpenTelemetryPanelTelemetry implements PanelTelemetry {
   );
 
   @override
-  Future<http.Response> traceHttp({
+  Future<Response> traceHttp({
     required String method,
     required Uri uri,
-    required Future<http.Response> Function(Map<String, String> headers)
-    operation,
+    required Future<Response> Function(Map<String, String> headers) operation,
   }) => _tracer.startActiveSpanAsync(
     name: "$method ${uri.path}",
     kind: SpanKind.client,

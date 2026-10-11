@@ -47,7 +47,7 @@ private data class RouterTarget(
 )
 
 private val routerAddress =
-    addressTemplate("router.{id}.get", { addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) })
+    "router.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) })
 private val routerCodec =
     object : PayloadCodec<String> {
         override fun encode(value: String) = Payload.copyOf(value.encodeToByteArray())
@@ -131,8 +131,7 @@ val CommunicatorRouterTest by testSuite {
             val wildcardMiddle =
                 EventContract(
                     OperationName.of("service.middle.get"),
-                    addressTemplate(
-                        "service.{id}.get",
+                    "service.{id}.get".addressTemplate(
                         { addressValuesOf("id" to it.id) },
                         { RouterTarget(it.require("id")) },
                     ),
@@ -142,8 +141,7 @@ val CommunicatorRouterTest by testSuite {
             val wildcardEnd =
                 EventContract(
                     OperationName.of("service.alpha.any"),
-                    addressTemplate(
-                        "service.alpha.{id}",
+                    "service.alpha.{id}".addressTemplate(
                         { addressValuesOf("id" to it.id) },
                         { RouterTarget(it.require("id")) },
                     ),
@@ -605,7 +603,7 @@ private fun twoEventRoutes() =
         event(
             EventContract(
                 OperationName.of("router.other"),
-                addressTemplate("other.{id}.get", { addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) }),
+                "other.{id}.get".addressTemplate({ addressValuesOf("id" to it.id) }, { RouterTarget(it.require("id")) }),
                 routerCodec,
                 ErrorSlug.of("router-other-failed"),
             ),

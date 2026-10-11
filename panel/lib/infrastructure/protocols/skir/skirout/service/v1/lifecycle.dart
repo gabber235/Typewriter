@@ -12,18 +12,18 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
-// -----------------------------------------------------------------------------
 // struct ServiceHeartbeatNotification
-// -----------------------------------------------------------------------------
 
 sealed class ServiceHeartbeatNotification_orMutable {
   ServiceHeartbeatNotification toFrozen();
 }
 
 /// Deeply immutable.
-final class ServiceHeartbeatNotification implements ServiceHeartbeatNotification_orMutable {
+final class ServiceHeartbeatNotification
+    implements ServiceHeartbeatNotification_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory ServiceHeartbeatNotification() => ServiceHeartbeatNotification._();
@@ -35,21 +35,26 @@ final class ServiceHeartbeatNotification implements ServiceHeartbeatNotification
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceHeartbeatNotification_mutable mutable() => ServiceHeartbeatNotification_mutable._();
+  static ServiceHeartbeatNotification_mutable mutable() =>
+      ServiceHeartbeatNotification_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceHeartbeatNotification toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceHeartbeatNotification_mutable toMutable() => ServiceHeartbeatNotification_mutable._();
+  ServiceHeartbeatNotification_mutable toMutable() =>
+      ServiceHeartbeatNotification_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceHeartbeatNotification) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -61,7 +66,11 @@ final class ServiceHeartbeatNotification implements ServiceHeartbeatNotification
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceHeartbeatNotification` instances.
-  static _skir.StructSerializer<ServiceHeartbeatNotification, ServiceHeartbeatNotification_mutable> get serializer {
+  static _skir.StructSerializer<
+    ServiceHeartbeatNotification,
+    ServiceHeartbeatNotification_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -80,26 +89,27 @@ final class ServiceHeartbeatNotification implements ServiceHeartbeatNotification
 }
 
 /// Mutable version of [ServiceHeartbeatNotification].
-final class ServiceHeartbeatNotification_mutable implements ServiceHeartbeatNotification_orMutable {
+final class ServiceHeartbeatNotification_mutable
+    implements ServiceHeartbeatNotification_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ServiceHeartbeatNotification_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceHeartbeatNotification toFrozen() => ServiceHeartbeatNotification().._u = this._u;
+  ServiceHeartbeatNotification toFrozen() =>
+      ServiceHeartbeatNotification().._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ServiceShutdownNotification
-// -----------------------------------------------------------------------------
 
 sealed class ServiceShutdownNotification_orMutable {
   ServiceShutdownNotification toFrozen();
 }
 
 /// Deeply immutable.
-final class ServiceShutdownNotification implements ServiceShutdownNotification_orMutable {
+final class ServiceShutdownNotification
+    implements ServiceShutdownNotification_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   factory ServiceShutdownNotification() => ServiceShutdownNotification._();
@@ -111,21 +121,26 @@ final class ServiceShutdownNotification implements ServiceShutdownNotification_o
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ServiceShutdownNotification_mutable mutable() => ServiceShutdownNotification_mutable._();
+  static ServiceShutdownNotification_mutable mutable() =>
+      ServiceShutdownNotification_mutable._();
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ServiceShutdownNotification toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ServiceShutdownNotification_mutable toMutable() => ServiceShutdownNotification_mutable._();
+  ServiceShutdownNotification_mutable toMutable() =>
+      ServiceShutdownNotification_mutable._();
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ServiceShutdownNotification) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -137,7 +152,11 @@ final class ServiceShutdownNotification implements ServiceShutdownNotification_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ServiceShutdownNotification` instances.
-  static _skir.StructSerializer<ServiceShutdownNotification, ServiceShutdownNotification_mutable> get serializer {
+  static _skir.StructSerializer<
+    ServiceShutdownNotification,
+    ServiceShutdownNotification_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.finalize();
     }
@@ -156,12 +175,14 @@ final class ServiceShutdownNotification implements ServiceShutdownNotification_o
 }
 
 /// Mutable version of [ServiceShutdownNotification].
-final class ServiceShutdownNotification_mutable implements ServiceShutdownNotification_orMutable {
+final class ServiceShutdownNotification_mutable
+    implements ServiceShutdownNotification_orMutable {
   _skir.internal__UnrecognizedFields? _u;
 
   ServiceShutdownNotification_mutable._();
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ServiceShutdownNotification toFrozen() => ServiceShutdownNotification().._u = this._u;
+  ServiceShutdownNotification toFrozen() =>
+      ServiceShutdownNotification().._u = this._u;
 }

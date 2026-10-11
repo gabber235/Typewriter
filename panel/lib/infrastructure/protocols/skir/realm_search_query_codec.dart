@@ -1,13 +1,13 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
-    as wire;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-wire.RealmSearchQuery encodeRealmSearchQuery(SearchQueryContext query) =>
-    wire.RealmSearchQuery(
+skir.RealmSearchQuery encodeRealmSearchQuery(SearchQueryContext query) =>
+    skir.RealmSearchQuery(
       normalizedQuery: query.normalizedQuery,
       terms: query.terms,
       selectors: query.selectors.map(
-        (selector) => wire.RealmSearchSelector(
+        (selector) => skir.RealmSearchSelector(
           selectorId: selector.selectorId,
           key: selector.key,
           value: selector.value,
@@ -18,27 +18,27 @@ wire.RealmSearchQuery encodeRealmSearchQuery(SearchQueryContext query) =>
           : encodeRealmSearchSelectorExpression(query.selectorExpression!),
     );
 
-wire.RealmSearchSelectorExpression encodeRealmSearchSelectorExpression(
+skir.RealmSearchSelectorExpression encodeRealmSearchSelectorExpression(
   SearchSelectorExpression expression,
 ) => switch (expression) {
   SearchSelectorLeafExpression(:final selector) =>
-    wire.RealmSearchSelectorExpression.wrapSelector(
-      wire.RealmSearchSelector(
+    skir.RealmSearchSelectorExpression.wrapSelector(
+      skir.RealmSearchSelector(
         selectorId: selector.selectorId,
         key: selector.key,
         value: selector.value,
       ),
     ),
   SearchSelectorBinaryExpression(:final operator, :final left, :final right) =>
-    wire.RealmSearchSelectorExpression.createBinary(
+    skir.RealmSearchSelectorExpression.createBinary(
       operator_: operator == SearchSelectorOperator.and
-          ? wire.RealmSearchSelectorOperator.and
-          : wire.RealmSearchSelectorOperator.or,
+          ? skir.RealmSearchSelectorOperator.and
+          : skir.RealmSearchSelectorOperator.or,
       left: encodeRealmSearchSelectorExpression(left),
       right: encodeRealmSearchSelectorExpression(right),
     ),
   SearchSelectorNotExpression(:final expression) =>
-    wire.RealmSearchSelectorExpression.createNot(
+    skir.RealmSearchSelectorExpression.createNot(
       expression: encodeRealmSearchSelectorExpression(expression),
     ),
 };

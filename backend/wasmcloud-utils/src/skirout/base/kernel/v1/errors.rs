@@ -25,23 +25,25 @@ pub struct InternalError {
 
 impl InternalError {
     pub fn default_ref() -> &'static InternalError {
-        static D: std::sync::LazyLock<InternalError> = std::sync::LazyLock::new(InternalError::default);
+        static D: std::sync::LazyLock<InternalError> =
+            std::sync::LazyLock::new(InternalError::default);
         &D
     }
 }
 
 impl InternalError {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InternalError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InternalError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "kernel/v1/errors.skir",
-                    "InternalError",
-                    "",
-                    |x: &InternalError| &x._unrecognized,
-                    |x: &mut InternalError, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InternalError>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "kernel/v1/errors.skir",
+                "InternalError",
+                "",
+                |x: &InternalError| &x._unrecognized,
+                |x: &mut InternalError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InternalError> {
@@ -64,23 +66,25 @@ pub struct InvalidRecordIdError {
 
 impl InvalidRecordIdError {
     pub fn default_ref() -> &'static InvalidRecordIdError {
-        static D: std::sync::LazyLock<InvalidRecordIdError> = std::sync::LazyLock::new(InvalidRecordIdError::default);
+        static D: std::sync::LazyLock<InvalidRecordIdError> =
+            std::sync::LazyLock::new(InvalidRecordIdError::default);
         &D
     }
 }
 
 impl InvalidRecordIdError {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InvalidRecordIdError> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<InvalidRecordIdError>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "kernel/v1/errors.skir",
-                    "InvalidRecordIdError",
-                    "",
-                    |x: &InvalidRecordIdError| &x._unrecognized,
-                    |x: &mut InvalidRecordIdError, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InvalidRecordIdError>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "kernel/v1/errors.skir",
+                "InvalidRecordIdError",
+                "",
+                |x: &InvalidRecordIdError| &x._unrecognized,
+                |x: &mut InvalidRecordIdError, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<InvalidRecordIdError> {
@@ -94,18 +98,33 @@ impl InvalidRecordIdError {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InternalError> = InternalError::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<InvalidRecordIdError> = InvalidRecordIdError::_adapter() as *const _ as *mut _;
-                (*a).add_field("expected_table", 0, crate::skir_client::Serializer::string(), "", |x: &InvalidRecordIdError| &x.expected_table, |x: &mut InvalidRecordIdError, v| x.expected_table = v);
-                (*a).add_field("given_tables", 1, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &InvalidRecordIdError| &x.given_tables, |x: &mut InvalidRecordIdError, v| x.given_tables = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InternalError> =
+                InternalError::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InvalidRecordIdError> =
+                InvalidRecordIdError::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "expected_table",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &InvalidRecordIdError| &x.expected_table,
+                |x: &mut InvalidRecordIdError, v| x.expected_table = v,
+            );
+            (*a).add_field(
+                "given_tables",
+                1,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &InvalidRecordIdError| &x.given_tables,
+                |x: &mut InvalidRecordIdError, v| x.given_tables = v,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

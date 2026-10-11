@@ -1,7 +1,4 @@
-import "package:flutter/foundation.dart";
-import "package:typewriter_panel/app/application/router/access/authentication_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/organization_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_module.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns the route access modules used by the application's router.
 ///

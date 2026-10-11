@@ -6,9 +6,9 @@ void _testHostTargetSelection() {
       "hosted Realm inference respects ${realmTarget == "paper" ? "version constraints" : "engine identity"}",
       (tester) async {
         final hosted = skir.RealmInstance(
-          realmId: recordId("realm_instance:paper"),
+          realmId: skir.recordId("realm_instance:paper"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:paper"),
+            id: skir.recordId("service_host:paper"),
             name: "Host",
           ),
           revision: 1,
@@ -19,9 +19,9 @@ void _testHostTargetSelection() {
           state: skir.ChildRuntimeState.defaultInstance,
         );
         final external = skir.RealmInstance(
-          realmId: recordId("realm_instance:external"),
+          realmId: skir.recordId("realm_instance:external"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:external"),
+            id: skir.recordId("service_host:external"),
             name: "Compatible Realm",
           ),
           revision: 1,
@@ -34,9 +34,9 @@ void _testHostTargetSelection() {
         final incompatible = skir.RealmInstance(
           revision: 1,
           state: skir.ChildRuntimeState.defaultInstance,
-          realmId: recordId("realm_instance:incompatible"),
+          realmId: skir.recordId("realm_instance:incompatible"),
           ownerHost: skir.OwnerHost(
-            id: recordId("service_host:incompatible"),
+            id: skir.recordId("service_host:incompatible"),
             name: "Incompatible Realm",
           ),
           targetEngine: skir.EngineTarget(
@@ -55,27 +55,40 @@ void _testHostTargetSelection() {
         final owners = EditorOwnerRegistry();
         addTearDown(owners.dispose);
 
-        final model = harness.selectable.buildPresentation(owners);
-        final owner =
-            ((model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-                  as EditorSource)
-              ..update(
-                DataPath.root.field("engine"),
-                _mode("EngineEnabled", {
-                  "target": const StringValue("paper@*"),
-                  "realm": const StringValue(""),
-                }),
-              );
+        final host = _buildInspection(harness, owners).host!;
+        final owner = _configurationSource(owners);
+        expect(
+          owner.update(
+            editorRootPath.field("engine"),
+            _mode("EngineEnabled", {
+              "target": skir.DataValue.wrapStringValue("paper@*"),
+              "realm": skir.DataValue.wrapStringValue(""),
+            }),
+          ),
+          isA<AppliedEditorMutation>(),
+        );
         await tester.pumpTestApp(
-          child: SingleChildScrollView(child: ComposedEditor(model: model)),
+          child: SingleChildScrollView(
+            child: PortablePresentationRenderer(host: host),
+          ),
         );
 
         expect(find.text("Assigned Realm"), findsOneWidget);
+        final realmInput = find.byKey(
+          const ValueKey("serviceHost.engine.realm.input"),
+        );
+        await tester.ensureVisible(realmInput);
+        await tester.tap(realmInput);
+        await tester.pumpAndSettle();
         expect(find.text("Compatible Realm"), findsWidgets);
         expect(find.text("Incompatible Realm"), findsNothing);
+        await tester.tap(find.text("Compatible Realm").last);
+        await tester.pumpAndSettle();
         expect(
-          owner.value(DataPath.root.field("engine").field("realm")).valueOrNull,
-          StringValue(external.realmId.id),
+          owner
+              .value(editorRootPath.field("engine").field("realm"))
+              .valueOrNull,
+          skir.DataValue.wrapStringValue(external.realmId.id),
         );
         expect(owner.draftDiagnostics, isEmpty);
         skir.ConfigureServiceHostRequest? submitted;
@@ -90,7 +103,7 @@ void _testHostTargetSelection() {
               host: _hostWithRevision(harness.host, 2),
               realm: hosted,
               engine: skir.EngineInstance(
-                engineId: recordId("engine_instance:paper"),
+                engineId: skir.recordId("engine_instance:paper"),
                 ownerHost: hosted.ownerHost,
                 realm: skir.RealmInfo(
                   realmId: external.realmId,
@@ -113,10 +126,10 @@ void _testHostTargetSelection() {
         );
         expect(
           owner.update(
-            DataPath.root.field("engine"),
+            editorRootPath.field("engine"),
             _mode("EngineEnabled", {
-              "target": const StringValue("paper@*"),
-              "realm": StringValue(incompatible.realmId.id),
+              "target": skir.DataValue.wrapStringValue("paper@*"),
+              "realm": skir.DataValue.wrapStringValue(incompatible.realmId.id),
             }),
           ),
           isA<AppliedEditorMutation>(),
@@ -124,8 +137,10 @@ void _testHostTargetSelection() {
         expect(owner.draftDiagnostics, isNotEmpty);
 
         owner.update(
-          DataPath.root.field("realm"),
-          _mode("RealmHosted", {"target": const StringValue("paper@*")}),
+          editorRootPath.field("realm"),
+          _mode("RealmHosted", {
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+          }),
         );
         await tester.pumpAndSettle();
         expect(find.text("Assigned Realm"), findsNothing);

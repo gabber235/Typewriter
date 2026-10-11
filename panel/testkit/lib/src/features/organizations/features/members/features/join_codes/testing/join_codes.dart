@@ -1,12 +1,10 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter_animate/flutter_animate.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 // ============================================================================
@@ -39,7 +37,7 @@ OrganizationJoinCode generateRandomJoinCode({
       : JoinCodeAutoAccept();
 
   return OrganizationJoinCode(
-    code: recordId("organization_join_code:${generateCode(20)}"),
+    code: skir.recordId("organization_join_code:${generateCode(20)}"),
     createdAt: faker.date.dateTime(minYear: 2024, maxYear: 2025),
     expiresAt: expiresAt,
     singleUse: singleUse,
@@ -58,32 +56,6 @@ class OrganizationJoinCodesMock extends OrganizationJoinCodes {
     yield await displayState.generate(
       () => generateRandomJoinCode(availableRoles: availableRoles),
     );
-  }
-
-  @override
-  Future<SecretFieldRevealed> generateCode({
-    JoinCodeOptions options = const JoinCodeOptions(),
-  }) async {
-    await Future<void>.delayed(2500.ms);
-    final expiresAt = switch (options.expiration) {
-      JoinCodeExpirationNever() => null,
-      JoinCodeExpirationDuration(:final duration) => DateTime.now().add(
-        duration,
-      ),
-    };
-    return SecretFieldRevealed(
-      value: "Roft9n2cgVEypNBanD23",
-      expiresAt: expiresAt,
-    );
-  }
-
-  @override
-  Future<void> revokeCode(skir.RecordId codeId) async {
-    await Future.delayed(300.ms);
-    final codes = await future;
-
-    final updated = codes.where((c) => c.code != codeId).toList();
-    state = AsyncData(updated);
   }
 }
 

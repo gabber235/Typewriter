@@ -1,7 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:material_color_utilities/material_color_utilities.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// High contrast accent colors suitable for user selectable labels.
 const safeColors = <Color>[
@@ -36,9 +33,9 @@ extension ColorsExtension on List<Color> {
 
     for (final color in this) {
       final hsv = HSVColor.fromColor(color);
-      final hueRadians = hsv.hue * math.pi / 180;
-      hueX += math.cos(hueRadians) * hsv.saturation;
-      hueY += math.sin(hueRadians) * hsv.saturation;
+      final hueRadians = hsv.hue * pi / 180;
+      hueX += cos(hueRadians) * hsv.saturation;
+      hueY += sin(hueRadians) * hsv.saturation;
 
       saturation += hsv.saturation;
 
@@ -46,10 +43,10 @@ extension ColorsExtension on List<Color> {
       alpha += hsv.alpha;
     }
 
-    final hueVectorLength = math.sqrt(hueX * hueX + hueY * hueY);
+    final hueVectorLength = sqrt(hueX * hueX + hueY * hueY);
     final hue = hueVectorLength < 1e-10
         ? 0.0
-        : (math.atan2(hueY, hueX) * 180 / math.pi + 360) % 360;
+        : (atan2(hueY, hueX) * 180 / pi + 360) % 360;
     final count = length;
 
     return HSVColor.fromAHSV(

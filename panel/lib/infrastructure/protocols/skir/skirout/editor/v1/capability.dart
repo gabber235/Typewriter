@@ -12,14 +12,13 @@
 //   dart pub add skir_client
 
 import "dart:core" as _core;
+
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
-// -----------------------------------------------------------------------------
 // struct InvocationId
-// -----------------------------------------------------------------------------
 
 sealed class InvocationId_orMutable {
   _core.String get value;
@@ -33,56 +32,46 @@ final class InvocationId implements InvocationId_orMutable {
   final _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  factory InvocationId({
-    required _core.String value,
-  }) => InvocationId._(
-    value,
-  );
+  factory InvocationId({required _core.String value}) => InvocationId._(value);
 
-  InvocationId._(
-    this.value,
-  );
+  InvocationId._(this.value);
 
   /// Default instance with all fields set to their default values.
-  static final defaultInstance = InvocationId._(
-    "",
-  );
+  static final defaultInstance = InvocationId._("");
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InvocationId_mutable mutable() => InvocationId_mutable._(
-    "",
-  );
+  static InvocationId_mutable mutable() => InvocationId_mutable._("");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InvocationId toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InvocationId_mutable toMutable() => InvocationId_mutable._(
-    this.value,
-  );
+  InvocationId_mutable toMutable() => InvocationId_mutable._(this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InvocationId) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InvocationId` instances.
-  static _skir.StructSerializer<InvocationId, InvocationId_mutable> get serializer {
+  static _skir.StructSerializer<InvocationId, InvocationId_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "value",
@@ -114,47 +103,42 @@ final class InvocationId_mutable implements InvocationId_orMutable {
   _core.String value;
   _skir.internal__UnrecognizedFields? _u;
 
-  InvocationId_mutable._(
-    this.value,
-  );
+  InvocationId_mutable._(this.value);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  InvocationId toFrozen() => InvocationId(
-    value: this.value,
-  ).._u = this._u;
+  InvocationId toFrozen() => InvocationId(value: this.value).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct SearchCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class SearchCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resultType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get resultType;
 
   SearchCapabilityDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orMutable {
+final class SearchCapabilityDefinition
+    implements SearchCapabilityDefinition_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resultType;
+  final _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory SearchCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => SearchCapabilityDefinition._(
     capabilityId.toFrozen(),
-    requestType.toFrozen(),
-    resultType.toFrozen(),
+    requestType,
+    resultType,
   );
 
   SearchCapabilityDefinition._(
@@ -166,35 +150,40 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
   /// Default instance with all fields set to their default values.
   static final defaultInstance = SearchCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static SearchCapabilityDefinition_mutable mutable() => SearchCapabilityDefinition_mutable._(
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-  );
+  static SearchCapabilityDefinition_mutable mutable() =>
+      SearchCapabilityDefinition_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+      );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   SearchCapabilityDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  SearchCapabilityDefinition_mutable toMutable() => SearchCapabilityDefinition_mutable._(
-    this.capabilityId,
-    this.requestType,
-    this.resultType,
-  );
+  SearchCapabilityDefinition_mutable toMutable() =>
+      SearchCapabilityDefinition_mutable._(
+        this.capabilityId,
+        this.requestType,
+        this.resultType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! SearchCapabilityDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -210,7 +199,11 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `SearchCapabilityDefinition` instances.
-  static _skir.StructSerializer<SearchCapabilityDefinition, SearchCapabilityDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    SearchCapabilityDefinition,
+    SearchCapabilityDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capability_id",
@@ -225,7 +218,7 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -234,7 +227,7 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
         "result_type",
         "resultType",
         2,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -256,10 +249,11 @@ final class SearchCapabilityDefinition implements SearchCapabilityDefinition_orM
 }
 
 /// Mutable version of [SearchCapabilityDefinition].
-final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefinition_orMutable {
+final class SearchCapabilityDefinition_mutable
+    implements SearchCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
+  _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   SearchCapabilityDefinition_mutable._(
@@ -268,36 +262,15 @@ final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefini
     this.resultType,
   );
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
-    }
-  }
-
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [resultType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResultType {
-    final value = this.resultType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resultType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -310,36 +283,35 @@ final class SearchCapabilityDefinition_mutable implements SearchCapabilityDefini
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ComputationCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class ComputationCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resultType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get resultType;
 
   ComputationCapabilityDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class ComputationCapabilityDefinition implements ComputationCapabilityDefinition_orMutable {
+final class ComputationCapabilityDefinition
+    implements ComputationCapabilityDefinition_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resultType;
+  final _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ComputationCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => ComputationCapabilityDefinition._(
     capabilityId.toFrozen(),
-    requestType.toFrozen(),
-    resultType.toFrozen(),
+    requestType,
+    resultType,
   );
 
   ComputationCapabilityDefinition._(
@@ -351,35 +323,40 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ComputationCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static ComputationCapabilityDefinition_mutable mutable() => ComputationCapabilityDefinition_mutable._(
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-  );
+  static ComputationCapabilityDefinition_mutable mutable() =>
+      ComputationCapabilityDefinition_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+      );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ComputationCapabilityDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ComputationCapabilityDefinition_mutable toMutable() => ComputationCapabilityDefinition_mutable._(
-    this.capabilityId,
-    this.requestType,
-    this.resultType,
-  );
+  ComputationCapabilityDefinition_mutable toMutable() =>
+      ComputationCapabilityDefinition_mutable._(
+        this.capabilityId,
+        this.requestType,
+        this.resultType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ComputationCapabilityDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -395,7 +372,11 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ComputationCapabilityDefinition` instances.
-  static _skir.StructSerializer<ComputationCapabilityDefinition, ComputationCapabilityDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    ComputationCapabilityDefinition,
+    ComputationCapabilityDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capability_id",
@@ -410,7 +391,7 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -419,7 +400,7 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
         "result_type",
         "resultType",
         2,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resultType,
         (it, v) => it.resultType = v,
@@ -441,10 +422,11 @@ final class ComputationCapabilityDefinition implements ComputationCapabilityDefi
 }
 
 /// Mutable version of [ComputationCapabilityDefinition].
-final class ComputationCapabilityDefinition_mutable implements ComputationCapabilityDefinition_orMutable {
+final class ComputationCapabilityDefinition_mutable
+    implements ComputationCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
+  _lib_editor_v1_type_catalog.TypeUse resultType;
   _skir.internal__UnrecognizedFields? _u;
 
   ComputationCapabilityDefinition_mutable._(
@@ -453,36 +435,15 @@ final class ComputationCapabilityDefinition_mutable implements ComputationCapabi
     this.resultType,
   );
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
-    }
-  }
-
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
-
-  /// If the value of [resultType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResultType {
-    final value = this.resultType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resultType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -495,82 +456,81 @@ final class ComputationCapabilityDefinition_mutable implements ComputationCapabi
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommandCapabilityDefinition
-// -----------------------------------------------------------------------------
 
 sealed class CommandCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get requestType;
+  _lib_editor_v1_type_catalog.TypeUse get requestType;
 
   CommandCapabilityDefinition toFrozen();
 }
 
 /// Deeply immutable.
-final class CommandCapabilityDefinition implements CommandCapabilityDefinition_orMutable {
+final class CommandCapabilityDefinition
+    implements CommandCapabilityDefinition_orMutable {
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef requestType;
+  final _lib_editor_v1_type_catalog.TypeUse requestType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CommandCapabilityDefinition({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-  }) => CommandCapabilityDefinition._(
-    capabilityId.toFrozen(),
-    requestType.toFrozen(),
-  );
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+  }) => CommandCapabilityDefinition._(capabilityId.toFrozen(), requestType);
 
-  CommandCapabilityDefinition._(
-    this.capabilityId,
-    this.requestType,
-  );
+  CommandCapabilityDefinition._(this.capabilityId, this.requestType);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CommandCapabilityDefinition._(
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CommandCapabilityDefinition_mutable mutable() => CommandCapabilityDefinition_mutable._(
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-  );
+  static CommandCapabilityDefinition_mutable mutable() =>
+      CommandCapabilityDefinition_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_type_catalog.TypeUse.unknown,
+      );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommandCapabilityDefinition toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CommandCapabilityDefinition_mutable toMutable() => CommandCapabilityDefinition_mutable._(
-    this.capabilityId,
-    this.requestType,
-  );
+  CommandCapabilityDefinition_mutable toMutable() =>
+      CommandCapabilityDefinition_mutable._(
+        this.capabilityId,
+        this.requestType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CommandCapabilityDefinition) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.capabilityId,
-    this.requestType,
-  ];
+  _core.List get _equality_proxy => [this.capabilityId, this.requestType];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CommandCapabilityDefinition` instances.
-  static _skir.StructSerializer<CommandCapabilityDefinition, CommandCapabilityDefinition_mutable> get serializer {
+  static _skir.StructSerializer<
+    CommandCapabilityDefinition,
+    CommandCapabilityDefinition_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "capability_id",
@@ -585,7 +545,7 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
         "request_type",
         "requestType",
         1,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.requestType,
         (it, v) => it.requestType = v,
@@ -607,35 +567,23 @@ final class CommandCapabilityDefinition implements CommandCapabilityDefinition_o
 }
 
 /// Mutable version of [CommandCapabilityDefinition].
-final class CommandCapabilityDefinition_mutable implements CommandCapabilityDefinition_orMutable {
+final class CommandCapabilityDefinition_mutable
+    implements CommandCapabilityDefinition_orMutable {
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType;
+  _lib_editor_v1_type_catalog.TypeUse requestType;
   _skir.internal__UnrecognizedFields? _u;
 
-  CommandCapabilityDefinition_mutable._(
-    this.capabilityId,
-    this.requestType,
-  );
+  CommandCapabilityDefinition_mutable._(this.capabilityId, this.requestType);
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
-    }
-  }
-
-  /// If the value of [requestType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableRequestType {
-    final value = this.requestType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.requestType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -647,9 +595,7 @@ final class CommandCapabilityDefinition_mutable implements CommandCapabilityDefi
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum CapabilityDefinition
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -665,58 +611,57 @@ final class CommandCapabilityDefinition_mutable implements CommandCapabilityDefi
 sealed class CapabilityDefinition {
   /// Constant indicating an unknown `CapabilityDefinition`.
   /// Default value for fields of type `CapabilityDefinition`.
-  static const CapabilityDefinition unknown = CapabilityDefinition_unknown._instance;
+  static const CapabilityDefinition unknown =
+      CapabilityDefinition_unknown._instance;
 
   /// Create a 'search' variant wrapping around the given value.
-  factory CapabilityDefinition.wrapSearch(
-    SearchCapabilityDefinition value
-  ) => CapabilityDefinition_searchWrapper._(value);
+  factory CapabilityDefinition.wrapSearch(SearchCapabilityDefinition value) =>
+      CapabilityDefinition_searchWrapper._(value);
 
   /// Same as `wrapSearch(SearchCapabilityDefinition(...))`.
   factory CapabilityDefinition.createSearch({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => CapabilityDefinition.wrapSearch(
     SearchCapabilityDefinition(
       capabilityId: capabilityId,
       requestType: requestType,
       resultType: resultType,
-    )
+    ),
   );
 
   /// Create a 'computation' variant wrapping around the given value.
   factory CapabilityDefinition.wrapComputation(
-    ComputationCapabilityDefinition value
+    ComputationCapabilityDefinition value,
   ) => CapabilityDefinition_computationWrapper._(value);
 
   /// Same as `wrapComputation(ComputationCapabilityDefinition(...))`.
   factory CapabilityDefinition.createComputation({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resultType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
+    required _lib_editor_v1_type_catalog.TypeUse resultType,
   }) => CapabilityDefinition.wrapComputation(
     ComputationCapabilityDefinition(
       capabilityId: capabilityId,
       requestType: requestType,
       resultType: resultType,
-    )
+    ),
   );
 
   /// Create a 'command' variant wrapping around the given value.
-  factory CapabilityDefinition.wrapCommand(
-    CommandCapabilityDefinition value
-  ) => CapabilityDefinition_commandWrapper._(value);
+  factory CapabilityDefinition.wrapCommand(CommandCapabilityDefinition value) =>
+      CapabilityDefinition_commandWrapper._(value);
 
   /// Same as `wrapCommand(CommandCapabilityDefinition(...))`.
   factory CapabilityDefinition.createCommand({
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable requestType,
+    required _lib_editor_v1_type_catalog.TypeUse requestType,
   }) => CapabilityDefinition.wrapCommand(
     CommandCapabilityDefinition(
       capabilityId: capabilityId,
       requestType: requestType,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this CapabilityDefinition.
@@ -760,15 +705,16 @@ sealed class CapabilityDefinition {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/capability.skir:CapabilityDefinition",
-    doc: "",
-    unknownInstance: CapabilityDefinition_unknown._instance,
-    enumInstance: CapabilityDefinition.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CapabilityDefinition_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/capability.skir:CapabilityDefinition",
+        doc: "",
+        unknownInstance: CapabilityDefinition_unknown._instance,
+        enumInstance: CapabilityDefinition.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CapabilityDefinition_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CapabilityDefinition`.
@@ -798,7 +744,8 @@ final class CapabilityDefinition_unknown implements CapabilityDefinition {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CapabilityDefinition.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CapabilityDefinition.serializer);
 }
 
 sealed class _CapabilityDefinition_wrapper implements CapabilityDefinition {
@@ -814,10 +761,12 @@ sealed class _CapabilityDefinition_wrapper implements CapabilityDefinition {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CapabilityDefinition.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CapabilityDefinition.serializer);
 }
 
-final class CapabilityDefinition_searchWrapper extends _CapabilityDefinition_wrapper {
+final class CapabilityDefinition_searchWrapper
+    extends _CapabilityDefinition_wrapper {
   final SearchCapabilityDefinition value;
 
   CapabilityDefinition_searchWrapper._(this.value);
@@ -826,31 +775,33 @@ final class CapabilityDefinition_searchWrapper extends _CapabilityDefinition_wra
   CapabilityDefinition_kind get kind => CapabilityDefinition_kind.searchWrapper;
 }
 
-final class CapabilityDefinition_computationWrapper extends _CapabilityDefinition_wrapper {
+final class CapabilityDefinition_computationWrapper
+    extends _CapabilityDefinition_wrapper {
   final ComputationCapabilityDefinition value;
 
   CapabilityDefinition_computationWrapper._(this.value);
 
   @_core.override
-  CapabilityDefinition_kind get kind => CapabilityDefinition_kind.computationWrapper;
+  CapabilityDefinition_kind get kind =>
+      CapabilityDefinition_kind.computationWrapper;
 }
 
-final class CapabilityDefinition_commandWrapper extends _CapabilityDefinition_wrapper {
+final class CapabilityDefinition_commandWrapper
+    extends _CapabilityDefinition_wrapper {
   final CommandCapabilityDefinition value;
 
   CapabilityDefinition_commandWrapper._(this.value);
 
   @_core.override
-  CapabilityDefinition_kind get kind => CapabilityDefinition_kind.commandWrapper;
+  CapabilityDefinition_kind get kind =>
+      CapabilityDefinition_kind.commandWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct ResourceAddress
-// -----------------------------------------------------------------------------
 
 sealed class ResourceAddress_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable get resourceType;
-  _lib_editor_v1_type_catalog.TypedValue get identity;
+  _lib_editor_v1_type_catalog.TypeUse get resourceType;
+  _lib_editor_v1_type_catalog.DataValue get identity;
 
   ResourceAddress toFrozen();
 }
@@ -858,74 +809,67 @@ sealed class ResourceAddress_orMutable {
 /// Deeply immutable.
 final class ResourceAddress implements ResourceAddress_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.ResolvedTypeRef resourceType;
+  final _lib_editor_v1_type_catalog.TypeUse resourceType;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue identity;
+  final _lib_editor_v1_type_catalog.DataValue identity;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ResourceAddress({
-    required _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resourceType,
-    required _lib_editor_v1_type_catalog.TypedValue identity,
-  }) => ResourceAddress._(
-    resourceType.toFrozen(),
-    identity,
-  );
+    required _lib_editor_v1_type_catalog.TypeUse resourceType,
+    required _lib_editor_v1_type_catalog.DataValue identity,
+  }) => ResourceAddress._(resourceType, identity);
 
-  ResourceAddress._(
-    this.resourceType,
-    this.identity,
-  );
+  ResourceAddress._(this.resourceType, this.identity);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ResourceAddress._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ResourceAddress_mutable mutable() => ResourceAddress_mutable._(
-    _lib_editor_v1_type_catalog.ResolvedTypeRef.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ResourceAddress toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ResourceAddress_mutable toMutable() => ResourceAddress_mutable._(
-    this.resourceType,
-    this.identity,
-  );
+  ResourceAddress_mutable toMutable() =>
+      ResourceAddress_mutable._(this.resourceType, this.identity);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ResourceAddress) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resourceType,
-    this.identity,
-  ];
+  _core.List get _equality_proxy => [this.resourceType, this.identity];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ResourceAddress` instances.
-  static _skir.StructSerializer<ResourceAddress, ResourceAddress_mutable> get serializer {
+  static _skir.StructSerializer<ResourceAddress, ResourceAddress_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "resource_type",
         "resourceType",
         0,
-        _lib_editor_v1_type_catalog.ResolvedTypeRef.serializer,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
         "",
         (it) => it.resourceType,
         (it, v) => it.resourceType = v,
@@ -934,7 +878,7 @@ final class ResourceAddress implements ResourceAddress_orMutable {
         "identity",
         "identity",
         1,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.identity,
         (it, v) => it.identity = v,
@@ -957,37 +901,20 @@ final class ResourceAddress implements ResourceAddress_orMutable {
 
 /// Mutable version of [ResourceAddress].
 final class ResourceAddress_mutable implements ResourceAddress_orMutable {
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_orMutable resourceType;
-  _lib_editor_v1_type_catalog.TypedValue identity;
+  _lib_editor_v1_type_catalog.TypeUse resourceType;
+  _lib_editor_v1_type_catalog.DataValue identity;
   _skir.internal__UnrecognizedFields? _u;
 
-  ResourceAddress_mutable._(
-    this.resourceType,
-    this.identity,
-  );
-
-  /// If the value of [resourceType] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [resourceType] and returns it.
-  _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable get mutableResourceType {
-    final value = this.resourceType;
-    if (value is _lib_editor_v1_type_catalog.ResolvedTypeRef_mutable) {
-      return value;
-    } else {
-      return this.resourceType = (value as _lib_editor_v1_type_catalog.ResolvedTypeRef).toMutable();
-    }
-  }
+  ResourceAddress_mutable._(this.resourceType, this.identity);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ResourceAddress toFrozen() => ResourceAddress(
-    resourceType: this.resourceType,
-    identity: this.identity,
-  ).._u = this._u;
+  ResourceAddress toFrozen() =>
+      ResourceAddress(resourceType: this.resourceType, identity: this.identity)
+        .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct InvalidateResourceInstruction
-// -----------------------------------------------------------------------------
 
 sealed class InvalidateResourceInstruction_orMutable {
   ResourceAddress_orMutable get resource;
@@ -996,20 +923,17 @@ sealed class InvalidateResourceInstruction_orMutable {
 }
 
 /// Deeply immutable.
-final class InvalidateResourceInstruction implements InvalidateResourceInstruction_orMutable {
+final class InvalidateResourceInstruction
+    implements InvalidateResourceInstruction_orMutable {
   @_core.override
   final ResourceAddress resource;
   _skir.internal__UnrecognizedFields? _u;
 
   factory InvalidateResourceInstruction({
     required ResourceAddress_orMutable resource,
-  }) => InvalidateResourceInstruction._(
-    resource.toFrozen(),
-  );
+  }) => InvalidateResourceInstruction._(resource.toFrozen());
 
-  InvalidateResourceInstruction._(
-    this.resource,
-  );
+  InvalidateResourceInstruction._(this.resource);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = InvalidateResourceInstruction._(
@@ -1018,39 +942,42 @@ final class InvalidateResourceInstruction implements InvalidateResourceInstructi
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static InvalidateResourceInstruction_mutable mutable() => InvalidateResourceInstruction_mutable._(
-    ResourceAddress.defaultInstance,
-  );
+  static InvalidateResourceInstruction_mutable mutable() =>
+      InvalidateResourceInstruction_mutable._(ResourceAddress.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   InvalidateResourceInstruction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  InvalidateResourceInstruction_mutable toMutable() => InvalidateResourceInstruction_mutable._(
-    this.resource,
-  );
+  InvalidateResourceInstruction_mutable toMutable() =>
+      InvalidateResourceInstruction_mutable._(this.resource);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! InvalidateResourceInstruction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resource,
-  ];
+  _core.List get _equality_proxy => [this.resource];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `InvalidateResourceInstruction` instances.
-  static _skir.StructSerializer<InvalidateResourceInstruction, InvalidateResourceInstruction_mutable> get serializer {
+  static _skir.StructSerializer<
+    InvalidateResourceInstruction,
+    InvalidateResourceInstruction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "resource",
@@ -1078,15 +1005,14 @@ final class InvalidateResourceInstruction implements InvalidateResourceInstructi
 }
 
 /// Mutable version of [InvalidateResourceInstruction].
-final class InvalidateResourceInstruction_mutable implements InvalidateResourceInstruction_orMutable {
+final class InvalidateResourceInstruction_mutable
+    implements InvalidateResourceInstruction_orMutable {
   ResourceAddress_orMutable resource;
   _skir.internal__UnrecognizedFields? _u;
 
-  InvalidateResourceInstruction_mutable._(
-    this.resource,
-  );
+  InvalidateResourceInstruction_mutable._(this.resource);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceAddress_mutable get mutableResource {
     final value = this.resource;
@@ -1099,14 +1025,11 @@ final class InvalidateResourceInstruction_mutable implements InvalidateResourceI
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  InvalidateResourceInstruction toFrozen() => InvalidateResourceInstruction(
-    resource: this.resource,
-  ).._u = this._u;
+  InvalidateResourceInstruction toFrozen() =>
+      InvalidateResourceInstruction(resource: this.resource).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct OpenResourceInstruction
-// -----------------------------------------------------------------------------
 
 sealed class OpenResourceInstruction_orMutable {
   ResourceAddress_orMutable get resource;
@@ -1115,20 +1038,17 @@ sealed class OpenResourceInstruction_orMutable {
 }
 
 /// Deeply immutable.
-final class OpenResourceInstruction implements OpenResourceInstruction_orMutable {
+final class OpenResourceInstruction
+    implements OpenResourceInstruction_orMutable {
   @_core.override
   final ResourceAddress resource;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OpenResourceInstruction({
     required ResourceAddress_orMutable resource,
-  }) => OpenResourceInstruction._(
-    resource.toFrozen(),
-  );
+  }) => OpenResourceInstruction._(resource.toFrozen());
 
-  OpenResourceInstruction._(
-    this.resource,
-  );
+  OpenResourceInstruction._(this.resource);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = OpenResourceInstruction._(
@@ -1137,39 +1057,42 @@ final class OpenResourceInstruction implements OpenResourceInstruction_orMutable
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static OpenResourceInstruction_mutable mutable() => OpenResourceInstruction_mutable._(
-    ResourceAddress.defaultInstance,
-  );
+  static OpenResourceInstruction_mutable mutable() =>
+      OpenResourceInstruction_mutable._(ResourceAddress.defaultInstance);
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   OpenResourceInstruction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  OpenResourceInstruction_mutable toMutable() => OpenResourceInstruction_mutable._(
-    this.resource,
-  );
+  OpenResourceInstruction_mutable toMutable() =>
+      OpenResourceInstruction_mutable._(this.resource);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! OpenResourceInstruction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.resource,
-  ];
+  _core.List get _equality_proxy => [this.resource];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `OpenResourceInstruction` instances.
-  static _skir.StructSerializer<OpenResourceInstruction, OpenResourceInstruction_mutable> get serializer {
+  static _skir.StructSerializer<
+    OpenResourceInstruction,
+    OpenResourceInstruction_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "resource",
@@ -1197,15 +1120,14 @@ final class OpenResourceInstruction implements OpenResourceInstruction_orMutable
 }
 
 /// Mutable version of [OpenResourceInstruction].
-final class OpenResourceInstruction_mutable implements OpenResourceInstruction_orMutable {
+final class OpenResourceInstruction_mutable
+    implements OpenResourceInstruction_orMutable {
   ResourceAddress_orMutable resource;
   _skir.internal__UnrecognizedFields? _u;
 
-  OpenResourceInstruction_mutable._(
-    this.resource,
-  );
+  OpenResourceInstruction_mutable._(this.resource);
 
-  /// If the value of [resource] is already mutable, returns it as-is.
+  /// If the value of [resource] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
   ResourceAddress_mutable get mutableResource {
     final value = this.resource;
@@ -1218,14 +1140,11 @@ final class OpenResourceInstruction_mutable implements OpenResourceInstruction_o
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  OpenResourceInstruction toFrozen() => OpenResourceInstruction(
-    resource: this.resource,
-  ).._u = this._u;
+  OpenResourceInstruction toFrozen() =>
+      OpenResourceInstruction(resource: this.resource).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum NotificationSeverity
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1242,7 +1161,8 @@ final class OpenResourceInstruction_mutable implements OpenResourceInstruction_o
 sealed class NotificationSeverity {
   /// Constant indicating an unknown `NotificationSeverity`.
   /// Default value for fields of type `NotificationSeverity`.
-  static const NotificationSeverity unknown = NotificationSeverity_unknown._instance;
+  static const NotificationSeverity unknown =
+      NotificationSeverity_unknown._instance;
 
   static const info = _NotificationSeverity_consts.infoConst;
   static const success = _NotificationSeverity_consts.successConst;
@@ -1255,13 +1175,7 @@ sealed class NotificationSeverity {
   /// Serializer for `NotificationSeverity` instances.
   static _skir.EnumSerializer<NotificationSeverity> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "info",
-        "info",
-        "",
-        info,
-      );
+      _serializerBuilder.addConstantVariant(1, "info", "info", "", info);
       _serializerBuilder.addConstantVariant(
         2,
         "success",
@@ -1276,27 +1190,22 @@ sealed class NotificationSeverity {
         "",
         warning,
       );
-      _serializerBuilder.addConstantVariant(
-        4,
-        "error",
-        "error",
-        "",
-        error,
-      );
+      _serializerBuilder.addConstantVariant(4, "error", "error", "", error);
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/capability.skir:NotificationSeverity",
-    doc: "",
-    unknownInstance: NotificationSeverity_unknown._instance,
-    enumInstance: NotificationSeverity.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: NotificationSeverity_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/capability.skir:NotificationSeverity",
+        doc: "",
+        unknownInstance: NotificationSeverity_unknown._instance,
+        enumInstance: NotificationSeverity.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: NotificationSeverity_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `NotificationSeverity`.
@@ -1327,7 +1236,8 @@ final class NotificationSeverity_unknown implements NotificationSeverity {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, NotificationSeverity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, NotificationSeverity.serializer);
 }
 
 enum _NotificationSeverity_consts implements NotificationSeverity {
@@ -1342,12 +1252,11 @@ enum _NotificationSeverity_consts implements NotificationSeverity {
   const _NotificationSeverity_consts(this.kind);
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, NotificationSeverity.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, NotificationSeverity.serializer);
 }
 
-// -----------------------------------------------------------------------------
 // struct NotifyInstruction
-// -----------------------------------------------------------------------------
 
 sealed class NotifyInstruction_orMutable {
   NotificationSeverity get severity;
@@ -1367,15 +1276,9 @@ final class NotifyInstruction implements NotifyInstruction_orMutable {
   factory NotifyInstruction({
     required NotificationSeverity severity,
     required _core.String message,
-  }) => NotifyInstruction._(
-    severity,
-    message,
-  );
+  }) => NotifyInstruction._(severity, message);
 
-  NotifyInstruction._(
-    this.severity,
-    this.message,
-  );
+  NotifyInstruction._(this.severity, this.message);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = NotifyInstruction._(
@@ -1385,42 +1288,39 @@ final class NotifyInstruction implements NotifyInstruction_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static NotifyInstruction_mutable mutable() => NotifyInstruction_mutable._(
-    NotificationSeverity.unknown,
-    "",
-  );
+  static NotifyInstruction_mutable mutable() =>
+      NotifyInstruction_mutable._(NotificationSeverity.unknown, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   NotifyInstruction toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  NotifyInstruction_mutable toMutable() => NotifyInstruction_mutable._(
-    this.severity,
-    this.message,
-  );
+  NotifyInstruction_mutable toMutable() =>
+      NotifyInstruction_mutable._(this.severity, this.message);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! NotifyInstruction) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.severity,
-    this.message,
-  ];
+  _core.List get _equality_proxy => [this.severity, this.message];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `NotifyInstruction` instances.
-  static _skir.StructSerializer<NotifyInstruction, NotifyInstruction_mutable> get serializer {
+  static _skir.StructSerializer<NotifyInstruction, NotifyInstruction_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "severity",
@@ -1462,22 +1362,16 @@ final class NotifyInstruction_mutable implements NotifyInstruction_orMutable {
   _core.String message;
   _skir.internal__UnrecognizedFields? _u;
 
-  NotifyInstruction_mutable._(
-    this.severity,
-    this.message,
-  );
+  NotifyInstruction_mutable._(this.severity, this.message);
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  NotifyInstruction toFrozen() => NotifyInstruction(
-    severity: this.severity,
-    message: this.message,
-  ).._u = this._u;
+  NotifyInstruction toFrozen() =>
+      NotifyInstruction(severity: this.severity, message: this.message)
+        .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum PanelInstruction
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -1497,46 +1391,37 @@ sealed class PanelInstruction {
 
   /// Create a 'invalidate_resource' variant wrapping around the given value.
   factory PanelInstruction.wrapInvalidateResource(
-    InvalidateResourceInstruction value
+    InvalidateResourceInstruction value,
   ) => PanelInstruction_invalidateResourceWrapper._(value);
 
   /// Same as `wrapInvalidateResource(InvalidateResourceInstruction(...))`.
   factory PanelInstruction.createInvalidateResource({
     required ResourceAddress_orMutable resource,
   }) => PanelInstruction.wrapInvalidateResource(
-    InvalidateResourceInstruction(
-      resource: resource,
-    )
+    InvalidateResourceInstruction(resource: resource),
   );
 
   /// Create a 'open_resource' variant wrapping around the given value.
-  factory PanelInstruction.wrapOpenResource(
-    OpenResourceInstruction value
-  ) => PanelInstruction_openResourceWrapper._(value);
+  factory PanelInstruction.wrapOpenResource(OpenResourceInstruction value) =>
+      PanelInstruction_openResourceWrapper._(value);
 
   /// Same as `wrapOpenResource(OpenResourceInstruction(...))`.
   factory PanelInstruction.createOpenResource({
     required ResourceAddress_orMutable resource,
   }) => PanelInstruction.wrapOpenResource(
-    OpenResourceInstruction(
-      resource: resource,
-    )
+    OpenResourceInstruction(resource: resource),
   );
 
   /// Create a 'notify' variant wrapping around the given value.
-  factory PanelInstruction.wrapNotify(
-    NotifyInstruction value
-  ) => PanelInstruction_notifyWrapper._(value);
+  factory PanelInstruction.wrapNotify(NotifyInstruction value) =>
+      PanelInstruction_notifyWrapper._(value);
 
   /// Same as `wrapNotify(NotifyInstruction(...))`.
   factory PanelInstruction.createNotify({
     required NotificationSeverity severity,
     required _core.String message,
   }) => PanelInstruction.wrapNotify(
-    NotifyInstruction(
-      severity: severity,
-      message: message,
-    )
+    NotifyInstruction(severity: severity, message: message),
   );
 
   /// Returns the kind of variant held by this PanelInstruction.
@@ -1580,15 +1465,16 @@ sealed class PanelInstruction {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/capability.skir:PanelInstruction",
-    doc: "",
-    unknownInstance: PanelInstruction_unknown._instance,
-    enumInstance: PanelInstruction.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: PanelInstruction_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/capability.skir:PanelInstruction",
+        doc: "",
+        unknownInstance: PanelInstruction_unknown._instance,
+        enumInstance: PanelInstruction.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PanelInstruction_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `PanelInstruction`.
@@ -1618,7 +1504,8 @@ final class PanelInstruction_unknown implements PanelInstruction {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PanelInstruction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PanelInstruction.serializer);
 }
 
 sealed class _PanelInstruction_wrapper implements PanelInstruction {
@@ -1634,19 +1521,23 @@ sealed class _PanelInstruction_wrapper implements PanelInstruction {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, PanelInstruction.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, PanelInstruction.serializer);
 }
 
-final class PanelInstruction_invalidateResourceWrapper extends _PanelInstruction_wrapper {
+final class PanelInstruction_invalidateResourceWrapper
+    extends _PanelInstruction_wrapper {
   final InvalidateResourceInstruction value;
 
   PanelInstruction_invalidateResourceWrapper._(this.value);
 
   @_core.override
-  PanelInstruction_kind get kind => PanelInstruction_kind.invalidateResourceWrapper;
+  PanelInstruction_kind get kind =>
+      PanelInstruction_kind.invalidateResourceWrapper;
 }
 
-final class PanelInstruction_openResourceWrapper extends _PanelInstruction_wrapper {
+final class PanelInstruction_openResourceWrapper
+    extends _PanelInstruction_wrapper {
   final OpenResourceInstruction value;
 
   PanelInstruction_openResourceWrapper._(this.value);
@@ -1664,22 +1555,21 @@ final class PanelInstruction_notifyWrapper extends _PanelInstruction_wrapper {
   PanelInstruction_kind get kind => PanelInstruction_kind.notifyWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityInvocationRequest
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityInvocationRequest_orMutable {
   InvocationId_orMutable get invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue get payload;
-  _lib_editor_v1_type_catalog.TypeExpression? get expectedResultType;
+  _lib_editor_v1_type_catalog.DataValue get payload;
+  _lib_editor_v1_type_catalog.TypeTemplate? get expectedResultType;
 
   CapabilityInvocationRequest toFrozen();
 }
 
 /// Deeply immutable.
-final class CapabilityInvocationRequest implements CapabilityInvocationRequest_orMutable {
+final class CapabilityInvocationRequest
+    implements CapabilityInvocationRequest_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
@@ -1687,17 +1577,17 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
   @_core.override
   final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue payload;
+  final _lib_editor_v1_type_catalog.DataValue payload;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypeExpression? expectedResultType;
+  final _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CapabilityInvocationRequest({
     required InvocationId_orMutable invocationId,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation,
     required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
-    required _lib_editor_v1_type_catalog.TypedValue payload,
-    required _lib_editor_v1_type_catalog.TypeExpression? expectedResultType,
+    required _lib_editor_v1_type_catalog.DataValue payload,
+    required _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType,
   }) => CapabilityInvocationRequest._(
     invocationId.toFrozen(),
     generation.toFrozen(),
@@ -1719,39 +1609,44 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
     InvocationId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
     null,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CapabilityInvocationRequest_mutable mutable() => CapabilityInvocationRequest_mutable._(
-    InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
-    null,
-  );
+  static CapabilityInvocationRequest_mutable mutable() =>
+      CapabilityInvocationRequest_mutable._(
+        InvocationId.defaultInstance,
+        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_type_catalog.DataValue.unknown,
+        null,
+      );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityInvocationRequest toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CapabilityInvocationRequest_mutable toMutable() => CapabilityInvocationRequest_mutable._(
-    this.invocationId,
-    this.generation,
-    this.capabilityId,
-    this.payload,
-    this.expectedResultType,
-  );
+  CapabilityInvocationRequest_mutable toMutable() =>
+      CapabilityInvocationRequest_mutable._(
+        this.invocationId,
+        this.generation,
+        this.capabilityId,
+        this.payload,
+        this.expectedResultType,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CapabilityInvocationRequest) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
@@ -1769,7 +1664,11 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CapabilityInvocationRequest` instances.
-  static _skir.StructSerializer<CapabilityInvocationRequest, CapabilityInvocationRequest_mutable> get serializer {
+  static _skir.StructSerializer<
+    CapabilityInvocationRequest,
+    CapabilityInvocationRequest_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -1802,7 +1701,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
         "payload",
         "payload",
         3,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.payload,
         (it, v) => it.payload = v,
@@ -1812,7 +1711,7 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
         "expectedResultType",
         4,
         _skir.Serializers.optional(
-          _lib_editor_v1_type_catalog.TypeExpression.serializer,
+          _lib_editor_v1_type_catalog.TypeTemplate.serializer,
         ),
         "",
         (it) => it.expectedResultType,
@@ -1835,12 +1734,13 @@ final class CapabilityInvocationRequest implements CapabilityInvocationRequest_o
 }
 
 /// Mutable version of [CapabilityInvocationRequest].
-final class CapabilityInvocationRequest_mutable implements CapabilityInvocationRequest_orMutable {
+final class CapabilityInvocationRequest_mutable
+    implements CapabilityInvocationRequest_orMutable {
   InvocationId_orMutable invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable generation;
   _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
-  _lib_editor_v1_type_catalog.TypedValue payload;
-  _lib_editor_v1_type_catalog.TypeExpression? expectedResultType;
+  _lib_editor_v1_type_catalog.DataValue payload;
+  _lib_editor_v1_type_catalog.TypeTemplate? expectedResultType;
   _skir.internal__UnrecognizedFields? _u;
 
   CapabilityInvocationRequest_mutable._(
@@ -1851,7 +1751,7 @@ final class CapabilityInvocationRequest_mutable implements CapabilityInvocationR
     this.expectedResultType,
   );
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -1862,25 +1762,27 @@ final class CapabilityInvocationRequest_mutable implements CapabilityInvocationR
     }
   }
 
-  /// If the value of [generation] is already mutable, returns it as-is.
+  /// If the value of [generation] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
   _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableGeneration {
     final value = this.generation;
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.generation = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.generation =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
-  /// If the value of [capabilityId] is already mutable, returns it as-is.
+  /// If the value of [capabilityId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
   _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
     final value = this.capabilityId;
     if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
       return value;
     } else {
-      return this.capabilityId = (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
     }
   }
 
@@ -1895,13 +1797,11 @@ final class CapabilityInvocationRequest_mutable implements CapabilityInvocationR
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct ComputationSuccess
-// -----------------------------------------------------------------------------
 
 sealed class ComputationSuccess_orMutable {
   InvocationId_orMutable get invocationId;
-  _lib_editor_v1_type_catalog.TypedValue get value;
+  _lib_editor_v1_type_catalog.DataValue get value;
 
   ComputationSuccess toFrozen();
 }
@@ -1911,66 +1811,59 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
-  final _lib_editor_v1_type_catalog.TypedValue value;
+  final _lib_editor_v1_type_catalog.DataValue value;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ComputationSuccess({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.TypedValue value,
-  }) => ComputationSuccess._(
-    invocationId.toFrozen(),
-    value,
-  );
+    required _lib_editor_v1_type_catalog.DataValue value,
+  }) => ComputationSuccess._(invocationId.toFrozen(), value);
 
-  ComputationSuccess._(
-    this.invocationId,
-    this.value,
-  );
+  ComputationSuccess._(this.invocationId, this.value);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ComputationSuccess._(
     InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ComputationSuccess_mutable mutable() => ComputationSuccess_mutable._(
     InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.TypedValue.unknown,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   ComputationSuccess toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  ComputationSuccess_mutable toMutable() => ComputationSuccess_mutable._(
-    this.invocationId,
-    this.value,
-  );
+  ComputationSuccess_mutable toMutable() =>
+      ComputationSuccess_mutable._(this.invocationId, this.value);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! ComputationSuccess) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.invocationId,
-    this.value,
-  ];
+  _core.List get _equality_proxy => [this.invocationId, this.value];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `ComputationSuccess` instances.
-  static _skir.StructSerializer<ComputationSuccess, ComputationSuccess_mutable> get serializer {
+  static _skir.StructSerializer<ComputationSuccess, ComputationSuccess_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -1985,7 +1878,7 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
         "value",
         "value",
         1,
-        _lib_editor_v1_type_catalog.TypedValue.serializer,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
         "",
         (it) => it.value,
         (it, v) => it.value = v,
@@ -2009,15 +1902,12 @@ final class ComputationSuccess implements ComputationSuccess_orMutable {
 /// Mutable version of [ComputationSuccess].
 final class ComputationSuccess_mutable implements ComputationSuccess_orMutable {
   InvocationId_orMutable invocationId;
-  _lib_editor_v1_type_catalog.TypedValue value;
+  _lib_editor_v1_type_catalog.DataValue value;
   _skir.internal__UnrecognizedFields? _u;
 
-  ComputationSuccess_mutable._(
-    this.invocationId,
-    this.value,
-  );
+  ComputationSuccess_mutable._(this.invocationId, this.value);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2030,15 +1920,12 @@ final class ComputationSuccess_mutable implements ComputationSuccess_orMutable {
 
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  ComputationSuccess toFrozen() => ComputationSuccess(
-    invocationId: this.invocationId,
-    value: this.value,
-  ).._u = this._u;
+  ComputationSuccess toFrozen() =>
+      ComputationSuccess(invocationId: this.invocationId, value: this.value)
+        .._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CommandSuccess
-// -----------------------------------------------------------------------------
 
 sealed class CommandSuccess_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2063,10 +1950,7 @@ final class CommandSuccess implements CommandSuccess_orMutable {
     _skir.internal__frozenCopy(instructions),
   );
 
-  CommandSuccess._(
-    this.invocationId,
-    this.instructions,
-  );
+  CommandSuccess._(this.invocationId, this.instructions);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CommandSuccess._(
@@ -2081,37 +1965,36 @@ final class CommandSuccess implements CommandSuccess_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CommandSuccess toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CommandSuccess_mutable toMutable() => CommandSuccess_mutable._(
-    this.invocationId,
-    this.instructions,
-  );
+  CommandSuccess_mutable toMutable() =>
+      CommandSuccess_mutable._(this.invocationId, this.instructions);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CommandSuccess) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.invocationId,
-    this.instructions,
-  ];
+  _core.List get _equality_proxy => [this.invocationId, this.instructions];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CommandSuccess` instances.
-  static _skir.StructSerializer<CommandSuccess, CommandSuccess_mutable> get serializer {
+  static _skir.StructSerializer<CommandSuccess, CommandSuccess_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -2126,9 +2009,7 @@ final class CommandSuccess implements CommandSuccess_orMutable {
         "instructions",
         "instructions",
         1,
-        _skir.Serializers.iterable(
-          PanelInstruction.serializer,
-        ),
+        _skir.Serializers.iterable(PanelInstruction.serializer),
         "",
         (it) => it.instructions,
         (it, v) => it.instructions = v,
@@ -2155,12 +2036,9 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
   _core.Iterable<PanelInstruction> instructions;
   _skir.internal__UnrecognizedFields? _u;
 
-  CommandSuccess_mutable._(
-    this.invocationId,
-    this.instructions,
-  );
+  CommandSuccess_mutable._(this.invocationId, this.instructions);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2171,7 +2049,7 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
     }
   }
 
-  /// If the value of [instructions] is already mutable, returns it as-is.
+  /// If the value of [instructions] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [instructions] and returns it.
   _core.List<PanelInstruction> get mutableInstructions {
     final value = this.instructions;
@@ -2190,9 +2068,7 @@ final class CommandSuccess_mutable implements CommandSuccess_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityPermissionDenied
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityPermissionDenied_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2202,7 +2078,8 @@ sealed class CapabilityPermissionDenied_orMutable {
 }
 
 /// Deeply immutable.
-final class CapabilityPermissionDenied implements CapabilityPermissionDenied_orMutable {
+final class CapabilityPermissionDenied
+    implements CapabilityPermissionDenied_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
@@ -2212,15 +2089,9 @@ final class CapabilityPermissionDenied implements CapabilityPermissionDenied_orM
   factory CapabilityPermissionDenied({
     required InvocationId_orMutable invocationId,
     required _core.String message,
-  }) => CapabilityPermissionDenied._(
-    invocationId.toFrozen(),
-    message,
-  );
+  }) => CapabilityPermissionDenied._(invocationId.toFrozen(), message);
 
-  CapabilityPermissionDenied._(
-    this.invocationId,
-    this.message,
-  );
+  CapabilityPermissionDenied._(this.invocationId, this.message);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CapabilityPermissionDenied._(
@@ -2230,42 +2101,42 @@ final class CapabilityPermissionDenied implements CapabilityPermissionDenied_orM
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static CapabilityPermissionDenied_mutable mutable() => CapabilityPermissionDenied_mutable._(
-    InvocationId.defaultInstance,
-    "",
-  );
+  static CapabilityPermissionDenied_mutable mutable() =>
+      CapabilityPermissionDenied_mutable._(InvocationId.defaultInstance, "");
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityPermissionDenied toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CapabilityPermissionDenied_mutable toMutable() => CapabilityPermissionDenied_mutable._(
-    this.invocationId,
-    this.message,
-  );
+  CapabilityPermissionDenied_mutable toMutable() =>
+      CapabilityPermissionDenied_mutable._(this.invocationId, this.message);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CapabilityPermissionDenied) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.invocationId,
-    this.message,
-  ];
+  _core.List get _equality_proxy => [this.invocationId, this.message];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CapabilityPermissionDenied` instances.
-  static _skir.StructSerializer<CapabilityPermissionDenied, CapabilityPermissionDenied_mutable> get serializer {
+  static _skir.StructSerializer<
+    CapabilityPermissionDenied,
+    CapabilityPermissionDenied_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -2302,17 +2173,15 @@ final class CapabilityPermissionDenied implements CapabilityPermissionDenied_orM
 }
 
 /// Mutable version of [CapabilityPermissionDenied].
-final class CapabilityPermissionDenied_mutable implements CapabilityPermissionDenied_orMutable {
+final class CapabilityPermissionDenied_mutable
+    implements CapabilityPermissionDenied_orMutable {
   InvocationId_orMutable invocationId;
   _core.String message;
   _skir.internal__UnrecognizedFields? _u;
 
-  CapabilityPermissionDenied_mutable._(
-    this.invocationId,
-    this.message,
-  );
+  CapabilityPermissionDenied_mutable._(this.invocationId, this.message);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2331,9 +2200,7 @@ final class CapabilityPermissionDenied_mutable implements CapabilityPermissionDe
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct StaleCatalogGeneration
-// -----------------------------------------------------------------------------
 
 sealed class StaleCatalogGeneration_orMutable {
   InvocationId_orMutable get invocationId;
@@ -2352,16 +2219,14 @@ final class StaleCatalogGeneration implements StaleCatalogGeneration_orMutable {
 
   factory StaleCatalogGeneration({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
+    actualGeneration,
   }) => StaleCatalogGeneration._(
     invocationId.toFrozen(),
     actualGeneration.toFrozen(),
   );
 
-  StaleCatalogGeneration._(
-    this.invocationId,
-    this.actualGeneration,
-  );
+  StaleCatalogGeneration._(this.invocationId, this.actualGeneration);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = StaleCatalogGeneration._(
@@ -2371,42 +2236,48 @@ final class StaleCatalogGeneration implements StaleCatalogGeneration_orMutable {
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
-  static StaleCatalogGeneration_mutable mutable() => StaleCatalogGeneration_mutable._(
-    InvocationId.defaultInstance,
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-  );
+  static StaleCatalogGeneration_mutable mutable() =>
+      StaleCatalogGeneration_mutable._(
+        InvocationId.defaultInstance,
+        _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+      );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   StaleCatalogGeneration toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  StaleCatalogGeneration_mutable toMutable() => StaleCatalogGeneration_mutable._(
-    this.invocationId,
-    this.actualGeneration,
-  );
+  StaleCatalogGeneration_mutable toMutable() =>
+      StaleCatalogGeneration_mutable._(
+        this.invocationId,
+        this.actualGeneration,
+      );
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! StaleCatalogGeneration) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.invocationId,
-    this.actualGeneration,
-  ];
+  _core.List get _equality_proxy => [this.invocationId, this.actualGeneration];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `StaleCatalogGeneration` instances.
-  static _skir.StructSerializer<StaleCatalogGeneration, StaleCatalogGeneration_mutable> get serializer {
+  static _skir.StructSerializer<
+    StaleCatalogGeneration,
+    StaleCatalogGeneration_mutable
+  >
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -2443,17 +2314,15 @@ final class StaleCatalogGeneration implements StaleCatalogGeneration_orMutable {
 }
 
 /// Mutable version of [StaleCatalogGeneration].
-final class StaleCatalogGeneration_mutable implements StaleCatalogGeneration_orMutable {
+final class StaleCatalogGeneration_mutable
+    implements StaleCatalogGeneration_orMutable {
   InvocationId_orMutable invocationId;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration;
   _skir.internal__UnrecognizedFields? _u;
 
-  StaleCatalogGeneration_mutable._(
-    this.invocationId,
-    this.actualGeneration,
-  );
+  StaleCatalogGeneration_mutable._(this.invocationId, this.actualGeneration);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2464,14 +2333,16 @@ final class StaleCatalogGeneration_mutable implements StaleCatalogGeneration_orM
     }
   }
 
-  /// If the value of [actualGeneration] is already mutable, returns it as-is.
+  /// If the value of [actualGeneration] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableActualGeneration {
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable
+  get mutableActualGeneration {
     final value = this.actualGeneration;
     if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
       return value;
     } else {
-      return this.actualGeneration = (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+      return this.actualGeneration =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
     }
   }
 
@@ -2483,13 +2354,12 @@ final class StaleCatalogGeneration_mutable implements StaleCatalogGeneration_orM
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // struct CapabilityFailure
-// -----------------------------------------------------------------------------
 
 sealed class CapabilityFailure_orMutable {
   InvocationId_orMutable get invocationId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+  get diagnostics;
 
   CapabilityFailure toFrozen();
 }
@@ -2499,21 +2369,19 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
   @_core.override
   final InvocationId invocationId;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic> diagnostics;
+  final _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
   factory CapabilityFailure({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    diagnostics,
   }) => CapabilityFailure._(
     invocationId.toFrozen(),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
   );
 
-  CapabilityFailure._(
-    this.invocationId,
-    this.diagnostics,
-  );
+  CapabilityFailure._(this.invocationId, this.diagnostics);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = CapabilityFailure._(
@@ -2528,37 +2396,36 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
     _skir.KeyedIterable.empty,
   );
 
-  /// Returns this instance (no-op).
+  /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
   @_core.override
   CapabilityFailure toFrozen() => this;
 
   /// Returns a mutable shallow copy of this instance.
-  CapabilityFailure_mutable toMutable() => CapabilityFailure_mutable._(
-    this.invocationId,
-    this.diagnostics,
-  );
+  CapabilityFailure_mutable toMutable() =>
+      CapabilityFailure_mutable._(this.invocationId, this.diagnostics);
 
   @_core.override
   _core.bool operator ==(other) {
     if (_core.identical(this, other)) return true;
     if (other is! CapabilityFailure) return false;
-    return _skir.internal__listEquality.equals(_equality_proxy, other._equality_proxy);
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
   }
 
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [
-    this.invocationId,
-    this.diagnostics,
-  ];
+  _core.List get _equality_proxy => [this.invocationId, this.diagnostics];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
 
   /// Serializer for `CapabilityFailure` instances.
-  static _skir.StructSerializer<CapabilityFailure, CapabilityFailure_mutable> get serializer {
+  static _skir.StructSerializer<CapabilityFailure, CapabilityFailure_mutable>
+  get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
         "invocation_id",
@@ -2574,7 +2441,7 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
         "diagnostics",
         1,
         _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.TypeDiagnostic.serializer,
+          _lib_editor_v1_diagnostic.Diagnostic.serializer,
         ),
         "",
         (it) => it.diagnostics,
@@ -2599,15 +2466,12 @@ final class CapabilityFailure implements CapabilityFailure_orMutable {
 /// Mutable version of [CapabilityFailure].
 final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
   InvocationId_orMutable invocationId;
-  _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics;
+  _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable> diagnostics;
   _skir.internal__UnrecognizedFields? _u;
 
-  CapabilityFailure_mutable._(
-    this.invocationId,
-    this.diagnostics,
-  );
+  CapabilityFailure_mutable._(this.invocationId, this.diagnostics);
 
-  /// If the value of [invocationId] is already mutable, returns it as-is.
+  /// If the value of [invocationId] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
   InvocationId_mutable get mutableInvocationId {
     final value = this.invocationId;
@@ -2618,11 +2482,15 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
     }
   }
 
-  /// If the value of [diagnostics] is already mutable, returns it as-is.
+  /// If the value of [diagnostics] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> get mutableDiagnostics {
+  _core.List<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+  get mutableDiagnostics {
     final value = this.diagnostics;
-    if (value is _skir.internal__MutableList<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable>) {
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.Diagnostic_orMutable
+        >) {
       return value;
     } else {
       return this.diagnostics = _skir.internal__MutableList([...value]);
@@ -2637,9 +2505,7 @@ final class CapabilityFailure_mutable implements CapabilityFailure_orMutable {
   ).._u = this._u;
 }
 
-// -----------------------------------------------------------------------------
 // enum ComputationResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2660,56 +2526,46 @@ sealed class ComputationResult {
   static const ComputationResult unknown = ComputationResult_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
-  factory ComputationResult.wrapSuccess(
-    ComputationSuccess value
-  ) => ComputationResult_successWrapper._(value);
+  factory ComputationResult.wrapSuccess(ComputationSuccess value) =>
+      ComputationResult_successWrapper._(value);
 
   /// Same as `wrapSuccess(ComputationSuccess(...))`.
   factory ComputationResult.createSuccess({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.TypedValue value,
+    required _lib_editor_v1_type_catalog.DataValue value,
   }) => ComputationResult.wrapSuccess(
-    ComputationSuccess(
-      invocationId: invocationId,
-      value: value,
-    )
+    ComputationSuccess(invocationId: invocationId, value: value),
   );
 
   /// Create a 'invalid' variant wrapping around the given value.
-  factory ComputationResult.wrapInvalid(
-    CapabilityFailure value
-  ) => ComputationResult_invalidWrapper._(value);
+  factory ComputationResult.wrapInvalid(CapabilityFailure value) =>
+      ComputationResult_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(CapabilityFailure(...))`.
   factory ComputationResult.createInvalid({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    diagnostics,
   }) => ComputationResult.wrapInvalid(
-    CapabilityFailure(
-      invocationId: invocationId,
-      diagnostics: diagnostics,
-    )
+    CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
-  factory ComputationResult.wrapUnavailable(
-    CapabilityFailure value
-  ) => ComputationResult_unavailableWrapper._(value);
+  factory ComputationResult.wrapUnavailable(CapabilityFailure value) =>
+      ComputationResult_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(CapabilityFailure(...))`.
   factory ComputationResult.createUnavailable({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    diagnostics,
   }) => ComputationResult.wrapUnavailable(
-    CapabilityFailure(
-      invocationId: invocationId,
-      diagnostics: diagnostics,
-    )
+    CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
   /// Create a 'permission_denied' variant wrapping around the given value.
   factory ComputationResult.wrapPermissionDenied(
-    CapabilityPermissionDenied value
+    CapabilityPermissionDenied value,
   ) => ComputationResult_permissionDeniedWrapper._(value);
 
   /// Same as `wrapPermissionDenied(CapabilityPermissionDenied(...))`.
@@ -2717,26 +2573,23 @@ sealed class ComputationResult {
     required InvocationId_orMutable invocationId,
     required _core.String message,
   }) => ComputationResult.wrapPermissionDenied(
-    CapabilityPermissionDenied(
-      invocationId: invocationId,
-      message: message,
-    )
+    CapabilityPermissionDenied(invocationId: invocationId, message: message),
   );
 
   /// Create a 'stale_generation' variant wrapping around the given value.
-  factory ComputationResult.wrapStaleGeneration(
-    StaleCatalogGeneration value
-  ) => ComputationResult_staleGenerationWrapper._(value);
+  factory ComputationResult.wrapStaleGeneration(StaleCatalogGeneration value) =>
+      ComputationResult_staleGenerationWrapper._(value);
 
   /// Same as `wrapStaleGeneration(StaleCatalogGeneration(...))`.
   factory ComputationResult.createStaleGeneration({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
+    actualGeneration,
   }) => ComputationResult.wrapStaleGeneration(
     StaleCatalogGeneration(
       invocationId: invocationId,
       actualGeneration: actualGeneration,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this ComputationResult.
@@ -2800,15 +2653,16 @@ sealed class ComputationResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/capability.skir:ComputationResult",
-    doc: "",
-    unknownInstance: ComputationResult_unknown._instance,
-    enumInstance: ComputationResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: ComputationResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/capability.skir:ComputationResult",
+        doc: "",
+        unknownInstance: ComputationResult_unknown._instance,
+        enumInstance: ComputationResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ComputationResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `ComputationResult`.
@@ -2840,7 +2694,8 @@ final class ComputationResult_unknown implements ComputationResult {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ComputationResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ComputationResult.serializer);
 }
 
 sealed class _ComputationResult_wrapper implements ComputationResult {
@@ -2856,10 +2711,12 @@ sealed class _ComputationResult_wrapper implements ComputationResult {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, ComputationResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, ComputationResult.serializer);
 }
 
-final class ComputationResult_successWrapper extends _ComputationResult_wrapper {
+final class ComputationResult_successWrapper
+    extends _ComputationResult_wrapper {
   final ComputationSuccess value;
 
   ComputationResult_successWrapper._(this.value);
@@ -2868,7 +2725,8 @@ final class ComputationResult_successWrapper extends _ComputationResult_wrapper 
   ComputationResult_kind get kind => ComputationResult_kind.successWrapper;
 }
 
-final class ComputationResult_invalidWrapper extends _ComputationResult_wrapper {
+final class ComputationResult_invalidWrapper
+    extends _ComputationResult_wrapper {
   final CapabilityFailure value;
 
   ComputationResult_invalidWrapper._(this.value);
@@ -2877,7 +2735,8 @@ final class ComputationResult_invalidWrapper extends _ComputationResult_wrapper 
   ComputationResult_kind get kind => ComputationResult_kind.invalidWrapper;
 }
 
-final class ComputationResult_unavailableWrapper extends _ComputationResult_wrapper {
+final class ComputationResult_unavailableWrapper
+    extends _ComputationResult_wrapper {
   final CapabilityFailure value;
 
   ComputationResult_unavailableWrapper._(this.value);
@@ -2886,27 +2745,29 @@ final class ComputationResult_unavailableWrapper extends _ComputationResult_wrap
   ComputationResult_kind get kind => ComputationResult_kind.unavailableWrapper;
 }
 
-final class ComputationResult_permissionDeniedWrapper extends _ComputationResult_wrapper {
+final class ComputationResult_permissionDeniedWrapper
+    extends _ComputationResult_wrapper {
   final CapabilityPermissionDenied value;
 
   ComputationResult_permissionDeniedWrapper._(this.value);
 
   @_core.override
-  ComputationResult_kind get kind => ComputationResult_kind.permissionDeniedWrapper;
+  ComputationResult_kind get kind =>
+      ComputationResult_kind.permissionDeniedWrapper;
 }
 
-final class ComputationResult_staleGenerationWrapper extends _ComputationResult_wrapper {
+final class ComputationResult_staleGenerationWrapper
+    extends _ComputationResult_wrapper {
   final StaleCatalogGeneration value;
 
   ComputationResult_staleGenerationWrapper._(this.value);
 
   @_core.override
-  ComputationResult_kind get kind => ComputationResult_kind.staleGenerationWrapper;
+  ComputationResult_kind get kind =>
+      ComputationResult_kind.staleGenerationWrapper;
 }
 
-// -----------------------------------------------------------------------------
 // enum CommandResult
-// -----------------------------------------------------------------------------
 
 /// To switch on the variants:
 ///   ```
@@ -2927,56 +2788,46 @@ sealed class CommandResult {
   static const CommandResult unknown = CommandResult_unknown._instance;
 
   /// Create a 'success' variant wrapping around the given value.
-  factory CommandResult.wrapSuccess(
-    CommandSuccess value
-  ) => CommandResult_successWrapper._(value);
+  factory CommandResult.wrapSuccess(CommandSuccess value) =>
+      CommandResult_successWrapper._(value);
 
   /// Same as `wrapSuccess(CommandSuccess(...))`.
   factory CommandResult.createSuccess({
     required InvocationId_orMutable invocationId,
     required _core.Iterable<PanelInstruction> instructions,
   }) => CommandResult.wrapSuccess(
-    CommandSuccess(
-      invocationId: invocationId,
-      instructions: instructions,
-    )
+    CommandSuccess(invocationId: invocationId, instructions: instructions),
   );
 
   /// Create a 'invalid' variant wrapping around the given value.
-  factory CommandResult.wrapInvalid(
-    CapabilityFailure value
-  ) => CommandResult_invalidWrapper._(value);
+  factory CommandResult.wrapInvalid(CapabilityFailure value) =>
+      CommandResult_invalidWrapper._(value);
 
   /// Same as `wrapInvalid(CapabilityFailure(...))`.
   factory CommandResult.createInvalid({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    diagnostics,
   }) => CommandResult.wrapInvalid(
-    CapabilityFailure(
-      invocationId: invocationId,
-      diagnostics: diagnostics,
-    )
+    CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
   /// Create a 'unavailable' variant wrapping around the given value.
-  factory CommandResult.wrapUnavailable(
-    CapabilityFailure value
-  ) => CommandResult_unavailableWrapper._(value);
+  factory CommandResult.wrapUnavailable(CapabilityFailure value) =>
+      CommandResult_unavailableWrapper._(value);
 
   /// Same as `wrapUnavailable(CapabilityFailure(...))`.
   factory CommandResult.createUnavailable({
     required InvocationId_orMutable invocationId,
-    required _core.Iterable<_lib_editor_v1_diagnostic.TypeDiagnostic_orMutable> diagnostics,
+    required _core.Iterable<_lib_editor_v1_diagnostic.Diagnostic_orMutable>
+    diagnostics,
   }) => CommandResult.wrapUnavailable(
-    CapabilityFailure(
-      invocationId: invocationId,
-      diagnostics: diagnostics,
-    )
+    CapabilityFailure(invocationId: invocationId, diagnostics: diagnostics),
   );
 
   /// Create a 'permission_denied' variant wrapping around the given value.
   factory CommandResult.wrapPermissionDenied(
-    CapabilityPermissionDenied value
+    CapabilityPermissionDenied value,
   ) => CommandResult_permissionDeniedWrapper._(value);
 
   /// Same as `wrapPermissionDenied(CapabilityPermissionDenied(...))`.
@@ -2984,26 +2835,23 @@ sealed class CommandResult {
     required InvocationId_orMutable invocationId,
     required _core.String message,
   }) => CommandResult.wrapPermissionDenied(
-    CapabilityPermissionDenied(
-      invocationId: invocationId,
-      message: message,
-    )
+    CapabilityPermissionDenied(invocationId: invocationId, message: message),
   );
 
   /// Create a 'stale_generation' variant wrapping around the given value.
-  factory CommandResult.wrapStaleGeneration(
-    StaleCatalogGeneration value
-  ) => CommandResult_staleGenerationWrapper._(value);
+  factory CommandResult.wrapStaleGeneration(StaleCatalogGeneration value) =>
+      CommandResult_staleGenerationWrapper._(value);
 
   /// Same as `wrapStaleGeneration(StaleCatalogGeneration(...))`.
   factory CommandResult.createStaleGeneration({
     required InvocationId_orMutable invocationId,
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable actualGeneration,
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable
+    actualGeneration,
   }) => CommandResult.wrapStaleGeneration(
     StaleCatalogGeneration(
       invocationId: invocationId,
       actualGeneration: actualGeneration,
-    )
+    ),
   );
 
   /// Returns the kind of variant held by this CommandResult.
@@ -3067,15 +2915,16 @@ sealed class CommandResult {
     return _serializerBuilder.serializer;
   }
 
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder.create(
-    recordId: "editor/v1/capability.skir:CommandResult",
-    doc: "",
-    unknownInstance: CommandResult_unknown._instance,
-    enumInstance: CommandResult.unknown,
-    getOrdinal: (it) => it.kind._ordinal,
-    wrapUnrecognized: CommandResult_unknown._unrecognized,
-    getUnrecognized: (it) => it._u,
-  );
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/capability.skir:CommandResult",
+        doc: "",
+        unknownInstance: CommandResult_unknown._instance,
+        enumInstance: CommandResult.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: CommandResult_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
 }
 
 /// The kind of variant held by a `CommandResult`.
@@ -3107,7 +2956,8 @@ final class CommandResult_unknown implements CommandResult {
   @_core.override
   _core.int get hashCode => 8118964;
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CommandResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CommandResult.serializer);
 }
 
 sealed class _CommandResult_wrapper implements CommandResult {
@@ -3123,7 +2973,8 @@ sealed class _CommandResult_wrapper implements CommandResult {
   _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
 
   @_core.override
-  _core.String toString() => _skir.internal__stringify(this, CommandResult.serializer);
+  _core.String toString() =>
+      _skir.internal__stringify(this, CommandResult.serializer);
 }
 
 final class CommandResult_successWrapper extends _CommandResult_wrapper {
@@ -3153,7 +3004,8 @@ final class CommandResult_unavailableWrapper extends _CommandResult_wrapper {
   CommandResult_kind get kind => CommandResult_kind.unavailableWrapper;
 }
 
-final class CommandResult_permissionDeniedWrapper extends _CommandResult_wrapper {
+final class CommandResult_permissionDeniedWrapper
+    extends _CommandResult_wrapper {
   final CapabilityPermissionDenied value;
 
   CommandResult_permissionDeniedWrapper._(this.value);
@@ -3162,7 +3014,8 @@ final class CommandResult_permissionDeniedWrapper extends _CommandResult_wrapper
   CommandResult_kind get kind => CommandResult_kind.permissionDeniedWrapper;
 }
 
-final class CommandResult_staleGenerationWrapper extends _CommandResult_wrapper {
+final class CommandResult_staleGenerationWrapper
+    extends _CommandResult_wrapper {
   final StaleCatalogGeneration value;
 
   CommandResult_staleGenerationWrapper._(this.value);
@@ -3171,26 +3024,20 @@ final class CommandResult_staleGenerationWrapper extends _CommandResult_wrapper 
   CommandResult_kind get kind => CommandResult_kind.staleGenerationWrapper;
 }
 
-final _skir.Method<
-  CapabilityInvocationRequest,
-  ComputationResult
-> invokeRealmComputationMethod =
-  _skir.Method(
-    "InvokeRealmComputation",
-    919101,
-    CapabilityInvocationRequest.serializer,
-    ComputationResult.serializer,
-    "",
-  );
+final _skir.Method<CapabilityInvocationRequest, ComputationResult>
+invokeRealmComputationMethod = _skir.Method(
+  "InvokeRealmComputation",
+  919101,
+  CapabilityInvocationRequest.serializer,
+  ComputationResult.serializer,
+  "",
+);
 
-final _skir.Method<
-  CapabilityInvocationRequest,
-  CommandResult
-> invokeRealmCommandMethod =
-  _skir.Method(
-    "InvokeRealmCommand",
-    919102,
-    CapabilityInvocationRequest.serializer,
-    CommandResult.serializer,
-    "",
-  );
+final _skir.Method<CapabilityInvocationRequest, CommandResult>
+invokeRealmCommandMethod = _skir.Method(
+  "InvokeRealmCommand",
+  919102,
+  CapabilityInvocationRequest.serializer,
+  CommandResult.serializer,
+  "",
+);

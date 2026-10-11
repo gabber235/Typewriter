@@ -32,7 +32,7 @@ sealed interface RecordId_OrMutable {
 class RecordId private constructor(
     override val table: kotlin.String,
     override val key: skirout.kernel.v1.record_id.RecordIdKey,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.RecordId>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.RecordId>? =
         null,
 ): skirout.kernel.v1.record_id.RecordId_OrMutable {
     constructor(
@@ -85,7 +85,7 @@ class RecordId private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.record_id.RecordId.serializerImpl,
+            _SerializerRegistry.RecordIdSerializerImpl,
         )
     }
 
@@ -136,43 +136,11 @@ class RecordId private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/record_id.skir:RecordId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RecordId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordIdSerializer;
 
         /** Describes the [RecordId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "table",
-                "table",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.table },
-                { mut, v -> mut.table = v },
-            );
-            serializerImpl.addField(
-                "key",
-                "key",
-                1,
-                skirout.kernel.v1.record_id.RecordIdKey.serializer,
-                "",
-                { it.key },
-                { mut, v -> mut.key = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordIdSerializerImpl.typeDescriptor;
     }
 }
 
@@ -288,7 +256,7 @@ sealed class RecordIdKey private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.record_id.RecordIdKey._serializerImpl,
+            _SerializerRegistry.RecordIdKeySerializerImpl,
         )
     }
 
@@ -299,86 +267,11 @@ sealed class RecordIdKey private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.kernel.v1.record_id.RecordIdKey, Unknown>(
-                recordId = "kernel/v1/record_id.skir:RecordIdKey",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [RecordIdKey] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordIdKeySerializer;
 
         /** Describes the [RecordIdKey] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "number",
-                    Kind.NUMBER_WRAPPER.ordinal,
-                    build.skir.Serializers.int64,
-                    "",
-                    { NumberWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "string",
-                    Kind.STRING_WRAPPER.ordinal,
-                    build.skir.Serializers.string,
-                    "",
-                    { StringWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "uuid",
-                    Kind.UUID_WRAPPER.ordinal,
-                    build.skir.Serializers.string,
-                    "",
-                    { UuidWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "array",
-                    Kind.ARRAY_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordIdValue.serializer,
-                    ),
-                    "",
-                    { ArrayWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "object",
-                    Kind.OBJECT_WRAPPER.ordinal,
-                    build.skir.internal.keyedListSerializer(
-                        skirout.kernel.v1.record_id.ObjectRecordIdKey.serializer,
-                        "key",
-                        { it.key },
-                    ),
-                    "",
-                    { ObjectWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordIdKeySerializerImpl.typeDescriptor;
     }
 }
 
@@ -394,7 +287,7 @@ sealed interface ObjectRecordIdKey_OrMutable {
 class ObjectRecordIdKey private constructor(
     override val key: kotlin.String,
     override val value: skirout.kernel.v1.record_id.RecordIdValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.ObjectRecordIdKey>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.ObjectRecordIdKey>? =
         null,
 ): skirout.kernel.v1.record_id.ObjectRecordIdKey_OrMutable {
     constructor(
@@ -447,7 +340,7 @@ class ObjectRecordIdKey private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.record_id.ObjectRecordIdKey.serializerImpl,
+            _SerializerRegistry.ObjectRecordIdKeySerializerImpl,
         )
     }
 
@@ -498,43 +391,11 @@ class ObjectRecordIdKey private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/record_id.skir:ObjectRecordIdKey",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ObjectRecordIdKey] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ObjectRecordIdKeySerializer;
 
         /** Describes the [ObjectRecordIdKey] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "key",
-                "key",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.key },
-                { mut, v -> mut.key = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.kernel.v1.record_id.RecordIdValue.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ObjectRecordIdKeySerializerImpl.typeDescriptor;
     }
 }
 
@@ -576,10 +437,6 @@ sealed class RecordIdValue private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.NULL_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -682,7 +539,7 @@ sealed class RecordIdValue private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.record_id.RecordIdValue._serializerImpl,
+            _SerializerRegistry.RecordIdValueSerializerImpl,
         )
     }
 
@@ -693,103 +550,11 @@ sealed class RecordIdValue private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.kernel.v1.record_id.RecordIdValue, Unknown>(
-                recordId = "kernel/v1/record_id.skir:RecordIdValue",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [RecordIdValue] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.RecordIdValueSerializer;
 
         /** Describes the [RecordIdValue] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            NULL;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 2) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "null",
-                    Kind.NULL_CONST.ordinal,
-                    "",
-                    NULL,
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "boolean",
-                    Kind.BOOLEAN_WRAPPER.ordinal,
-                    build.skir.Serializers.bool,
-                    "",
-                    { BooleanWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "number",
-                    Kind.NUMBER_WRAPPER.ordinal,
-                    build.skir.Serializers.int64,
-                    "",
-                    { NumberWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "float",
-                    Kind.FLOAT_WRAPPER.ordinal,
-                    build.skir.Serializers.float64,
-                    "",
-                    { FloatWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "string",
-                    Kind.STRING_WRAPPER.ordinal,
-                    build.skir.Serializers.string,
-                    "",
-                    { StringWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "array",
-                    Kind.ARRAY_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.kernel.v1.record_id.RecordIdValue.serializer,
-                    ),
-                    "",
-                    { ArrayWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "object",
-                    Kind.OBJECT_WRAPPER.ordinal,
-                    build.skir.internal.keyedListSerializer(
-                        skirout.kernel.v1.record_id.ObjectRecordIdValue.serializer,
-                        "key",
-                        { it.key },
-                    ),
-                    "",
-                    { ObjectWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.RecordIdValueSerializerImpl.typeDescriptor;
     }
 }
 
@@ -805,7 +570,7 @@ sealed interface ObjectRecordIdValue_OrMutable {
 class ObjectRecordIdValue private constructor(
     override val key: kotlin.String,
     override val value: skirout.kernel.v1.record_id.RecordIdValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.ObjectRecordIdValue>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.record_id.ObjectRecordIdValue>? =
         null,
 ): skirout.kernel.v1.record_id.ObjectRecordIdValue_OrMutable {
     constructor(
@@ -858,7 +623,7 @@ class ObjectRecordIdValue private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.record_id.ObjectRecordIdValue.serializerImpl,
+            _SerializerRegistry.ObjectRecordIdValueSerializerImpl,
         )
     }
 
@@ -909,42 +674,258 @@ class ObjectRecordIdValue private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/record_id.skir:ObjectRecordIdValue",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ObjectRecordIdValue] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ObjectRecordIdValueSerializer;
 
         /** Describes the [ObjectRecordIdValue] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ObjectRecordIdValueSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
+private object _SerializerRegistry {
+    val ObjectRecordIdKeySerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/record_id.skir:ObjectRecordIdKey",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.record_id.ObjectRecordIdKey.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.record_id.ObjectRecordIdKey.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ObjectRecordIdKeySerializer = build.skir.internal.makeSerializer(ObjectRecordIdKeySerializerImpl);
+
+    val ObjectRecordIdValueSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/record_id.skir:ObjectRecordIdValue",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.record_id.ObjectRecordIdValue.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.record_id.ObjectRecordIdValue.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ObjectRecordIdValueSerializer = build.skir.internal.makeSerializer(ObjectRecordIdValueSerializerImpl);
+
+    val RecordIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/record_id.skir:RecordId",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.record_id.RecordId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.record_id.RecordId.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RecordIdSerializer = build.skir.internal.makeSerializer(RecordIdSerializerImpl);
+
+    val RecordIdKeySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.kernel.v1.record_id.RecordIdKey, skirout.kernel.v1.record_id.RecordIdKey.Unknown>(
+            recordId = "kernel/v1/record_id.skir:RecordIdKey",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.kernel.v1.record_id.RecordIdKey.Kind.values().size,
+            unknownInstance = skirout.kernel.v1.record_id.RecordIdKey.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.kernel.v1.record_id.RecordIdKey.Unknown(skirout.kernel.v1.record_id.RecordIdKey.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val RecordIdKeySerializer = build.skir.internal.makeSerializer(RecordIdKeySerializerImpl);
+
+    val RecordIdValueSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.kernel.v1.record_id.RecordIdValue, skirout.kernel.v1.record_id.RecordIdValue.Unknown>(
+            recordId = "kernel/v1/record_id.skir:RecordIdValue",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.kernel.v1.record_id.RecordIdValue.Kind.values().size,
+            unknownInstance = skirout.kernel.v1.record_id.RecordIdValue.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.kernel.v1.record_id.RecordIdValue.Unknown(skirout.kernel.v1.record_id.RecordIdValue.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val RecordIdValueSerializer = build.skir.internal.makeSerializer(RecordIdValueSerializerImpl);
+
+    init {
+        ObjectRecordIdKeySerializerImpl.addField(
+            "key",
+            "key",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        ObjectRecordIdKeySerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            _SerializerRegistry.RecordIdValueSerializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        ObjectRecordIdKeySerializerImpl.finalizeStruct();
+
+        ObjectRecordIdValueSerializerImpl.addField(
+            "key",
+            "key",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        ObjectRecordIdValueSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            _SerializerRegistry.RecordIdValueSerializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        ObjectRecordIdValueSerializerImpl.finalizeStruct();
+
+        RecordIdSerializerImpl.addField(
+            "table",
+            "table",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.table },
+            { mut, v -> mut.table = v },
+        );
+        RecordIdSerializerImpl.addField(
+            "key",
+            "key",
+            1,
+            _SerializerRegistry.RecordIdKeySerializer,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        RecordIdSerializerImpl.finalizeStruct();
+
+        RecordIdKeySerializerImpl.addWrapperVariant(
+            1,
+            "number",
+            skirout.kernel.v1.record_id.RecordIdKey.Kind.NUMBER_WRAPPER.ordinal,
+            build.skir.Serializers.int64,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdKey.NumberWrapper(it) },
+            { it.value },
+        );
+        RecordIdKeySerializerImpl.addWrapperVariant(
+            2,
+            "string",
+            skirout.kernel.v1.record_id.RecordIdKey.Kind.STRING_WRAPPER.ordinal,
+            build.skir.Serializers.string,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdKey.StringWrapper(it) },
+            { it.value },
+        );
+        RecordIdKeySerializerImpl.addWrapperVariant(
+            3,
+            "uuid",
+            skirout.kernel.v1.record_id.RecordIdKey.Kind.UUID_WRAPPER.ordinal,
+            build.skir.Serializers.string,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdKey.UuidWrapper(it) },
+            { it.value },
+        );
+        RecordIdKeySerializerImpl.addWrapperVariant(
+            4,
+            "array",
+            skirout.kernel.v1.record_id.RecordIdKey.Kind.ARRAY_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RecordIdValueSerializer,
+            ),
+            "",
+            { skirout.kernel.v1.record_id.RecordIdKey.ArrayWrapper(it) },
+            { it.value },
+        );
+        RecordIdKeySerializerImpl.addWrapperVariant(
+            5,
+            "object",
+            skirout.kernel.v1.record_id.RecordIdKey.Kind.OBJECT_WRAPPER.ordinal,
+            build.skir.internal.keyedListSerializer(
+                _SerializerRegistry.ObjectRecordIdKeySerializer,
                 "key",
-                "key",
-                0,
-                build.skir.Serializers.string,
-                "",
                 { it.key },
-                { mut, v -> mut.key = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.kernel.v1.record_id.RecordIdValue.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+            ),
+            "",
+            { skirout.kernel.v1.record_id.RecordIdKey.ObjectWrapper(it) },
+            { it.value },
+        );
+        RecordIdKeySerializerImpl.finalizeEnum();
+
+        RecordIdValueSerializerImpl.addConstantVariant(
+            1,
+            "null",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.NULL_CONST.ordinal,
+            "",
+            skirout.kernel.v1.record_id.RecordIdValue.NULL,
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            2,
+            "boolean",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.BOOLEAN_WRAPPER.ordinal,
+            build.skir.Serializers.bool,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.BooleanWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            3,
+            "number",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.NUMBER_WRAPPER.ordinal,
+            build.skir.Serializers.int64,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.NumberWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            4,
+            "float",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.FLOAT_WRAPPER.ordinal,
+            build.skir.Serializers.float64,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.FloatWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            5,
+            "string",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.STRING_WRAPPER.ordinal,
+            build.skir.Serializers.string,
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.StringWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            6,
+            "array",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.ARRAY_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RecordIdValueSerializer,
+            ),
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.ArrayWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.addWrapperVariant(
+            7,
+            "object",
+            skirout.kernel.v1.record_id.RecordIdValue.Kind.OBJECT_WRAPPER.ordinal,
+            build.skir.internal.keyedListSerializer(
+                _SerializerRegistry.ObjectRecordIdValueSerializer,
+                "key",
+                { it.key },
+            ),
+            "",
+            { skirout.kernel.v1.record_id.RecordIdValue.ObjectWrapper(it) },
+            { it.value },
+        );
+        RecordIdValueSerializerImpl.finalizeEnum();
     }
 }

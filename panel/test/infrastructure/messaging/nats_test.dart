@@ -1,10 +1,5 @@
-import "dart:async";
-import "dart:typed_data";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:http/http.dart" as http;
 import "package:http/testing.dart";
-import "package:riverpod/riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -12,7 +7,35 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final _testRefProvider = Provider<Ref>((ref) => ref);
 
-final class _PendingSubscribeNatsClient implements NatsClient {
+mixin _FixtureNatsIdentity implements NatsClient {
+  @override
+  String get actorId => "fixture-user";
+
+  @override
+  String? get organizationId => "fixture-organization";
+
+  @override
+  String get connectionSession => "0123456789abcdef0123456789abcdef";
+
+  @override
+  Future<NatsSubscription> subscribePersistent(
+    String stream,
+    String consumer,
+    String filterSubject,
+  ) => subscribe(filterSubject);
+}
+
+Future<void> _waitFor(bool Function() condition) async {
+  await Future.doWhile(() async {
+    if (condition()) return false;
+    await Future<void>.delayed(Duration.zero);
+    return true;
+  }).timeout(const Duration(seconds: 2));
+}
+
+final class _PendingSubscribeNatsClient
+    with _FixtureNatsIdentity
+    implements NatsClient {
   final Completer<NatsSubscription> _pendingSubscription = Completer();
   final _TrackingNatsSubscription subscription = _TrackingNatsSubscription();
   int requests = 0;
@@ -46,12 +69,6 @@ final class _PendingSubscribeNatsClient implements NatsClient {
   Future<NatsSubscription> subscribe(String subject) =>
       _pendingSubscription.future;
 
-  @override
-  Future<NatsSubscription> subscribeOrdered(
-    String stream,
-    String filterSubject,
-  ) => subscribe(filterSubject);
-
   void completeSubscription() => _pendingSubscription.complete(subscription);
 
   @override
@@ -76,7 +93,83 @@ final class _TrackingNatsSubscription implements NatsSubscription {
   }
 }
 
-final class _FailingOrderedNatsClient implements NatsClient {
+final class _PendingReconnectNatsClient
+    with _FixtureNatsIdentity
+    implements NatsClient {
+  final _lifecycle = StreamController<NatsConnectionState>.broadcast(
+    sync: true,
+  );
+  final acquisitions = <Completer<NatsSubscription>>[];
+  final subscriptions = <_TrackingNatsSubscription>[];
+  NatsConnectionState _state = const NatsConnected();
+  int activeAcquisitions = 0;
+  int maximumActiveAcquisitions = 0;
+  int requests = 0;
+
+  @override
+  NatsConnectionState get connectionState => _state;
+
+  @override
+  Stream<NatsConnectionState> get connectionStateChanges => _lifecycle.stream;
+
+  void setConnectionState(NatsConnectionState value) {
+    _state = value;
+    _lifecycle.add(value);
+  }
+
+  @override
+  Future<NatsSubscription> subscribePersistent(
+    String stream,
+    String consumer,
+    String filterSubject,
+  ) {
+    activeAcquisitions++;
+    maximumActiveAcquisitions = max(
+      maximumActiveAcquisitions,
+      activeAcquisitions,
+    );
+    final acquisition = Completer<NatsSubscription>();
+    acquisitions.add(acquisition);
+    return acquisition.future.whenComplete(() => activeAcquisitions--);
+  }
+
+  void completeAcquisition(int index) {
+    final subscription = _TrackingNatsSubscription();
+    subscriptions.add(subscription);
+    acquisitions[index].complete(subscription);
+  }
+
+  @override
+  Future<NatsMessage> request(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    requests++;
+    return NatsMessage(
+      skir.Duration.serializer.toBytes(skir.Duration(milliseconds: requests)),
+    );
+  }
+
+  @override
+  Future<void> publish(
+    String subject,
+    Uint8List payload, {
+    Map<String, String> headers = const {},
+  }) => throw UnsupportedError("Not used by this test");
+
+  @override
+  Future<NatsSubscription> subscribe(String subject) =>
+      throw UnsupportedError("Not used by this test");
+
+  @override
+  Future<void> close() => _lifecycle.close();
+}
+
+final class _FailingOrderedNatsClient
+    with _FixtureNatsIdentity
+    implements NatsClient {
   _FailingOrderedNatsClient({required this.unsubscribeError});
 
   final Exception unsubscribeError;
@@ -116,8 +209,9 @@ final class _FailingOrderedNatsClient implements NatsClient {
       throw UnsupportedError("Not used by this test");
 
   @override
-  Future<NatsSubscription> subscribeOrdered(
+  Future<NatsSubscription> subscribePersistent(
     String stream,
+    String consumer,
     String filterSubject,
   ) async => subscription;
 
@@ -151,9 +245,11 @@ final class _FailingOrderedNatsSubscription implements NatsSubscription {
   }
 }
 
-final class _ControlledCloseNatsClient implements NatsClient {
-  final Completer<void> closeStarted = Completer<void>();
-  final Completer<void> allowClose = Completer<void>();
+final class _RecoveringPersistentNatsClient
+    with _FixtureNatsIdentity
+    implements NatsClient {
+  final List<_RecoverableSubscription> subscriptions = [];
+  int requests = 0;
 
   @override
   NatsConnectionState get connectionState => const NatsConnected();
@@ -167,8 +263,24 @@ final class _ControlledCloseNatsClient implements NatsClient {
     String subject,
     Uint8List payload, {
     Map<String, String> headers = const {},
-    Duration timeout = const Duration(seconds: 10),
-  }) => throw UnsupportedError("Not used by this test");
+    Duration? timeout,
+  }) async {
+    requests++;
+    return NatsMessage(
+      skir.Duration.serializer.toBytes(skir.Duration(milliseconds: requests)),
+    );
+  }
+
+  @override
+  Future<NatsSubscription> subscribePersistent(
+    String stream,
+    String consumer,
+    String filterSubject,
+  ) async {
+    final subscription = _RecoverableSubscription();
+    subscriptions.add(subscription);
+    return subscription;
+  }
 
   @override
   Future<void> publish(
@@ -182,16 +294,65 @@ final class _ControlledCloseNatsClient implements NatsClient {
       throw UnsupportedError("Not used by this test");
 
   @override
-  Future<NatsSubscription> subscribeOrdered(
-    String stream,
-    String filterSubject,
-  ) => throw UnsupportedError("Not used by this test");
+  Future<void> close() async {}
+}
+
+final class _RecoverableSubscription implements NatsSubscription {
+  final StreamController<NatsMessage> _messages = StreamController();
+  int unsubscribeCount = 0;
 
   @override
-  Future<void> close() async {
-    if (!closeStarted.isCompleted) closeStarted.complete();
-    await allowClose.future;
+  Stream<NatsMessage> get messages => _messages.stream;
+
+  @override
+  Future<void> get done => _messages.done;
+
+  void lose() {
+    _messages.addError(
+      const NatsClientException(
+        kind: NatsFailureKind.unavailable,
+        message: "Named consumer was lost",
+      ),
+    );
+    unawaited(_messages.close());
   }
+
+  @override
+  Future<void> unsubscribe() async {
+    unsubscribeCount++;
+    await _messages.close();
+  }
+}
+
+void _admitPermissions(
+  FakeNatsClient client,
+  Iterable<skir.RecordId> realms, {
+  VoidCallback? onQuery,
+}) {
+  final organization = client.organizationId;
+  final grant = panelTransportPermissions(
+    actorId: client.actorId,
+    organizationId: organization == null
+        ? null
+        : skir.recordId("organization:$organization"),
+    connectionSession: client.connectionSession,
+    realmIds: realms,
+  );
+  client.registerHandler(r"$SYS.REQ.USER.INFO", (_) {
+    onQuery?.call();
+    return Uint8List.fromList(
+      utf8.encode(
+        jsonEncode({
+          "data": {
+            "permissions": {
+              "publish": {"allow": grant.publish.toList()},
+              "subscribe": {"allow": grant.subscribe.toList()},
+            },
+          },
+        }),
+      ),
+    );
+  });
 }
 
 final class _FakeTelemetry implements PanelTelemetry {
@@ -207,11 +368,10 @@ final class _FakeTelemetry implements PanelTelemetry {
   });
 
   @override
-  Future<http.Response> traceHttp({
+  Future<Response> traceHttp({
     required String method,
     required Uri uri,
-    required Future<http.Response> Function(Map<String, String> headers)
-    operation,
+    required Future<Response> Function(Map<String, String> headers) operation,
   }) => operation({
     "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
     "tracestate": "vendor=value",
@@ -221,7 +381,7 @@ final class _FakeTelemetry implements PanelTelemetry {
 void main() {
   group("sentinelCredentials", () {
     test("forwards trace headers and decodes a successful response", () async {
-      late http.Request capturedRequest;
+      late Request capturedRequest;
       final responseBytes = skir.GetSentinelCredentialsResponse.serializer
           .toBytes(
             skir.GetSentinelCredentialsResponse.createSuccess(
@@ -231,7 +391,7 @@ void main() {
           );
       final client = MockClient((request) async {
         capturedRequest = request;
-        return http.Response.bytes(responseBytes, 200);
+        return Response.bytes(responseBytes, 200);
       });
       final container = ProviderContainer(
         retry: (retryCount, error) => null,
@@ -255,7 +415,7 @@ void main() {
         retry: (retryCount, error) => null,
         overrides: [
           panelHttpClientProvider.overrideWithValue(
-            MockClient((_) async => http.Response("unavailable", 503)),
+            MockClient((_) async => Response("unavailable", 503)),
           ),
           panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
         ],
@@ -282,7 +442,7 @@ void main() {
         retry: (retryCount, error) => null,
         overrides: [
           panelHttpClientProvider.overrideWithValue(
-            MockClient((_) => Future<http.Response>.error(error)),
+            MockClient((_) => Future<Response>.error(error)),
           ),
           panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
         ],
@@ -331,11 +491,13 @@ void main() {
       final response = await container
           .read(_testRefProvider)
           .requestSkir(
-            "test.subject",
-            skir.GetSentinelCredentialsRequest.serializer.toBytes(
-              skir.GetSentinelCredentialsRequest(),
+            SkirRouteOperation(
+              subject: "test.subject",
+              requestBytes: skir.GetSentinelCredentialsRequest.serializer
+                  .toBytes(skir.GetSentinelCredentialsRequest()),
+              responseSerializer:
+                  skir.GetSentinelCredentialsResponse.serializer,
             ),
-            skir.GetSentinelCredentialsResponse.serializer,
           );
 
       expect(
@@ -368,9 +530,13 @@ void main() {
       await container
           .read(_testRefProvider)
           .requestSkir(
-            "test.subject",
-            skir.GetSentinelCredentialsRequest.serializer.toBytes(request),
-            skir.GetSentinelCredentialsResponse.serializer,
+            SkirRouteOperation(
+              subject: "test.subject",
+              requestBytes: skir.GetSentinelCredentialsRequest.serializer
+                  .toBytes(request),
+              responseSerializer:
+                  skir.GetSentinelCredentialsResponse.serializer,
+            ),
           );
 
       expect(capturedRequestData, isNotNull);
@@ -385,11 +551,13 @@ void main() {
         () => container
             .read(_testRefProvider)
             .requestSkir(
-              "unregistered.subject",
-              skir.GetSentinelCredentialsRequest.serializer.toBytes(
-                skir.GetSentinelCredentialsRequest(),
+              SkirRouteOperation(
+                subject: "unregistered.subject",
+                requestBytes: skir.GetSentinelCredentialsRequest.serializer
+                    .toBytes(skir.GetSentinelCredentialsRequest()),
+                responseSerializer:
+                    skir.GetSentinelCredentialsResponse.serializer,
               ),
-              skir.GetSentinelCredentialsResponse.serializer,
             ),
         throwsA(isA<TimeoutException>()),
       );
@@ -409,18 +577,20 @@ void main() {
         () => container
             .read(_testRefProvider)
             .requestSkir(
-              "test.subject",
-              skir.GetSentinelCredentialsRequest.serializer.toBytes(
-                skir.GetSentinelCredentialsRequest(),
+              SkirRouteOperation(
+                subject: "test.subject",
+                requestBytes: skir.GetSentinelCredentialsRequest.serializer
+                    .toBytes(skir.GetSentinelCredentialsRequest()),
+                responseSerializer:
+                    skir.GetSentinelCredentialsResponse.serializer,
               ),
-              skir.GetSentinelCredentialsResponse.serializer,
             ),
         throwsA(isA<NatsClientException>()),
       );
     });
   });
 
-  group("RefNatsExtension.watchRequest", () {
+  group("RefNatsExtension.watchProjection", () {
     late FakeNatsClient mockClient;
     late ProviderContainer container;
 
@@ -439,25 +609,36 @@ void main() {
       mockClient.dispose();
     });
 
-    test("injects trace headers on the initial Skir request", () async {
+    test("subscribes before the traced initial Skir request", () async {
       const listenSubject = "test.responses";
-      mockClient.registerHandler(
-        "test.watch",
-        (_) => skir.GetSentinelCredentialsResponse.serializer.toBytes(
+      var subscribedBeforeSnapshot = false;
+      mockClient.registerHandler("test.watch", (_) {
+        subscribedBeforeSnapshot = mockClient.subscriptionSubjects.contains(
+          listenSubject,
+        );
+        return skir.GetSentinelCredentialsResponse.serializer.toBytes(
           skir.GetSentinelCredentialsResponse.createSuccess(
             jwt: "test-jwt",
             seed: "test-seed",
           ),
-        ),
-      );
+        );
+      });
       final stream = container
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.watch",
-            listenSubject: listenSubject,
+            eventSubject: listenSubject,
             requestBytes: Uint8List.fromList([1, 2, 3]),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final firstResponse = stream.first;
 
@@ -469,6 +650,7 @@ void main() {
       expect(request.subject, "test.watch");
       expect(request.headers["traceparent"], startsWith("00-4bf92f"));
       expect(request.headers["tracestate"], "vendor=value");
+      expect(subscribedBeforeSnapshot, isTrue);
 
       expect(await firstResponse, isA<skir.GetSentinelCredentialsResponse>());
     });
@@ -486,12 +668,20 @@ void main() {
       );
       final stream = container
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.cancel",
-            listenSubject: listenSubject,
+            eventSubject: listenSubject,
             requestBytes: Uint8List.fromList([1, 2, 3]),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final subscription = stream.listen(null);
 
@@ -517,23 +707,246 @@ void main() {
       addTearDown(pendingContainer.dispose);
       final stream = pendingContainer
           .read(_testRefProvider)
-          .watchRequest(
+          .watchProjection<
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse,
+            skir.GetSentinelCredentialsResponse
+          >(
             subject: "test.pending",
-            listenSubject: "test.pending.responses",
+            eventSubject: "test.pending.responses",
             requestBytes: Uint8List(0),
-            serializer: skir.GetSentinelCredentialsResponse.serializer,
-            transformer: (_, response) => response,
+            responseSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            eventSerializer: skir.GetSentinelCredentialsResponse.serializer,
+            snapshot: (response) => response,
+            reduce: (_, event) => event,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
           );
       final listener = stream.listen(null);
       await Future<void>.delayed(Duration.zero);
 
-      await listener.cancel();
+      final cancellation = listener.cancel();
       client.completeSubscription();
+      await cancellation;
       await pumpEventQueue();
 
       expect(client.subscription.unsubscribed, isTrue);
       expect(client.requests, isZero);
     });
+
+    test("reconnect serializes a pending persistent acquisition", () async {
+      final client = _PendingReconnectNatsClient();
+      final pendingContainer = ProviderContainer(
+        overrides: [
+          natsProvider.overrideWithValue(client),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(pendingContainer.dispose);
+      addTearDown(client.close);
+      final values = <int>[];
+      final listener = pendingContainer
+          .read(_testRefProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "test.pending.reconnect",
+            eventSubject: "test.pending.reconnect.changed",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_FIXTURE",
+              consumer: "TW_fixture",
+            ),
+            reconciliation: const ProjectionReconciliation.latest(),
+          )
+          .listen(values.add);
+      await _waitFor(() => client.acquisitions.length == 1);
+
+      client
+        ..setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        )
+        ..setConnectionState(const NatsConnected());
+      await pumpEventQueue();
+      expect(client.acquisitions, hasLength(1));
+
+      client.completeAcquisition(0);
+      await _waitFor(() => client.acquisitions.length == 2);
+      expect(client.subscriptions.single.unsubscribed, isTrue);
+      client.completeAcquisition(1);
+      await _waitFor(() => values.isNotEmpty);
+
+      expect(client.maximumActiveAcquisitions, 1);
+      expect(values, [1]);
+      await listener.cancel();
+    });
+
+    test(
+      "reconnect replaces the subscription and reloads its baseline",
+      () async {
+        var snapshot = 1;
+        mockClient.registerHandler(
+          "test.reconnect",
+          (_) => skir.Duration.serializer.toBytes(
+            skir.Duration(milliseconds: snapshot),
+          ),
+        );
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchProjection<int, skir.Duration, skir.Duration>(
+              subject: "test.reconnect",
+              eventSubject: "test.reconnect.changed",
+              requestBytes: Uint8List(0),
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds,
+              reduce: (_, event) => event.milliseconds,
+              delivery: const ProjectionDelivery.ephemeral(),
+              reconciliation: const ProjectionReconciliation.latest(),
+            )
+            .listen(values.add);
+
+        await _waitFor(() => values.length == 1);
+        mockClient.emitMessageOnSubject(
+          "test.reconnect.changed",
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        );
+        await _waitFor(() => values.length == 2);
+
+        mockClient.setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        );
+        await _waitFor(() => mockClient.subscriptionSubjects.isEmpty);
+        snapshot = 4;
+        mockClient
+          ..emitMessageOnSubject(
+            "test.reconnect.changed",
+            skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 3)),
+          )
+          ..setConnectionState(const NatsConnected());
+        await _waitFor(() => values.length == 3);
+
+        expect(values, [1, 2, 4]);
+        expect(mockClient.requests, hasLength(2));
+        expect(mockClient.subscriptionSubjects, ["test.reconnect.changed"]);
+        await listener.cancel();
+      },
+    );
+
+    test("a stale reconnect generation cannot publish its snapshot", () async {
+      final firstSnapshot = Completer<Uint8List>();
+      var requests = 0;
+      mockClient.registerHandler("test.stale.generation", (_) {
+        requests++;
+        if (requests == 1) return firstSnapshot.future;
+        return skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2));
+      });
+      final values = <int>[];
+      final listener = container
+          .read(_testRefProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "test.stale.generation",
+            eventSubject: "test.stale.generation.changed",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            delivery: const ProjectionDelivery.ephemeral(),
+            reconciliation: const ProjectionReconciliation.latest(),
+          )
+          .listen(values.add);
+
+      await _waitFor(() => requests == 1);
+      mockClient
+        ..setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        )
+        ..setConnectionState(const NatsConnected());
+      await _waitFor(() => values.length == 1);
+
+      firstSnapshot.complete(
+        skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+      );
+      await pumpEventQueue();
+
+      expect(values, [2]);
+      expect(requests, 2);
+      await listener.cancel();
+    });
+
+    test(
+      "cancellation closes a subscription while its refresh is pending",
+      () async {
+        final refresh = Completer<Uint8List>();
+        var requests = 0;
+        mockClient.registerHandler("test.refresh.cancel", (_) {
+          requests++;
+          if (requests == 1) {
+            return skir.Duration.serializer.toBytes(
+              skir.Duration(milliseconds: 1),
+            );
+          }
+          return refresh.future;
+        });
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchProjection<int, skir.Duration, skir.Duration>(
+              subject: "test.refresh.cancel",
+              eventSubject: "test.refresh.cancel.changed",
+              requestBytes: Uint8List(0),
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds,
+              reduce: (_, event) => event.milliseconds,
+              delivery: const ProjectionDelivery.ephemeral(),
+              reconciliation: const ProjectionReconciliation.latest(),
+            )
+            .listen(values.add);
+        await _waitFor(() => values.isNotEmpty);
+
+        mockClient.setConnectionState(
+          const NatsReconnecting(
+            NatsClientException(
+              kind: NatsFailureKind.unavailable,
+              message: "Connection interrupted",
+            ),
+          ),
+        );
+        await _waitFor(() => mockClient.subscriptionSubjects.isEmpty);
+        mockClient.setConnectionState(const NatsConnected());
+        await _waitFor(() => requests == 2);
+
+        await listener.cancel();
+        expect(mockClient.subscriptionSubjects, isEmpty);
+        refresh.complete(
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 2)),
+        );
+        await pumpEventQueue();
+
+        expect(values, [1]);
+        expect(mockClient.subscriptionSubjects, isEmpty);
+      },
+    );
 
     test("sequenced watch ignores duplicates and refreshes one gap", () async {
       var snapshotSequence = 1;
@@ -547,19 +960,23 @@ void main() {
       final values = <int>[];
       final subscription = container
           .read(_testRefProvider)
-          .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+          .watchProjection<int, skir.Duration, skir.Duration>(
             subject: "test.sequenced.watch",
             eventSubject: "test.sequenced.changed",
             requestBytes: Uint8List(0),
             responseSerializer: skir.Duration.serializer,
             eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => SequencedSnapshot(
-              sequence: response.milliseconds,
-              value: response.milliseconds,
-            ),
-            eventSequence: (event) => event.milliseconds,
+            snapshot: (response) => response.milliseconds,
             reduce: (_, event) => event.milliseconds,
-            sequenceState: sequenceState,
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_MEMBERSHIP",
+              consumer: "TW_nats_test_one",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: sequenceState,
+            ),
           )
           .listen(values.add);
 
@@ -601,6 +1018,98 @@ void main() {
     });
 
     test(
+      "a delayed snapshot cannot rewind accepted sequence progress",
+      () async {
+        final delayedSnapshot = Completer<Uint8List>();
+        final sequenceState = SequencedCollection<int>()
+          ..snapshot = const SequencedSnapshot(sequence: 1, value: 10);
+        mockClient.registerHandler(
+          "test.sequenced.delayed",
+          (_) => delayedSnapshot.future,
+        );
+        final values = <int>[];
+        final listener = container
+            .read(_testRefProvider)
+            .watchProjection<int, skir.Duration, skir.Duration>(
+              subject: "test.sequenced.delayed",
+              eventSubject: "test.sequenced.delayed.changed",
+              requestBytes: Uint8List(0),
+              responseSerializer: skir.Duration.serializer,
+              eventSerializer: skir.Duration.serializer,
+              snapshot: (response) => response.milliseconds * 10,
+              reduce: (_, event) => event.milliseconds * 10,
+              delivery: const ProjectionDelivery.persistent(
+                stream: "TYPEWRITER_MEMBERSHIP",
+                consumer: "TW_nats_test_two",
+              ),
+              reconciliation: ProjectionReconciliation.sequenced(
+                snapshotSequence: (response) => response.milliseconds,
+                eventSequence: (event) => event.milliseconds,
+                sequenceState: sequenceState,
+              ),
+            )
+            .listen(values.add);
+
+        await _waitFor(() => mockClient.requests.isNotEmpty);
+        expect(
+          sequenceState.apply(sequence: 2, reduce: (_) => 20),
+          SequencedEventResult.applied,
+        );
+        delayedSnapshot.complete(
+          skir.Duration.serializer.toBytes(skir.Duration(milliseconds: 1)),
+        );
+        await _waitFor(() => values.isNotEmpty);
+
+        expect(sequenceState.snapshot?.sequence, 2);
+        expect(values, [20]);
+        await listener.cancel();
+      },
+    );
+
+    test("lost persistent reader reacquires lease and snapshot", () async {
+      final client = _RecoveringPersistentNatsClient();
+      final recoveringContainer = ProviderContainer(
+        overrides: [
+          natsProvider.overrideWithValue(client),
+          panelTelemetryProvider.overrideWithValue(AsyncData(_FakeTelemetry())),
+        ],
+      );
+      addTearDown(recoveringContainer.dispose);
+      final values = <int>[];
+      final subscription = recoveringContainer
+          .read(_testRefProvider)
+          .watchProjection<int, skir.Duration, skir.Duration>(
+            subject: "test.recovery",
+            eventSubject: "test.recovery.changed",
+            requestBytes: Uint8List(0),
+            responseSerializer: skir.Duration.serializer,
+            eventSerializer: skir.Duration.serializer,
+            snapshot: (response) => response.milliseconds,
+            reduce: (_, event) => event.milliseconds,
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_MEMBERSHIP",
+              consumer: "TW_nats_reader_recovery",
+            ),
+            reconciliation: const ProjectionReconciliation.latest(),
+          )
+          .listen(values.add);
+
+      while (values.isEmpty) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      client.subscriptions.single.lose();
+      while (client.subscriptions.length < 2 || values.length < 2) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+
+      expect(values, [1, 2]);
+      expect(client.requests, 2);
+      expect(client.subscriptions.first.unsubscribeCount, 1);
+      await subscription.cancel();
+      expect(client.subscriptions.last.unsubscribeCount, 1);
+    });
+
+    test(
       "sequenced watch preserves stream failure when cleanup also fails",
       () async {
         final primaryFailure = StateError("primary stream failure");
@@ -622,19 +1131,23 @@ void main() {
         final completed = Completer<void>();
         failingContainer
             .read(_testRefProvider)
-            .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+            .watchProjection<int, skir.Duration, skir.Duration>(
               subject: "test.sequenced.failure",
               eventSubject: "test.sequenced.failure.changed",
               requestBytes: Uint8List(0),
               responseSerializer: skir.Duration.serializer,
               eventSerializer: skir.Duration.serializer,
-              snapshot: (response) => SequencedSnapshot(
-                sequence: response.milliseconds,
-                value: response.milliseconds,
-              ),
-              eventSequence: (event) => event.milliseconds,
+              snapshot: (response) => response.milliseconds,
               reduce: (_, event) => event.milliseconds,
-              sequenceState: SequencedCollection<int>(),
+              delivery: const ProjectionDelivery.persistent(
+                stream: "TYPEWRITER_MEMBERSHIP",
+                consumer: "TW_nats_test_three",
+              ),
+              reconciliation: ProjectionReconciliation.sequenced(
+                snapshotSequence: (response) => response.milliseconds,
+                eventSequence: (event) => event.milliseconds,
+                sequenceState: SequencedCollection<int>(),
+              ),
             )
             .listen(
               values.add,
@@ -667,19 +1180,23 @@ void main() {
       final errors = <Object>[];
       final listener = failingContainer
           .read(_testRefProvider)
-          .watchSequencedRequest<int, skir.Duration, skir.Duration>(
+          .watchProjection<int, skir.Duration, skir.Duration>(
             subject: "test.sequenced.cancel",
             eventSubject: "test.sequenced.cancel.changed",
             requestBytes: Uint8List(0),
             responseSerializer: skir.Duration.serializer,
             eventSerializer: skir.Duration.serializer,
-            snapshot: (response) => SequencedSnapshot(
-              sequence: response.milliseconds,
-              value: response.milliseconds,
-            ),
-            eventSequence: (event) => event.milliseconds,
+            snapshot: (response) => response.milliseconds,
             reduce: (_, event) => event.milliseconds,
-            sequenceState: SequencedCollection<int>(),
+            delivery: const ProjectionDelivery.persistent(
+              stream: "TYPEWRITER_MEMBERSHIP",
+              consumer: "TW_nats_test_four",
+            ),
+            reconciliation: ProjectionReconciliation.sequenced(
+              snapshotSequence: (response) => response.milliseconds,
+              eventSequence: (event) => event.milliseconds,
+              sequenceState: SequencedCollection<int>(),
+            ),
           )
           .listen(
             null,
@@ -758,10 +1275,202 @@ void main() {
   });
 
   group("Nats retry", () {
-    test("closes the current client before creating its replacement", () async {
-      final firstClient = _ControlledCloseNatsClient();
-      final secondClient = FakeNatsClient();
-      final createdClients = <NatsClient>[];
+    for (final scope in ["token", "organization"]) {
+      test(
+        "$scope change closes a pending admission without stale publication",
+        () async {
+          var token = "first-token";
+          var organization = skir.recordId("organization:first");
+          final realm = skir.recordId("realm_instance:demanded");
+          final started = Completer<void>();
+          final permissionReply = Completer<Uint8List>();
+          final clients = <FakeNatsClient>[];
+          final container = ProviderContainer.test(
+            overrides: [
+              accessTokenProvider.overrideWith(
+                (ref) => AccessToken(token: token),
+              ),
+              authUserInfoProvider.overrideWithValue(
+                const AsyncData(UserInfo(sub: "user-id")),
+              ),
+              sentinelCredentialsProvider.overrideWithValue(
+                AsyncData(
+                  skir.GetSentinelCredentialsResponse_Success(
+                    jwt: "fixture-jwt",
+                    seed: "fixture-seed",
+                  ),
+                ),
+              ),
+              organizationIdProvider.overrideWith((ref) => organization),
+              natsConnectionSessionFactoryProvider.overrideWithValue(
+                () => clients.length.toString().padLeft(32, "0"),
+              ),
+              natsClientFactoryProvider.overrideWithValue((configuration) {
+                final client = FakeNatsClient(
+                  actorId: configuration.actorId,
+                  organizationId: configuration.organizationId,
+                  connectionSession: configuration.connectionSession,
+                );
+                _admitPermissions(client, clients.isEmpty ? [] : [realm]);
+                if (clients.length == 1) {
+                  client.registerHandler(r"$SYS.REQ.USER.INFO", (_) {
+                    started.complete();
+                    return permissionReply.future;
+                  });
+                }
+                clients.add(client);
+                return client;
+              }),
+            ],
+          );
+          addTearDown(() async {
+            container.dispose();
+            await Future.wait(clients.map((client) => client.close()));
+          });
+          final subscription = container.listen(natsProvider, (_, _) {});
+          addTearDown(subscription.close);
+          final admission = container
+              .read(natsProvider.notifier)
+              .ensureRealmsAdmitted({realm});
+          final rejected = expectLater(
+            admission,
+            throwsA(
+              isA<NatsClientException>().having(
+                (error) => error.kind,
+                "kind",
+                NatsFailureKind.closed,
+              ),
+            ),
+          );
+          await started.future;
+          final candidate = clients[1];
+          if (scope == "token") {
+            token = "second-token";
+            container.invalidate(accessTokenProvider);
+          } else {
+            organization = skir.recordId("organization:second");
+            container.invalidate(organizationIdProvider);
+          }
+          await container.pump();
+          final current = container.read(natsProvider);
+          expect(clients, hasLength(3));
+          expect(current, same(clients.last));
+          expect(
+            clients.take(2).map((client) => client.connectionState),
+            everyElement(isA<NatsClosed>()),
+          );
+
+          final permissions = panelTransportPermissions(
+            actorId: candidate.actorId,
+            organizationId: skir.recordId(
+              "organization:${candidate.organizationId}",
+            ),
+            connectionSession: candidate.connectionSession,
+            realmIds: [realm],
+          );
+          permissionReply.complete(
+            Uint8List.fromList(
+              utf8.encode(
+                jsonEncode({
+                  "data": {
+                    "permissions": {
+                      "publish": {"allow": permissions.publish.toList()},
+                      "subscribe": {"allow": permissions.subscribe.toList()},
+                    },
+                  },
+                }),
+              ),
+            ),
+          );
+          await rejected;
+          expect(container.read(natsProvider), same(current));
+        },
+      );
+    }
+
+    test("tracks connection inputs and gives retry a fresh session", () async {
+      var token = "first-token";
+      var organization = skir.recordId("organization:first");
+      var session = 0;
+      final configurations = <NatsClientConfiguration>[];
+      final clients = <FakeNatsClient>[];
+      final container = ProviderContainer.test(
+        overrides: [
+          accessTokenProvider.overrideWith((ref) => AccessToken(token: token)),
+          authUserInfoProvider.overrideWithValue(
+            const AsyncData(UserInfo(sub: "user-id")),
+          ),
+          sentinelCredentialsProvider.overrideWithValue(
+            AsyncData(
+              skir.GetSentinelCredentialsResponse_Success(
+                jwt: "sentinel-jwt",
+                seed: "sentinel-seed",
+              ),
+            ),
+          ),
+          organizationIdProvider.overrideWith((ref) => organization),
+          natsConnectionSessionFactoryProvider.overrideWithValue(
+            () => (++session).toString().padLeft(32, "0"),
+          ),
+          natsClientFactoryProvider.overrideWithValue((configuration) {
+            configurations.add(configuration);
+            final client = FakeNatsClient(
+              actorId: configuration.actorId,
+              organizationId: configuration.organizationId,
+              connectionSession: configuration.connectionSession,
+            );
+            _admitPermissions(client, []);
+            clients.add(client);
+            return client;
+          }),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        for (final client in clients) {
+          await client.dispose();
+        }
+      });
+
+      container.read(natsProvider);
+      expect(configurations.single.password, token);
+      expect(configurations.single.organizationId, "first");
+
+      token = "second-token";
+      container.invalidate(accessTokenProvider);
+      await container.pump();
+      container.read(natsProvider);
+      expect(configurations.last.password, token);
+      expect(clients.first.connectionState, isA<NatsClosed>());
+
+      organization = skir.recordId("organization:second");
+      container.invalidate(organizationIdProvider);
+      await container.pump();
+      final previous = container.read(natsProvider);
+      expect(configurations.last.organizationId, "second");
+
+      await container.read(natsProvider.notifier).retry();
+      expect(container.read(natsProvider), same(clients.last));
+      expect(clients.last, isNot(same(previous)));
+      expect(previous.connectionState, isA<NatsClosed>());
+      expect(configurations.last.password, token);
+      expect(configurations.last.organizationId, "second");
+      expect(
+        configurations.map((value) => value.connectionSession).toSet(),
+        hasLength(configurations.length),
+      );
+      expect(configurations, hasLength(4));
+    });
+
+    test("rejects insufficient grants before replacing the client", () async {
+      final existingRealm = skir.recordId("realm_instance:realm1");
+      final demandedRealm = skir.recordId("realm_instance:realm2");
+      final clients = <FakeNatsClient>[];
+      final sessions = [
+        "00000000000000000000000000000000",
+        "11111111111111111111111111111111",
+        "22222222222222222222222222222222",
+      ];
       final container = ProviderContainer(
         overrides: [
           accessTokenProvider.overrideWithValue(
@@ -779,33 +1488,69 @@ void main() {
             ),
           ),
           organizationIdProvider.overrideWithValue(
-            recordId("organization:test"),
+            skir.recordId("organization:test"),
           ),
-          natsClientFactoryProvider.overrideWithValue((_) {
-            final client = createdClients.isEmpty ? firstClient : secondClient;
-            createdClients.add(client);
+          natsConnectionSessionFactoryProvider.overrideWithValue(
+            () => sessions[clients.length],
+          ),
+          natsClientFactoryProvider.overrideWithValue((configuration) {
+            final client = FakeNatsClient(
+              actorId: configuration.actorId,
+              organizationId: configuration.organizationId,
+              connectionSession: configuration.connectionSession,
+            );
+            final index = clients.length;
+            _admitPermissions(
+              client,
+              index == 2 ? [existingRealm, demandedRealm] : [existingRealm],
+              onQuery: index == 1
+                  ? () => expect(
+                      clients.first.connectionState,
+                      isA<NatsConnected>(),
+                    )
+                  : null,
+            );
+            clients.add(client);
             return client;
           }),
         ],
       );
       addTearDown(() async {
-        if (!firstClient.allowClose.isCompleted) {
-          firstClient.allowClose.complete();
-        }
         container.dispose();
-        await secondClient.dispose();
+        for (final client in clients) {
+          await client.dispose();
+        }
       });
+      final firstClient = container.read(natsProvider);
       expect(container.read(natsProvider), same(firstClient));
+      await container.read(natsProvider.notifier).ensureRealmsAdmitted({
+        existingRealm,
+      });
 
-      final retry = container.read(natsProvider.notifier).retry();
-      await firstClient.closeStarted.future;
+      await expectLater(
+        container.read(natsProvider.notifier).ensureRealmsAdmitted({
+          existingRealm,
+          demandedRealm,
+        }),
+        throwsA(
+          isA<NatsClientException>().having(
+            (error) => error.kind,
+            "kind",
+            NatsFailureKind.permission,
+          ),
+        ),
+      );
+      expect(container.read(natsProvider), same(firstClient));
+      expect(firstClient.connectionState, isA<NatsConnected>());
+      expect(clients[1].connectionState, isA<NatsClosed>());
 
-      expect(createdClients, [same(firstClient)]);
-
-      firstClient.allowClose.complete();
-      await retry;
-      expect(container.read(natsProvider), same(secondClient));
-      expect(createdClients, [same(firstClient), same(secondClient)]);
+      await container.read(natsProvider.notifier).retry();
+      expect(container.read(natsProvider), same(clients[2]));
+      expect((await clients[2].queryPermissions()).admittedRealms(clients[2]), {
+        existingRealm,
+        demandedRealm,
+      });
+      expect(firstClient.connectionState, isA<NatsClosed>());
     });
   });
 

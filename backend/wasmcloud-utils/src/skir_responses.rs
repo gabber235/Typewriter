@@ -43,8 +43,17 @@ wasmcloud_utils_macros::skir_response! {
 }
 
 wasmcloud_utils_macros::skir_response! {
-    GetServiceStatusResponse {
-        success: Status,
+    QueryServiceBindingResponse {
+        success: Binding,
+        errors {
+            ServiceNotFoundError => "Service not found",
+        }
+    }
+}
+
+wasmcloud_utils_macros::skir_response! {
+    EnsureRegistrationLeaseResponse {
+        success: [Issued, AlreadyBound],
         errors {
             ServiceNotFoundError => "Service not found",
         }
@@ -55,8 +64,6 @@ wasmcloud_utils_macros::skir_response! {
     BindServiceResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRegistrationTokenError => "Invalid or expired registration token",
             OrganizationNotFoundError => "Organization not found",
         }
@@ -67,8 +74,6 @@ wasmcloud_utils_macros::skir_response! {
     UnbindServiceResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             ServiceNotFoundError => "Service not found in organization",
         }
     }
@@ -76,7 +81,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationServicesResponse {
-        success: [List, Add, Update, Remove],
+        success: List,
         errors {}
     }
 }
@@ -85,8 +90,6 @@ wasmcloud_utils_macros::skir_response! {
     UpdateOrganizationServiceResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             ConflictError => "Service changed elsewhere",
             ServiceNotFoundError => "Service not found in organization",
@@ -106,8 +109,6 @@ wasmcloud_utils_macros::skir_response! {
     ConfigureServiceHostResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             ConflictError => "Host changed elsewhere",
             InvalidConfigurationError => "Host configuration is invalid",
@@ -119,7 +120,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationTopologyResponse {
-        success: [List, ConfigurationChanged, HostUpdated, RealmUpdated, EngineUpdated, ResourceRemoved],
+        success: List,
         errors {}
     }
 }
@@ -152,9 +153,7 @@ wasmcloud_utils_macros::skir_response! {
 wasmcloud_utils_macros::skir_response! {
     CreateOrganizationResponse {
         success: Success,
-        errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",}
+        errors {}
     }
 }
 
@@ -185,8 +184,6 @@ wasmcloud_utils_macros::skir_response! {
     SubmitUserJoinRequestResponse {
         success: [RequestMade, AutoAccepted],
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             CodeNotFoundError(e) => format!("Could not find code: '{}'", e.code.key),
             AlreadyMemberError => "User is already a member of this organization",
@@ -201,8 +198,6 @@ wasmcloud_utils_macros::skir_response! {
     CancelUserJoinRequestResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
         }
@@ -220,8 +215,6 @@ wasmcloud_utils_macros::skir_response! {
     GenerateOrganizationJoinCodeResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
             RolesNotAssignableError(e) => format!("Roles not assignable: {:?}", e.role_ids),
@@ -234,8 +227,6 @@ wasmcloud_utils_macros::skir_response! {
     RevokeOrganizationJoinCodeResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             CodeNotFoundError(e) => format!("Join code not found: '{}'", e.code_id),
         }
@@ -254,7 +245,6 @@ wasmcloud_utils_macros::skir_response! {
         success: Success,
         errors {
             InvalidRecordIdError,
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidSelectionError => "Selection must contain distinct targets",
             RequestNotFoundError(e) => format!("Join requests not found: {:?}", e.request_ids),
             RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
@@ -269,8 +259,6 @@ wasmcloud_utils_macros::skir_response! {
     DeclineOrganizationJoinRequestResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             RequestNotFoundError(e) => format!("Join request not found: '{}'", e.request_id),
         }
@@ -279,7 +267,7 @@ wasmcloud_utils_macros::skir_response! {
 
 wasmcloud_utils_macros::skir_response! {
     WatchOrganizationMembersResponse {
-        success: [Snapshot, Changed],
+        success: Snapshot,
         errors {}
     }
 }
@@ -289,7 +277,6 @@ wasmcloud_utils_macros::skir_response! {
         success: Success,
         errors {
             InvalidRecordIdError,
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidSelectionError => "Selection must contain distinct targets",
             UserNotFoundError(e) => format!("Users not found: {:?}", e.user_ids),
             RolesNotFoundError(e) => format!("Roles not found: {:?}", e.role_ids),
@@ -304,8 +291,6 @@ wasmcloud_utils_macros::skir_response! {
     RemoveOrganizationMemberResponse {
         success: Success,
         errors {
-            InvalidOperationIdError => "Operation identity is required",
-            OperationIdentityReusedError => "Operation identity was reused with different input",
             InvalidRecordIdError,
             UserNotMemberError(e) => format!("User is not a member: '{}'", e.user_id),
             FounderCannotBeRemovedError(e) => format!("Founder cannot be removed: '{}'", e.user_id),

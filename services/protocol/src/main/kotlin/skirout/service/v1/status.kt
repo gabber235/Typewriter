@@ -25,8 +25,8 @@ sealed class ServiceBinding private constructor() {
     /** The kind of variant held by a `ServiceBinding`. */
     enum class Kind {
         UNKNOWN,
+        UNBOUND_CONST,
         BOUND_WRAPPER,
-        UNBOUND_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.status.ServiceBinding.UNKNOWN")) internal constructor(
@@ -41,6 +41,18 @@ sealed class ServiceBinding private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
+        }
+    }
+
+    object UNBOUND : skirout.service.v1.status.ServiceBinding() {
+        override val kind get() = Kind.UNBOUND_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.ServiceBinding && other.kind == Kind.UNBOUND_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.UNBOUND_CONST.ordinal;
         }
     }
 
@@ -62,24 +74,6 @@ sealed class ServiceBinding private constructor() {
         }
     }
 
-    class UnboundWrapper private constructor (
-        val value: skirout.service.v1.status.ServiceBinding.Unbound,
-    ) : skirout.service.v1.status.ServiceBinding() {
-        constructor(
-            value: skirout.service.v1.status.ServiceBinding.Unbound_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.UNBOUND_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.status.ServiceBinding.UnboundWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -293117307;
-        }
-    }
-
     internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.ServiceBinding>? get() = null;
 
     abstract val kind: Kind;
@@ -87,7 +81,7 @@ sealed class ServiceBinding private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.status.ServiceBinding._serializerImpl,
+            _SerializerRegistry.ServiceBindingSerializerImpl,
         )
     }
 
@@ -112,65 +106,11 @@ sealed class ServiceBinding private constructor() {
             )
         );
 
-        /** Shortcut for `UnboundWrapper(skirout.service.v1.status.ServiceBinding.Unbound(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createUnbound(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            registrationToken: kotlin.String?,
-        ) = UnboundWrapper(
-            skirout.service.v1.status.ServiceBinding.Unbound(
-                registrationToken = registrationToken,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.status.ServiceBinding, Unknown>(
-                recordId = "service/v1/status.skir:ServiceBinding",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ServiceBinding] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceBindingSerializer;
 
         /** Describes the [ServiceBinding] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "bound",
-                    Kind.BOUND_WRAPPER.ordinal,
-                    skirout.service.v1.status.ServiceBinding.Bound.serializer,
-                    "",
-                    { BoundWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "unbound",
-                    Kind.UNBOUND_WRAPPER.ordinal,
-                    skirout.service.v1.status.ServiceBinding.Unbound.serializer,
-                    "",
-                    { UnboundWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceBindingSerializerImpl.typeDescriptor;
     }
 
     sealed interface Bound_OrMutable {
@@ -185,7 +125,7 @@ sealed class ServiceBinding private constructor() {
     class Bound private constructor(
         override val organizationId: kotlin.String,
         override val organizationName: kotlin.String?,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.ServiceBinding.Bound>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.ServiceBinding.Bound>? =
             null,
     ): skirout.service.v1.status.ServiceBinding.Bound_OrMutable {
         constructor(
@@ -238,7 +178,7 @@ sealed class ServiceBinding private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.status.ServiceBinding.Bound.serializerImpl,
+                _SerializerRegistry.ServiceBinding_BoundSerializerImpl,
             )
         }
 
@@ -289,197 +229,153 @@ sealed class ServiceBinding private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/status.skir:ServiceBinding.Bound",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Bound] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ServiceBinding_BoundSerializer;
 
             /** Describes the [Bound] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "organization_id",
-                    "organizationId",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.organizationId },
-                    { mut, v -> mut.organizationId = v },
-                );
-                serializerImpl.addField(
-                    "organization_name",
-                    "organizationName",
-                    1,
-                    build.skir.Serializers.optional(
-                        build.skir.Serializers.string,
-                    ),
-                    "",
-                    { it.organizationName },
-                    { mut, v -> mut.organizationName = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface Unbound_OrMutable {
-        val registrationToken: kotlin.String?;
-
-        fun toFrozen(): skirout.service.v1.status.ServiceBinding.Unbound;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class Unbound private constructor(
-        override val registrationToken: kotlin.String?,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.ServiceBinding.Unbound>? =
-            null,
-    ): skirout.service.v1.status.ServiceBinding.Unbound_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            registrationToken: kotlin.String?,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.ServiceBinding.Unbound>? =
-                null,
-        ): this(
-            registrationToken,
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            registrationToken = this.registrationToken,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            registrationToken: kotlin.String? =
-                this.registrationToken,
-        ) = skirout.service.v1.status.ServiceBinding.Unbound(
-            registrationToken,
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.status.ServiceBinding.Unbound && this.registrationToken == other.registrationToken);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.registrationToken).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.status.ServiceBinding.Unbound.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [Unbound]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var registrationToken: kotlin.String? =
-                null,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.ServiceBinding.Unbound>? =
-                null,
-        ): skirout.service.v1.status.ServiceBinding.Unbound_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.status.ServiceBinding.Unbound(
-                registrationToken = this.registrationToken,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.status.ServiceBinding.Unbound(
-                    null,
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [Unbound].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                registrationToken: kotlin.String? =
-                    null,
-            ) = skirout.service.v1.status.ServiceBinding.Unbound(
-                registrationToken = registrationToken,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/status.skir:ServiceBinding.Unbound",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [Unbound] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [Unbound] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "registration_token",
-                    "registrationToken",
-                    0,
-                    build.skir.Serializers.optional(
-                        build.skir.Serializers.string,
-                    ),
-                    "",
-                    { it.registrationToken },
-                    { mut, v -> mut.registrationToken = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ServiceBinding_BoundSerializerImpl.typeDescriptor;
         }
     }
 }
 
-sealed interface GetServiceStatusRequest_OrMutable {
-    fun toFrozen(): skirout.service.v1.status.GetServiceStatusRequest;
+sealed interface RegistrationLease_OrMutable {
+    val token: kotlin.String;
+    val expiresAt: java.time.Instant;
+
+    fun toFrozen(): skirout.service.v1.status.RegistrationLease;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class GetServiceStatusRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusRequest>? =
+class RegistrationLease private constructor(
+    override val token: kotlin.String,
+    override val expiresAt: java.time.Instant,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.RegistrationLease>? =
         null,
-): skirout.service.v1.status.GetServiceStatusRequest_OrMutable {
+): skirout.service.v1.status.RegistrationLease_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusRequest>? =
+        token: kotlin.String,
+        expiresAt: java.time.Instant,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.RegistrationLease>? =
+            null,
+    ): this(
+        token,
+        expiresAt,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        token = this.token,
+        expiresAt = this.expiresAt,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        token: kotlin.String =
+            this.token,
+        expiresAt: java.time.Instant =
+            this.expiresAt,
+    ) = skirout.service.v1.status.RegistrationLease(
+        token,
+        expiresAt,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.status.RegistrationLease && this.token == other.token && this.expiresAt == other.expiresAt);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.token, this.expiresAt).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RegistrationLeaseSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RegistrationLease]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var token: kotlin.String =
+            "",
+        override var expiresAt: java.time.Instant =
+            java.time.Instant.EPOCH,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.RegistrationLease>? =
+            null,
+    ): skirout.service.v1.status.RegistrationLease_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.status.RegistrationLease(
+            token = this.token,
+            expiresAt = this.expiresAt,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.status.RegistrationLease(
+                "",
+                java.time.Instant.EPOCH,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RegistrationLease].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            token: kotlin.String =
+                "",
+            expiresAt: java.time.Instant =
+                java.time.Instant.EPOCH,
+        ) = skirout.service.v1.status.RegistrationLease(
+            token = token,
+            expiresAt = expiresAt,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RegistrationLease] instances. */
+        val serializer get() = _SerializerRegistry.RegistrationLeaseSerializer;
+
+        /** Describes the [RegistrationLease] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RegistrationLeaseSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface QueryServiceBindingRequest_OrMutable {
+    fun toFrozen(): skirout.service.v1.status.QueryServiceBindingRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class QueryServiceBindingRequest private constructor(
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingRequest>? =
+        null,
+): skirout.service.v1.status.QueryServiceBindingRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingRequest>? =
             null,
     ): this(
         _unrecognizedFields,
@@ -492,7 +388,7 @@ class GetServiceStatusRequest private constructor(
     fun toMutable() = Mutable();
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.status.GetServiceStatusRequest);
+        return this === other || (other is skirout.service.v1.status.QueryServiceBindingRequest);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -502,82 +398,68 @@ class GetServiceStatusRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.status.GetServiceStatusRequest.serializerImpl,
+            _SerializerRegistry.QueryServiceBindingRequestSerializerImpl,
         )
     }
 
-    /** Mutable version of [GetServiceStatusRequest]. */
+    /** Mutable version of [QueryServiceBindingRequest]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusRequest>? =
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingRequest>? =
             null,
-    ): skirout.service.v1.status.GetServiceStatusRequest_OrMutable {
+    ): skirout.service.v1.status.QueryServiceBindingRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.status.GetServiceStatusRequest(
+        override fun toFrozen() = skirout.service.v1.status.QueryServiceBindingRequest(
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
 
     companion object {
         private val default =
-            skirout.service.v1.status.GetServiceStatusRequest();
+            skirout.service.v1.status.QueryServiceBindingRequest();
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [GetServiceStatusRequest].
+         * Creates a new instance of [QueryServiceBindingRequest].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-        ) = skirout.service.v1.status.GetServiceStatusRequest(
+        ) = skirout.service.v1.status.QueryServiceBindingRequest(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/status.skir:GetServiceStatusRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
+        /** Serializer for [QueryServiceBindingRequest] instances. */
+        val serializer get() = _SerializerRegistry.QueryServiceBindingRequestSerializer;
 
-        /** Serializer for [GetServiceStatusRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [GetServiceStatusRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        /** Describes the [QueryServiceBindingRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.QueryServiceBindingRequestSerializerImpl.typeDescriptor;
     }
 }
 
 /** Deeply immutable. */
-sealed class GetServiceStatusResponse private constructor() {
-    /** The kind of variant held by a `GetServiceStatusResponse`. */
+sealed class QueryServiceBindingResponse private constructor() {
+    /** The kind of variant held by a `QueryServiceBindingResponse`. */
     enum class Kind {
         UNKNOWN,
-        INTERNAL_ERROR_WRAPPER,
+        BINDING_WRAPPER,
         SERVICE_NOT_FOUND_ERROR_WRAPPER,
-        STATUS_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
     }
 
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.status.GetServiceStatusResponse.UNKNOWN")) internal constructor(
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.status.QueryServiceBindingResponse.UNKNOWN")) internal constructor(
         internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.GetServiceStatusResponse>?,
-    ) : skirout.service.v1.status.GetServiceStatusResponse() {
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.QueryServiceBindingResponse>?,
+    ) : skirout.service.v1.status.QueryServiceBindingResponse() {
         override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.status.GetServiceStatusResponse && other.kind == kind;
+            return other is skirout.service.v1.status.QueryServiceBindingResponse && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -585,35 +467,35 @@ sealed class GetServiceStatusResponse private constructor() {
         }
     }
 
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.status.GetServiceStatusResponse() {
+    class BindingWrapper private constructor (
+        val value: skirout.service.v1.status.QueryServiceBindingResponse.Binding,
+    ) : skirout.service.v1.status.QueryServiceBindingResponse() {
         constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+            value: skirout.service.v1.status.QueryServiceBindingResponse.Binding_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+        override val kind get() = Kind.BINDING_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.status.GetServiceStatusResponse.InternalErrorWrapper && value == other.value;
+            return other is skirout.service.v1.status.QueryServiceBindingResponse.BindingWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
+            return this.value.hashCode() + -108220795;
         }
     }
 
     class ServiceNotFoundErrorWrapper private constructor (
-        val value: skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError,
-    ) : skirout.service.v1.status.GetServiceStatusResponse() {
+        val value: skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError,
+    ) : skirout.service.v1.status.QueryServiceBindingResponse() {
         constructor(
-            value: skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError_OrMutable,
+            value: skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundErrorWrapper && value == other.value;
+            return other is skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
@@ -621,41 +503,62 @@ sealed class GetServiceStatusResponse private constructor() {
         }
     }
 
-    class StatusWrapper private constructor (
-        val value: skirout.service.v1.status.GetServiceStatusResponse.Status,
-    ) : skirout.service.v1.status.GetServiceStatusResponse() {
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.status.QueryServiceBindingResponse() {
         constructor(
-            value: skirout.service.v1.status.GetServiceStatusResponse.Status_OrMutable,
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.STATUS_WRAPPER;
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.status.GetServiceStatusResponse.StatusWrapper && value == other.value;
+            return other is skirout.service.v1.status.QueryServiceBindingResponse.InternalErrorWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -892481550;
+            return this.value.hashCode() + 778975750;
         }
     }
 
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.GetServiceStatusResponse>? get() = null;
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.QueryServiceBindingResponse>? get() = null;
 
     abstract val kind: Kind;
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.status.GetServiceStatusResponse._serializerImpl,
+            _SerializerRegistry.QueryServiceBindingResponseSerializerImpl,
         )
     }
 
     companion object {
         /**
-         * Constant indicating an unknown [GetServiceStatusResponse].
-         * Default value for fields of type [GetServiceStatusResponse].
+         * Constant indicating an unknown [QueryServiceBindingResponse].
+         * Default value for fields of type [QueryServiceBindingResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `BindingWrapper(skirout.service.v1.status.QueryServiceBindingResponse.Binding(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createBinding(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            binding: skirout.service.v1.status.ServiceBinding,
+        ) = BindingWrapper(
+            skirout.service.v1.status.QueryServiceBindingResponse.Binding(
+                binding = binding,
+            )
+        );
+
+        /** Shortcut for `ServiceNotFoundErrorWrapper(skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createServiceNotFoundError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = ServiceNotFoundErrorWrapper(
+            skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError()
+        );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -666,197 +569,31 @@ sealed class GetServiceStatusResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        /** Shortcut for `ServiceNotFoundErrorWrapper(skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createServiceNotFoundError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = ServiceNotFoundErrorWrapper(
-            skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError()
-        );
+        /** Serializer for [QueryServiceBindingResponse] instances. */
+        val serializer get() = _SerializerRegistry.QueryServiceBindingResponseSerializer;
 
-        /** Shortcut for `StatusWrapper(skirout.service.v1.status.GetServiceStatusResponse.Status(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createStatus(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            binding: skirout.service.v1.status.ServiceBinding,
-        ) = StatusWrapper(
-            skirout.service.v1.status.GetServiceStatusResponse.Status(
-                binding = binding,
-            )
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.status.GetServiceStatusResponse, Unknown>(
-                recordId = "service/v1/status.skir:GetServiceStatusResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [GetServiceStatusResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [GetServiceStatusResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "service_not_found_error",
-                    Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError.serializer,
-                    "",
-                    { ServiceNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "status",
-                    Kind.STATUS_WRAPPER.ordinal,
-                    skirout.service.v1.status.GetServiceStatusResponse.Status.serializer,
-                    "",
-                    { StatusWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        /** Describes the [QueryServiceBindingResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.QueryServiceBindingResponseSerializerImpl.typeDescriptor;
     }
 
-    sealed interface ServiceNotFoundError_OrMutable {
-        fun toFrozen(): skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class ServiceNotFoundError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError>? =
-            null,
-    ): skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [ServiceNotFoundError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError>? =
-                null,
-        ): skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [ServiceNotFoundError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.status.GetServiceStatusResponse.ServiceNotFoundError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/status.skir:GetServiceStatusResponse.ServiceNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [ServiceNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [ServiceNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface Status_OrMutable {
+    sealed interface Binding_OrMutable {
         val binding: skirout.service.v1.status.ServiceBinding;
 
-        fun toFrozen(): skirout.service.v1.status.GetServiceStatusResponse.Status;
+        fun toFrozen(): skirout.service.v1.status.QueryServiceBindingResponse.Binding;
     }
 
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
-    class Status private constructor(
+    class Binding private constructor(
         override val binding: skirout.service.v1.status.ServiceBinding,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.Status>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.Binding>? =
             null,
-    ): skirout.service.v1.status.GetServiceStatusResponse.Status_OrMutable {
+    ): skirout.service.v1.status.QueryServiceBindingResponse.Binding_OrMutable {
         constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             binding: skirout.service.v1.status.ServiceBinding,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.Status>? =
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.Binding>? =
                 null,
         ): this(
             binding,
@@ -877,7 +614,7 @@ sealed class GetServiceStatusResponse private constructor() {
                 _MustNameArguments,
             binding: skirout.service.v1.status.ServiceBinding =
                 this.binding,
-        ) = skirout.service.v1.status.GetServiceStatusResponse.Status(
+        ) = skirout.service.v1.status.QueryServiceBindingResponse.Binding(
             binding,
             this._unrecognizedFields,
         );
@@ -886,7 +623,7 @@ sealed class GetServiceStatusResponse private constructor() {
         fun copy() = this;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.status.GetServiceStatusResponse.Status && this.binding == other.binding);
+            return this === other || (other is skirout.service.v1.status.QueryServiceBindingResponse.Binding && this.binding == other.binding);
         }
 
         override fun hashCode(): kotlin.Int {
@@ -896,21 +633,21 @@ sealed class GetServiceStatusResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.status.GetServiceStatusResponse.Status.serializerImpl,
+                _SerializerRegistry.QueryServiceBindingResponse_BindingSerializerImpl,
             )
         }
 
-        /** Mutable version of [Status]. */
+        /** Mutable version of [Binding]. */
         class Mutable internal constructor(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             override var binding: skirout.service.v1.status.ServiceBinding =
                 skirout.service.v1.status.ServiceBinding.UNKNOWN,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.GetServiceStatusResponse.Status>? =
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.Binding>? =
                 null,
-        ): skirout.service.v1.status.GetServiceStatusResponse.Status_OrMutable {
+        ): skirout.service.v1.status.QueryServiceBindingResponse.Binding_OrMutable {
             /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.status.GetServiceStatusResponse.Status(
+            override fun toFrozen() = skirout.service.v1.status.QueryServiceBindingResponse.Binding(
                 binding = this.binding,
                 _unrecognizedFields = this._unrecognizedFields,
             );
@@ -918,7 +655,7 @@ sealed class GetServiceStatusResponse private constructor() {
 
         companion object {
             private val default =
-                skirout.service.v1.status.GetServiceStatusResponse.Status(
+                skirout.service.v1.status.QueryServiceBindingResponse.Binding(
                     skirout.service.v1.status.ServiceBinding.UNKNOWN,
                 );
 
@@ -926,7 +663,7 @@ sealed class GetServiceStatusResponse private constructor() {
             fun partial() = default;
 
             /**
-             * Creates a new instance of [Status].
+             * Creates a new instance of [Binding].
              * Unlike the constructor, does not require all fields to be specified.
              * Missing fields will be set to their default values.
              */
@@ -935,52 +672,883 @@ sealed class GetServiceStatusResponse private constructor() {
                     _MustNameArguments,
                 binding: skirout.service.v1.status.ServiceBinding =
                     skirout.service.v1.status.ServiceBinding.UNKNOWN,
-            ) = skirout.service.v1.status.GetServiceStatusResponse.Status(
+            ) = skirout.service.v1.status.QueryServiceBindingResponse.Binding(
                 binding = binding,
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/status.skir:GetServiceStatusResponse.Status",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            /** Serializer for [Binding] instances. */
+            val serializer get() = _SerializerRegistry.QueryServiceBindingResponse_BindingSerializer;
+
+            /** Describes the [Binding] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.QueryServiceBindingResponse_BindingSerializerImpl.typeDescriptor;
+        }
+    }
+
+    sealed interface ServiceNotFoundError_OrMutable {
+        fun toFrozen(): skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ServiceNotFoundError private constructor(
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError>? =
+            null,
+    ): skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.QueryServiceBindingResponse_ServiceNotFoundErrorSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [ServiceNotFoundError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError>? =
+                null,
+        ): skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ServiceNotFoundError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError(
+                _unrecognizedFields = null,
             );
 
-            /** Serializer for [Status] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            /** Serializer for [ServiceNotFoundError] instances. */
+            val serializer get() = _SerializerRegistry.QueryServiceBindingResponse_ServiceNotFoundErrorSerializer;
 
-            /** Describes the [Status] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "binding",
-                    "binding",
-                    0,
-                    skirout.service.v1.status.ServiceBinding.serializer,
-                    "",
-                    { it.binding },
-                    { mut, v -> mut.binding = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            /** Describes the [ServiceNotFoundError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.QueryServiceBindingResponse_ServiceNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 }
 
-val GetServiceStatus: build.skir.service.Method<
-    skirout.service.v1.status.GetServiceStatusRequest,
-    skirout.service.v1.status.GetServiceStatusResponse,
+sealed interface EnsureRegistrationLeaseRequest_OrMutable {
+    fun toFrozen(): skirout.service.v1.status.EnsureRegistrationLeaseRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class EnsureRegistrationLeaseRequest private constructor(
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseRequest>? =
+        null,
+): skirout.service.v1.status.EnsureRegistrationLeaseRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseRequest>? =
+            null,
+    ): this(
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable();
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.status.EnsureRegistrationLeaseRequest);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.EnsureRegistrationLeaseRequestSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [EnsureRegistrationLeaseRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseRequest>? =
+            null,
+    ): skirout.service.v1.status.EnsureRegistrationLeaseRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.status.EnsureRegistrationLeaseRequest(
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.status.EnsureRegistrationLeaseRequest();
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [EnsureRegistrationLeaseRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = skirout.service.v1.status.EnsureRegistrationLeaseRequest(
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [EnsureRegistrationLeaseRequest] instances. */
+        val serializer get() = _SerializerRegistry.EnsureRegistrationLeaseRequestSerializer;
+
+        /** Describes the [EnsureRegistrationLeaseRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.EnsureRegistrationLeaseRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class EnsureRegistrationLeaseResponse private constructor() {
+    /** The kind of variant held by a `EnsureRegistrationLeaseResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        ISSUED_WRAPPER,
+        ALREADY_BOUND_WRAPPER,
+        SERVICE_NOT_FOUND_ERROR_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.status.EnsureRegistrationLeaseResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.EnsureRegistrationLeaseResponse>?,
+    ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.EnsureRegistrationLeaseResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class IssuedWrapper private constructor (
+        val value: skirout.service.v1.status.RegistrationLease,
+    ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
+        constructor(
+            value: skirout.service.v1.status.RegistrationLease_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ISSUED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.IssuedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1179159893;
+        }
+    }
+
+    class AlreadyBoundWrapper private constructor (
+        val value: skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound,
+    ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
+        constructor(
+            value: skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.ALREADY_BOUND_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBoundWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1210864937;
+        }
+    }
+
+    class ServiceNotFoundErrorWrapper private constructor (
+        val value: skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError,
+    ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
+        constructor(
+            value: skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 532683285;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.status.EnsureRegistrationLeaseResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.status.EnsureRegistrationLeaseResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.EnsureRegistrationLeaseResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [EnsureRegistrationLeaseResponse].
+         * Default value for fields of type [EnsureRegistrationLeaseResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `IssuedWrapper(skirout.service.v1.status.RegistrationLease(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createIssued(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            token: kotlin.String,
+            expiresAt: java.time.Instant,
+        ) = IssuedWrapper(
+            skirout.service.v1.status.RegistrationLease(
+                token = token,
+                expiresAt = expiresAt,
+            )
+        );
+
+        /** Shortcut for `AlreadyBoundWrapper(skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAlreadyBound(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            organizationId: kotlin.String,
+            organizationName: kotlin.String?,
+        ) = AlreadyBoundWrapper(
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(
+                organizationId = organizationId,
+                organizationName = organizationName,
+            )
+        );
+
+        /** Shortcut for `ServiceNotFoundErrorWrapper(skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createServiceNotFoundError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = ServiceNotFoundErrorWrapper(
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError()
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [EnsureRegistrationLeaseResponse] instances. */
+        val serializer get() = _SerializerRegistry.EnsureRegistrationLeaseResponseSerializer;
+
+        /** Describes the [EnsureRegistrationLeaseResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.EnsureRegistrationLeaseResponseSerializerImpl.typeDescriptor;
+    }
+
+    sealed interface AlreadyBound_OrMutable {
+        val organizationId: kotlin.String;
+        val organizationName: kotlin.String?;
+
+        fun toFrozen(): skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class AlreadyBound private constructor(
+        override val organizationId: kotlin.String,
+        override val organizationName: kotlin.String?,
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound>? =
+            null,
+    ): skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            organizationId: kotlin.String,
+            organizationName: kotlin.String?,
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound>? =
+                null,
+        ): this(
+            organizationId,
+            organizationName,
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            organizationId = this.organizationId,
+            organizationName = this.organizationName,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            organizationId: kotlin.String =
+                this.organizationId,
+            organizationName: kotlin.String? =
+                this.organizationName,
+        ) = skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(
+            organizationId,
+            organizationName,
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound && this.organizationId == other.organizationId && this.organizationName == other.organizationName);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.organizationId, this.organizationName).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [AlreadyBound]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var organizationId: kotlin.String =
+                "",
+            override var organizationName: kotlin.String? =
+                null,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound>? =
+                null,
+        ): skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(
+                organizationId = this.organizationId,
+                organizationName = this.organizationName,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(
+                    "",
+                    null,
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [AlreadyBound].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                organizationId: kotlin.String =
+                    "",
+                organizationName: kotlin.String? =
+                    null,
+            ) = skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound(
+                organizationId = organizationId,
+                organizationName = organizationName,
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [AlreadyBound] instances. */
+            val serializer get() = _SerializerRegistry.EnsureRegistrationLeaseResponse_AlreadyBoundSerializer;
+
+            /** Describes the [AlreadyBound] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl.typeDescriptor;
+        }
+    }
+
+    sealed interface ServiceNotFoundError_OrMutable {
+        fun toFrozen(): skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class ServiceNotFoundError private constructor(
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError>? =
+            null,
+    ): skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError>? =
+                null,
+        ): this(
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable();
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [ServiceNotFoundError]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError>? =
+                null,
+        ): skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError(
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+        }
+
+        companion object {
+            private val default =
+                skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError();
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [ServiceNotFoundError].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+            ) = skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError(
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [ServiceNotFoundError] instances. */
+            val serializer get() = _SerializerRegistry.EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializer;
+
+            /** Describes the [ServiceNotFoundError] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializerImpl.typeDescriptor;
+        }
+    }
+}
+
+val QueryServiceBinding: build.skir.service.Method<
+    skirout.service.v1.status.QueryServiceBindingRequest,
+    skirout.service.v1.status.QueryServiceBindingResponse,
 > by kotlin.lazy {
     build.skir.service.Method(
-        "GetServiceStatus",
+        "QueryServiceBinding",
         955610,
-        skirout.service.v1.status.GetServiceStatusRequest.serializer,
-        skirout.service.v1.status.GetServiceStatusResponse.serializer,
+        skirout.service.v1.status.QueryServiceBindingRequest.serializer,
+        skirout.service.v1.status.QueryServiceBindingResponse.serializer,
         "",
     )
+}
+
+val EnsureRegistrationLease: build.skir.service.Method<
+    skirout.service.v1.status.EnsureRegistrationLeaseRequest,
+    skirout.service.v1.status.EnsureRegistrationLeaseResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "EnsureRegistrationLease",
+        955611,
+        skirout.service.v1.status.EnsureRegistrationLeaseRequest.serializer,
+        skirout.service.v1.status.EnsureRegistrationLeaseResponse.serializer,
+        "",
+    )
+}
+
+private object _SerializerRegistry {
+    val EnsureRegistrationLeaseRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:EnsureRegistrationLeaseRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.EnsureRegistrationLeaseRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.EnsureRegistrationLeaseRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EnsureRegistrationLeaseRequestSerializer = build.skir.internal.makeSerializer(EnsureRegistrationLeaseRequestSerializerImpl);
+
+    val EnsureRegistrationLeaseResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.status.EnsureRegistrationLeaseResponse, skirout.service.v1.status.EnsureRegistrationLeaseResponse.Unknown>(
+            recordId = "service/v1/status.skir:EnsureRegistrationLeaseResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.status.EnsureRegistrationLeaseResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.status.EnsureRegistrationLeaseResponse.Unknown(skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val EnsureRegistrationLeaseResponseSerializer = build.skir.internal.makeSerializer(EnsureRegistrationLeaseResponseSerializerImpl);
+
+    val EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:EnsureRegistrationLeaseResponse.AlreadyBound",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBound.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EnsureRegistrationLeaseResponse_AlreadyBoundSerializer = build.skir.internal.makeSerializer(EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl);
+
+    val EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:EnsureRegistrationLeaseResponse.ServiceNotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializer = build.skir.internal.makeSerializer(EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializerImpl);
+
+    val QueryServiceBindingRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:QueryServiceBindingRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.QueryServiceBindingRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.QueryServiceBindingRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val QueryServiceBindingRequestSerializer = build.skir.internal.makeSerializer(QueryServiceBindingRequestSerializerImpl);
+
+    val QueryServiceBindingResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.status.QueryServiceBindingResponse, skirout.service.v1.status.QueryServiceBindingResponse.Unknown>(
+            recordId = "service/v1/status.skir:QueryServiceBindingResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.status.QueryServiceBindingResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.status.QueryServiceBindingResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.status.QueryServiceBindingResponse.Unknown(skirout.service.v1.status.QueryServiceBindingResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val QueryServiceBindingResponseSerializer = build.skir.internal.makeSerializer(QueryServiceBindingResponseSerializerImpl);
+
+    val QueryServiceBindingResponse_BindingSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:QueryServiceBindingResponse.Binding",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.QueryServiceBindingResponse.Binding.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.QueryServiceBindingResponse.Binding.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val QueryServiceBindingResponse_BindingSerializer = build.skir.internal.makeSerializer(QueryServiceBindingResponse_BindingSerializerImpl);
+
+    val QueryServiceBindingResponse_ServiceNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:QueryServiceBindingResponse.ServiceNotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val QueryServiceBindingResponse_ServiceNotFoundErrorSerializer = build.skir.internal.makeSerializer(QueryServiceBindingResponse_ServiceNotFoundErrorSerializerImpl);
+
+    val RegistrationLeaseSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:RegistrationLease",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.RegistrationLease.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.RegistrationLease.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RegistrationLeaseSerializer = build.skir.internal.makeSerializer(RegistrationLeaseSerializerImpl);
+
+    val ServiceBindingSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.status.ServiceBinding, skirout.service.v1.status.ServiceBinding.Unknown>(
+            recordId = "service/v1/status.skir:ServiceBinding",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.status.ServiceBinding.Kind.values().size,
+            unknownInstance = skirout.service.v1.status.ServiceBinding.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.status.ServiceBinding.Unknown(skirout.service.v1.status.ServiceBinding.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ServiceBindingSerializer = build.skir.internal.makeSerializer(ServiceBindingSerializerImpl);
+
+    val ServiceBinding_BoundSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/status.skir:ServiceBinding.Bound",
+        doc = "",
+        defaultInstance = skirout.service.v1.status.ServiceBinding.Bound.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.status.ServiceBinding.Bound.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceBinding_BoundSerializer = build.skir.internal.makeSerializer(ServiceBinding_BoundSerializerImpl);
+
+    init {
+        EnsureRegistrationLeaseRequestSerializerImpl.finalizeStruct();
+
+        EnsureRegistrationLeaseResponseSerializerImpl.addWrapperVariant(
+            1,
+            "issued",
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.ISSUED_WRAPPER.ordinal,
+            _SerializerRegistry.RegistrationLeaseSerializer,
+            "",
+            { skirout.service.v1.status.EnsureRegistrationLeaseResponse.IssuedWrapper(it) },
+            { it.value },
+        );
+        EnsureRegistrationLeaseResponseSerializerImpl.addWrapperVariant(
+            2,
+            "already_bound",
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.ALREADY_BOUND_WRAPPER.ordinal,
+            _SerializerRegistry.EnsureRegistrationLeaseResponse_AlreadyBoundSerializer,
+            "",
+            { skirout.service.v1.status.EnsureRegistrationLeaseResponse.AlreadyBoundWrapper(it) },
+            { it.value },
+        );
+        EnsureRegistrationLeaseResponseSerializerImpl.addWrapperVariant(
+            3,
+            "service_not_found_error",
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.status.EnsureRegistrationLeaseResponse.ServiceNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        EnsureRegistrationLeaseResponseSerializerImpl.addWrapperVariant(
+            4,
+            "internal_error",
+            skirout.service.v1.status.EnsureRegistrationLeaseResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.status.EnsureRegistrationLeaseResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        EnsureRegistrationLeaseResponseSerializerImpl.finalizeEnum();
+
+        EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl.addField(
+            "organization_name",
+            "organizationName",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.organizationName },
+            { mut, v -> mut.organizationName = v },
+        );
+        EnsureRegistrationLeaseResponse_AlreadyBoundSerializerImpl.finalizeStruct();
+
+        EnsureRegistrationLeaseResponse_ServiceNotFoundErrorSerializerImpl.finalizeStruct();
+
+        QueryServiceBindingRequestSerializerImpl.finalizeStruct();
+
+        QueryServiceBindingResponseSerializerImpl.addWrapperVariant(
+            1,
+            "binding",
+            skirout.service.v1.status.QueryServiceBindingResponse.Kind.BINDING_WRAPPER.ordinal,
+            _SerializerRegistry.QueryServiceBindingResponse_BindingSerializer,
+            "",
+            { skirout.service.v1.status.QueryServiceBindingResponse.BindingWrapper(it) },
+            { it.value },
+        );
+        QueryServiceBindingResponseSerializerImpl.addWrapperVariant(
+            2,
+            "service_not_found_error",
+            skirout.service.v1.status.QueryServiceBindingResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.QueryServiceBindingResponse_ServiceNotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.status.QueryServiceBindingResponse.ServiceNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        QueryServiceBindingResponseSerializerImpl.addWrapperVariant(
+            3,
+            "internal_error",
+            skirout.service.v1.status.QueryServiceBindingResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.status.QueryServiceBindingResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        QueryServiceBindingResponseSerializerImpl.finalizeEnum();
+
+        QueryServiceBindingResponse_BindingSerializerImpl.addField(
+            "binding",
+            "binding",
+            0,
+            _SerializerRegistry.ServiceBindingSerializer,
+            "",
+            { it.binding },
+            { mut, v -> mut.binding = v },
+        );
+        QueryServiceBindingResponse_BindingSerializerImpl.finalizeStruct();
+
+        QueryServiceBindingResponse_ServiceNotFoundErrorSerializerImpl.finalizeStruct();
+
+        RegistrationLeaseSerializerImpl.addField(
+            "token",
+            "token",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.token },
+            { mut, v -> mut.token = v },
+        );
+        RegistrationLeaseSerializerImpl.addField(
+            "expires_at",
+            "expiresAt",
+            1,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.expiresAt },
+            { mut, v -> mut.expiresAt = v },
+        );
+        RegistrationLeaseSerializerImpl.finalizeStruct();
+
+        ServiceBindingSerializerImpl.addWrapperVariant(
+            1,
+            "bound",
+            skirout.service.v1.status.ServiceBinding.Kind.BOUND_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceBinding_BoundSerializer,
+            "",
+            { skirout.service.v1.status.ServiceBinding.BoundWrapper(it) },
+            { it.value },
+        );
+        ServiceBindingSerializerImpl.addConstantVariant(
+            2,
+            "unbound",
+            skirout.service.v1.status.ServiceBinding.Kind.UNBOUND_CONST.ordinal,
+            "",
+            skirout.service.v1.status.ServiceBinding.UNBOUND,
+        );
+        ServiceBindingSerializerImpl.finalizeEnum();
+
+        ServiceBinding_BoundSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        ServiceBinding_BoundSerializerImpl.addField(
+            "organization_name",
+            "organizationName",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.organizationName },
+            { mut, v -> mut.organizationName = v },
+        );
+        ServiceBinding_BoundSerializerImpl.finalizeStruct();
+    }
 }

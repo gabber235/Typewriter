@@ -1,0 +1,54 @@
+import {
+  AuthoringRecord,
+  DataValue,
+  RelationId,
+  ResourceId,
+  TypeSelection,
+  ValueLocation,
+  ValuePath,
+} from "editor/v1/type_catalog.skir";
+
+struct LinkProjection(812300001) {
+  contract: RelationId = 0;
+  first: ResourceId = 1;
+  second: ResourceId = 2;
+  first_location: ValuePath? = 3;
+  second_location: ValuePath? = 4;
+}
+
+enum TraversalDirection(812300002) {
+  forward = 1;
+  reverse = 2;
+  both = 3;
+}
+
+enum EditExpectation(812300003) {
+  value: struct {
+    at: ValueLocation = 0;
+    expected: DataValue? = 1;
+  } = 1;
+  resource: struct {
+    id: ResourceId = 0;
+    expected: AuthoringRecord? = 1;
+  } = 2;
+  resource_exists: struct {
+    id: ResourceId = 0;
+    expected: bool = 1;
+  } = 3;
+  configuration: struct {
+    at: ValueLocation = 0;
+    expected: TypeSelection? = 1;
+  } = 4;
+  resource_ids: [ResourceId] = 5;
+  links: struct {
+    resource: ResourceId = 0;
+    contract: RelationId = 1;
+    direction: TraversalDirection = 2;
+    expected: [LinkProjection] = 3;
+  } = 6;
+}
+
+struct ExpectationConflict(812300004) {
+  expected: EditExpectation = 0;
+  actual: EditExpectation = 1;
+}

@@ -140,12 +140,13 @@ void main() {
   group("limited", () {
     test("limits depth first and removes empty sections", () {
       final inner = FakeSearchSource();
-      final source = inner.limited(2);
+      final source = inner.limited((_) => 2);
       addTearDown(source.dispose);
       final snapshots = <SearchSourceSnapshot>[];
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
 
+      source.initialize(queryContext("two"));
       inner.emitSnapshot(
         readySnapshot(
           nodes: [
@@ -157,6 +158,28 @@ void main() {
 
       expect(resultIds(snapshots.single), ["one", "two"]);
       expect(snapshots.single.nodes, hasLength(1));
+    });
+
+    test("resolves its limit from each query before child snapshots", () {
+      final inner = FakeSearchSource();
+      final source = inner.limited(
+        (query) => query.normalizedQuery == "compact" ? 1 : 2,
+      );
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+      final snapshot = readySnapshot(
+        nodes: [resultNode("one"), resultNode("two")],
+      );
+
+      source.initialize(queryContext("compact"));
+      inner.emitSnapshot(snapshot);
+      source.search(queryContext("expanded"));
+      inner.emitSnapshot(snapshot);
+
+      expect(resultIds(snapshots.first), ["one"]);
+      expect(resultIds(snapshots.last), ["one", "two"]);
     });
   });
 
@@ -187,12 +210,13 @@ void main() {
   group("section", () {
     test("wraps nonempty snapshots and preserves empty snapshots", () {
       final inner = FakeSearchSource();
-      final source = inner.inSection(id: "icons", title: "Icons");
+      final source = inner.inSection(id: "icons", title: (_) => "Icons");
       addTearDown(source.dispose);
       final snapshots = <SearchSourceSnapshot>[];
       final subscription = source.snapshots.listen(snapshots.add);
       addTearDown(subscription.cancel);
 
+      source.initialize(queryContext("icons"));
       inner.emitSnapshot(readySnapshot(nodes: [resultNode("home")]));
       inner.emitSnapshot(readySnapshot(nodes: const []));
 
@@ -202,14 +226,40 @@ void main() {
       expect(resultIds(snapshots.first), ["home"]);
       expect(snapshots.last.nodes, isEmpty);
     });
+
+    test("resolves its title from each query", () {
+      final inner = FakeSearchSource();
+      final source = inner.inSection(
+        id: "results",
+        title: (query) => query.normalizedQuery,
+      );
+      addTearDown(source.dispose);
+      final snapshots = <SearchSourceSnapshot>[];
+      final subscription = source.snapshots.listen(snapshots.add);
+      addTearDown(subscription.cancel);
+
+      source.initialize(queryContext("First"));
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("one")]));
+      source.search(queryContext("Second"));
+      inner.emitSnapshot(readySnapshot(nodes: [resultNode("two")]));
+
+      expect(
+        (snapshots.first.nodes.single as SearchSectionNode).title,
+        "First",
+      );
+      expect(
+        (snapshots.last.nodes.single as SearchSectionNode).title,
+        "Second",
+      );
+    });
   });
 
   test("rank before limit differs from limit before rank", () {
     final firstInner = FakeSearchSource();
     final secondInner = FakeSearchSource();
     final fields = [SearchRankField(text: (result) => result.title, weight: 1)];
-    final rankThenLimit = firstInner.ranked(fields).limited(1);
-    final limitThenRank = secondInner.limited(1).ranked(fields);
+    final rankThenLimit = firstInner.ranked(fields).limited((_) => 1);
+    final limitThenRank = secondInner.limited((_) => 1).ranked(fields);
     addTearDown(rankThenLimit.dispose);
 
     addTearDown(limitThenRank.dispose);

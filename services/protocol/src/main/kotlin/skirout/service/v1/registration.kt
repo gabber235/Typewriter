@@ -21,7 +21,6 @@ import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface BindServiceRequest_OrMutable {
-    val operationId: kotlin.String;
     val registrationToken: kotlin.String;
 
     fun toFrozen(): skirout.service.v1.registration.BindServiceRequest;
@@ -30,20 +29,17 @@ sealed interface BindServiceRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class BindServiceRequest private constructor(
-    override val operationId: kotlin.String,
     override val registrationToken: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceRequest>? =
         null,
 ): skirout.service.v1.registration.BindServiceRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         registrationToken: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceRequest>? =
             null,
     ): this(
-        operationId,
         registrationToken,
         _unrecognizedFields,
     ) {}
@@ -53,7 +49,6 @@ class BindServiceRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         registrationToken = this.registrationToken,
     );
 
@@ -61,12 +56,9 @@ class BindServiceRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         registrationToken: kotlin.String =
             this.registrationToken,
     ) = skirout.service.v1.registration.BindServiceRequest(
-        operationId,
         registrationToken,
         this._unrecognizedFields,
     );
@@ -75,17 +67,17 @@ class BindServiceRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.registration.BindServiceRequest && this.operationId == other.operationId && this.registrationToken == other.registrationToken);
+        return this === other || (other is skirout.service.v1.registration.BindServiceRequest && this.registrationToken == other.registrationToken);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.registrationToken).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.registrationToken).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.registration.BindServiceRequest.serializerImpl,
+            _SerializerRegistry.BindServiceRequestSerializerImpl,
         )
     }
 
@@ -93,8 +85,6 @@ class BindServiceRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var registrationToken: kotlin.String =
             "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceRequest>? =
@@ -102,7 +92,6 @@ class BindServiceRequest private constructor(
     ): skirout.service.v1.registration.BindServiceRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.registration.BindServiceRequest(
-            operationId = this.operationId,
             registrationToken = this.registrationToken,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -111,7 +100,6 @@ class BindServiceRequest private constructor(
     companion object {
         private val default =
             skirout.service.v1.registration.BindServiceRequest(
-                "",
                 "",
             );
 
@@ -126,53 +114,18 @@ class BindServiceRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             registrationToken: kotlin.String =
                 "",
         ) = skirout.service.v1.registration.BindServiceRequest(
-            operationId = operationId,
             registrationToken = registrationToken,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/registration.skir:BindServiceRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [BindServiceRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.BindServiceRequestSerializer;
 
         /** Describes the [BindServiceRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "registration_token",
-                "registrationToken",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.registrationToken },
-                { mut, v -> mut.registrationToken = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.BindServiceRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -181,8 +134,6 @@ sealed class BindServiceResponse private constructor() {
     /** The kind of variant held by a `BindServiceResponse`. */
     enum class Kind {
         UNKNOWN,
-        INVALID_OPERATION_ID_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
         INVALID_REGISTRATION_TOKEN_ERROR_WRAPPER,
@@ -201,42 +152,6 @@ sealed class BindServiceResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
-        }
-    }
-
-    class InvalidOperationIdErrorWrapper private constructor (
-        val value: skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError,
-    ) : skirout.service.v1.registration.BindServiceResponse() {
-        constructor(
-            value: skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_OPERATION_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1583533316;
-        }
-    }
-
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError,
-    ) : skirout.service.v1.registration.BindServiceResponse() {
-        constructor(
-            value: skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
         }
     }
 
@@ -319,7 +234,7 @@ sealed class BindServiceResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.registration.BindServiceResponse._serializerImpl,
+            _SerializerRegistry.BindServiceResponseSerializerImpl,
         )
     }
 
@@ -329,24 +244,6 @@ sealed class BindServiceResponse private constructor() {
          * Default value for fields of type [BindServiceResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InvalidOperationIdErrorWrapper(skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidOperationIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InvalidOperationIdErrorWrapper(
-            skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError()
-        );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -391,277 +288,11 @@ sealed class BindServiceResponse private constructor() {
             skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.registration.BindServiceResponse, Unknown>(
-                recordId = "service/v1/registration.skir:BindServiceResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [BindServiceResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.BindServiceResponseSerializer;
 
         /** Describes the [BindServiceResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "invalid_operation_id_error",
-                    Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError.serializer,
-                    "",
-                    { InvalidOperationIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "operation_identity_reused_error",
-                    Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError.serializer,
-                    "",
-                    { OperationIdentityReusedErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.registration.BindServiceResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "invalid_registration_token_error",
-                    Kind.INVALID_REGISTRATION_TOKEN_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError.serializer,
-                    "",
-                    { InvalidRegistrationTokenErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "organization_not_found_error",
-                    Kind.ORGANIZATION_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError.serializer,
-                    "",
-                    { OrganizationNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface InvalidOperationIdError_OrMutable {
-        fun toFrozen(): skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidOperationIdError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError>? =
-            null,
-    ): skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidOperationIdError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError>? =
-                null,
-        ): skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidOperationIdError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.registration.BindServiceResponse.InvalidOperationIdError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:BindServiceResponse.InvalidOperationIdError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.registration.BindServiceResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:BindServiceResponse.OperationIdentityReusedError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.BindServiceResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -678,7 +309,7 @@ sealed class BindServiceResponse private constructor() {
         override val serviceId: kotlin.String,
         override val serviceName: kotlin.String?,
         override val serviceRole: skirout.service.v1.service.ServiceRole,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.Success>? =
             null,
     ): skirout.service.v1.registration.BindServiceResponse.Success_OrMutable {
         constructor(
@@ -737,7 +368,7 @@ sealed class BindServiceResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.registration.BindServiceResponse.Success.serializerImpl,
+                _SerializerRegistry.BindServiceResponse_SuccessSerializerImpl,
             )
         }
 
@@ -795,54 +426,11 @@ sealed class BindServiceResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:BindServiceResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.BindServiceResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "service_id",
-                    "serviceId",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.serviceId },
-                    { mut, v -> mut.serviceId = v },
-                );
-                serializerImpl.addField(
-                    "service_name",
-                    "serviceName",
-                    1,
-                    build.skir.Serializers.optional(
-                        build.skir.Serializers.string,
-                    ),
-                    "",
-                    { it.serviceName },
-                    { mut, v -> mut.serviceName = v },
-                );
-                serializerImpl.addField(
-                    "service_role",
-                    "serviceRole",
-                    2,
-                    skirout.service.v1.service.ServiceRole.serializer,
-                    "",
-                    { it.serviceRole },
-                    { mut, v -> mut.serviceRole = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.BindServiceResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -853,7 +441,7 @@ sealed class BindServiceResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidRegistrationTokenError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError>? =
             null,
     ): skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError_OrMutable {
         constructor(
@@ -882,7 +470,7 @@ sealed class BindServiceResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError.serializerImpl,
+                _SerializerRegistry.BindServiceResponse_InvalidRegistrationTokenErrorSerializerImpl,
             )
         }
 
@@ -918,25 +506,11 @@ sealed class BindServiceResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:BindServiceResponse.InvalidRegistrationTokenError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [InvalidRegistrationTokenError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.BindServiceResponse_InvalidRegistrationTokenErrorSerializer;
 
             /** Describes the [InvalidRegistrationTokenError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.BindServiceResponse_InvalidRegistrationTokenErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -947,7 +521,7 @@ sealed class BindServiceResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class OrganizationNotFoundError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError>? =
             null,
     ): skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError_OrMutable {
         constructor(
@@ -976,7 +550,7 @@ sealed class BindServiceResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError.serializerImpl,
+                _SerializerRegistry.BindServiceResponse_OrganizationNotFoundErrorSerializerImpl,
             )
         }
 
@@ -1012,25 +586,11 @@ sealed class BindServiceResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:BindServiceResponse.OrganizationNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [OrganizationNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.BindServiceResponse_OrganizationNotFoundErrorSerializer;
 
             /** Describes the [OrganizationNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.BindServiceResponse_OrganizationNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -1047,7 +607,7 @@ sealed interface ServiceBoundNotification_OrMutable {
 class ServiceBoundNotification private constructor(
     override val organizationId: kotlin.String,
     override val organizationName: kotlin.String?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.ServiceBoundNotification>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.ServiceBoundNotification>? =
         null,
 ): skirout.service.v1.registration.ServiceBoundNotification_OrMutable {
     constructor(
@@ -1100,7 +660,7 @@ class ServiceBoundNotification private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.registration.ServiceBoundNotification.serializerImpl,
+            _SerializerRegistry.ServiceBoundNotificationSerializerImpl,
         )
     }
 
@@ -1151,50 +711,15 @@ class ServiceBoundNotification private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/registration.skir:ServiceBoundNotification",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceBoundNotification] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceBoundNotificationSerializer;
 
         /** Describes the [ServiceBoundNotification] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "organization_id",
-                "organizationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.organizationId },
-                { mut, v -> mut.organizationId = v },
-            );
-            serializerImpl.addField(
-                "organization_name",
-                "organizationName",
-                1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.organizationName },
-                { mut, v -> mut.organizationName = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceBoundNotificationSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface UnbindServiceRequest_OrMutable {
-    val operationId: kotlin.String;
     val serviceId: kotlin.String;
 
     fun toFrozen(): skirout.service.v1.registration.UnbindServiceRequest;
@@ -1203,20 +728,17 @@ sealed interface UnbindServiceRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UnbindServiceRequest private constructor(
-    override val operationId: kotlin.String,
     override val serviceId: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceRequest>? =
         null,
 ): skirout.service.v1.registration.UnbindServiceRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         serviceId: kotlin.String,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceRequest>? =
             null,
     ): this(
-        operationId,
         serviceId,
         _unrecognizedFields,
     ) {}
@@ -1226,7 +748,6 @@ class UnbindServiceRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         serviceId = this.serviceId,
     );
 
@@ -1234,12 +755,9 @@ class UnbindServiceRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         serviceId: kotlin.String =
             this.serviceId,
     ) = skirout.service.v1.registration.UnbindServiceRequest(
-        operationId,
         serviceId,
         this._unrecognizedFields,
     );
@@ -1248,17 +766,17 @@ class UnbindServiceRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.registration.UnbindServiceRequest && this.operationId == other.operationId && this.serviceId == other.serviceId);
+        return this === other || (other is skirout.service.v1.registration.UnbindServiceRequest && this.serviceId == other.serviceId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.serviceId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.serviceId).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.registration.UnbindServiceRequest.serializerImpl,
+            _SerializerRegistry.UnbindServiceRequestSerializerImpl,
         )
     }
 
@@ -1266,8 +784,6 @@ class UnbindServiceRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var serviceId: kotlin.String =
             "",
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceRequest>? =
@@ -1275,7 +791,6 @@ class UnbindServiceRequest private constructor(
     ): skirout.service.v1.registration.UnbindServiceRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.registration.UnbindServiceRequest(
-            operationId = this.operationId,
             serviceId = this.serviceId,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -1284,7 +799,6 @@ class UnbindServiceRequest private constructor(
     companion object {
         private val default =
             skirout.service.v1.registration.UnbindServiceRequest(
-                "",
                 "",
             );
 
@@ -1299,53 +813,18 @@ class UnbindServiceRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             serviceId: kotlin.String =
                 "",
         ) = skirout.service.v1.registration.UnbindServiceRequest(
-            operationId = operationId,
             serviceId = serviceId,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/registration.skir:UnbindServiceRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [UnbindServiceRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.UnbindServiceRequestSerializer;
 
         /** Describes the [UnbindServiceRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "service_id",
-                "serviceId",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.serviceId },
-                { mut, v -> mut.serviceId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.UnbindServiceRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1354,8 +833,6 @@ sealed class UnbindServiceResponse private constructor() {
     /** The kind of variant held by a `UnbindServiceResponse`. */
     enum class Kind {
         UNKNOWN,
-        INVALID_OPERATION_ID_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
         SERVICE_NOT_FOUND_ERROR_WRAPPER,
@@ -1373,42 +850,6 @@ sealed class UnbindServiceResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
-        }
-    }
-
-    class InvalidOperationIdErrorWrapper private constructor (
-        val value: skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError,
-    ) : skirout.service.v1.registration.UnbindServiceResponse() {
-        constructor(
-            value: skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_OPERATION_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1583533316;
-        }
-    }
-
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError,
-    ) : skirout.service.v1.registration.UnbindServiceResponse() {
-        constructor(
-            value: skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
         }
     }
 
@@ -1473,7 +914,7 @@ sealed class UnbindServiceResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.registration.UnbindServiceResponse._serializerImpl,
+            _SerializerRegistry.UnbindServiceResponseSerializerImpl,
         )
     }
 
@@ -1483,24 +924,6 @@ sealed class UnbindServiceResponse private constructor() {
          * Default value for fields of type [UnbindServiceResponse].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `InvalidOperationIdErrorWrapper(skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidOperationIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InvalidOperationIdErrorWrapper(
-            skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError()
-        );
 
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -1529,268 +952,11 @@ sealed class UnbindServiceResponse private constructor() {
             skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.registration.UnbindServiceResponse, Unknown>(
-                recordId = "service/v1/registration.skir:UnbindServiceResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [UnbindServiceResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.UnbindServiceResponseSerializer;
 
         /** Describes the [UnbindServiceResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "invalid_operation_id_error",
-                    Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError.serializer,
-                    "",
-                    { InvalidOperationIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "operation_identity_reused_error",
-                    Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError.serializer,
-                    "",
-                    { OperationIdentityReusedErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.registration.UnbindServiceResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "service_not_found_error",
-                    Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError.serializer,
-                    "",
-                    { ServiceNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface InvalidOperationIdError_OrMutable {
-        fun toFrozen(): skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidOperationIdError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError>? =
-            null,
-    ): skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidOperationIdError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError>? =
-                null,
-        ): skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidOperationIdError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.registration.UnbindServiceResponse.InvalidOperationIdError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:UnbindServiceResponse.InvalidOperationIdError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
-    }
-
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.registration.UnbindServiceResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:UnbindServiceResponse.OperationIdentityReusedError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.UnbindServiceResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -1800,7 +966,7 @@ sealed class UnbindServiceResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Success private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.Success>? =
             null,
     ): skirout.service.v1.registration.UnbindServiceResponse.Success_OrMutable {
         constructor(
@@ -1829,7 +995,7 @@ sealed class UnbindServiceResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.registration.UnbindServiceResponse.Success.serializerImpl,
+                _SerializerRegistry.UnbindServiceResponse_SuccessSerializerImpl,
             )
         }
 
@@ -1865,25 +1031,11 @@ sealed class UnbindServiceResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:UnbindServiceResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.UnbindServiceResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.UnbindServiceResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1894,7 +1046,7 @@ sealed class UnbindServiceResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class ServiceNotFoundError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError>? =
             null,
     ): skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError_OrMutable {
         constructor(
@@ -1923,7 +1075,7 @@ sealed class UnbindServiceResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError.serializerImpl,
+                _SerializerRegistry.UnbindServiceResponse_ServiceNotFoundErrorSerializerImpl,
             )
         }
 
@@ -1959,25 +1111,11 @@ sealed class UnbindServiceResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/registration.skir:UnbindServiceResponse.ServiceNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [ServiceNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.UnbindServiceResponse_ServiceNotFoundErrorSerializer;
 
             /** Describes the [ServiceNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.UnbindServiceResponse_ServiceNotFoundErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -2006,4 +1144,280 @@ val UnbindService: build.skir.service.Method<
         skirout.service.v1.registration.UnbindServiceResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val BindServiceRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:BindServiceRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.BindServiceRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.BindServiceRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindServiceRequestSerializer = build.skir.internal.makeSerializer(BindServiceRequestSerializerImpl);
+
+    val BindServiceResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.registration.BindServiceResponse, skirout.service.v1.registration.BindServiceResponse.Unknown>(
+            recordId = "service/v1/registration.skir:BindServiceResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.registration.BindServiceResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.registration.BindServiceResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.registration.BindServiceResponse.Unknown(skirout.service.v1.registration.BindServiceResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val BindServiceResponseSerializer = build.skir.internal.makeSerializer(BindServiceResponseSerializerImpl);
+
+    val BindServiceResponse_InvalidRegistrationTokenErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:BindServiceResponse.InvalidRegistrationTokenError",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindServiceResponse_InvalidRegistrationTokenErrorSerializer = build.skir.internal.makeSerializer(BindServiceResponse_InvalidRegistrationTokenErrorSerializerImpl);
+
+    val BindServiceResponse_OrganizationNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:BindServiceResponse.OrganizationNotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindServiceResponse_OrganizationNotFoundErrorSerializer = build.skir.internal.makeSerializer(BindServiceResponse_OrganizationNotFoundErrorSerializerImpl);
+
+    val BindServiceResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:BindServiceResponse.Success",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.BindServiceResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.BindServiceResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindServiceResponse_SuccessSerializer = build.skir.internal.makeSerializer(BindServiceResponse_SuccessSerializerImpl);
+
+    val ServiceBoundNotificationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:ServiceBoundNotification",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.ServiceBoundNotification.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.ServiceBoundNotification.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceBoundNotificationSerializer = build.skir.internal.makeSerializer(ServiceBoundNotificationSerializerImpl);
+
+    val UnbindServiceRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:UnbindServiceRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.UnbindServiceRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.UnbindServiceRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UnbindServiceRequestSerializer = build.skir.internal.makeSerializer(UnbindServiceRequestSerializerImpl);
+
+    val UnbindServiceResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.registration.UnbindServiceResponse, skirout.service.v1.registration.UnbindServiceResponse.Unknown>(
+            recordId = "service/v1/registration.skir:UnbindServiceResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.registration.UnbindServiceResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.registration.UnbindServiceResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.registration.UnbindServiceResponse.Unknown(skirout.service.v1.registration.UnbindServiceResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val UnbindServiceResponseSerializer = build.skir.internal.makeSerializer(UnbindServiceResponseSerializerImpl);
+
+    val UnbindServiceResponse_ServiceNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:UnbindServiceResponse.ServiceNotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UnbindServiceResponse_ServiceNotFoundErrorSerializer = build.skir.internal.makeSerializer(UnbindServiceResponse_ServiceNotFoundErrorSerializerImpl);
+
+    val UnbindServiceResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/registration.skir:UnbindServiceResponse.Success",
+        doc = "",
+        defaultInstance = skirout.service.v1.registration.UnbindServiceResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.registration.UnbindServiceResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UnbindServiceResponse_SuccessSerializer = build.skir.internal.makeSerializer(UnbindServiceResponse_SuccessSerializerImpl);
+
+    init {
+        BindServiceRequestSerializerImpl.addField(
+            "registration_token",
+            "registrationToken",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.registrationToken },
+            { mut, v -> mut.registrationToken = v },
+        );
+        BindServiceRequestSerializerImpl.finalizeStruct();
+
+        BindServiceResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.service.v1.registration.BindServiceResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.registration.BindServiceResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        BindServiceResponseSerializerImpl.addWrapperVariant(
+            2,
+            "success",
+            skirout.service.v1.registration.BindServiceResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.BindServiceResponse_SuccessSerializer,
+            "",
+            { skirout.service.v1.registration.BindServiceResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        BindServiceResponseSerializerImpl.addWrapperVariant(
+            3,
+            "invalid_registration_token_error",
+            skirout.service.v1.registration.BindServiceResponse.Kind.INVALID_REGISTRATION_TOKEN_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.BindServiceResponse_InvalidRegistrationTokenErrorSerializer,
+            "",
+            { skirout.service.v1.registration.BindServiceResponse.InvalidRegistrationTokenErrorWrapper(it) },
+            { it.value },
+        );
+        BindServiceResponseSerializerImpl.addWrapperVariant(
+            4,
+            "organization_not_found_error",
+            skirout.service.v1.registration.BindServiceResponse.Kind.ORGANIZATION_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.BindServiceResponse_OrganizationNotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.registration.BindServiceResponse.OrganizationNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        BindServiceResponseSerializerImpl.finalizeEnum();
+
+        BindServiceResponse_InvalidRegistrationTokenErrorSerializerImpl.finalizeStruct();
+
+        BindServiceResponse_OrganizationNotFoundErrorSerializerImpl.finalizeStruct();
+
+        BindServiceResponse_SuccessSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        BindServiceResponse_SuccessSerializerImpl.addField(
+            "service_name",
+            "serviceName",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.serviceName },
+            { mut, v -> mut.serviceName = v },
+        );
+        BindServiceResponse_SuccessSerializerImpl.addField(
+            "service_role",
+            "serviceRole",
+            2,
+            skirout.service.v1.service.ServiceRole.serializer,
+            "",
+            { it.serviceRole },
+            { mut, v -> mut.serviceRole = v },
+        );
+        BindServiceResponse_SuccessSerializerImpl.finalizeStruct();
+
+        ServiceBoundNotificationSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        ServiceBoundNotificationSerializerImpl.addField(
+            "organization_name",
+            "organizationName",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.organizationName },
+            { mut, v -> mut.organizationName = v },
+        );
+        ServiceBoundNotificationSerializerImpl.finalizeStruct();
+
+        UnbindServiceRequestSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        UnbindServiceRequestSerializerImpl.finalizeStruct();
+
+        UnbindServiceResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.service.v1.registration.UnbindServiceResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.registration.UnbindServiceResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        UnbindServiceResponseSerializerImpl.addWrapperVariant(
+            2,
+            "success",
+            skirout.service.v1.registration.UnbindServiceResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.UnbindServiceResponse_SuccessSerializer,
+            "",
+            { skirout.service.v1.registration.UnbindServiceResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        UnbindServiceResponseSerializerImpl.addWrapperVariant(
+            3,
+            "service_not_found_error",
+            skirout.service.v1.registration.UnbindServiceResponse.Kind.SERVICE_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.UnbindServiceResponse_ServiceNotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.registration.UnbindServiceResponse.ServiceNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        UnbindServiceResponseSerializerImpl.finalizeEnum();
+
+        UnbindServiceResponse_ServiceNotFoundErrorSerializerImpl.finalizeStruct();
+
+        UnbindServiceResponse_SuccessSerializerImpl.finalizeStruct();
+    }
 }

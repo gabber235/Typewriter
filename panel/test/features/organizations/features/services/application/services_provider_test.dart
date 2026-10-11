@@ -1,8 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -10,10 +6,10 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _publishSubject = "cloud.to.user.user1.organization.org1.services.watch";
 const _listenSubject = "cloud.from.organization.org1.services.watch";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 
 Service _service(String id, {String? name, int revision = 1}) => Service(
-  serviceId: recordId("service:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: revision,
   name: name ?? "Service $id",
   role: HostServiceRole(version: "1"),
@@ -29,18 +25,18 @@ Future<void> _waitFor(bool Function() condition) async {
 }
 
 class _Harness {
-  _Harness() {
+  _Harness({skir.WatchOrganizationServicesResponse? initialReply}) {
     nats.registerHandler(
       _publishSubject,
       (_) => skir.WatchOrganizationServicesResponse.serializer.toBytes(
-        skir.WatchOrganizationServicesResponse.wrapList([]),
+        initialReply ?? skir.WatchOrganizationServicesResponse.wrapList([]),
       ),
     );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => "user1"),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     subscription = container.listen(
@@ -61,44 +57,40 @@ class _Harness {
         nats.subscriptionSubjects.contains(_listenSubject),
   );
 
-  Future<List<Service>> emit(
-    skir.WatchOrganizationServicesResponse response,
-  ) async {
+  Future<List<Service>> emit(skir.OrganizationServicesChanged event) async {
     final previous = value;
     nats.emitMessageOnSubject(
       _listenSubject,
-      skir.WatchOrganizationServicesResponse.serializer.toBytes(response),
+      skir.OrganizationServicesChanged.serializer.toBytes(event),
     );
     await _waitFor(() => !identical(value, previous));
-    return value.requireValue;
+    return await container.read(canonicalServicesProvider.future);
   }
 
   Future<List<Service>> emitWithoutChange(
-    skir.WatchOrganizationServicesResponse response,
+    skir.OrganizationServicesChanged event,
   ) async {
     nats.emitMessageOnSubject(
       _listenSubject,
-      skir.WatchOrganizationServicesResponse.serializer.toBytes(response),
+      skir.OrganizationServicesChanged.serializer.toBytes(event),
     );
     await Future<void>.delayed(const Duration(milliseconds: 20));
     return container.read(canonicalServicesProvider).requireValue;
   }
 
-  Future<Object> emitError(
-    skir.WatchOrganizationServicesResponse response,
-  ) async {
+  Future<Object> emitError(skir.OrganizationServicesChanged event) async {
     final completer = Completer<Object>();
-    final errorSubscription = container.listen(canonicalServicesProvider, (
-      previous,
-      next,
-    ) {
-      if (next.hasError && !completer.isCompleted) {
-        completer.complete(next.error!);
-      }
-    });
+    final errorSubscription = container.listen(
+      canonicalOrganizationServicesProvider(_organizationId),
+      (previous, next) {
+        if (next.hasError && !completer.isCompleted) {
+          completer.complete(next.error!);
+        }
+      },
+    );
     nats.emitMessageOnSubject(
       _listenSubject,
-      skir.WatchOrganizationServicesResponse.serializer.toBytes(response),
+      skir.OrganizationServicesChanged.serializer.toBytes(event),
     );
     try {
       return await completer.future.timeout(const Duration(seconds: 2));
@@ -137,10 +129,10 @@ void main() {
       );
     });
 
-    test("reduces list, add, update, and remove", () async {
+    test("reduces replacement, update, and remove", () async {
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapList([
+          skir.OrganizationServicesChanged.wrapReplace([
             _service("one").toSkir(),
           ]),
         ),
@@ -148,22 +140,23 @@ void main() {
       );
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapAdd(
+          skir.OrganizationServicesChanged.wrapReplace([
+            _service("one").toSkir(),
             _service("two").toSkir(),
-          ),
+          ]),
         ),
         [_service("one"), _service("two")],
       );
       final updated = _service("one", name: "Updated", revision: 2);
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapUpdate(updated.toSkir()),
+          skir.OrganizationServicesChanged.wrapUpdate(updated.toSkir()),
         ),
         [updated, _service("two")],
       );
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapRemove(
+          skir.OrganizationServicesChanged.wrapRemove(
             _service("two").serviceId,
           ),
         ),
@@ -184,14 +177,14 @@ void main() {
       );
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapList([current.toSkir()]),
+          skir.OrganizationServicesChanged.wrapReplace([current.toSkir()]),
         ),
         [current],
       );
 
       expect(
         await harness.emitWithoutChange(
-          skir.WatchOrganizationServicesResponse.wrapUpdate(
+          skir.OrganizationServicesChanged.wrapUpdate(
             _service("one", name: "Older", revision: 2).toSkir(),
           ),
         ),
@@ -199,7 +192,7 @@ void main() {
       );
       expect(
         await harness.emitWithoutChange(
-          skir.WatchOrganizationServicesResponse.wrapUpdate(
+          skir.OrganizationServicesChanged.wrapUpdate(
             _service("one", name: "Divergent", revision: 3).toSkir(),
           ),
         ),
@@ -228,32 +221,96 @@ void main() {
         ),
       );
       await harness.emit(
-        skir.WatchOrganizationServicesResponse.wrapList([current.toSkir()]),
+        skir.OrganizationServicesChanged.wrapReplace([current.toSkir()]),
       );
 
       expect(
         await harness.emit(
-          skir.WatchOrganizationServicesResponse.wrapUpdate(heartbeat.toSkir()),
+          skir.OrganizationServicesChanged.wrapUpdate(heartbeat.toSkir()),
         ),
         [heartbeat],
       );
     });
 
-    test("maps internal and unknown errors", () async {
+    test("maps unknown event errors", () async {
       expect(
-        await harness.emitError(
-          skir.WatchOrganizationServicesResponse.createInternalError(),
-        ),
-        isA<ApiException>().having((error) => error.code, "code", 500),
-      );
-      harness.dispose();
-      harness = _Harness();
-      await harness.start();
-      expect(
-        await harness.emitError(skir.WatchOrganizationServicesResponse.unknown),
+        await harness.emitError(skir.OrganizationServicesChanged.unknown),
         isA<ApiException>().having((error) => error.code, "code", 422),
       );
     });
+  });
+
+  test("delayed reconnect snapshot preserves confirmed facts and replacement membership", () async {
+    final harness = _Harness(
+      initialReply: skir.WatchOrganizationServicesResponse.wrapList([
+        _service("one").toSkir(),
+        _service("removed").toSkir(),
+      ]),
+    );
+    addTearDown(harness.dispose);
+    await harness.start();
+    await _waitFor(() => harness.value.value?.length == 2);
+    final reply = Completer<Uint8List>();
+    harness.nats.registerHandler(_publishSubject, (_) => reply.future);
+    harness.nats
+      ..setConnectionState(const NatsConnecting())
+      ..setConnectionState(const NatsConnected());
+    await _waitFor(() => harness.nats.requests.length == 2);
+    final renamed = _service("one", name: "Confirmed rename", revision: 3);
+    harness.container
+        .read(resourceRepositoriesProvider)
+        .services(_organizationId)
+      ..acceptService(renamed)
+      ..acceptService(_service("removed", revision: 9));
+    await _waitFor(() => harness.value.value?.first.revision == 3);
+    reply.complete(
+      skir.WatchOrganizationServicesResponse.serializer.toBytes(
+        skir.WatchOrganizationServicesResponse.wrapList([
+          _service("one").toSkir(),
+        ]),
+      ),
+    );
+    await _waitFor(() => harness.value.value?.length == 1);
+    expect(harness.value.requireValue, [renamed]);
+    expect(
+      await harness.emit(
+        skir.OrganizationServicesChanged.wrapUpdate(
+          _service("one", name: "Later event", revision: 4).toSkir(),
+        ),
+      ),
+      [_service("one", name: "Later event", revision: 4)],
+    );
+    expect(
+      await harness.emit(
+        skir.OrganizationServicesChanged.wrapReplace([
+          _service("removed", revision: 1).toSkir(),
+        ]),
+      ),
+      [_service("removed", revision: 1)],
+    );
+  });
+
+  test("confirmed fact before initial snapshot enters the same reconciliation owner", () async {
+    final reply = Completer<Uint8List>();
+    final harness = _Harness();
+    harness.nats.registerHandler(_publishSubject, (_) => reply.future);
+    addTearDown(harness.dispose);
+    await harness.start();
+    final renamed = _service("one", name: "Confirmed first", revision: 2);
+    harness.container
+        .read(resourceRepositoriesProvider)
+        .services(_organizationId)
+        .acceptService(renamed);
+    await _waitFor(() => harness.value.value?.single.revision == 2);
+    reply.complete(
+      skir.WatchOrganizationServicesResponse.serializer.toBytes(
+        skir.WatchOrganizationServicesResponse.wrapList([
+          _service("one").toSkir(),
+        ]),
+      ),
+    );
+    await pumpEventQueue();
+    expect(harness.value.requireValue, [renamed]);
   });
 
   for (final auth in [
@@ -266,7 +323,7 @@ void main() {
         overrides: [
           userIdProvider.overrideWith((ref) async => auth.userId),
           organizationIdProvider.overrideWith((ref) => auth.organizationId),
-          natsProvider.overrideWithValue(nats),
+          natsProvider.overrideWith(() => FakeNats(nats)),
         ],
       );
       addTearDown(container.dispose);

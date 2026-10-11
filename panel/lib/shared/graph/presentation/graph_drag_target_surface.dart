@@ -1,6 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Render slots for the graph and its scene positioned drop target.

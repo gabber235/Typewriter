@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns raw query text and the parsed context sent to a [SearchSource].
@@ -19,9 +16,8 @@ class SourceController extends ChangeNotifier {
     _lastRawQuery = initialQuery;
     _lastSearchedContext = _parseContext(initialQuery);
 
-    source.initialize(_lastSearchedContext);
-
     _sourceSubscription = source.snapshots.listen(_onSourceSnapshot);
+    source.initialize(_lastSearchedContext);
   }
 
   final SearchSource source;

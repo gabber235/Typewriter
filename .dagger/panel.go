@@ -66,6 +66,7 @@ func (m *Typewriter) buildRunner(
 	panelSource := source.Directory("/panel", defaultWorkspaceOpts)
 	workspaceSource := dag.Directory().WithDirectory("panel", panelSource)
 	generated := m.panelGeneratorContainer(source, packageName).
+		WithFile("/tmp/normalize_generated_dart.dart", source.Directory("/services/protocol/transport-generator", defaultWorkspaceOpts).File("normalize_generated_dart.dart")).
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{"git", "init", "--quiet"}).
 		WithExec([]string{"git", "add", "--all"}).
@@ -76,7 +77,7 @@ func (m *Typewriter) buildRunner(
 		WithExec([]string{
 			"sh",
 			"-c",
-			"(git diff --name-only --diff-filter=ACM -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart'; git ls-files --others --exclude-standard -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart') | xargs -0 -r sed -i 's/[[:space:]]*$//'",
+			"(git diff --name-only --diff-filter=ACM -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart'; git ls-files --others --exclude-standard -z -- ':(glob)**/*.g.dart' ':(glob)**/*.freezed.dart') | xargs -0 -r dart /tmp/normalize_generated_dart.dart",
 		}).
 		WithWorkdir(dir).
 		WithExec([]string{"dart", "format", "--output=none", "."}).
@@ -160,8 +161,8 @@ authorization {
   users: [{
     nkey: "UD466L6EBCM3YY5HEGHJANNTN4LSKTSUXTH7RILHCKEQMQHTBNLHJJXT"
     permissions: {
-      publish: {allow: ["allowed.>", "_INBOX.integration.>"]}
-      subscribe: {allow: ["allowed.>", "_INBOX.integration.>"]}
+      publish: {allow: ["allowed.echo", "allowed.missing", "_INBOX.integration.*"]}
+      subscribe: {allow: ["allowed.echo", "_INBOX.integration.*"]}
     }
   }]
 }
@@ -174,15 +175,29 @@ authorization {
 			Args:          []string{"-c", "/etc/nats/nats.conf"},
 			UseEntrypoint: true,
 		})
+	native := dag.Container().
+		From("nats:2.15.0-alpine").
+		WithFile("/etc/nats/nats.conf", source.Directory("/panel", defaultWorkspaceOpts).
+			File("test/infrastructure/messaging/fixtures/nats_native.conf")).
+		WithExposedPort(4222).
+		AsService(dagger.ContainerAsServiceOpts{
+			Args:          []string{"-c", "/etc/nats/nats.conf"},
+			UseEntrypoint: true,
+		})
 
 	return m.panelContainer(source).
 		WithServiceBinding("nats", nats).
+		WithServiceBinding("nats-native", native).
 		WithEnvVariable("NATS_ADAPTER_URL", "nats://nats:4222").
+		WithEnvVariable("NATS_NATIVE_URL", "nats://nats-native:4222").
+		WithEnvVariable("NATS_NATIVE_ADMIN_USER", "fixture_admin").
+		WithEnvVariable("NATS_NATIVE_ADMIN_PASSWORD", "fixture_admin").
 		WithWorkdir("/workspace/panel").
 		WithExec([]string{
 			"flutter",
 			"test",
 			"--no-pub",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
+			"test/infrastructure/messaging/nats_native_authorization_integration_test.dart",
 		})
 }

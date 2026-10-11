@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":typewriter-api"))
+    implementation(project(":typewriter-contracts"))
     implementation("com.typewritermc:imprint-model")
     implementation(libs.ksp.api)
     implementation(libs.kotlinpoet)

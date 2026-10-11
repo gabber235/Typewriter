@@ -1,8 +1,7 @@
 //! Current organization read snapshots used by watch responses and recovery publication.
 //!
-//! Each snapshot reads current database state and its sequence together. A snapshot is a read
-//! model, not a mutation receipt and not historical result data recalled from an idempotent
-//! mutation. Conversion and publication remain caller responsibilities after the read succeeds.
+//! Each snapshot reads current database state and its sequence together. Conversion and
+//! publication remain caller responsibilities after the read succeeds.
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;

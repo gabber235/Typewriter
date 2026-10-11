@@ -10,13 +10,13 @@ class _ActivityDetails extends StatelessWidget {
   final LocalWorkState state;
   final LocalWorkCommands controller;
 
-  Future<void> _review(
-    BuildContext context,
-    LocalWorkResourceState resource,
-  ) async {
-    final source = controller.source(resource.key);
+  Future<void> _review(BuildContext context, WorkEntryState resource) async {
+    final source = controller.source(resource.id.identity as EditorResourceKey);
     if (source == null) return;
-    controller.retain(resource.key);
+    final host = controller.resources[resource.id.identity as EditorResourceKey]
+        ?.buildPortablePresentationHost();
+    if (host == null) return;
+    controller.retain(resource.id.identity as EditorResourceKey);
     try {
       await showAdvancedDialog<void>(
         context: context,
@@ -25,9 +25,7 @@ class _ActivityDetails extends StatelessWidget {
           content: SizedBox(
             width: 560,
             child: SingleChildScrollView(
-              child: ComposedEditor(
-                model: PresentationModel.editor(owner: source),
-              ),
+              child: PortablePresentationRenderer(host: host),
             ),
           ),
           actions: [
@@ -39,89 +37,14 @@ class _ActivityDetails extends StatelessWidget {
         ),
       );
     } finally {
-      controller.release(resource.key);
+      host.dispose();
+      controller.release(resource.id.identity as EditorResourceKey);
     }
-  }
-
-  String _resourceMessage(
-    LocalWorkResourceState resource,
-    EditorSource? source,
-    EditorSaveState? saveState,
-  ) {
-    final diagnostics = saveState?.diagnostics.isNotEmpty == true
-        ? saveState!.diagnostics
-        : source?.draftDiagnostics ?? const <TypeDiagnostic>[];
-    final diagnostic = diagnostics.isEmpty ? null : diagnostics.first;
-    return switch (resource.savePhase) {
-      EditorSavePhase.failed =>
-        diagnostic == null
-            ? "Save failed"
-            : "Save failed: ${diagnostic.message}",
-      EditorSavePhase.conflict =>
-        "Changed elsewhere. Resolve the conflict before saving.",
-      EditorSavePhase.repeatedContention =>
-        "Changed repeatedly elsewhere. Retry when other edits stop.",
-      EditorSavePhase.uncertain => "Outcome unknown. Verify before retrying.",
-      EditorSavePhase.deletedElsewhere => "Deleted elsewhere.",
-      _ =>
-        resource.commitPolicy == EditorCommitPolicy.applyResource
-            ? "Configuration draft"
-            : "Unsaved changes",
-    };
-  }
-
-  List<_ActivityDetail> _resourceDetails(
-    LocalWorkResourceState resource,
-    EditorSource? source,
-    EditorSaveState? saveState,
-  ) {
-    final diagnostics = saveState?.diagnostics.isNotEmpty == true
-        ? saveState!.diagnostics
-        : source?.draftDiagnostics ?? const <TypeDiagnostic>[];
-    final details = <_ActivityDetail>[
-      _ActivityDetail("Phase", resource.savePhase.name),
-      if (saveState?.path case final path?)
-        _ActivityDetail("Path", path.toString()),
-      if (_canonicalSubmissionId(saveState?.submissionId)
-          case final submissionId?)
-        _ActivityDetail("Submission", submissionId),
-      if (saveState?.contention case final contention?) ...[
-        _ActivityDetail("Contention", contention.kind.name),
-        _ActivityDetail("Attempts", "${contention.attempts} total"),
-        _ActivityDetail(
-          "Retries",
-          "${contention.retryLimit} of ${contention.retryLimit}",
-        ),
-        if (contention.expectedVersion case final expected?)
-          _ActivityDetail("Expected version", expected.toString()),
-        if (contention.observedVersion case final observed?)
-          _ActivityDetail("Observed version", observed.toString()),
-        _ActivityDetail(
-          "Contention paths",
-          contention.paths.map((path) => path.toString()).join(", "),
-        ),
-      ],
-      for (final diagnostic in diagnostics) ...[
-        _ActivityDetail("Reason", diagnostic.message),
-        _ActivityDetail("Code", diagnostic.code.name),
-        if (diagnostic.pathPresent)
-          _ActivityDetail("Diagnostic path", diagnostic.path.toString()),
-      ],
-    ];
-    if (source == null) {
-      details.add(
-        const _ActivityDetail(
-          "Source",
-          "The draft source is no longer available.",
-        ),
-      );
-    }
-    return details;
   }
 
   @override
   Widget build(BuildContext context) {
-    final drafts = state.resources.values.toList();
+    final drafts = state.entries.values.toList();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -168,19 +91,12 @@ class _ActivityDetails extends StatelessWidget {
               for (final resource in drafts)
                 Builder(
                   builder: (context) {
-                    final source = controller.source(resource.key);
-                    final saveState = source?.saveState(DataPath.root);
-                    final message = _resourceMessage(
-                      resource,
-                      source,
-                      saveState,
-                    );
-                    final details =
-                        _needsResourceDetails(resource, source, saveState)
-                        ? _resourceDetails(resource, source, saveState)
-                        : const <_ActivityDetail>[];
+                    final message = resource.phase;
+                    final details = resource.details
+                        .map((fact) => _ActivityDetail(fact.label, fact.value))
+                        .toList();
                     return _ActivityCard(
-                      key: ValueKey(("resource", resource.key)),
+                      key: ValueKey(("resource", resource.id)),
                       title: resource.label,
                       message: message,
                       details: details,
@@ -195,13 +111,17 @@ class _ActivityDetails extends StatelessWidget {
                         resource,
                       ]),
                       actions: [
-                        if (source != null &&
-                            saveState?.canRetry == true &&
-                            !source.readOnly)
+                        if (resource.canSave)
+                          TextButton.icon(
+                            icon: const Icon(Icons.save_outlined, size: 16),
+                            onPressed: () => controller.save(resource.id),
+                            label: const Text("Save"),
+                          ),
+                        if (resource.canRetry)
                           TextButton.icon(
                             icon: const Icon(Icons.refresh, size: 16),
-                            onPressed: source.flush,
-                            label: const Text("Retry save"),
+                            onPressed: () => controller.retry(resource.id),
+                            label: const Text("Retry"),
                           ),
                         if (resource.destination ==
                             LocalWorkDestinationState.available)
@@ -209,31 +129,28 @@ class _ActivityDetails extends StatelessWidget {
                             icon: const Icon(Icons.arrow_outward, size: 16),
                             onPressed: () async {
                               onClose();
-                              await controller.open(resource.key);
+                              await controller.open(resource.id);
                             },
-                            label: const Text("Return to draft"),
+                            label: const Text("Open work"),
                           )
-                        else if (resource.destination ==
-                            LocalWorkDestinationState.unavailable)
+                        else if (resource.id.identity is EditorResourceKey &&
+                            resource.destination ==
+                                LocalWorkDestinationState.unavailable)
                           TextButton.icon(
                             icon: const Icon(Icons.edit_outlined, size: 16),
                             onPressed: () => _review(context, resource),
                             label: const Text("Review draft"),
                           ),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: context.theme.colorScheme.error,
+                        if (resource.canDiscard)
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: context.theme.colorScheme.error,
+                            ),
+                            onPressed: resource.canDiscard
+                                ? () => controller.discard(resource.id)
+                                : null,
+                            child: const Text("Discard"),
                           ),
-                          onPressed:
-                              resource.readOnly ||
-                                  {
-                                    EditorSavePhase.saving,
-                                    EditorSavePhase.uncertain,
-                                  }.contains(resource.savePhase)
-                              ? null
-                              : () => controller.discard(resource.key),
-                          child: const Text("Discard"),
-                        ),
                       ],
                     );
                   },
@@ -261,13 +178,15 @@ class _ActivityDetails extends StatelessWidget {
                     if (submission.integrationFailed)
                       TextButton.icon(
                         icon: const Icon(Icons.refresh, size: 16),
-                        onPressed: () => controller.retry(submission.id),
+                        onPressed: () =>
+                            controller.retrySubmission(submission.id),
                         label: const Text("Refresh saved result"),
                       )
                     else if (submission.canReplay)
                       TextButton.icon(
                         icon: const Icon(Icons.refresh, size: 16),
-                        onPressed: () => controller.retry(submission.id),
+                        onPressed: () =>
+                            controller.retrySubmission(submission.id),
                         label: const Text("Retry captured request"),
                       )
                     else if (!submission.sending &&

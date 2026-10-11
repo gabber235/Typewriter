@@ -2,14 +2,24 @@
 
 ## Dart imports
 
-For internal panel APIs, always prefer the main package barrel:
+For panel APIs and external runtime dependencies, use the main package barrel:
 
 ```dart
 import "package:typewriter_panel/typewriter_panel.dart";
 ```
 
-Do not replace the main barrel with individual `typewriter_panel` imports.
-External package imports remain direct.
+Import Skir declarations and runtime APIs through their separate named library:
+
+```dart
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;
+```
+
+Keep dependency exports and collision names in `lib/dependencies.dart`. Keep
+generated protocol exports in the Skir library. These library boundaries own
+the direct dependency imports. Generated files retain their generator imports.
+Testing and Widgetbook tools stay in their own packages and may be imported
+directly. Do not add individual panel imports or named runtime imports to
+consumer files.
 
 ## Riverpod providers
 

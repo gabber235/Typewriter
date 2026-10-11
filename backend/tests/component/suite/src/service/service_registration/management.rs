@@ -4,9 +4,9 @@ use typewriter_component_test::prelude::skir_record_id;
 use wasmcloud_utils::skir::base::{
     kernel::v1::record_id::RecordId,
     service::v1::organization::{
-        ServiceUpdateValidationError, UpdateOrganizationServiceRequest,
-        UpdateOrganizationServiceResponse, WatchOrganizationServicesRequest,
-        WatchOrganizationServicesResponse,
+        OrganizationServicesChanged, ServiceUpdateValidationError,
+        UpdateOrganizationServiceRequest, UpdateOrganizationServiceResponse,
+        WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
 };
 
@@ -72,12 +72,12 @@ async fn update_renames_owned_service_and_publishes_new_value(
         .messaging_mock()?
         .expect_publish("typewriter.to.organization.test_org.services.watch")
         .body_matches(|body| {
-            WatchOrganizationServicesResponse::serializer()
+            OrganizationServicesChanged::serializer()
                 .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
                 .is_ok_and(|response| {
                     matches!(
                         response,
-                        WatchOrganizationServicesResponse::Update(service)
+                        OrganizationServicesChanged::Update(service)
                             if service.name == "new_name" && service.revision == 2
                     )
                 })
@@ -87,7 +87,6 @@ async fn update_renames_owned_service_and_publishes_new_value(
         context,
         "typewriter.from.user.actor.organization.test_org.services.update",
         &UpdateOrganizationServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: service_id("managed"),
             expected_revision: 1,
             name: "new_name".into(),
@@ -128,7 +127,6 @@ async fn update_cannot_modify_service_from_another_organization(
         context,
         "typewriter.from.user.actor.organization.test_org.services.update",
         &UpdateOrganizationServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: service_id("managed"),
             expected_revision: 1,
             name: "new_name".into(),
@@ -168,7 +166,6 @@ async fn stale_update_returns_canonical_conflict_without_writing(
         context,
         "typewriter.from.user.actor.organization.test_org.services.update",
         &UpdateOrganizationServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: service_id("managed"),
             expected_revision: 3,
             name: "stale_name".into(),
@@ -216,7 +213,6 @@ async fn update_rejects_noncanonical_snake_case_name(
         context,
         "typewriter.from.user.actor.organization.test_org.services.update",
         &UpdateOrganizationServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: service_id("managed"),
             expected_revision: 1,
             name: "invalid__name".into(),

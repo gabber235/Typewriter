@@ -1,6 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A placement adjustment applied after the preferred side overflows.
@@ -155,10 +152,10 @@ Size _applySharedAxisSizing({
 Size _applyInitialSizeConstraints(Size size, AnchoredOverlayConfig config) {
   final constrainedWidth = config.maxWidth == null
       ? size.width
-      : math.min(size.width, config.maxWidth!);
+      : min(size.width, config.maxWidth!);
   final constrainedHeight = config.maxHeight == null
       ? size.height
-      : math.min(size.height, config.maxHeight!);
+      : min(size.height, config.maxHeight!);
   return Size(constrainedWidth, constrainedHeight);
 }
 
@@ -194,7 +191,7 @@ Offset _clampOffset(Rect boundaryRect, Offset offset, Size size) {
 
 Size _clampSizeToBoundary(Rect boundaryRect, Size size) {
   return Size(
-    math.min(size.width, boundaryRect.width),
-    math.min(size.height, boundaryRect.height),
+    min(size.width, boundaryRect.width),
+    min(size.height, boundaryRect.height),
   );
 }

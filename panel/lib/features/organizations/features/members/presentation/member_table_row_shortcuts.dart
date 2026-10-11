@@ -1,8 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Adds the member row's keyboard contract without changing its rendering.
@@ -92,9 +87,10 @@ class MemberTableRowShortcuts extends ConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () {
         onRemoveFromSelection();
-        return ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        return ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

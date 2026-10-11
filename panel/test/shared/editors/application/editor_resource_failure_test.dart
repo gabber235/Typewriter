@@ -1,32 +1,29 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+
+import "../../../support/editor_fixture.dart";
 
 const _key = EditorResourceKey(
   scope: "original organization",
   identity: "resource",
 );
-final _title = DataPath.root.field("title");
-
-RecordValue _value(String title) => RecordValue({"title": StringValue(title)});
+final _title = editorRootPath.field("title");
 
 EditorSnapshot _snapshot({String title = "Original", int revision = 1}) =>
-    DocumentEditorSnapshot(
-      EditorDocument(
-        rootType: RecordType(
-          fields: const {"title": TypeField(name: "title", type: StringType())},
-        ),
-        typeCatalog: const TypeCatalog([]),
-        confirmedValue: _value(title),
-        revision: revision,
+    FakeEditorSnapshot(
+      recordEditorDocument(
+        {"title": skir.DataValue.wrapStringValue(title)},
+        {"title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)},
+        revision,
       ),
+      validation: acceptTestEditorMutation,
     );
 
 TransactionalEditorSource _draft(
-  LocalWorkSession workspace,
+  ScopedWorkSession workspace,
   EditableResource resource,
 ) {
   final source = workspace.editor(
@@ -39,20 +36,21 @@ TransactionalEditorSource _draft(
     ),
   ) as TransactionalEditorSource;
   workspace.retain(resource.key);
-  source.update(_title, const StringValue("Draft"));
+  source.update(_title, skir.DataValue.wrapStringValue("Draft"));
   return source;
 }
 
 void main() {
   test("validation diagnostics survive preparation without a commit", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
-    const diagnostic = TypeDiagnostic(
-      code: TypeDiagnosticCode.invalidValue,
+    const diagnostic = EditorDiagnostic(
+      code: EditorDiagnosticCode.invalidValue,
       message: "The resource is invalid",
     );
     final snapshot = FakeEditorSnapshot(
       _snapshot().document,
+      validation: acceptTestEditorMutation,
       draftValidation: (_) => const [diagnostic],
     );
     final resource = FakeEditableResource(
@@ -70,18 +68,18 @@ void main() {
       ),
     ) as TransactionalEditorSource;
     workspace.retain(_key);
-    source.update(_title, const StringValue("Draft"));
+    source.update(_title, skir.DataValue.wrapStringValue("Draft"));
 
     final result = await source.flush();
 
     expect(result, isA<MutationInvalid>());
-    expect(source.saveState(DataPath.root).diagnostics, [diagnostic]);
+    expect(source.saveState(editorRootPath).diagnostics, [diagnostic]);
   });
 
   test(
     "unexpected preparation failure reports cause and sanitizes result",
     () async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       addTearDown(workspace.dispose);
       final cause = StateError("private preparation detail");
       final reports = <FlutterErrorDetails>[];
@@ -98,7 +96,7 @@ void main() {
 
       final result = await source.flush();
       final message = source
-          .saveState(DataPath.root)
+          .saveState(editorRootPath)
           .diagnostics
           .single
           .message;
@@ -113,7 +111,7 @@ void main() {
   );
 
   test("refresh conflict returns typed failure without reporting", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final reports = <FlutterErrorDetails>[];
     final previousErrorHandler = FlutterError.onError;
@@ -127,12 +125,15 @@ void main() {
     final source = _draft(workspace, resource);
 
     expect(await source.flush(), isA<MutationUnavailable>());
-    expect(source.value(_title).valueOrNull, const StringValue("Draft"));
+    expect(
+      source.value(_title).valueOrNull,
+      skir.DataValue.wrapStringValue("Draft"),
+    );
     expect(reports, isEmpty);
   });
 
   test("confirmed deletion returns typed failure without reporting", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     addTearDown(workspace.dispose);
     final reports = <FlutterErrorDetails>[];
     final previousErrorHandler = FlutterError.onError;
@@ -147,14 +148,14 @@ void main() {
 
     expect(await source.flush(), isA<MutationUnavailable>());
     expect(
-      source.saveState(DataPath.root).phase,
+      source.saveState(editorRootPath).phase,
       EditorSavePhase.deletedElsewhere,
     );
     expect(reports, isEmpty);
   });
 
   test("workspace disposal returns typed failure without reporting", () async {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final reports = <FlutterErrorDetails>[];
     final previousErrorHandler = FlutterError.onError;
     FlutterError.onError = reports.add;

@@ -1,35 +1,60 @@
-import "dart:async";
-
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
 ///
-/// Creation starts from a validated identifier dialog, submits through
-/// [CanonicalTags], then selects the returned resource only after persistence
-/// succeeds. Existing tags are rendered by [TagGraph], which handles layout
-/// gestures through the same provider.
+/// Creation prepares authored defaults, commits the unfinished resource, then
+/// opens its normal inspector. Existing tags are rendered by [TagGraph], which
+/// handles placement gestures through the same authoring session.
 @RoutePage()
 class TagsPage extends HookConsumerWidget {
   const TagsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tagsAsync = ref.watch(projectedTagsProvider);
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    final tagsAsync = ref.watch(workingTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
+    final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
+    final definitionId = coreTagResourceDefinition;
+    final definition = document?.catalog.snapshot.resourceDefinitions
+        .where((candidate) => candidate.id == definitionId)
+        .firstOrNull;
+    final selection = definition == null
+        ? null
+        : document?.catalog.beginSelection(definition.root);
+    final canCreate =
+        scope != null &&
+        selection != null &&
+        selection != skir.TypeSelection.unknown;
 
     Future<void> handleCreateTag() async {
-      final name = await _showTagNameDialog(context);
-      if (name == null || name.isEmpty) return;
-      final newTag = await ref
-          .read(canonicalTagsProvider.notifier)
-          .createTag(name: name, preferredGraphAnchor: viewportCenter.value);
-      ref.read(selectionProvider.notifier).select(TagIdentifier(newTag.tagId));
+      final current = definition == null
+          ? null
+          : ref
+                .read(selectedWorkingAuthoringDocumentProvider)
+                .value
+                ?.catalog
+                .beginSelection(definition.root);
+      if (current == null || current == skir.TypeSelection.unknown) {
+        throw StateError("Tag creation is unavailable");
+      }
+      final created = await ref
+          .read(resourceCreationProvider(scope!))
+          .create(
+            context: context,
+            request: ResourceCreationRequest(
+              definition: definitionId,
+              configuration: current,
+            ),
+          );
+      if (created == null) return;
+      ref
+          .read(selectionProvider.notifier)
+          .select(
+            AuthoringResourceIdentifier.inScope(created.scope, created.id),
+          );
     }
 
     return Pane(
@@ -56,12 +81,12 @@ class TagsPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: (_) => handleCreateTag(),
+              onInvoke: canCreate ? (_) => handleCreateTag() : null,
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: handleCreateTag,
+            onPressed: canCreate ? handleCreateTag : null,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -77,7 +102,7 @@ class TagsPage extends HookConsumerWidget {
                         return EmptyScreen(
                           title: "No tags yet",
                           buttonText: "Create Tag",
-                          onPressed: handleCreateTag,
+                          onPressed: canCreate ? handleCreateTag : null,
                         );
                       }
                       return TagGraph(
@@ -93,64 +118,6 @@ class TagsPage extends HookConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  /// Collects an identifier compatible with the inspector's name field.
-  ///
-  /// Cancellation and invalid submission return null. The route owns only this
-  /// transient dialog value; canonical creation remains in the application
-  /// provider.
-  Future<String?> _showTagNameDialog(BuildContext context) async {
-    return showAdvancedDialog<String>(
-      context: context,
-      builder: (context) {
-        return HookConsumer(
-          builder: (context, ref, child) {
-            final controller = useTextEditingController();
-            final isValid = useListenableSelector(
-              controller,
-              () => controller.text.isValidIdentifier,
-            );
-            final focusNode = useFocusNode();
-
-            return AlertDialog(
-              title: const Text("Create Tag"),
-              content: EditorTextField(
-                focusNode: focusNode,
-                controller: controller,
-                autofocus: EditorTextFieldAutoFocus.textField,
-                decoration: const InputDecoration(hintText: "Enter tag name"),
-                inputFormatters: identifierInputFormats.toTextInputFormatters(),
-                onSubmitted: (value) {
-                  if (!isValid) return;
-                  Navigator.of(context).pop(value);
-                },
-              ),
-              actions: [
-                TextButton.icon(
-                  icon: const Icones(Fa6Solid.xmark),
-                  label: const Text("Cancel"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.color,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                LoadingButton.filledIcon(
-                  onPressed: isValid
-                      ? () => Navigator.of(context).pop(controller.text)
-                      : null,
-                  label: const Text("Create"),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-            );
-          },
-        );
-      },
     );
   }
 }

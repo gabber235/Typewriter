@@ -1,0 +1,52 @@
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.ksp)
+}
+
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io") {
+        content {
+            includeModule("com.github.gabber235", "skir-kotlin-client")
+        }
+    }
+}
+
+val repository = file(providers.gradleProperty("typewriterRepository").get())
+
+dependencies {
+    implementation(files(repository.resolve("services/sdk/typewriter-api/build/libs/typewriter-api.jar")))
+    implementation(files(repository.resolve("services/sdk/typewriter-contracts/build/libs/typewriter-contracts.jar")))
+    implementation(files(repository.resolve("services/protocol/build/libs/protocol.jar")))
+    implementation(files(repository.resolve("services/imprint/model/build/libs/imprint-model-1000.0.0.jar")))
+    implementation(libs.kotlin.serialize.core)
+    implementation(libs.kotlin.coroutines.core)
+    implementation(libs.skir.client)
+
+    ksp(files(repository.resolve("services/sdk/typewriter-codegen/build/libs/typewriter-codegen.jar")))
+    ksp(files(repository.resolve("services/sdk/typewriter-contracts/build/libs/typewriter-contracts.jar")))
+    ksp(files(repository.resolve("services/imprint/model/build/libs/imprint-model-1000.0.0.jar")))
+    ksp(libs.kotlinpoet)
+    ksp(libs.kotlinpoet.ksp)
+    ksp(libs.kotlin.serialize.cbor)
+}
+
+ksp {
+    arg("typewriter.artifactId", "typewritermc:compiler-fixture")
+    arg("typewriter.sourcePart", "fixture")
+    arg("typewriter.claimDependencyClosure", "false")
+}
+
+kotlin {
+    jvmToolchain(25)
+}
+
+tasks.register<JavaExec>("verifyFixture") {
+    dependsOn(tasks.named("jar"))
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("fixture.FixtureKt")
+    doFirst {
+        val artifact = tasks.named<org.gradle.jvm.tasks.Jar>("jar").get().archiveFile.get().asFile
+        systemProperty("fixtureArtifact", artifact.absolutePath)
+    }
+}

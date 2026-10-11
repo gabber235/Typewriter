@@ -1,6 +1,5 @@
-import "package:flutter/scheduler.dart";
-import "package:flutter/widgets.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Composes the selected resources into one inspector presentation graph.
@@ -44,8 +43,8 @@ final class InspectionSession extends ChangeNotifier {
   final EditorOwnerRegistry owners;
   InspectionBuildContext? _buildContext;
 
-  Widget? header;
-  PresentationModel? model;
+  List<PortablePresentationHost> hosts = const [];
+  Widget? body;
 
   void _refresh() {
     final selection = ref.read(inspectedSelectionProvider).value;
@@ -67,14 +66,16 @@ final class InspectionSession extends ChangeNotifier {
     var committed = false;
     try {
       final content = _buildSelection(selection, next);
-      final nextModel = content?.model.copyWith(ownerLabels: refresh.labels);
 
       refresh.commit();
       committed = true;
       final previous = _buildContext;
       _buildContext = next;
-      header = content?.header;
-      model = nextModel;
+      hosts = content == null
+          ? const []
+          : [content.host, ...content.additionalHosts].nonNulls.toList();
+      body = content?.body;
+      previous?.releaseHosts(hosts);
       previous?.dispose();
       notifyListeners();
     } on Object {
@@ -94,126 +95,105 @@ final class InspectionSession extends ChangeNotifier {
   ) {
     if (selection.isEmpty) return null;
     if (selection.length == 1) {
-      return selection.single.buildInspection(context.owners);
+      return context.ownHosts(selection.single.buildInspection(context.owners));
     }
 
-    final editable = selection.whereType<EditableSelectable>().toList();
-    final definition = editable.length == selection.length
-        ? editable.sharedMultiInspection
-        : const TypeResult<MultiInspectionDefinition?>.success(null);
-    if (definition.valueOrNull case final shared?) {
-      final composed = context.compose(shared, editable);
-      if (composed.valueOrNull case final content?) return content;
-      return _buildStructural(
-        selection,
-        context,
-        diagnostics: composed.diagnostics,
+    if (_buildSharedPortable(selection, context) case final content?) {
+      return context.ownHosts(content);
+    }
+
+    return _buildStructural(selection, context);
+  }
+
+  InspectionContent? _buildSharedPortable(
+    List<InspectableSelectable> selection,
+    InspectionBuildContext context,
+  ) {
+    final candidates = selection
+        .map(
+          (item) =>
+              _indexPortableSurfaces(item.portableMultiInspectionSurfaces),
+        )
+        .toList();
+    if (candidates.any((surfaces) => surfaces.isEmpty)) return null;
+
+    final plans = <_PortableMultiInspectionPlan>[];
+    for (final id in candidates.first.keys) {
+      final members = [for (final surfaces in candidates) ?surfaces[id]];
+      if (members.length != selection.length) continue;
+      final first = members.first;
+      if (members.any(
+        (candidate) =>
+            !first.isCompatibleWith(candidate) ||
+            !candidate.isCompatibleWith(first),
+      )) {
+        continue;
+      }
+      final rootType = members.first.rootType;
+      if (members.any((candidate) => candidate.rootType != rootType)) continue;
+      final catalog = _mergePortableCatalogs(members);
+      if (catalog == null) continue;
+      plans.add(
+        _PortableMultiInspectionPlan(
+          members: members,
+          rootType: rootType,
+          catalog: catalog,
+        ),
       );
     }
-    return _buildStructural(
-      selection,
-      context,
-      diagnostics: definition.diagnostics,
+    if (plans.isEmpty) return null;
+
+    final hosts = <PortablePresentationHost>[];
+    for (final plan in plans) {
+      final owners =
+          (Set<EditorSource>.identity()..addAll(
+                plan.members.map(
+                  (surface) => context.owners.editor(surface.target),
+                ),
+              ))
+              .toList();
+      final combined = context.multiEditorForOwners(
+        owners,
+        rootType: plan.rootType,
+        catalog: plan.catalog,
+      );
+      final host = plan.members.first.buildHost(
+        plan.members,
+        combined,
+        () async {
+          await Future.wait(owners.map((owner) => owner.flush()));
+        },
+      );
+      context.ownHosts(InspectionContent(host: host));
+      hosts.add(host);
+    }
+    return InspectionContent(
+      host: hosts.first,
+      additionalHosts: hosts.skip(1).toList(),
     );
   }
 
   InspectionContent _buildStructural(
     List<InspectableSelectable> selection,
-    InspectionBuildContext context, {
-    List<TypeDiagnostic> diagnostics = const [],
-  }) {
-    final contents = selection
-        .map((item) => item.buildInspection(context.owners))
-        .toList();
-    final model = _combine(
-      contents.map((content) => content.model).toList(),
-      context,
-    );
-    return InspectionContent(
-      model: model.copyWith(
-        diagnostics: [...model.diagnostics, ...diagnostics],
-      ),
-    );
-  }
-
-  PresentationModel _combine(
-    List<PresentationModel> models,
     InspectionBuildContext context,
   ) {
-    final catalog = TypeCatalog(
-      models.expand((model) => model.catalog.definitions).toSet().toList(),
-    );
-    final inputsBySelection = models
-        .map(
-          (model) => model.inputs.values
-              .whereType<PresentationEditInput>()
-              .map(
-                (input) => input.path == DataPath.root
-                    ? input.owner
-                    : ProjectedEditOwner(input.owner, input.path),
-              )
-              .toSet()
-              .toList(),
-        )
-        .toList();
-    final combinations = <List<EditOwner>>[];
-    if (inputsBySelection.every((inputs) => inputs.length == 1)) {
-      combinations.add(
-        inputsBySelection.map((inputs) => inputs.single).toSet().toList(),
-      );
-    } else {
-      for (final first in inputsBySelection.first) {
-        final matches = <EditOwner>[first];
-        for (final candidates in inputsBySelection.skip(1)) {
-          final match = candidates
-              .where(
-                (owner) => typeExpressionsEqual(owner.rootType, first.rootType),
-              )
-              .firstOrNull;
-          if (match != null) matches.add(match);
-        }
-        if (matches.length == models.length) {
-          combinations.add(matches.toSet().toList());
-        }
-      }
+    final contents = <InspectionContent>[];
+    for (final item in selection) {
+      contents.add(context.ownHosts(item.buildInspection(context.owners)));
     }
-    final inputs = <BindingId, PresentationInput>{};
-    final children = <PresentationNode>[];
-    for (final members in combinations) {
-      final types = members
-          .map(
-            (owner) => owner.rootType is NamedType
-                ? TypeRegistry(owner.typeCatalog)
-                          .resolve(owner.rootType as NamedType)
-                          .valueOrNull
-                          ?.representation ??
-                      owner.rootType
-                : owner.rootType,
-          )
-          .toList();
-      final common = types.commonEditableProjection().valueOrNull;
-      if (common == null) continue;
-      final owner = context.multiEditorForOwners(
-        members,
-        rootType: common,
-        typeCatalog: catalog,
-      );
-      final id = BindingId(inputs.length);
-      inputs[id] = PresentationInput.edit(owner);
-      children.add(
-        common.generateDefaultPresentation(
-          binding: BindingReference(bindingId: id),
-          nodeId: "selection.${id.value}",
-        ),
-      );
-    }
-    return PresentationModel(
-      catalog: catalog,
-      inputs: inputs,
-      root: PresentationNode(
-        id: "selection",
-        element: ColumnElement(children: children),
-      ),
+    final bodies = contents.map((content) => content.body).nonNulls.toList();
+    final hosts = [
+      for (final content in contents)
+        ...[content.host, ...content.additionalHosts].nonNulls,
+    ];
+    return InspectionContent(
+      additionalHosts: hosts,
+      body: bodies.isEmpty
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: bodies,
+            ),
     );
   }
 
@@ -235,12 +215,48 @@ final class InspectionSession extends ChangeNotifier {
   }
 }
 
+Map<Object, PortableMultiInspectionSurface> _indexPortableSurfaces(
+  Iterable<PortableMultiInspectionSurface> surfaces,
+) {
+  final indexed = <Object, PortableMultiInspectionSurface>{};
+  for (final surface in surfaces) {
+    if (indexed.containsKey(surface.id)) {
+      throw StateError("Portable inspection surface ids must be unique");
+    }
+    indexed[surface.id] = surface;
+  }
+  return indexed;
+}
+
+CheckedEditorCatalog? _mergePortableCatalogs(
+  List<PortableMultiInspectionSurface> surfaces,
+) {
+  final catalog = surfaces.first.catalog;
+  return surfaces.every(
+        (surface) => surface.catalog.snapshot == catalog.snapshot,
+      )
+      ? catalog
+      : null;
+}
+
+final class _PortableMultiInspectionPlan {
+  const _PortableMultiInspectionPlan({
+    required this.members,
+    required this.rootType,
+    required this.catalog,
+  });
+
+  final List<PortableMultiInspectionSurface> members;
+  final skir.TypeUse rootType;
+  final CheckedEditorCatalog catalog;
+}
+
 /// Restores a resource selection and its route without retaining an inspector.
 ///
 /// Editor resources use this destination after the inspector graph is rebuilt
 /// or closed. It observes route and selection state, but owns neither; closing
 /// it releases only those listeners.
-final class InspectorDestination extends EditorDestination {
+final class InspectorDestination extends WorkDestination {
   InspectorDestination({
     required this.container,
     required this.router,

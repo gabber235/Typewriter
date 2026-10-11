@@ -1,14 +1,13 @@
 package com.typewritermc.realm
 
-import com.typewritermc.discovery.DeploymentDiscoverySnapshot
-import com.typewritermc.elements.ElementCatalog
-import com.typewritermc.realm.routes.RealmAddress
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.catalog.installTestCatalog
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
-import com.typewritermc.types.TypeCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -20,25 +19,26 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
-import skirout.editor.v1.catalog.CatalogWatchUpdate
+import skirout.editor.v1.catalog.CatalogInvalidated
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import com.typewritermc.discovery.CatalogGeneration as DiscoveryGeneration
 
 val RealmCatalogInvalidationProcessTest by testSuite {
-    test("retries snapshot changes without a watch request") {
+    test("retries the installed generation announcement without a watch request") {
         runBlocking {
             val telemetry = TelemetryTestHarness.create()
             val transport = FakeMessageTransport()
             val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val snapshots = RealmDiscoverySnapshotStore()
-            val process = RealmCatalogInvalidationProcess(snapshots, scope, telemetry.telemetry)
+            val catalogs = RealmCatalogStore()
+            catalogs.installTestCatalog("initial")
+            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
             try {
                 transport.failNextPublish(TransportError.Unavailable())
-                process.replaceCommunicator(communicator, RealmAddress("realm", "organization"))
-
-                snapshots.replace(snapshot("next"))
+                process.replaceCommunicator(
+                    communicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
 
                 val publication =
                     withTimeout(2.seconds) {
@@ -57,41 +57,53 @@ val RealmCatalogInvalidationProcessTest by testSuite {
                         }
                         error("Publication wait ended unexpectedly")
                     }
-                val update = CatalogWatchUpdate.serializer.fromBytes(publication.message.payload.toByteArray())
+                val update = CatalogInvalidated.serializer.fromBytes(publication.message.payload.toByteArray())
 
-                (update as CatalogWatchUpdate.InvalidatedWrapper).value.generation.value shouldBe "next"
+                update.generation.value shouldBe "initial"
             } finally {
                 process.stop()
                 scope.cancel()
+                catalogs.close()
                 transport.close()
                 telemetry.close()
             }
         }
     }
 
-    test("publishes a rollback to the communicator baseline generation") {
+    test("announces the installed generation again when the communicator changes") {
         runBlocking {
             val telemetry = TelemetryTestHarness.create()
             val transport = FakeMessageTransport()
             val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
+            val replacementTransport = FakeMessageTransport()
+            val replacementCommunicator = Communicator(replacementTransport, telemetry.telemetry, ContextPropagators.noop())
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-            val snapshots = RealmDiscoverySnapshotStore()
-            val process = RealmCatalogInvalidationProcess(snapshots, scope, telemetry.telemetry)
+            val catalogs = RealmCatalogStore()
+            catalogs.installTestCatalog("a")
+            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
             try {
-                snapshots.replace(snapshot("a"))
-                process.replaceCommunicator(communicator, RealmAddress("realm", "organization"))
+                process.replaceCommunicator(
+                    communicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
+                val first = awaitPublicationCount(transport, 1)
+                val firstUpdate = CatalogInvalidated.serializer.fromBytes(first.message.payload.toByteArray())
 
-                snapshots.replace(snapshot("b"))
-                awaitPublicationCount(transport, 1)
-                snapshots.replace(snapshot("a"))
-                val publication = awaitPublicationCount(transport, 2)
-                val update = CatalogWatchUpdate.serializer.fromBytes(publication.message.payload.toByteArray())
+                process.replaceCommunicator(
+                    replacementCommunicator,
+                    RealmRouteScope(organizationId = "organization", realmId = "realm"),
+                )
+                val publication = awaitPublicationCount(replacementTransport, 1)
+                val update = CatalogInvalidated.serializer.fromBytes(publication.message.payload.toByteArray())
 
-                (update as CatalogWatchUpdate.InvalidatedWrapper).value.generation.value shouldBe "a"
+                firstUpdate.generation.value shouldBe "a"
+                update.generation.value shouldBe "a"
             } finally {
                 process.stop()
                 scope.cancel()
+                catalogs.close()
                 transport.close()
+                replacementTransport.close()
                 telemetry.close()
             }
         }
@@ -118,16 +130,3 @@ private suspend fun awaitPublicationCount(
         }
         error("Publication wait ended unexpectedly")
     } ?: error("Expected $count catalog invalidations but observed ${transport.actions}.")
-
-private fun snapshot(generation: String): RealmDiscoverySnapshot =
-    RealmDiscoverySnapshot(
-        discovery =
-            DeploymentDiscoverySnapshot(
-                generation = DiscoveryGeneration(generation),
-                artifacts = emptyList(),
-                sourceParts = emptyList(),
-                types = TypeCatalog(emptyList()),
-                diagnostics = emptyList(),
-            ),
-        elements = ElementCatalog(emptyList()),
-    )

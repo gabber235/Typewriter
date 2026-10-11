@@ -20,141 +20,9 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface BindingId_OrMutable {
-    val value: kotlin.Long;
-
-    fun toFrozen(): skirout.editor.v1.binding.BindingId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class BindingId private constructor(
-    override val value: kotlin.Long,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingId>? =
-        null,
-): skirout.editor.v1.binding.BindingId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.Long,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.Long =
-            this.value,
-    ) = skirout.editor.v1.binding.BindingId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.binding.BindingId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.binding.BindingId.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [BindingId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.Long =
-            0L,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingId>? =
-            null,
-    ): skirout.editor.v1.binding.BindingId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.binding.BindingId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.binding.BindingId(
-                0L,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [BindingId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.Long =
-                0L,
-        ) = skirout.editor.v1.binding.BindingId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/binding.skir:BindingId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [BindingId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [BindingId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
 sealed interface BindingRef_OrMutable {
-    val path: skirout.editor.v1.path.DataPath_OrMutable;
-    val bindingId: skirout.editor.v1.binding.BindingId_OrMutable;
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.binding.BindingRef;
 }
@@ -162,16 +30,16 @@ sealed interface BindingRef_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class BindingRef private constructor(
-    override val path: skirout.editor.v1.path.DataPath,
-    override val bindingId: skirout.editor.v1.binding.BindingId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingRef>? =
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    override val bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingRef>? =
         null,
 ): skirout.editor.v1.binding.BindingRef_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        path: skirout.editor.v1.path.DataPath_OrMutable,
-        bindingId: skirout.editor.v1.binding.BindingId_OrMutable,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingRef>? =
             null,
     ): this(
@@ -193,9 +61,9 @@ class BindingRef private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        path: skirout.editor.v1.path.DataPath_OrMutable =
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
             this.path,
-        bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
+        bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
             this.bindingId,
     ) = skirout.editor.v1.binding.BindingRef(
         path.toFrozen(),
@@ -217,7 +85,7 @@ class BindingRef private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.binding.BindingRef.serializerImpl,
+            _SerializerRegistry.BindingRefSerializerImpl,
         )
     }
 
@@ -225,10 +93,10 @@ class BindingRef private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var path: skirout.editor.v1.path.DataPath_OrMutable =
-            skirout.editor.v1.path.DataPath.partial(),
-        override var bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
-            skirout.editor.v1.binding.BindingId.partial(),
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+            skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingRef>? =
             null,
     ): skirout.editor.v1.binding.BindingRef_OrMutable {
@@ -240,34 +108,34 @@ class BindingRef private constructor(
         );
 
         /**
-         * If the value of [path] is already mutable, returns it as-is.
+         * If the value of [path] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
          */
-        val mutablePath: skirout.editor.v1.path.DataPath.Mutable get() {
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
             var value = this.path;
             return when (value) {
-                is skirout.editor.v1.path.DataPath -> {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
                     value = value.toMutable();
                     this.path = value;
                     return value;
                 }
-                is skirout.editor.v1.path.DataPath.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
             }
         }
 
         /**
-         * If the value of [bindingId] is already mutable, returns it as-is.
+         * If the value of [bindingId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [bindingId] and returns it.
          */
-        val mutableBindingId: skirout.editor.v1.binding.BindingId.Mutable get() {
+        val mutableBindingId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
             var value = this.bindingId;
             return when (value) {
-                is skirout.editor.v1.binding.BindingId -> {
+                is skirout.editor.v1.type_catalog.ExpressionBindingId -> {
                     value = value.toMutable();
                     this.bindingId = value;
                     return value;
                 }
-                is skirout.editor.v1.binding.BindingId.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable -> value;
             }
         }
     }
@@ -275,8 +143,8 @@ class BindingRef private constructor(
     companion object {
         private val default =
             skirout.editor.v1.binding.BindingRef(
-                skirout.editor.v1.path.DataPath.partial(),
-                skirout.editor.v1.binding.BindingId.partial(),
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -290,60 +158,28 @@ class BindingRef private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            path: skirout.editor.v1.path.DataPath_OrMutable =
-                skirout.editor.v1.path.DataPath.partial(),
-            bindingId: skirout.editor.v1.binding.BindingId_OrMutable =
-                skirout.editor.v1.binding.BindingId.partial(),
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            bindingId: skirout.editor.v1.type_catalog.ExpressionBindingId_OrMutable =
+                skirout.editor.v1.type_catalog.ExpressionBindingId.partial(),
         ) = skirout.editor.v1.binding.BindingRef(
             path = path,
             bindingId = bindingId,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/binding.skir:BindingRef",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [BindingRef] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.BindingRefSerializer;
 
         /** Describes the [BindingRef] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "path",
-                "path",
-                0,
-                skirout.editor.v1.path.DataPath.serializer,
-                "",
-                { it.path },
-                { mut, v -> mut.path = v },
-            );
-            serializerImpl.addField(
-                "binding_id",
-                "bindingId",
-                1,
-                skirout.editor.v1.binding.BindingId.serializer,
-                "",
-                { it.bindingId },
-                { mut, v -> mut.bindingId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.BindingRefSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ResolvedBinding_OrMutable {
     val reference: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val valueType: skirout.editor.v1.type_catalog.TypeExpression;
-    val value: skirout.editor.v1.type_catalog.TypedValue;
+    val valueType: skirout.editor.v1.type_catalog.TypeUse;
+    val value: skirout.editor.v1.type_catalog.DataValue;
     val writable: kotlin.Boolean;
     val revision: kotlin.Long;
 
@@ -354,19 +190,19 @@ sealed interface ResolvedBinding_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResolvedBinding private constructor(
     override val reference: skirout.editor.v1.binding.BindingRef,
-    override val valueType: skirout.editor.v1.type_catalog.TypeExpression,
-    override val value: skirout.editor.v1.type_catalog.TypedValue,
+    override val valueType: skirout.editor.v1.type_catalog.TypeUse,
+    override val value: skirout.editor.v1.type_catalog.DataValue,
     override val writable: kotlin.Boolean,
     override val revision: kotlin.Long,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.ResolvedBinding>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.ResolvedBinding>? =
         null,
 ): skirout.editor.v1.binding.ResolvedBinding_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         reference: skirout.editor.v1.binding.BindingRef_OrMutable,
-        valueType: skirout.editor.v1.type_catalog.TypeExpression,
-        value: skirout.editor.v1.type_catalog.TypedValue,
+        valueType: skirout.editor.v1.type_catalog.TypeUse,
+        value: skirout.editor.v1.type_catalog.DataValue,
         writable: kotlin.Boolean,
         revision: kotlin.Long,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.ResolvedBinding>? =
@@ -398,9 +234,9 @@ class ResolvedBinding private constructor(
             _MustNameArguments,
         reference: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.reference,
-        valueType: skirout.editor.v1.type_catalog.TypeExpression =
+        valueType: skirout.editor.v1.type_catalog.TypeUse =
             this.valueType,
-        value: skirout.editor.v1.type_catalog.TypedValue =
+        value: skirout.editor.v1.type_catalog.DataValue =
             this.value,
         writable: kotlin.Boolean =
             this.writable,
@@ -429,7 +265,7 @@ class ResolvedBinding private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.binding.ResolvedBinding.serializerImpl,
+            _SerializerRegistry.ResolvedBindingSerializerImpl,
         )
     }
 
@@ -439,10 +275,10 @@ class ResolvedBinding private constructor(
             _MustNameArguments,
         override var reference: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var valueType: skirout.editor.v1.type_catalog.TypeExpression =
-            skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
-        override var value: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        override var valueType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var value: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         override var writable: kotlin.Boolean =
             false,
         override var revision: kotlin.Long =
@@ -461,7 +297,7 @@ class ResolvedBinding private constructor(
         );
 
         /**
-         * If the value of [reference] is already mutable, returns it as-is.
+         * If the value of [reference] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [reference] and returns it.
          */
         val mutableReference: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -481,8 +317,8 @@ class ResolvedBinding private constructor(
         private val default =
             skirout.editor.v1.binding.ResolvedBinding(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
                 false,
                 0L,
             );
@@ -500,10 +336,10 @@ class ResolvedBinding private constructor(
                 _MustNameArguments,
             reference: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            valueType: skirout.editor.v1.type_catalog.TypeExpression =
-                skirout.editor.v1.type_catalog.TypeExpression.UNKNOWN,
-            value: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            valueType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            value: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
             writable: kotlin.Boolean =
                 false,
             revision: kotlin.Long =
@@ -517,70 +353,135 @@ class ResolvedBinding private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/binding.skir:ResolvedBinding",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ResolvedBinding] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ResolvedBindingSerializer;
 
         /** Describes the [ResolvedBinding] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ResolvedBindingSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "reference",
-                "reference",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
+sealed interface BindingDiagnostic_OrMutable {
+    val code: kotlin.String;
+    val message: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.binding.BindingDiagnostic;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class BindingDiagnostic private constructor(
+    override val code: kotlin.String,
+    override val message: kotlin.String,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingDiagnostic>? =
+        null,
+): skirout.editor.v1.binding.BindingDiagnostic_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        code: kotlin.String,
+        message: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingDiagnostic>? =
+            null,
+    ): this(
+        code,
+        message,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        code = this.code,
+        message = this.message,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        code: kotlin.String =
+            this.code,
+        message: kotlin.String =
+            this.message,
+    ) = skirout.editor.v1.binding.BindingDiagnostic(
+        code,
+        message,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.binding.BindingDiagnostic && this.code == other.code && this.message == other.message);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.code, this.message).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.BindingDiagnosticSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [BindingDiagnostic]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var code: kotlin.String =
+            "",
+        override var message: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.binding.BindingDiagnostic>? =
+            null,
+    ): skirout.editor.v1.binding.BindingDiagnostic_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.binding.BindingDiagnostic(
+            code = this.code,
+            message = this.message,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.binding.BindingDiagnostic(
                 "",
-                { it.reference },
-                { mut, v -> mut.reference = v },
-            );
-            serializerImpl.addField(
-                "value_type",
-                "valueType",
-                1,
-                skirout.editor.v1.type_catalog.TypeExpression.serializer,
                 "",
-                { it.valueType },
-                { mut, v -> mut.valueType = v },
             );
-            serializerImpl.addField(
-                "value",
-                "value",
-                2,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [BindingDiagnostic].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            code: kotlin.String =
                 "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.addField(
-                "writable",
-                "writable",
-                3,
-                build.skir.Serializers.bool,
+            message: kotlin.String =
                 "",
-                { it.writable },
-                { mut, v -> mut.writable = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                4,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        ) = skirout.editor.v1.binding.BindingDiagnostic(
+            code = code,
+            message = message,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [BindingDiagnostic] instances. */
+        val serializer get() = _SerializerRegistry.BindingDiagnosticSerializer;
+
+        /** Describes the [BindingDiagnostic] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.BindingDiagnosticSerializerImpl.typeDescriptor;
     }
 }
 
@@ -627,10 +528,10 @@ sealed class BindingResolution private constructor() {
     }
 
     class DiagnosticsWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic>,
+        val value: kotlin.collections.List<skirout.editor.v1.binding.BindingDiagnostic>,
     ) : skirout.editor.v1.binding.BindingResolution() {
         constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            value: kotlin.collections.Iterable<skirout.editor.v1.binding.BindingDiagnostic_OrMutable>,
         ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
 
         override val kind get() = Kind.DIAGNOSTICS_WRAPPER;
@@ -651,7 +552,7 @@ sealed class BindingResolution private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.binding.BindingResolution._serializerImpl,
+            _SerializerRegistry.BindingResolutionSerializerImpl,
         )
     }
 
@@ -668,8 +569,8 @@ sealed class BindingResolution private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             reference: skirout.editor.v1.binding.BindingRef_OrMutable,
-            valueType: skirout.editor.v1.type_catalog.TypeExpression,
-            value: skirout.editor.v1.type_catalog.TypedValue,
+            valueType: skirout.editor.v1.type_catalog.TypeUse,
+            value: skirout.editor.v1.type_catalog.DataValue,
             writable: kotlin.Boolean,
             revision: kotlin.Long,
         ) = ResolvedWrapper(
@@ -682,54 +583,172 @@ sealed class BindingResolution private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.binding.BindingResolution, Unknown>(
-                recordId = "editor/v1/binding.skir:BindingResolution",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [BindingResolution] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.BindingResolutionSerializer;
 
         /** Describes the [BindingResolution] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.BindingResolutionSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            _maybeFinalizeSerializer();
-        }
+private object _SerializerRegistry {
+    val BindingDiagnosticSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/binding.skir:BindingDiagnostic",
+        doc = "",
+        defaultInstance = skirout.editor.v1.binding.BindingDiagnostic.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.binding.BindingDiagnostic.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-        private var _finalizationCounter = 0;
+    val BindingDiagnosticSerializer = build.skir.internal.makeSerializer(BindingDiagnosticSerializerImpl);
 
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "resolved",
-                    Kind.RESOLVED_WRAPPER.ordinal,
-                    skirout.editor.v1.binding.ResolvedBinding.serializer,
-                    "",
-                    { ResolvedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "diagnostics",
-                    Kind.DIAGNOSTICS_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.editor.v1.diagnostic.TypeDiagnostic.serializer,
-                    ),
-                    "",
-                    { DiagnosticsWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+    val BindingRefSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/binding.skir:BindingRef",
+        doc = "",
+        defaultInstance = skirout.editor.v1.binding.BindingRef.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.binding.BindingRef.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val BindingRefSerializer = build.skir.internal.makeSerializer(BindingRefSerializerImpl);
+
+    val BindingResolutionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.binding.BindingResolution, skirout.editor.v1.binding.BindingResolution.Unknown>(
+            recordId = "editor/v1/binding.skir:BindingResolution",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.binding.BindingResolution.Kind.values().size,
+            unknownInstance = skirout.editor.v1.binding.BindingResolution.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.binding.BindingResolution.Unknown(skirout.editor.v1.binding.BindingResolution.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val BindingResolutionSerializer = build.skir.internal.makeSerializer(BindingResolutionSerializerImpl);
+
+    val ResolvedBindingSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/binding.skir:ResolvedBinding",
+        doc = "",
+        defaultInstance = skirout.editor.v1.binding.ResolvedBinding.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.binding.ResolvedBinding.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResolvedBindingSerializer = build.skir.internal.makeSerializer(ResolvedBindingSerializerImpl);
+
+    init {
+        BindingDiagnosticSerializerImpl.addField(
+            "code",
+            "code",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.code },
+            { mut, v -> mut.code = v },
+        );
+        BindingDiagnosticSerializerImpl.addField(
+            "message",
+            "message",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        BindingDiagnosticSerializerImpl.finalizeStruct();
+
+        BindingRefSerializerImpl.addField(
+            "path",
+            "path",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.path },
+            { mut, v -> mut.path = v },
+        );
+        BindingRefSerializerImpl.addField(
+            "binding_id",
+            "bindingId",
+            1,
+            skirout.editor.v1.type_catalog.ExpressionBindingId.serializer,
+            "",
+            { it.bindingId },
+            { mut, v -> mut.bindingId = v },
+        );
+        BindingRefSerializerImpl.finalizeStruct();
+
+        BindingResolutionSerializerImpl.addWrapperVariant(
+            1,
+            "resolved",
+            skirout.editor.v1.binding.BindingResolution.Kind.RESOLVED_WRAPPER.ordinal,
+            _SerializerRegistry.ResolvedBindingSerializer,
+            "",
+            { skirout.editor.v1.binding.BindingResolution.ResolvedWrapper(it) },
+            { it.value },
+        );
+        BindingResolutionSerializerImpl.addWrapperVariant(
+            2,
+            "diagnostics",
+            skirout.editor.v1.binding.BindingResolution.Kind.DIAGNOSTICS_WRAPPER.ordinal,
+            build.skir.Serializers.list(
+                _SerializerRegistry.BindingDiagnosticSerializer,
+            ),
+            "",
+            { skirout.editor.v1.binding.BindingResolution.DiagnosticsWrapper(it) },
+            { it.value },
+        );
+        BindingResolutionSerializerImpl.finalizeEnum();
+
+        ResolvedBindingSerializerImpl.addField(
+            "reference",
+            "reference",
+            0,
+            _SerializerRegistry.BindingRefSerializer,
+            "",
+            { it.reference },
+            { mut, v -> mut.reference = v },
+        );
+        ResolvedBindingSerializerImpl.addField(
+            "value_type",
+            "valueType",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.valueType },
+            { mut, v -> mut.valueType = v },
+        );
+        ResolvedBindingSerializerImpl.addField(
+            "value",
+            "value",
+            2,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        ResolvedBindingSerializerImpl.addField(
+            "writable",
+            "writable",
+            3,
+            build.skir.Serializers.bool,
+            "",
+            { it.writable },
+            { mut, v -> mut.writable = v },
+        );
+        ResolvedBindingSerializerImpl.addField(
+            "revision",
+            "revision",
+            4,
+            build.skir.Serializers.int64,
+            "",
+            { it.revision },
+            { mut, v -> mut.revision = v },
+        );
+        ResolvedBindingSerializerImpl.finalizeStruct();
     }
 }

@@ -22,7 +22,7 @@ import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
 sealed interface SetValueAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val value: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.action.SetValueAction;
 }
@@ -31,20 +31,20 @@ sealed interface SetValueAction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class SetValueAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
-    override val value: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.SetValueAction>? =
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.SetValueAction>? =
         null,
 ): skirout.editor.v1.action.SetValueAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        value: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.SetValueAction>? =
             null,
     ): this(
         target.toFrozen(),
-        value.toFrozen(),
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -63,11 +63,11 @@ class SetValueAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.target,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
     ) = skirout.editor.v1.action.SetValueAction(
         target.toFrozen(),
-        value.toFrozen(),
+        value,
         this._unrecognizedFields,
     );
 
@@ -85,7 +85,7 @@ class SetValueAction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.SetValueAction.serializerImpl,
+            _SerializerRegistry.SetValueActionSerializerImpl,
         )
     }
 
@@ -95,8 +95,8 @@ class SetValueAction private constructor(
             _MustNameArguments,
         override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.SetValueAction>? =
             null,
     ): skirout.editor.v1.action.SetValueAction_OrMutable {
@@ -108,7 +108,7 @@ class SetValueAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -122,29 +122,13 @@ class SetValueAction private constructor(
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.action.SetValueAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -160,58 +144,26 @@ class SetValueAction private constructor(
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.action.SetValueAction(
             target = target,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:SetValueAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [SetValueAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.SetValueActionSerializer;
 
         /** Describes the [SetValueAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.SetValueActionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface InsertListItemAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val index: skirout.editor.v1.expression.TypedExpression_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val after: skirout.editor.v1.type_catalog.ItemId_OrMutable?;
+    val value: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.action.InsertListItemAction;
 }
@@ -220,23 +172,23 @@ sealed interface InsertListItemAction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class InsertListItemAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
-    override val index: skirout.editor.v1.expression.TypedExpression,
-    override val value: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertListItemAction>? =
+    override val after: skirout.editor.v1.type_catalog.ItemId?,
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertListItemAction>? =
         null,
 ): skirout.editor.v1.action.InsertListItemAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        index: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        after: skirout.editor.v1.type_catalog.ItemId_OrMutable?,
+        value: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertListItemAction>? =
             null,
     ): this(
         target.toFrozen(),
-        index.toFrozen(),
-        value.toFrozen(),
+        if (after != null) after.toFrozen() else null,
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -246,7 +198,7 @@ class InsertListItemAction private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         target = this.target,
-        index = this.index,
+        after = this.after,
         value = this.value,
     );
 
@@ -256,14 +208,14 @@ class InsertListItemAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.target,
-        index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.index,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
+            this.after,
+        value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
     ) = skirout.editor.v1.action.InsertListItemAction(
         target.toFrozen(),
-        index.toFrozen(),
-        value.toFrozen(),
+        if (after != null) after.toFrozen() else null,
+        value,
         this._unrecognizedFields,
     );
 
@@ -271,17 +223,17 @@ class InsertListItemAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.InsertListItemAction && this.target == other.target && this.index == other.index && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.action.InsertListItemAction && this.target == other.target && this.after == other.after && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.index, this.value).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.after, this.value).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.InsertListItemAction.serializerImpl,
+            _SerializerRegistry.InsertListItemActionSerializerImpl,
         )
     }
 
@@ -291,23 +243,23 @@ class InsertListItemAction private constructor(
             _MustNameArguments,
         override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
+            null,
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertListItemAction>? =
             null,
     ): skirout.editor.v1.action.InsertListItemAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.action.InsertListItemAction(
             target = this.target,
-            index = this.index,
+            after = this.after,
             value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -321,46 +273,14 @@ class InsertListItemAction private constructor(
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [index] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [index] and returns it.
-         */
-        val mutableIndex: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.index;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.index = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.action.InsertListItemAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                null,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -376,257 +296,28 @@ class InsertListItemAction private constructor(
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
+            after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
+                null,
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.action.InsertListItemAction(
             target = target,
-            index = index,
+            after = after,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:InsertListItemAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [InsertListItemAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.InsertListItemActionSerializer;
 
         /** Describes the [InsertListItemAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "index",
-                "index",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.index },
-                { mut, v -> mut.index = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                2,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface RemoveListItemAction_OrMutable {
-    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val index: skirout.editor.v1.expression.TypedExpression_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.action.RemoveListItemAction;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RemoveListItemAction private constructor(
-    override val target: skirout.editor.v1.binding.BindingRef,
-    override val index: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
-        null,
-): skirout.editor.v1.action.RemoveListItemAction_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        index: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
-            null,
-    ): this(
-        target.toFrozen(),
-        index.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        target = this.target,
-        index = this.index,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.binding.BindingRef_OrMutable =
-            this.target,
-        index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.index,
-    ) = skirout.editor.v1.action.RemoveListItemAction(
-        target.toFrozen(),
-        index.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.RemoveListItemAction && this.target == other.target && this.index == other.index);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.index).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.RemoveListItemAction.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [RemoveListItemAction]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
-            skirout.editor.v1.binding.BindingRef.partial(),
-        override var index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
-            null,
-    ): skirout.editor.v1.action.RemoveListItemAction_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.RemoveListItemAction(
-            target = this.target,
-            index = this.index,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [target] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-         */
-        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
-            var value = this.target;
-            return when (value) {
-                is skirout.editor.v1.binding.BindingRef -> {
-                    value = value.toMutable();
-                    this.target = value;
-                    return value;
-                }
-                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [index] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [index] and returns it.
-         */
-        val mutableIndex: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.index;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.index = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.action.RemoveListItemAction(
-                skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RemoveListItemAction].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            target: skirout.editor.v1.binding.BindingRef_OrMutable =
-                skirout.editor.v1.binding.BindingRef.partial(),
-            index: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.RemoveListItemAction(
-            target = target,
-            index = index,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:RemoveListItemAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [RemoveListItemAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [RemoveListItemAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "index",
-                "index",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.index },
-                { mut, v -> mut.index = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.InsertListItemActionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface AppendListItemAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val value: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.action.AppendListItemAction;
 }
@@ -635,20 +326,20 @@ sealed interface AppendListItemAction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AppendListItemAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
-    override val value: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AppendListItemAction>? =
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AppendListItemAction>? =
         null,
 ): skirout.editor.v1.action.AppendListItemAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        value: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AppendListItemAction>? =
             null,
     ): this(
         target.toFrozen(),
-        value.toFrozen(),
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -667,11 +358,11 @@ class AppendListItemAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.target,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
     ) = skirout.editor.v1.action.AppendListItemAction(
         target.toFrozen(),
-        value.toFrozen(),
+        value,
         this._unrecognizedFields,
     );
 
@@ -689,7 +380,7 @@ class AppendListItemAction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.AppendListItemAction.serializerImpl,
+            _SerializerRegistry.AppendListItemActionSerializerImpl,
         )
     }
 
@@ -699,8 +390,8 @@ class AppendListItemAction private constructor(
             _MustNameArguments,
         override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AppendListItemAction>? =
             null,
     ): skirout.editor.v1.action.AppendListItemAction_OrMutable {
@@ -712,7 +403,7 @@ class AppendListItemAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -726,29 +417,13 @@ class AppendListItemAction private constructor(
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.action.AppendListItemAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -764,75 +439,47 @@ class AppendListItemAction private constructor(
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.action.AppendListItemAction(
             target = target,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:AppendListItemAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [AppendListItemAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.AppendListItemActionSerializer;
 
         /** Describes the [AppendListItemAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.AppendListItemActionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface DuplicateListItemAction_OrMutable {
-    val source: skirout.editor.v1.binding.BindingRef_OrMutable;
+sealed interface RemoveListItemAction_OrMutable {
+    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val item: skirout.editor.v1.type_catalog.ItemId_OrMutable;
 
-    fun toFrozen(): skirout.editor.v1.action.DuplicateListItemAction;
+    fun toFrozen(): skirout.editor.v1.action.RemoveListItemAction;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class DuplicateListItemAction private constructor(
-    override val source: skirout.editor.v1.binding.BindingRef,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.DuplicateListItemAction>? =
+class RemoveListItemAction private constructor(
+    override val target: skirout.editor.v1.binding.BindingRef,
+    override val item: skirout.editor.v1.type_catalog.ItemId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
         null,
-): skirout.editor.v1.action.DuplicateListItemAction_OrMutable {
+): skirout.editor.v1.action.RemoveListItemAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.DuplicateListItemAction>? =
+        target: skirout.editor.v1.binding.BindingRef_OrMutable,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
             null,
     ): this(
-        source.toFrozen(),
+        target.toFrozen(),
+        item.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -841,17 +488,21 @@ class DuplicateListItemAction private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        source = this.source,
+        target = this.target,
+        item = this.item,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable =
-            this.source,
-    ) = skirout.editor.v1.action.DuplicateListItemAction(
-        source.toFrozen(),
+        target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.target,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            this.item,
+    ) = skirout.editor.v1.action.RemoveListItemAction(
+        target.toFrozen(),
+        item.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -859,17 +510,173 @@ class DuplicateListItemAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.DuplicateListItemAction && this.source == other.source);
+        return this === other || (other is skirout.editor.v1.action.RemoveListItemAction && this.target == other.target && this.item == other.item);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.item).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.DuplicateListItemAction.serializerImpl,
+            _SerializerRegistry.RemoveListItemActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RemoveListItemAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            skirout.editor.v1.binding.BindingRef.partial(),
+        override var item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            skirout.editor.v1.type_catalog.ItemId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveListItemAction>? =
+            null,
+    ): skirout.editor.v1.action.RemoveListItemAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.RemoveListItemAction(
+            target = this.target,
+            item = this.item,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [target] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingRef -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [item] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
+         */
+        val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
+            var value = this.item;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ItemId -> {
+                    value = value.toMutable();
+                    this.item = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ItemId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.RemoveListItemAction(
+                skirout.editor.v1.binding.BindingRef.partial(),
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RemoveListItemAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable =
+                skirout.editor.v1.binding.BindingRef.partial(),
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+        ) = skirout.editor.v1.action.RemoveListItemAction(
+            target = target,
+            item = item,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RemoveListItemAction] instances. */
+        val serializer get() = _SerializerRegistry.RemoveListItemActionSerializer;
+
+        /** Describes the [RemoveListItemAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RemoveListItemActionSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface DuplicateListItemAction_OrMutable {
+    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val item: skirout.editor.v1.type_catalog.ItemId_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.action.DuplicateListItemAction;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DuplicateListItemAction private constructor(
+    override val target: skirout.editor.v1.binding.BindingRef,
+    override val item: skirout.editor.v1.type_catalog.ItemId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.DuplicateListItemAction>? =
+        null,
+): skirout.editor.v1.action.DuplicateListItemAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.DuplicateListItemAction>? =
+            null,
+    ): this(
+        target.toFrozen(),
+        item.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        target = this.target,
+        item = this.item,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.target,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            this.item,
+    ) = skirout.editor.v1.action.DuplicateListItemAction(
+        target.toFrozen(),
+        item.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.DuplicateListItemAction && this.target == other.target && this.item == other.item);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.item).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.DuplicateListItemActionSerializerImpl,
         )
     }
 
@@ -877,30 +684,49 @@ class DuplicateListItemAction private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.binding.BindingRef_OrMutable =
+        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
+        override var item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            skirout.editor.v1.type_catalog.ItemId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.DuplicateListItemAction>? =
             null,
     ): skirout.editor.v1.action.DuplicateListItemAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.action.DuplicateListItemAction(
-            source = this.source,
+            target = this.target,
+            item = this.item,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+         * If the value of [target] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
-        val mutableSource: skirout.editor.v1.binding.BindingRef.Mutable get() {
-            var value = this.source;
+        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.target;
             return when (value) {
                 is skirout.editor.v1.binding.BindingRef -> {
                     value = value.toMutable();
-                    this.source = value;
+                    this.target = value;
                     return value;
                 }
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [item] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
+         */
+        val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
+            var value = this.item;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ItemId -> {
+                    value = value.toMutable();
+                    this.item = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ItemId.Mutable -> value;
             }
         }
     }
@@ -909,6 +735,7 @@ class DuplicateListItemAction private constructor(
         private val default =
             skirout.editor.v1.action.DuplicateListItemAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
+                skirout.editor.v1.type_catalog.ItemId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -922,69 +749,53 @@ class DuplicateListItemAction private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable =
+            target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+                skirout.editor.v1.type_catalog.ItemId.partial(),
         ) = skirout.editor.v1.action.DuplicateListItemAction(
-            source = source,
+            target = target,
+            item = item,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:DuplicateListItemAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [DuplicateListItemAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.DuplicateListItemActionSerializer;
 
         /** Describes the [DuplicateListItemAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "source",
-                "source",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.DuplicateListItemActionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface ReorderListItemAction_OrMutable {
-    val source: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable;
+sealed interface MoveListItemAction_OrMutable {
+    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val item: skirout.editor.v1.type_catalog.ItemId_OrMutable;
+    val after: skirout.editor.v1.type_catalog.ItemId_OrMutable?;
 
-    fun toFrozen(): skirout.editor.v1.action.ReorderListItemAction;
+    fun toFrozen(): skirout.editor.v1.action.MoveListItemAction;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class ReorderListItemAction private constructor(
-    override val source: skirout.editor.v1.binding.BindingRef,
-    override val newIndex: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReorderListItemAction>? =
+class MoveListItemAction private constructor(
+    override val target: skirout.editor.v1.binding.BindingRef,
+    override val item: skirout.editor.v1.type_catalog.ItemId,
+    override val after: skirout.editor.v1.type_catalog.ItemId?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MoveListItemAction>? =
         null,
-): skirout.editor.v1.action.ReorderListItemAction_OrMutable {
+): skirout.editor.v1.action.MoveListItemAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable,
-        newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReorderListItemAction>? =
+        target: skirout.editor.v1.binding.BindingRef_OrMutable,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        after: skirout.editor.v1.type_catalog.ItemId_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MoveListItemAction>? =
             null,
     ): this(
-        source.toFrozen(),
-        newIndex.toFrozen(),
+        target.toFrozen(),
+        item.toFrozen(),
+        if (after != null) after.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -993,21 +804,25 @@ class ReorderListItemAction private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        source = this.source,
-        newIndex = this.newIndex,
+        target = this.target,
+        item = this.item,
+        after = this.after,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        source: skirout.editor.v1.binding.BindingRef_OrMutable =
-            this.source,
-        newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.newIndex,
-    ) = skirout.editor.v1.action.ReorderListItemAction(
-        source.toFrozen(),
-        newIndex.toFrozen(),
+        target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.target,
+        item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            this.item,
+        after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
+            this.after,
+    ) = skirout.editor.v1.action.MoveListItemAction(
+        target.toFrozen(),
+        item.toFrozen(),
+        if (after != null) after.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -1015,48 +830,51 @@ class ReorderListItemAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.ReorderListItemAction && this.source == other.source && this.newIndex == other.newIndex);
+        return this === other || (other is skirout.editor.v1.action.MoveListItemAction && this.target == other.target && this.item == other.item && this.after == other.after);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.source, this.newIndex).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.item, this.after).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.ReorderListItemAction.serializerImpl,
+            _SerializerRegistry.MoveListItemActionSerializerImpl,
         )
     }
 
-    /** Mutable version of [ReorderListItemAction]. */
+    /** Mutable version of [MoveListItemAction]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var source: skirout.editor.v1.binding.BindingRef_OrMutable =
+        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReorderListItemAction>? =
+        override var item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            skirout.editor.v1.type_catalog.ItemId.partial(),
+        override var after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
             null,
-    ): skirout.editor.v1.action.ReorderListItemAction_OrMutable {
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MoveListItemAction>? =
+            null,
+    ): skirout.editor.v1.action.MoveListItemAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.ReorderListItemAction(
-            source = this.source,
-            newIndex = this.newIndex,
+        override fun toFrozen() = skirout.editor.v1.action.MoveListItemAction(
+            target = this.target,
+            item = this.item,
+            after = this.after,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [source] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
+         * If the value of [target] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
-        val mutableSource: skirout.editor.v1.binding.BindingRef.Mutable get() {
-            var value = this.source;
+        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.target;
             return when (value) {
                 is skirout.editor.v1.binding.BindingRef -> {
                     value = value.toMutable();
-                    this.source = value;
+                    this.target = value;
                     return value;
                 }
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
@@ -1064,119 +882,91 @@ class ReorderListItemAction private constructor(
         }
 
         /**
-         * If the value of [newIndex] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [newIndex] and returns it.
+         * If the value of [item] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [item] and returns it.
          */
-        val mutableNewIndex: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.newIndex;
+        val mutableItem: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
+            var value = this.item;
             return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
+                is skirout.editor.v1.type_catalog.ItemId -> {
                     value = value.toMutable();
-                    this.newIndex = value;
+                    this.item = value;
                     return value;
                 }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ItemId.Mutable -> value;
             }
         }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.action.ReorderListItemAction(
+            skirout.editor.v1.action.MoveListItemAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ReorderListItemAction].
+         * Creates a new instance of [MoveListItemAction].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable =
+            target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.ReorderListItemAction(
-            source = source,
-            newIndex = newIndex,
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+            after: skirout.editor.v1.type_catalog.ItemId_OrMutable? =
+                null,
+        ) = skirout.editor.v1.action.MoveListItemAction(
+            target = target,
+            item = item,
+            after = after,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:ReorderListItemAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
+        /** Serializer for [MoveListItemAction] instances. */
+        val serializer get() = _SerializerRegistry.MoveListItemActionSerializer;
 
-        /** Serializer for [ReorderListItemAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [ReorderListItemAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "source",
-                "source",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.source },
-                { mut, v -> mut.source = v },
-            );
-            serializerImpl.addField(
-                "new_index",
-                "newIndex",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.newIndex },
-                { mut, v -> mut.newIndex = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        /** Describes the [MoveListItemAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.MoveListItemActionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface PutMapEntryAction_OrMutable {
+sealed interface InsertMapRowAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val key: skirout.editor.v1.expression.TypedExpression_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val key: skirout.editor.v1.expression.ExpressionNode;
+    val value: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.action.PutMapEntryAction;
+    fun toFrozen(): skirout.editor.v1.action.InsertMapRowAction;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class PutMapEntryAction private constructor(
+class InsertMapRowAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
-    override val key: skirout.editor.v1.expression.TypedExpression,
-    override val value: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PutMapEntryAction>? =
+    override val key: skirout.editor.v1.expression.ExpressionNode,
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertMapRowAction>? =
         null,
-): skirout.editor.v1.action.PutMapEntryAction_OrMutable {
+): skirout.editor.v1.action.InsertMapRowAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        key: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PutMapEntryAction>? =
+        key: skirout.editor.v1.expression.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertMapRowAction>? =
             null,
     ): this(
         target.toFrozen(),
-        key.toFrozen(),
-        value.toFrozen(),
+        key,
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -1196,14 +986,14 @@ class PutMapEntryAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.target,
-        key: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        key: skirout.editor.v1.expression.ExpressionNode =
             this.key,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
-    ) = skirout.editor.v1.action.PutMapEntryAction(
+    ) = skirout.editor.v1.action.InsertMapRowAction(
         target.toFrozen(),
-        key.toFrozen(),
-        value.toFrozen(),
+        key,
+        value,
         this._unrecognizedFields,
     );
 
@@ -1211,7 +1001,7 @@ class PutMapEntryAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.PutMapEntryAction && this.target == other.target && this.key == other.key && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.action.InsertMapRowAction && this.target == other.target && this.key == other.key && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
@@ -1221,25 +1011,25 @@ class PutMapEntryAction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.PutMapEntryAction.serializerImpl,
+            _SerializerRegistry.InsertMapRowActionSerializerImpl,
         )
     }
 
-    /** Mutable version of [PutMapEntryAction]. */
+    /** Mutable version of [InsertMapRowAction]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var key: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PutMapEntryAction>? =
+        override var key: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.InsertMapRowAction>? =
             null,
-    ): skirout.editor.v1.action.PutMapEntryAction_OrMutable {
+    ): skirout.editor.v1.action.InsertMapRowAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.PutMapEntryAction(
+        override fun toFrozen() = skirout.editor.v1.action.InsertMapRowAction(
             target = this.target,
             key = this.key,
             value = this.value,
@@ -1247,7 +1037,7 @@ class PutMapEntryAction private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -1261,53 +1051,21 @@ class PutMapEntryAction private constructor(
                 is skirout.editor.v1.binding.BindingRef.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [key] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
-         */
-        val mutableKey: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.key;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.key = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.action.PutMapEntryAction(
+            skirout.editor.v1.action.InsertMapRowAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [PutMapEntryAction].
+         * Creates a new instance of [InsertMapRowAction].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -1316,91 +1074,58 @@ class PutMapEntryAction private constructor(
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            key: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.PutMapEntryAction(
+            key: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.action.InsertMapRowAction(
             target = target,
             key = key,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:PutMapEntryAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
+        /** Serializer for [InsertMapRowAction] instances. */
+        val serializer get() = _SerializerRegistry.InsertMapRowActionSerializer;
 
-        /** Serializer for [PutMapEntryAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [PutMapEntryAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "key",
-                "key",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.key },
-                { mut, v -> mut.key = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                2,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        /** Describes the [InsertMapRowAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.InsertMapRowActionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface RemoveMapEntryAction_OrMutable {
+sealed interface UpdateMapRowAction_OrMutable {
     val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val key: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val row: skirout.editor.v1.type_catalog.ItemId_OrMutable;
+    val key: skirout.editor.v1.expression.ExpressionNode;
+    val value: skirout.editor.v1.expression.ExpressionNode;
 
-    fun toFrozen(): skirout.editor.v1.action.RemoveMapEntryAction;
+    fun toFrozen(): skirout.editor.v1.action.UpdateMapRowAction;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class RemoveMapEntryAction private constructor(
+class UpdateMapRowAction private constructor(
     override val target: skirout.editor.v1.binding.BindingRef,
-    override val key: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapEntryAction>? =
+    override val row: skirout.editor.v1.type_catalog.ItemId,
+    override val key: skirout.editor.v1.expression.ExpressionNode,
+    override val value: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.UpdateMapRowAction>? =
         null,
-): skirout.editor.v1.action.RemoveMapEntryAction_OrMutable {
+): skirout.editor.v1.action.UpdateMapRowAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        key: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapEntryAction>? =
+        row: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        key: skirout.editor.v1.expression.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.UpdateMapRowAction>? =
             null,
     ): this(
         target.toFrozen(),
-        key.toFrozen(),
+        row.toFrozen(),
+        key,
+        value,
         _unrecognizedFields,
     ) {}
 
@@ -1410,199 +1135,8 @@ class RemoveMapEntryAction private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         target = this.target,
+        row = this.row,
         key = this.key,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.binding.BindingRef_OrMutable =
-            this.target,
-        key: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            this.key,
-    ) = skirout.editor.v1.action.RemoveMapEntryAction(
-        target.toFrozen(),
-        key.toFrozen(),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.RemoveMapEntryAction && this.target == other.target && this.key == other.key);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.key).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.RemoveMapEntryAction.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [RemoveMapEntryAction]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
-            skirout.editor.v1.binding.BindingRef.partial(),
-        override var key: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapEntryAction>? =
-            null,
-    ): skirout.editor.v1.action.RemoveMapEntryAction_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.RemoveMapEntryAction(
-            target = this.target,
-            key = this.key,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [target] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
-         */
-        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
-            var value = this.target;
-            return when (value) {
-                is skirout.editor.v1.binding.BindingRef -> {
-                    value = value.toMutable();
-                    this.target = value;
-                    return value;
-                }
-                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [key] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
-         */
-        val mutableKey: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.key;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.key = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.action.RemoveMapEntryAction(
-                skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RemoveMapEntryAction].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            target: skirout.editor.v1.binding.BindingRef_OrMutable =
-                skirout.editor.v1.binding.BindingRef.partial(),
-            key: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.RemoveMapEntryAction(
-            target = target,
-            key = key,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:RemoveMapEntryAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [RemoveMapEntryAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [RemoveMapEntryAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "key",
-                "key",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.key },
-                { mut, v -> mut.key = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface ReplaceConcreteNominalTypeAction_OrMutable {
-    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
-    val concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val value: skirout.editor.v1.expression.TypedExpression_OrMutable;
-
-    fun toFrozen(): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ReplaceConcreteNominalTypeAction private constructor(
-    override val target: skirout.editor.v1.binding.BindingRef,
-    override val concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val value: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
-        null,
-): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        target: skirout.editor.v1.binding.BindingRef_OrMutable,
-        concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
-            null,
-    ): this(
-        target.toFrozen(),
-        concreteType.toFrozen(),
-        value.toFrozen(),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        target = this.target,
-        concreteType = this.concreteType,
         value = this.value,
     );
 
@@ -1612,14 +1146,17 @@ class ReplaceConcreteNominalTypeAction private constructor(
             _MustNameArguments,
         target: skirout.editor.v1.binding.BindingRef_OrMutable =
             this.target,
-        concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            this.concreteType,
-        value: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            this.row,
+        key: skirout.editor.v1.expression.ExpressionNode =
+            this.key,
+        value: skirout.editor.v1.expression.ExpressionNode =
             this.value,
-    ) = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
+    ) = skirout.editor.v1.action.UpdateMapRowAction(
         target.toFrozen(),
-        concreteType.toFrozen(),
-        value.toFrozen(),
+        row.toFrozen(),
+        key,
+        value,
         this._unrecognizedFields,
     );
 
@@ -1627,43 +1164,46 @@ class ReplaceConcreteNominalTypeAction private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.ReplaceConcreteNominalTypeAction && this.target == other.target && this.concreteType == other.concreteType && this.value == other.value);
+        return this === other || (other is skirout.editor.v1.action.UpdateMapRowAction && this.target == other.target && this.row == other.row && this.key == other.key && this.value == other.value);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.concreteType, this.value).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.row, this.key, this.value).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.ReplaceConcreteNominalTypeAction.serializerImpl,
+            _SerializerRegistry.UpdateMapRowActionSerializerImpl,
         )
     }
 
-    /** Mutable version of [ReplaceConcreteNominalTypeAction]. */
+    /** Mutable version of [UpdateMapRowAction]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
             skirout.editor.v1.binding.BindingRef.partial(),
-        override var concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReplaceConcreteNominalTypeAction>? =
+        override var row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            skirout.editor.v1.type_catalog.ItemId.partial(),
+        override var key: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var value: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.UpdateMapRowAction>? =
             null,
-    ): skirout.editor.v1.action.ReplaceConcreteNominalTypeAction_OrMutable {
+    ): skirout.editor.v1.action.UpdateMapRowAction_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
+        override fun toFrozen() = skirout.editor.v1.action.UpdateMapRowAction(
             target = this.target,
-            concreteType = this.concreteType,
+            row = this.row,
+            key = this.key,
             value = this.value,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
@@ -1679,51 +1219,36 @@ class ReplaceConcreteNominalTypeAction private constructor(
         }
 
         /**
-         * If the value of [concreteType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [concreteType] and returns it.
+         * If the value of [row] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
          */
-        val mutableConcreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.concreteType;
+        val mutableRow: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
+            var value = this.row;
             return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
+                is skirout.editor.v1.type_catalog.ItemId -> {
                     value = value.toMutable();
-                    this.concreteType = value;
+                    this.row = value;
                     return value;
                 }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [value] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [value] and returns it.
-         */
-        val mutableValue: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.value;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.value = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
+                is skirout.editor.v1.type_catalog.ItemId.Mutable -> value;
             }
         }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
+            skirout.editor.v1.action.UpdateMapRowAction(
                 skirout.editor.v1.binding.BindingRef.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [ReplaceConcreteNominalTypeAction].
+         * Creates a new instance of [UpdateMapRowAction].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
@@ -1732,63 +1257,321 @@ class ReplaceConcreteNominalTypeAction private constructor(
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable =
                 skirout.editor.v1.binding.BindingRef.partial(),
-            concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
-        ) = skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
+            row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+            key: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            value: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        ) = skirout.editor.v1.action.UpdateMapRowAction(
             target = target,
-            concreteType = concreteType,
+            row = row,
+            key = key,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:ReplaceConcreteNominalTypeAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        /** Serializer for [UpdateMapRowAction] instances. */
+        val serializer get() = _SerializerRegistry.UpdateMapRowActionSerializer;
+
+        /** Describes the [UpdateMapRowAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.UpdateMapRowActionSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface RemoveMapRowAction_OrMutable {
+    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val row: skirout.editor.v1.type_catalog.ItemId_OrMutable;
+
+    fun toFrozen(): skirout.editor.v1.action.RemoveMapRowAction;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RemoveMapRowAction private constructor(
+    override val target: skirout.editor.v1.binding.BindingRef,
+    override val row: skirout.editor.v1.type_catalog.ItemId,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapRowAction>? =
+        null,
+): skirout.editor.v1.action.RemoveMapRowAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable,
+        row: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapRowAction>? =
+            null,
+    ): this(
+        target.toFrozen(),
+        row.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        target = this.target,
+        row = this.row,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.target,
+        row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            this.row,
+    ) = skirout.editor.v1.action.RemoveMapRowAction(
+        target.toFrozen(),
+        row.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.RemoveMapRowAction && this.target == other.target && this.row == other.row);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.row).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RemoveMapRowActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RemoveMapRowAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            skirout.editor.v1.binding.BindingRef.partial(),
+        override var row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+            skirout.editor.v1.type_catalog.ItemId.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.RemoveMapRowAction>? =
+            null,
+    ): skirout.editor.v1.action.RemoveMapRowAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.RemoveMapRowAction(
+            target = this.target,
+            row = this.row,
+            _unrecognizedFields = this._unrecognizedFields,
         );
 
-        /** Serializer for [ReplaceConcreteNominalTypeAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [ReplaceConcreteNominalTypeAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.editor.v1.binding.BindingRef.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "concrete_type",
-                "concreteType",
-                1,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.concreteType },
-                { mut, v -> mut.concreteType = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                2,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
+        /**
+         * If the value of [target] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingRef -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
+            }
         }
+
+        /**
+         * If the value of [row] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [row] and returns it.
+         */
+        val mutableRow: skirout.editor.v1.type_catalog.ItemId.Mutable get() {
+            var value = this.row;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ItemId -> {
+                    value = value.toMutable();
+                    this.row = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ItemId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.RemoveMapRowAction(
+                skirout.editor.v1.binding.BindingRef.partial(),
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RemoveMapRowAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable =
+                skirout.editor.v1.binding.BindingRef.partial(),
+            row: skirout.editor.v1.type_catalog.ItemId_OrMutable =
+                skirout.editor.v1.type_catalog.ItemId.partial(),
+        ) = skirout.editor.v1.action.RemoveMapRowAction(
+            target = target,
+            row = row,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RemoveMapRowAction] instances. */
+        val serializer get() = _SerializerRegistry.RemoveMapRowActionSerializer;
+
+        /** Describes the [RemoveMapRowAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RemoveMapRowActionSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface ChooseFormAction_OrMutable {
+    val target: skirout.editor.v1.binding.BindingRef_OrMutable;
+    val type: skirout.editor.v1.type_catalog.TypeUse;
+
+    fun toFrozen(): skirout.editor.v1.action.ChooseFormAction;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ChooseFormAction private constructor(
+    override val target: skirout.editor.v1.binding.BindingRef,
+    override val type: skirout.editor.v1.type_catalog.TypeUse,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ChooseFormAction>? =
+        null,
+): skirout.editor.v1.action.ChooseFormAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable,
+        type: skirout.editor.v1.type_catalog.TypeUse,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ChooseFormAction>? =
+            null,
+    ): this(
+        target.toFrozen(),
+        type,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        target = this.target,
+        type = this.type,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            this.target,
+        type: skirout.editor.v1.type_catalog.TypeUse =
+            this.type,
+    ) = skirout.editor.v1.action.ChooseFormAction(
+        target.toFrozen(),
+        type,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.ChooseFormAction && this.target == other.target && this.type == other.type);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.target, this.type).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ChooseFormActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [ChooseFormAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var target: skirout.editor.v1.binding.BindingRef_OrMutable =
+            skirout.editor.v1.binding.BindingRef.partial(),
+        override var type: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ChooseFormAction>? =
+            null,
+    ): skirout.editor.v1.action.ChooseFormAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.ChooseFormAction(
+            target = this.target,
+            type = this.type,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [target] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
+         */
+        val mutableTarget: skirout.editor.v1.binding.BindingRef.Mutable get() {
+            var value = this.target;
+            return when (value) {
+                is skirout.editor.v1.binding.BindingRef -> {
+                    value = value.toMutable();
+                    this.target = value;
+                    return value;
+                }
+                is skirout.editor.v1.binding.BindingRef.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.ChooseFormAction(
+                skirout.editor.v1.binding.BindingRef.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ChooseFormAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable =
+                skirout.editor.v1.binding.BindingRef.partial(),
+            type: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        ) = skirout.editor.v1.action.ChooseFormAction(
+            target = target,
+            type = type,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [ChooseFormAction] instances. */
+        val serializer get() = _SerializerRegistry.ChooseFormActionSerializer;
+
+        /** Describes the [ChooseFormAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ChooseFormActionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1799,13 +1582,14 @@ sealed class LocalEditorAction private constructor() {
         UNKNOWN,
         SET_VALUE_WRAPPER,
         INSERT_LIST_ITEM_WRAPPER,
-        REMOVE_LIST_ITEM_WRAPPER,
         APPEND_LIST_ITEM_WRAPPER,
+        REMOVE_LIST_ITEM_WRAPPER,
         DUPLICATE_LIST_ITEM_WRAPPER,
-        REORDER_LIST_ITEM_WRAPPER,
-        PUT_MAP_ENTRY_WRAPPER,
-        REMOVE_MAP_ENTRY_WRAPPER,
-        REPLACE_CONCRETE_NOMINAL_TYPE_WRAPPER,
+        MOVE_LIST_ITEM_WRAPPER,
+        INSERT_MAP_ROW_WRAPPER,
+        UPDATE_MAP_ROW_WRAPPER,
+        REMOVE_MAP_ROW_WRAPPER,
+        CHOOSE_FORM_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.LocalEditorAction.UNKNOWN")) internal constructor(
@@ -1859,24 +1643,6 @@ sealed class LocalEditorAction private constructor() {
         }
     }
 
-    class RemoveListItemWrapper private constructor (
-        val value: skirout.editor.v1.action.RemoveListItemAction,
-    ) : skirout.editor.v1.action.LocalEditorAction() {
-        constructor(
-            value: skirout.editor.v1.action.RemoveListItemAction_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REMOVE_LIST_ITEM_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.LocalEditorAction.RemoveListItemWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 623334425;
-        }
-    }
-
     class AppendListItemWrapper private constructor (
         val value: skirout.editor.v1.action.AppendListItemAction,
     ) : skirout.editor.v1.action.LocalEditorAction() {
@@ -1892,6 +1658,24 @@ sealed class LocalEditorAction private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -1997641937;
+        }
+    }
+
+    class RemoveListItemWrapper private constructor (
+        val value: skirout.editor.v1.action.RemoveListItemAction,
+    ) : skirout.editor.v1.action.LocalEditorAction() {
+        constructor(
+            value: skirout.editor.v1.action.RemoveListItemAction_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.REMOVE_LIST_ITEM_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.LocalEditorAction.RemoveListItemWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 623334425;
         }
     }
 
@@ -1913,75 +1697,93 @@ sealed class LocalEditorAction private constructor() {
         }
     }
 
-    class ReorderListItemWrapper private constructor (
-        val value: skirout.editor.v1.action.ReorderListItemAction,
+    class MoveListItemWrapper private constructor (
+        val value: skirout.editor.v1.action.MoveListItemAction,
     ) : skirout.editor.v1.action.LocalEditorAction() {
         constructor(
-            value: skirout.editor.v1.action.ReorderListItemAction_OrMutable,
+            value: skirout.editor.v1.action.MoveListItemAction_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.REORDER_LIST_ITEM_WRAPPER;
+        override val kind get() = Kind.MOVE_LIST_ITEM_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.LocalEditorAction.ReorderListItemWrapper && value == other.value;
+            return other is skirout.editor.v1.action.LocalEditorAction.MoveListItemWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1434112976;
+            return this.value.hashCode() + 1050778406;
         }
     }
 
-    class PutMapEntryWrapper private constructor (
-        val value: skirout.editor.v1.action.PutMapEntryAction,
+    class InsertMapRowWrapper private constructor (
+        val value: skirout.editor.v1.action.InsertMapRowAction,
     ) : skirout.editor.v1.action.LocalEditorAction() {
         constructor(
-            value: skirout.editor.v1.action.PutMapEntryAction_OrMutable,
+            value: skirout.editor.v1.action.InsertMapRowAction_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.PUT_MAP_ENTRY_WRAPPER;
+        override val kind get() = Kind.INSERT_MAP_ROW_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.LocalEditorAction.PutMapEntryWrapper && value == other.value;
+            return other is skirout.editor.v1.action.LocalEditorAction.InsertMapRowWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1182007967;
+            return this.value.hashCode() + 158802161;
         }
     }
 
-    class RemoveMapEntryWrapper private constructor (
-        val value: skirout.editor.v1.action.RemoveMapEntryAction,
+    class UpdateMapRowWrapper private constructor (
+        val value: skirout.editor.v1.action.UpdateMapRowAction,
     ) : skirout.editor.v1.action.LocalEditorAction() {
         constructor(
-            value: skirout.editor.v1.action.RemoveMapEntryAction_OrMutable,
+            value: skirout.editor.v1.action.UpdateMapRowAction_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.REMOVE_MAP_ENTRY_WRAPPER;
+        override val kind get() = Kind.UPDATE_MAP_ROW_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.LocalEditorAction.RemoveMapEntryWrapper && value == other.value;
+            return other is skirout.editor.v1.action.LocalEditorAction.UpdateMapRowWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1204766252;
+            return this.value.hashCode() + -294156543;
         }
     }
 
-    class ReplaceConcreteNominalTypeWrapper private constructor (
-        val value: skirout.editor.v1.action.ReplaceConcreteNominalTypeAction,
+    class RemoveMapRowWrapper private constructor (
+        val value: skirout.editor.v1.action.RemoveMapRowAction,
     ) : skirout.editor.v1.action.LocalEditorAction() {
         constructor(
-            value: skirout.editor.v1.action.ReplaceConcreteNominalTypeAction_OrMutable,
+            value: skirout.editor.v1.action.RemoveMapRowAction_OrMutable,
         ): this(value.toFrozen()) {}
 
-        override val kind get() = Kind.REPLACE_CONCRETE_NOMINAL_TYPE_WRAPPER;
+        override val kind get() = Kind.REMOVE_MAP_ROW_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.LocalEditorAction.ReplaceConcreteNominalTypeWrapper && value == other.value;
+            return other is skirout.editor.v1.action.LocalEditorAction.RemoveMapRowWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 244036844;
+            return this.value.hashCode() + 1536187324;
+        }
+    }
+
+    class ChooseFormWrapper private constructor (
+        val value: skirout.editor.v1.action.ChooseFormAction,
+    ) : skirout.editor.v1.action.LocalEditorAction() {
+        constructor(
+            value: skirout.editor.v1.action.ChooseFormAction_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CHOOSE_FORM_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.LocalEditorAction.ChooseFormWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1681488404;
         }
     }
 
@@ -1992,7 +1794,7 @@ sealed class LocalEditorAction private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.LocalEditorAction._serializerImpl,
+            _SerializerRegistry.LocalEditorActionSerializerImpl,
         )
     }
 
@@ -2009,7 +1811,7 @@ sealed class LocalEditorAction private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            value: skirout.editor.v1.expression.ExpressionNode,
         ) = SetValueWrapper(
             skirout.editor.v1.action.SetValueAction(
                 target = target,
@@ -2023,12 +1825,26 @@ sealed class LocalEditorAction private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            index: skirout.editor.v1.expression.TypedExpression_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            after: skirout.editor.v1.type_catalog.ItemId_OrMutable?,
+            value: skirout.editor.v1.expression.ExpressionNode,
         ) = InsertListItemWrapper(
             skirout.editor.v1.action.InsertListItemAction(
                 target = target,
-                index = index,
+                after = after,
+                value = value,
+            )
+        );
+
+        /** Shortcut for `AppendListItemWrapper(skirout.editor.v1.action.AppendListItemAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAppendListItem(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable,
+            value: skirout.editor.v1.expression.ExpressionNode,
+        ) = AppendListItemWrapper(
+            skirout.editor.v1.action.AppendListItemAction(
+                target = target,
                 value = value,
             )
         );
@@ -2039,25 +1855,11 @@ sealed class LocalEditorAction private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            index: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
         ) = RemoveListItemWrapper(
             skirout.editor.v1.action.RemoveListItemAction(
                 target = target,
-                index = index,
-            )
-        );
-
-        /** Shortcut for `AppendListItemWrapper(skirout.editor.v1.action.AppendListItemAction(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createAppendListItem(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = AppendListItemWrapper(
-            skirout.editor.v1.action.AppendListItemAction(
-                target = target,
-                value = value,
+                item = item,
             )
         );
 
@@ -2066,183 +1868,98 @@ sealed class LocalEditorAction private constructor() {
         fun createDuplicateListItem(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable,
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
         ) = DuplicateListItemWrapper(
             skirout.editor.v1.action.DuplicateListItemAction(
-                source = source,
+                target = target,
+                item = item,
             )
         );
 
-        /** Shortcut for `ReorderListItemWrapper(skirout.editor.v1.action.ReorderListItemAction(...))`. */
+        /** Shortcut for `MoveListItemWrapper(skirout.editor.v1.action.MoveListItemAction(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReorderListItem(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            source: skirout.editor.v1.binding.BindingRef_OrMutable,
-            newIndex: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = ReorderListItemWrapper(
-            skirout.editor.v1.action.ReorderListItemAction(
-                source = source,
-                newIndex = newIndex,
-            )
-        );
-
-        /** Shortcut for `PutMapEntryWrapper(skirout.editor.v1.action.PutMapEntryAction(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPutMapEntry(
+        fun createMoveListItem(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            key: skirout.editor.v1.expression.TypedExpression_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = PutMapEntryWrapper(
-            skirout.editor.v1.action.PutMapEntryAction(
+            item: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+            after: skirout.editor.v1.type_catalog.ItemId_OrMutable?,
+        ) = MoveListItemWrapper(
+            skirout.editor.v1.action.MoveListItemAction(
+                target = target,
+                item = item,
+                after = after,
+            )
+        );
+
+        /** Shortcut for `InsertMapRowWrapper(skirout.editor.v1.action.InsertMapRowAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInsertMapRow(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable,
+            key: skirout.editor.v1.expression.ExpressionNode,
+            value: skirout.editor.v1.expression.ExpressionNode,
+        ) = InsertMapRowWrapper(
+            skirout.editor.v1.action.InsertMapRowAction(
                 target = target,
                 key = key,
                 value = value,
             )
         );
 
-        /** Shortcut for `RemoveMapEntryWrapper(skirout.editor.v1.action.RemoveMapEntryAction(...))`. */
+        /** Shortcut for `UpdateMapRowWrapper(skirout.editor.v1.action.UpdateMapRowAction(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRemoveMapEntry(
+        fun createUpdateMapRow(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            key: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = RemoveMapEntryWrapper(
-            skirout.editor.v1.action.RemoveMapEntryAction(
+            row: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+            key: skirout.editor.v1.expression.ExpressionNode,
+            value: skirout.editor.v1.expression.ExpressionNode,
+        ) = UpdateMapRowWrapper(
+            skirout.editor.v1.action.UpdateMapRowAction(
                 target = target,
+                row = row,
                 key = key,
-            )
-        );
-
-        /** Shortcut for `ReplaceConcreteNominalTypeWrapper(skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createReplaceConcreteNominalType(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            target: skirout.editor.v1.binding.BindingRef_OrMutable,
-            concreteType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-            value: skirout.editor.v1.expression.TypedExpression_OrMutable,
-        ) = ReplaceConcreteNominalTypeWrapper(
-            skirout.editor.v1.action.ReplaceConcreteNominalTypeAction(
-                target = target,
-                concreteType = concreteType,
                 value = value,
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.LocalEditorAction, Unknown>(
-                recordId = "editor/v1/action.skir:LocalEditorAction",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
+        /** Shortcut for `RemoveMapRowWrapper(skirout.editor.v1.action.RemoveMapRowAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createRemoveMapRow(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable,
+            row: skirout.editor.v1.type_catalog.ItemId_OrMutable,
+        ) = RemoveMapRowWrapper(
+            skirout.editor.v1.action.RemoveMapRowAction(
+                target = target,
+                row = row,
+            )
+        );
+
+        /** Shortcut for `ChooseFormWrapper(skirout.editor.v1.action.ChooseFormAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createChooseForm(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            target: skirout.editor.v1.binding.BindingRef_OrMutable,
+            type: skirout.editor.v1.type_catalog.TypeUse,
+        ) = ChooseFormWrapper(
+            skirout.editor.v1.action.ChooseFormAction(
+                target = target,
+                type = type,
+            )
+        );
 
         /** Serializer for [LocalEditorAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.LocalEditorActionSerializer;
 
         /** Describes the [LocalEditorAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "set_value",
-                    Kind.SET_VALUE_WRAPPER.ordinal,
-                    skirout.editor.v1.action.SetValueAction.serializer,
-                    "",
-                    { SetValueWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "insert_list_item",
-                    Kind.INSERT_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.InsertListItemAction.serializer,
-                    "",
-                    { InsertListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "remove_list_item",
-                    Kind.REMOVE_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.RemoveListItemAction.serializer,
-                    "",
-                    { RemoveListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "append_list_item",
-                    Kind.APPEND_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.AppendListItemAction.serializer,
-                    "",
-                    { AppendListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "duplicate_list_item",
-                    Kind.DUPLICATE_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.DuplicateListItemAction.serializer,
-                    "",
-                    { DuplicateListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "reorder_list_item",
-                    Kind.REORDER_LIST_ITEM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.ReorderListItemAction.serializer,
-                    "",
-                    { ReorderListItemWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "put_map_entry",
-                    Kind.PUT_MAP_ENTRY_WRAPPER.ordinal,
-                    skirout.editor.v1.action.PutMapEntryAction.serializer,
-                    "",
-                    { PutMapEntryWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "remove_map_entry",
-                    Kind.REMOVE_MAP_ENTRY_WRAPPER.ordinal,
-                    skirout.editor.v1.action.RemoveMapEntryAction.serializer,
-                    "",
-                    { RemoveMapEntryWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "replace_concrete_nominal_type",
-                    Kind.REPLACE_CONCRETE_NOMINAL_TYPE_WRAPPER.ordinal,
-                    skirout.editor.v1.action.ReplaceConcreteNominalTypeAction.serializer,
-                    "",
-                    { ReplaceConcreteNominalTypeWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.LocalEditorActionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2253,7 +1970,7 @@ sealed interface ReloadRealmAction_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ReloadRealmAction private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReloadRealmAction>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ReloadRealmAction>? =
         null,
 ): skirout.editor.v1.action.ReloadRealmAction_OrMutable {
     constructor(
@@ -2282,7 +1999,7 @@ class ReloadRealmAction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.ReloadRealmAction.serializerImpl,
+            _SerializerRegistry.ReloadRealmActionSerializerImpl,
         )
     }
 
@@ -2318,31 +2035,17 @@ class ReloadRealmAction private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:ReloadRealmAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ReloadRealmAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ReloadRealmActionSerializer;
 
         /** Describes the [ReloadRealmAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ReloadRealmActionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface CommandCapabilityAction_OrMutable {
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val payload: skirout.editor.v1.expression.TypedExpression_OrMutable;
+    val payload: skirout.editor.v1.expression.ExpressionNode;
 
     fun toFrozen(): skirout.editor.v1.action.CommandCapabilityAction;
 }
@@ -2351,20 +2054,20 @@ sealed interface CommandCapabilityAction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CommandCapabilityAction private constructor(
     override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
-    override val payload: skirout.editor.v1.expression.TypedExpression,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
+    override val payload: skirout.editor.v1.expression.ExpressionNode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
         null,
 ): skirout.editor.v1.action.CommandCapabilityAction_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
+        payload: skirout.editor.v1.expression.ExpressionNode,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
             null,
     ): this(
         capabilityId.toFrozen(),
-        payload.toFrozen(),
+        payload,
         _unrecognizedFields,
     ) {}
 
@@ -2383,11 +2086,11 @@ class CommandCapabilityAction private constructor(
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
+        payload: skirout.editor.v1.expression.ExpressionNode =
             this.payload,
     ) = skirout.editor.v1.action.CommandCapabilityAction(
         capabilityId.toFrozen(),
-        payload.toFrozen(),
+        payload,
         this._unrecognizedFields,
     );
 
@@ -2405,7 +2108,7 @@ class CommandCapabilityAction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.CommandCapabilityAction.serializerImpl,
+            _SerializerRegistry.CommandCapabilityActionSerializerImpl,
         )
     }
 
@@ -2415,8 +2118,8 @@ class CommandCapabilityAction private constructor(
             _MustNameArguments,
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
-            skirout.editor.v1.expression.TypedExpression.partial(),
+        override var payload: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.CommandCapabilityAction>? =
             null,
     ): skirout.editor.v1.action.CommandCapabilityAction_OrMutable {
@@ -2428,7 +2131,7 @@ class CommandCapabilityAction private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -2442,29 +2145,13 @@ class CommandCapabilityAction private constructor(
                 is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [payload] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [payload] and returns it.
-         */
-        val mutablePayload: skirout.editor.v1.expression.TypedExpression.Mutable get() {
-            var value = this.payload;
-            return when (value) {
-                is skirout.editor.v1.expression.TypedExpression -> {
-                    value = value.toMutable();
-                    this.payload = value;
-                    return value;
-                }
-                is skirout.editor.v1.expression.TypedExpression.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.action.CommandCapabilityAction(
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.expression.TypedExpression.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2480,51 +2167,19 @@ class CommandCapabilityAction private constructor(
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            payload: skirout.editor.v1.expression.TypedExpression_OrMutable =
-                skirout.editor.v1.expression.TypedExpression.partial(),
+            payload: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
         ) = skirout.editor.v1.action.CommandCapabilityAction(
             capabilityId = capabilityId,
             payload = payload,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:CommandCapabilityAction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CommandCapabilityAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CommandCapabilityActionSerializer;
 
         /** Describes the [CommandCapabilityAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "capability_id",
-                "capabilityId",
-                0,
-                skirout.editor.v1.type_catalog.CapabilityId.serializer,
-                "",
-                { it.capabilityId },
-                { mut, v -> mut.capabilityId = v },
-            );
-            serializerImpl.addField(
-                "payload",
-                "payload",
-                1,
-                skirout.editor.v1.expression.TypedExpression.serializer,
-                "",
-                { it.payload },
-                { mut, v -> mut.payload = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CommandCapabilityActionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2595,7 +2250,7 @@ sealed class RealmEditorAction private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.RealmEditorAction._serializerImpl,
+            _SerializerRegistry.RealmEditorActionSerializerImpl,
         )
     }
 
@@ -2621,7 +2276,7 @@ sealed class RealmEditorAction private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-            payload: skirout.editor.v1.expression.TypedExpression_OrMutable,
+            payload: skirout.editor.v1.expression.ExpressionNode,
         ) = CommandWrapper(
             skirout.editor.v1.action.CommandCapabilityAction(
                 capabilityId = capabilityId,
@@ -2629,53 +2284,11 @@ sealed class RealmEditorAction private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.RealmEditorAction, Unknown>(
-                recordId = "editor/v1/action.skir:RealmEditorAction",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [RealmEditorAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmEditorActionSerializer;
 
         /** Describes the [RealmEditorAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "reload",
-                    Kind.RELOAD_WRAPPER.ordinal,
-                    skirout.editor.v1.action.ReloadRealmAction.serializer,
-                    "",
-                    { ReloadWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "command",
-                    Kind.COMMAND_WRAPPER.ordinal,
-                    skirout.editor.v1.action.CommandCapabilityAction.serializer,
-                    "",
-                    { CommandWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmEditorActionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2738,7 +2351,7 @@ sealed class EditorAction private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.action.EditorAction._serializerImpl,
+            _SerializerRegistry.EditorActionSerializerImpl,
         )
     }
 
@@ -2749,778 +2362,600 @@ sealed class EditorAction private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.EditorAction, Unknown>(
-                recordId = "editor/v1/action.skir:EditorAction",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [EditorAction] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.EditorActionSerializer;
 
         /** Describes the [EditorAction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "local",
-                    Kind.LOCAL_WRAPPER.ordinal,
-                    skirout.editor.v1.action.LocalEditorAction.serializer,
-                    "",
-                    { LocalWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "realm",
-                    Kind.REALM_WRAPPER.ordinal,
-                    skirout.editor.v1.action.RealmEditorAction.serializer,
-                    "",
-                    { RealmWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.EditorActionSerializerImpl.typeDescriptor;
     }
 }
 
-sealed interface MutationSuccess_OrMutable {
-    val revision: kotlin.Long;
-    val value: skirout.editor.v1.type_catalog.TypedValue;
-
-    fun toFrozen(): skirout.editor.v1.action.MutationSuccess;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class MutationSuccess private constructor(
-    override val revision: kotlin.Long,
-    override val value: skirout.editor.v1.type_catalog.TypedValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationSuccess>? =
-        null,
-): skirout.editor.v1.action.MutationSuccess_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        revision: kotlin.Long,
-        value: skirout.editor.v1.type_catalog.TypedValue,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationSuccess>? =
-            null,
-    ): this(
-        revision,
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        revision = this.revision,
-        value = this.value,
+private object _SerializerRegistry {
+    val AppendListItemActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:AppendListItemAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.AppendListItemAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.AppendListItemAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        revision: kotlin.Long =
-            this.revision,
-        value: skirout.editor.v1.type_catalog.TypedValue =
-            this.value,
-    ) = skirout.editor.v1.action.MutationSuccess(
-        revision,
-        value,
-        this._unrecognizedFields,
+    val AppendListItemActionSerializer = build.skir.internal.makeSerializer(AppendListItemActionSerializerImpl);
+
+    val ChooseFormActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:ChooseFormAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.ChooseFormAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.ChooseFormAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    val ChooseFormActionSerializer = build.skir.internal.makeSerializer(ChooseFormActionSerializerImpl);
 
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.MutationSuccess && this.revision == other.revision && this.value == other.value);
-    }
+    val CommandCapabilityActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:CommandCapabilityAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.CommandCapabilityAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.CommandCapabilityAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.revision, this.value).hashCode();
-    }
+    val CommandCapabilityActionSerializer = build.skir.internal.makeSerializer(CommandCapabilityActionSerializerImpl);
 
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.MutationSuccess.serializerImpl,
-        )
-    }
+    val DuplicateListItemActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:DuplicateListItemAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.DuplicateListItemAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.DuplicateListItemAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-    /** Mutable version of [MutationSuccess]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var revision: kotlin.Long =
-            0L,
-        override var value: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationSuccess>? =
-            null,
-    ): skirout.editor.v1.action.MutationSuccess_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.MutationSuccess(
-            revision = this.revision,
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
+    val DuplicateListItemActionSerializer = build.skir.internal.makeSerializer(DuplicateListItemActionSerializerImpl);
 
-    companion object {
-        private val default =
-            skirout.editor.v1.action.MutationSuccess(
-                0L,
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [MutationSuccess].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            revision: kotlin.Long =
-                0L,
-            value: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        ) = skirout.editor.v1.action.MutationSuccess(
-            revision = revision,
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:MutationSuccess",
+    val EditorActionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.EditorAction, skirout.editor.v1.action.EditorAction.Unknown>(
+            recordId = "editor/v1/action.skir:EditorAction",
             doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.action.EditorAction.Kind.values().size,
+            unknownInstance = skirout.editor.v1.action.EditorAction.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.action.EditorAction.Unknown(skirout.editor.v1.action.EditorAction.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
         );
 
-        /** Serializer for [MutationSuccess] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+    val EditorActionSerializer = build.skir.internal.makeSerializer(EditorActionSerializerImpl);
 
-        /** Describes the [MutationSuccess] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface MutationConflict_OrMutable {
-    val expectedRevision: kotlin.Long;
-    val actualRevision: kotlin.Long;
-    val actualValue: skirout.editor.v1.type_catalog.TypedValue;
-
-    fun toFrozen(): skirout.editor.v1.action.MutationConflict;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class MutationConflict private constructor(
-    override val expectedRevision: kotlin.Long,
-    override val actualRevision: kotlin.Long,
-    override val actualValue: skirout.editor.v1.type_catalog.TypedValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationConflict>? =
-        null,
-): skirout.editor.v1.action.MutationConflict_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        expectedRevision: kotlin.Long,
-        actualRevision: kotlin.Long,
-        actualValue: skirout.editor.v1.type_catalog.TypedValue,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationConflict>? =
-            null,
-    ): this(
-        expectedRevision,
-        actualRevision,
-        actualValue,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        expectedRevision = this.expectedRevision,
-        actualRevision = this.actualRevision,
-        actualValue = this.actualValue,
+    val InsertListItemActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:InsertListItemAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.InsertListItemAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.InsertListItemAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        expectedRevision: kotlin.Long =
-            this.expectedRevision,
-        actualRevision: kotlin.Long =
-            this.actualRevision,
-        actualValue: skirout.editor.v1.type_catalog.TypedValue =
-            this.actualValue,
-    ) = skirout.editor.v1.action.MutationConflict(
-        expectedRevision,
-        actualRevision,
-        actualValue,
-        this._unrecognizedFields,
+    val InsertListItemActionSerializer = build.skir.internal.makeSerializer(InsertListItemActionSerializerImpl);
+
+    val InsertMapRowActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:InsertMapRowAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.InsertMapRowAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.InsertMapRowAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    val InsertMapRowActionSerializer = build.skir.internal.makeSerializer(InsertMapRowActionSerializerImpl);
 
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.MutationConflict && this.expectedRevision == other.expectedRevision && this.actualRevision == other.actualRevision && this.actualValue == other.actualValue);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.expectedRevision, this.actualRevision, this.actualValue).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.MutationConflict.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [MutationConflict]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var expectedRevision: kotlin.Long =
-            0L,
-        override var actualRevision: kotlin.Long =
-            0L,
-        override var actualValue: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.MutationConflict>? =
-            null,
-    ): skirout.editor.v1.action.MutationConflict_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.MutationConflict(
-            expectedRevision = this.expectedRevision,
-            actualRevision = this.actualRevision,
-            actualValue = this.actualValue,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.action.MutationConflict(
-                0L,
-                0L,
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [MutationConflict].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedRevision: kotlin.Long =
-                0L,
-            actualRevision: kotlin.Long =
-                0L,
-            actualValue: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        ) = skirout.editor.v1.action.MutationConflict(
-            expectedRevision = expectedRevision,
-            actualRevision = actualRevision,
-            actualValue = actualValue,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:MutationConflict",
+    val LocalEditorActionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.LocalEditorAction, skirout.editor.v1.action.LocalEditorAction.Unknown>(
+            recordId = "editor/v1/action.skir:LocalEditorAction",
             doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.action.LocalEditorAction.Kind.values().size,
+            unknownInstance = skirout.editor.v1.action.LocalEditorAction.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.action.LocalEditorAction.Unknown(skirout.editor.v1.action.LocalEditorAction.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
         );
 
-        /** Serializer for [MutationConflict] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+    val LocalEditorActionSerializer = build.skir.internal.makeSerializer(LocalEditorActionSerializerImpl);
 
-        /** Describes the [MutationConflict] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "expected_revision",
-                "expectedRevision",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.expectedRevision },
-                { mut, v -> mut.expectedRevision = v },
-            );
-            serializerImpl.addField(
-                "actual_revision",
-                "actualRevision",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.actualRevision },
-                { mut, v -> mut.actualRevision = v },
-            );
-            serializerImpl.addField(
-                "actual_value",
-                "actualValue",
-                2,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.actualValue },
-                { mut, v -> mut.actualValue = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface PermissionDenied_OrMutable {
-    val message: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.action.PermissionDenied;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class PermissionDenied private constructor(
-    override val message: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PermissionDenied>? =
-        null,
-): skirout.editor.v1.action.PermissionDenied_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        message: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PermissionDenied>? =
-            null,
-    ): this(
-        message,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        message = this.message,
+    val MoveListItemActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:MoveListItemAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.MoveListItemAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.MoveListItemAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        message: kotlin.String =
-            this.message,
-    ) = skirout.editor.v1.action.PermissionDenied(
-        message,
-        this._unrecognizedFields,
+    val MoveListItemActionSerializer = build.skir.internal.makeSerializer(MoveListItemActionSerializerImpl);
+
+    val RealmEditorActionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.RealmEditorAction, skirout.editor.v1.action.RealmEditorAction.Unknown>(
+            recordId = "editor/v1/action.skir:RealmEditorAction",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.action.RealmEditorAction.Kind.values().size,
+            unknownInstance = skirout.editor.v1.action.RealmEditorAction.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.action.RealmEditorAction.Unknown(skirout.editor.v1.action.RealmEditorAction.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val RealmEditorActionSerializer = build.skir.internal.makeSerializer(RealmEditorActionSerializerImpl);
+
+    val ReloadRealmActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:ReloadRealmAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.ReloadRealmAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.ReloadRealmAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
+    val ReloadRealmActionSerializer = build.skir.internal.makeSerializer(ReloadRealmActionSerializerImpl);
 
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.action.PermissionDenied && this.message == other.message);
-    }
+    val RemoveListItemActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:RemoveListItemAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.RemoveListItemAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.RemoveListItemAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.message).hashCode();
-    }
+    val RemoveListItemActionSerializer = build.skir.internal.makeSerializer(RemoveListItemActionSerializerImpl);
 
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.PermissionDenied.serializerImpl,
-        )
-    }
+    val RemoveMapRowActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:RemoveMapRowAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.RemoveMapRowAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.RemoveMapRowAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
 
-    /** Mutable version of [PermissionDenied]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var message: kotlin.String =
+    val RemoveMapRowActionSerializer = build.skir.internal.makeSerializer(RemoveMapRowActionSerializerImpl);
+
+    val SetValueActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:SetValueAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.SetValueAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.SetValueAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val SetValueActionSerializer = build.skir.internal.makeSerializer(SetValueActionSerializerImpl);
+
+    val UpdateMapRowActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:UpdateMapRowAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.UpdateMapRowAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.UpdateMapRowAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val UpdateMapRowActionSerializer = build.skir.internal.makeSerializer(UpdateMapRowActionSerializerImpl);
+
+    init {
+        AppendListItemActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
             "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.PermissionDenied>? =
-            null,
-    ): skirout.editor.v1.action.PermissionDenied_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.action.PermissionDenied(
-            message = this.message,
-            _unrecognizedFields = this._unrecognizedFields,
+            { it.target },
+            { mut, v -> mut.target = v },
         );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.action.PermissionDenied(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [PermissionDenied].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            message: kotlin.String =
-                "",
-        ) = skirout.editor.v1.action.PermissionDenied(
-            message = message,
-            _unrecognizedFields = null,
+        AppendListItemActionSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
         );
+        AppendListItemActionSerializerImpl.finalizeStruct();
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/action.skir:PermissionDenied",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        ChooseFormActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
         );
-
-        /** Serializer for [PermissionDenied] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [PermissionDenied] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "message",
-                "message",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.message },
-                { mut, v -> mut.message = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class TypedMutationResult private constructor() {
-    /** The kind of variant held by a `TypedMutationResult`. */
-    enum class Kind {
-        UNKNOWN,
-        SUCCESS_WRAPPER,
-        CONFLICT_WRAPPER,
-        INVALID_WRAPPER,
-        UNAVAILABLE_WRAPPER,
-        PERMISSION_DENIED_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.TypedMutationResult.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.TypedMutationResult>?,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.editor.v1.action.MutationSuccess,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        constructor(
-            value: skirout.editor.v1.action.MutationSuccess_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class ConflictWrapper private constructor (
-        val value: skirout.editor.v1.action.MutationConflict,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        constructor(
-            value: skirout.editor.v1.action.MutationConflict_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CONFLICT_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult.ConflictWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -580047918;
-        }
-    }
-
-    class InvalidWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic>,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.INVALID_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult.InvalidWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1959784951;
-        }
-    }
-
-    class UnavailableWrapper private constructor (
-        val value: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic>,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        constructor(
-            value: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
-        ): this(build.skir.internal.toFrozenList(value, { it.toFrozen() })) {}
-
-        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult.UnavailableWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -665462704;
-        }
-    }
-
-    class PermissionDeniedWrapper private constructor (
-        val value: skirout.editor.v1.action.PermissionDenied,
-    ) : skirout.editor.v1.action.TypedMutationResult() {
-        constructor(
-            value: skirout.editor.v1.action.PermissionDenied_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.PERMISSION_DENIED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.action.TypedMutationResult.PermissionDeniedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 330128395;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.TypedMutationResult>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.editor.v1.action.TypedMutationResult._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [TypedMutationResult].
-         * Default value for fields of type [TypedMutationResult].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `SuccessWrapper(skirout.editor.v1.action.MutationSuccess(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            revision: kotlin.Long,
-            value: skirout.editor.v1.type_catalog.TypedValue,
-        ) = SuccessWrapper(
-            skirout.editor.v1.action.MutationSuccess(
-                revision = revision,
-                value = value,
-            )
+        ChooseFormActionSerializerImpl.addField(
+            "type",
+            "type",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.type },
+            { mut, v -> mut.type = v },
         );
+        ChooseFormActionSerializerImpl.finalizeStruct();
 
-        /** Shortcut for `ConflictWrapper(skirout.editor.v1.action.MutationConflict(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createConflict(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            expectedRevision: kotlin.Long,
-            actualRevision: kotlin.Long,
-            actualValue: skirout.editor.v1.type_catalog.TypedValue,
-        ) = ConflictWrapper(
-            skirout.editor.v1.action.MutationConflict(
-                expectedRevision = expectedRevision,
-                actualRevision = actualRevision,
-                actualValue = actualValue,
-            )
+        CommandCapabilityActionSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
         );
-
-        /** Shortcut for `PermissionDeniedWrapper(skirout.editor.v1.action.PermissionDenied(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPermissionDenied(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            message: kotlin.String,
-        ) = PermissionDeniedWrapper(
-            skirout.editor.v1.action.PermissionDenied(
-                message = message,
-            )
+        CommandCapabilityActionSerializerImpl.addField(
+            "payload",
+            "payload",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.payload },
+            { mut, v -> mut.payload = v },
         );
+        CommandCapabilityActionSerializerImpl.finalizeStruct();
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.TypedMutationResult, Unknown>(
-                recordId = "editor/v1/action.skir:TypedMutationResult",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
+        DuplicateListItemActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        DuplicateListItemActionSerializerImpl.addField(
+            "item",
+            "item",
+            1,
+            skirout.editor.v1.type_catalog.ItemId.serializer,
+            "",
+            { it.item },
+            { mut, v -> mut.item = v },
+        );
+        DuplicateListItemActionSerializerImpl.finalizeStruct();
 
-        /** Serializer for [TypedMutationResult] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        EditorActionSerializerImpl.addWrapperVariant(
+            1,
+            "local",
+            skirout.editor.v1.action.EditorAction.Kind.LOCAL_WRAPPER.ordinal,
+            _SerializerRegistry.LocalEditorActionSerializer,
+            "",
+            { skirout.editor.v1.action.EditorAction.LocalWrapper(it) },
+            { it.value },
+        );
+        EditorActionSerializerImpl.addWrapperVariant(
+            2,
+            "realm",
+            skirout.editor.v1.action.EditorAction.Kind.REALM_WRAPPER.ordinal,
+            _SerializerRegistry.RealmEditorActionSerializer,
+            "",
+            { skirout.editor.v1.action.EditorAction.RealmWrapper(it) },
+            { it.value },
+        );
+        EditorActionSerializerImpl.finalizeEnum();
 
-        /** Describes the [TypedMutationResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+        InsertListItemActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        InsertListItemActionSerializerImpl.addField(
+            "after",
+            "after",
+            1,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ItemId.serializer,
+            ),
+            "",
+            { it.after },
+            { mut, v -> mut.after = v },
+        );
+        InsertListItemActionSerializerImpl.addField(
+            "value",
+            "value",
+            2,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        InsertListItemActionSerializerImpl.finalizeStruct();
 
-        init {
-            _maybeFinalizeSerializer();
-        }
+        InsertMapRowActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        InsertMapRowActionSerializerImpl.addField(
+            "key",
+            "key",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        InsertMapRowActionSerializerImpl.addField(
+            "value",
+            "value",
+            2,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        InsertMapRowActionSerializerImpl.finalizeStruct();
 
-        private var _finalizationCounter = 0;
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            1,
+            "set_value",
+            skirout.editor.v1.action.LocalEditorAction.Kind.SET_VALUE_WRAPPER.ordinal,
+            _SerializerRegistry.SetValueActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.SetValueWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            2,
+            "insert_list_item",
+            skirout.editor.v1.action.LocalEditorAction.Kind.INSERT_LIST_ITEM_WRAPPER.ordinal,
+            _SerializerRegistry.InsertListItemActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.InsertListItemWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            3,
+            "append_list_item",
+            skirout.editor.v1.action.LocalEditorAction.Kind.APPEND_LIST_ITEM_WRAPPER.ordinal,
+            _SerializerRegistry.AppendListItemActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.AppendListItemWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            4,
+            "remove_list_item",
+            skirout.editor.v1.action.LocalEditorAction.Kind.REMOVE_LIST_ITEM_WRAPPER.ordinal,
+            _SerializerRegistry.RemoveListItemActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.RemoveListItemWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            5,
+            "duplicate_list_item",
+            skirout.editor.v1.action.LocalEditorAction.Kind.DUPLICATE_LIST_ITEM_WRAPPER.ordinal,
+            _SerializerRegistry.DuplicateListItemActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.DuplicateListItemWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            6,
+            "move_list_item",
+            skirout.editor.v1.action.LocalEditorAction.Kind.MOVE_LIST_ITEM_WRAPPER.ordinal,
+            _SerializerRegistry.MoveListItemActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.MoveListItemWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            7,
+            "insert_map_row",
+            skirout.editor.v1.action.LocalEditorAction.Kind.INSERT_MAP_ROW_WRAPPER.ordinal,
+            _SerializerRegistry.InsertMapRowActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.InsertMapRowWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            8,
+            "update_map_row",
+            skirout.editor.v1.action.LocalEditorAction.Kind.UPDATE_MAP_ROW_WRAPPER.ordinal,
+            _SerializerRegistry.UpdateMapRowActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.UpdateMapRowWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            9,
+            "remove_map_row",
+            skirout.editor.v1.action.LocalEditorAction.Kind.REMOVE_MAP_ROW_WRAPPER.ordinal,
+            _SerializerRegistry.RemoveMapRowActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.RemoveMapRowWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.addWrapperVariant(
+            10,
+            "choose_form",
+            skirout.editor.v1.action.LocalEditorAction.Kind.CHOOSE_FORM_WRAPPER.ordinal,
+            _SerializerRegistry.ChooseFormActionSerializer,
+            "",
+            { skirout.editor.v1.action.LocalEditorAction.ChooseFormWrapper(it) },
+            { it.value },
+        );
+        LocalEditorActionSerializerImpl.finalizeEnum();
 
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.editor.v1.action.MutationSuccess.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "conflict",
-                    Kind.CONFLICT_WRAPPER.ordinal,
-                    skirout.editor.v1.action.MutationConflict.serializer,
-                    "",
-                    { ConflictWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "invalid",
-                    Kind.INVALID_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.editor.v1.diagnostic.TypeDiagnostic.serializer,
-                    ),
-                    "",
-                    { InvalidWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "unavailable",
-                    Kind.UNAVAILABLE_WRAPPER.ordinal,
-                    build.skir.Serializers.list(
-                        skirout.editor.v1.diagnostic.TypeDiagnostic.serializer,
-                    ),
-                    "",
-                    { UnavailableWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "permission_denied",
-                    Kind.PERMISSION_DENIED_WRAPPER.ordinal,
-                    skirout.editor.v1.action.PermissionDenied.serializer,
-                    "",
-                    { PermissionDeniedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        MoveListItemActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        MoveListItemActionSerializerImpl.addField(
+            "item",
+            "item",
+            1,
+            skirout.editor.v1.type_catalog.ItemId.serializer,
+            "",
+            { it.item },
+            { mut, v -> mut.item = v },
+        );
+        MoveListItemActionSerializerImpl.addField(
+            "after",
+            "after",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.ItemId.serializer,
+            ),
+            "",
+            { it.after },
+            { mut, v -> mut.after = v },
+        );
+        MoveListItemActionSerializerImpl.finalizeStruct();
+
+        RealmEditorActionSerializerImpl.addWrapperVariant(
+            1,
+            "reload",
+            skirout.editor.v1.action.RealmEditorAction.Kind.RELOAD_WRAPPER.ordinal,
+            _SerializerRegistry.ReloadRealmActionSerializer,
+            "",
+            { skirout.editor.v1.action.RealmEditorAction.ReloadWrapper(it) },
+            { it.value },
+        );
+        RealmEditorActionSerializerImpl.addWrapperVariant(
+            2,
+            "command",
+            skirout.editor.v1.action.RealmEditorAction.Kind.COMMAND_WRAPPER.ordinal,
+            _SerializerRegistry.CommandCapabilityActionSerializer,
+            "",
+            { skirout.editor.v1.action.RealmEditorAction.CommandWrapper(it) },
+            { it.value },
+        );
+        RealmEditorActionSerializerImpl.finalizeEnum();
+
+        ReloadRealmActionSerializerImpl.finalizeStruct();
+
+        RemoveListItemActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        RemoveListItemActionSerializerImpl.addField(
+            "item",
+            "item",
+            1,
+            skirout.editor.v1.type_catalog.ItemId.serializer,
+            "",
+            { it.item },
+            { mut, v -> mut.item = v },
+        );
+        RemoveListItemActionSerializerImpl.finalizeStruct();
+
+        RemoveMapRowActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        RemoveMapRowActionSerializerImpl.addField(
+            "row",
+            "row",
+            1,
+            skirout.editor.v1.type_catalog.ItemId.serializer,
+            "",
+            { it.row },
+            { mut, v -> mut.row = v },
+        );
+        RemoveMapRowActionSerializerImpl.finalizeStruct();
+
+        SetValueActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        SetValueActionSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        SetValueActionSerializerImpl.finalizeStruct();
+
+        UpdateMapRowActionSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            skirout.editor.v1.binding.BindingRef.serializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        UpdateMapRowActionSerializerImpl.addField(
+            "row",
+            "row",
+            1,
+            skirout.editor.v1.type_catalog.ItemId.serializer,
+            "",
+            { it.row },
+            { mut, v -> mut.row = v },
+        );
+        UpdateMapRowActionSerializerImpl.addField(
+            "key",
+            "key",
+            2,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.key },
+            { mut, v -> mut.key = v },
+        );
+        UpdateMapRowActionSerializerImpl.addField(
+            "value",
+            "value",
+            3,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        UpdateMapRowActionSerializerImpl.finalizeStruct();
     }
 }

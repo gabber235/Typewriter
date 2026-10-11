@@ -1,14 +1,8 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Renders projected tags as an editable graph.
-///
-/// Node placement and direct parent IDs become graph elements and edges. Move
-/// and resize callbacks submit guarded updates through [CanonicalTags], using
-/// the projected tag as the expected observation. Missing parent records are
-/// omitted from edges, so malformed references do not block the rest of the
-/// graph.
+/// Renders the shared working tags. Each graph gesture stages one atomic group.
 class TagGraph extends HookConsumerWidget {
   const TagGraph({this.onViewportCenterChanged, super.key});
 
@@ -65,59 +59,115 @@ class TagGraph extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tags = ref.watch(projectedTagsProvider);
+    final tags = ref.watch(workingTagsProvider);
+    final scope = ref.watch(selectedAuthoringScopeProvider);
 
     return tags(
       name: "tags",
       builder: (tagList) {
         if (tagList.isEmpty) {
+          final template =
+              (ref
+                      .read(selectedWorkingAuthoringDocumentProvider)
+                      .value
+                      ?.catalog)
+                  .resourceCreationTemplate(coreTagResourceDefinition.value);
           return EmptyTagsPage(
-            onCreateTag: () => ref
-                .read(canonicalTagsProvider.notifier)
-                .createTag(name: "New Tag"),
+            onCreateTag: template == null || scope == null
+                ? null
+                : () async {
+                    final created = await ref
+                        .read(resourceCreationProvider(scope))
+                        .create(
+                          context: context,
+                          request: ResourceCreationRequest(
+                            definition: template.definition,
+                            configuration: template.configuration,
+                          ),
+                        );
+                    if (created == null) return;
+                    ref
+                        .read(selectionProvider.notifier)
+                        .select(
+                          AuthoringResourceIdentifier.inScope(
+                            created.scope,
+                            created.id,
+                          ),
+                        );
+                  },
           );
         }
 
+        final from = ref
+            .read(selectedWorkingAuthoringDocumentProvider)
+            .requireValue;
         final tagIds = {for (final tag in tagList) tag.tagId.id: tag.tagId};
-
         return Graph(
           data: _graphFromTags(context, tagList),
           onViewportCenterChanged: onViewportCenterChanged,
           onElementsMoved: (changes) {
-            final tagsById = {for (final tag in tagList) tag.tagId: tag};
-            for (final change in changes) {
-              final tagId = tagIds[change.id.id];
-              final tag = tagsById[tagId];
-              if (tag == null) continue;
-              ref
-                  .read(canonicalTagsProvider.notifier)
-                  .updateTag(
-                    tag.copyWith(
-                      placement: tag.placement.copyWith(
-                        x: change.x,
-                        y: change.y,
-                      ),
-                    ),
-                  );
-            }
+            ref
+                .readAuthoringWorkspace()
+                .edit(
+                  label: "Move tags",
+                  from: from,
+                  apply: (edit) {
+                    for (final change in changes) {
+                      final resource = tagIds[change.id.id];
+                      if (resource == null) {
+                        throw StateError("The moved tag is unavailable");
+                      }
+                      edit
+                        ..setFieldPayload(
+                          resource: resource,
+                          fields: ["placement", "x"],
+                          payload: skir.DataValue.wrapInteger(
+                            change.x.toString(),
+                          ),
+                        )
+                        ..setFieldPayload(
+                          resource: resource,
+                          fields: ["placement", "y"],
+                          payload: skir.DataValue.wrapInteger(
+                            change.y.toString(),
+                          ),
+                        );
+                    }
+                  },
+                )
+                .report(context);
           },
           onElementsResized: (changes) {
-            final tagsById = {for (final tag in tagList) tag.tagId: tag};
-            for (final change in changes) {
-              final tagId = tagIds[change.id.id];
-              final tag = tagsById[tagId];
-              if (tag == null) continue;
-              ref
-                  .read(canonicalTagsProvider.notifier)
-                  .updateTag(
-                    tag.copyWith(
-                      placement: tag.placement.copyWith(
-                        width: change.width,
-                        height: change.height,
-                      ),
-                    ),
-                  );
-            }
+            ref
+                .readAuthoringWorkspace()
+                .edit(
+                  label: "Resize tags",
+                  from: from,
+                  apply: (edit) {
+                    for (final change in changes) {
+                      final resource = tagIds[change.id.id];
+                      if (resource == null) {
+                        throw StateError("The resized tag is unavailable");
+                      }
+                      edit
+                        ..setFieldPayload(
+                          resource: resource,
+                          fields: ["placement", "width"],
+                          payload: skir.DataValue.wrapInteger(
+                            change.width.toString(),
+                          ),
+                        )
+                        ..setFieldPayload(
+                          resource: resource,
+                          fields: ["placement", "height"],
+                          payload: skir.DataValue.wrapInteger(
+                            change.height.toString(),
+                          ),
+                        );
+                    }
+                  },
+                )
+                .report(context);
           },
         );
       },
@@ -129,7 +179,7 @@ class TagGraph extends HookConsumerWidget {
 class EmptyTagsPage extends StatelessWidget {
   const EmptyTagsPage({required this.onCreateTag, super.key});
 
-  final VoidCallback onCreateTag;
+  final VoidCallback? onCreateTag;
 
   @override
   Widget build(BuildContext context) {

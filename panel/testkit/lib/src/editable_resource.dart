@@ -1,23 +1,30 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+
+EditorMutationResult acceptTestEditorMutation(
+  skir.ValuePath path,
+  skir.DataValue value,
+) => EditorMutationResult.applied(value);
 
 final class FakeEditorSnapshot extends EditorSnapshot {
   const FakeEditorSnapshot(
     this.document, {
-    this.validation,
+    required this.validation,
     this.draftValidation,
   });
 
   @override
   final EditorDocument document;
-  final EditorMutationValidator? validation;
-  final List<TypeDiagnostic> Function(DataValue)? draftValidation;
+  final EditorMutationValidator validation;
+  final List<EditorDiagnostic> Function(skir.DataValue)? draftValidation;
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) =>
-      validation?.call(path, value) ?? super.validate(path, value);
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
+      validation(path, value);
 
   @override
-  List<TypeDiagnostic> validateDraft(DataValue value) =>
+  List<EditorDiagnostic> validateDraft(skir.DataValue value) =>
       draftValidation?.call(value) ?? const [];
 }
 
@@ -83,11 +90,16 @@ ResourceEditorTarget fakeEditorTarget({
   required String label,
   required EditorDocument document,
   required EditorCommitter commit,
+  required EditorMutationValidator validation,
   Object? scope,
   EditorCommitPolicy commitPolicy = EditorCommitPolicy.autosaveChanges,
-  List<TypeDiagnostic> Function(DataValue)? validateDraft,
+  List<EditorDiagnostic> Function(skir.DataValue)? validateDraft,
 }) {
-  final snapshot = FakeEditorSnapshot(document, draftValidation: validateDraft);
+  final snapshot = FakeEditorSnapshot(
+    document,
+    validation: validation,
+    draftValidation: validateDraft,
+  );
   return ResourceEditorTarget(
     targetId: targetId,
     label: label,

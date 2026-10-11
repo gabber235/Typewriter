@@ -6,22 +6,22 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactRequirement
 import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.CommonExtensionSourcePart
+import com.typewritermc.imprint.EngineExtensionSourcePart
 import com.typewritermc.imprint.EngineManifest
+import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.IMPRINT_MANIFEST_PATH
 import com.typewritermc.imprint.ImprintManifestCodec
 import com.typewritermc.imprint.RealmManifest
+import com.typewritermc.imprint.ResolvedArtifact
 import com.typewritermc.imprint.VersionConstraint
-import com.typewritermc.loader.api.RealmServiceAddress
+import com.typewritermc.loader.api.EngineImplementationArtifact
 import com.typewritermc.loader.api.RuntimePlacement
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
-import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.artifact.ArtifactCoordinate
 import com.typewritermc.loader.artifact.ArtifactInboxReconciler
 import com.typewritermc.loader.artifact.BlobContracts
@@ -33,7 +33,7 @@ import com.typewritermc.loader.deployment.DeploymentContent
 import com.typewritermc.loader.deployment.DeploymentContentCodec
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
-import com.typewritermc.loader.deployment.RealmTopology
+import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
 import com.typewritermc.loader.rollout.ActiveBaseline
 import com.typewritermc.loader.rollout.ActiveProjectionReference
@@ -54,16 +54,31 @@ import com.typewritermc.loader.rollout.RolloutCommand
 import com.typewritermc.loader.rollout.RolloutEnvelope
 import com.typewritermc.loader.rollout.RolloutMessenger
 import com.typewritermc.loader.rollout.RuntimeHealthSnapshot
+import com.typewritermc.loader.rollout.deploymentSelectionOrNull
+import com.typewritermc.loader.rollout.hostExecutionReportResponsePolicy
+import com.typewritermc.loader.rollout.hostExecutionResponseClassifier
+import com.typewritermc.loader.rollout.hostExecutionResponsePolicy
+import com.typewritermc.loader.rollout.hostRegistrationResponsePolicy
 import com.typewritermc.loader.rollout.toChildRuntimeState
 import com.typewritermc.loader.rollout.toDesiredHostExecution
-import com.typewritermc.loader.rollout.toReadyTopology
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
 import com.typewritermc.loader.shared.SharedArtifactService
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
+import com.typewritermc.protocol.transport.generated.hostExecutionReport
+import com.typewritermc.protocol.transport.generated.hostExecutionWatch
+import com.typewritermc.protocol.transport.generated.serviceHostRegister
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.services.libs.registrar.ServiceId
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceTimeBy
@@ -91,7 +106,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TestTimeSource
 
 val ArtifactDistributionTest by testSuite {
-    test("Realm topology requires one unambiguous Realm host and permits no primary engine") {
+    test("Realm deployment selection requires one unambiguous Realm host and permits no primary engine") {
         val realmId = RealmId("realm")
         val host = ServiceId("combined")
         val probe = ProbeRealmHosts(realmId)
@@ -105,20 +120,20 @@ val ArtifactDistributionTest by testSuite {
             )
         val combined = realmOnly.copy(assignedRoles = RuntimePlacement.entries.toSet())
 
-        emptyList<RealmHostPresence>().toReadyTopology() shouldBe null
-        listOf(realmOnly).toReadyTopology() shouldBe
-            RealmTopology(host, emptySet(), mapOf(host to ArtifactVersion("1.0.0")))
-        listOf(realmOnly, combined).toReadyTopology() shouldBe null
-        listOf(combined).toReadyTopology() shouldBe
-            RealmTopology(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
+        emptyList<RealmHostPresence>().deploymentSelectionOrNull() shouldBe null
+        listOf(realmOnly).deploymentSelectionOrNull() shouldBe
+            RealmDeploymentSelection(host, emptySet(), mapOf(host to ArtifactVersion("1.0.0")))
+        listOf(realmOnly, combined).deploymentSelectionOrNull() shouldBe null
+        listOf(combined).deploymentSelectionOrNull() shouldBe
+            RealmDeploymentSelection(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
     }
 
-    test("distinct service identities remain distinct rollout participants") {
+    test("distinct observed service identities remain distinct in deployment selection") {
         val realmId = RealmId("realm")
         val probe = ProbeRealmHosts(realmId)
         val standalone = ServiceId("standalone-service")
         val paper = ServiceId("paper-service")
-        val topology =
+        val selection =
             listOf(
                 RealmHostPresence(
                     probe.probeId,
@@ -134,10 +149,10 @@ val ArtifactDistributionTest by testSuite {
                     setOf(RuntimePlacement.PRIMARY_ENGINE),
                     null,
                 ),
-            ).toReadyTopology()
+            ).deploymentSelectionOrNull()
 
-        topology shouldBe
-            RealmTopology(
+        selection shouldBe
+            RealmDeploymentSelection(
                 realmService = standalone,
                 primaryEngineServices = setOf(paper),
                 serviceApis = mapOf(standalone to ArtifactVersion("1.0.0"), paper to ArtifactVersion("1.0.0")),
@@ -146,29 +161,43 @@ val ArtifactDistributionTest by testSuite {
 
     test("shared artifact contracts use valid telemetry slugs") {
         val contracts = SharedContracts()
-        contracts.catalog.failureSlug.value shouldBe "shared-catalog-fetch"
-        contracts.publish.failureSlug.value shouldBe "shared-publish"
+        val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
+        contracts.catalog(scope).failureSlug.value shouldBe "shared-catalog-fetch-failed"
+        contracts.publish(scope).failureSlug.value shouldBe "shared-publish-failed"
     }
 
     test("blob contracts use valid telemetry slugs") {
         val contracts = BlobContracts()
-        contracts.metadata.failureSlug.value shouldBe "shared-blob-metadata"
-        contracts.read.failureSlug.value shouldBe "shared-blob-read"
-        contracts.begin.failureSlug.value shouldBe "shared-blob-begin"
-        contracts.write.failureSlug.value shouldBe "shared-blob-write"
-        contracts.complete.failureSlug.value shouldBe "shared-blob-complete"
+        val scope = RealmRouteScope(organizationId = "writers", realmId = "quests")
+        contracts.metadata(scope).failureSlug.value shouldBe "shared-blob-metadata-failed"
+        contracts.read(scope).failureSlug.value shouldBe "shared-blob-read-failed"
+        contracts.begin(scope).failureSlug.value shouldBe "shared-blob-begin-failed"
+        contracts.write(scope).failureSlug.value shouldBe "shared-blob-write-failed"
+        contracts.complete(scope).failureSlug.value shouldBe "shared-blob-complete-failed"
     }
 
-    test("Realm service addresses preserve the established authority family") {
-        val address = RealmServiceAddress(realmId = "quests", organizationId = "writers")
+    test("generated Realm routes preserve the established authority family") {
+        val address = RealmRouteScope(realmId = "quests", organizationId = "writers")
+        val shared = SharedContracts().publish(address)
 
-        address.request("shared.publish") shouldBe
+        shared.requestAddress.render(address).value shouldBe
             "service.to.quests.organization.writers.realm.shared.publish"
-        address.event("catalog.invalidate") shouldBe
-            "service.from.quests.organization.writers.realm.catalog.invalidate"
-        shouldThrow<IllegalArgumentException> {
-            address.request("shared.*")
-        }
+        address.authoringCompiledChanged.address
+            .render(address)
+            .value shouldBe
+            "service.from.quests.organization.writers.realm.editor.authoring.compiled.changed"
+    }
+
+    test("generated host execution routes preserve the service authority family") {
+        val scope = ServiceRouteScope("host")
+        val registration = scope.serviceHostRegister(hostRegistrationResponsePolicy)
+        val watch = scope.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
+        val report = scope.hostExecutionReport(hostExecutionReportResponsePolicy)
+
+        registration.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.register"
+        watch.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.watch"
+        watch.updateAddress.render(scope).value shouldBe "cloud.from.service.host.execution.watch"
+        report.requestAddress.render(scope).value shouldBe "cloud.to.service.host.execution.report"
     }
 
     test("combined host receives Realm panel and primary runtimes as one projection") {
@@ -178,8 +207,8 @@ val ArtifactDistributionTest by testSuite {
         val content = DeploymentContent(realm = realm, primaryEngine = primary, panelEngine = panel, extensions = emptyList())
         val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
         val host = ServiceId("combined")
-        val topology =
-            RealmTopology(
+        val selection =
+            RealmDeploymentSelection(
                 realmService = host,
                 primaryEngineServices = setOf(host),
                 serviceApis = mapOf(host to ArtifactVersion("1.0.0")),
@@ -198,7 +227,7 @@ val ArtifactDistributionTest by testSuite {
                 primary.coordinate.id to engineManifest(primary),
             )
 
-        val projection = snapshot.projectFor("realm", topology, host, manifests)
+        val projection = snapshot.projectFor("realm", selection, host, manifests)
 
         projection.serviceId shouldBe host
         projection.runtimes.map { it.placement } shouldContainExactly
@@ -207,6 +236,136 @@ val ArtifactDistributionTest by testSuite {
                 RuntimePlacement.PRIMARY_ENGINE,
                 RuntimePlacement.REALM,
             )
+        projection.publicationTarget.engine.id shouldBe primary.coordinate.id
+        projection.publicationTarget.engine.digest shouldBe primary.digest
+    }
+
+    test("Realm and remote primary engine receive one exact implementation target") {
+        val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
+        val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
+        val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
+        val content = DeploymentContent(realm = realm, primaryEngine = primary, panelEngine = panel, extensions = emptyList())
+        val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
+        val realmHost = ServiceId("realm")
+        val engineHost = ServiceId("engine")
+        val selection =
+            RealmDeploymentSelection(
+                realmService = realmHost,
+                primaryEngineServices = setOf(engineHost),
+                serviceApis =
+                    mapOf(
+                        realmHost to ArtifactVersion("1.0.0"),
+                        engineHost to ArtifactVersion("1.0.0"),
+                    ),
+            )
+        val manifests =
+            mapOf(
+                realm.coordinate.id to
+                    RealmManifest(
+                        id = realm.coordinate.id,
+                        version = realm.coordinate.version,
+                        hostApi = VersionConstraint("^1"),
+                        runtimeEntrypointClass = "fixture.Runtime",
+                        contributions = emptyList(),
+                    ),
+                panel.coordinate.id to engineManifest(panel),
+                primary.coordinate.id to engineManifest(primary),
+            )
+
+        val realmProjection = snapshot.projectFor("realm", selection, realmHost, manifests)
+        val engineProjection = snapshot.projectFor("realm", selection, engineHost, manifests)
+
+        realmProjection.publicationTarget shouldBe engineProjection.publicationTarget
+        realmProjection.publicationTarget.fingerprint() shouldBe engineProjection.publicationTarget.fingerprint()
+        realmProjection.publicationTarget.engine.id shouldBe primary.coordinate.id
+        engineProjection.runtimes.single().implementation shouldBe engineProjection.publicationTarget
+        val panelImplementation =
+            requireNotNull(realmProjection.runtimes.single { it.placement == RuntimePlacement.PANEL_ENGINE }.implementation)
+        panelImplementation.engine.id shouldBe panel.coordinate.id
+        panelImplementation.fingerprint() shouldNotBe realmProjection.publicationTarget.fingerprint()
+        realmProjection.runtimes.single { it.placement == RuntimePlacement.REALM }.implementation shouldBe null
+
+        val changedPrimary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "changed paper")
+        val changedContent = content.copy(primaryEngine = changedPrimary)
+        val changed = DeploymentSnapshot(DeploymentGeneration(2), DeploymentContentCodec.digest(changedContent), changedContent)
+        changed.projectFor("realm", selection, realmHost, manifests).publicationTarget.fingerprint() shouldNotBe
+            realmProjection.publicationTarget.fingerprint()
+    }
+
+    test("publication fingerprint includes only source parts eligible for the primary engine") {
+        val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
+        val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
+        val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
+        val extension = artifact("typewritermc:extension", ArtifactKind.EXTENSION, "extension")
+        val content =
+            DeploymentContent(
+                realm = realm,
+                primaryEngine = primary,
+                panelEngine = panel,
+                extensions = listOf(extension),
+            )
+        val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
+        val realmHost = ServiceId("realm")
+        val selection =
+            RealmDeploymentSelection(
+                realmService = realmHost,
+                primaryEngineServices = emptySet(),
+                serviceApis = mapOf(realmHost to ArtifactVersion("1.0.0")),
+            )
+        val manifests =
+            mapOf(
+                realm.coordinate.id to
+                    RealmManifest(
+                        id = realm.coordinate.id,
+                        version = realm.coordinate.version,
+                        hostApi = VersionConstraint("^1"),
+                        runtimeEntrypointClass = "fixture.Runtime",
+                        contributions = emptyList(),
+                    ),
+                panel.coordinate.id to engineManifest(panel),
+                primary.coordinate.id to engineManifest(primary),
+                extension.coordinate.id to
+                    ExtensionManifest(
+                        id = extension.coordinate.id,
+                        version = extension.coordinate.version,
+                        sourceParts =
+                            listOf(
+                                CommonExtensionSourcePart,
+                                EngineExtensionSourcePart(
+                                    name = "paper",
+                                    requirement = ArtifactRequirement(primary.coordinate.id, VersionConstraint("^1")),
+                                    resolved =
+                                        ResolvedArtifact(
+                                            primary.coordinate.id,
+                                            primary.coordinate.version,
+                                            ArtifactKind.ENGINE,
+                                        ),
+                                ),
+                            ),
+                        buildProvenance = emptyList(),
+                        contributions = emptyList(),
+                    ),
+            )
+
+        val projection = snapshot.projectFor("realm", selection, realmHost, manifests)
+        val included = projection.publicationTarget.extensions.single()
+        included.sourceParts shouldContainExactly listOf("common", "paper")
+        val changedParts =
+            projection.publicationTarget.copy(
+                extensions =
+                    listOf(
+                        EngineImplementationArtifact(
+                            included.id,
+                            included.version,
+                            included.digest,
+                            listOf("common", "panel"),
+                        ),
+                    ),
+            )
+        changedParts.fingerprint() shouldNotBe projection.publicationTarget.fingerprint()
+        val panelImplementation =
+            requireNotNull(projection.runtimes.single { it.placement == RuntimePlacement.PANEL_ENGINE }.implementation)
+        panelImplementation.extensions.single().sourceParts shouldContainExactly listOf("common")
     }
 
     test("blob completion verifies bytes and supports ranged reads") {
@@ -238,7 +397,7 @@ val ArtifactDistributionTest by testSuite {
             val projection =
                 snapshot.projectFor(
                     "realm",
-                    RealmTopology(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0"))),
+                    RealmDeploymentSelection(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0"))),
                     host,
                     mapOf(
                         realm.coordinate.id to
@@ -264,104 +423,129 @@ val ArtifactDistributionTest by testSuite {
         }
     }
 
-    test("Realm and panel roll out without a primary engine host") {
-        runTest {
-            val root = Files.createTempDirectory("typewriter-realm-only-rollout")
-            val realmId = RealmId("realm")
-            val host = ServiceId("realm-service")
-            val hostApi = ArtifactVersion("1.0.0")
-            val assignedRoles = setOf(RuntimePlacement.REALM, RuntimePlacement.PANEL_ENGINE)
-            val presence = RealmHostPresence(ProbeRealmHosts(realmId).probeId, host, hostApi, assignedRoles, null)
-            val topology = requireNotNull(listOf(presence).toReadyTopology())
-            val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
-            val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
-            val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
-            val content = DeploymentContent(realm = realm, primaryEngine = primary, panelEngine = panel, extensions = emptyList())
-            val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
-            val manifests =
-                mapOf(
-                    realm.coordinate.id to
-                        RealmManifest(
-                            id = realm.coordinate.id,
-                            version = realm.coordinate.version,
-                            hostApi = VersionConstraint("^1"),
-                            runtimeEntrypointClass = "fixture.Runtime",
-                            contributions = emptyList(),
-                        ),
-                    panel.coordinate.id to engineManifest(panel),
-                    primary.coordinate.id to engineManifest(primary),
-                )
-            val state = FileRolloutStateRepository(realmId, root)
-            val commands = mutableListOf<RolloutEnvelope>()
-            var currentStatus: ParticipantStatus? = null
-            val messenger =
-                object : RolloutMessenger {
-                    override suspend fun discover(
-                        probe: ProbeRealmHosts,
-                        expected: Set<ServiceId>,
-                        timeout: Duration,
-                    ) = listOf(presence.copy(probeId = probe.probeId))
-
-                    override suspend fun command(
-                        envelope: RolloutEnvelope,
-                        timeout: Duration,
-                    ): List<CommandAcceptance> {
-                        commands += envelope
-                        val reference = envelope.projections.getValue(host)
-                        currentStatus =
-                            when (envelope.command) {
-                                RolloutCommand.Stage -> {
-                                    ParticipantStatus.Staged(envelope.attempt, host, reference, ActiveBaseline.Empty)
-                                }
-
-                                RolloutCommand.Commit -> {
-                                    ParticipantStatus.Active(
-                                        envelope.attempt,
-                                        host,
-                                        ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
-                                        RetainedProjection.None,
-                                    )
-                                }
-
-                                RolloutCommand.Abort -> {
-                                    ParticipantStatus.Idle(envelope.attempt, host)
-                                }
-
-                                is RolloutCommand.Rollback -> {
-                                    error("Rollback was not expected.")
-                                }
-                            }
-                        return listOf(CommandAcceptance(host, true))
+    listOf(false, true).forEach { absentEngineSelected ->
+        test(
+            if (absentEngineSelected) {
+                "an absent selected engine does not block responding Realm participants"
+            } else {
+                "Realm and panel roll out without a primary engine host"
+            },
+        ) {
+            runTest {
+                val root = Files.createTempDirectory("typewriter-realm-only-rollout")
+                val realmId = RealmId("realm")
+                val host = ServiceId("realm-service")
+                val hostApi = ArtifactVersion("1.0.0")
+                val assignedRoles = setOf(RuntimePlacement.REALM, RuntimePlacement.PANEL_ENGINE)
+                val presence = RealmHostPresence(ProbeRealmHosts(realmId).probeId, host, hostApi, assignedRoles, null)
+                val observedSelection = requireNotNull(listOf(presence).deploymentSelectionOrNull())
+                val absentEngine = ServiceId("absent-engine")
+                val selection =
+                    if (absentEngineSelected) {
+                        observedSelection.copy(
+                            primaryEngineServices = setOf(absentEngine),
+                            serviceApis = observedSelection.serviceApis + (absentEngine to hostApi),
+                        )
+                    } else {
+                        observedSelection
                     }
+                val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
+                val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
+                val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
+                val content = DeploymentContent(realm = realm, primaryEngine = primary, panelEngine = panel, extensions = emptyList())
+                val snapshot = DeploymentSnapshot(DeploymentGeneration(1), DeploymentContentCodec.digest(content), content)
+                val manifests =
+                    mapOf(
+                        realm.coordinate.id to
+                            RealmManifest(
+                                id = realm.coordinate.id,
+                                version = realm.coordinate.version,
+                                hostApi = VersionConstraint("^1"),
+                                runtimeEntrypointClass = "fixture.Runtime",
+                                contributions = emptyList(),
+                            ),
+                        panel.coordinate.id to engineManifest(panel),
+                        primary.coordinate.id to engineManifest(primary),
+                    )
+                val state = FileRolloutStateRepository(realmId, root)
+                val commands = mutableListOf<RolloutEnvelope>()
+                var currentStatus: ParticipantStatus? = null
+                var realmResponding = true
+                val messenger =
+                    object : RolloutMessenger {
+                        override suspend fun discover(
+                            probe: ProbeRealmHosts,
+                            expected: Set<ServiceId>,
+                            timeout: Duration,
+                        ) = if (realmResponding) listOf(presence.copy(probeId = probe.probeId)) else emptyList()
 
-                    override suspend fun statuses(
-                        probe: ProbeParticipantStatus,
-                        expected: Set<ServiceId>,
-                        timeout: Duration,
-                    ): Map<ServiceId, ParticipantStatus> = currentStatus?.let { mapOf(host to it) }.orEmpty()
-                }
-            val projectionRepository = BlobProjectionRepository(FileDigestBlobStore(root))
-            val rollout =
-                CoordinatedRollout(
-                    realmId,
-                    topology,
-                    manifests,
-                    messenger,
-                    projectionRepository,
-                    state,
-                    requestTimeout = 1.seconds,
-                    participantDeadline = 1.seconds,
-                    healthyDuration = Duration.ZERO,
-                )
+                        override suspend fun command(
+                            envelope: RolloutEnvelope,
+                            timeout: Duration,
+                        ): List<CommandAcceptance> {
+                            commands += envelope
+                            val reference = envelope.projections.getValue(host)
+                            currentStatus =
+                                when (envelope.command) {
+                                    RolloutCommand.Stage -> {
+                                        ParticipantStatus.Staged(envelope.attempt, host, reference, ActiveBaseline.Empty)
+                                    }
 
-            rollout.rollOut(snapshot)
+                                    RolloutCommand.Commit -> {
+                                        ParticipantStatus.Active(
+                                            envelope.attempt,
+                                            host,
+                                            ActiveProjectionReference(reference, RuntimeHealthSnapshot.Healthy),
+                                            RetainedProjection.None,
+                                        )
+                                    }
 
-            val committed = requireNotNull(state.current())
-            val projection = projectionRepository.fetch(committed.projections.getValue(host))
-            commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
-            commands.forEach { it.participants shouldBe setOf(host) }
-            projection.runtimes.map { it.placement } shouldContainExactly
-                listOf(RuntimePlacement.PANEL_ENGINE, RuntimePlacement.REALM)
+                                    RolloutCommand.Abort -> {
+                                        ParticipantStatus.Idle(envelope.attempt, host)
+                                    }
+
+                                    is RolloutCommand.Rollback -> {
+                                        error("Rollback was not expected.")
+                                    }
+                                }
+                            return listOf(CommandAcceptance(host, true))
+                        }
+
+                        override suspend fun statuses(
+                            probe: ProbeParticipantStatus,
+                            expected: Set<ServiceId>,
+                            timeout: Duration,
+                        ): Map<ServiceId, ParticipantStatus> = currentStatus?.let { mapOf(host to it) }.orEmpty()
+                    }
+                val projectionRepository = BlobProjectionRepository(FileDigestBlobStore(root))
+                val rollout =
+                    CoordinatedRollout(
+                        realmId,
+                        selection,
+                        manifests,
+                        messenger,
+                        projectionRepository,
+                        state,
+                        requestTimeout = 1.seconds,
+                        participantDeadline = 1.seconds,
+                        healthyDuration = Duration.ZERO,
+                    )
+
+                rollout.rollOut(snapshot)
+
+                val committed = requireNotNull(state.current())
+                val projection = projectionRepository.fetch(committed.projections.getValue(host))
+                commands.map { it.command } shouldContainExactly listOf(RolloutCommand.Stage, RolloutCommand.Commit)
+                commands.forEach { it.participants shouldBe setOf(host) }
+                projection.runtimes.map { it.placement } shouldContainExactly
+                    listOf(RuntimePlacement.PANEL_ENGINE, RuntimePlacement.REALM)
+
+                commands.clear()
+                realmResponding = false
+                shouldThrow<IllegalArgumentException> { rollout.rollOut(snapshot) }
+                commands shouldBe emptyList()
+                state.current() shouldBe committed
+            }
         }
     }
 
@@ -370,7 +554,7 @@ val ArtifactDistributionTest by testSuite {
             val root = Files.createTempDirectory("typewriter-rollout")
             val realmId = RealmId("realm")
             val host = ServiceId("combined")
-            val topology = RealmTopology(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
+            val selection = RealmDeploymentSelection(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
             val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
             val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
             val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
@@ -476,7 +660,7 @@ val ArtifactDistributionTest by testSuite {
             val rollout =
                 CoordinatedRollout(
                     realmId,
-                    topology,
+                    selection,
                     manifests,
                     messenger,
                     BlobProjectionRepository(blobs),
@@ -546,6 +730,18 @@ val ArtifactDistributionTest by testSuite {
             service.catalog().artifacts shouldContainExactly listOf(published.descriptor)
             FileSharedArtifactRepository(root.resolve("shared.cbor")).catalog().artifacts shouldContainExactly
                 listOf(published.descriptor)
+
+            val deleted =
+                service.delete(
+                    command.id,
+                    published.descriptor.revision,
+                    SharedArtifactProvenance.HostedRuntime("paper", "primary"),
+                ) as PublishResult.Published
+            deleted.catalogRevision.value shouldBe published.catalogRevision.value + 1
+            deleted.descriptor.deleted shouldBe true
+            val restartedCatalog = FileSharedArtifactRepository(root.resolve("shared.cbor")).catalog()
+            restartedCatalog.revision shouldBe deleted.catalogRevision
+            restartedCatalog.artifacts shouldContainExactly listOf(deleted.descriptor)
         }
     }
 
@@ -554,7 +750,7 @@ val ArtifactDistributionTest by testSuite {
             val root = Files.createTempDirectory("typewriter-stabilization")
             val realmId = RealmId("realm")
             val host = ServiceId("combined")
-            val topology = RealmTopology(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
+            val selection = RealmDeploymentSelection(host, setOf(host), mapOf(host to ArtifactVersion("1.0.0")))
             val realm = artifact("typewritermc:realm", ArtifactKind.REALM, "realm")
             val panel = artifact("typewritermc:panel", ArtifactKind.ENGINE, "panel")
             val primary = artifact("typewritermc:paper", ArtifactKind.ENGINE, "paper")
@@ -641,7 +837,7 @@ val ArtifactDistributionTest by testSuite {
             val rollout =
                 CoordinatedRollout(
                     realmId,
-                    topology,
+                    selection,
                     manifests,
                     messenger,
                     BlobProjectionRepository(FileDigestBlobStore(root)),

@@ -30,7 +30,6 @@ enum OrganizationMembersChange {
 
 struct OrganizationMembersChanged {
   sequence: int64;
-  operation_id: string;
   changes: [OrganizationMembersChange];
 }
 
@@ -41,14 +40,12 @@ method WatchOrganizationMembers(
   internal_error: InternalError;
 
   snapshot: OrganizationMembersSnapshot;
-  changed: OrganizationMembersChanged;
 } = 638484;
 
 // Applies one assignable role selection to every selected member in one transaction.
 // Protected roles remain assigned. Any invalid target rejects the complete selection, so the response never describes a partial update.
 method UpdateOrganizationMemberRoles(
   struct {
-    operation_id: string;
     user_ids: [RecordId];
     role_ids: [RecordId];
   }
@@ -72,7 +69,6 @@ method UpdateOrganizationMemberRoles(
     user_ids: [RecordId];
   };
   founder_role_required_error: struct {};
-  operation_identity_reused_error: struct {};
   invalid_selection_error: struct {};
   invalid_record_id_error: InvalidRecordIdError;
 } = 813953;
@@ -81,12 +77,9 @@ method UpdateOrganizationMemberRoles(
 // The founder cannot be removed when that would violate the organization's founder invariant.
 method RemoveOrganizationMember(
   struct {
-    operation_id: string;
     user_id: RecordId;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {

@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 abstract interface class EditorOwnerScope {
@@ -7,12 +9,12 @@ abstract interface class EditorOwnerScope {
 /// Retains resource editors across presentation refreshes and disposes unused owners.
 final class EditorOwnerRegistry implements EditorOwnerScope {
   EditorOwnerRegistry({LocalWorkCommands? workspace})
-    : workspace = workspace ?? LocalWorkSession(),
+    : workspace = workspace ?? ScopedWorkSession(),
       _ownsWorkspace = workspace == null;
 
   final LocalWorkCommands workspace;
   final bool _ownsWorkspace;
-  EditorDestination Function(Object identity)? destinationFor;
+  WorkDestination Function(Object identity)? destinationFor;
   Set<EditorResourceKey> _retained = {};
   EditorOwnerRefresh? _refresh;
 
@@ -63,8 +65,8 @@ final class EditorOwnerRegistry implements EditorOwnerScope {
         source.document.copyWith(
           readOnly: true,
           diagnostics: [
-            TypeDiagnostic(
-              code: TypeDiagnosticCode.invalidValue,
+            EditorDiagnostic(
+              code: EditorDiagnosticCode.invalidValue,
               message: message,
             ),
           ],
@@ -79,7 +81,7 @@ final class EditorOwnerRegistry implements EditorOwnerScope {
     final selected = [
       for (final key in _retained)
         if (workspace.resources[key] case final resource?)
-          if (!failedOnly || resource.source.saveState(DataPath.root).canRetry)
+          if (!failedOnly || resource.source.saveState(editorRootPath).canRetry)
             resource,
     ];
     final results = await Future.wait(
@@ -94,7 +96,7 @@ final class EditorOwnerRegistry implements EditorOwnerScope {
   void dispose() {
     _refresh?.rollback();
     if (_ownsWorkspace) {
-      (workspace as LocalWorkSession).dispose();
+      (workspace as ScopedWorkSession).dispose();
       return;
     }
     for (final key in _retained) {
@@ -120,7 +122,7 @@ final class EditorOwnerRefresh implements EditorOwnerScope {
   final Set<EditorResourceKey> _previousKeys;
   final Set<EditorResourceKey> _nextKeys = {};
   final Set<EditorResourceKey> _newlyRetainedKeys = {};
-  final Map<EditorResourceKey, EditorDestination> _nextDestinations = {};
+  final Map<EditorResourceKey, WorkDestination> _nextDestinations = {};
   bool _finished = false;
 
   Map<EditOwner, String> get labels => _registry.labelsFor(_nextKeys);
@@ -186,13 +188,15 @@ final class EditorOwnerRefresh implements EditorOwnerScope {
 }
 
 /// Binds immutable presentation metadata to an explicitly scoped resource.
-final class ResourceEditorTarget implements EditorTarget {
+final class ResourceEditorTarget
+    implements EditorTarget, PortablePresentationTarget {
   const ResourceEditorTarget({
     required this.targetId,
     required this.label,
     required this.resource,
     required this.snapshot,
     this.commitPolicy = EditorCommitPolicy.autosaveChanges,
+    this.portablePresentation,
   });
 
   @override
@@ -210,19 +214,26 @@ final class ResourceEditorTarget implements EditorTarget {
   @override
   final EditorCommitPolicy commitPolicy;
 
+  final PortablePresentationHostBuilder? portablePresentation;
+
+  @override
+  PortablePresentationHost? buildPortablePresentationHost(
+    EditorSource source,
+  ) => portablePresentation?.call(source);
+
   @override
   EditorDocument get document => snapshot.document;
 
   @override
-  List<TypeDiagnostic> validateDraft(DataValue value) =>
+  List<EditorDiagnostic> validateDraft(skir.DataValue value) =>
       snapshot.validateDraft(value);
 
   @override
-  EditorValue value(DataPath path) =>
+  EditorValue value(skir.ValuePath path) =>
       document.confirmedValue.readEditorValue(path);
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) =>
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) =>
       snapshot.validate(path, value);
 }
 

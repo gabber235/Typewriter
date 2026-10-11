@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches keyed content with the panel's standard elastic size and scale
 /// transition.

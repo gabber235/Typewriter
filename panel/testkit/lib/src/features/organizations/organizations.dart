@@ -1,19 +1,17 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter_animate/flutter_animate.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 export "features/features.dart";
 
 OrganizationData generateRandomOrganization() {
   return OrganizationData(
-    organizationId: recordId("organization:${faker.guid.guid()}"),
+    organizationId: skir.recordId("organization:${faker.guid.guid()}"),
     name: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")
@@ -38,7 +36,7 @@ class OrganizationsMock extends Organizations {
     required String logoUrl,
   }) async {
     await Future.delayed(Duration(milliseconds: 100));
-    return recordId("organization:${faker.guid.guid()}");
+    return skir.recordId("organization:${faker.guid.guid()}");
   }
 }
 
@@ -80,8 +78,8 @@ UserJoinRequest generateRandomUserJoinRequest() {
     Duration(minutes: faker.randomGenerator.integer(60, min: 1)),
   );
   return UserJoinRequest(
-    requestId: recordId("request_to_join:${faker.guid.guid()}"),
-    organizationId: recordId("organization:${faker.guid.guid()}"),
+    requestId: skir.recordId("request_to_join:${faker.guid.guid()}"),
+    organizationId: skir.recordId("organization:${faker.guid.guid()}"),
     organizationName: faker.lorem
         .words(faker.randomGenerator.integer(4, min: 2))
         .join(" ")

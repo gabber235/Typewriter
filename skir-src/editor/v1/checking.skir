@@ -1,0 +1,66 @@
+import { EditExpectation } from "editor/v1/authoring_facts.skir";
+import { Diagnostic } from "editor/v1/diagnostic.skir";
+import { EvaluationDiagnostic } from "editor/v1/expression.skir";
+import {
+  CatalogGeneration,
+  CheckExecutionId,
+  ResourceId,
+  RuleId,
+  ValueLocation,
+} from "editor/v1/type_catalog.skir";
+
+enum InspectionCompletion(811300001) {
+  complete = 1;
+  interrupted: string = 2;
+}
+
+struct UndecidedCandidate(811300002) {
+  resource: ResourceId = 0;
+  inputs: [ValueLocation] = 1;
+}
+
+enum CheckOutcome(811300003) {
+  finished = 1;
+  needs_input: [ValueLocation] = 2;
+  failed: [Diagnostic] = 3;
+  incomplete: string = 4;
+}
+
+enum FindingStatus(811300004) {
+  current = 1;
+  outdated = 2;
+}
+
+struct CheckInstanceId(811300005) {
+  rule: RuleId = 0;
+  location: ValueLocation = 1;
+}
+
+struct CheckTicket(811300006) {
+  instance: CheckInstanceId = 0;
+  incarnation: string = 1;
+  execution: CheckExecutionId = 2;
+  catalog: CatalogGeneration = 3;
+}
+
+struct FindingSet(811300007) {
+  ticket: CheckTicket = 0;
+  expectations: [EditExpectation] = 1;
+  outcome: CheckOutcome = 2;
+  findings: [Diagnostic] = 3;
+  status: FindingStatus = 4;
+}
+
+struct CheckResult(811300008) {
+  ticket: CheckTicket = 0;
+  outcome: CheckOutcome = 1;
+  expectations: [EditExpectation] = 2;
+  findings: [Diagnostic] = 3;
+}
+
+struct SelectionInspection(811300009) {
+  known_matches: [ResourceId] = 0;
+  undecided: [UndecidedCandidate] = 1;
+  completion: InspectionCompletion = 2;
+  failures: [EvaluationDiagnostic] = 3;
+}

@@ -1,0 +1,78 @@
+import { RuntimeMemberSignature } from "editor/v1/publication.skir";
+import {
+  CatalogGeneration,
+  PublicationId,
+  ResourceId,
+} from "editor/v1/type_catalog.skir";
+import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+struct CompilationProjectionId(810900100) {
+  value: string = 0;
+}
+struct CompilationRoot(810900101) {
+  projection: CompilationProjectionId = 0;
+  resource: ResourceId = 1;
+}
+struct CompiledBlobPointer(810900102) {
+  digest: string = 0;
+  size: int64 = 1;
+}
+struct CompiledArtifactReference(810900103) {
+  root: CompilationRoot = 0;
+  format_revision: int32 = 1;
+  media_type: string = 2;
+  semantic_digest: string = 3;
+}
+struct PublishedOutput(810900104) {
+  reference: CompiledArtifactReference = 0;
+  blob: CompiledBlobPointer = 1;
+}
+struct PublishedContent(810900105) {
+  publication: PublicationId = 0;
+  format_revision: int32 = 1;
+  catalog: CatalogGeneration = 2;
+  implementation_token: string = 3;
+  runtime_signatures: [RuntimeMemberSignature] = 4;
+  outputs: [PublishedOutput] = 5;
+}
+struct PublishedContentChunk(810900106) {
+  transfer: BoundedTransferChunk = 0;
+}
+enum CompiledResourceState(810900107) {
+  not_compiled = 1;
+  active: PublicationId = 2;
+}
+struct CompiledResourceStatus(810900108) {
+  root: CompilationRoot = 0;
+  state: CompiledResourceState = 1;
+}
+struct CompiledContentChanged(810900109) {
+  generation: CatalogGeneration = 0;
+}
+enum CompilationStatusSelection(810900110) {
+  all_roots = 1;
+  supplied_roots: [CompilationRoot] = 2;
+}
+
+method QueryPublishedContent(
+  struct {
+    transfer_id: string = 0;
+  }
+): enum {
+  chunk: PublishedContentChunk = 1;
+  absent: struct {} = 2;
+  unavailable: struct {} = 3;
+  internal_error: InternalError = 4;
+} = 920004;
+
+method QueryCompiledResourceStatus(
+  struct {
+    selection: CompilationStatusSelection = 0;
+  }
+): enum {
+  success: struct {
+    statuses: [CompiledResourceStatus] = 0;
+  } = 1;
+  internal_error: InternalError = 2;
+} = 920005;

@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'nats_provider.dart';
 
@@ -6,7 +6,7 @@ part of 'nats_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Provides the concrete NATS owner factory used after authentication.
 
@@ -60,6 +60,55 @@ final class NatsClientFactoryProvider
 
 String _$natsClientFactoryHash() => r'1c0582e7a874e091f3f55ad289b386b471ca7651';
 
+@ProviderFor(natsConnectionSessionFactory)
+final natsConnectionSessionFactoryProvider =
+    NatsConnectionSessionFactoryProvider._();
+
+final class NatsConnectionSessionFactoryProvider
+    extends
+        $FunctionalProvider<
+          NatsConnectionSessionFactory,
+          NatsConnectionSessionFactory,
+          NatsConnectionSessionFactory
+        >
+    with $Provider<NatsConnectionSessionFactory> {
+  NatsConnectionSessionFactoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'natsConnectionSessionFactoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$natsConnectionSessionFactoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<NatsConnectionSessionFactory> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  NatsConnectionSessionFactory create(Ref ref) {
+    return natsConnectionSessionFactory(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NatsConnectionSessionFactory value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NatsConnectionSessionFactory>(value),
+    );
+  }
+}
+
+String _$natsConnectionSessionFactoryHash() =>
+    r'efc56a1ff506ce661dee48cb9753c38de71ef235';
+
 /// Owns the HTTP client used by panel infrastructure requests.
 
 @ProviderFor(panelHttpClient)
@@ -68,8 +117,8 @@ final panelHttpClientProvider = PanelHttpClientProvider._();
 /// Owns the HTTP client used by panel infrastructure requests.
 
 final class PanelHttpClientProvider
-    extends $FunctionalProvider<http.Client, http.Client, http.Client>
-    with $Provider<http.Client> {
+    extends $FunctionalProvider<Client, Client, Client>
+    with $Provider<Client> {
   /// Owns the HTTP client used by panel infrastructure requests.
   PanelHttpClientProvider._()
     : super(
@@ -87,24 +136,24 @@ final class PanelHttpClientProvider
 
   @$internal
   @override
-  $ProviderElement<http.Client> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<Client> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  http.Client create(Ref ref) {
+  Client create(Ref ref) {
     return panelHttpClient(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(http.Client value) {
+  Override overrideWithValue(Client value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<http.Client>(value),
+      providerOverride: $SyncValueProvider<Client>(value),
     );
   }
 }
 
-String _$panelHttpClientHash() => r'7135e3872b268ca83f0cf2cb03ecc737f66a43d1';
+String _$panelHttpClientHash() => r'e19c3ba3e7d607f78da40a62ede3db9221f54206';
 
 /// Fetches the short lived credentials required to open the user's NATS session.
 ///
@@ -161,29 +210,26 @@ final class SentinelCredentialsProvider
 String _$sentinelCredentialsHash() =>
     r'd9ee71cee1fde6104af98ba3f2095b6144815fd6';
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 
 @ProviderFor(Nats)
 final natsProvider = NatsProvider._();
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
-  /// Owns the authenticated NATS client for the current user and organization.
+  /// Publishes the active client owned by the authenticated connection scope.
   ///
-  /// Credential providers and the organization qualifier are read when this
-  /// owner is built. Invalidating it closes the old client before a fresh
-  /// connection is created, which makes retry an ownership operation rather than
-  /// a second connection layered over the first.
+  /// Credential and organization changes dispose the entire previous connection.
+  /// Permission refresh and retry retain the current client until a replacement
+  /// has been admitted by the server.
   NatsProvider._()
     : super(
         from: null,
@@ -211,14 +257,13 @@ final class NatsProvider extends $NotifierProvider<Nats, NatsClient> {
   }
 }
 
-String _$natsHash() => r'4ba08fe612ce973633013ce67e9af3211661997e';
+String _$natsHash() => r'e9d6f3ac768a4bbe52579c7be177e8e2c9605b7c';
 
-/// Owns the authenticated NATS client for the current user and organization.
+/// Publishes the active client owned by the authenticated connection scope.
 ///
-/// Credential providers and the organization qualifier are read when this
-/// owner is built. Invalidating it closes the old client before a fresh
-/// connection is created, which makes retry an ownership operation rather than
-/// a second connection layered over the first.
+/// Credential and organization changes dispose the entire previous connection.
+/// Permission refresh and retry retain the current client until a replacement
+/// has been admitted by the server.
 
 abstract class _$Nats extends $Notifier<NatsClient> {
   NatsClient build();

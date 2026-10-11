@@ -1,8 +1,5 @@
-import "dart:async";
-import "dart:convert";
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void testWidgetsWithNetworkImages(
   String description,
@@ -84,9 +81,8 @@ final class _TestImageResponse extends Stream<List<int>>
     implements HttpClientResponse {
   _TestImageResponse(Uri url) : bytes = _bytesFor(url);
 
-  static final _pngBytes = File(
-    "../assets/typewriter-icon.png",
-  ).readAsBytesSync();
+  static final _pngBytes = File("../assets/typewriter-icon.png")
+      .readAsBytesSync();
   static final _svgBytes = utf8.encode(
     "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"></svg>",
   );

@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Selects which focus boundary receives focus when the field is built.
@@ -41,7 +38,6 @@ class EditorTextField extends HookWidget {
     this.selectAllOnFocus = false,
     this.onInputFocus,
     this.onDismiss,
-    this.onCancel,
     super.key,
   }) : super();
   final TextEditingController? controller;
@@ -100,7 +96,6 @@ class EditorTextField extends HookWidget {
   final bool selectAllOnFocus;
   final VoidCallback? onInputFocus;
   final VoidCallback? onDismiss;
-  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +123,20 @@ class EditorTextField extends HookWidget {
       return () => active = false;
     }, [controller, focusNode.hasPrimaryFocus, selectAllOnFocus]);
 
-    // When we are not focused, we want to update the controller with the latest.
-    // Since other people may update the text and we want that reflected.
-    // However, when we are focused, we don't want to update the controller as this causes the cursor to jump.
+    // Own edits already match the controller. Shared changes replace bound text
+    // while preserving the selection, including when this field has focus.
     useEffect(() {
-      if (!focusNode.hasFocus && text != null) {
-        controller.text = text ?? "";
+      if (text != null && controller.text != text) {
+        final selection = controller.selection;
+        controller.value = TextEditingValue(
+          text: text!,
+          selection: selection.isValid
+              ? TextSelection(
+                  baseOffset: selection.baseOffset.clamp(0, text!.length),
+                  extentOffset: selection.extentOffset.clamp(0, text!.length),
+                )
+              : TextSelection.collapsed(offset: text!.length),
+        );
       }
       return null;
     }, [text]);
@@ -176,7 +179,6 @@ class EditorTextField extends HookWidget {
       surroundingActions: surroundingActions,
       onInputFocus: onInputFocus,
       onDismiss: onDismiss,
-      onCancel: onCancel,
       child: TextFormField(
         focusNode: focusNode,
         autofocus: autofocus == EditorTextFieldAutoFocus.textField,

@@ -1,4 +1,4 @@
-import "dart:async";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Serializes mutations that touch overlapping resource identities.
 ///

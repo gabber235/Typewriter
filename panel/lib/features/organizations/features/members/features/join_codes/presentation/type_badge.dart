@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:typewriter_panel/app/presentation/theme/theme.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Compact visual label for one invitation policy facet.
 class TypeBadge extends StatelessWidget {

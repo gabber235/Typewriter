@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'editor_path_states.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$EditorPathRecord {
 
  EditorPathProgress? get progress; EditorInteractionSession? get gate;
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditorPathRecordCopyWith<EditorPathRecord> get copyWith => _$EditorPathRecordCopyWithImpl<EditorPathRecord>(this as EditorPathRecord, _$identity);
@@ -67,7 +67,7 @@ class _$EditorPathRecordCopyWithImpl<$Res>
   final $Res Function(EditorPathRecord) _then;
 
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? progress = freezed,Object? gate = freezed,}) {
   return _then(EditorPathRecord(
 progress: freezed == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,7 @@ as EditorInteractionSession?,
   ));
 }
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorPathProgressCopyWith<$Res>? get progress {
@@ -91,7 +91,7 @@ $EditorPathProgressCopyWith<$Res>? get progress {
 }
 
 
-/// Adds pattern-matching-related methods to [EditorPathRecord].
+/// Adds pattern matching related methods to [EditorPathRecord].
 extension EditorPathRecordPatterns on EditorPathRecord {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -114,7 +114,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -177,7 +177,7 @@ return $default(_that.progress,_that.gate);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -226,13 +226,13 @@ return $default(_that.progress,_that.gate);case _:
 
 class _EditorPathRecord extends EditorPathRecord {
   const _EditorPathRecord({this.progress, this.gate}): super._();
-  
+
 
 @override final  EditorPathProgress? progress;
 @override final  EditorInteractionSession? gate;
 
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditorPathRecordCopyWith<_EditorPathRecord> get copyWith => __$EditorPathRecordCopyWithImpl<_EditorPathRecord>(this, _$identity);
@@ -279,7 +279,7 @@ class __$EditorPathRecordCopyWithImpl<$Res>
   final $Res Function(_EditorPathRecord) _then;
 
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? progress = freezed,Object? gate = freezed,}) {
   return _then(_EditorPathRecord(
 progress: freezed == progress ? _self.progress : progress // ignore: cast_nullable_to_non_nullable
@@ -289,7 +289,7 @@ as EditorInteractionSession?,
 }
 
 /// Create a copy of EditorPathRecord
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorPathProgressCopyWith<$Res>? get progress {
@@ -333,7 +333,7 @@ $EditorPathProgressCopyWith(EditorPathProgress _, $Res Function(EditorPathProgre
 }
 
 
-/// Adds pattern-matching-related methods to [EditorPathProgress].
+/// Adds pattern matching related methods to [EditorPathProgress].
 extension EditorPathProgressPatterns on EditorPathProgress {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -361,7 +361,7 @@ return settled(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -423,7 +423,7 @@ return settled(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  pending,TResult Function()?  saving,TResult Function( List<TypeDiagnostic> diagnostics)?  failed,TResult Function()?  contended,TResult Function( EditorPathConflict conflict)?  conflicted,TResult Function( EditorSavePhase phase)?  settled,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  pending,TResult Function()?  saving,TResult Function( List<EditorDiagnostic> diagnostics)?  failed,TResult Function()?  contended,TResult Function( EditorPathConflict conflict)?  conflicted,TResult Function( EditorSavePhase phase)?  settled,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PendingPathProgress() when pending != null:
 return pending();case SavingPathProgress() when saving != null:
@@ -436,7 +436,7 @@ return settled(_that.phase);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -449,7 +449,7 @@ return settled(_that.phase);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  pending,required TResult Function()  saving,required TResult Function( List<TypeDiagnostic> diagnostics)  failed,required TResult Function()  contended,required TResult Function( EditorPathConflict conflict)  conflicted,required TResult Function( EditorSavePhase phase)  settled,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  pending,required TResult Function()  saving,required TResult Function( List<EditorDiagnostic> diagnostics)  failed,required TResult Function()  contended,required TResult Function( EditorPathConflict conflict)  conflicted,required TResult Function( EditorSavePhase phase)  settled,}) {final _that = this;
 switch (_that) {
 case PendingPathProgress():
 return pending();case SavingPathProgress():
@@ -471,7 +471,7 @@ return settled(_that.phase);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  pending,TResult? Function()?  saving,TResult? Function( List<TypeDiagnostic> diagnostics)?  failed,TResult? Function()?  contended,TResult? Function( EditorPathConflict conflict)?  conflicted,TResult? Function( EditorSavePhase phase)?  settled,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  pending,TResult? Function()?  saving,TResult? Function( List<EditorDiagnostic> diagnostics)?  failed,TResult? Function()?  contended,TResult? Function( EditorPathConflict conflict)?  conflicted,TResult? Function( EditorSavePhase phase)?  settled,}) {final _that = this;
 switch (_that) {
 case PendingPathProgress() when pending != null:
 return pending();case SavingPathProgress() when saving != null:
@@ -492,7 +492,7 @@ return settled(_that.phase);case _:
 
 class PendingPathProgress implements EditorPathProgress {
   const PendingPathProgress();
-  
+
 
 
 
@@ -524,7 +524,7 @@ String toString() {
 
 class SavingPathProgress implements EditorPathProgress {
   const SavingPathProgress();
-  
+
 
 
 
@@ -555,11 +555,11 @@ String toString() {
 
 
 class FailedPathProgress implements EditorPathProgress {
-  const FailedPathProgress( List<TypeDiagnostic> diagnostics): _diagnostics = diagnostics;
-  
+  const FailedPathProgress( List<EditorDiagnostic> diagnostics): _diagnostics = diagnostics;
 
- final  List<TypeDiagnostic> _diagnostics;
- List<TypeDiagnostic> get diagnostics {
+
+ final  List<EditorDiagnostic> _diagnostics;
+ List<EditorDiagnostic> get diagnostics {
   if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_diagnostics);
@@ -567,7 +567,7 @@ class FailedPathProgress implements EditorPathProgress {
 
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $FailedPathProgressCopyWith<FailedPathProgress> get copyWith => _$FailedPathProgressCopyWithImpl<FailedPathProgress>(this, _$identity);
@@ -598,7 +598,7 @@ abstract mixin class $FailedPathProgressCopyWith<$Res> implements $EditorPathPro
   factory $FailedPathProgressCopyWith(FailedPathProgress value, $Res Function(FailedPathProgress) _then) = _$FailedPathProgressCopyWithImpl;
 @useResult
 $Res call({
- List<TypeDiagnostic> diagnostics
+ List<EditorDiagnostic> diagnostics
 });
 
 
@@ -614,11 +614,11 @@ class _$FailedPathProgressCopyWithImpl<$Res>
   final $Res Function(FailedPathProgress) _then;
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,}) {
   return _then(FailedPathProgress(
 null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<TypeDiagnostic>,
+as List<EditorDiagnostic>,
   ));
 }
 
@@ -630,7 +630,7 @@ as List<TypeDiagnostic>,
 
 class ContendedPathProgress implements EditorPathProgress {
   const ContendedPathProgress();
-  
+
 
 
 
@@ -662,12 +662,12 @@ String toString() {
 
 class ConflictedPathProgress implements EditorPathProgress {
   const ConflictedPathProgress(this.conflict);
-  
+
 
  final  EditorPathConflict conflict;
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ConflictedPathProgressCopyWith<ConflictedPathProgress> get copyWith => _$ConflictedPathProgressCopyWithImpl<ConflictedPathProgress>(this, _$identity);
@@ -714,7 +714,7 @@ class _$ConflictedPathProgressCopyWithImpl<$Res>
   final $Res Function(ConflictedPathProgress) _then;
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? conflict = null,}) {
   return _then(ConflictedPathProgress(
 null == conflict ? _self.conflict : conflict // ignore: cast_nullable_to_non_nullable
@@ -730,12 +730,12 @@ as EditorPathConflict,
 
 class SettledPathProgress implements EditorPathProgress {
   const SettledPathProgress(this.phase): assert(phase == EditorSavePhase.saved, 'A settled path has been saved.');
-  
+
 
  final  EditorSavePhase phase;
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SettledPathProgressCopyWith<SettledPathProgress> get copyWith => _$SettledPathProgressCopyWithImpl<SettledPathProgress>(this, _$identity);
@@ -782,7 +782,7 @@ class _$SettledPathProgressCopyWithImpl<$Res>
   final $Res Function(SettledPathProgress) _then;
 
 /// Create a copy of EditorPathProgress
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? phase = null,}) {
   return _then(SettledPathProgress(
 null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable

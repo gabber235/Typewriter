@@ -1,5 +1,3 @@
-import "package:flutter/cupertino.dart";
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Chooses a compact selection control based on the number of available choices.

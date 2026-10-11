@@ -6,9 +6,13 @@
 library;
 
 export "api_exception.dart";
+export "bounded_transfer_assembler.dart";
+export "generated/generated.dart";
 export "nats.dart";
+export "nats_authorization.dart";
 export "nats_client.dart";
 export "nats_core_client.dart";
 export "nats_provider.dart";
+export "projection_reconciliation.dart";
 export "skir_mutation.dart";
 export "skir_nats.dart";

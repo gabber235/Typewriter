@@ -1,361 +1,299 @@
-// Authoring state and commands for one organization and realm.
-//
-// AuthoringSession is the owner of the canonical authoring read model. It
-// keeps one sequence aligned with the server change stream, routes commands
-// through the authoring batch protocol, and reconciles gaps or conflicts from
-// authoritative snapshots. Editors keep unsubmitted values in
-// LocalWorkCommands, not in this session.
-//
-// The session is keyed by organization and realm through Riverpod. It starts
-// its watches when a scope is acquired or the provider is observed, and
-// releases subscriptions when its provider is disposed. Library, book, and
-// page leases determine which snapshot slices are retained and whether the
-// session should stay alive.
-//
-// AuthoringResourceRepository owns editor resource requests and their mutation
-// combiner. SkirMutationClient owns request transport and local submission
-// integration. RealmServiceAddress only maps the organization and realm
-// identifiers to service subjects. The realm service owns durable persistence.
-import "dart:async";
-
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart" show WidgetRef;
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authoring_session.freezed.dart";
 part "authoring_session.g.dart";
-part "authoring_session_snapshots.dart";
 part "authoring_resource_repository.dart";
-part "authoring_editor_resource.dart";
 part "authoring_session_state.dart";
-part "authoring_session_sync.dart";
-part "authoring_operation_resources.dart";
-part "authoring_operation_label.dart";
 
 @riverpod
-/// Owns the canonical authoring state for one organization and realm.
-///
-/// Canonical state contains only server accepted books, tags, pages, and page
-/// documents. Local editor drafts belong to [LocalWorkCommands] and are
-/// projected over this state by editor resources. A state [sequence] couples
-/// every canonical projection to the server revision that produced it. The
-/// session applies only the next sequence, buffers future changes, and fetches
-/// a snapshot when a gap, conflict, reconnect, or indirect page dependency
-/// makes incremental reconciliation unsafe.
-///
-/// Use a scope lease before reading a resource that needs an authoritative
-/// snapshot. The lease keeps this provider alive, waits for subscriptions and
-/// its initial refresh through [AuthoringScopeLease.ready], and must be
-/// released when the resource stops being used.
-///
-/// Direct create and delete commands are routed through [prepare] and
-/// [apply]. Editor updates normally enter through
-/// [AuthoringResourceRepository.combiner], so several editor intents can share
-/// one authoring batch without the session owning editor presentation state.
-class AuthoringSession extends _$AuthoringSession
-    with _AuthoringSessionSnapshots, _AuthoringSessionSync {
+class AuthoringSession extends _$AuthoringSession {
+  late AuthoringResourceRepository _repository;
+  late skir.RecordId _organizationId;
+  late skir.RecordId _realmId;
+  var _lifecycleRevision = 0;
+  Future<void>? _refreshing;
+  var _refreshRequested = false;
+  var _catalogRefreshRequested = false;
+  skir.CatalogGeneration? _latestInvalidatedGeneration;
   @override
   AuthoringSessionState build(
     skir.RecordId organizationId,
     skir.RecordId realmId,
   ) {
-    _client = ref.watch(natsProvider);
-    final repository = ref
-        .watch(resourceRepositoriesProvider)
-        .authoring(organizationId, realmId);
-    final results = repository.changes.listen(_accept);
+    final lifecycleRevision = ++_lifecycleRevision;
+    _refreshing = null;
+    _refreshRequested = false;
+    _catalogRefreshRequested = false;
+    _latestInvalidatedGeneration = null;
+    _organizationId = organizationId;
+    _realmId = realmId;
+    final repositories = ref.watch(resourceRepositoriesProvider);
+    final repository = repositories.authoring(organizationId, realmId);
+    _repository = repository;
+    final changes = repository.changes.listen(
+      (change) => _acceptChange(change, lifecycleRevision),
+      onError: (Object _, StackTrace _) => _scheduleRefresh(lifecycleRevision),
+    );
     final invalidations = repository.invalidations.listen(
-      (_) => _scheduleRefresh(),
+      (_) => _scheduleRefresh(lifecycleRevision),
+    );
+    final catalogInvalidations = ref.listen(
+      realmCatalogInvalidationsProvider(organizationId, realmId),
+      (previous, next) {
+        if (!_isActive(lifecycleRevision)) return;
+        if (next.hasError) {
+          _scheduleRefresh(lifecycleRevision, catalog: true);
+          return;
+        }
+        if (next case AsyncData(:final value)) {
+          _latestInvalidatedGeneration = value.generation;
+          final current = state.catalog?.snapshot.generation;
+          if (current != null && value.generation != current) {
+            _scheduleRefresh(lifecycleRevision, catalog: true);
+          }
+        }
+      },
     );
     ref
-      ..onDispose(results.cancel)
-      ..onDispose(invalidations.cancel);
-    _address = RealmServiceAddress(
-      organizationId: organizationId,
-      realmId: realmId,
+      ..onDispose(() {
+        if (_lifecycleRevision == lifecycleRevision) {
+          _lifecycleRevision++;
+        }
+      })
+      ..onDispose(changes.cancel)
+      ..onDispose(invalidations.cancel)
+      ..onDispose(catalogInvalidations.close)
+      ..onDispose(() => repositories.releaseAuthoring(repository));
+    unawaited(
+      _start(
+        repositories,
+        repository,
+        lifecycleRevision,
+        organizationId,
+        realmId,
+      ).catchError((Object error, StackTrace stackTrace) {
+        if (!_isActive(lifecycleRevision)) return;
+        state = state.copyWith(refreshing: false, failure: error);
+      }),
     );
-
-    ref.onDispose(_dispose);
-    _startOperation = _start();
     return const AuthoringSessionState();
   }
 
-  /// Returns the current canonical read model without creating a copy.
-  ///
-  /// The model may be empty before a held scope has completed [refresh]. It
-  /// never includes local editor drafts.
-  AuthoringSessionState get snapshot => state;
-
-  /// Fetches authoritative snapshots for all currently held scopes.
-  ///
-  /// The operation updates [snapshot] and sequence state when the response is
-  /// current enough to reconcile. It is safe to call while another refresh is
-  /// running because refresh requests coalesce.
-  Future<void> refresh() => _refresh();
-
-  /// Retains the library scope and returns its lifecycle lease.
-  ///
-  /// Await [AuthoringScopeLease.ready] before using library collections, then
-  /// call [AuthoringScopeLease.release] exactly once when finished.
-  AuthoringScopeLease acquireLibrary() =>
-      _acquire(const _AuthoringScope.library());
-
-  /// Retains the book scope and returns its lifecycle lease.
-  ///
-  /// The first lease for [bookId] fetches the book and its pages. Await
-  /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
-  /// Release the lease when the book is no longer in use.
-  AuthoringScopeLease acquireBook(skir.RecordId bookId) =>
-      _acquire(_AuthoringScope.book(bookId));
-
-  /// Retains the page scope and returns its lifecycle lease.
-  ///
-  /// The first lease for [pageId] fetches the page and its document. Await
-  /// [AuthoringScopeLease.ready] before reading the resulting canonical state.
-  /// Release the lease when the page is no longer in use.
-  AuthoringScopeLease acquirePage(skir.RecordId pageId) =>
-      _acquire(_AuthoringScope.page(pageId));
-
-  /// Prepares one authoring batch for the shared local mutation owner.
-  ///
-  /// The caller supplies operations that already contain their expected values.
-  /// [batchId] may identify a retry; an omitted value creates a new id. The
-  /// returned commit captures the request, reserves every affected resource,
-  /// and classifies applied, rejected, and unconfirmed responses. Integration
-  /// advances canonical state from the applied event and refreshes after a
-  /// conflict. The caller must submit the returned commit through
-  /// [LocalWorkCommands], not send it directly.
-  PreparedCommit<skir.ApplyAuthoringBatchResponse> prepare(
-    Iterable<skir.AuthoringOperation> operations, {
-    String? batchId,
-  }) {
-    final request = skir.ApplyAuthoringBatchRequest(
-      batchId: batchId ?? uuid.v4(),
-      operations: operations,
+  Future<void> _start(
+    ResourceRepositories repositories,
+    AuthoringResourceRepository repository,
+    int lifecycleRevision,
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) async {
+    await repositories.ensureAuthoringRealmsAdmitted(
+      repositories.authoringRealms(organizationId),
     );
-    return ref.prepareSkir(
-      _address.request("library.authoring.batch.apply"),
-      skir.ApplyAuthoringBatchRequest.serializer.toBytes(request),
-      skir.ApplyAuthoringBatchResponse.serializer,
-      label: _authoringLabel(request.operations),
-      classify: (response) => switch (response) {
-        skir.ApplyAuthoringBatchResponse_appliedWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.ApplyAuthoringBatchResponse_unknown() ||
-        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
-      onResponse: (response) async {
-        switch (response) {
-          case skir.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
-            _accept(value);
-          case skir.ApplyAuthoringBatchResponse_conflictWrapper():
-            await _refresh();
-          case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
-              skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-              skir.ApplyAuthoringBatchResponse_unknown():
-        }
-      },
-      submissionId: request.batchId,
-      resources: {
-        for (final operation in request.operations)
-          for (final resource in _operationResources(operation))
-            (organizationId, realmId, resource),
-      },
-      replay: SubmissionReplay.identicalRequest,
-    );
+    if (!_isActive(lifecycleRevision)) return;
+    await repository.start();
+    if (!_isActive(lifecycleRevision)) return;
+    await _refresh(repository, lifecycleRevision, organizationId, realmId);
   }
 
-  /// Applies one authoring batch through the shared local mutation owner.
-  ///
-  /// Each operation must carry the expected server value required by the
-  /// authoring protocol. On success, the applied change is integrated into
-  /// canonical state. A conflict triggers authoritative refresh before the
-  /// failure returns to the caller.
-  Future<skir.ApplyAuthoringBatchResponse> apply(
-    Iterable<skir.AuthoringOperation> operations, {
-    String? batchId,
+  Future<void> refresh({bool catalog = false}) => _refresh(
+    _repository,
+    _lifecycleRevision,
+    _organizationId,
+    _realmId,
+    catalog: catalog,
+  );
+
+  Future<void> _refresh(
+    AuthoringResourceRepository repository,
+    int lifecycleRevision,
+    skir.RecordId organizationId,
+    skir.RecordId realmId, {
+    bool catalog = false,
+  }) {
+    if (!_isActive(lifecycleRevision)) return Future.value();
+    _refreshRequested = true;
+    _catalogRefreshRequested = _catalogRefreshRequested || catalog;
+    final active = _refreshing;
+    if (active != null) return active;
+    final operation =
+        _drainRefreshes(
+          repository,
+          lifecycleRevision,
+          organizationId,
+          realmId,
+        ).whenComplete(() {
+          if (!_isActive(lifecycleRevision)) return;
+          _refreshing = null;
+          if (_refreshRequested) {
+            unawaited(
+              _refresh(repository, lifecycleRevision, organizationId, realmId),
+            );
+          }
+        });
+    _refreshing = operation;
+    return operation;
+  }
+
+  Future<void> _drainRefreshes(
+    AuthoringResourceRepository repository,
+    int lifecycleRevision,
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) async {
+    while (_isActive(lifecycleRevision) && _refreshRequested) {
+      _refreshRequested = false;
+      final catalog = _catalogRefreshRequested;
+      _catalogRefreshRequested = false;
+      await _runRefresh(
+        repository,
+        lifecycleRevision,
+        organizationId,
+        realmId,
+        refreshCatalog: catalog,
+      );
+    }
+  }
+
+  Future<void> _runRefresh(
+    AuthoringResourceRepository repository,
+    int lifecycleRevision,
+    skir.RecordId organizationId,
+    skir.RecordId realmId, {
+    required bool refreshCatalog,
   }) async {
-    final commit = prepare(operations, batchId: batchId);
+    if (!_isActive(lifecycleRevision)) return;
+    state = state.copyWith(refreshing: true, failure: null);
     try {
-      return await ref.read(localWorkControllerProvider).execute(commit);
-    } on Object {
-      _scheduleRefresh();
+      var catalog = state.catalog?.snapshot;
+      if (catalog == null || refreshCatalog) {
+        catalog = await _fetchCatalog(organizationId, realmId);
+      }
+      if (!_isActive(lifecycleRevision)) return;
+      final invalidatedGeneration = _latestInvalidatedGeneration;
+      if (invalidatedGeneration != null &&
+          catalog.generation != invalidatedGeneration) {
+        catalog = await _fetchCatalog(organizationId, realmId);
+      }
+      if (!_isActive(lifecycleRevision)) return;
+      skir.AuthoringState snapshot;
+      try {
+        snapshot = await repository.fetch(generation: catalog.generation);
+      } on CatalogGenerationChanged {
+        catalog = await _fetchCatalog(organizationId, realmId);
+        if (!_isActive(lifecycleRevision)) return;
+        snapshot = await repository.fetch(generation: catalog.generation);
+      }
+      if (!_isActive(lifecycleRevision)) return;
+      state = AuthoringSessionState(
+        snapshot: snapshot,
+        catalog: CheckedEditorCatalog(catalog),
+      );
+    } on Object catch (error) {
+      if (error is BoundedTransferCancelled && repository._isDisposed) return;
+      if (!_isActive(lifecycleRevision)) return;
+      state = state.copyWith(refreshing: false, failure: error);
       rethrow;
     }
   }
 
-  /// Executes operations and Realm page rules without committing state.
-  Future<skir.PreviewAuthoringBatchResponse> preview(
-    Iterable<skir.AuthoringOperation> operations,
-  ) {
-    final request = skir.PreviewAuthoringBatchRequest(operations: operations);
-    return ref.requestSkir(
-      _address.request("library.authoring.batch.preview"),
-      skir.PreviewAuthoringBatchRequest.serializer.toBytes(request),
-      skir.PreviewAuthoringBatchResponse.serializer,
+  Future<skir.EditorCatalogWireSnapshot> _fetchCatalog(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+  ) async {
+    final provider = realmCatalogTransferProvider(
+      organizationId,
+      realmId,
+      uuid.v4(),
     );
-  }
-
-  _AuthoringScopeLease _acquire(_AuthoringScope scope) {
-    final added = !_scopeCounts.containsKey(scope);
-    _scopeCounts.update(scope, (count) => count + 1, ifAbsent: () => 1);
-    final ready = added
-        ? _scopeReadiness[scope] = _startOperation.then((_) => _refresh())
-        : _scopeReadiness[scope] ?? _startOperation;
-    final retention = ref.keepAlive();
-    return _AuthoringScopeLease(ready, () {
-      _release(scope);
+    final retention = ref.listen(provider, (previous, next) {});
+    try {
+      return await ref.read(provider.future);
+    } finally {
       retention.close();
-    });
-  }
-
-  void _release(_AuthoringScope scope) {
-    final count = _scopeCounts[scope];
-    if (count == null) return;
-    if (count == 1) {
-      _scopeCounts.remove(scope);
-      _scopeReadiness.remove(scope);
-    } else {
-      _scopeCounts[scope] = count - 1;
-    }
-  }
-}
-
-/// Pairs the session command owner with the canonical state read for one
-/// organization and realm.
-@freezed
-abstract class AuthoringSessionAccess with _$AuthoringSessionAccess {
-  const factory AuthoringSessionAccess({
-    required AuthoringSession notifier,
-    required AuthoringSessionState state,
-  }) = _AuthoringSessionAccess;
-}
-
-/// Adds provider helpers for acquiring the selected authoring session.
-extension AuthoringSessionRef on Ref {
-  /// Resolves the selected organization and realm session for a provider.
-  ///
-  /// Throws when no organization or realm is selected.
-  AuthoringSessionAccess readAuthoringSession() {
-    final organizationId = read(organizationIdProvider);
-    final realmId = read(realmIdProvider);
-    if (organizationId == null) throw ApiException.noOrganization();
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    final provider = authoringSessionProvider(organizationId, realmId);
-    return AuthoringSessionAccess(
-      notifier: read(provider.notifier),
-      state: read(provider),
-    );
-  }
-}
-
-/// Adds the selected authoring session helper to widget references.
-extension AuthoringSessionWidgetRef on WidgetRef {
-  /// Resolves the selected organization and realm session for a widget.
-  ///
-  /// Throws when no organization or realm is selected.
-  AuthoringSessionAccess readAuthoringSession() {
-    final organizationId = read(organizationIdProvider);
-    final realmId = read(realmIdProvider);
-    if (organizationId == null) throw ApiException.noOrganization();
-    if (realmId == null) throw ApiException.badRequest("No realm selected");
-    final provider = authoringSessionProvider(organizationId, realmId);
-    return AuthoringSessionAccess(
-      notifier: read(provider.notifier),
-      state: read(provider),
-    );
-  }
-}
-
-/// Converts authoring validation diagnostics into the panel's API error type.
-extension AuthoringInvalidFailure on skir.AuthoringInvalid {
-  String get message =>
-      diagnostics.map((diagnostic) => diagnostic.message).join("; ");
-
-  ApiException toApiException() => ApiException.badRequest(message);
-}
-
-/// Converts non applied authoring batch responses into caller visible errors.
-extension AuthoringBatchFailure on skir.ApplyAuthoringBatchResponse {
-  void requireApplied({required String conflictMessage}) {
-    switch (this) {
-      case skir.ApplyAuthoringBatchResponse_appliedWrapper():
-        return;
-      case skir.ApplyAuthoringBatchResponse_conflictWrapper():
-        throw ApiException.conflict(conflictMessage);
-      case skir.ApplyAuthoringBatchResponse_invalidWrapper() ||
-          skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-          skir.ApplyAuthoringBatchResponse_unknown():
-        throw toApiException();
     }
   }
 
-  ApiException toApiException() => switch (this) {
-    skir.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
-      value.toApiException(),
-    skir.ApplyAuthoringBatchResponse_internalErrorWrapper() =>
-      ApiException.internalServerError(),
-    skir.ApplyAuthoringBatchResponse_unknown() =>
-      ApiException.unknownResponseMessage(),
-    _ => throw StateError("The authoring response is not a failure"),
-  };
+  bool _isActive(int lifecycleRevision) =>
+      ref.mounted && _lifecycleRevision == lifecycleRevision;
 
-  TypedMutationResult toMutationFailure({required String unavailableMessage}) =>
-      switch (this) {
-        skir.ApplyAuthoringBatchResponse_invalidWrapper(:final value) =>
-          invalidMutation(value.message),
-        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-        skir.ApplyAuthoringBatchResponse_unknown() => unavailableMutation(
-          unavailableMessage,
-        ),
-        _ => throw StateError(
-          "The authoring response is not a mutation failure",
-        ),
-      };
-}
+  void _scheduleRefresh(int lifecycleRevision, {bool catalog = false}) {
+    if (!_isActive(lifecycleRevision)) return;
+    unawaited(
+      _refresh(
+        _repository,
+        lifecycleRevision,
+        _organizationId,
+        _realmId,
+        catalog: catalog,
+      ).catchError((Object _) {}),
+    );
+  }
 
-/// Keeps the library projection and its session alive while observed.
-@riverpod
-AuthoringScopeLease authoringLibraryScope(
-  Ref ref,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-) {
-  final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquireLibrary();
-  ref.onDispose(lease.release);
-  return lease;
-}
+  void _acceptChange(skir.AuthoringChanged change, int lifecycleRevision) {
+    if (!_isActive(lifecycleRevision)) return;
+    _scheduleRefresh(
+      lifecycleRevision,
+      catalog: change.generation != state.generation,
+    );
+  }
 
-/// Keeps a book projection and its session alive while observed.
-@riverpod
-AuthoringScopeLease authoringBookScope(
-  Ref ref,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-  skir.RecordId bookId,
-) {
-  final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquireBook(bookId);
-  ref.onDispose(lease.release);
-  return lease;
-}
+  PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
+    skir.PreparedEdit edit,
+  ) => _repository.prepareCommit(edit);
 
-/// Keeps a page projection and its session alive while observed.
-@riverpod
-AuthoringScopeLease authoringPageScope(
-  Ref ref,
-  skir.RecordId organizationId,
-  skir.RecordId realmId,
-  skir.RecordId pageId,
-) {
-  final session = authoringSessionProvider(organizationId, realmId);
-  final lease = ref.read(session.notifier).acquirePage(pageId);
-  ref.onDispose(lease.release);
-  return lease;
+  Future<skir.TypePreviewResult> previewTypeArguments({
+    required skir.ResourceId resource,
+    required skir.TypeSelection requested,
+  }) {
+    final snapshot = state.snapshot;
+    if (snapshot == null) throw StateError("Authoring is not loaded");
+    return _repository.previewTypeArgumentChange(
+      skir.PreviewTypeArgumentChangeRequest(
+        resource: resource,
+        requested: requested,
+        catalog: snapshot.generation,
+      ),
+    );
+  }
+
+  Future<skir.PreparedEditResult> prepareTypeArguments(
+    skir.TypeArgumentChangePreview preview,
+  ) => _repository.prepareTypeArgumentChange(preview);
+
+  Future<skir.PreparedValue> prepareValue(
+    skir.ValuePreparationRequest request,
+  ) =>
+      NatsRealmEditorCatalogSource(ref)
+          .prepareValue(_organizationId, _realmId, request);
+
+  Future<skir.SearchAuthoringResponse> search(
+    skir.SearchAuthoringRequest request,
+  ) => _repository.search(request);
+
+  Future<skir.CommandResult> invokeCommand({
+    required skir.CapabilityId capabilityId,
+    required skir.DataValue payload,
+  }) {
+    final catalog = state.catalog;
+    if (catalog == null) throw StateError("The editor catalog is not loaded");
+    return NatsAuthoredCapabilityTransport(
+      ref: ref,
+      organizationId: _organizationId,
+      realmId: _realmId,
+    ).command(
+      generation: catalog.snapshot.generation,
+      capabilityId: capabilityId,
+      payload: payload,
+    );
+  }
+
+  Stream<skir.RealmPresentationSearchUpdate> watchPresentationSearch(
+    skir.RealmPresentationSearchRequest request,
+  ) => NatsRealmPresentationSearchTransport(
+    ref: ref,
+    organizationId: _organizationId,
+    realmId: _realmId,
+  ).watch(request);
 }

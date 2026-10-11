@@ -1,6 +1,3 @@
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:petitparser/debug.dart";
-import "package:petitparser/petitparser.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "query_lexer.freezed.dart";
@@ -29,7 +26,7 @@ final _notOperatorParser = [
 class QueryLexer {
   QueryLexer(List<QuerySelectorDefinition> selectors) {
     if (selectors.isEmpty) {
-      parser = any().star().flatten().map((input) {
+      parser = anyCharacter().star().flatten().map((input) {
         final query = input.trim();
         return QueryLexerResult(
           query: query,
@@ -118,9 +115,9 @@ class QueryLexer {
     final expression = builder.build();
 
     parser =
-        (any().starLazy(expression).flatten().optional() &
+        (anyCharacter().starLazy(expression).flatten().optional() &
                 expression.optional() &
-                any().star().flatten())
+                anyCharacter().star().flatten())
             .map((list) {
               final [String? left, QueryLexerToken? expression, String? right] =
                   list;

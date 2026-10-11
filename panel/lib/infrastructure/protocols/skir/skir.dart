@@ -1,37 +1,42 @@
 /// Public Skir boundary for panel protocol models and domain codecs.
 ///
-/// Generated wire declarations are re exported for transport use, while
-/// handwritten codecs and converters keep those declarations away from most
-/// application code. The generated tree is not edited here.
+/// Import this library as `skir` so protocol names stay distinct from panel and
+/// Flutter names. It exposes generated declarations, serializers, and primitive
+/// converters used at protocol boundaries. The generated tree is not edited.
 library;
 
+import "skirout/editor/v1/authoring.dart"
+    show ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
+
+export "package:skir_client/skir_client.dart" hide EnumVariant, Service;
+
 export "converters.dart";
-export "editor_codec.dart";
 export "skirout/access/v1/permission.dart";
 export "skirout/access/v1/sentinel.dart";
 export "skirout/editor/v1/action.dart";
+export "skirout/editor/v1/authoring.dart"
+    hide ArgumentLocation, ArgumentLocation_mutable, ArgumentLocation_orMutable;
+export "skirout/editor/v1/authoring_facts.dart";
 export "skirout/editor/v1/binding.dart";
 export "skirout/editor/v1/capability.dart";
 export "skirout/editor/v1/catalog.dart";
+export "skirout/editor/v1/catalog_presentation.dart";
+export "skirout/editor/v1/checking.dart";
+export "skirout/editor/v1/compiled_content.dart";
 export "skirout/editor/v1/conversion.dart";
 export "skirout/editor/v1/diagnostic.dart";
-export "skirout/editor/v1/element_catalog.dart";
 export "skirout/editor/v1/expression.dart";
-export "skirout/editor/v1/page_catalog.dart"
-    hide PageDiagnostic, PageDiagnostic_mutable, PageDiagnostic_orMutable;
-export "skirout/editor/v1/path.dart";
 export "skirout/editor/v1/presentation.dart";
+export "skirout/editor/v1/publication.dart";
 export "skirout/editor/v1/search.dart";
 export "skirout/editor/v1/type_catalog.dart";
 export "skirout/editor/v1/typed_value.dart";
+export "skirout/kernel/v1/bounded_transfer.dart";
 export "skirout/kernel/v1/color.dart";
 export "skirout/kernel/v1/duration.dart";
 export "skirout/kernel/v1/errors.dart";
 export "skirout/kernel/v1/icon.dart";
-export "skirout/kernel/v1/page_kind.dart";
 export "skirout/kernel/v1/record_id.dart";
-export "skirout/library/v1/authoring.dart";
-export "skirout/library/v1/compiled_content.dart";
 export "skirout/organization/v1/join_codes.dart";
 export "skirout/organization/v1/join_request.dart";
 export "skirout/organization/v1/member.dart";
@@ -47,3 +52,8 @@ export "skirout/service/v1/registration.dart";
 export "skirout/service/v1/service.dart";
 export "skirout/service/v1/status.dart";
 export "skirout/service/v1/topology.dart";
+
+/// Authoring argument placement, distinct from diagnostic argument locations.
+typedef AuthoringArgumentLocation = ArgumentLocation;
+typedef AuthoringArgumentLocationMutable = ArgumentLocation_mutable;
+typedef AuthoringArgumentLocationOrMutable = ArgumentLocation_orMutable;

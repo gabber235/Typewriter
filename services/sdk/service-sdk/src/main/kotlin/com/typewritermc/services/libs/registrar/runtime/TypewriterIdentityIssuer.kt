@@ -16,7 +16,7 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.registrar.ServiceIdentity
 import com.typewritermc.services.libs.registrar.ServiceRole
 import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import skirout.service.v1.identity.IssueServiceIdentityRequest
 import skirout.service.v1.identity.IssueServiceIdentityResponse
 import java.net.URI
@@ -70,7 +70,7 @@ class TypewriterIdentityIssuer(
             try {
                 IssueServiceIdentityResponse.serializer.fromBytes(result.response.body)
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 return IdentityIssueResult.Failure(IdentityIssueError.Protocol("malformed_response", ambiguous))
             }
         return mapIdentityResponse(status, response, role)
@@ -118,7 +118,7 @@ private fun mapIdentityResponse(
                 ),
             )
         } catch (failure: Throwable) {
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
             IdentityIssueResult.Failure(IdentityIssueError.Protocol("invalid_success", true))
         }
     }

@@ -1,8 +1,3 @@
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "models.freezed.dart";
@@ -381,7 +376,7 @@ abstract class SearchPreviewRequest with _$SearchPreviewRequest {
 
 /// Success or user visible failure from a preview request.
 @freezed
-abstract class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
+sealed class SearchPreviewRequestResult with _$SearchPreviewRequestResult {
   const factory SearchPreviewRequestResult.data({required Object data}) =
       SearchPreviewRequestResultData;
 

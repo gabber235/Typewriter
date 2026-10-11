@@ -1,8 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:localstorage/localstorage.dart";
-import "package:rive/rive.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Initializes Flutter and global platform services before mounting the panel.

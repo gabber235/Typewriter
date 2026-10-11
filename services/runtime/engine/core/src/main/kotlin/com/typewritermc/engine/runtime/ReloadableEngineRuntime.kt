@@ -1,10 +1,11 @@
 package com.typewritermc.engine.runtime
 
+import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.RuntimeRegistrar
-import com.typewritermc.discovery.runtime.DiscoveryDeployment
-import com.typewritermc.engine.ActivatedCompiledContent
+import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
+import com.typewritermc.scripting.RuntimeMemberSignature
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,22 +18,25 @@ import kotlinx.coroutines.flow.StateFlow
  * Lifecycle methods and external content application require serialized access.
  */
 class ReloadableEngineRuntime(
-    deployment: DiscoveryDeployment,
+    deployment: GeneratedProviderDeployment,
     private val registrars: List<RuntimeRegistrar>,
     private val parentScope: CoroutineScope,
+    private val implementationToken: String,
+    private val enforceImplementationCompatibility: Boolean = true,
+    private val runtimeSignatures: Set<RuntimeMemberSignature>,
     private val contentGateway: EngineContentGateway? = null,
     private val contentDelivery: EngineContentDelivery? = null,
 ) : StagedHostedRuntime {
     private val mutableHealth = MutableStateFlow<RuntimeHealth>(RuntimeHealth.Staged)
     override val health: StateFlow<RuntimeHealth> = mutableHealth
-    private var deployment: DiscoveryDeployment? = deployment
+    private var deployment: GeneratedProviderDeployment? = deployment
     private var scope: ManagedRuntimeScope? = null
-    private var lastContent: ActivatedCompiledContent? = null
+    private var lastContent: LoadedPublishedContent? = null
 
     override suspend fun activate() {
         val currentDeployment = checkNotNull(deployment) { "Engine deployment is stopped." }
         check(scope == null) { "Engine deployment is already active." }
-        val replacement = ManagedRuntimeScope(parentScope, currentDeployment.prototypes, currentDeployment.facts)
+        val replacement = ManagedRuntimeScope(parentScope, currentDeployment.facts)
         try {
             with(replacement) {
                 registrars.forEach { it.register() }
@@ -48,22 +52,25 @@ class ReloadableEngineRuntime(
         }
     }
 
-    /**
-     * Applies content only while active and only if its activation revision exceeds the last successful one.
-     *
-     * The remembered revision advances after the gateway succeeds. Missing gateways return Unsupported; older or
-     * equal revisions return the current activation without reapplying.
-     */
-    suspend fun applyContent(content: ActivatedCompiledContent): ContentApplicationResult {
+    /** Applies a current descriptor delivered by the serialized content worker. */
+    suspend fun applyContent(content: LoadedPublishedContent): ContentApplicationResult {
         check(scope != null) { "Engine deployment is not active." }
+        if (enforceImplementationCompatibility) {
+            require(content.descriptor.implementationToken == implementationToken) {
+                "Compiled content targets a different engine implementation."
+            }
+        }
+        require(content.descriptor.runtimeSignatures == runtimeSignatures) {
+            "Compiled content requires a different runtime member signature set."
+        }
         val current = lastContent
-        if (current != null && content.activationRevision <= current.activationRevision) {
-            return ContentApplicationResult.Ignored(current.activationRevision, current.content.manifest.digest)
+        if (current?.descriptor?.publication == content.descriptor.publication) {
+            return ContentApplicationResult.Unchanged(current.descriptor.publication)
         }
         val gateway = contentGateway ?: return ContentApplicationResult.Unsupported
         gateway.apply(content)
         lastContent = content
-        return ContentApplicationResult.Applied(content.activationRevision, content.content.manifest.digest)
+        return ContentApplicationResult.Applied(content.descriptor.publication)
     }
 
     override suspend fun quiesce() {

@@ -1,8 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/rendering.dart";
-import "package:flutter/widgets.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const _defaultDuration = Duration(milliseconds: 300);
 const _defaultInterval = Duration(milliseconds: 60);
@@ -527,7 +523,7 @@ class _StaggerCoordinator {
 
     final finalDesiredStart = assignments.fold<double>(
       0,
-      (latest, assignment) => math.max(latest, assignment.desiredStartUs),
+      (latest, assignment) => max(latest, assignment.desiredStartUs),
     );
     final capUs = settings.maxLaunchDuration.inMicroseconds.toDouble();
     final scale = finalDesiredStart <= 0 || finalDesiredStart <= capUs
@@ -539,7 +535,7 @@ class _StaggerCoordinator {
       final startUs = assignment.desiredStartUs * scale;
       final durationUs = assignment.node.settings.duration.inMicroseconds
           .toDouble();
-      timelineUs = math.max(timelineUs, startUs + durationUs);
+      timelineUs = max(timelineUs, startUs + durationUs);
     }
 
     if (timelineUs <= 0) {
@@ -549,9 +545,7 @@ class _StaggerCoordinator {
       return;
     }
 
-    final timelineDuration = Duration(
-      microseconds: math.max(1, timelineUs.round()),
-    );
+    final timelineDuration = Duration(microseconds: max(1, timelineUs.round()));
     localController.duration = timelineDuration;
 
     for (final assignment in assignments) {

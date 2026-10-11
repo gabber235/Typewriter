@@ -1,9 +1,4 @@
-import "dart:async";
-import "dart:io";
-import "dart:typed_data";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:nats_core/nats_core.dart" as core;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const _seed = "SUAKYRHVIOREXV7EUZTBHUHL7NUMHPMAS7QMDU3GTIUWEI5LDNOXD43IZY";
@@ -40,10 +35,10 @@ void main() {
   test(
     "adapter requests through a restricted caller inbox",
     () async {
-      final responder = await core.NatsConnection.connect(
-        core.NatsOptions(
-          servers: [core.NatsServer.parse(serverUrl!)],
-          authentication: core.NatsAuthentication.nkey(_seed),
+      final responder = await NatsConnection.connect(
+        NatsOptions(
+          servers: [NatsServer.parse(serverUrl!)],
+          authentication: NatsAuthentication.nkey(_seed),
         ),
       );
       addTearDown(responder.close);
@@ -52,6 +47,9 @@ void main() {
           url: serverUrl,
           seed: _seed,
           requestInboxPrefix: "_INBOX.integration",
+          actorId: "integration-user",
+          organizationId: "integration-organization",
+          connectionSession: "0123456789abcdef0123456789abcdef",
         ),
       );
       addTearDown(client.close);
@@ -59,7 +57,7 @@ void main() {
         await _waitForConnectionState<NatsConnected>(client);
       }
 
-      final received = Completer<core.NatsMessage>();
+      final received = Completer<CoreNatsMessage>();
       final responderSubscription = await responder.subscribe("allowed.echo");
       addTearDown(responderSubscription.unsubscribe);
       final listener = responderSubscription.messages.listen((message) {
@@ -104,6 +102,9 @@ void main() {
           url: serverUrl!,
           seed: _rejectedSeed,
           requestInboxPrefix: "_INBOX.integration.rejected",
+          actorId: "rejected-user",
+          organizationId: null,
+          connectionSession: "fedcba9876543210fedcba9876543210",
         ),
       );
       addTearDown(client.close);
@@ -111,8 +112,8 @@ void main() {
       final failed = await _waitForConnectionState<NatsFailed>(client);
 
       expect(failed.failure.kind, NatsFailureKind.authentication);
-      expect(failed.failure.cause, isA<core.NatsAuthenticationException>());
-      final cause = failed.failure.cause! as core.NatsAuthenticationException;
+      expect(failed.failure.cause, isA<NatsAuthenticationException>());
+      final cause = failed.failure.cause! as NatsAuthenticationException;
       expect(failed.failure.message, cause.message);
       expect(failed.failure.toString(), isNot(contains(_rejectedSeed)));
 

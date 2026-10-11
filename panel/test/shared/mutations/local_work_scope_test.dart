@@ -1,7 +1,4 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -35,12 +32,13 @@ void main() {
           targetId: "resource",
           label: "Resource",
           scope: EditorResourceScope(organizationId: organization),
-          document: const EditorDocument(
-            rootType: StringType(),
-            typeCatalog: TypeCatalog([]),
-            confirmedValue: StringValue("Original"),
+          document: EditorDocument(
+            rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+            catalog: _emptyCatalog,
+            confirmedValue: skir.DataValue.wrapStringValue("Original"),
             revision: 1,
           ),
+          validation: acceptTestEditorMutation,
           commit: (_) async => throw StateError("No save expected"),
         ),
       ),
@@ -82,32 +80,33 @@ void main() {
           organizationId: organization,
           realmId: realm,
         ),
-        document: const EditorDocument(
-          rootType: StringType(),
-          typeCatalog: TypeCatalog([]),
-          confirmedValue: StringValue("Original"),
+        document: EditorDocument(
+          rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          catalog: _emptyCatalog,
+          confirmedValue: skir.DataValue.wrapStringValue("Original"),
           revision: 1,
         ),
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );
       final source = workspace.editor(target)
-        ..update(DataPath.root, const StringValue("Draft"));
+        ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
 
       realm = _id("realm", "second");
       container.invalidate(realmIdProvider);
       await container.pump();
       expect(container.read(localWorkControllerProvider), same(workspace));
       expect(
-        source.value(DataPath.root).valueOrNull,
-        const StringValue("Draft"),
+        source.value(editorRootPath).valueOrNull,
+        skir.DataValue.wrapStringValue("Draft"),
       );
 
       await switchOrganization();
       final next = container.read(localWorkControllerProvider);
       expect(next, same(workspace));
       final nextState = container.read(localWorkProvider);
-      expect(nextState.resources, isEmpty);
+      expect(nextState.entries, isEmpty);
       expect(workspace.resources, isEmpty);
       expect(await source.flush(), isA<MutationUnavailable>());
     },
@@ -173,3 +172,7 @@ void main() {
     },
   );
 }
+
+final _emptyCatalog = CheckedEditorCatalog(
+  skir.EditorCatalogWireSnapshot.defaultInstance,
+);

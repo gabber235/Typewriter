@@ -1,20 +1,9 @@
 // ignore_for_file: invalid_use_of_internal_member
 
-import "dart:async";
-
-import "package:flutter/widgets.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/legacy.dart";
-import "package:typewriter_panel/app/application/router/access/authentication_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/organization_route_access.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_coordinator.dart";
-import "package:typewriter_panel/app/presentation/route_access/authentication_route_access_binding.dart";
-import "package:typewriter_panel/app/presentation/route_access/organization_route_access_binding.dart";
-import "package:typewriter_panel/app/presentation/route_access/route_access_binding.dart";
-import "package:typewriter_panel/features/auth/application/auth.dart";
-import "package:typewriter_panel/features/organizations/application/application.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/converters.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final _authenticationDependency = StateProvider<Future<bool>>(
   (ref) => Future.value(false),
@@ -37,7 +26,7 @@ RouteAccessCoordinator _coordinator() => RouteAccessCoordinator(
 );
 
 OrganizationData _organization(String id) => OrganizationData(
-  organizationId: recordId("organization:$id"),
+  organizationId: skir.recordId("organization:$id"),
   name: id,
   logoUrl: "",
 );

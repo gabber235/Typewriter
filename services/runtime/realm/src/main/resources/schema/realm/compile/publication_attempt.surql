@@ -1,0 +1,11 @@
+DEFINE TABLE OVERWRITE publication_attempt SCHEMAFULL TYPE NORMAL PERMISSIONS NONE;
+DEFINE FIELD OVERWRITE catalog ON publication_attempt TYPE string;
+DEFINE FIELD OVERWRITE engine_inputs ON publication_attempt TYPE object FLEXIBLE;
+DEFINE FIELD OVERWRITE state ON publication_attempt TYPE "checking" | "compiling" | "activating" | "complete" | "blocked" | "interrupted";
+DEFINE FIELD OVERWRITE selected ON publication_attempt TYPE bool DEFAULT false;
+DEFINE FIELD OVERWRITE result ON publication_attempt TYPE option<object> FLEXIBLE;
+DEFINE FIELD OVERWRITE findings ON publication_attempt TYPE array<object> DEFAULT [];
+DEFINE FIELD OVERWRITE findings.* ON publication_attempt TYPE object FLEXIBLE;
+DEFINE FIELD OVERWRITE started_at ON publication_attempt TYPE datetime DEFAULT time::now();
+DEFINE FIELD OVERWRITE updated_at ON publication_attempt TYPE datetime DEFAULT time::now();
+DEFINE INDEX OVERWRITE publication_selected ON publication_attempt FIELDS selected;

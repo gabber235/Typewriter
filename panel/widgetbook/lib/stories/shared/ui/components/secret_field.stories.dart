@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -13,8 +11,7 @@ Widget secretFieldInviteLinkUseCase(BuildContext context) {
   );
   final description = context.knobs.string(
     label: "Description",
-    initialValue:
-        "Generate a unique invite link to share with team members. The link will expire after a set time for security.",
+    initialValue: "Generate a unique invite link to share with team members. The link will expire after a set time for security.",
   );
   final ms = context.knobs.int.input(label: "Delay (ms)", initialValue: 1500);
   final expirySeconds = context.knobs.int.input(
@@ -51,8 +48,7 @@ Widget secretFieldMinecraftCommandUseCase(BuildContext context) {
       width: 600,
       child: SecretField(
         title: "Server Connection Command",
-        description:
-            "Generate a one-time command to link your Minecraft server. Run this command in your server console.",
+        description: "Generate a one-time command to link your Minecraft server. Run this command in your server console.",
         prefix: "/typewriter link ",
         generateButtonText: "Generate Command",
         regenerateButtonText: "New Command",
@@ -76,8 +72,7 @@ Widget secretFieldApiKeyUseCase(BuildContext context) {
       width: 500,
       child: SecretField(
         title: "API Key",
-        description:
-            "Generate a temporary API key for testing. This key will expire and should not be used in production.",
+        description: "Generate a temporary API key for testing. This key will expire and should not be used in production.",
         generateButtonText: "Generate Key",
         regenerateButtonText: "Regenerate",
         onGenerate: () async {
@@ -108,8 +103,7 @@ Widget secretFieldStateTransitionsUseCase(BuildContext context) {
             children: [
               SecretField(
                 title: "Interactive Demo",
-                description:
-                    "Click Generate to see all state transitions. Watch the countdown timer and try both copy buttons.",
+                description: "Click Generate to see all state transitions. Watch the countdown timer and try both copy buttons.",
                 prefix: "https://example.com/secret/",
                 onGenerate: () async {
                   copiedNotifier.value = false;
@@ -154,8 +148,7 @@ Widget secretFieldQuickExpiryUseCase(BuildContext context) {
       width: 500,
       child: SecretField(
         title: "Quick Expiry Demo",
-        description:
-            "This secret expires in just 10 seconds to demonstrate the urgent expiry state.",
+        description: "This secret expires in just 10 seconds to demonstrate the urgent expiry state.",
         onGenerate: () async {
           await Future<void>.delayed(const Duration(milliseconds: 500));
           return SecretFieldRevealed(

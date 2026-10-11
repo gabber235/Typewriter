@@ -27,12 +27,11 @@ enum MutationActivityPhase {
   /// over lower priority states. The method does not inspect mutable owners.
   static MutationActivityPhase resolve(
     Iterable<LocalWorkSubmissionState> submissions,
-    Iterable<LocalWorkResourceState> drafts,
+    Iterable<WorkEntryState> drafts,
   ) {
-    final phases = drafts.map((entry) => entry.savePhase).toSet();
     final saving =
         submissions.any((entry) => entry.sending) ||
-        phases.contains(EditorSavePhase.saving);
+        drafts.any((entry) => entry.saving);
     final attention =
         submissions.any(
           (entry) =>
@@ -41,19 +40,11 @@ enum MutationActivityPhase {
               (entry.result != LocalWorkSubmissionResult.confirmed ||
                   entry.integrationFailed),
         ) ||
-        phases.any(
-          {
-            EditorSavePhase.failed,
-            EditorSavePhase.conflict,
-            EditorSavePhase.uncertain,
-            EditorSavePhase.repeatedContention,
-            EditorSavePhase.deletedElsewhere,
-          }.contains,
-        );
+        drafts.any((entry) => entry.needsAttention);
     if (attention) return saving ? savingWithAttention : needsAttention;
 
     if (saving) return MutationActivityPhase.saving;
-    if (drafts.any((entry) => entry.hasDiagnostics)) {
+    if (drafts.any((entry) => entry.needsInput)) {
       return needsInput;
     }
 

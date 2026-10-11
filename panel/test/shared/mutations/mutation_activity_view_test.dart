@@ -1,7 +1,3 @@
-import "dart:ui" show PointerDeviceKind;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -29,7 +25,7 @@ void main() {
   testWidgets(
     "successful feedback expires after ten seconds and later saves appear again",
     (tester) async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       final journal = workspace;
 
       addTearDown(workspace.dispose);
@@ -44,7 +40,7 @@ void main() {
       await tester.pumpTestApp(
         child: Scaffold(
           appBar: AppBar(
-            actions: [LocalWorkSessionActivityView(controller: workspace)],
+            actions: [ScopedWorkSessionActivityView(controller: workspace)],
           ),
         ),
       );
@@ -110,7 +106,7 @@ void main() {
         await tester.binding.setSurfaceSize(Size(mobile ? 390 : 1280, 800));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        final workspace = LocalWorkSession();
+        final workspace = ScopedWorkSession();
         final journal = workspace;
 
         addTearDown(workspace.dispose);
@@ -126,7 +122,7 @@ void main() {
         await tester.pumpTestApp(
           child: Scaffold(
             appBar: AppBar(
-              actions: [LocalWorkSessionActivityView(controller: workspace)],
+              actions: [ScopedWorkSessionActivityView(controller: workspace)],
             ),
           ),
         );
@@ -226,7 +222,7 @@ void main() {
   testWidgets(
     "already confirmed submissions expire but uncertain outcomes do not",
     (tester) async {
-      final journal = LocalWorkSession();
+      final journal = ScopedWorkSession();
 
       final confirmed = MutationSubmission<void>(
         id: 1,

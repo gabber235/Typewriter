@@ -1,6 +1,4 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Tracks a route access state while filtering transient states from guards.
 ///
@@ -9,11 +7,11 @@ import "package:flutter/foundation.dart";
 /// first nonpending state, while [reevaluation] emits only when consecutive
 /// stable projections differ. Disposal completes pending waiters so guards do
 /// not remain blocked when the router provider is torn down.
-final class RouteAccessStateController<State, StableState extends Object> {
+final class RouteAccessStateController<StateT, StableState extends Object> {
   RouteAccessStateController({
-    required State initialState,
-    required bool Function(State state) isPending,
-    required StableState? Function(State state) stableStateOf,
+    required StateT initialState,
+    required bool Function(StateT state) isPending,
+    required StableState? Function(StateT state) stableStateOf,
   }) : _current = initialState,
        _isPending = isPending,
        _stableStateOf = stableStateOf,
@@ -22,23 +20,23 @@ final class RouteAccessStateController<State, StableState extends Object> {
            : stableStateOf(initialState),
        _ready = isPending(initialState) ? Completer<void>() : null;
 
-  final bool Function(State state) _isPending;
-  final StableState? Function(State state) _stableStateOf;
+  final bool Function(StateT state) _isPending;
+  final StableState? Function(StateT state) _stableStateOf;
   final _RouteReevaluationSignal _reevaluation = _RouteReevaluationSignal();
 
-  State _current;
+  StateT _current;
   StableState? _lastStable;
   Completer<void>? _ready;
   bool _disposed = false;
 
-  State get current => _current;
+  StateT get current => _current;
   Listenable get reevaluation => _reevaluation;
 
   /// Completes when the current access state first becomes nonpending.
   Future<void> waitUntilReady() => _ready?.future ?? Future.value();
 
   /// Replaces the current observation and emits semantic changes when stable.
-  void transitionTo(State next) {
+  void transitionTo(StateT next) {
     assert(!_disposed, "Cannot transition disposed route access state");
     if (next == _current) return;
     _current = next;

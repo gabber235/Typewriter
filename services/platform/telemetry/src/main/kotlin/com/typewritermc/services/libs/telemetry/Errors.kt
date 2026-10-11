@@ -1,6 +1,6 @@
 package com.typewritermc.services.libs.telemetry
 
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 
 /**
  * Provides a stable machine readable failure identity independent of exception text.
@@ -54,7 +54,7 @@ inline fun <T> withErrorSlug(
     try {
         block()
     } catch (failure: Throwable) {
-        rethrowExceptionalThrowable(failure)
+        failure.rethrowExceptional()
         if (failure is SluggedException) throw failure
         throw SluggedException.wrap(slug, failure)
     }
@@ -71,7 +71,7 @@ suspend fun <T> withErrorSlugSuspending(
     try {
         block()
     } catch (failure: Throwable) {
-        rethrowExceptionalThrowable(failure)
+        failure.rethrowExceptional()
         if (failure is SluggedException) throw failure
         throw SluggedException.wrap(slug, failure)
     }
@@ -81,7 +81,7 @@ fun <T> Result<T>.withErrorSlug(slug: ErrorSlug): Result<T> =
     fold(
         onSuccess = { Result.success(it) },
         onFailure = { failure ->
-            rethrowExceptionalThrowable(failure)
+            failure.rethrowExceptional()
             if (failure is SluggedException) {
                 Result.failure(failure)
             } else {

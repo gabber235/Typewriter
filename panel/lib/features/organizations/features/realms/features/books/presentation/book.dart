@@ -1,11 +1,3 @@
-import "dart:math";
-
-import "package:flutter/material.dart" hide Title;
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/heroicons_solid.dart";
-import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -17,7 +9,7 @@ const bookAspectRatio = bookWidth / bookHeight;
 /// Displays a book in the library grid.
 ///
 /// Selection and focus belong to the shared selectable system. Double click
-/// opens the book route. The caller supplies projected book data, including
+/// opens the book route. The caller supplies working book data, including
 /// already resolved tags.
 class BookWidget extends HookConsumerWidget {
   const BookWidget({
@@ -29,7 +21,7 @@ class BookWidget extends HookConsumerWidget {
     super.key,
   });
 
-  final skir.RecordId id;
+  final skir.ResourceId id;
   final String title;
   final Widget icon;
   final Color color;
@@ -38,18 +30,22 @@ class BookWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focusNode = useFocusNode();
-    final selectableId = BookIdentifier(id);
-    final organization = ref.watch(organizationIdProvider);
-    final realm = ref.watch(realmIdProvider);
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    if (scope == null) return const SizedBox.shrink();
+    final selectableId = AuthoringResourceIdentifier.inScope(scope, id);
 
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
-      onDoubleTap: organization == null || realm == null
-          ? null
-          : () => ref
-                .read(appRouterProvider)
-                .navigate(selectableId.routeFor(organization, realm)),
+      onDoubleTap: () => ref
+          .read(appRouterProvider)
+          .navigate(
+            BookRoute(
+              organizationId: scope.organizationId.id,
+              realmId: scope.realmId.id,
+              bookId: id.id,
+            ),
+          ),
       builder: (isSelected, isFocused, isHovered) {
         final book = Surface(
           color: Theme.of(context).colorScheme.surface,
@@ -75,14 +71,15 @@ class BookWidget extends HookConsumerWidget {
                   .hoverScale(isHovered)
                   .hoverRotate(isHovered),
         );
-        return DragTarget<Object>(
+        return DragTarget<AuthoringResourceIdentifier>(
           onWillAcceptWithDetails: (details) =>
-              details.data is ReferenceResourceDragData &&
-              (details.data as ReferenceResourceDragData).referenceId.table ==
-                  "tag",
+              details.data.scope == scope &&
+              (ref.read(workingTagsProvider).value ?? const <Tag>[]).any(
+                (tag) => tag.tagId == details.data.resourceId,
+              ),
           onAcceptWithDetails: (details) async {
-            final data = details.data as ReferenceResourceDragData;
-            final current = ref.read(projectedBookProvider(id)).value;
+            final data = details.data;
+            final current = ref.read(workingBookProvider(id)).value;
             if (current == null) return;
             final tags = [...current.tagIds];
             final index = tags.indexOf(data.referenceId);
@@ -91,9 +88,22 @@ class BookWidget extends HookConsumerWidget {
             } else {
               tags.removeAt(index);
             }
-            await ref
-                .read(canonicalBooksProvider.notifier)
-                .updateBook(current.copyWith(tagIds: tags), expected: current);
+            final workspace = ref.read(authoringWorkspaceProvider(scope));
+            workspace
+                .edit(
+                  label: "Change book tags",
+                  apply: (edit) {
+                    replacePortableLinkCollection(
+                      draft: edit,
+                      catalog: workspace.document.catalog,
+                      resource: id,
+                      field: "tags",
+                      expected: current.tagIds,
+                      proposed: tags,
+                    );
+                  },
+                )
+                .report(context);
           },
           builder: (context, accepted, rejected) => AnimatedContainer(
             duration: const Duration(milliseconds: 120),
@@ -108,7 +118,7 @@ class BookWidget extends HookConsumerWidget {
                       width: 2,
                     ),
             ),
-            child: Draggable<BookIdentifier>(
+            child: Draggable<AuthoringResourceIdentifier>(
               data: selectableId,
               feedback: Material(
                 color: Colors.transparent,

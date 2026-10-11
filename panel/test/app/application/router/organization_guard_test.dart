@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod/riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -47,7 +48,7 @@ void main() {
 
     expect(
       container.read(organizationIdProvider),
-      recordId("organization:org1"),
+      skir.recordId("organization:org1"),
     );
   });
 }

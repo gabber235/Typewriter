@@ -26,7 +26,7 @@ spec:
             - core
             - jetstream
           config:
-            core-subscriptions: service.*.status:typewriter.service-registration,service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.status:typewriter.service-registration,typewriter.from.service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.heartbeat:typewriter.service-registration,typewriter.from.service.*.shutdown:typewriter.service-registration,typewriter.from.user.*.organization.*.services.*:typewriter.service-registration,typewriter.from.user.*.organization.*.topology.*:typewriter.service-registration,typewriter.from.service.*.execution.*:typewriter.service-registration
+            core-subscriptions: service.*.binding.query:typewriter.service-registration,service.*.registration.ensure:typewriter.service-registration,service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.binding.query:typewriter.service-registration,typewriter.from.service.*.registration.ensure:typewriter.service-registration,typewriter.from.service.*.messaging.scope:typewriter.service-registration,typewriter.from.service.*.heartbeat:typewriter.service-registration,typewriter.from.service.*.shutdown:typewriter.service-registration,typewriter.from.user.*.organization.*.services.*:typewriter.service-registration,typewriter.from.user.*.organization.*.topology.*:typewriter.service-registration,typewriter.from.service.*.execution.*:typewriter.service-registration
         - namespace: seamlezz
           package: surrealdb
           version: "0.4.0"

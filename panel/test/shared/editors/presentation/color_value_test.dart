@@ -1,5 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -7,21 +8,21 @@ void main() {
     test("converts a Flutter color to an unsigned integer value", () {
       expect(
         const Color(0x807C4DFF).asValue,
-        IntegerValue(BigInt.from(0x807C4DFF)),
+        skir.DataValue.wrapInteger("2155630079"),
       );
     });
 
     test("converts valid integer values to Flutter colors", () {
       expect(
-        IntegerValue(BigInt.from(0x807C4DFF)).asColorOrNull,
+        skir.DataValue.wrapInteger("2155630079").asColorOrNull,
         const Color(0x807C4DFF),
       );
     });
 
     test("rejects non integer and out of range values", () {
-      expect(const StringValue("#807C4DFF").asColorOrNull, isNull);
-      expect(IntegerValue(BigInt.from(-1)).asColorOrNull, isNull);
-      expect(IntegerValue(BigInt.from(0x100000000)).asColorOrNull, isNull);
+      expect(skir.DataValue.wrapStringValue("#807C4DFF").asColorOrNull, isNull);
+      expect(skir.DataValue.wrapInteger("-1").asColorOrNull, isNull);
+      expect(skir.DataValue.wrapInteger("4294967296").asColorOrNull, isNull);
     });
   });
 

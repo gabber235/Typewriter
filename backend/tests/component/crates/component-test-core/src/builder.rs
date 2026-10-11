@@ -442,7 +442,7 @@ mod tests {
         let builder = FixtureBuilder::<MessagingFixture>::new()
             .messaging()
             .dependency("messaging-component", |component| {
-                component.subscription("typewriter.from.service.*.status")
+                component.subscription("typewriter.from.service.*.binding.query")
             });
 
         assert!(builder.validate().is_ok());
@@ -467,8 +467,8 @@ mod tests {
             .messaging()
             .dependency("messaging-component", |component| {
                 component
-                    .subscription("typewriter.from.service.*.status")
-                    .subscription("typewriter.from.service.*.status")
+                    .subscription("typewriter.from.service.*.binding.query")
+                    .subscription("typewriter.from.service.*.binding.query")
             });
 
         let error = builder.validate().unwrap_err();

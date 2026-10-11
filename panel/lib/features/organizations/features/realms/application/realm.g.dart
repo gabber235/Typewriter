@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'realm.dart';
 
@@ -6,8 +6,67 @@ part of 'realm.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+
+@ProviderFor(realmTopologyRecovery)
+final realmTopologyRecoveryProvider = RealmTopologyRecoveryProvider._();
+
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+
+final class RealmTopologyRecoveryProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  /// Reloads topology when a previously disconnected service becomes available.
+  ///
+  /// Service heartbeats are independent from topology observations. A recovered
+  /// service therefore provides a reliable opportunity to replace any topology
+  /// event that core NATS could not deliver while the panel was disconnected.
+  RealmTopologyRecoveryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'realmTopologyRecoveryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$realmTopologyRecoveryHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return realmTopologyRecovery(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$realmTopologyRecoveryHash() =>
+    r'8f67b392b182c9e355f0d888d88e6122a9e35ade';
+
 /// Resolves the route's realm parameter to the typed topology identifier.
 ///
 /// A missing parameter deliberately remains `null`; it represents the
@@ -61,7 +120,7 @@ final class RealmIdProvider
   }
 }
 
-String _$realmIdHash() => r'ffb152dbb33d651fc8a22b7ec72cdcb852832b60';
+String _$realmIdHash() => r'8107d153417198d64ff1502ee6bef9393e24bbe4';
 
 /// Finds the selected realm in the organization topology projection.
 ///
@@ -117,7 +176,7 @@ final class SelectedRealmProvider
   }
 }
 
-String _$selectedRealmHash() => r'c519620c0a77a2ee3ece7e8496937fb6a3d5ca59';
+String _$selectedRealmHash() => r'55651a7e38c6f2d9ae3e91fc1ecb2aef5bc4d4e8';
 
 /// Exposes all realms in the current organization topology for selection UI.
 
@@ -163,7 +222,7 @@ final class RealmsProvider
   }
 }
 
-String _$realmsHash() => r'a6a67271ad2071acc9794999988313a29132975d';
+String _$realmsHash() => r'8c75ecbbc7533ed1d2315cc04909bdb119dbeb80';
 
 @ProviderFor(realmsAvailability)
 final realmsAvailabilityProvider = RealmsAvailabilityProvider._();
@@ -212,7 +271,7 @@ String _$realmsAvailabilityHash() =>
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 
 @ProviderFor(realmConnection)
 final realmConnectionProvider = RealmConnectionProvider._();
@@ -222,24 +281,24 @@ final realmConnectionProvider = RealmConnectionProvider._();
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 
 final class RealmConnectionProvider
     extends
         $FunctionalProvider<
           AsyncValue<RealmConnectionState>,
           RealmConnectionState,
-          Stream<RealmConnectionState>
+          FutureOr<RealmConnectionState>
         >
     with
         $FutureModifier<RealmConnectionState>,
-        $StreamProvider<RealmConnectionState> {
+        $FutureProvider<RealmConnectionState> {
   /// Derives the connection gate consumed by the workspace and editor providers.
   ///
   /// The selected realm must resolve, report an active runtime status, and have
   /// its owner host connected. Resolution failures become [unavailable]; known
   /// inactive or disconnected realms become [offline]. Topology invalidation is
-  /// the recovery path, and causes Riverpod to reevaluate this stream.
+  /// the recovery path, and causes Riverpod to reevaluate this result.
   RealmConnectionProvider._()
     : super(
         from: null,
@@ -256,17 +315,17 @@ final class RealmConnectionProvider
 
   @$internal
   @override
-  $StreamProviderElement<RealmConnectionState> $createElement(
+  $FutureProviderElement<RealmConnectionState> $createElement(
     $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  Stream<RealmConnectionState> create(Ref ref) {
+  FutureOr<RealmConnectionState> create(Ref ref) {
     return realmConnection(ref);
   }
 }
 
-String _$realmConnectionHash() => r'4a138358818b34afa64c45a4107bb05a1f356342';
+String _$realmConnectionHash() => r'08a930d77f59a7bb80c3648b671d268da9594a4b';
 
 /// Provides a synchronous interaction policy for widgets during async checks.
 ///
@@ -330,4 +389,4 @@ final class RealmInteractionProvider
   }
 }
 
-String _$realmInteractionHash() => r'c5ab3f670a6f9d86721d1555509b4ca8239b6b85';
+String _$realmInteractionHash() => r'53d08c62de035e50e7d0a4b2bb5afdffb32f2ac3';

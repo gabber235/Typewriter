@@ -1,7 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:rxdart/rxdart.dart";
-import "package:searchlight/searchlight.dart" hide SearchResult;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -122,9 +118,11 @@ final class RealmsSearchSource(
   }
 
   @override
-  Future<SearchPreviewRequestResult> preview(SearchPreviewRequest request) {
-    throw UnimplementedError();
-  }
+  Future<SearchPreviewRequestResult> preview(
+    SearchPreviewRequest request,
+  ) async => const SearchPreviewRequestResult.error(
+    message: "Realm results do not provide a separate preview",
+  );
 
   @override
   void dispose() {

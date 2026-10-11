@@ -264,6 +264,14 @@ abstract class OrganizationTopology with _$OrganizationTopology {
 
   const OrganizationTopology._();
 
+  factory OrganizationTopology.fromSkir(
+    skir.OrganizationTopologySnapshot snapshot,
+  ) => OrganizationTopology(
+    hosts: snapshot.hosts.map(TopologyHost.fromSkir).toList(),
+    realmInstances: snapshot.realms.map(TopologyRealm.fromSkir).toList(),
+    engineInstances: snapshot.engines.map(TopologyEngine.fromSkir).toList(),
+  );
+
   static const empty = OrganizationTopology(
     hosts: [],
     realmInstances: [],

@@ -1,8 +1,30 @@
 part of "transactional_editor_source.dart";
 
 extension EditorCommitReconciliation on TransactionalEditorSource {
+  EditorCommit previewCommit(
+    skir.ValuePath path,
+    skir.DataValue value, {
+    EditorStructuralMutation? structuralMutation,
+  }) {
+    final replaced = _draft.replacingEditorValue(path, value);
+    if (replaced == null) throw StateError("The editor path is unavailable");
+    final paths = {...editedPaths, path};
+    final current = captureCommit(paths);
+    return EditorCommit(
+      expectedRevision: current.expectedRevision,
+      localRevision: current.localRevision,
+      rootValue: replaced,
+      baseValue: current.baseValue,
+      changedPaths: current.changedPaths,
+      mutations: [
+        ...current.mutations,
+        structuralMutation ?? EditorSetValue(path, value),
+      ],
+    );
+  }
+
   /// Captures immutable intent. Delivery and later edits cannot change it.
-  EditorCommit captureCommit(Set<DataPath> paths) => EditorCommit(
+  EditorCommit captureCommit(Set<skir.ValuePath> paths) => EditorCommit(
     expectedRevision: document.revision,
     localRevision: _localRevision,
     rootValue: _commitValue(paths),

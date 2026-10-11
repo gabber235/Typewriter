@@ -1,8 +1,4 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents optional supporting text as a label followed by a message.
 ///

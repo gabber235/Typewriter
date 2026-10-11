@@ -23,6 +23,16 @@ class _ServiceHostSelectable
   final Future<void> Function()? onUnbind;
   final EditorTarget? serviceIdentityTarget;
 
+  @override
+  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+    if (serviceIdentityTarget case final target?)
+      _ServiceIdentityPortableSurface(target),
+    _ServiceHostConfigurationPortableSurface(
+      selectable: this,
+      target: configurationTarget,
+    ),
+  ];
+
   HostEditorSnapshot get _configuration =>
       configurationTarget.snapshot as HostEditorSnapshot;
   Map<String, List<String>> get _realmTargets => _configuration._realmTargets;
@@ -32,52 +42,6 @@ class _ServiceHostSelectable
   String get name => service?.displayName ?? host.hostId.id;
 
   @override
-  PresentationModel buildPresentation(EditorOwnerScope owners) {
-    final view = _hostObservation(host, service);
-    final definition = _hostInspectorPresentation(
-      realmTargets: _realmTargets,
-      engineTargets: _engineTargets,
-      realms: topology.realmInstances
-          .where((realm) => realm.ownerHost.id != host.hostId)
-          .toList(),
-      canHostRealm: host.canHostRealm,
-      color: service?.color ?? standaloneServiceColor,
-    );
-    return PresentationModel(
-      catalog: _hostInspectorCatalog,
-      inputs: {
-        const BindingId(0): PresentationInput.value(
-          type: NamedType(_hostInspectorTypeRef),
-          value: EditorValue.ready(view),
-        ),
-        const BindingId(1): PresentationInput.edit(
-          owners.editor(configurationTarget),
-        ),
-        if (serviceIdentityTarget case final target?)
-          const BindingId(2): PresentationInput.edit(owners.editor(target)),
-        if (service == null)
-          const BindingId(2): PresentationInput.value(
-            type: _serviceIdentityType,
-            value: EditorValue.ready(
-              RecordValue({"name": "Unavailable".asValue}),
-            ),
-          ),
-      },
-      presentations: [definition],
-      root: PresentationNode(
-        id: "host",
-        element: PresentationInvocationElement(
-          presentationId: definition.id,
-          arguments: {
-            for (final input in definition.inputs)
-              input.id: BindingReference(bindingId: input.id),
-          },
-        ),
-      ),
-    );
-  }
-
-  @override
   List<SelectionCapability> get capabilities => [
     if (onUnbind case final unbind?)
       UnbindSelectionCapability(onUnbind: unbind),
@@ -85,54 +49,95 @@ class _ServiceHostSelectable
 
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) {
-    final id = host.hostId.id;
-    final fallbackName = name;
-    final fallbackColor = service?.color ?? standaloneServiceColor;
+    final configurationOwner = owners.editor(configurationTarget);
+    final identityOwner = serviceIdentityTarget == null
+        ? null
+        : owners.editor(serviceIdentityTarget!);
     return InspectionContent(
-      model: buildPresentation(owners),
-      header: serviceIdentityTarget != null
-          ? ManagedInspectorHeader(
-              id: id,
-              owner: owners.editor(serviceIdentityTarget!),
-              fallbackName: fallbackName,
-              fallbackColor: fallbackColor,
-            )
-          : InspectorHeader(id: id, name: fallbackName, color: fallbackColor),
+      host: topologyHostPortableHost(
+        host: host,
+        service: service,
+        connected: connected,
+        configurationOwner: configurationOwner,
+        identityOwner: identityOwner,
+        realmTargets: _realmTargets,
+        engineTargets: _engineTargets,
+        realms: topology.realmInstances
+            .where((realm) => realm.ownerHost.id != host.hostId)
+            .toList(),
+      ),
     );
   }
+}
 
-  RecordValue _hostObservation(
-    TopologyHost currentHost,
-    Service? currentService,
+final class _ServiceHostConfigurationPortableSurface
+    implements PortableMultiInspectionSurface {
+  const _ServiceHostConfigurationPortableSurface({
+    required this.selectable,
+    required this.target,
+  });
+
+  final _ServiceHostSelectable selectable;
+
+  @override
+  Object get id => "service.host.configuration";
+
+  @override
+  final EditorTarget target;
+
+  @override
+  skir.TypeUse get rootType => _hostConfigurationType;
+
+  @override
+  CheckedEditorCatalog get catalog => _hostConfigurationCatalog;
+
+  @override
+  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+      other is _ServiceHostConfigurationPortableSurface;
+
+  @override
+  PortablePresentationHost buildHost(
+    List<PortableMultiInspectionSurface> members,
+    EditOwner combinedOwner,
+    Future<void> Function() commit,
   ) {
-    return RecordValue({
-      _HostInspectorFields.service: RecordValue({
-        _HostInspectorFields.version:
-            (currentService?.role.version ?? "Unavailable").asValue,
-        _HostInspectorFields.state:
-            (connected ? "Connected" : "Offline").asValue,
-        _HostInspectorFields.lastSeen: _optionalTimestamp(
-          currentService?.lastSeen,
-        ),
-      }),
-      _HostInspectorFields.host: RecordValue({
-        _HostInspectorFields.entrypoint:
-            currentHost.entrypoint.formatted.asValue,
-        _HostInspectorFields.canHostRealm: currentHost.canHostRealm.asValue,
-        _HostInspectorFields.supportedEngines: ListValue(
-          currentHost.supportedEngines
-              .map((supported) => supported.engineId.asValue)
-              .toList(),
-        ),
-        _HostInspectorFields.state: hostRuntimeStatusLabel(
-          currentHost.state.status,
-        ).asValue,
-        _HostInspectorFields.message:
-            (currentHost.state.message ?? "None").asValue,
-        _HostInspectorFields.updatedAt: TimestampValue(
-          currentHost.state.updatedAt,
-        ),
-      }),
-    });
+    final hosts = members
+        .cast<_ServiceHostConfigurationPortableSurface>()
+        .map((surface) => surface.selectable)
+        .toList();
+    final first = hosts.first;
+    final selectedHostIds = hosts.map((host) => host.host.hostId).toSet();
+    return topologyHostPortableHost(
+      host: first.host,
+      service: first.service,
+      connected: hosts.every((host) => host.connected),
+      configurationOwner: combinedOwner,
+      identityOwner: null,
+      realmTargets: _commonTargets(hosts.map((host) => host._realmTargets)),
+      engineTargets: _commonTargets(hosts.map((host) => host._engineTargets)),
+      realms: first.topology.realmInstances
+          .where((realm) => !selectedHostIds.contains(realm.ownerHost.id))
+          .toList(),
+      configurationOnly: true,
+      commit: commit,
+    );
   }
+}
+
+Map<String, List<String>> _commonTargets(
+  Iterable<Map<String, List<String>>> values,
+) {
+  final inputs = values.toList();
+  if (inputs.isEmpty) return const {};
+  return {
+    for (final entry in inputs.first.entries)
+      if (inputs.skip(1).every((value) => value.containsKey(entry.key)))
+        entry.key: entry.value
+            .where(
+              (version) => inputs
+                  .skip(1)
+                  .every((value) => value[entry.key]!.contains(version)),
+            )
+            .toList(),
+  }..removeWhere((key, versions) => versions.isEmpty);
 }

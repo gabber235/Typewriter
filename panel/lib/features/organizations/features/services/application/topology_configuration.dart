@@ -8,6 +8,36 @@ part of "services.dart";
 /// state only. Timestamp and revision checks prevent an older observation from
 /// erasing newer knowledge when responses and watch events overlap.
 extension OrganizationTopologyConfiguration on OrganizationTopology {
+  /// Uses incoming snapshot membership and retains accepted configuration and
+  /// runtime progress only for resources that remain present.
+  OrganizationTopology reconcileSnapshot(OrganizationTopology previous) =>
+      copyWith(
+        hosts: [
+          for (final incoming in hosts)
+            incoming.reconcileSnapshot(
+              previous.hosts.firstWhereOrNull(
+                (item) => item.hostId == incoming.hostId,
+              ),
+            ),
+        ],
+        realmInstances: [
+          for (final incoming in realmInstances)
+            incoming.reconcileSnapshot(
+              previous.realmInstances.firstWhereOrNull(
+                (item) => item.realmId == incoming.realmId,
+              ),
+            ),
+        ],
+        engineInstances: [
+          for (final incoming in engineInstances)
+            incoming.reconcileSnapshot(
+              previous.engineInstances.firstWhereOrNull(
+                (item) => item.engineId == incoming.engineId,
+              ),
+            ),
+        ],
+      );
+
   /// Merges a host runtime observation without changing its desired
   /// configuration.
   OrganizationTopology applyHostObservation(TopologyHost incoming) {
@@ -19,15 +49,14 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      hosts: _upsertById(
-        hosts,
+      hosts: hosts.upsertByKey(
+        (host) => host.hostId,
         previous.copyWith(
           state: incoming.state,
           topologyRevision: previous.topologyRevision.copyWith(
             applied: incoming.topologyRevision.applied,
           ),
         ),
-        (host) => host.hostId,
       ),
     );
   }
@@ -42,10 +71,9 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      realmInstances: _upsertById(
-        realmInstances,
-        previous.copyWith(state: incoming.state),
+      realmInstances: realmInstances.upsertByKey(
         (realm) => realm.realmId,
+        previous.copyWith(state: incoming.state),
       ),
     );
   }
@@ -60,10 +88,9 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
       return this;
     }
     return copyWith(
-      engineInstances: _upsertById(
-        engineInstances,
-        previous.copyWith(state: incoming.state),
+      engineInstances: engineInstances.upsertByKey(
         (engine) => engine.engineId,
+        previous.copyWith(state: incoming.state),
       ),
     );
   }
@@ -118,7 +145,7 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
           previous.state.updatedAt.isAfter(realm.state.updatedAt)) {
         realm = realm.copyWith(state: previous.state);
       }
-      realms = _upsertById(realms, realm, (item) => item.realmId);
+      realms = realms.upsertByKey((item) => item.realmId, realm);
     }
     if (change.engine case final value?) {
       var engine = TopologyEngine.fromSkir(value);
@@ -129,12 +156,107 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
           previous.state.updatedAt.isAfter(engine.state.updatedAt)) {
         engine = engine.copyWith(state: previous.state);
       }
-      engines = _upsertById(engines, engine, (item) => item.engineId);
+      engines = engines.upsertByKey((item) => item.engineId, engine);
     }
     return copyWith(
-      hosts: _upsertById(hosts, host, (item) => item.hostId),
+      hosts: hosts.upsertByKey((item) => item.hostId, host),
       realmInstances: realms,
       engineInstances: engines,
+    );
+  }
+
+  /// Applies one compound runtime report as one immutable projection update.
+  OrganizationTopology applyRuntimeObservation(
+    skir.HostExecutionObservation observation,
+  ) {
+    var next = applyHostObservation(TopologyHost.fromSkir(observation.host));
+    if (observation.realm case final observed?) {
+      final previous = next.realmInstances.firstWhereOrNull(
+        (realm) => realm.realmId == observed.realmId,
+      );
+      if (previous != null) {
+        next = next.applyRealmObservation(
+          previous.copyWith(
+            state: TopologyRuntimeState.fromSkir(observed.state),
+          ),
+        );
+      }
+    }
+    if (observation.engine case final observed?) {
+      final previous = next.engineInstances.firstWhereOrNull(
+        (engine) => engine.engineId == observed.engineId,
+      );
+      if (previous != null) {
+        next = next.applyEngineObservation(
+          previous.copyWith(
+            state: TopologyRuntimeState.fromSkir(observed.state),
+          ),
+        );
+      }
+    }
+    return next;
+  }
+
+  /// Accepts host discovery without treating it as child membership authority.
+  OrganizationTopology applyAdvertisement(skir.ServiceHost advertisement) {
+    final incoming = TopologyHost.fromSkir(advertisement);
+    final previous = hosts.firstWhereOrNull(
+      (host) => host.hostId == incoming.hostId,
+    );
+    final accepted = incoming.reconcileSnapshot(previous);
+    return copyWith(hosts: hosts.upsertByKey((host) => host.hostId, accepted));
+  }
+}
+
+extension TopologyHostSnapshotProgress on TopologyHost {
+  TopologyHost reconcileSnapshot(TopologyHost? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    final observation =
+        previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: observation.state,
+      topologyRevision: configuration.topologyRevision.copyWith(
+        applied: max(
+          previous.topologyRevision.applied,
+          incoming.topologyRevision.applied,
+        ),
+      ),
+    );
+  }
+}
+
+extension TopologyRealmSnapshotProgress on TopologyRealm {
+  TopologyRealm reconcileSnapshot(TopologyRealm? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+          ? previous.state
+          : incoming.state,
+    );
+  }
+}
+
+extension TopologyEngineSnapshotProgress on TopologyEngine {
+  TopologyEngine reconcileSnapshot(TopologyEngine? previous) {
+    final incoming = this;
+    if (previous == null) return incoming;
+    final configuration = previous.revision > incoming.revision
+        ? previous
+        : incoming;
+    return configuration.copyWith(
+      state: previous.state.updatedAt.isAfter(incoming.state.updatedAt)
+          ? previous.state
+          : incoming.state,
     );
   }
 }

@@ -11,20 +11,18 @@ void _testResourceConnections() {
       final owners = EditorOwnerRegistry(workspace: workspace);
       addTearDown(owners.dispose);
 
-      final model = harness.selectable.buildPresentation(owners);
-      final source =
-          (model.inputs[const BindingId(2)]! as PresentationEditInput).owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final source = _identitySource(owners);
       expect(
         source.update(
-          DataPath.root.field("name"),
-          const StringValue("renamed"),
+          editorRootPath.field("name"),
+          skir.DataValue.wrapStringValue("renamed"),
         ),
         isA<AppliedEditorMutation>(),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
 
       final replacement = FakeNatsClient();
@@ -48,7 +46,7 @@ void _testResourceConnections() {
         );
       (harness.container.read(
         natsProvider.notifier,
-      ) as _ReplaceableNats).connection = replacement;
+      ) as FakeNats).connection = replacement;
       await harness.container.pump();
 
       expect(
@@ -60,8 +58,8 @@ void _testResourceConnections() {
         same(repositories),
       );
       expect(
-        source.value(DataPath.root.field("name")).valueOrNull,
-        const StringValue("renamed"),
+        source.value(editorRootPath.field("name")).valueOrNull,
+        skir.DataValue.wrapStringValue("renamed"),
       );
       expect(await source.flush(), isA<MutationSuccess>());
       expect(harness.nats.requests, isEmpty);

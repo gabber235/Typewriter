@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilities
@@ -11,24 +12,24 @@ import com.typewritermc.capability.RealmSearch
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchRequest
 import com.typewritermc.capability.realmSearch
+import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.discovery.TypewriterRegistrar
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.ElementRuntimeContext
-import com.typewritermc.elements.ElementRuntimeFacet
-import com.typewritermc.elements.ElementRuntimeHandle
 import com.typewritermc.elements.Entry
-import com.typewritermc.elements.TypewriterElement
-import com.typewritermc.elements.TypewriterElementFacet
-import com.typewritermc.pages.GraphDirection
-import com.typewritermc.pages.PageEditorDefinition
-import com.typewritermc.pages.TypewriterPage
-import com.typewritermc.pages.page
-import com.typewritermc.presentation.PresentationBuildContext
-import com.typewritermc.presentation.TypewriterPresentation
-import com.typewritermc.presentation.presentation
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
+import com.typewritermc.library.Book
+import com.typewritermc.library.BookPages
+import com.typewritermc.library.ChapterPath
+import com.typewritermc.library.Page
+import com.typewritermc.library.PageElements
+import com.typewritermc.presentation.AppliedPresentation
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
+import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,34 +58,43 @@ data class RepeatedMessage(
     val repetitions: Int,
 ) : SyntheticMessage
 
-interface ConformanceEntry : Entry
+interface ConformanceEntry : Entry {
+    override val placement: GraphPlacement
+}
 
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
-@TypewriterElement(
-    id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281",
-    revision = 2,
+@TypewriterType(id = "019d1c2a8f7b7cc18c2a4a7b2fd1e281", revision = 1)
+@TypewriterDisplay(
     name = "Synthetic Entry",
     description = "Verifies Typewriter discovery",
     icon = "material-symbols:science",
     color = Color.Hex.PURPLE,
 )
 data class SyntheticEntry(
-    override val id: ElementInstanceId,
     override val name: String,
+    override val placement: GraphPlacement,
     val message: SyntheticMessage,
+    val cues: List<Ref<SyntheticEntryCues.Entry, SyntheticSegment>> = emptyList(),
 ) : ConformanceEntry
 
-/** Provides the generated page declaration used by page reference conformance checks. */
-@TypewriterPage(
-    id = "019d3a87000170008000000000000001",
-)
-fun syntheticPage() =
-    page(
-        name = "Synthetic",
-        icon = "material-symbols:account-tree",
-        color = "#7C4DFF",
-        editor = PageEditorDefinition.Graph(GraphDirection.LEFT_TO_RIGHT, listOf(ConformanceEntry::class)),
-    )
+/** Concrete Page used by the reference and page catalog conformance checks. */
+@TypewriterType(id = "019d3a87000170008000000000000001")
+@TypewriterDisplay(name = "Synthetic", icon = "material-symbols:account-tree", color = "#7C4DFF")
+data class SyntheticPage(
+    override val book: Ref<BookPages.Page, Book>,
+    override val name: String = "",
+    override val chapter: ChapterPath = ChapterPath.Root,
+    override val priority: Int = 0,
+    override val elements: List<Ref<PageElements.Page, ConformanceEntry>> = emptyList(),
+) : Page
+
+object SyntheticPageEditor : SyntheticPagePresentation {
+    override val roles = setOf(PresentationRole.EDITOR)
+
+    override fun SyntheticPagePresentationScope.present() {
+        elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }
+    }
+}
 
 /** Exposes search, computation, and command fixtures for generated Realm capability discovery. */
 @RealmCapabilities
@@ -118,54 +128,88 @@ class SyntheticRealmCapabilities {
         )
 }
 
-/** Builds the default editor presentation with controls for both message variants. */
-@TypewriterPresentation(
-    default = true,
-    priority = 100,
-)
-context(_: PresentationBuildContext)
-fun syntheticEntryEditor() =
-    presentation<SyntheticEntry>(name = "editor") {
-        section(
-            key = "message",
-            title = "Message",
-            initiallyExpanded = true,
-        ) {
-            polymorphicInput(SyntheticEntry::message) {
-                type<LiteralMessage>("Literal") {
-                    textInput(LiteralMessage::value, multiline = true)
-                }
-                type<RepeatedMessage>("Repeated") {
-                    textInput(RepeatedMessage::value)
-                    numericInput(RepeatedMessage::repetitions)
-                }
-            }
-        }
-    }
+object LiteralMessageEditorPresentation : LiteralMessagePresentation {
+    override val priority: Int = 100
 
-/** Builds a compact named presentation for the same entry. */
-@TypewriterPresentation(priority = 10)
-context(_: PresentationBuildContext)
-fun syntheticEntryCompactEditor() =
-    presentation<SyntheticEntry>(name = "compact") {
-        polymorphicInput(SyntheticEntry::message) {
-            type<LiteralMessage>("Literal") {
-                textInput(LiteralMessage::value)
-            }
-            type<RepeatedMessage>("Repeated") {
-                textInput(RepeatedMessage::value)
-            }
-        }
+    override fun LiteralMessagePresentationScope.present() {
+        value { textInput(multiline = true) }
     }
+}
 
-/** Supplies the runtime facet discovered for [SyntheticEntry]. */
-@TypewriterElementFacet(SyntheticEntry::class)
-class SyntheticEntryFacet : ElementRuntimeFacet<SyntheticEntry> {
-    context(context: ElementRuntimeContext)
-    override suspend fun attach(element: SyntheticEntry): ElementRuntimeHandle =
-        object : ElementRuntimeHandle {
-            override fun close() = Unit
+object RepeatedMessageEditorPresentation : RepeatedMessagePresentation {
+    override val priority: Int = 100
+
+    override fun RepeatedMessagePresentationScope.present() {
+        value { textInput() }
+        repetitions { numericInput() }
+    }
+}
+
+object LiteralMessageCompactPresentation : LiteralMessagePresentation {
+    override val priority: Int = 10
+
+    override fun LiteralMessagePresentationScope.present() {
+        value { textInput() }
+    }
+}
+
+object RepeatedMessageCompactPresentation : RepeatedMessagePresentation {
+    override val priority: Int = 10
+
+    override fun RepeatedMessagePresentationScope.present() {
+        value { textInput() }
+    }
+}
+
+object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
+    override val priority: Int = 100
+
+    override fun SyntheticEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed entry")),
+            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
+        message {
+            label("Message")
+            polymorphicInput {
+                form(
+                    AppliedPresentation(LiteralMessageDefinition.use, LiteralMessageEditorPresentation),
+                    literal("Literal"),
+                )
+                form(
+                    AppliedPresentation(RepeatedMessageDefinition.use, RepeatedMessageEditorPresentation),
+                    literal("Repeated"),
+                )
+            }
         }
+        remainingFields { exclude(message) }
+    }
+}
+
+object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
+    override val priority: Int = 10
+
+    override fun SyntheticEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed entry")),
+            color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
+        message {
+            polymorphicInput {
+                form(
+                    AppliedPresentation(LiteralMessageDefinition.use, LiteralMessageCompactPresentation),
+                    literal("Literal"),
+                )
+                form(
+                    AppliedPresentation(RepeatedMessageDefinition.use, RepeatedMessageCompactPresentation),
+                    literal("Repeated"),
+                )
+            }
+        }
+        remainingFields { exclude(message) }
+    }
 }
 
 /** Registers the conformance runtime scope and owns no external resources. */

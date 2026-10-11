@@ -1,3 +1,5 @@
+import "package:typewriter_panel/typewriter_panel.dart";
+
 // Coordinates focus movement between visible panes in the panel shell.
 //
 // A Pane registers its focus scope and rendered bounds with the nearest
@@ -5,12 +7,6 @@
 // using the pane bounds rather than the bounds of an individual child. The
 // primary pane supplies the initial virtual origin, while the last active
 // pane supplies the fallback origin when focus is temporarily absent.
-import "dart:collection";
-
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:flutter/services.dart";
-import "package:typewriter_panel/typewriter_panel.dart";
 
 class _PaneRegistration {
   _PaneRegistration({required this.scope});

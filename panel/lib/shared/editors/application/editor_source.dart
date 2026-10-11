@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Coordinates an editor's local draft with an optional canonical document and
@@ -20,18 +22,18 @@ abstract interface class EditorSource implements EditOwner {
   bool get hasWork;
 
   /// Diagnostics attached to the current draft rather than the remote document.
-  List<TypeDiagnostic> get draftDiagnostics;
+  List<EditorDiagnostic> get draftDiagnostics;
 
   /// Removes local edits and returns the editor to its canonical observation.
   void discardDraft();
 
   @override
-  EditorValue value(DataPath path);
+  EditorValue value(skir.ValuePath path);
 
   @override
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   });
 
@@ -40,28 +42,28 @@ abstract interface class EditorSource implements EditOwner {
   void refreshDocument(EditorDocument document);
 
   @override
-  EditorInteractionSession beginInteraction(DataPath path);
+  EditorInteractionSession beginInteraction(skir.ValuePath path);
 
   /// Describes whether [path] is clean, locally changed, conflicted, or ready
   /// for the next save operation.
-  EditorSaveState saveState(DataPath path);
+  EditorSaveState saveState(skir.ValuePath path);
 
   /// Captures and submits pending edits for [paths], or all changed paths.
   /// The typed result reports rejection and transport failure to the caller.
-  Future<TypedMutationResult> flush({Set<DataPath>? paths});
+  Future<TypedMutationResult> flush({Set<skir.ValuePath>? paths});
 
   /// Replaces the canonical value and revision when the remote resource exists.
-  void acceptRemote({required int revision, required DataValue value});
+  void acceptRemote({required int revision, required skir.DataValue value});
 
   /// Records that the canonical resource no longer exists.
   void acceptRemoteDeletion();
 
   /// Resolves [path] in favor of the canonical value, discarding its draft.
-  void useRemote(DataPath path);
+  void useRemote(skir.ValuePath path);
 
   /// Resolves [path] in favor of the draft by persisting it against the remote
   /// revision.
-  Future<TypedMutationResult> keepLocal(DataPath path);
+  Future<TypedMutationResult> keepLocal(skir.ValuePath path);
 
   @override
   void dispose();

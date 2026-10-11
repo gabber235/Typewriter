@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared interactive surface for one editor search result.
@@ -8,7 +5,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Result specific widgets supply content and semantic color. The shared search controller owns
 /// selection and focus; this card only projects those flags into visual state and forwards tap
 /// callbacks. A missing callback deliberately leaves the corresponding interaction disabled.
-class SearchResultCard extends StatelessWidget {
+class SearchResultCard extends HookWidget {
   const SearchResultCard({
     required this.color,
     required this.content,
@@ -33,6 +30,7 @@ class SearchResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final states = useWidgetStatesController();
     final surfaceColor = Surface.colorOf(context);
     final surfaceBrightness = ThemeData.estimateBrightnessForColor(
       surfaceColor,
@@ -43,13 +41,21 @@ class SearchResultCard extends StatelessWidget {
         : Color.alphaBlend(color.withValues(alpha: alpha), surfaceColor);
     final borderColor = selected ? color : Colors.transparent;
 
-    return Surface(
-      color: backgroundColor,
+    return SurfaceContainer(
+      duration: 180.ms,
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: focused ? color : color.withValues(alpha: color.a * alpha),
+        borderRadius: context.shapes.mediumBorderRadius,
+        border: Border.all(color: borderColor, width: 1.4),
+      ),
+      foregroundFor: (context, displayed) =>
+          focused ? displayed.on(context) : context.colors.contentPrimary,
       child: Material(
-        animationDuration: 180.ms,
-        color: backgroundColor,
+        color: Colors.transparent,
         borderRadius: context.shapes.mediumBorderRadius,
         child: InkWell(
+          statesController: states,
           borderRadius: context.shapes.mediumBorderRadius,
           onTap: onTap,
           onLongPress: onLongPress,
@@ -70,47 +76,52 @@ class SearchResultCard extends StatelessWidget {
             ),
           },
           highlightColor: Colors.transparent,
-          child: AnimatedContainer(
-            duration: 180.ms,
-            curve: Curves.easeOutCubic,
-            constraints: BoxConstraints(minHeight: 64),
-            decoration: BoxDecoration(
-              borderRadius: context.shapes.mediumBorderRadius,
-              border: Border.all(color: borderColor, width: 1.4),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (prefix != null)
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: context.spacing.space1,
-                    ),
-                    child: prefix,
-                  ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top: context.spacing.space2,
-                      right: 10,
-                      bottom: context.spacing.space2,
-                      left: 10,
-                    ),
-                    child: content,
+          child: ValueListenableBuilder<Set<WidgetState>>(
+            valueListenable: states,
+            builder: (context, value, _) => PresentationInteractionScope(
+              value: PresentationInteraction.fromWidgetStates(value).copyWith(
+                selected: selected,
+                focused: focused || value.contains(WidgetState.focused),
+              ),
+              child: ClipRRect(
+                borderRadius: context.shapes.mediumBorderRadius,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 64),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      if (prefix != null)
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: context.spacing.space1,
+                          ),
+                          child: prefix,
+                        ),
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: context.spacing.space2,
+                            right: 10,
+                            bottom: context.spacing.space2,
+                            left: 10,
+                          ),
+                          child: content,
+                        ),
+                      ),
+                      if (suffix != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 10,
+                            right: 10,
+                            bottom: 10,
+                          ),
+                          child: suffix,
+                        ),
+                    ],
                   ),
                 ),
-                if (suffix != null)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 10,
-                      right: 10,
-                      bottom: 10,
-                    ),
-                    child: suffix,
-                  ),
-              ],
+              ),
             ),
           ),
         ),

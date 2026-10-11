@@ -19,7 +19,11 @@ mod join_requests;
 mod watch;
 
 use wasmcloud_utils::{
-    dispatch_actions,
+    dispatch_route,
+    transport_routes::{
+        UserJoinRequestCancelRoute, UserJoinRequestSubmitRoute, UserJoinRequestsWatchRoute,
+        UserOrganizationCreateRoute, UserOrganizationsWatchRoute, unmatched_route,
+    },
     wasmcloud::messaging::{core_handler::Guest, types},
 };
 
@@ -34,13 +38,18 @@ impl Guest for Component {
 }
 
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    dispatch_actions!(
+    dispatch_route!(msg, UserOrganizationCreateRoute, create::handle_create);
+    dispatch_route!(msg, UserOrganizationsWatchRoute, watch::handle_watch);
+    dispatch_route!(msg, UserJoinRequestsWatchRoute, join_requests::handle_watch);
+    dispatch_route!(
         msg,
-        "typewriter.from.user.<user_id>.organization.<action>",
-        "create" => async create::handle_create,
-        "watch" => async watch::handle_watch,
-        "join_requests.watch" => async join_requests::handle_watch,
-        "join_requests.request" => async join_requests::handle_request,
-        "join_requests.cancel" => async join_requests::handle_cancel,
-    )
+        UserJoinRequestSubmitRoute,
+        join_requests::handle_request
+    );
+    dispatch_route!(
+        msg,
+        UserJoinRequestCancelRoute,
+        join_requests::handle_cancel
+    );
+    Err(unmatched_route(&msg, "dispatch-action-unknown"))
 }

@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 const _maxSearchFrameWidth = 880.0;
@@ -510,6 +507,8 @@ class _FloatingCard extends StatelessWidget {
 
     return Surface(
       color: colors.surfaceContainer,
+      foreground: context.colors.contentPrimary,
+      secondaryForeground: context.colors.contentSecondary,
       child: Material(
         color: colors.surfaceContainer,
         shape: RoundedRectangleBorder(

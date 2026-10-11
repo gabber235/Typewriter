@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Reusable animation effects for interactive panel controls.
 extension AnimationExtension on Animate {

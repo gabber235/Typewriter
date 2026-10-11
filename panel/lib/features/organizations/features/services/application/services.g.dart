@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'services.dart';
 
@@ -6,14 +6,14 @@ part of 'services.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the organization scoped canonical service identity projection.
 ///
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 
@@ -26,7 +26,7 @@ final canonicalOrganizationServicesProvider =
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 final class CanonicalOrganizationServicesProvider
@@ -37,7 +37,7 @@ final class CanonicalOrganizationServicesProvider
   /// The provider combines the backend watch with committed mutation results
   /// published by the resource repository. Its state is canonical, while
   /// [projectedServices] and [projectedService] overlay unsaved editor values for
-  /// presentation. Mutations use operation identities and optimistic revisions;
+  /// presentation. Mutations use optimistic revisions;
   /// conflicts update this projection with the backend value before returning a
   /// conflict result so the caller can refresh or merge.
   CanonicalOrganizationServicesProvider._({
@@ -78,14 +78,14 @@ final class CanonicalOrganizationServicesProvider
 }
 
 String _$canonicalOrganizationServicesHash() =>
-    r'ca7f3899d62573786c7d08d150f840767584f6a1';
+    r'9ee87b480965dfb7610a7ed66a24ac966a42038f';
 
 /// Owns the organization scoped canonical service identity projection.
 ///
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 
@@ -112,7 +112,7 @@ final class CanonicalOrganizationServicesFamily extends $Family
   /// The provider combines the backend watch with committed mutation results
   /// published by the resource repository. Its state is canonical, while
   /// [projectedServices] and [projectedService] overlay unsaved editor values for
-  /// presentation. Mutations use operation identities and optimistic revisions;
+  /// presentation. Mutations use optimistic revisions;
   /// conflicts update this projection with the backend value before returning a
   /// conflict result so the caller can refresh or merge.
 
@@ -131,7 +131,7 @@ final class CanonicalOrganizationServicesFamily extends $Family
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 
@@ -246,35 +246,226 @@ final class CanonicalServiceFamily extends $Family
   String toString() => r'canonicalServiceProvider';
 }
 
+/// Owns the live organization topology projection.
+///
+/// The projection combines the topology watch with committed configuration
+/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
+///
+/// Consumers may use the projection to display current backend knowledge and
+/// to choose configuration targets. They must not treat desired configuration
+/// as proof that runtime resources are active, or infer service identity fields
+/// from a host without resolving its service identifier.
+
+@ProviderFor(OrganizationTopologyController)
+final organizationTopologyControllerProvider =
+    OrganizationTopologyControllerFamily._();
+
+/// Owns the live organization topology projection.
+///
+/// The projection combines the topology watch with committed configuration
+/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
+///
+/// Consumers may use the projection to display current backend knowledge and
+/// to choose configuration targets. They must not treat desired configuration
+/// as proof that runtime resources are active, or infer service identity fields
+/// from a host without resolving its service identifier.
+final class OrganizationTopologyControllerProvider
+    extends
+        $StreamNotifierProvider<
+          OrganizationTopologyController,
+          OrganizationTopology
+        > {
+  /// Owns the live organization topology projection.
+  ///
+  /// The projection combines the topology watch with committed configuration
+  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// and applied configuration revisions alongside host runtime observations.
+  /// Snapshots and configuration changes own child membership. Runtime reports
+  /// update observed state only and cannot create or revive child resources. A
+  /// topology entry is therefore not another service identity.
+  ///
+  /// Consumers may use the projection to display current backend knowledge and
+  /// to choose configuration targets. They must not treat desired configuration
+  /// as proof that runtime resources are active, or infer service identity fields
+  /// from a host without resolving its service identifier.
+  OrganizationTopologyControllerProvider._({
+    required OrganizationTopologyControllerFamily super.from,
+    required skir.RecordId super.argument,
+  }) : super(
+         retry: null,
+         name: r'organizationTopologyControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$organizationTopologyControllerHash();
+
+  @override
+  String toString() {
+    return r'organizationTopologyControllerProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  OrganizationTopologyController create() => OrganizationTopologyController();
+
+  @override
+  bool operator ==(Object other) {
+    return other is OrganizationTopologyControllerProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$organizationTopologyControllerHash() =>
+    r'c890afa465b59e8f9a397e020b298ee8a3d208a8';
+
+/// Owns the live organization topology projection.
+///
+/// The projection combines the topology watch with committed configuration
+/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
+///
+/// Consumers may use the projection to display current backend knowledge and
+/// to choose configuration targets. They must not treat desired configuration
+/// as proof that runtime resources are active, or infer service identity fields
+/// from a host without resolving its service identifier.
+
+final class OrganizationTopologyControllerFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          OrganizationTopologyController,
+          AsyncValue<OrganizationTopology>,
+          OrganizationTopology,
+          Stream<OrganizationTopology>,
+          skir.RecordId
+        > {
+  OrganizationTopologyControllerFamily._()
+    : super(
+        retry: null,
+        name: r'organizationTopologyControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Owns the live organization topology projection.
+  ///
+  /// The projection combines the topology watch with committed configuration
+  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// and applied configuration revisions alongside host runtime observations.
+  /// Snapshots and configuration changes own child membership. Runtime reports
+  /// update observed state only and cannot create or revive child resources. A
+  /// topology entry is therefore not another service identity.
+  ///
+  /// Consumers may use the projection to display current backend knowledge and
+  /// to choose configuration targets. They must not treat desired configuration
+  /// as proof that runtime resources are active, or infer service identity fields
+  /// from a host without resolving its service identifier.
+
+  OrganizationTopologyControllerProvider call(skir.RecordId organizationId) =>
+      OrganizationTopologyControllerProvider._(
+        argument: organizationId,
+        from: this,
+      );
+
+  @override
+  String toString() => r'organizationTopologyControllerProvider';
+}
+
+/// Owns the live organization topology projection.
+///
+/// The projection combines the topology watch with committed configuration
+/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// and applied configuration revisions alongside host runtime observations.
+/// Snapshots and configuration changes own child membership. Runtime reports
+/// update observed state only and cannot create or revive child resources. A
+/// topology entry is therefore not another service identity.
+///
+/// Consumers may use the projection to display current backend knowledge and
+/// to choose configuration targets. They must not treat desired configuration
+/// as proof that runtime resources are active, or infer service identity fields
+/// from a host without resolving its service identifier.
+
+abstract class _$OrganizationTopologyController
+    extends $StreamNotifier<OrganizationTopology> {
+  late final _$args = ref.$arg as skir.RecordId;
+  skir.RecordId get organizationId => _$args;
+
+  Stream<OrganizationTopology> build(skir.RecordId organizationId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref =
+        this.ref
+            as $Ref<AsyncValue<OrganizationTopology>, OrganizationTopology>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                AsyncValue<OrganizationTopology>,
+                OrganizationTopology
+              >,
+              AsyncValue<OrganizationTopology>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}
+
 /// Adapts the organization scoped service projection to the current route.
 ///
 /// The route provider owns no service data. It follows the selected
-/// organization and delegates reads and mutations to
-/// [CanonicalOrganizationServices], yielding an empty projection when no
-/// organization is selected.
+/// organization and watches [CanonicalOrganizationServices], returning an empty
+/// projection when no organization is selected.
 
-@ProviderFor(CanonicalServices)
+@ProviderFor(canonicalServices)
 final canonicalServicesProvider = CanonicalServicesProvider._();
 
 /// Adapts the organization scoped service projection to the current route.
 ///
 /// The route provider owns no service data. It follows the selected
-/// organization and delegates reads and mutations to
-/// [CanonicalOrganizationServices], yielding an empty projection when no
-/// organization is selected.
+/// organization and watches [CanonicalOrganizationServices], returning an empty
+/// projection when no organization is selected.
+
 final class CanonicalServicesProvider
-    extends $StreamNotifierProvider<CanonicalServices, List<Service>> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Service>>,
+          List<Service>,
+          FutureOr<List<Service>>
+        >
+    with $FutureModifier<List<Service>>, $FutureProvider<List<Service>> {
   /// Adapts the organization scoped service projection to the current route.
   ///
   /// The route provider owns no service data. It follows the selected
-  /// organization and delegates reads and mutations to
-  /// [CanonicalOrganizationServices], yielding an empty projection when no
-  /// organization is selected.
+  /// organization and watches [CanonicalOrganizationServices], returning an empty
+  /// projection when no organization is selected.
   CanonicalServicesProvider._()
     : super(
         from: null,
         argument: null,
-        retry: null,
+        retry: _noRouteRetry,
         name: r'canonicalServicesProvider',
         isAutoDispose: true,
         dependencies: null,
@@ -286,35 +477,17 @@ final class CanonicalServicesProvider
 
   @$internal
   @override
-  CanonicalServices create() => CanonicalServices();
-}
+  $FutureProviderElement<List<Service>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
-String _$canonicalServicesHash() => r'068de9cecaf6154f42b023858fd20ea83e4ee603';
-
-/// Adapts the organization scoped service projection to the current route.
-///
-/// The route provider owns no service data. It follows the selected
-/// organization and delegates reads and mutations to
-/// [CanonicalOrganizationServices], yielding an empty projection when no
-/// organization is selected.
-
-abstract class _$CanonicalServices extends $StreamNotifier<List<Service>> {
-  Stream<List<Service>> build();
-  @$mustCallSuper
   @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<Service>>, List<Service>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<Service>>, List<Service>>,
-              AsyncValue<List<Service>>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
+  FutureOr<List<Service>> create(Ref ref) {
+    return canonicalServices(ref);
   }
 }
+
+String _$canonicalServicesHash() => r'9b42c1074ea3fb9fcb1927675dfc6a31ff1ae23e';
 
 /// Overlays active local editor drafts on canonical service identities.
 ///
@@ -475,243 +648,61 @@ final class ProjectedServiceFamily extends $Family
 /// Exposes topology for the organization selected by the current route.
 ///
 /// The route projection delegates lifecycle and reconciliation to
-/// [OrganizationTopologyController] and yields an empty topology without an
-/// organization.
+/// [OrganizationTopologyController] and returns an empty topology without an
+/// organization. Each canonical update recomputes this route projection.
 
-@ProviderFor(organizationTopologyStream)
-final organizationTopologyStreamProvider =
-    OrganizationTopologyStreamProvider._();
+@ProviderFor(organizationTopology)
+final organizationTopologyProvider = OrganizationTopologyProvider._();
 
 /// Exposes topology for the organization selected by the current route.
 ///
 /// The route projection delegates lifecycle and reconciliation to
-/// [OrganizationTopologyController] and yields an empty topology without an
-/// organization.
+/// [OrganizationTopologyController] and returns an empty topology without an
+/// organization. Each canonical update recomputes this route projection.
 
-final class OrganizationTopologyStreamProvider
+final class OrganizationTopologyProvider
     extends
         $FunctionalProvider<
           AsyncValue<OrganizationTopology>,
           OrganizationTopology,
-          Stream<OrganizationTopology>
+          FutureOr<OrganizationTopology>
         >
     with
         $FutureModifier<OrganizationTopology>,
-        $StreamProvider<OrganizationTopology> {
+        $FutureProvider<OrganizationTopology> {
   /// Exposes topology for the organization selected by the current route.
   ///
   /// The route projection delegates lifecycle and reconciliation to
-  /// [OrganizationTopologyController] and yields an empty topology without an
-  /// organization.
-  OrganizationTopologyStreamProvider._()
+  /// [OrganizationTopologyController] and returns an empty topology without an
+  /// organization. Each canonical update recomputes this route projection.
+  OrganizationTopologyProvider._()
     : super(
         from: null,
         argument: null,
-        retry: null,
-        name: r'organizationTopologyStreamProvider',
+        retry: _noRouteRetry,
+        name: r'organizationTopologyProvider',
         isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$organizationTopologyStreamHash();
+  String debugGetCreateSourceHash() => _$organizationTopologyHash();
 
   @$internal
   @override
-  $StreamProviderElement<OrganizationTopology> $createElement(
+  $FutureProviderElement<OrganizationTopology> $createElement(
     $ProviderPointer pointer,
-  ) => $StreamProviderElement(pointer);
+  ) => $FutureProviderElement(pointer);
 
   @override
-  Stream<OrganizationTopology> create(Ref ref) {
-    return organizationTopologyStream(ref);
+  FutureOr<OrganizationTopology> create(Ref ref) {
+    return organizationTopology(ref);
   }
 }
 
-String _$organizationTopologyStreamHash() =>
-    r'9bb2fbcc6854c48e401a910ea007417828c91951';
-
-/// Owns the live organization topology projection.
-///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
-///
-/// Consumers may use the projection to display current backend knowledge and
-/// to choose configuration targets. They must not treat desired configuration
-/// as proof that runtime resources are active, or infer service identity fields
-/// from a host without resolving its service identifier.
-
-@ProviderFor(OrganizationTopologyController)
-final organizationTopologyControllerProvider =
-    OrganizationTopologyControllerFamily._();
-
-/// Owns the live organization topology projection.
-///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
-///
-/// Consumers may use the projection to display current backend knowledge and
-/// to choose configuration targets. They must not treat desired configuration
-/// as proof that runtime resources are active, or infer service identity fields
-/// from a host without resolving its service identifier.
-final class OrganizationTopologyControllerProvider
-    extends
-        $StreamNotifierProvider<
-          OrganizationTopologyController,
-          OrganizationTopology
-        > {
-  /// Owns the live organization topology projection.
-  ///
-  /// The projection combines the topology watch with committed configuration
-  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-  /// and applied configuration revisions alongside host runtime observations;
-  /// child realm and engine entries describe the resources currently reported by
-  /// that host. A topology entry is therefore not another service identity.
-  ///
-  /// Consumers may use the projection to display current backend knowledge and
-  /// to choose configuration targets. They must not treat desired configuration
-  /// as proof that runtime resources are active, or infer service identity fields
-  /// from a host without resolving its service identifier.
-  OrganizationTopologyControllerProvider._({
-    required OrganizationTopologyControllerFamily super.from,
-    required skir.RecordId super.argument,
-  }) : super(
-         retry: null,
-         name: r'organizationTopologyControllerProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$organizationTopologyControllerHash();
-
-  @override
-  String toString() {
-    return r'organizationTopologyControllerProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  OrganizationTopologyController create() => OrganizationTopologyController();
-
-  @override
-  bool operator ==(Object other) {
-    return other is OrganizationTopologyControllerProvider &&
-        other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$organizationTopologyControllerHash() =>
-    r'aa04502bebbe260b8e17dd4179f734ea8567b85c';
-
-/// Owns the live organization topology projection.
-///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
-///
-/// Consumers may use the projection to display current backend knowledge and
-/// to choose configuration targets. They must not treat desired configuration
-/// as proof that runtime resources are active, or infer service identity fields
-/// from a host without resolving its service identifier.
-
-final class OrganizationTopologyControllerFamily extends $Family
-    with
-        $ClassFamilyOverride<
-          OrganizationTopologyController,
-          AsyncValue<OrganizationTopology>,
-          OrganizationTopology,
-          Stream<OrganizationTopology>,
-          skir.RecordId
-        > {
-  OrganizationTopologyControllerFamily._()
-    : super(
-        retry: null,
-        name: r'organizationTopologyControllerProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  /// Owns the live organization topology projection.
-  ///
-  /// The projection combines the topology watch with committed configuration
-  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-  /// and applied configuration revisions alongside host runtime observations;
-  /// child realm and engine entries describe the resources currently reported by
-  /// that host. A topology entry is therefore not another service identity.
-  ///
-  /// Consumers may use the projection to display current backend knowledge and
-  /// to choose configuration targets. They must not treat desired configuration
-  /// as proof that runtime resources are active, or infer service identity fields
-  /// from a host without resolving its service identifier.
-
-  OrganizationTopologyControllerProvider call(skir.RecordId organizationId) =>
-      OrganizationTopologyControllerProvider._(
-        argument: organizationId,
-        from: this,
-      );
-
-  @override
-  String toString() => r'organizationTopologyControllerProvider';
-}
-
-/// Owns the live organization topology projection.
-///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
-/// and applied configuration revisions alongside host runtime observations;
-/// child realm and engine entries describe the resources currently reported by
-/// that host. A topology entry is therefore not another service identity.
-///
-/// Consumers may use the projection to display current backend knowledge and
-/// to choose configuration targets. They must not treat desired configuration
-/// as proof that runtime resources are active, or infer service identity fields
-/// from a host without resolving its service identifier.
-
-abstract class _$OrganizationTopologyController
-    extends $StreamNotifier<OrganizationTopology> {
-  late final _$args = ref.$arg as skir.RecordId;
-  skir.RecordId get organizationId => _$args;
-
-  Stream<OrganizationTopology> build(skir.RecordId organizationId);
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref =
-        this.ref
-            as $Ref<AsyncValue<OrganizationTopology>, OrganizationTopology>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<
-                AsyncValue<OrganizationTopology>,
-                OrganizationTopology
-              >,
-              AsyncValue<OrganizationTopology>,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, () => build(_$args));
-  }
-}
+String _$organizationTopologyHash() =>
+    r'f6efcc8ca0e589ff6b81bd163be6e293718a5dc2';
 
 /// Shares one deadline projection for a service list across its consumers.
 
@@ -839,7 +830,7 @@ final class HostConnectedProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$hostConnectedHash() => r'09b1ee4918132ecf7c243b785b39033369b3ff63';
+String _$hostConnectedHash() => r'0de38fbae6e101f0292ab3e1283be5a8fad89257';
 
 /// Resolves host connectivity through its linked service heartbeat.
 ///

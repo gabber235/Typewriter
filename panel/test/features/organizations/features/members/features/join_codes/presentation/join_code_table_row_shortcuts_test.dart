@@ -1,6 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -16,7 +16,7 @@ void main() {
     var copies = 0;
 
     final code = OrganizationJoinCode(
-      code: recordId("join_code:code"),
+      code: skir.recordId("join_code:code"),
       createdAt: DateTime.utc(2024),
     );
 
@@ -70,7 +70,7 @@ void main() {
     var copies = 0;
     var revokes = 0;
     final code = OrganizationJoinCode(
-      code: recordId("join_code:selected"),
+      code: skir.recordId("join_code:selected"),
       createdAt: DateTime.utc(2024),
     );
 

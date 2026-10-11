@@ -64,7 +64,7 @@ final class AppRouterProvider
   }
 }
 
-String _$appRouterHash() => r'dcba6f0b62eea76b19a03b6a9a3d3a97e2cb8b06';
+String _$appRouterHash() => r'59601f42521add9d9c465d8cc51d24d2ed45f2e3';
 
 /// Exposes the router's current path as reactive application state.
 

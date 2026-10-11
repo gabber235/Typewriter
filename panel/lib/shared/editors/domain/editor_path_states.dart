@@ -1,4 +1,5 @@
-import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "editor_path_states.freezed.dart";
@@ -15,10 +16,10 @@ part "editor_path_states.freezed.dart";
 /// related states) instead of recorded snapshots, so a path cannot report a
 /// stale phase.
 final class EditorPathStates {
-  final Map<DataPath, EditorPathRecord> _records = {};
-  final Map<DataPath, EditorContentionDetails> _contentions = {};
+  final Map<skir.ValuePath, EditorPathRecord> _records = {};
+  final Map<skir.ValuePath, EditorContentionDetails> _contentions = {};
 
-  Set<DataPath> get dirtyPaths => _pathsWhere((record) => record.dirty);
+  Set<skir.ValuePath> get dirtyPaths => _pathsWhere((record) => record.dirty);
 
   bool get hasConflicts {
     return _records.values.any(
@@ -30,7 +31,7 @@ final class EditorPathStates {
   ///
   /// Conflict paths stay excluded until a caller resolves them. A non null
   /// request narrows the result without adding paths that are not dirty.
-  Set<DataPath> flushCandidates(Set<DataPath>? requested) {
+  Set<skir.ValuePath> flushCandidates(Set<skir.ValuePath>? requested) {
     final candidates = _pathsWhere(
       (record) => record.dirty && record.progress is! ConflictedPathProgress,
     );
@@ -38,7 +39,7 @@ final class EditorPathStates {
     return candidates.intersection(requested);
   }
 
-  Set<DataPath> get autoFlushCandidates {
+  Set<skir.ValuePath> get autoFlushCandidates {
     return _pathsWhere(
       (record) => record.progress is PendingPathProgress && record.gate == null,
     );
@@ -48,7 +49,7 @@ final class EditorPathStates {
   ///
   /// This is a read model for presentation and recovery. It does not mutate
   /// records or infer persistence from the current value.
-  EditorSaveState saveState(DataPath path) {
+  EditorSaveState saveState(skir.ValuePath path) {
     var best = const EditorSaveState.idle();
     var bestPriority = _phasePriority(best.phase);
     for (final entry in _records.entries) {
@@ -65,10 +66,10 @@ final class EditorPathStates {
     return best;
   }
 
-  void markEdited(DataPath path) =>
+  void markEdited(skir.ValuePath path) =>
       _setProgress(path, const EditorPathProgress.pending());
 
-  void markSaving(Iterable<DataPath> paths) {
+  void markSaving(Iterable<skir.ValuePath> paths) {
     for (final path in paths) {
       _setProgress(path, const EditorPathProgress.saving());
     }
@@ -81,20 +82,23 @@ final class EditorPathStates {
     }
   }
 
-  void confirm(Iterable<DataPath> paths, EditorSavePhase phase) {
+  void confirm(Iterable<skir.ValuePath> paths, EditorSavePhase phase) {
     for (final path in paths) {
       _setProgress(path, EditorPathProgress.settled(phase));
     }
   }
 
-  void fail(Iterable<DataPath> paths, List<TypeDiagnostic> diagnostics) {
+  void fail(
+    Iterable<skir.ValuePath> paths,
+    List<EditorDiagnostic> diagnostics,
+  ) {
     for (final path in paths) {
       _setProgress(path, EditorPathProgress.failed(diagnostics));
     }
   }
 
   void markContended(
-    Iterable<DataPath> paths,
+    Iterable<skir.ValuePath> paths,
     EditorContentionDetails contention,
   ) {
     for (final path in paths) {
@@ -103,22 +107,22 @@ final class EditorPathStates {
     }
   }
 
-  void resolveConflictLocally(DataPath path) =>
+  void resolveConflictLocally(skir.ValuePath path) =>
       _setProgress(path, const EditorPathProgress.pending());
 
-  void adoptRemote(DataPath path, EditorSavePhase phase) =>
+  void adoptRemote(skir.ValuePath path, EditorSavePhase phase) =>
       _setProgress(path, EditorPathProgress.settled(phase));
 
-  void reset(DataPath path) => _setProgress(path, null);
+  void reset(skir.ValuePath path) => _setProgress(path, null);
 
   /// Installs one reconciliation transition without losing settled paths.
   ///
   /// [dirtyPaths], [confirmedPaths], and [conflicts] are the result of one
   /// remote observation and must be applied together by the editor owner.
   void applyReconciliation({
-    required Set<DataPath> dirtyPaths,
-    required Set<DataPath> confirmedPaths,
-    required Map<DataPath, EditorPathConflict> conflicts,
+    required Set<skir.ValuePath> dirtyPaths,
+    required Set<skir.ValuePath> confirmedPaths,
+    required Map<skir.ValuePath, EditorPathConflict> conflicts,
     required EditorSavePhase confirmedPhase,
   }) {
     for (final entry in _records.entries.toList()) {
@@ -134,12 +138,12 @@ final class EditorPathStates {
     }
   }
 
-  EditorInteractionSession? gate(DataPath path) => _records[path]?.gate;
+  EditorInteractionSession? gate(skir.ValuePath path) => _records[path]?.gate;
 
-  void setGate(DataPath path, EditorInteractionSession session) =>
+  void setGate(skir.ValuePath path, EditorInteractionSession session) =>
       _transform(path, (record) => record.copyWith(gate: session));
 
-  void clearGate(DataPath path, EditorInteractionSession session) {
+  void clearGate(skir.ValuePath path, EditorInteractionSession session) {
     if (_records[path]?.gate != session) return;
     _transform(path, (record) => record.copyWith(gate: null));
   }
@@ -155,20 +159,22 @@ final class EditorPathStates {
     return gates;
   }
 
-  Set<DataPath> _pathsWhere(bool Function(EditorPathRecord record) predicate) {
+  Set<skir.ValuePath> _pathsWhere(
+    bool Function(EditorPathRecord record) predicate,
+  ) {
     return {
       for (final entry in _records.entries)
         if (predicate(entry.value)) entry.key,
     };
   }
 
-  void _setProgress(DataPath path, EditorPathProgress? progress) {
+  void _setProgress(skir.ValuePath path, EditorPathProgress? progress) {
     if (progress is! ContendedPathProgress) _contentions.remove(path);
     _transform(path, (record) => record.copyWith(progress: progress));
   }
 
   void _transform(
-    DataPath path,
+    skir.ValuePath path,
     EditorPathRecord Function(EditorPathRecord record) transform,
   ) {
     final next = transform(_records[path] ?? const EditorPathRecord());
@@ -189,10 +195,10 @@ abstract class EditorPathRecord with _$EditorPathRecord {
 
   const EditorPathRecord._();
 
-  bool get removable => progress == null && gate == null;
+  bool get removable => this.progress == null && gate == null;
 
   bool get dirty {
-    return switch (progress) {
+    return switch (this.progress) {
       PendingPathProgress() ||
       SavingPathProgress() ||
       FailedPathProgress() ||
@@ -203,7 +209,7 @@ abstract class EditorPathRecord with _$EditorPathRecord {
   }
 
   EditorSavePhase get phase {
-    return switch (progress) {
+    return switch (this.progress) {
       null => EditorSavePhase.idle,
       PendingPathProgress() => EditorSavePhase.pending,
       SavingPathProgress() => EditorSavePhase.saving,
@@ -215,17 +221,17 @@ abstract class EditorPathRecord with _$EditorPathRecord {
   }
 
   EditorSaveState saveState(
-    DataPath path, {
+    skir.ValuePath path, {
     EditorContentionDetails? contention,
   }) {
     return EditorSaveState(
       phase: phase,
       path: path,
-      conflict: switch (progress) {
+      conflict: switch (this.progress) {
         ConflictedPathProgress(:final conflict) => conflict,
         _ => null,
       },
-      diagnostics: switch (progress) {
+      diagnostics: switch (this.progress) {
         FailedPathProgress(:final diagnostics) => diagnostics,
         _ => const [],
       },
@@ -240,7 +246,7 @@ sealed class EditorPathProgress with _$EditorPathProgress {
 
   const factory EditorPathProgress.saving() = SavingPathProgress;
 
-  const factory EditorPathProgress.failed(List<TypeDiagnostic> diagnostics) =
+  const factory EditorPathProgress.failed(List<EditorDiagnostic> diagnostics) =
       FailedPathProgress;
 
   const factory EditorPathProgress.contended() = ContendedPathProgress;

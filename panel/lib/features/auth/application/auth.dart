@@ -1,7 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:oidc/oidc.dart";
-import "package:oidc_default_store/oidc_default_store.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "auth.g.dart";
@@ -94,8 +90,9 @@ class AccessToken {
 /// Owns the panel's identity provider session for the application lifetime.
 ///
 /// Construction selects the redirect flow required by the current platform,
-/// initializes the OIDC manager, and restores any persisted session. Sign in and
-/// sign out invalidate this provider so all consumers observe the new session
+/// initializes the OIDC manager, and restores any persisted session. Web sign in
+/// navigates in the current tab and restores the session on return. Native sign
+/// in and sign out invalidate this provider so consumers observe the new session
 /// through Riverpod rather than retaining their own authentication state.
 @Riverpod(keepAlive: true)
 class Auth extends _$Auth {
@@ -129,7 +126,6 @@ class Auth extends _$Auth {
       frontChannelLogoutUri: frontChannelLogoutUri,
       scope: config.scopes.split(" "),
       initMode: OidcInitMode.blockingValidate,
-      discoveryDocumentMaxAge: Duration.zero,
       supportOfflineAuth: false,
       refreshBefore: (token) => const Duration(seconds: 30),
     );
@@ -154,14 +150,29 @@ class Auth extends _$Auth {
 
   /// Starts authorization in the configured identity provider and refreshes
   /// dependent session consumers after the callback completes.
+  ///
+  /// Web authorization uses the current tab. The redirect page restores the
+  /// original panel URL, and initialization completes the stored response.
   Future<void> signIn() async {
     debugPrint("Signing in");
     final manager = await future;
     if (manager == null) {
       throw Exception("Auth manager not initialized");
     }
-    await manager.loginAuthorizationCodeFlow();
-    ref.invalidateSelf();
+    await manager.loginAuthorizationCodeFlow(
+      originalUri: kIsWeb ? Uri.base : null,
+      options: kIsWeb
+          ? const OidcPlatformSpecificOptions(
+              web: OidcPlatformSpecificOptions_Web(
+                navigationMode:
+                    OidcPlatformSpecificOptions_Web_NavigationMode.samePage,
+              ),
+            )
+          : null,
+    );
+    if (!kIsWeb) {
+      ref.invalidateSelf();
+    }
   }
 
   /// Ends the provider session and removes its locally stored credentials.

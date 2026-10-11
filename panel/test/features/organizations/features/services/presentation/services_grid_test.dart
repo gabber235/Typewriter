@@ -1,9 +1,8 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
@@ -12,8 +11,8 @@ void main() {
     "Realm navigation keeps the Realm ID distinct from its host service",
     () {
       final route = realmNavigationRoute(
-        recordId("organization:test"),
-        recordId("realm_instance:adventure"),
+        skir.recordId("organization:test"),
+        skir.recordId("realm_instance:adventure"),
       );
       final realmRoute = route.initialChildren!.single;
 
@@ -111,28 +110,28 @@ void main() {
     await tester.tap(find.text("PAPER HOST"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Service"), findsOneWidget);
-    expect(find.text("Identity and connection"), findsNothing);
+    expect(find.text("Name"), findsOneWidget);
     expect(find.text("CONNECTION"), findsOneWidget);
-    expect(find.text("Host"), findsOneWidget);
-    expect(find.text("Capabilities and runtime health"), findsNothing);
-    expect(find.text("CAPABILITIES"), findsOneWidget);
-
+    expect(
+      find.descendant(
+        of: find.byType(PortablePresentationRenderer),
+        matching: find.text("Connected"),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text("Version"), findsOneWidget);
+    expect(find.text("Entry point"), findsOneWidget);
+    expect(find.text("Realm hosting"), findsOneWidget);
+    expect(find.text("Supported engines"), findsOneWidget);
     expect(find.text("RUNTIME HEALTH"), findsOneWidget);
-    expect(find.text("Configuration"), findsOneWidget);
-    expect(find.text("REALM HOSTING"), findsOneWidget);
-    expect(find.text("EXECUTION ENGINE"), findsOneWidget);
     expect(find.text("Host a Realm"), findsOneWidget);
     expect(find.text("Run an execution engine"), findsOneWidget);
 
     expect(find.text("Assigned Realm"), findsNothing);
     expect(find.text("Hosted Realm"), findsNothing);
     expect(find.text("Message"), findsNothing);
-    expect(find.byType(ComposedEditor), findsOneWidget);
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
     expect(find.text("Unbind"), findsOneWidget);
-    expect(find.byIcon(Icons.cloud_done_outlined), findsOneWidget);
-
-    expect(find.byIcon(Icons.play_circle_outline), findsWidgets);
 
     await tester.ensureVisible(find.text("Host a Realm"));
     await tester.pumpAndSettle();
@@ -192,17 +191,14 @@ void main() {
     await tester.tap(find.text("ENGINE"));
     await tester.pumpAndSettle();
 
-    expect(find.text("Runtime"), findsOneWidget);
-    expect(find.text("Current deployment health"), findsNothing);
+    expect(find.text("Owner host"), findsOneWidget);
+    expect(find.text("Target"), findsOneWidget);
     expect(find.text("STATUS"), findsOneWidget);
-    expect(find.text("Placement"), findsOneWidget);
-    expect(find.text("Where this runtime executes"), findsNothing);
-    expect(find.text("ASSIGNMENT"), findsOneWidget);
-
+    expect(find.text("Artifact"), findsOneWidget);
     expect(find.text("Assigned Realm"), findsOneWidget);
     expect(find.text("Message"), findsOneWidget);
     expect(find.text("Deployment needs attention"), findsOneWidget);
-    expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
+    expect(find.byType(PortablePresentationRenderer), findsOneWidget);
   });
 
   testWidgets("offline Realm selection does not expose open", (tester) async {
@@ -244,7 +240,7 @@ class _Fixture {
       role: CustomServiceRole(name: "discord", version: "1.0.0"),
     );
     host = skir.ServiceHost(
-      hostId: recordId("service_host:paper-eu"),
+      hostId: skir.recordId("service_host:paper-eu"),
       serviceId: hostService.serviceId,
       revision: 2,
       entrypoint: "PAPER",
@@ -258,7 +254,7 @@ class _Fixture {
       ),
     );
     realm = skir.RealmInstance(
-      realmId: recordId("realm_instance:adventure"),
+      realmId: skir.recordId("realm_instance:adventure"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       revision: 3,
       targetEngine: skir.EngineTarget(
@@ -268,7 +264,7 @@ class _Fixture {
       state: _childState(message: childMessage),
     );
     engine = skir.EngineInstance(
-      engineId: recordId("engine_instance:paper-eu"),
+      engineId: skir.recordId("engine_instance:paper-eu"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: hostService.name),
       realm: skir.RealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
       revision: 4,
@@ -288,24 +284,20 @@ class _Fixture {
   late final skir.RealmInstance realm;
   late final skir.EngineInstance engine;
   late final OrganizationTopology topology;
+  final nats = FakeNatsClient();
 
   List<Service> get services => [hostService, customService];
 
   List<Override> get overrides => [
-    organizationIdProvider.overrideWith((ref) => recordId("organization:test")),
-    organizationTopologyControllerProvider(recordId("organization:test"))
+    userIdProvider.overrideWith((ref) async => "test-user"),
+    natsProvider.overrideWith(() => FakeNats(nats)),
+    organizationIdProvider.overrideWith(
+      (ref) => skir.recordId("organization:test"),
+    ),
+    organizationTopologyControllerProvider(skir.recordId("organization:test"))
         .overrideWith(() => _FixtureScopedTopology(topology)),
-    canonicalServicesProvider.overrideWith(() => _FixtureServices(services)),
+    canonicalServicesProvider.overrideWith((ref) async => services),
   ];
-}
-
-class _FixtureServices extends CanonicalServices {
-  _FixtureServices(this.services);
-
-  final List<Service> services;
-
-  @override
-  Stream<List<Service>> build() => Stream.value(services);
 }
 
 Service _service({
@@ -314,12 +306,12 @@ Service _service({
   required bool connected,
   required ServiceRole role,
 }) => Service(
-  serviceId: recordId("service:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: 1,
   name: name,
   role: role,
   createdAt: DateTime.utc(2026, 8, 20),
-  organization: recordId("organization:test"),
+  organization: skir.recordId("organization:test"),
   state: ServiceState(
     status: connected ? ServiceStateStatus.online : ServiceStateStatus.offline,
     lastSeen: DateTime.now(),

@@ -21,6 +21,7 @@ use wasmcloud_utils::{
     affected_paths(
         "backend/access/auth-typewriter-permissions/",
         "backend/database/schema/organization/",
+        "backend/database/schema/service/",
         "backend/database/schema/user.surql"
     )
 )]
@@ -32,7 +33,7 @@ impl FixtureSpec for AuthTypewriterPermissions {
             .messaging_subscription("auth.permissions.typewriter-panel")
             .messaging_subscription("auth.permissions.typewriter-services")
             .otel()
-            .typewriter_database(SchemaPreset::Organization)
+            .typewriter_database(SchemaPreset::Full)
     }
 }
 

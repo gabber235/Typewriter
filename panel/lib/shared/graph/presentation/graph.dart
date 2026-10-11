@@ -1,8 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:vector_math/vector_math_64.dart" hide Colors;
 
 /// Receives an element identifier and its preview dimensions during resizing.
 typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);

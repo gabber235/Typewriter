@@ -7,6 +7,7 @@ import { RecordId } from "kernel/v1/record_id.skir";
 enum EntityPermissionQualifier {
   user: struct {
     organization_id: RecordId?;
+    connection_session: string;
   };
   service: struct {};
 }

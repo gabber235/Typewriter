@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns composite editors created while assembling one inspection model.
@@ -11,51 +13,46 @@ final class InspectionBuildContext {
 
   final EditorOwnerRefresh owners;
   final List<MultiEditOwner> _multiEditors = [];
+  final Set<PortablePresentationHost> _hosts = {};
+
+  InspectionContent ownHosts(InspectionContent content) {
+    if (content.host case final host?) _hosts.add(host);
+    _hosts.addAll(content.additionalHosts);
+    return content;
+  }
+
+  void releaseHosts(Iterable<PortablePresentationHost> hosts) {
+    _hosts.removeAll(hosts);
+  }
 
   /// Creates and registers a composite owner for the selected targets.
   ///
   /// The returned owner is valid for this build context only. The individual
   /// target owners remain owned by the editor owner registry.
   MultiEditOwner multiEditorFor(
-    Iterable<EditableSelectable> targets, {
-    required TypeExpression rootType,
-    required TypeCatalog typeCatalog,
+    Iterable<EditorTarget> targets, {
+    required skir.TypeUse rootType,
+    required CheckedEditorCatalog catalog,
   }) => multiEditorForOwners(
     targets.map(owners.editor),
     rootType: rootType,
-    typeCatalog: typeCatalog,
+    catalog: catalog,
   );
 
   /// Creates and registers a composite owner from already resolved owners.
   MultiEditOwner multiEditorForOwners(
     Iterable<EditOwner> owners, {
-    required TypeExpression rootType,
-    required TypeCatalog typeCatalog,
+    required skir.TypeUse rootType,
+    required CheckedEditorCatalog catalog,
   }) {
     final editor = MultiEditOwner(
       owners: owners.toList(growable: false),
       rootType: rootType,
-      typeCatalog: typeCatalog,
+      catalog: catalog,
       commitInteractions: (interactions) => interactions.commitAtomically(),
     );
     _multiEditors.add(editor);
     return editor;
-  }
-
-  /// Runs a shared inspection build with rollback on failure.
-  TypeResult<InspectionContent> compose(
-    MultiInspectionDefinition definition,
-    List<EditableSelectable> selection,
-  ) {
-    final checkpoint = _multiEditors.length;
-    try {
-      final result = definition.build(selection, this);
-      if (result is TypeFailure) _rollbackTo(checkpoint);
-      return result;
-    } on Object {
-      _rollbackTo(checkpoint);
-      rethrow;
-    }
   }
 
   void _rollbackTo(int checkpoint) {
@@ -66,6 +63,12 @@ final class InspectionBuildContext {
     }
   }
 
-  /// Disposes every composite owner created by this context.
-  void dispose() => _rollbackTo(0);
+  /// Disposes every composite owner and portable host created by this context.
+  void dispose() {
+    _rollbackTo(0);
+    for (final host in _hosts) {
+      host.dispose();
+    }
+    _hosts.clear();
+  }
 }

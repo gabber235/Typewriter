@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns delivery of one prepared request, independently of later user edits.
@@ -28,8 +25,8 @@ final class MutationSubmission<T> extends ChangeNotifier {
   final Future<SubmissionResult<T>> Function() _send;
   final Future<void> Function(SubmissionResult<T>)? _integrate;
   final void Function()? _onDispose;
-  AsyncError? _integrationError;
-  AsyncError? get integrationError => _integrationError;
+  SdkAsyncError? _integrationError;
+  SdkAsyncError? get integrationError => _integrationError;
   Future<SubmissionResult<T>>? _active;
   SubmissionResult<T>? _result;
   bool _disposed = false;
@@ -90,7 +87,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
       _integrationError = null;
     } on Object catch (error, stackTrace) {
       if (_disposed) return result;
-      _integrationError = AsyncError(error, stackTrace);
+      _integrationError = SdkAsyncError(error, stackTrace);
       FlutterError.reportError(
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );

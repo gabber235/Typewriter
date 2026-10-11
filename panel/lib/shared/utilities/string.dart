@@ -1,5 +1,11 @@
-import "package:dart_casing/dart_casing.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+extension NullableDisplayLabel on String? {
+  String displayLabel(String fallback) {
+    final value = this;
+    return value == null || value.trim().isEmpty ? fallback : value;
+  }
+}
 
 /// String transformations used for authored names and display labels.
 extension StringX on String {

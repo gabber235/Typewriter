@@ -1,10 +1,10 @@
 // Conversion metadata describes directed paths between resolved types. The editor uses local rules for local
 // evaluation; Realm rules remain delegated to their owner.
 
-import { DataPath } from "editor/v1/path.skir";
 import {
   ConversionId,
-  ResolvedTypeRef,
+  TypeUse,
+  ValuePath,
 } from "editor/v1/type_catalog.skir";
 
 enum ConversionSafety(810500001) {
@@ -38,8 +38,8 @@ enum ScalarCastKind(810500004) {
 }
 
 struct RecordProjectionField(810500005) {
-  source: DataPath = 0;
-  target: DataPath = 1;
+  source: ValuePath = 0;
+  target: ValuePath = 1;
   conversion_id: ConversionId? = 2;
 }
 
@@ -49,7 +49,7 @@ struct RecordProjectionRule(810500006) {
 
 struct RecordConstructionField(810500007) {
   target_field: string = 0;
-  source: DataPath = 1;
+  source: ValuePath = 1;
   conversion_id: ConversionId? = 2;
 }
 
@@ -81,8 +81,8 @@ enum ConversionRule(810500012) {
 
 struct ConversionDefinition(810500013) {
   conversion_id: ConversionId = 0;
-  source: ResolvedTypeRef = 1;
-  target: ResolvedTypeRef = 2;
+  source: TypeUse = 1;
+  target: TypeUse = 2;
   safety: ConversionSafety = 3;
   fallibility: ConversionFallibility = 4;
   locality: ConversionLocality = 5;

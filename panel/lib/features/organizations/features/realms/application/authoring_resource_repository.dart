@@ -1,122 +1,331 @@
 part of "authoring_session.dart";
 
-/// Owns durable authoring requests for editor resources in one realm.
-///
-/// The repository is cached by [ResourceRepositories] for the organization and
-/// realm. It does not own canonical snapshots or live subscriptions. The
-/// [AuthoringSession] owns those projections and consumes [changes] and
-/// [invalidations] emitted after mutation integration. [SkirMutationClient]
-/// remains the transport owner; this repository supplies authoring subjects,
-/// serialization, resource reservations, and response integration.
 final class AuthoringResourceRepository {
   AuthoringResourceRepository(this.session, this.organization, this.realm);
 
-  /// Organization repositories that own this repository's transport lifetime.
   final ResourceRepositories session;
-
-  /// Organization containing the realm resources.
   final skir.RecordId organization;
-
-  /// Realm containing the authoring resources.
   final skir.RecordId realm;
   final _changes = StreamController<skir.AuthoringChanged>.broadcast(
     sync: true,
   );
   final _invalidations = StreamController<void>.broadcast(sync: true);
+  final Completer<void> _disposed = Completer<void>();
 
-  /// Emits applied authoring events for the owning session's canonical model.
   Stream<skir.AuthoringChanged> get changes => _changes.stream;
-
-  /// Emits when a conflict requires the owning session to refresh.
   Stream<void> get invalidations => _invalidations.stream;
 
-  /// Builds service subjects for this organization's realm.
-  RealmServiceAddress get address =>
-      RealmServiceAddress(organizationId: organization, realmId: realm);
+  NatsSubscription? _authoringSubscription;
+  StreamSubscription<NatsMessage>? _authoringMessages;
+  StreamSubscription<NatsConnectionState>? _lifecycle;
+  var _started = false;
+  var _isDisposed = false;
+  var _reconnectNeedsRefresh = false;
+  NatsClient? _boundTransport;
+  var _transportGeneration = 0;
+  Future<void>? _binding;
 
-  /// Combines editor contributions into one authoring batch per preparation.
-  late final combiner =
-      MutationCombiner<
-        skir.AuthoringOperation,
-        skir.ApplyAuthoringBatchResponse
-      >(prepare: prepare);
+  bool isScopedTo(skir.RecordId organizationId, skir.RecordId realmId) =>
+      organization == organizationId && realm == realmId;
 
-  /// Fetches one authoritative snapshot scope for an editor resource.
-  ///
-  /// The repository must still be active when the request starts and when the
-  /// response arrives. A successful response is returned unchanged. Invalid,
-  /// internal, and unknown responses become the repository's API exceptions.
-  Future<skir.AuthoringSnapshot> fetch(
-    skir.AuthoringSnapshotScope scope,
+  Future<void> start() async {
+    if (_started) {
+      await _binding;
+      return;
+    }
+    _started = true;
+    await rebindTransport(session.transport.client);
+  }
+
+  Future<void> rebindTransport(NatsClient client) {
+    if (!_started || _isDisposed) return Future<void>.value();
+    if (identical(_boundTransport, client)) {
+      return _binding ?? Future<void>.value();
+    }
+    _boundTransport = client;
+    final generation = ++_transportGeneration;
+    final previous = _binding;
+    final binding = () async {
+      if (previous != null) {
+        try {
+          await previous;
+        } on Object {
+          // A failed binding does not own the replacement connection.
+        }
+      }
+      if (!_acceptsTransport(generation)) return;
+      await _authoringMessages?.cancel();
+      await _lifecycle?.cancel();
+      await _authoringSubscription?.unsubscribe();
+      _authoringMessages = null;
+      _lifecycle = null;
+      _authoringSubscription = null;
+      if (!_acceptsTransport(generation)) return;
+      _lifecycle = client.connectionStateChanges.listen((value) {
+        if (_acceptsTransport(generation)) _onLifecycle(value);
+      });
+      _onLifecycle(client.connectionState);
+      final subscription = await client.subscribe(
+        AuthoringChangedRouteEvent.subject(
+          organizationId: organization,
+          realmId: realm,
+        ),
+      );
+      if (!_acceptsTransport(generation)) {
+        await subscription.unsubscribe();
+        return;
+      }
+      _authoringSubscription = subscription;
+      _authoringMessages = subscription.messages.listen(
+        (message) {
+          if (_acceptsTransport(generation)) _acceptAuthoringMessage(message);
+        },
+        onError: (Object _, StackTrace _) {
+          if (_acceptsTransport(generation)) _invalidations.add(null);
+        },
+      );
+      _invalidations.add(null);
+    }();
+    _binding = binding;
+    return binding;
+  }
+
+  bool _acceptsTransport(int generation) =>
+      !_isDisposed && _transportGeneration == generation;
+
+  Future<skir.AuthoringState> fetch({
+    required skir.CatalogGeneration generation,
+  }) async {
+    session.checkActive();
+    final transferId = uuid.v4();
+    final request = skir.QueryAuthoringStateRequest(
+      generation: generation,
+      transferId: transferId,
+    );
+    final responses = request.watch(
+      session.transport,
+      organizationId: organization,
+      realmId: realm,
+    );
+    final assembler = AuthoringStateTransferAssembler();
+    final result = await assembler.assemble(
+      responses.map(
+        (response) => switch (response) {
+          skir.QueryAuthoringStateResponse_chunkWrapper(:final value) => value,
+          skir.QueryAuthoringStateResponse_catalogChangedWrapper(
+            :final value,
+          ) =>
+            throw CatalogGenerationChanged(value.actualGeneration),
+          skir.QueryAuthoringStateResponse_unavailableWrapper(:final value) =>
+            throw AuthoringStateTransferUnavailable(value),
+          _ => throw ApiException.internalServerError(),
+        },
+      ),
+      cancelled: _disposed.future,
+    );
+    session.checkActive();
+    return result;
+  }
+
+  Future<skir.SearchAuthoringResponse> search(
+    skir.SearchAuthoringRequest request,
   ) async {
     session.checkActive();
-    final request = skir.GetAuthoringSnapshotRequest(scopes: [scope]);
+    final operation = request.operation(
+      organizationId: organization,
+      realmId: realm,
+    );
     final response = await session.transport.request(
-      address.request("library.authoring.snapshot.get"),
-      skir.GetAuthoringSnapshotRequest.serializer.toBytes(request),
-      skir.GetAuthoringSnapshotResponse.serializer,
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
+    );
+    session.checkActive();
+    return response;
+  }
+
+  Future<skir.TypePreviewResult> previewTypeArgumentChange(
+    skir.PreviewTypeArgumentChangeRequest request,
+  ) async {
+    session.checkActive();
+    final operation = request.operation(
+      organizationId: organization,
+      realmId: realm,
+    );
+    final response = await session.transport.request(
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
     session.checkActive();
     return switch (response) {
-      skir.GetAuthoringSnapshotResponse_successWrapper(:final value) => value,
-      skir.GetAuthoringSnapshotResponse_invalidWrapper(:final value) =>
-        throw value.toApiException(),
+      skir.PreviewTypeArgumentChangeResponse_resultWrapper(:final value) =>
+        value,
       _ => throw ApiException.internalServerError(),
     };
   }
 
-  /// Prepares an editor batch for the shared local mutation owner.
-  ///
-  /// Operations must include their expected canonical values. The returned
-  /// commit captures immutable request bytes, reserves every affected resource,
-  /// supports identical request replay, and emits [changes] after an applied
-  /// response. A conflict emits [invalidations]. Other outcomes remain owned
-  /// by the shared mutation layer and do not emit canonical changes here.
-  PreparedCommit<skir.ApplyAuthoringBatchResponse> prepare(
-    List<skir.AuthoringOperation> operations,
-  ) {
+  PreparedCommit<skir.CommitPreparedEditResponse> prepareCommit(
+    skir.PreparedEdit edit,
+  ) => session.transport.prepare(
+    edit.operation(organizationId: organization, realmId: realm),
+    submissionId: uuid.v4(),
+    replay: SubmissionReplay.unsupported,
+    label: "Save Realm changes",
+    resources: {
+      for (final resource in edit.editedResources)
+        (organization, realm, resource),
+    },
+    classify: (response) => switch (response) {
+      skir.CommitPreparedEditResponse_resultWrapper(
+        value: skir.CommitResult.committed,
+      ) =>
+        MutationResponseDisposition.confirmed,
+      skir.CommitPreparedEditResponse_internalErrorWrapper() ||
+      skir.CommitPreparedEditResponse_unknown() =>
+        MutationResponseDisposition.uncertain,
+      _ => MutationResponseDisposition.rejected,
+    },
+    rejectionMessage: (response) => response.rejectionMessage,
+  );
+
+  Future<skir.PreparedEditResult> prepareTypeArgumentChange(
+    skir.TypeArgumentChangePreview preview,
+  ) async {
     session.checkActive();
-    final request = skir.ApplyAuthoringBatchRequest(
-      batchId: uuid.v4(),
-      operations: operations,
+    final operation = preview.operation(
+      organizationId: organization,
+      realmId: realm,
     );
-    return session.transport.prepare(
-      address.request("library.authoring.batch.apply"),
-      skir.ApplyAuthoringBatchRequest.serializer.toBytes(request),
-      skir.ApplyAuthoringBatchResponse.serializer,
-      submissionId: request.batchId,
-      replay: SubmissionReplay.identicalRequest,
-      label: _authoringLabel(operations),
-      resources: {
-        for (final operation in operations)
-          for (final id in _operationResources(operation))
-            (organization, realm, id),
-      },
-      classify: (response) => switch (response) {
-        skir.ApplyAuthoringBatchResponse_appliedWrapper() =>
-          MutationResponseDisposition.confirmed,
-        skir.ApplyAuthoringBatchResponse_internalErrorWrapper() ||
-        skir.ApplyAuthoringBatchResponse_unknown() =>
-          MutationResponseDisposition.uncertain,
-        _ => MutationResponseDisposition.rejected,
-      },
-      onResponse: (response) async {
-        session.checkActive();
-        switch (response) {
-          case skir.ApplyAuthoringBatchResponse_appliedWrapper(:final value):
-            _changes.add(value);
-          case skir.ApplyAuthoringBatchResponse_conflictWrapper():
-            _invalidations.add(null);
-          default:
-            break;
-        }
-      },
+    final response = await session.transport.request(
+      operation.subject,
+      operation.requestBytes,
+      operation.responseSerializer,
     );
+    session.checkActive();
+    return switch (response) {
+      skir.PrepareTypeArgumentChangeResponse_resultWrapper(:final value) =>
+        value,
+      _ => throw ApiException.internalServerError(),
+    };
   }
 
-  /// Closes event streams and ends this repository's lifecycle.
+  void _acceptAuthoringMessage(NatsMessage message) {
+    if (_isDisposed) return;
+    try {
+      _changes.add(skir.AuthoringChanged.serializer.fromBytes(message.payload));
+    } on Object {
+      _invalidations.add(null);
+    }
+  }
+
+  void _onLifecycle(NatsConnectionState lifecycle) {
+    if (_isDisposed) return;
+    switch (lifecycle) {
+      case NatsReconnecting() || NatsFailed():
+        _reconnectNeedsRefresh = true;
+      case NatsConnected() when _reconnectNeedsRefresh:
+        _reconnectNeedsRefresh = false;
+        _invalidations.add(null);
+      case NatsConnecting() || NatsConnected() || NatsClosed():
+    }
+  }
+
   void dispose() {
+    if (_isDisposed) return;
+    _isDisposed = true;
+    _transportGeneration++;
+    _disposed.complete();
+    unawaited(_authoringMessages?.cancel());
+    unawaited(_lifecycle?.cancel());
+    unawaited(_authoringSubscription?.unsubscribe());
     unawaited(_changes.close());
     unawaited(_invalidations.close());
+  }
+}
+
+extension CommitPreparedEditResponseMessaging
+    on skir.CommitPreparedEditResponse {
+  String get rejectionMessage => switch (this) {
+    skir.CommitPreparedEditResponse_resultWrapper(:final value) =>
+      value.rejectionMessage,
+    _ => "The operation was rejected",
+  };
+}
+
+extension CommitResultMessaging on skir.CommitResult {
+  String get rejectionMessage => switch (this) {
+    skir.CommitResult_rejectedWrapper(:final value) => value.rejectionMessage,
+    skir.CommitResult_conflictWrapper() =>
+      "The Realm changed before this edit was saved",
+    skir.CommitResult_catalogChangedWrapper() => "The editor catalog changed",
+    _ => "The operation was rejected",
+  };
+}
+
+extension ValueProblemMessages on Iterable<skir.ValueProblem> {
+  String get rejectionMessage {
+    final values = toList(growable: false);
+    if (values.isEmpty) return "The Realm rejected this edit";
+    const shownLimit = 5;
+    final shown = values
+        .take(shownLimit)
+        .map((problem) => problem.locatedMessage)
+        .join("; ");
+    final remaining = values.length - shownLimit;
+    return remaining > 0
+        ? "The Realm rejected this edit: $shown; and $remaining more"
+        : "The Realm rejected this edit: $shown";
+  }
+}
+
+extension ValueProblemMessaging on skir.ValueProblem {
+  String get locatedMessage {
+    final path = location.path.segments
+        .map(
+          (segment) => switch (segment) {
+            skir.PathSegment_fieldWrapper(:final value) => value.name,
+            skir.PathSegment_itemWrapper(:final value) => value.id.value,
+            skir.PathSegment.mapKey => "key",
+            skir.PathSegment.mapValue => "value",
+            _ => "unknown",
+          },
+        )
+        .join(".");
+    final locationLabel = path.isEmpty
+        ? location.resource.value
+        : "${location.resource.value}:$path";
+    return "$code at $locationLabel";
+  }
+}
+
+extension PreparedEditResources on skir.PreparedEdit {
+  Iterable<skir.ResourceId> get editedResources sync* {
+    for (final intent in intents) {
+      switch (intent) {
+        case skir.EditIntent_createResourceWrapper(:final value):
+          yield value.id;
+        case skir.EditIntent_deleteResourceWrapper(:final value):
+          yield value.id;
+        case skir.EditIntent_setValueWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_insertWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_removeWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_moveWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_connectRelationWrapper(:final value):
+          yield value.source.source;
+          yield value.target;
+        case skir.EditIntent_disconnectRelationWrapper(:final value):
+          yield value.location.resource;
+        case skir.EditIntent_retagWrapper(:final value):
+          yield value.at.resource;
+        case skir.EditIntent_configureResourceWrapper(:final value):
+          yield value.resource;
+        case skir.EditIntent_unknown():
+      }
+    }
   }
 }

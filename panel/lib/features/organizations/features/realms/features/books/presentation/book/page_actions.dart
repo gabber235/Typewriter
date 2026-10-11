@@ -2,7 +2,7 @@ part of "route.dart";
 
 /// Moves every page in a chapter subtree to a new chapter path.
 ///
-/// The canonical page snapshot is read before building the batch so descendants
+/// The working revision is read before building the batch so descendants
 /// move together. Expected chapter values make a concurrent edit visible as a
 /// conflict instead of silently overwriting it.
 Future<void> _changePagesChapter(
@@ -14,7 +14,7 @@ Future<void> _changePagesChapter(
   if (bookId == null) {
     throw Exception("Book ID is null");
   }
-  final pages = await ref.read(canonicalBookPagesProvider(bookId).future);
+  final pages = ref.read(workingBookPagesProvider(bookId, "")).requireValue;
   final changed = pages
       .where(
         (page) =>
@@ -22,11 +22,23 @@ Future<void> _changePagesChapter(
       )
       .toList();
   if (changed.isEmpty || !ref.context.mounted) return;
-  final result = await ref.editPagesChapter(changed, chapter, newChapter);
-
-  result.requireApplied(
-    conflictMessage: "A page changed while chapters were moving",
-  );
+  ref
+      .readAuthoringWorkspace()
+      .edit(
+        label: "Change chapter",
+        apply: (edit) {
+          for (final page in changed) {
+            edit.setFieldPayload(
+              resource: page.pageId,
+              fields: ["chapter"],
+              payload: skir.DataValue.wrapStringValue(
+                page.chapter.replacingChapter(from: chapter, to: newChapter),
+              ),
+            );
+          }
+        },
+      )
+      .requireAccepted();
 }
 
 class _AddPageButton extends HookConsumerWidget {
@@ -66,7 +78,7 @@ class _AddPageButton extends HookConsumerWidget {
         padding: EdgeInsets.zero,
       ),
       child: TextButton(
-        onPressed: () => promptAndCreatePage(context: context, ref: ref),
+        onPressed: () => createPage(context: context, ref: ref),
         onFocusChange: (focus) => isFocused.value = focus,
         onHover: (hover) => isHovered.value = hover,
         style: TextButton.styleFrom(
@@ -183,7 +195,7 @@ class ChangeChapterDialogue extends HookConsumerWidget {
 
 Future<bool> showPageDeletionDialogue(
   WidgetRef ref,
-  skir.RecordId pageId,
+  skir.ResourceId pageId,
   String pageName,
 ) {
   return showConfirmationDialogue(
@@ -195,10 +207,10 @@ Future<bool> showPageDeletionDialogue(
     confirmIcon: MaterialSymbols.delete_forever,
     onConfirm: () async {
       final router = ref.read(appRouterProvider);
-      final result = await ref.readAuthoringSession().notifier.deletePage(
-        pageId,
-      );
-      result.requireApplied(conflictMessage: "The page no longer exists");
+      ref
+          .readAuthoringWorkspace()
+          .edit(label: "Delete page", apply: (edit) => edit.delete(pageId))
+          .requireAccepted();
       final context = ref.context;
       if (!context.mounted) return;
       final organizationId = ref.read(organizationIdProvider);

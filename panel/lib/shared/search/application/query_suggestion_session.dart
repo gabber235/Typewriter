@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:rxdart/rxdart.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns asynchronous selector completion for one query editor session.

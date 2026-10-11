@@ -1,13 +1,12 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
+
 // Bridges panel primitives and shared Skir identity values.
 //
 // This boundary keeps Flutter representations and Surreal record syntax out
 // of domain models. Resource identifiers are generated here so one identity
 // can be reused across an authoring batch and any retry of that batch.
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 
 /// Converts the protocol color representation into Flutter's color value.
 extension SkirColorExtension on skir.Color {
@@ -36,9 +35,6 @@ extension RecordIdExtension on skir.RecordId {
       "${_formatStringKey(table)}:${_formatRecordIdKey(key)}";
 }
 
-/// Resource tables for identities created by panel authoring.
-enum AuthoringResource { book, tag, page, element }
-
 final _resourceRandom = Random.secure();
 const _resourceAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -47,15 +43,16 @@ const _resourceAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
 /// Callers must retain the returned value for the complete submission flow.
 /// Reusing it across retries makes a replay address the same resource instead
 /// of creating a duplicate.
-skir.RecordId newResourceId(AuthoringResource resource) => skir.RecordId(
-  table: resource.name,
-  key: skir.RecordIdKey.wrapString(
-    String.fromCharCodes([
-      for (var index = 0; index < 20; index++)
-        _resourceAlphabet.codeUnitAt(_resourceRandom.nextInt(36)),
-    ]),
-  ),
+skir.ResourceId newResourceId() => skir.ResourceId(
+  value: String.fromCharCodes([
+    for (var index = 0; index < 20; index++)
+      _resourceAlphabet.codeUnitAt(_resourceRandom.nextInt(36)),
+  ]),
 );
+
+extension ResourceIdExtension on skir.ResourceId {
+  String get id => value;
+}
 
 String _formatRecordIdKey(skir.RecordIdKey key) {
   return switch (key) {

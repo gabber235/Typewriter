@@ -1,60 +1,61 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Displays one page using the editor selected by its catalog definition.
-///
-/// The route observes projected metadata so unsaved names and chapters remain
-/// visible, then consults the active realm catalog for the page kind. A missing
-/// definition is rendered as read only because choosing an editor without its
-/// contract would risk interpreting page content incorrectly.
 @RoutePage()
-class PagePage extends HookConsumerWidget {
+class PagePage extends ConsumerWidget {
   const PagePage({@PathParam("pageId") required this.pageId, super.key});
 
   final String pageId;
 
-  /// Builds a page surface or a safe read only fallback when its kind is absent.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final page = ref.watch(projectedPageProvider(recordId("page:$pageId")));
+    final organizationId = ref.watch(organizationIdProvider);
+    final realmId = ref.watch(realmIdProvider);
+    Widget child;
+    if (organizationId == null || realmId == null) {
+      child = const Center(child: Text("Select a Realm to edit this page"));
+    } else {
+      final scope = AuthoringScope(
+        organizationId: organizationId,
+        realmId: realmId,
+      );
+      final source = ref.watch(workingAuthoringDocumentProvider(scope));
+      final resource = skir.ResourceId(value: pageId);
+      final document = source.value;
+      if (source.error case final failure?) {
+        child = Center(child: Text("Page authoring is unavailable: $failure"));
+      } else if (document == null) {
+        child = const Center(child: CircularProgressIndicator());
+      } else if (document.resource(resource) == null) {
+        child = const Center(child: Text("This page is no longer available"));
+      } else {
+        child = AuthoredResourceInspection(
+          key: ValueKey((resource, skir.PresentationRole.editor)),
+          resource: resource,
+          workspace: ref.watch(authoringWorkspaceProvider(scope)),
+          commands: ref.watch(authoredResourceCommandsProvider(scope)),
+          role: skir.PresentationRole.editor,
+          openResource: (selected) {
+            ref
+                .read(selectionProvider.notifier)
+                .select(
+                  AuthoringResourceIdentifier(
+                    organizationId: organizationId,
+                    realmId: realmId,
+                    resourceId: selected,
+                  ),
+                );
+          },
+        );
+      }
+    }
     return Pane(
       id: "pagepage",
       primary: true,
       borderRadius: context.shapes.largeBorderRadius,
-      margin: EdgeInsets.only(
-        top: context.spacing.space2,
-        left: context.spacing.space2,
-        right: context.isMobile ? context.spacing.space2 : 0,
-      ),
-      child: Section(
-        margin: EdgeInsets.zero,
-        child: page(
-          name: "page",
-          builder: (page) {
-            final definition = ref
-                .watch(realmEditorCatalogProvider)
-                .value
-                ?.snapshot
-                ?.pageCatalog
-                .definitions[page.kind];
-            if (definition == null) {
-              return const ErrorScreen(
-                title: "Page Kind Unavailable",
-                message: "This page kind is unavailable. Likely because the extension which provides it failed to load or was removed.",
-              );
-            }
-            return switch (definition.editor) {
-              RealmGraphPageEditor(:final direction) => EntryGraph(
-                pageId: pageId,
-                graphDirection: direction,
-              ),
-              RealmTimelinePageEditor() => EntryTimelineEditor(pageId: pageId),
-            };
-          },
-        ),
-      ),
+      margin: EdgeInsets.all(context.spacing.space2),
+      child: Material(child: child),
     );
   }
 }

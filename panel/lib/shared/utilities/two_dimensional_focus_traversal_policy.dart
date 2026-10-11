@@ -1,6 +1,4 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Traverses focus through a two dimensional layout using node geometry.
 ///
@@ -420,9 +418,7 @@ class TwoDFocusTraversalPolicy extends FocusTraversalPolicy {
       TraversalDirection.left || TraversalDirection.right => vector.dy.abs(),
     };
 
-    final angle = forward <= 0
-        ? 1.5707963267948966
-        : math.atan(cross / forward);
+    final angle = forward <= 0 ? 1.5707963267948966 : atan(cross / forward);
     final overlap = _overlapRatioOnPerpendicularAxis(
       current,
       candidate,

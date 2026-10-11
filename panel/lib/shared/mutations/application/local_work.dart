@@ -1,9 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod/riverpod.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -13,7 +7,7 @@ part "local_work.g.dart";
 
 /// Scope that determines which authenticated workspace owns local work.
 ///
-/// A change to either value replaces the private [LocalWorkSession]. Work is
+/// A change to either value replaces the private [ScopedWorkSession]. Work is
 /// therefore never carried across users or organizations accidentally.
 @freezed
 abstract class LocalWorkScope with _$LocalWorkScope {
@@ -53,7 +47,7 @@ abstract class EditorResourceKey with _$EditorResourceKey {
 /// The destination reports whether the resource is currently visible and
 /// opens that exact resource when requested. The resource owner disposes it
 /// when its lease and draft work both end.
-abstract class EditorDestination extends ChangeNotifier {
+abstract class WorkDestination extends ChangeNotifier {
   /// Whether this destination currently displays its resource.
   bool get isCurrent;
 
@@ -71,15 +65,15 @@ LocalWorkScope localWorkScope(Ref ref) => LocalWorkScope(
 ///
 /// Riverpod keeps this command surface stable for callers. Mutable resources,
 /// reservations, submissions, and editor lifetimes belong to the current
-/// [LocalWorkSession], which is discarded when [localWorkScope] changes.
+/// [ScopedWorkSession], which is discarded when [localWorkScope] changes.
 @Riverpod(keepAlive: true)
 class LocalWork extends _$LocalWork implements LocalWorkCommands {
   LocalWorkScope? _scope;
-  LocalWorkSession? _session;
+  ScopedWorkSession? _session;
   StreamSubscription<LocalWorkState>? _subscription;
   bool _disposeRegistered = false;
 
-  LocalWorkSession get _activeSession => _session!;
+  ScopedWorkSession get _activeSession => _session!;
 
   @override
   LocalWorkState build() {
@@ -95,7 +89,7 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   void _replace(LocalWorkScope scope) {
     unawaited(_subscription?.cancel());
     _session?.dispose();
-    final session = LocalWorkSession();
+    final session = ScopedWorkSession();
     _scope = scope;
     _session = session;
     _subscription = session.changes.listen((next) {
@@ -108,6 +102,9 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
     _session?.dispose();
     _subscription = null;
   }
+
+  @override
+  Stream<LocalWorkState> get changes => _activeSession.changes;
 
   @override
   Map<EditorResourceKey, EditorResource> get resources =>
@@ -148,13 +145,41 @@ class LocalWork extends _$LocalWork implements LocalWorkCommands {
   void release(EditorResourceKey key) => _activeSession.release(key);
 
   @override
-  Future<void> retry(Object id) => _activeSession.retry(id);
+  Future<void> retrySubmission(Object id) => _activeSession.retrySubmission(id);
 
   @override
-  void discard(EditorResourceKey key) => _activeSession.discard(key);
+  Future<void> retry(WorkEntryId entry) => _activeSession.retry(entry);
 
   @override
-  Future<void> open(EditorResourceKey key) => _activeSession.open(key);
+  Future<void> save(WorkEntryId entry) => _activeSession.save(entry);
+
+  @override
+  WorkDriverId register(WorkDriver driver, {WorkDestination? destination}) =>
+      _activeSession.register(driver, destination: destination);
+
+  @override
+  D getOrRegister<D extends WorkDriver>(
+    WorkDriverId id,
+    D Function() create, {
+    WorkDestination? destination,
+  }) => _activeSession.getOrRegister(id, create, destination: destination);
+
+  /// Creates domain adapters with the authenticated owner's provider lifetime.
+  D getOrRegisterScoped<D extends WorkDriver>(
+    WorkDriverId id,
+    D Function(Ref owner) create, {
+    WorkDestination Function(Ref owner)? destination,
+  }) =>
+      getOrRegister(id, () => create(ref), destination: destination?.call(ref));
+
+  @override
+  WorkLease lease(WorkDriverId driver) => _activeSession.lease(driver);
+
+  @override
+  bool discard(WorkEntryId entry) => _activeSession.discard(entry);
+
+  @override
+  Future<void> open(WorkEntryId entry) => _activeSession.open(entry);
 
   @override
   EditorSource? source(EditorResourceKey key) => _activeSession.source(key);

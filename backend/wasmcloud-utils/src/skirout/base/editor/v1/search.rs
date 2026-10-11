@@ -28,23 +28,25 @@ pub struct RealmSearchSelector {
 
 impl RealmSearchSelector {
     pub fn default_ref() -> &'static RealmSearchSelector {
-        static D: std::sync::LazyLock<RealmSearchSelector> = std::sync::LazyLock::new(RealmSearchSelector::default);
+        static D: std::sync::LazyLock<RealmSearchSelector> =
+            std::sync::LazyLock::new(RealmSearchSelector::default);
         &D
     }
 }
 
 impl RealmSearchSelector {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmSearchSelector> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmSearchSelector>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmSearchSelector",
-                    "",
-                    |x: &RealmSearchSelector| &x._unrecognized,
-                    |x: &mut RealmSearchSelector, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmSearchSelector>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmSearchSelector",
+                "",
+                |x: &RealmSearchSelector| &x._unrecognized,
+                |x: &mut RealmSearchSelector, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchSelector> {
@@ -71,27 +73,34 @@ impl Default for RealmSearchSelectorOperator {
 }
 
 impl RealmSearchSelectorOperator {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RealmSearchSelectorOperator| match x {
-                        RealmSearchSelectorOperator::Unknown(_) => 0,
-                        RealmSearchSelectorOperator::And => 1,
-                        RealmSearchSelectorOperator::Or => 2,
-                    },
-                    |u| RealmSearchSelectorOperator::Unknown(Some(u)),
-                    |x: &RealmSearchSelectorOperator| match x { RealmSearchSelectorOperator::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/search.skir",
-                    "RealmSearchSelectorOperator",
-                    "",
-                )
-            });
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RealmSearchSelectorOperator| match x {
+                    RealmSearchSelectorOperator::Unknown(_) => 0,
+                    RealmSearchSelectorOperator::And => 1,
+                    RealmSearchSelectorOperator::Or => 2,
+                },
+                |u| RealmSearchSelectorOperator::Unknown(Some(u)),
+                |x: &RealmSearchSelectorOperator| match x {
+                    RealmSearchSelectorOperator::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/search.skir",
+                "RealmSearchSelectorOperator",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchSelectorOperator> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorOperator::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            RealmSearchSelectorOperator::_adapter(),
+        )
     }
 }
 
@@ -105,33 +114,40 @@ pub struct RealmSearchSelectorBinaryExpression {
     pub left: RealmSearchSelectorExpression,
     pub right: RealmSearchSelectorExpression,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmSearchSelectorBinaryExpression>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<RealmSearchSelectorBinaryExpression>>,
 }
 
 impl RealmSearchSelectorBinaryExpression {
     pub fn default_ref() -> &'static RealmSearchSelectorBinaryExpression {
-        static D: std::sync::LazyLock<RealmSearchSelectorBinaryExpression> = std::sync::LazyLock::new(RealmSearchSelectorBinaryExpression::default);
+        static D: std::sync::LazyLock<RealmSearchSelectorBinaryExpression> =
+            std::sync::LazyLock::new(RealmSearchSelectorBinaryExpression::default);
         &D
     }
 }
 
 impl RealmSearchSelectorBinaryExpression {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmSearchSelectorBinaryExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmSearchSelectorBinaryExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmSearchSelectorBinaryExpression",
-                    "",
-                    |x: &RealmSearchSelectorBinaryExpression| &x._unrecognized,
-                    |x: &mut RealmSearchSelectorBinaryExpression, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RealmSearchSelectorBinaryExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmSearchSelectorBinaryExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmSearchSelectorBinaryExpression",
+                "",
+                |x: &RealmSearchSelectorBinaryExpression| &x._unrecognized,
+                |x: &mut RealmSearchSelectorBinaryExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchSelectorBinaryExpression> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelectorBinaryExpression::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmSearchSelectorBinaryExpression::_adapter(),
+        )
     }
 }
 
@@ -143,33 +159,39 @@ impl RealmSearchSelectorBinaryExpression {
 pub struct RealmSearchSelectorNotExpression {
     pub expression: RealmSearchSelectorExpression,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmSearchSelectorNotExpression>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<RealmSearchSelectorNotExpression>>,
 }
 
 impl RealmSearchSelectorNotExpression {
     pub fn default_ref() -> &'static RealmSearchSelectorNotExpression {
-        static D: std::sync::LazyLock<RealmSearchSelectorNotExpression> = std::sync::LazyLock::new(RealmSearchSelectorNotExpression::default);
+        static D: std::sync::LazyLock<RealmSearchSelectorNotExpression> =
+            std::sync::LazyLock::new(RealmSearchSelectorNotExpression::default);
         &D
     }
 }
 
 impl RealmSearchSelectorNotExpression {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmSearchSelectorNotExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmSearchSelectorNotExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmSearchSelectorNotExpression",
-                    "",
-                    |x: &RealmSearchSelectorNotExpression| &x._unrecognized,
-                    |x: &mut RealmSearchSelectorNotExpression, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RealmSearchSelectorNotExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmSearchSelectorNotExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmSearchSelectorNotExpression",
+                "",
+                |x: &RealmSearchSelectorNotExpression| &x._unrecognized,
+                |x: &mut RealmSearchSelectorNotExpression, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchSelectorNotExpression> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelectorNotExpression::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmSearchSelectorNotExpression::_adapter(),
+        )
     }
 }
 
@@ -192,28 +214,35 @@ impl Default for RealmSearchSelectorExpression {
 }
 
 impl RealmSearchSelectorExpression {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RealmSearchSelectorExpression| match x {
-                        RealmSearchSelectorExpression::Unknown(_) => 0,
-                        RealmSearchSelectorExpression::Selector(_) => 1,
-                        RealmSearchSelectorExpression::Binary(_) => 2,
-                        RealmSearchSelectorExpression::Not(_) => 3,
-                    },
-                    |u| RealmSearchSelectorExpression::Unknown(Some(u)),
-                    |x: &RealmSearchSelectorExpression| match x { RealmSearchSelectorExpression::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/search.skir",
-                    "RealmSearchSelectorExpression",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RealmSearchSelectorExpression| match x {
+                    RealmSearchSelectorExpression::Unknown(_) => 0,
+                    RealmSearchSelectorExpression::Selector(_) => 1,
+                    RealmSearchSelectorExpression::Binary(_) => 2,
+                    RealmSearchSelectorExpression::Not(_) => 3,
+                },
+                |u| RealmSearchSelectorExpression::Unknown(Some(u)),
+                |x: &RealmSearchSelectorExpression| match x {
+                    RealmSearchSelectorExpression::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/search.skir",
+                "RealmSearchSelectorExpression",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchSelectorExpression> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            RealmSearchSelectorExpression::_adapter(),
+        )
     }
 }
 
@@ -233,23 +262,25 @@ pub struct RealmSearchQuery {
 
 impl RealmSearchQuery {
     pub fn default_ref() -> &'static RealmSearchQuery {
-        static D: std::sync::LazyLock<RealmSearchQuery> = std::sync::LazyLock::new(RealmSearchQuery::default);
+        static D: std::sync::LazyLock<RealmSearchQuery> =
+            std::sync::LazyLock::new(RealmSearchQuery::default);
         &D
     }
 }
 
 impl RealmSearchQuery {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmSearchQuery> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmSearchQuery>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmSearchQuery",
-                    "",
-                    |x: &RealmSearchQuery| &x._unrecognized,
-                    |x: &mut RealmSearchQuery, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmSearchQuery>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmSearchQuery",
+                "",
+                |x: &RealmSearchQuery| &x._unrecognized,
+                |x: &mut RealmSearchQuery, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmSearchQuery> {
@@ -267,37 +298,43 @@ pub struct RealmPresentationSearchRequest {
     pub subscription_id: String,
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
-    pub payload: crate::skirout::base::editor::v1::type_catalog::TypedValue,
-    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeExpression,
+    pub payload: crate::skirout::base::editor::v1::type_catalog::DataValue,
+    pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub query: RealmSearchQuery,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchRequest>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchRequest>>,
 }
 
 impl RealmPresentationSearchRequest {
     pub fn default_ref() -> &'static RealmPresentationSearchRequest {
-        static D: std::sync::LazyLock<RealmPresentationSearchRequest> = std::sync::LazyLock::new(RealmPresentationSearchRequest::default);
+        static D: std::sync::LazyLock<RealmPresentationSearchRequest> =
+            std::sync::LazyLock::new(RealmPresentationSearchRequest::default);
         &D
     }
 }
 
 impl RealmPresentationSearchRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmPresentationSearchRequest",
-                    "",
-                    |x: &RealmPresentationSearchRequest| &x._unrecognized,
-                    |x: &mut RealmPresentationSearchRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmPresentationSearchRequest",
+                "",
+                |x: &RealmPresentationSearchRequest| &x._unrecognized,
+                |x: &mut RealmPresentationSearchRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresentationSearchRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmPresentationSearchRequest::_adapter(),
+        )
     }
 }
 
@@ -320,28 +357,35 @@ impl Default for RealmPresentationSearchStatus {
 }
 
 impl RealmPresentationSearchStatus {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RealmPresentationSearchStatus| match x {
-                        RealmPresentationSearchStatus::Unknown(_) => 0,
-                        RealmPresentationSearchStatus::Loading => 1,
-                        RealmPresentationSearchStatus::Ready => 2,
-                        RealmPresentationSearchStatus::Error => 3,
-                    },
-                    |u| RealmPresentationSearchStatus::Unknown(Some(u)),
-                    |x: &RealmPresentationSearchStatus| match x { RealmPresentationSearchStatus::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/search.skir",
-                    "RealmPresentationSearchStatus",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RealmPresentationSearchStatus| match x {
+                    RealmPresentationSearchStatus::Unknown(_) => 0,
+                    RealmPresentationSearchStatus::Loading => 1,
+                    RealmPresentationSearchStatus::Ready => 2,
+                    RealmPresentationSearchStatus::Error => 3,
+                },
+                |u| RealmPresentationSearchStatus::Unknown(Some(u)),
+                |x: &RealmPresentationSearchStatus| match x {
+                    RealmPresentationSearchStatus::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/search.skir",
+                "RealmPresentationSearchStatus",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresentationSearchStatus> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(RealmPresentationSearchStatus::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            RealmPresentationSearchStatus::_adapter(),
+        )
     }
 }
 
@@ -353,37 +397,43 @@ impl RealmPresentationSearchStatus {
 pub struct RealmPresentationSearchSnapshot {
     pub subscription_id: String,
     pub status: RealmPresentationSearchStatus,
-    pub values: Vec<crate::skirout::base::editor::v1::type_catalog::TypedValue>,
+    pub values: Vec<crate::skirout::base::editor::v1::type_catalog::DataValue>,
     pub guidance: Vec<String>,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::Diagnostic>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchSnapshot>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchSnapshot>>,
 }
 
 impl RealmPresentationSearchSnapshot {
     pub fn default_ref() -> &'static RealmPresentationSearchSnapshot {
-        static D: std::sync::LazyLock<RealmPresentationSearchSnapshot> = std::sync::LazyLock::new(RealmPresentationSearchSnapshot::default);
+        static D: std::sync::LazyLock<RealmPresentationSearchSnapshot> =
+            std::sync::LazyLock::new(RealmPresentationSearchSnapshot::default);
         &D
     }
 }
 
 impl RealmPresentationSearchSnapshot {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmPresentationSearchSnapshot",
-                    "",
-                    |x: &RealmPresentationSearchSnapshot| &x._unrecognized,
-                    |x: &mut RealmPresentationSearchSnapshot, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmPresentationSearchSnapshot",
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x._unrecognized,
+                |x: &mut RealmPresentationSearchSnapshot, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresentationSearchSnapshot> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchSnapshot::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmPresentationSearchSnapshot::_adapter(),
+        )
     }
 }
 
@@ -394,35 +444,42 @@ impl RealmPresentationSearchSnapshot {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchUnavailable {
     pub subscription_id: String,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic>,
+    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::Diagnostic>,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchUnavailable>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchUnavailable>>,
 }
 
 impl RealmPresentationSearchUnavailable {
     pub fn default_ref() -> &'static RealmPresentationSearchUnavailable {
-        static D: std::sync::LazyLock<RealmPresentationSearchUnavailable> = std::sync::LazyLock::new(RealmPresentationSearchUnavailable::default);
+        static D: std::sync::LazyLock<RealmPresentationSearchUnavailable> =
+            std::sync::LazyLock::new(RealmPresentationSearchUnavailable::default);
         &D
     }
 }
 
 impl RealmPresentationSearchUnavailable {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "RealmPresentationSearchUnavailable",
-                    "",
-                    |x: &RealmPresentationSearchUnavailable| &x._unrecognized,
-                    |x: &mut RealmPresentationSearchUnavailable, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmPresentationSearchUnavailable",
+                "",
+                |x: &RealmPresentationSearchUnavailable| &x._unrecognized,
+                |x: &mut RealmPresentationSearchUnavailable, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresentationSearchUnavailable> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchUnavailable::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmPresentationSearchUnavailable::_adapter(),
+        )
     }
 }
 
@@ -444,27 +501,34 @@ impl Default for RealmPresentationSearchUpdate {
 }
 
 impl RealmPresentationSearchUpdate {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &RealmPresentationSearchUpdate| match x {
-                        RealmPresentationSearchUpdate::Unknown(_) => 0,
-                        RealmPresentationSearchUpdate::Snapshot(_) => 1,
-                        RealmPresentationSearchUpdate::Unavailable(_) => 2,
-                    },
-                    |u| RealmPresentationSearchUpdate::Unknown(Some(u)),
-                    |x: &RealmPresentationSearchUpdate| match x { RealmPresentationSearchUpdate::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/search.skir",
-                    "RealmPresentationSearchUpdate",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RealmPresentationSearchUpdate| match x {
+                    RealmPresentationSearchUpdate::Unknown(_) => 0,
+                    RealmPresentationSearchUpdate::Snapshot(_) => 1,
+                    RealmPresentationSearchUpdate::Unavailable(_) => 2,
+                },
+                |u| RealmPresentationSearchUpdate::Unknown(Some(u)),
+                |x: &RealmPresentationSearchUpdate| match x {
+                    RealmPresentationSearchUpdate::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/search.skir",
+                "RealmPresentationSearchUpdate",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<RealmPresentationSearchUpdate> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(RealmPresentationSearchUpdate::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            RealmPresentationSearchUpdate::_adapter(),
+        )
     }
 }
 
@@ -476,33 +540,40 @@ impl RealmPresentationSearchUpdate {
 pub struct CancelRealmPresentationSearchRequest {
     pub subscription_id: String,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CancelRealmPresentationSearchRequest>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<CancelRealmPresentationSearchRequest>>,
 }
 
 impl CancelRealmPresentationSearchRequest {
     pub fn default_ref() -> &'static CancelRealmPresentationSearchRequest {
-        static D: std::sync::LazyLock<CancelRealmPresentationSearchRequest> = std::sync::LazyLock::new(CancelRealmPresentationSearchRequest::default);
+        static D: std::sync::LazyLock<CancelRealmPresentationSearchRequest> =
+            std::sync::LazyLock::new(CancelRealmPresentationSearchRequest::default);
         &D
     }
 }
 
 impl CancelRealmPresentationSearchRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/search.skir",
-                    "CancelRealmPresentationSearchRequest",
-                    "",
-                    |x: &CancelRealmPresentationSearchRequest| &x._unrecognized,
-                    |x: &mut CancelRealmPresentationSearchRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "CancelRealmPresentationSearchRequest",
+                "",
+                |x: &CancelRealmPresentationSearchRequest| &x._unrecognized,
+                |x: &mut CancelRealmPresentationSearchRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CancelRealmPresentationSearchRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CancelRealmPresentationSearchRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            CancelRealmPresentationSearchRequest::_adapter(),
+        )
     }
 }
 
@@ -525,28 +596,35 @@ impl Default for CancelRealmPresentationSearchResult {
 }
 
 impl CancelRealmPresentationSearchResult {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &CancelRealmPresentationSearchResult| match x {
-                        CancelRealmPresentationSearchResult::Unknown(_) => 0,
-                        CancelRealmPresentationSearchResult::Canceled => 1,
-                        CancelRealmPresentationSearchResult::NotFound => 2,
-                        CancelRealmPresentationSearchResult::Unavailable => 3,
-                    },
-                    |u| CancelRealmPresentationSearchResult::Unknown(Some(u)),
-                    |x: &CancelRealmPresentationSearchResult| match x { CancelRealmPresentationSearchResult::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/search.skir",
-                    "CancelRealmPresentationSearchResult",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &CancelRealmPresentationSearchResult| match x {
+                    CancelRealmPresentationSearchResult::Unknown(_) => 0,
+                    CancelRealmPresentationSearchResult::Canceled => 1,
+                    CancelRealmPresentationSearchResult::NotFound => 2,
+                    CancelRealmPresentationSearchResult::Unavailable => 3,
+                },
+                |u| CancelRealmPresentationSearchResult::Unknown(Some(u)),
+                |x: &CancelRealmPresentationSearchResult| match x {
+                    CancelRealmPresentationSearchResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/search.skir",
+                "CancelRealmPresentationSearchResult",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<CancelRealmPresentationSearchResult> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(CancelRealmPresentationSearchResult::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            CancelRealmPresentationSearchResult::_adapter(),
+        )
     }
 }
 
@@ -555,99 +633,402 @@ impl CancelRealmPresentationSearchResult {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchSelector> = RealmSearchSelector::_adapter() as *const _ as *mut _;
-                (*a).add_field("selector_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmSearchSelector| &x.selector_id, |x: &mut RealmSearchSelector, v| x.selector_id = v);
-                (*a).add_field("key", 1, crate::skir_client::Serializer::string(), "", |x: &RealmSearchSelector| &x.key, |x: &mut RealmSearchSelector, v| x.key = v);
-                (*a).add_field("value", 2, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &RealmSearchSelector| &x.value, |x: &mut RealmSearchSelector, v| x.value = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator> = RealmSearchSelectorOperator::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("and", 1, 1, "", RealmSearchSelectorOperator::And);
-                (*a).add_constant_variant("or", 2, 2, "", RealmSearchSelectorOperator::Or);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchSelectorBinaryExpression> = RealmSearchSelectorBinaryExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("operator", 0, crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorOperator::_adapter()), "", |x: &RealmSearchSelectorBinaryExpression| &x.operator, |x: &mut RealmSearchSelectorBinaryExpression, v| x.operator = v);
-                (*a).add_field("left", 1, crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter()), "", |x: &RealmSearchSelectorBinaryExpression| &x.left, |x: &mut RealmSearchSelectorBinaryExpression, v| x.left = v);
-                (*a).add_field("right", 2, crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter()), "", |x: &RealmSearchSelectorBinaryExpression| &x.right, |x: &mut RealmSearchSelectorBinaryExpression, v| x.right = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchSelectorNotExpression> = RealmSearchSelectorNotExpression::_adapter() as *const _ as *mut _;
-                (*a).add_field("expression", 0, crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter()), "", |x: &RealmSearchSelectorNotExpression| &x.expression, |x: &mut RealmSearchSelectorNotExpression, v| x.expression = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression> = RealmSearchSelectorExpression::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("selector", 1, 1, crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelector::_adapter()), "", |v| RealmSearchSelectorExpression::Selector(Box::new(v)), |x| match x { RealmSearchSelectorExpression::Selector(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("binary", 2, 2, crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelectorBinaryExpression::_adapter()), "", |v| RealmSearchSelectorExpression::Binary(Box::new(v)), |x| match x { RealmSearchSelectorExpression::Binary(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("not", 3, 3, crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelectorNotExpression::_adapter()), "", |v| RealmSearchSelectorExpression::Not(Box::new(v)), |x| match x { RealmSearchSelectorExpression::Not(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchQuery> = RealmSearchQuery::_adapter() as *const _ as *mut _;
-                (*a).add_field("normalized_query", 0, crate::skir_client::Serializer::string(), "", |x: &RealmSearchQuery| &x.normalized_query, |x: &mut RealmSearchQuery, v| x.normalized_query = v);
-                (*a).add_field("selectors", 1, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(RealmSearchSelector::_adapter())), "", |x: &RealmSearchQuery| &x.selectors, |x: &mut RealmSearchQuery, v| x.selectors = v);
-                (*a).add_field("selector_expression", 2, crate::skir_client::Serializer::optional(crate::skir_client::internal::enum_serializer_from_static(RealmSearchSelectorExpression::_adapter())), "", |x: &RealmSearchQuery| &x.selector_expression, |x: &mut RealmSearchQuery, v| x.selector_expression = v);
-                (*a).add_field("terms", 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &RealmSearchQuery| &x.terms, |x: &mut RealmSearchQuery, v| x.terms = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchRequest> = RealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchRequest| &x.subscription_id, |x: &mut RealmPresentationSearchRequest, v| x.subscription_id = v);
-                (*a).add_field("generation", 5, crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(), "", |x: &RealmPresentationSearchRequest| &x.generation, |x: &mut RealmPresentationSearchRequest, v| x.generation = v);
-                (*a).add_field("capability_id", 1, crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(), "", |x: &RealmPresentationSearchRequest| &x.capability_id, |x: &mut RealmPresentationSearchRequest, v| x.capability_id = v);
-                (*a).add_field("payload", 2, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &RealmPresentationSearchRequest| &x.payload, |x: &mut RealmPresentationSearchRequest, v| x.payload = v);
-                (*a).add_field("result_type", 3, crate::skirout::base::editor::v1::type_catalog::TypeExpression::serializer(), "", |x: &RealmPresentationSearchRequest| &x.result_type, |x: &mut RealmPresentationSearchRequest, v| x.result_type = v);
-                (*a).add_field("query", 4, crate::skir_client::internal::struct_serializer_from_static(RealmSearchQuery::_adapter()), "", |x: &RealmPresentationSearchRequest| &x.query, |x: &mut RealmPresentationSearchRequest, v| x.query = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus> = RealmPresentationSearchStatus::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("loading", 1, 1, "", RealmPresentationSearchStatus::Loading);
-                (*a).add_constant_variant("ready", 2, 2, "", RealmPresentationSearchStatus::Ready);
-                (*a).add_constant_variant("error", 3, 3, "", RealmPresentationSearchStatus::Error);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchSnapshot> = RealmPresentationSearchSnapshot::_adapter() as *const _ as *mut _;
-                (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchSnapshot| &x.subscription_id, |x: &mut RealmPresentationSearchSnapshot, v| x.subscription_id = v);
-                (*a).add_field("status", 1, crate::skir_client::internal::enum_serializer_from_static(RealmPresentationSearchStatus::_adapter()), "", |x: &RealmPresentationSearchSnapshot| &x.status, |x: &mut RealmPresentationSearchSnapshot, v| x.status = v);
-                (*a).add_field("values", 2, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.values, |x: &mut RealmPresentationSearchSnapshot, v| x.values = v);
-                (*a).add_field("guidance", 3, crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()), "", |x: &RealmPresentationSearchSnapshot| &x.guidance, |x: &mut RealmPresentationSearchSnapshot, v| x.guidance = v);
-                (*a).add_field("diagnostics", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &RealmPresentationSearchSnapshot| &x.diagnostics, |x: &mut RealmPresentationSearchSnapshot, v| x.diagnostics = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<RealmPresentationSearchUnavailable> = RealmPresentationSearchUnavailable::_adapter() as *const _ as *mut _;
-                (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &RealmPresentationSearchUnavailable| &x.subscription_id, |x: &mut RealmPresentationSearchUnavailable, v| x.subscription_id = v);
-                (*a).add_field("diagnostics", 1, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::TypeDiagnostic::serializer()), "", |x: &RealmPresentationSearchUnavailable| &x.diagnostics, |x: &mut RealmPresentationSearchUnavailable, v| x.diagnostics = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate> = RealmPresentationSearchUpdate::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("snapshot", 1, 1, crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchSnapshot::_adapter()), "", |v| RealmPresentationSearchUpdate::Snapshot(Box::new(v)), |x| match x { RealmPresentationSearchUpdate::Snapshot(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("unavailable", 2, 2, crate::skir_client::internal::struct_serializer_from_static(RealmPresentationSearchUnavailable::_adapter()), "", |v| RealmPresentationSearchUpdate::Unavailable(Box::new(v)), |x| match x { RealmPresentationSearchUpdate::Unavailable(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<CancelRealmPresentationSearchRequest> = CancelRealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
-                (*a).add_field("subscription_id", 0, crate::skir_client::Serializer::string(), "", |x: &CancelRealmPresentationSearchRequest| &x.subscription_id, |x: &mut CancelRealmPresentationSearchRequest, v| x.subscription_id = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<CancelRealmPresentationSearchResult> = CancelRealmPresentationSearchResult::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("canceled", 1, 1, "", CancelRealmPresentationSearchResult::Canceled);
-                (*a).add_constant_variant("not_found", 2, 2, "", CancelRealmPresentationSearchResult::NotFound);
-                (*a).add_constant_variant("unavailable", 3, 3, "", CancelRealmPresentationSearchResult::Unavailable);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchSelector> =
+                RealmSearchSelector::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "selector_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmSearchSelector| &x.selector_id,
+                |x: &mut RealmSearchSelector, v| x.selector_id = v,
+            );
+            (*a).add_field(
+                "key",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmSearchSelector| &x.key,
+                |x: &mut RealmSearchSelector, v| x.key = v,
+            );
+            (*a).add_field(
+                "value",
+                2,
+                crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
+                "",
+                |x: &RealmSearchSelector| &x.value,
+                |x: &mut RealmSearchSelector, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RealmSearchSelectorOperator> =
+                RealmSearchSelectorOperator::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("and", 1, 1, "", RealmSearchSelectorOperator::And);
+            (*a).add_constant_variant("or", 2, 2, "", RealmSearchSelectorOperator::Or);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmSearchSelectorBinaryExpression,
+            > = RealmSearchSelectorBinaryExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operator",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmSearchSelectorOperator::_adapter(),
+                ),
+                "",
+                |x: &RealmSearchSelectorBinaryExpression| &x.operator,
+                |x: &mut RealmSearchSelectorBinaryExpression, v| x.operator = v,
+            );
+            (*a).add_field(
+                "left",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmSearchSelectorExpression::_adapter(),
+                ),
+                "",
+                |x: &RealmSearchSelectorBinaryExpression| &x.left,
+                |x: &mut RealmSearchSelectorBinaryExpression, v| x.left = v,
+            );
+            (*a).add_field(
+                "right",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmSearchSelectorExpression::_adapter(),
+                ),
+                "",
+                |x: &RealmSearchSelectorBinaryExpression| &x.right,
+                |x: &mut RealmSearchSelectorBinaryExpression, v| x.right = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmSearchSelectorNotExpression,
+            > = RealmSearchSelectorNotExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "expression",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmSearchSelectorExpression::_adapter(),
+                ),
+                "",
+                |x: &RealmSearchSelectorNotExpression| &x.expression,
+                |x: &mut RealmSearchSelectorNotExpression, v| x.expression = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RealmSearchSelectorExpression> =
+                RealmSearchSelectorExpression::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "selector",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmSearchSelector::_adapter(),
+                ),
+                "",
+                |v| RealmSearchSelectorExpression::Selector(Box::new(v)),
+                |x| match x {
+                    RealmSearchSelectorExpression::Selector(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "binary",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmSearchSelectorBinaryExpression::_adapter(),
+                ),
+                "",
+                |v| RealmSearchSelectorExpression::Binary(Box::new(v)),
+                |x| match x {
+                    RealmSearchSelectorExpression::Binary(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "not",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmSearchSelectorNotExpression::_adapter(),
+                ),
+                "",
+                |v| RealmSearchSelectorExpression::Not(Box::new(v)),
+                |x| match x {
+                    RealmSearchSelectorExpression::Not(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RealmSearchQuery> =
+                RealmSearchQuery::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "normalized_query",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmSearchQuery| &x.normalized_query,
+                |x: &mut RealmSearchQuery, v| x.normalized_query = v,
+            );
+            (*a).add_field(
+                "selectors",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RealmSearchSelector::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &RealmSearchQuery| &x.selectors,
+                |x: &mut RealmSearchQuery, v| x.selectors = v,
+            );
+            (*a).add_field(
+                "selector_expression",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        RealmSearchSelectorExpression::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &RealmSearchQuery| &x.selector_expression,
+                |x: &mut RealmSearchQuery, v| x.selector_expression = v,
+            );
+            (*a).add_field(
+                "terms",
+                3,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &RealmSearchQuery| &x.terms,
+                |x: &mut RealmSearchQuery, v| x.terms = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmPresentationSearchRequest,
+            > = RealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "subscription_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.subscription_id,
+                |x: &mut RealmPresentationSearchRequest, v| x.subscription_id = v,
+            );
+            (*a).add_field(
+                "generation",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.generation,
+                |x: &mut RealmPresentationSearchRequest, v| x.generation = v,
+            );
+            (*a).add_field(
+                "capability_id",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.capability_id,
+                |x: &mut RealmPresentationSearchRequest, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "payload",
+                3,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.payload,
+                |x: &mut RealmPresentationSearchRequest, v| x.payload = v,
+            );
+            (*a).add_field(
+                "result_type",
+                4,
+                crate::skirout::base::editor::v1::type_catalog::TypeTemplate::serializer(),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.result_type,
+                |x: &mut RealmPresentationSearchRequest, v| x.result_type = v,
+            );
+            (*a).add_field(
+                "query",
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmSearchQuery::_adapter(),
+                ),
+                "",
+                |x: &RealmPresentationSearchRequest| &x.query,
+                |x: &mut RealmPresentationSearchRequest, v| x.query = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RealmPresentationSearchStatus> =
+                RealmPresentationSearchStatus::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("loading", 1, 1, "", RealmPresentationSearchStatus::Loading);
+            (*a).add_constant_variant("ready", 2, 2, "", RealmPresentationSearchStatus::Ready);
+            (*a).add_constant_variant("error", 3, 3, "", RealmPresentationSearchStatus::Error);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmPresentationSearchSnapshot,
+            > = RealmPresentationSearchSnapshot::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "subscription_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x.subscription_id,
+                |x: &mut RealmPresentationSearchSnapshot, v| x.subscription_id = v,
+            );
+            (*a).add_field(
+                "status",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RealmPresentationSearchStatus::_adapter(),
+                ),
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x.status,
+                |x: &mut RealmPresentationSearchSnapshot, v| x.status = v,
+            );
+            (*a).add_field(
+                "values",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                ),
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x.values,
+                |x: &mut RealmPresentationSearchSnapshot, v| x.values = v,
+            );
+            (*a).add_field(
+                "guidance",
+                3,
+                crate::skir_client::Serializer::array(crate::skir_client::Serializer::string()),
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x.guidance,
+                |x: &mut RealmPresentationSearchSnapshot, v| x.guidance = v,
+            );
+            (*a).add_field(
+                "diagnostics",
+                4,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer(),
+                ),
+                "",
+                |x: &RealmPresentationSearchSnapshot| &x.diagnostics,
+                |x: &mut RealmPresentationSearchSnapshot, v| x.diagnostics = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmPresentationSearchUnavailable,
+            > = RealmPresentationSearchUnavailable::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "subscription_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmPresentationSearchUnavailable| &x.subscription_id,
+                |x: &mut RealmPresentationSearchUnavailable, v| x.subscription_id = v,
+            );
+            (*a).add_field(
+                "diagnostics",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::diagnostic::Diagnostic::serializer(),
+                ),
+                "",
+                |x: &RealmPresentationSearchUnavailable| &x.diagnostics,
+                |x: &mut RealmPresentationSearchUnavailable, v| x.diagnostics = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate> =
+                RealmPresentationSearchUpdate::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "snapshot",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmPresentationSearchSnapshot::_adapter(),
+                ),
+                "",
+                |v| RealmPresentationSearchUpdate::Snapshot(Box::new(v)),
+                |x| match x {
+                    RealmPresentationSearchUpdate::Snapshot(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unavailable",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmPresentationSearchUnavailable::_adapter(),
+                ),
+                "",
+                |v| RealmPresentationSearchUpdate::Unavailable(Box::new(v)),
+                |x| match x {
+                    RealmPresentationSearchUpdate::Unavailable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                CancelRealmPresentationSearchRequest,
+            > = CancelRealmPresentationSearchRequest::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "subscription_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &CancelRealmPresentationSearchRequest| &x.subscription_id,
+                |x: &mut CancelRealmPresentationSearchRequest, v| x.subscription_id = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<
+                CancelRealmPresentationSearchResult,
+            > = CancelRealmPresentationSearchResult::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant(
+                "canceled",
+                1,
+                1,
+                "",
+                CancelRealmPresentationSearchResult::Canceled,
+            );
+            (*a).add_constant_variant(
+                "not_found",
+                2,
+                2,
+                "",
+                CancelRealmPresentationSearchResult::NotFound,
+            );
+            (*a).add_constant_variant(
+                "unavailable",
+                3,
+                3,
+                "",
+                CancelRealmPresentationSearchResult::Unavailable,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -655,28 +1036,37 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::Method<RealmPresentationSearchRequest, RealmPresentationSearchUpdate> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<RealmPresentationSearchRequest, RealmPresentationSearchUpdate>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "WatchRealmPresentationSearch".to_string(),
-            number: 910003_i64,
-            request_serializer: RealmPresentationSearchRequest::serializer(),
-            response_serializer: RealmPresentationSearchUpdate::serializer(),
-            doc: "".to_string(),
-        }
+pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::Method<
+    RealmPresentationSearchRequest,
+    RealmPresentationSearchUpdate,
+> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<RealmPresentationSearchRequest, RealmPresentationSearchUpdate>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "WatchRealmPresentationSearch".to_string(),
+        number: 919103_i64,
+        request_serializer: RealmPresentationSearchRequest::serializer(),
+        response_serializer: RealmPresentationSearchUpdate::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }
 
-pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client::Method<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchResult> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<CancelRealmPresentationSearchRequest, CancelRealmPresentationSearchResult>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "CancelRealmPresentationSearch".to_string(),
-            number: 919103_i64,
-            request_serializer: CancelRealmPresentationSearchRequest::serializer(),
-            response_serializer: CancelRealmPresentationSearchResult::serializer(),
-            doc: "".to_string(),
-        }
+pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client::Method<
+    CancelRealmPresentationSearchRequest,
+    CancelRealmPresentationSearchResult,
+> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<
+            CancelRealmPresentationSearchRequest,
+            CancelRealmPresentationSearchResult,
+        >,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "CancelRealmPresentationSearch".to_string(),
+        number: 919104_i64,
+        request_serializer: CancelRealmPresentationSearchRequest::serializer(),
+        response_serializer: CancelRealmPresentationSearchResult::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

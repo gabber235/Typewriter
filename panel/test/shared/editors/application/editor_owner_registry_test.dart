@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
@@ -6,12 +8,15 @@ ResourceEditorTarget _target(String id) => fakeEditorTarget(
   targetId: id,
   label: id,
   scope: "realm",
-  document: const EditorDocument(
-    rootType: StringType(),
-    typeCatalog: TypeCatalog([]),
-    confirmedValue: StringValue("Original"),
+  document: EditorDocument(
+    rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+    catalog: CheckedEditorCatalog(
+      skir.EditorCatalogWireSnapshot.defaultInstance,
+    ),
+    confirmedValue: skir.DataValue.wrapStringValue("Original"),
     revision: 1,
   ),
+  validation: acceptTestEditorMutation,
   commit: (commit) async =>
       MutationSuccess(revision: 2, value: commit.rootValue),
 );
@@ -19,7 +24,7 @@ ResourceEditorTarget _target(String id) => fakeEditorTarget(
 EditorResourceKey _key(String id) =>
     EditorResourceKey(scope: "realm", identity: id);
 
-final class _Destination extends EditorDestination {
+final class _Destination extends WorkDestination {
   bool disposed = false;
 
   @override
@@ -37,7 +42,7 @@ final class _Destination extends EditorDestination {
 
 void main() {
   test("committed refresh retains duplicate acquisition exactly once", () {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final registry = EditorOwnerRegistry(workspace: workspace);
     addTearDown(workspace.dispose);
     addTearDown(registry.dispose);
@@ -47,17 +52,22 @@ void main() {
     expect(identical(first.editor(_target("first")), source), isTrue);
     first.commit();
 
-    expect(workspace.resources[_key("first")]!.leases, 1);
+    expect(workspace.resources[_key("first")], isNotNull);
 
     final second = registry.beginRefresh();
     expect(identical(second.editor(_target("first")), source), isTrue);
     second.commit();
 
-    expect(workspace.resources[_key("first")]!.leases, 1);
+    expect(
+      identical(workspace.resources[_key("first")]!.source, source),
+      isTrue,
+    );
+    registry.dispose();
+    expect(workspace.resources[_key("first")], isNull);
   });
 
   test("rolled back refresh preserves installed lease and destination", () {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final registry = EditorOwnerRegistry(workspace: workspace);
     addTearDown(workspace.dispose);
     addTearDown(registry.dispose);
@@ -81,7 +91,7 @@ void main() {
     final abandonedDestination = destinations["second"]!.single;
     prospective.rollback();
 
-    expect(workspace.resources[_key("first")]!.leases, 1);
+    expect(workspace.resources[_key("first")], isNotNull);
     expect(
       workspace.resources[_key("first")]!.destination,
       same(originalDestination),
@@ -90,10 +100,12 @@ void main() {
     expect(prospectiveDestination.disposed, isTrue);
     expect(abandonedDestination.disposed, isTrue);
     expect(workspace.resources[_key("second")], isNull);
+    registry.dispose();
+    expect(workspace.resources[_key("first")], isNull);
   });
 
   test("committed replacement releases the previous owner", () {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final registry = EditorOwnerRegistry(workspace: workspace);
     addTearDown(workspace.dispose);
     addTearDown(registry.dispose);
@@ -107,11 +119,13 @@ void main() {
       ..commit();
 
     expect(workspace.resources[_key("first")], isNull);
-    expect(workspace.resources[_key("second")]!.leases, 1);
+    expect(workspace.resources[_key("second")], isNotNull);
+    registry.dispose();
+    expect(workspace.resources[_key("second")], isNull);
   });
 
   test("committed refresh replaces the retained destination", () {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final registry = EditorOwnerRegistry(workspace: workspace);
     addTearDown(workspace.dispose);
     addTearDown(registry.dispose);
@@ -132,10 +146,12 @@ void main() {
     expect(destinations, hasLength(2));
     expect(destinations.first.disposed, isTrue);
     expect(workspace.resources[_key("first")]!.destination, destinations.last);
+    registry.dispose();
+    expect(workspace.resources[_key("first")], isNull);
   });
 
   test("nested refresh is rejected and dispose rolls back active work", () {
-    final workspace = LocalWorkSession();
+    final workspace = ScopedWorkSession();
     final registry = EditorOwnerRegistry(workspace: workspace);
     addTearDown(workspace.dispose);
 

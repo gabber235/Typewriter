@@ -1,8 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Edits one color value in the shared editor surface.
@@ -10,39 +5,44 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The bound editor owns the color and receives every valid change through
 /// [onChanged]. This field owns only picker visibility and interaction
 /// boundaries. Opening begins an interaction, ordinary dismissal commits it,
-/// and cancel dismissal reports cancellation without changing the value here.
-/// The mixed constructor keeps differing bound values distinct until the caller
-/// chooses a replacement color.
+/// and every dismissal preserves the current value. The mixed constructor
+/// keeps differing bound values distinct until the caller
+/// chooses a replacement color. Supply [onCleared] to allow empty text to
+/// remove the value.
 class ColorPickerField extends HookConsumerWidget {
   const ColorPickerField({
     required this.color,
     required this.includeAlpha,
     required this.onChanged,
+    this.onCleared,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
-  });
+  }) : mixed = false;
 
   const ColorPickerField.mixed({
     required this.includeAlpha,
     required this.onChanged,
+    this.onCleared,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
-  }) : color = null;
+  }) : color = null,
+       mixed = true;
 
   final Color? color;
+
+  /// Whether selected owners disagree, independently of an empty color.
+  final bool mixed;
   final bool includeAlpha;
   final ValueChanged<Color> onChanged;
+  final VoidCallback? onCleared;
   final VoidCallback? onInteractionStart;
   final VoidCallback? onInteractionCommit;
-  final VoidCallback? onInteractionCancel;
   final bool enabled;
   final bool readOnly;
 
@@ -56,16 +56,11 @@ class ColorPickerField extends HookConsumerWidget {
     final currentColor = color;
     final pickerColor = currentColor ?? Theme.of(context).colorScheme.primary;
 
-    void close({bool cancel = false}) {
+    void close() {
       if (!open.value) return;
       open.value = false;
-      if (cancel) {
-        onInteractionCancel?.call();
-      } else {
-        onInteractionCommit?.call();
-      }
-      if (!cancel &&
-          currentColor != null &&
+      onInteractionCommit?.call();
+      if (currentColor != null &&
           openingColor.value != currentColor.argbValue) {
         ref
             .read(colorLibraryProvider.notifier)
@@ -122,9 +117,7 @@ class ColorPickerField extends HookConsumerWidget {
           child: Actions(
             actions: {
               DismissIntent: CallbackAction(onInvoke: (_) => close()),
-              CancelIntent: CallbackAction(
-                onInvoke: (_) => close(cancel: true),
-              ),
+              CancelIntent: CallbackAction(onInvoke: (_) => close()),
             },
             child: SizedBox(
               width: 340,
@@ -133,7 +126,7 @@ class ColorPickerField extends HookConsumerWidget {
                 includeAlpha: includeAlpha,
                 enabled: editable,
                 warnsAboutAlpha: !includeAlpha && pickerColor.alphaByte != 0xFF,
-                replacing: currentColor == null,
+                replacing: mixed,
                 onChanged: onChanged,
               ),
             ),
@@ -141,7 +134,7 @@ class ColorPickerField extends HookConsumerWidget {
         ),
         child: ValidatedTextField<Color>(
           value: currentColor,
-          mixed: currentColor == null,
+          mixed: mixed,
           name: includeAlpha ? "ARGB color" : "RGB color",
           readOnly: !editable,
           deserialize: (value) => value.formatHex(includeAlpha: includeAlpha),
@@ -152,9 +145,9 @@ class ColorPickerField extends HookConsumerWidget {
             LengthLimitingTextInputFormatter(includeAlpha ? 10 : 8),
           ],
           onChanged: onChanged,
+          onCleared: onCleared,
           onInputFocus: onInteractionStart,
           onInputBlur: onInteractionCommit,
-          onCancel: onInteractionCancel,
           onDone: (value) {
             if (value.argbValue != currentColor?.argbValue) {
               ref
@@ -201,13 +194,18 @@ class ColorPickerField extends HookConsumerWidget {
               ),
           ],
           decoration: InputDecoration(
-            hintText: currentColor == null ? "Multiple colors" : null,
+            hintText: mixed ? "Multiple colors" : null,
+            helperText: !mixed && currentColor == null
+                ? "This value is Unfilled"
+                : null,
             prefixIcon: GestureDetector(
               onTap: enabled ? toggle : null,
               child: Padding(
                 padding: const EdgeInsets.all(5),
-                child: currentColor == null
+                child: mixed
                     ? const MixedColorSwatch()
+                    : currentColor == null
+                    ? const Icon(Icons.palette_outlined, size: 24)
                     : Checkerboard(
                         borderRadius: context.shapes.smallBorderRadius,
                         child: Container(

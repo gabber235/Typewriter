@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Decides whether a key event should be consumed before it reaches the input.
@@ -83,7 +80,6 @@ class InputFieldContainer extends HookConsumerWidget {
     this.borderRadius,
     this.onInputFocus,
     this.onDismiss,
-    this.onCancel,
     this.autofocus = false,
     super.key,
   });
@@ -112,10 +108,6 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Called when a dismiss intent is handled while the input is focused.
   /// Dismissing leaves the field but keeps what was typed.
   final VoidCallback? onDismiss;
-
-  /// Called when a cancel intent is handled while the input is focused.
-  /// Cancelling leaves the field and discards what was typed.
-  final VoidCallback? onCancel;
 
   /// Whether the surrounding focus should request focus automatically.
   final bool autofocus;
@@ -203,13 +195,6 @@ class InputFieldContainer extends HookConsumerWidget {
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
                       onDismiss?.call();
-                      modeCoordinator.end(id);
-                      return null;
-                    },
-                  ),
-                  CancelIntent: CallbackAction<CancelIntent>(
-                    onInvoke: (intent) {
-                      onCancel?.call();
                       modeCoordinator.end(id);
                       return null;
                     },

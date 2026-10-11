@@ -1,6 +1,3 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Organization services workspace.
@@ -16,7 +13,7 @@ class ServicesPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(projectedServicesProvider);
-    final topologyAsync = ref.watch(organizationTopologyStreamProvider);
+    final topologyAsync = ref.watch(organizationTopologyProvider);
 
     return Pane(
       id: "services",

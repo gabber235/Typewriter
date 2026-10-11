@@ -1,44 +1,17 @@
 part of "services.dart";
 
+Duration? _noRouteRetry(int retryCount, Object error) => null;
+
 /// Adapts the organization scoped service projection to the current route.
 ///
 /// The route provider owns no service data. It follows the selected
-/// organization and delegates reads and mutations to
-/// [CanonicalOrganizationServices], yielding an empty projection when no
-/// organization is selected.
-@riverpod
-class CanonicalServices extends _$CanonicalServices {
-  @override
-  Stream<List<Service>> build() async* {
-    final organization = ref.watch(organizationIdProvider);
-    if (organization == null) {
-      yield [];
-      return;
-    }
-    final provider = canonicalOrganizationServicesProvider(organization);
-    ref.listen(provider, (_, next) => state = next);
-    yield await ref.read(provider.future);
-  }
-
-  CanonicalOrganizationServices get _repository {
-    final organization = ref.read(organizationIdProvider);
-    if (organization == null) throw ApiException.noOrganization();
-    return ref.read(
-      canonicalOrganizationServicesProvider(organization).notifier,
-    );
-  }
-
-  /// Delegates registration binding to the selected organization repository.
-  Future<void> bindService(String token) async =>
-      _repository.bindService(token);
-
-  /// Delegates an identity update to the selected organization repository.
-  Future<TypedMutationResult> updateService(Service service) async =>
-      _repository.updateService(service);
-
-  /// Delegates service removal to the selected organization repository.
-  Future<void> deleteService(skir.RecordId id) async =>
-      _repository.deleteService(id);
+/// organization and watches [CanonicalOrganizationServices], returning an empty
+/// projection when no organization is selected.
+@Riverpod(retry: _noRouteRetry)
+FutureOr<List<Service>> canonicalServices(Ref ref) {
+  final organization = ref.watch(organizationIdProvider);
+  if (organization == null) return const [];
+  return ref.watch(canonicalOrganizationServicesProvider(organization).future);
 }
 
 /// Overlays active local editor drafts on canonical service identities.
@@ -90,16 +63,11 @@ AsyncValue<Service?> projectedService(Ref ref, skir.RecordId serviceId) {
 /// Exposes topology for the organization selected by the current route.
 ///
 /// The route projection delegates lifecycle and reconciliation to
-/// [OrganizationTopologyController] and yields an empty topology without an
-/// organization.
-@riverpod
-Stream<OrganizationTopology> organizationTopologyStream(Ref ref) async* {
+/// [OrganizationTopologyController] and returns an empty topology without an
+/// organization. Each canonical update recomputes this route projection.
+@Riverpod(retry: _noRouteRetry)
+FutureOr<OrganizationTopology> organizationTopology(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
-  if (organization == null) {
-    yield OrganizationTopology.empty;
-    return;
-  }
-  yield await ref.watch(
-    organizationTopologyControllerProvider(organization).future,
-  );
+  if (organization == null) return OrganizationTopology.empty;
+  return ref.watch(organizationTopologyControllerProvider(organization).future);
 }

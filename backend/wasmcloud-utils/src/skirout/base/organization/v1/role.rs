@@ -31,23 +31,25 @@ pub struct OrganizationRole {
 
 impl OrganizationRole {
     pub fn default_ref() -> &'static OrganizationRole {
-        static D: std::sync::LazyLock<OrganizationRole> = std::sync::LazyLock::new(OrganizationRole::default);
+        static D: std::sync::LazyLock<OrganizationRole> =
+            std::sync::LazyLock::new(OrganizationRole::default);
         &D
     }
 }
 
 impl OrganizationRole {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OrganizationRole> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<OrganizationRole>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/role.skir",
-                    "OrganizationRole",
-                    "",
-                    |x: &OrganizationRole| &x._unrecognized,
-                    |x: &mut OrganizationRole, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<OrganizationRole>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/role.skir",
+                "OrganizationRole",
+                "",
+                |x: &OrganizationRole| &x._unrecognized,
+                |x: &mut OrganizationRole, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<OrganizationRole> {
@@ -63,33 +65,39 @@ impl OrganizationRole {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct WatchOrganizationRolesRequest {
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<WatchOrganizationRolesRequest>>,
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<WatchOrganizationRolesRequest>>,
 }
 
 impl WatchOrganizationRolesRequest {
     pub fn default_ref() -> &'static WatchOrganizationRolesRequest {
-        static D: std::sync::LazyLock<WatchOrganizationRolesRequest> = std::sync::LazyLock::new(WatchOrganizationRolesRequest::default);
+        static D: std::sync::LazyLock<WatchOrganizationRolesRequest> =
+            std::sync::LazyLock::new(WatchOrganizationRolesRequest::default);
         &D
     }
 }
 
 impl WatchOrganizationRolesRequest {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "organization/v1/role.skir",
-                    "WatchOrganizationRolesRequest",
-                    "",
-                    |x: &WatchOrganizationRolesRequest| &x._unrecognized,
-                    |x: &mut WatchOrganizationRolesRequest, u| x._unrecognized = u,
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "organization/v1/role.skir",
+                "WatchOrganizationRolesRequest",
+                "",
+                |x: &WatchOrganizationRolesRequest| &x._unrecognized,
+                |x: &mut WatchOrganizationRolesRequest, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationRolesRequest> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(WatchOrganizationRolesRequest::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            WatchOrganizationRolesRequest::_adapter(),
+        )
     }
 }
 
@@ -114,30 +122,37 @@ impl Default for WatchOrganizationRolesResponse {
 }
 
 impl WatchOrganizationRolesResponse {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &WatchOrganizationRolesResponse| match x {
-                        WatchOrganizationRolesResponse::Unknown(_) => 0,
-                        WatchOrganizationRolesResponse::InternalError(_) => 1,
-                        WatchOrganizationRolesResponse::List(_) => 2,
-                        WatchOrganizationRolesResponse::Add(_) => 3,
-                        WatchOrganizationRolesResponse::Update(_) => 4,
-                        WatchOrganizationRolesResponse::Remove(_) => 5,
-                    },
-                    |u| WatchOrganizationRolesResponse::Unknown(Some(u)),
-                    |x: &WatchOrganizationRolesResponse| match x { WatchOrganizationRolesResponse::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "organization/v1/role.skir",
-                    "WatchOrganizationRolesResponse",
-                    "",
-                )
-            });
+    fn _adapter()
+    -> &'static crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &WatchOrganizationRolesResponse| match x {
+                    WatchOrganizationRolesResponse::Unknown(_) => 0,
+                    WatchOrganizationRolesResponse::InternalError(_) => 1,
+                    WatchOrganizationRolesResponse::List(_) => 2,
+                    WatchOrganizationRolesResponse::Add(_) => 3,
+                    WatchOrganizationRolesResponse::Update(_) => 4,
+                    WatchOrganizationRolesResponse::Remove(_) => 5,
+                },
+                |u| WatchOrganizationRolesResponse::Unknown(Some(u)),
+                |x: &WatchOrganizationRolesResponse| match x {
+                    WatchOrganizationRolesResponse::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "organization/v1/role.skir",
+                "WatchOrganizationRolesResponse",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<WatchOrganizationRolesResponse> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(WatchOrganizationRolesResponse::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(
+            WatchOrganizationRolesResponse::_adapter(),
+        )
     }
 }
 
@@ -146,32 +161,139 @@ impl WatchOrganizationRolesResponse {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<OrganizationRole> = OrganizationRole::_adapter() as *const _ as *mut _;
-                (*a).add_field("role_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &OrganizationRole| &x.role_id, |x: &mut OrganizationRole, v| x.role_id = v);
-                (*a).add_field("name", 1, crate::skir_client::Serializer::string(), "", |x: &OrganizationRole| &x.name, |x: &mut OrganizationRole, v| x.name = v);
-                (*a).add_field("color", 2, crate::skirout::base::kernel::v1::color::Color::serializer(), "", |x: &OrganizationRole| &x.color, |x: &mut OrganizationRole, v| x.color = v);
-                (*a).add_field("default_role", 3, crate::skir_client::Serializer::bool(), "", |x: &OrganizationRole| &x.default_role, |x: &mut OrganizationRole, v| x.default_role = v);
-                (*a).add_field("assignable", 4, crate::skir_client::Serializer::bool(), "", |x: &OrganizationRole| &x.assignable, |x: &mut OrganizationRole, v| x.assignable = v);
-                (*a).add_field("deletable", 5, crate::skir_client::Serializer::bool(), "", |x: &OrganizationRole| &x.deletable, |x: &mut OrganizationRole, v| x.deletable = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest> = WatchOrganizationRolesRequest::_adapter() as *const _ as *mut _;
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse> = WatchOrganizationRolesResponse::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("internal_error", 1, 1, crate::skirout::base::kernel::v1::errors::InternalError::serializer(), "", |v| WatchOrganizationRolesResponse::InternalError(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::InternalError(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("list", 2, 2, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter())), "", |v| WatchOrganizationRolesResponse::List(v), |x| match x { WatchOrganizationRolesResponse::List(v) => v, _ => unreachable!() });
-                (*a).add_wrapper_variant("add", 3, 3, crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter()), "", |v| WatchOrganizationRolesResponse::Add(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::Add(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("update", 4, 4, crate::skir_client::internal::struct_serializer_from_static(OrganizationRole::_adapter()), "", |v| WatchOrganizationRolesResponse::Update(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::Update(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("remove", 5, 5, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |v| WatchOrganizationRolesResponse::Remove(Box::new(v)), |x| match x { WatchOrganizationRolesResponse::Remove(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<OrganizationRole> =
+                OrganizationRole::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "role_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &OrganizationRole| &x.role_id,
+                |x: &mut OrganizationRole, v| x.role_id = v,
+            );
+            (*a).add_field(
+                "name",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &OrganizationRole| &x.name,
+                |x: &mut OrganizationRole, v| x.name = v,
+            );
+            (*a).add_field(
+                "color",
+                2,
+                crate::skirout::base::kernel::v1::color::Color::serializer(),
+                "",
+                |x: &OrganizationRole| &x.color,
+                |x: &mut OrganizationRole, v| x.color = v,
+            );
+            (*a).add_field(
+                "default_role",
+                3,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &OrganizationRole| &x.default_role,
+                |x: &mut OrganizationRole, v| x.default_role = v,
+            );
+            (*a).add_field(
+                "assignable",
+                4,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &OrganizationRole| &x.assignable,
+                |x: &mut OrganizationRole, v| x.assignable = v,
+            );
+            (*a).add_field(
+                "deletable",
+                5,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &OrganizationRole| &x.deletable,
+                |x: &mut OrganizationRole, v| x.deletable = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<WatchOrganizationRolesRequest> =
+                WatchOrganizationRolesRequest::_adapter() as *const _ as *mut _;
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<WatchOrganizationRolesResponse> =
+                WatchOrganizationRolesResponse::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "internal_error",
+                1,
+                1,
+                crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
+                "",
+                |v| WatchOrganizationRolesResponse::InternalError(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationRolesResponse::InternalError(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "list",
+                2,
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        OrganizationRole::_adapter(),
+                    ),
+                ),
+                "",
+                |v| WatchOrganizationRolesResponse::List(v),
+                |x| match x {
+                    WatchOrganizationRolesResponse::List(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "add",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrganizationRole::_adapter(),
+                ),
+                "",
+                |v| WatchOrganizationRolesResponse::Add(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationRolesResponse::Add(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "update",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    OrganizationRole::_adapter(),
+                ),
+                "",
+                |v| WatchOrganizationRolesResponse::Update(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationRolesResponse::Update(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "remove",
+                5,
+                5,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |v| WatchOrganizationRolesResponse::Remove(Box::new(v)),
+                |x| match x {
+                    WatchOrganizationRolesResponse::Remove(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }
 
@@ -179,15 +301,18 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
-pub fn watch_organization_roles_method() -> &'static crate::skir_client::Method<WatchOrganizationRolesRequest, WatchOrganizationRolesResponse> {
-    static METHOD: std::sync::LazyLock<crate::skir_client::Method<WatchOrganizationRolesRequest, WatchOrganizationRolesResponse>> = std::sync::LazyLock::new(|| {
-        crate::skir_client::Method {
-            name: "WatchOrganizationRoles".to_string(),
-            number: 49267_i64,
-            request_serializer: WatchOrganizationRolesRequest::serializer(),
-            response_serializer: WatchOrganizationRolesResponse::serializer(),
-            doc: "".to_string(),
-        }
+pub fn watch_organization_roles_method() -> &'static crate::skir_client::Method<
+    WatchOrganizationRolesRequest,
+    WatchOrganizationRolesResponse,
+> {
+    static METHOD: std::sync::LazyLock<
+        crate::skir_client::Method<WatchOrganizationRolesRequest, WatchOrganizationRolesResponse>,
+    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
+        name: "WatchOrganizationRoles".to_string(),
+        number: 49267_i64,
+        request_serializer: WatchOrganizationRolesRequest::serializer(),
+        response_serializer: WatchOrganizationRolesResponse::serializer(),
+        doc: "".to_string(),
     });
     &*METHOD
 }

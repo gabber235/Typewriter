@@ -1,7 +1,7 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+// Kept manual because the installed generator only accepts generated
+// declarations as dependency annotations. Keep the scoped search dependency.
 final _previewData = FutureProvider<SearchPreviewRequestResult>(
   dependencies: [searchProvider],
   (ref) async {
@@ -75,7 +75,6 @@ class SearchPreview extends HookConsumerWidget {
               message: message,
             ),
           ),
-          SearchPreviewRequestResult() => throw UnimplementedError(),
         };
       },
     );

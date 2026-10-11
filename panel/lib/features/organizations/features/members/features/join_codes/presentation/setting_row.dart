@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared label and control layout for one join code generation setting.
 class SettingRow extends StatelessWidget {

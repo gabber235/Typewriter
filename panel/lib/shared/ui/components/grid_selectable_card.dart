@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Renders a selectable grid card with an optional badge and title.
@@ -87,15 +85,14 @@ class GridSelectableCard extends StatelessWidget {
   /// Optional custom footer placed at the bottom of the card, below the title.
   final Widget? footer;
 
-  Color _backgroundColor(BuildContext context) {
-    final surface = Surface.colorOf(context);
+  Color _backgroundColor() {
     if (isSelected) {
       if (isFocused) {
-        return Color.alphaBlend(baseColor.withValues(alpha: 0.70), surface);
+        return baseColor.withValues(alpha: baseColor.a * 0.70);
       }
       return baseColor;
     }
-    return Color.alphaBlend(baseColor.withValues(alpha: 0.15), surface);
+    return baseColor.withValues(alpha: baseColor.a * 0.15);
   }
 
   @override
@@ -103,17 +100,12 @@ class GridSelectableCard extends StatelessWidget {
     final onBase =
         onBaseColor ?? Theme.of(context).colorScheme.surfaceContainerLowest;
 
-    final resolvedTitleStyle =
-        (titleStyle ??
-                Theme.of(context).textTheme.titleMedium!
-                    .copyWith(fontSize: 16, fontVariations: [.weight(600)]))
-            .copyWith(color: isSelected ? onBase : baseColor);
+    final backgroundColor = _backgroundColor();
 
-    final backgroundColor = _backgroundColor(context);
-
-    final card = AnimatedContainer(
+    final card = SurfaceContainer(
       duration: animationDuration,
       curve: animationCurve,
+      foreground: isSelected ? onBase : baseColor,
       width: width,
       height: height,
       decoration: BoxDecoration(
@@ -125,9 +117,8 @@ class GridSelectableCard extends StatelessWidget {
         ),
       ),
       padding: padding,
-      child: IconTheme(
-        data: IconThemeData(color: isSelected ? onBase : baseColor),
-        child: Column(
+      child: Builder(
+        builder: (context) => Column(
           crossAxisAlignment: .start,
           children: [
             if (badgeLabel != null)
@@ -148,7 +139,12 @@ class GridSelectableCard extends StatelessWidget {
                   title,
                   maxLines: 3,
                   overflow: .ellipsis,
-                  style: resolvedTitleStyle,
+                  style:
+                      titleStyle ??
+                      Theme.of(context).textTheme.titleMedium!.copyWith(
+                        fontSize: 16,
+                        fontVariations: [.weight(600)],
+                      ),
                 ),
               ),
             ),
@@ -158,7 +154,14 @@ class GridSelectableCard extends StatelessWidget {
       ),
     ).animate(target: isHovered ? 1 : 0).hoverScale(isHovered);
 
-    return Surface(color: backgroundColor, child: card);
+    return PresentationInteractionScope(
+      value: PresentationInteraction(
+        selected: isSelected,
+        focused: isFocused,
+        hovered: isHovered,
+      ),
+      child: card,
+    );
   }
 }
 

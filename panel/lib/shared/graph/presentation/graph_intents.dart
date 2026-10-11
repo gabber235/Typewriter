@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Requests one grid step for the currently active graph move mode.
 class GraphMoveIntent extends Intent {

@@ -34,7 +34,7 @@ Map<skir.RecordId, bool> serviceConnections(Ref ref) {
 /// service deadline projection and returns false when either record is absent.
 @riverpod
 bool hostConnected(Ref ref, skir.RecordId hostId) {
-  final topology = ref.watch(organizationTopologyStreamProvider).value;
+  final topology = ref.watch(organizationTopologyProvider).value;
   final connections = ref.watch(serviceConnectionsProvider);
   final host = topology?.hosts.firstWhereOrNull(
     (host) => host.hostId == hostId,

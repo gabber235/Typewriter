@@ -1,7 +1,5 @@
-import "dart:convert";
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 const _applicationId = "com.typewritermc.panel";
 const _brandColor = "#009FFF";

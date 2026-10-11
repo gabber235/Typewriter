@@ -1,5 +1,3 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -55,7 +53,7 @@ void main() {
   );
 
   test("a new attempt replaces only the same resource rejection", () async {
-    final journal = LocalWorkSession();
+    final journal = ScopedWorkSession();
     addTearDown(journal.dispose);
     MutationSubmission<int> attempt(String id, String scope) =>
         MutationSubmission<int>(

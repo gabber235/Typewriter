@@ -1,8 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "mutation_activity_details.dart";
@@ -48,10 +43,7 @@ class MutationActivityView extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: math.min(
-                  MediaQuery.sizeOf(context).height * .75,
-                  580,
-                ),
+                maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
               ),
               child: _ActivityDetails(
                 state: state,
@@ -65,7 +57,7 @@ class MutationActivityView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final drafts = state.resources.values.toList();
+    final drafts = state.entries.values.toList();
     final phase = MutationActivityPhase.resolve(state.submissions, drafts);
     final label = phase.label(drafts.length);
     final color = phase.color(context);
@@ -79,7 +71,7 @@ class MutationActivityView extends StatelessWidget {
       targetAnchor: Alignment.bottomRight,
       popupAnchor: Alignment.topRight,
       offset: Offset(0, context.spacing.space2),
-      maxHeight: math.min(MediaQuery.sizeOf(context).height * .75, 580),
+      maxHeight: min(MediaQuery.sizeOf(context).height * .75, 580),
       popupBuilder: (context, close) => SizedBox(
         width: double.infinity,
         child: _ActivityDetails(
@@ -125,14 +117,14 @@ class MutationActivityView extends StatelessWidget {
   }
 }
 
-/// Adapts a [LocalWorkSession] stream to [MutationActivityView].
+/// Adapts a [ScopedWorkSession] stream to [MutationActivityView].
 ///
 /// The initial snapshot is rendered immediately. Later snapshots replace it
 /// until the session is disposed by its owner.
-class LocalWorkSessionActivityView extends StatelessWidget {
-  const LocalWorkSessionActivityView({required this.controller, super.key});
+class ScopedWorkSessionActivityView extends StatelessWidget {
+  const ScopedWorkSessionActivityView({required this.controller, super.key});
 
-  final LocalWorkSession controller;
+  final ScopedWorkSession controller;
 
   @override
   Widget build(BuildContext context) => StreamBuilder<LocalWorkState>(

@@ -1,27 +1,5 @@
 part of "services.dart";
 
-const serviceInspectorTypeRef = ResolvedTypeRef(
-  id: QualifiedTypeId(namespace: "panel", name: "Service"),
-  revision: 2,
-);
-
-final _serviceInspectorType = TypeDefinition(
-  id: serviceInspectorTypeRef,
-  kind: NominalTypeKind.concrete,
-  representation: RecordType(
-    fields: {
-      "version": const TypeField(name: "version", type: StringType()),
-      "state": const TypeField(name: "state", type: StringType()),
-      "lastSeen": TypeField(
-        name: "lastSeen",
-        type: NamedType(standardTypeRefs.optionOf(const TimestampType())),
-      ),
-    },
-  ),
-);
-
-final _serviceInspectorCatalog = TypeCatalog([_serviceInspectorType]);
-
 /// Stable selection identity for a canonical organization service.
 ///
 /// Resolution waits for canonical and projected state, then builds an
@@ -43,9 +21,10 @@ class ServiceIdentifier extends SelectableIdentifier {
     if (organization == null) {
       return AsyncError(ApiException.noOrganization(), StackTrace.current);
     }
-    final repository = ref.watch(
-      canonicalOrganizationServicesProvider(organization).notifier,
-    );
+    final repository = ref
+        .watch(resourceRepositoriesProvider)
+        .services(organization);
+    final work = ref.watch(localWorkControllerProvider);
     final canonicalState = ref.watch(canonicalServiceProvider(serviceId));
     if (canonicalState.mapUnready<Selectable>() case final value?) return value;
     final canonical = canonicalState.requireValue;
@@ -65,12 +44,13 @@ class ServiceIdentifier extends SelectableIdentifier {
         editTarget: serviceIdentityTarget(
           id: this,
           service: canonical,
-
-          repository: ref
-              .watch(resourceRepositoriesProvider)
-              .services(organization),
+          connected: connections[serviceId] ?? false,
+          repository: repository,
         ),
-        onUnbind: () => repository.deleteService(serviceId),
+        onUnbind: () async {
+          final response = await work.execute(repository.unbind(serviceId));
+          response.requireAcceptedUnbinding();
+        },
         id: this,
         service: service,
         canonicalService: canonical,
@@ -113,35 +93,13 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   final EditorTarget editTarget;
   final Future<void> Function() onUnbind;
 
-  RecordValue get _data => canonicalService.observationValue(connected);
+  @override
+  List<PortableMultiInspectionSurface> get portableMultiInspectionSurfaces => [
+    _ServiceIdentityPortableSurface(editTarget),
+  ];
 
   @override
   String get name => service.displayName;
-
-  @override
-  PresentationModel buildPresentation(
-    EditorOwnerScope owners,
-  ) => PresentationModel(
-    catalog: _serviceInspectorCatalog,
-    inputs: {
-      const BindingId(0): PresentationInput.value(
-        type: NamedType(serviceInspectorTypeRef),
-        value: EditorValue.ready(_data),
-      ),
-      const BindingId(1): PresentationInput.edit(owners.editor(editTarget)),
-    },
-    presentations: [serviceInspectorPresentation(service)],
-    root: PresentationNode(
-      id: "service",
-      element: PresentationInvocationElement(
-        presentationId: _serviceInspectorPresentationId,
-        arguments: {
-          const BindingId(0): const BindingReference(bindingId: BindingId(0)),
-          const BindingId(1): const BindingReference(bindingId: BindingId(1)),
-        },
-      ),
-    ),
-  );
 
   @override
   List<SelectionCapability> get capabilities => [
@@ -151,33 +109,74 @@ class ServiceSelectable extends InspectableSelectable<ServiceIdentifier> {
   @override
   InspectionContent buildInspection(EditorOwnerScope owners) =>
       InspectionContent(
-        model: buildPresentation(owners),
-        header: ManagedInspectorHeader(
-          id: service.serviceId.id,
-          owner: owners.editor(editTarget),
-          fallbackName: service.displayName,
-          fallbackColor: service.color,
-          colorField: null,
+        host: service.portablePresentationHost(
+          connected: connected,
+          identityOwner: owners.editor(editTarget),
         ),
       );
 }
 
-/// Projects service identity and connectivity into inspector fields.
-///
-/// Connectivity is an observation from the host heartbeat. It does not change
-/// the canonical service identity or imply that a runtime configuration is
-/// applied.
-extension ServiceInspectorValue on Service {
-  RecordValue observationValue(bool connected) => RecordValue({
-    "version": role.version.asValue,
-    "state": (connected ? "Connected" : "Offline").asValue,
-    "lastSeen": _optionalTimestamp(lastSeen),
-  });
+final class _ServiceIdentityPortableSurface
+    implements PortableMultiInspectionSurface {
+  const _ServiceIdentityPortableSurface(this.target);
+
+  @override
+  Object get id => "service.identity";
+
+  @override
+  final EditorTarget target;
+
+  @override
+  skir.TypeUse get rootType => _serviceIdentityType;
+
+  @override
+  CheckedEditorCatalog get catalog => _serviceIdentityCatalog;
+
+  @override
+  bool isCompatibleWith(PortableMultiInspectionSurface other) =>
+      other is _ServiceIdentityPortableSurface;
+
+  @override
+  PortablePresentationHost buildHost(
+    List<PortableMultiInspectionSurface> members,
+    EditOwner combinedOwner,
+    Future<void> Function() commit,
+  ) => serviceIdentityPortablePresentationHost(
+    identityOwner: combinedOwner,
+    commit: commit,
+  );
 }
 
-final _serviceIdentityType = RecordType(
-  fields: {"name": TypeField(name: "name", type: identifierStringType)},
+final _serviceIdentityDefinition = _draftType("ServiceIdentity");
+final _serviceIdentityType = skir.TypeUse.wrapNamed(
+  _draftUse(_serviceIdentityDefinition),
 );
+final _serviceIdentityCatalog = skir.EditorCatalogWireSnapshot(
+  generation: skir.CatalogGeneration(value: "panel.service.identity"),
+  types: [
+    _draftPublished(
+      _serviceIdentityDefinition,
+      fields: [
+        _draftField(
+          _serviceIdentityDefinition,
+          "name",
+          _hostConfigurationTextTemplate,
+        ),
+      ],
+    ),
+  ],
+  presentations: const [],
+  presentationMaterials: const [],
+  configuration: const [],
+  capabilities: const [],
+  relations: const [],
+  endpointBindings: const [],
+  resourceDefinitions: const [],
+  recommendations: const [],
+  roleFallbacks: const [],
+  initialization: const [],
+  diagnostics: const [],
+).asTrustedLocalCatalog();
 
 /// Creates the scoped editor target used to rename [service].
 ///
@@ -186,10 +185,15 @@ final _serviceIdentityType = RecordType(
 ResourceEditorTarget serviceIdentityTarget({
   required ServiceIdentifier id,
   required Service service,
+  required bool connected,
   required ServiceResourceRepository repository,
 }) => ResourceEditorTarget(
   targetId: id,
   label: "${service.displayName}: identity",
   resource: ServiceEditorResource(repository, service.serviceId),
-  snapshot: serviceEditorSnapshot(service),
+  snapshot: service.editorSnapshot,
+  portablePresentation: (source) => service.portablePresentationHost(
+    connected: connected,
+    identityOwner: source,
+  ),
 );

@@ -1,7 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:url_launcher/url_launcher.dart";
 
 /// Displays a type label that can open its documentation URL.
 ///
@@ -90,6 +87,20 @@ class TypeLink extends HookWidget {
 
     return FocusableActionDetector(
       enabled: clickable,
+      actions: {
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            if (clickable) unawaited(handleTap());
+            return null;
+          },
+        ),
+        ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(
+          onInvoke: (_) {
+            if (clickable) unawaited(handleTap());
+            return null;
+          },
+        ),
+      },
       mouseCursor: clickable
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
@@ -103,6 +114,7 @@ class TypeLink extends HookWidget {
           link: clickable,
           label: text,
           enabled: clickable,
+          onTap: clickable ? () => unawaited(handleTap()) : null,
           child: AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 180),
             curve: Curves.fastEaseInToSlowEaseOut,

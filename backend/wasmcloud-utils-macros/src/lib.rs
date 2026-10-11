@@ -9,7 +9,6 @@ use proc_macro::TokenStream;
 use syn::parse_macro_input;
 
 mod database_query;
-mod dispatch_actions;
 mod paths;
 mod skir_domain_result;
 mod skir_response;
@@ -25,22 +24,6 @@ mod skir_variant;
 pub fn skir_response(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as skir_response::SkirResponseInput);
     skir_response::expand(input).into()
-}
-
-/// Route a broker message subject to a typed asynchronous or synchronous handler.
-///
-/// A single subject template dispatches by its `<action>` capture. Named templates let several
-/// subject families share one declaration. Handlers receive the broker message and parsed
-/// parameters, and must return `Result<Response, otel_wasi::Error>` so replies and failures keep
-/// the messaging boundary's standard behavior.
-#[proc_macro]
-pub fn dispatch_actions(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as dispatch_actions::DispatchInput);
-
-    match dispatch_actions::expand(input) {
-        Ok(tokens) => tokens.into(),
-        Err(error) => error.to_compile_error().into(),
-    }
 }
 
 /// Create a read query from a compile time string literal.

@@ -3,8 +3,8 @@ package com.typewritermc.loader.artifact
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ArtifactKind
 import com.typewritermc.imprint.ArtifactVersion
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import kotlinx.serialization.Serializable
 
 /**

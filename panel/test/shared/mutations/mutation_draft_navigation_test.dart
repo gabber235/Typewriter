@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -13,7 +11,7 @@ void main() {
     "return action follows current selection without replacing review fallback",
     (tester) async {
       final container = ProviderContainer.test();
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
 
       addTearDown(workspace.dispose);
 
@@ -29,19 +27,20 @@ void main() {
         fakeEditorTarget(
           targetId: identity,
           label: "Host configuration",
-          document: const EditorDocument(
-            rootType: StringType(),
-            typeCatalog: TypeCatalog([]),
-            confirmedValue: StringValue("original"),
+          document: EditorDocument(
+            rootType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+            catalog: _emptyCatalog,
+            confirmedValue: skir.DataValue.wrapStringValue("original"),
             revision: 1,
           ),
+          validation: acceptTestEditorMutation,
           commitPolicy: EditorCommitPolicy.applyResource,
           commit: (change) async =>
               MutationSuccess(revision: 2, value: change.rootValue),
         ),
       );
       workspace.retain(key);
-      owner.update(DataPath.root, const StringValue("draft"));
+      owner.update(editorRootPath, skir.DataValue.wrapStringValue("draft"));
 
       final resource = workspace.resources[key]!
         ..destination = InspectorDestination(
@@ -55,32 +54,32 @@ void main() {
       await tester.pumpTestApp(
         child: Scaffold(
           appBar: AppBar(
-            actions: [LocalWorkSessionActivityView(controller: workspace)],
+            actions: [ScopedWorkSessionActivityView(controller: workspace)],
           ),
         ),
       );
 
       await tester.tap(find.text("1 draft"));
       await tester.pumpAndSettle();
-      expect(find.text("Return to draft"), findsNothing);
+      expect(find.text("Open work"), findsNothing);
       expect(find.text("Review draft"), findsNothing);
 
       container.read(selectionProvider.notifier).clear();
       await tester.pumpAndSettle();
-      expect(find.text("Return to draft"), findsOneWidget);
+      expect(find.text("Open work"), findsOneWidget);
 
-      await tester.tap(find.text("Return to draft"));
+      await tester.tap(find.text("Open work"));
       await tester.pumpAndSettle();
       expect(container.read(selectionProvider), [identity]);
       expect(find.text("Save activity"), findsNothing);
       expect(
-        owner.value(DataPath.root).valueOrNull,
-        const StringValue("draft"),
+        owner.value(editorRootPath).valueOrNull,
+        skir.DataValue.wrapStringValue("draft"),
       );
 
       await tester.tap(find.text("1 draft"));
       await tester.pumpAndSettle();
-      expect(find.text("Return to draft"), findsNothing);
+      expect(find.text("Open work"), findsNothing);
 
       await tester.tap(find.byTooltip("Close"));
       await tester.pumpAndSettle();
@@ -116,3 +115,7 @@ void main() {
     expect(destination.isCurrent, isFalse);
   });
 }
+
+final _emptyCatalog = CheckedEditorCatalog(
+  skir.EditorCatalogWireSnapshot.defaultInstance,
+);

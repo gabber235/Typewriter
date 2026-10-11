@@ -1,15 +1,23 @@
 part of "service_host_selectable_test.dart";
 
-PolymorphicValue _mode(
+skir.DataValue _mode(
   String name, [
-  Map<String, DataValue> fields = const {},
-]) => PolymorphicValue(
-  concreteType: ResolvedTypeRef(
-    id: QualifiedTypeId(namespace: "panel.host", name: name),
+  Map<String, skir.DataValue> fields = const {},
+]) {
+  final type = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(namespace: "panel.host", name: name),
     revision: 1,
-  ),
-  value: RecordValue(fields),
-);
+  );
+  return skir.DataValue.createNamed(
+    actualType: skir.NamedTypeUse(definition: type, arguments: const []),
+    payload: skir.DataValue.createRecord(
+      fields: [
+        for (final entry in fields.entries)
+          skir.FieldValue(name: entry.key, value: entry.value),
+      ],
+    ),
+  );
+}
 
 void _testHostApply() {
   test(
@@ -20,14 +28,15 @@ void _testHostApply() {
 
       final owners = EditorOwnerRegistry();
       addTearDown(owners.dispose);
-      final model = harness.selectable.buildPresentation(owners);
-      final owner =
-          (model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-              as EditorSource;
-      final path = DataPath.root.field("realm");
+      _buildInspection(harness, owners);
+      final owner = _configurationSource(owners);
+      final path = editorRootPath.field("realm");
       final interaction = owner.beginInteraction(path);
 
-      owner.update(path, _mode("RealmHosted", {"target": StringValue("")}));
+      owner.update(
+        path,
+        _mode("RealmHosted", {"target": skir.DataValue.wrapStringValue("")}),
+      );
       await interaction.commit();
 
       expect(
@@ -46,14 +55,16 @@ void _testHostApply() {
 
       owner.update(
         path,
-        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
       expect(
         owner.update(
-          DataPath.root.field("engine"),
+          editorRootPath.field("engine"),
           _mode("EngineEnabled", {
-            "target": StringValue("paper@*"),
-            "realm": StringValue("realm_instance:elsewhere"),
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+            "realm": skir.DataValue.wrapStringValue("realm_instance:elsewhere"),
           }),
         ),
         isA<AppliedEditorMutation>(),
@@ -75,7 +86,7 @@ void _testHostApply() {
             host: _hostWithRevision(harness.host, 2),
             realm: harness.realm,
             engine: skir.EngineInstance(
-              engineId: recordId("engine_instance:paper"),
+              engineId: skir.recordId("engine_instance:paper"),
               ownerHost: harness.realm.ownerHost,
               realm: skir.RealmInfo(
                 realmId: harness.realm.realmId,
@@ -117,19 +128,18 @@ void _testHostApply() {
     final workspace = harness.container.read(localWorkControllerProvider);
     final view = EditorOwnerRegistry(workspace: workspace);
 
-    final owner =
-        ((harness.selectable.buildPresentation(view).inputs[const BindingId(1)]!
-                      as PresentationEditInput)
-                  .owner
-              as EditorSource)
-          ..update(
-            DataPath.root.field("realm"),
-            _mode("RealmHosted", {"target": StringValue("paper@*")}),
-          );
+    _buildInspection(harness, view);
+    final owner = _configurationSource(view)
+      ..update(
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
+      );
     view.dispose();
     harness.servicesSubscription.close();
     harness.topologySubscription.close();
-    organization = recordId("organization:org2");
+    organization = skir.recordId("organization:org2");
     harness.container.invalidate(organizationIdProvider);
 
     await harness.container.pump();
@@ -165,19 +175,14 @@ void _testHostApply() {
       addTearDown(harness.dispose);
       final owners = EditorOwnerRegistry();
       addTearDown(owners.dispose);
-      final owner =
-          (harness.selectable.buildPresentation(owners).inputs[const BindingId(
-                        1,
-                      )]!
-                      as PresentationEditInput)
-                  .owner
-              as EditorSource;
+      _buildInspection(harness, owners);
+      final owner = _configurationSource(owners);
       expect(
         owner.update(
-          DataPath.root.field("engine"),
+          editorRootPath.field("engine"),
           _mode("EngineEnabled", {
-            "target": StringValue("paper@*"),
-            "realm": StringValue(""),
+            "target": skir.DataValue.wrapStringValue("paper@*"),
+            "realm": skir.DataValue.wrapStringValue(""),
           }),
         ),
         isA<AppliedEditorMutation>(),
@@ -185,7 +190,7 @@ void _testHostApply() {
 
       expect(
         owner.draftDiagnostics.map((issue) => issue.path),
-        contains(DataPath.root.field("engine").field("realm")),
+        contains(editorRootPath.field("engine").field("realm")),
       );
       expect(await owner.flush(), isA<MutationInvalid>());
       expect(
@@ -196,11 +201,13 @@ void _testHostApply() {
       );
 
       owner.update(
-        DataPath.root.field("realm"),
-        _mode("RealmHosted", {"target": StringValue("paper@*")}),
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
       );
       expect(owner.draftDiagnostics, isEmpty);
-      owner.update(DataPath.root.field("realm"), _mode("RealmDisabled"));
+      owner.update(editorRootPath.field("realm"), _mode("RealmDisabled"));
       expect(await owner.flush(), isA<MutationInvalid>());
       expect(
         harness.nats.requests.where(

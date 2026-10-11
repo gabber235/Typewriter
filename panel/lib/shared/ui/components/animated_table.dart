@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Builds a row in an [AnimatedTable].
 /// Builds one active row. The animation is complete for settled rows and

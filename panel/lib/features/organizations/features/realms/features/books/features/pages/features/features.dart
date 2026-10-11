@@ -1,3 +1,3 @@
 library;
 
-export "editor/editor.dart";
+export "package:typewriter_panel/shared/editors/presentation/timeline/timeline.dart";

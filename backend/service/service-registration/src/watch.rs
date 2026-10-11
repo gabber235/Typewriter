@@ -1,40 +1,41 @@
 //! Serves the organization service snapshot used to initialize the service watch.
 //!
-//! The snapshot is the initial state for consumers that then process service add, update, and
-//! remove events on the same typed subject. Results are scoped to one organization and sorted by
+//! The snapshot is the initial state for consumers that then process service events on the same
+//! subject. Results are scoped to one organization and sorted by
 //! service name so the initial order is deterministic.
-
-use std::collections::HashMap;
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
     database::{RecordId, read_query},
-    decode_skir, extract_params,
     skir::base::service::v1::organization::{
         WatchOrganizationServicesRequest, WatchOrganizationServicesResponse,
     },
+    skir::base::service::v1::service::Service,
     wasmcloud::messaging::types::NatsMessage,
 };
 
 use wasmcloud_utils::database::service::ServiceRecord;
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Decodes the watch request and returns the current services for its organization.
 ///
 /// The user and organization path parameters identify the requested scope. The request body is
 /// still decoded to enforce the Skir boundary, although the current request has no fields.
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationServicesRequest,
 ) -> Result<WatchOrganizationServicesResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string()
     );
-    let _ = decode_skir!(WatchOrganizationServicesRequest, &msg.body)?;
 
-    snapshot(org_id).await
+    snapshot(org_id)
+        .await
+        .map(WatchOrganizationServicesResponse::List)
 }
 
 /// Reads one organization's service records in stable name order.
@@ -42,7 +43,7 @@ pub async fn handle_watch(
 /// This helper is also the snapshot boundary used by the request handler. It returns a complete
 /// list, while later service state changes use the typed update stream rather than being folded
 /// into this query.
-pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationServicesResponse, otel_wasi::Error> {
+pub async fn snapshot(org_id: &str) -> Result<Vec<Service>, otel_wasi::Error> {
     let organization_id = RecordId::new("organization", org_id);
     let records = read_query!(
         r#"
@@ -64,5 +65,5 @@ pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationServicesResponse,
         .collect::<Result<Vec<_>, _>>()?;
     otel_wasi::main_attribute!("service.result_count" = services.len() as i64);
 
-    Ok(WatchOrganizationServicesResponse::List(services))
+    Ok(services)
 }

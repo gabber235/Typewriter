@@ -1,8 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -16,7 +11,7 @@ class JoinCodesTab extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final codesAsync = ref.watch(organizationJoinCodesProvider);
+    final codesAsync = ref.watch(visibleOrganizationJoinCodesProvider);
     final rolesAsync = ref.watch(organizationRolesProvider);
     final selectedCodes = useState<Set<skir.RecordId>>({});
     final joinCodeOptions = useState(const JoinCodeOptions());
@@ -52,9 +47,10 @@ class JoinCodesTab extends HookConsumerWidget {
           confirmIcon: Fa6Solid.link_slash,
           onConfirm: () async {
             for (final code in codesToRevoke) {
-              await ref
-                  .read(organizationJoinCodesProvider.notifier)
-                  .revokeCode(code);
+              await ref.executeMembership(
+                ref.membershipCommands.revoke(code),
+                (response) => response.requireAccepted(),
+              );
             }
             selectedCodes.value = {};
           },
@@ -78,9 +74,12 @@ class JoinCodesTab extends HookConsumerWidget {
                     title: "Join Code",
                     description: "Generate a unique join code to invite new members to your organization.",
                     prefix: joinCodeUrlPrefix,
-                    onGenerate: () => ref
-                        .read(organizationJoinCodesProvider.notifier)
-                        .generateCode(options: joinCodeOptions.value),
+                    onGenerate: () => ref.executeMembership(
+                      ref.membershipCommands.generate(
+                        options: joinCodeOptions.value,
+                      ),
+                      (response) => response.requireAccepted(),
+                    ),
                     generateButtonText: "Generate Join Code",
                     regenerateButtonText: "New Join Code",
                     copyButtonText: "Copy Join Code",

@@ -1,11 +1,10 @@
 package com.typewritermc.loader.artifact
 
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.DEFAULT_CHUNK_SIZE
-import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.rollout.VerifiedArtifactSource
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobTransfer
 import java.nio.file.Path
 
 /**
@@ -22,23 +21,7 @@ class VerifiedArtifactCache(
     /** Returns a verified local path, resuming an existing transfer only through the endpoint contract. */
     override suspend fun fetch(digest: ArtifactDigest): Path {
         if (cache.metadata(digest) is BlobResult.Success) return cache.pathFor(digest)
-        val metadata = source.metadata(digest).requireSuccess()
-        val transfer = TransferId.create()
-        var offset = cache.beginWrite(transfer, metadata).requireSuccess().offset
-        while (offset < metadata.size) {
-            val chunk = source.read(digest, offset, DEFAULT_CHUNK_SIZE).requireSuccess()
-            require(chunk.bytes.isNotEmpty()) { "Artifact source returned an empty incomplete chunk." }
-            offset = cache.write(transfer, offset, chunk.bytes).requireSuccess()
-        }
-        cache.complete(transfer).requireSuccess()
+        BlobTransfer().copyVerified(source, cache, digest)
         return cache.pathFor(digest)
     }
 }
-
-private fun <Value> BlobResult<Value>.requireSuccess(): Value =
-    when (this) {
-        is BlobResult.Success -> value
-        BlobResult.NotFound -> error("Artifact blob was not found.")
-        is BlobResult.Invalid -> error(reason)
-        is BlobResult.Conflict -> error(reason)
-    }

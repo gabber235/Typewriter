@@ -1,18 +1,17 @@
-import "package:flutter/widgets.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+part "input_field_mode_coordinator.g.dart";
 
 /// Provides the coordinator that synchronizes input focus with interaction mode.
 ///
 /// The provider owns the coordinator for its Riverpod container. Disposing that
 /// container removes the global focus listener and clears registrations.
-final inputFieldModeCoordinatorProvider = Provider<InputFieldModeCoordinator>((
-  ref,
-) {
+@Riverpod(keepAlive: true)
+InputFieldModeCoordinator inputFieldModeCoordinator(Ref ref) {
   final coordinator = InputFieldModeCoordinator(ref);
   ref.onDispose(coordinator.dispose);
   return coordinator;
-});
+}
 
 /// Coordinates the shared mode state for registered input fields.
 ///

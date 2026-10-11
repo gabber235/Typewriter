@@ -30,7 +30,7 @@ sealed interface Duration_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class Duration private constructor(
     override val milliseconds: kotlin.Long,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.duration.Duration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.kernel.v1.duration.Duration>? =
         null,
 ): skirout.kernel.v1.duration.Duration_OrMutable {
     constructor(
@@ -77,7 +77,7 @@ class Duration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.duration.Duration.serializerImpl,
+            _SerializerRegistry.DurationSerializerImpl,
         )
     }
 
@@ -121,33 +121,37 @@ class Duration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "kernel/v1/duration.skir:Duration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [Duration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.DurationSerializer;
 
         /** Describes the [Duration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.DurationSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.addField(
-                "milliseconds",
-                "milliseconds",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.milliseconds },
-                { mut, v -> mut.milliseconds = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+private object _SerializerRegistry {
+    val DurationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "kernel/v1/duration.skir:Duration",
+        doc = "",
+        defaultInstance = skirout.kernel.v1.duration.Duration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.kernel.v1.duration.Duration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val DurationSerializer = build.skir.internal.makeSerializer(DurationSerializerImpl);
+
+    init {
+        DurationSerializerImpl.addField(
+            "milliseconds",
+            "milliseconds",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.milliseconds },
+            { mut, v -> mut.milliseconds = v },
+        );
+        DurationSerializerImpl.finalizeStruct();
     }
 }

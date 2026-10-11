@@ -1,12 +1,7 @@
-import "dart:math" as math;
-
-import "package:faker/faker.dart" hide Color;
-import "package:flutter/material.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:faker/faker.dart" hide Color, random;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
-import "package:typewriter_testkit/src/shared/testing/testing.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "tag_batch_layout.dart";
 
@@ -22,7 +17,7 @@ List<Tag> generateTagBatch(int count) {
   final rawTags = _generateRawTags(count);
   final layerMap = rawTags._calculateLayers();
 
-  final maxLayer = layerMap.values.fold(0, math.max);
+  final maxLayer = layerMap.values.fold(0, max);
   final layers = List.generate(
     maxLayer + 1,
     (i) => rawTags.where((t) => layerMap[t.tagId] == i).toList(),
@@ -36,10 +31,10 @@ List<Tag> _generateRawTags(int count) {
   final tags = <Tag>[];
 
   for (int i = 0; i < count; i++) {
-    final parentIds = <skir.RecordId>[];
+    final parentIds = <skir.ResourceId>[];
 
     if (i > 0 && tags.isNotEmpty) {
-      final prob = random.decimal();
+      final prob = faker.randomGenerator.decimal();
       final parentCount = prob < _probNoParents
           ? 0
           : prob < _probOneParent
@@ -48,8 +43,8 @@ List<Tag> _generateRawTags(int count) {
 
       final available = tags.toList();
       for (int p = 0; p < parentCount && available.isNotEmpty; p++) {
-        final recentWindow = math.min(_recentParentWindow, available.length);
-        final offset = random.integer(recentWindow, min: 0);
+        final recentWindow = min(_recentParentWindow, available.length);
+        final offset = faker.randomGenerator.integer(recentWindow, min: 0);
         final parentIndex = available.length - 1 - offset;
         final parent = available.removeAt(parentIndex);
         parentIds.add(parent.tagId);
@@ -58,14 +53,14 @@ List<Tag> _generateRawTags(int count) {
 
     tags.add(
       Tag(
-        tagId: recordId("tag:${faker.guid.guid()}"),
+        tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
         name: faker.lorem
-            .words(random.integer(3, min: 1))
+            .words(faker.randomGenerator.integer(3, min: 1))
             .join(" ")
             .snakeCase(),
         color: safeColors.randomElement(),
         parentIds: parentIds,
-        placement: const Placement(x: 0, y: 0, width: 0, height: 0),
+        placement: GraphPlacement(x: 0, y: 0, width: 0, height: 0),
       ),
     );
   }
@@ -76,107 +71,18 @@ List<Tag> _generateRawTags(int count) {
 /// Generates a random standalone tag with no parent relationships.
 Tag generateRandomTag() {
   return Tag(
-    tagId: recordId("tag:${faker.guid.guid()}"),
-    name: faker.lorem.words(random.integer(4, min: 1)).join(" ").snakeCase(),
+    tagId: skir.ResourceId(value: "tag:${faker.guid.guid()}"),
+    name: faker.lorem
+        .words(faker.randomGenerator.integer(4, min: 1))
+        .join(" ")
+        .snakeCase(),
     color: safeColors.randomElement(),
     parentIds: const [],
-    placement: Placement(
-      x: random.integer(20),
-      y: random.integer(10),
-      width: random.integer(6, min: 2),
-      height: random.integer(3, min: 1),
+    placement: GraphPlacement(
+      x: faker.randomGenerator.integer(20),
+      y: faker.randomGenerator.integer(10),
+      width: faker.randomGenerator.integer(6, min: 2),
+      height: faker.randomGenerator.integer(3, min: 1),
     ),
   );
 }
-
-class TagsMock extends CanonicalTags {
-  TagsMock({required this.displayState, this.specificTags});
-
-  final DisplayState displayState;
-  final List<Tag>? specificTags;
-
-  @override
-  Future<List<Tag>> build() async {
-    if (specificTags != null) {
-      return specificTags!;
-    }
-
-    return displayState.generateBatch(generateTagBatch);
-  }
-
-  @override
-  Future<Tag> createTag({
-    required String name,
-    Color? color,
-    List<skir.RecordId> parentIds = const [],
-    Offset? preferredGraphAnchor,
-  }) async {
-    final tags = await future;
-
-    final obstacles = [
-      for (final tag in tags)
-        GraphGridRect(
-          x: tag.placement.x,
-          y: tag.placement.y,
-          width: tag.placement.width,
-          height: tag.placement.height,
-        ),
-    ];
-    final placement = const GraphIncrementalPlacer()
-        .placeGroup(
-          obstacles: obstacles,
-          group: [GraphGridRect(x: 0, y: 0, width: 4, height: 1)],
-          anchor:
-              preferredGraphAnchor ??
-              graphCenterOfMass(obstacles, cellSize: tagGraphCellSize) ??
-              Offset.zero,
-        )
-        .single;
-
-    final newTag = Tag(
-      tagId: recordId("tag:${faker.guid.guid()}"),
-      name: name,
-      color: color ?? safeColors.randomElement(),
-      parentIds: parentIds,
-      placement: Placement(
-        x: placement.x,
-        y: placement.y,
-        width: placement.width,
-        height: placement.height,
-      ),
-    );
-
-    state = AsyncData([...tags, newTag]);
-    return newTag;
-  }
-
-  @override
-  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
-    final tags = await future;
-    final canonical = tag;
-    state = AsyncData(
-      tags
-          .map((value) => value.tagId == tag.tagId ? canonical : value)
-          .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: 1,
-      value: canonical.inspectorValue,
-    );
-  }
-
-  @override
-  Future<void> deleteTag(skir.RecordId tagId) async {
-    final tags = await future;
-    state = AsyncData(tags.where((t) => t.tagId != tagId).toList());
-  }
-}
-
-List<Override> tagsProviderOverrides({
-  DisplayState state = DisplayState.loading,
-  List<Tag>? tags,
-}) => [
-  canonicalTagsProvider.overrideWith(
-    () => TagsMock(displayState: state, specificTags: tags),
-  ),
-];

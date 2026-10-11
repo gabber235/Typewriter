@@ -1,11 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Expandable mobile card for one invitation code.
@@ -158,11 +150,6 @@ class JoinCodeCard extends HookConsumerWidget {
                                 endDate: code.expiresAt,
                                 onExpired: () {
                                   onSelectionChanged(false);
-                                  ref
-                                      .read(
-                                        organizationJoinCodesProvider.notifier,
-                                      )
-                                      .cleanupExpiredCodes();
                                 },
                               ),
                               JoinCodeTypeBadges(code: code),
@@ -254,9 +241,10 @@ class JoinCodeCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.link_slash,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationJoinCodesProvider.notifier)
-            .revokeCode(code.code);
+        await ref.executeMembership(
+          ref.membershipCommands.revoke(code.code),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

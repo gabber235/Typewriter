@@ -1,11 +1,11 @@
 package com.typewritermc.realm.routes
 
 import build.skir.Serializer
-import com.typewritermc.realm.compiler.SurrealCompiledContentRepository
-import com.typewritermc.realm.repository.RepositoryFixture
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
+import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.RouterResult
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.InboundMessage
@@ -23,26 +23,14 @@ import kotlinx.coroutines.yield
 import kotlin.time.Duration.Companion.seconds
 
 internal class RouteFixture(
-    editorCatalog: RealmEditorCatalogSource = UnavailableRealmEditorCatalogSource(),
-    presentationSearch: RealmPresentationSearchSource = UnavailableRealmPresentationSearchSource(),
+    routes: (EditorContracts, RealmRouteScope, Communicator) -> CommunicatorRoutes,
 ) : AutoCloseable {
-    val repositories = RepositoryFixture()
-    val compiledContent = SurrealCompiledContentRepository(repositories.database)
     val transport = FakeMessageTransport()
     private val telemetry = TelemetryTestHarness.create()
     private val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val router: CommunicatorRouter =
-        communicator.createRouter(
-            RealmRouteFactory(
-                authoring = repositories.authoring,
-                authoringSearch = repositories.search,
-                compiledContent = compiledContent,
-                editorCatalog = editorCatalog,
-                presentationSearch = presentationSearch,
-            ).create(RealmAddress("realm", "organization"), communicator),
-            scope,
-        )
+    private val address = RealmRouteScope(organizationId = "organization", realmId = "realm")
+    private val router: CommunicatorRouter = communicator.createRouter(routes(EditorContracts(address), address, communicator), scope)
     private var replySequence = 0
 
     init {
@@ -54,16 +42,19 @@ internal class RouteFixture(
         request: Request,
         requestSerializer: Serializer<Request>,
         responseSerializer: Serializer<Response>,
+    ): Response = requestPayload(suffix, requestSerializer.toBytes(request).toByteArray(), responseSerializer)
+
+    suspend fun <Response : Any> requestPayload(
+        suffix: String,
+        payload: ByteArray,
+        responseSerializer: Serializer<Response>,
     ): Response {
         val reply = MessageAddress.of("test.reply.${replySequence++}")
         transport.deliver(
             TransportDelivery.Message(
                 InboundMessage(
-                    address =
-                        MessageAddress.of(
-                            "service.to.realm.organization.organization.realm.$suffix",
-                        ),
-                    payload = requestSerializer.toBytes(request).toByteArray(),
+                    address = MessageAddress.of("service.to.realm.organization.organization.realm.$suffix"),
+                    payload = payload,
                     replyTo = reply,
                 ),
             ),
@@ -82,29 +73,10 @@ internal class RouteFixture(
         return responseSerializer.fromBytes(publication.message.payload.toByteArray())
     }
 
-    fun publishedTo(suffix: String) =
-        transport.actions
-            .filterIsInstance<FakeMessageTransport.Action.Publish>()
-            .filter {
-                it.message.address ==
-                    MessageAddress.of(
-                        "service.from.realm.organization.organization.realm.$suffix",
-                    )
-            }
-
-    fun <Response : Any> publishedTo(
-        suffix: String,
-        serializer: Serializer<Response>,
-    ): List<Response> = publishedTo(suffix).map { serializer.fromBytes(it.message.payload.toByteArray()) }
-
     override fun close() {
-        try {
-            runBlocking { router.stop() }
-            scope.cancel()
-            transport.close()
-            telemetry.close()
-        } finally {
-            repositories.close()
-        }
+        runBlocking { router.stop() }
+        scope.cancel()
+        transport.close()
+        telemetry.close()
     }
 }

@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'organization.dart';
 
@@ -6,7 +6,7 @@ part of 'organization.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the current user's organization list projection.
 ///
@@ -54,7 +54,7 @@ final class OrganizationsProvider
   Organizations create() => Organizations();
 }
 
-String _$organizationsHash() => r'cee411b116915b0b6e4da21ef292d6a4b640f7ec';
+String _$organizationsHash() => r'68f90990541b0a7f1c6a0a11deb550043b3cdf68';
 
 /// Owns the current user's organization list projection.
 ///
@@ -143,7 +143,7 @@ final class OrganizationIdProvider
   }
 }
 
-String _$organizationIdHash() => r'9902444ecead9e5ebb83f436a847d913ff97d987';
+String _$organizationIdHash() => r'7eb63d4df0d5163bd3cd75644fc63f619087e550';
 
 /// Selects the routed organization from the user's canonical organization list.
 ///

@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The default interaction mode that serves as the baseline experience.

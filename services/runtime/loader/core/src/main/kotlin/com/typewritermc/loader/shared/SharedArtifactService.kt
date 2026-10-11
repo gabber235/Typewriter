@@ -1,27 +1,26 @@
 package com.typewritermc.loader.shared
 
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobChunk
-import com.typewritermc.loader.api.artifact.BlobEndpoint
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.BlobWriteSession
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
 import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
-import com.typewritermc.loader.api.artifact.SharedArtifactChanged
 import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
-import com.typewritermc.loader.api.artifact.TransferId
 import com.typewritermc.loader.artifactSpan
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
+import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 
 /**
- * Groups descriptor changes, catalog revision allocation, and outbox enqueueing.
+ * Groups descriptor changes and catalog revision allocation.
  *
  * Use only inside the repository transaction block; do not retain the receiver after the block returns.
  */
@@ -31,12 +30,10 @@ interface SharedArtifactTransaction {
     suspend fun save(descriptor: SharedArtifactDescriptor)
 
     suspend fun nextCatalogRevision(): SharedCatalogRevision
-
-    suspend fun enqueue(change: SharedArtifactChanged)
 }
 
 /**
- * Owns shared descriptors and their catalog change outbox.
+ * Owns shared descriptors and their catalog revision.
  *
  * Transactions group logical updates. Blob storage is separate and bytes must be available before publication.
  */
@@ -49,9 +46,9 @@ interface SharedArtifactRepository {
 /**
  * Publishes revisioned descriptors over preexisting immutable blobs.
  *
- * Descriptor, catalog revision, and outbox event are grouped in one repository transaction. Identical live content
- * and metadata return Unchanged before revision comparison; provenance alone does not force a revision. Deletion
- * writes a tombstone and leaves blob retention to the host.
+ * Descriptor and catalog revision changes are grouped in one repository transaction. Identical live content and
+ * metadata return Unchanged before revision comparison; provenance alone does not force a revision. Deletion writes
+ * a tombstone and leaves blob retention to the host.
  */
 class SharedArtifactService(
     private val realmId: String,
@@ -92,7 +89,6 @@ class SharedArtifactService(
                     )
                 save(next)
                 val catalogRevision = nextCatalogRevision()
-                enqueue(SharedArtifactChanged(realmId, next, catalogRevision))
                 PublishResult.Published(next, catalogRevision)
             }
         }
@@ -119,7 +115,6 @@ class SharedArtifactService(
                 )
             save(tombstone)
             val catalogRevision = nextCatalogRevision()
-            enqueue(SharedArtifactChanged(realmId, tombstone, catalogRevision))
             PublishResult.Published(tombstone, catalogRevision)
         }
 

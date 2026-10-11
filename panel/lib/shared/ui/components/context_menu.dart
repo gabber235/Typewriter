@@ -1,9 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/gestures.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "context_menu.freezed.dart";
@@ -101,9 +95,12 @@ class ContextMenuRegion extends HookWidget {
   }
 
   /// Creates a tap handler that applies the platform context menu policy.
+  ///
+  /// Supply [onContextTap] to resolve a target before opening its actions.
   static void Function(TapUpDetails) onTapUp(
     MenuController controller, {
     Function(TapUpDetails)? orElse,
+    ValueChanged<TapUpDetails>? onContextTap,
   }) {
     return (details) {
       if (controller.isOpen) {
@@ -128,7 +125,11 @@ class ContextMenuRegion extends HookWidget {
               HardwareKeyboard.instance.logicalKeysPressed.contains(
                 LogicalKeyboardKey.controlRight,
               )) {
-            controller.open(position: details.localPosition);
+            if (onContextTap != null) {
+              onContextTap(details);
+            } else {
+              controller.open(position: details.localPosition);
+            }
           } else {
             orElse?.call(details);
           }

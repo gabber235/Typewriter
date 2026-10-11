@@ -77,34 +77,22 @@ abstract class _$PageSearch extends $Notifier<String> {
   }
 }
 
-/// Supplies the sidebar projection, preserving local edits while searching.
-///
-/// A projected result is used immediately when available. Otherwise the
-/// canonical provider is awaited once, then the projection is read again so
-/// the sidebar does not display stale canonical values over an active draft.
+/// Filters shared working pages immediately as values or search text change.
 
 @ProviderFor(_viewingPages)
 final _viewingPagesProvider = _ViewingPagesProvider._();
 
-/// Supplies the sidebar projection, preserving local edits while searching.
-///
-/// A projected result is used immediately when available. Otherwise the
-/// canonical provider is awaited once, then the projection is read again so
-/// the sidebar does not display stale canonical values over an active draft.
+/// Filters shared working pages immediately as values or search text change.
 
 final class _ViewingPagesProvider
     extends
         $FunctionalProvider<
           AsyncValue<List<Page>>,
-          List<Page>,
-          FutureOr<List<Page>>
+          AsyncValue<List<Page>>,
+          AsyncValue<List<Page>>
         >
-    with $FutureModifier<List<Page>>, $FutureProvider<List<Page>> {
-  /// Supplies the sidebar projection, preserving local edits while searching.
-  ///
-  /// A projected result is used immediately when available. Otherwise the
-  /// canonical provider is awaited once, then the projection is read again so
-  /// the sidebar does not display stale canonical values over an active draft.
+    with $Provider<AsyncValue<List<Page>>> {
+  /// Filters shared working pages immediately as values or search text change.
   _ViewingPagesProvider._()
     : super(
         from: null,
@@ -121,13 +109,22 @@ final class _ViewingPagesProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<Page>> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $ProviderElement<AsyncValue<List<Page>>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
-  FutureOr<List<Page>> create(Ref ref) {
+  AsyncValue<List<Page>> create(Ref ref) {
     return _viewingPages(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AsyncValue<List<Page>> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AsyncValue<List<Page>>>(value),
+    );
   }
 }
 
-String _$_viewingPagesHash() => r'a467bc68d6477bec5bead598f4d2592c9e3047bf';
+String _$_viewingPagesHash() => r'743feac838e37f37ecc5f92b69fbe17a77ab9399';

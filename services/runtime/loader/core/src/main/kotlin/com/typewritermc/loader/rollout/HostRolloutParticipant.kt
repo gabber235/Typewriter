@@ -28,11 +28,13 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
@@ -41,8 +43,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.nio.file.Path
+import java.util.concurrent.TimeoutException
 import kotlin.io.path.createDirectories
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -60,7 +63,7 @@ interface ProjectionSource {
  * The file must remain available during loading; the caller does not own deletion of shared cache content.
  */
 interface VerifiedArtifactSource {
-    suspend fun fetch(digest: com.typewritermc.loader.api.artifact.ArtifactDigest): Path
+    suspend fun fetch(digest: com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest): Path
 }
 
 /**
@@ -174,7 +177,7 @@ class HostRolloutParticipant(
             } catch (rejection: CommandRejectedException) {
                 CommandAcceptance(serviceId, false, rejection.message)
             } catch (failure: Throwable) {
-                rethrowExceptionalThrowable(failure)
+                failure.rethrowExceptional()
                 span?.recordDegraded(ErrorSlug.of("artifact-rollout-command-internal-failure"), failure)
                 val recoverable = localState.toRecoverable()
                 publish(
@@ -404,6 +407,8 @@ class HostRolloutParticipant(
                         identity = HostedRuntimeIdentity(serviceId.value, realmId.value, runtime.placement),
                         directories = HostedRuntimeDirectories(stateDirectory, deploymentDirectory),
                         artifacts = artifactPackage,
+                        publicationTarget = projection.publicationTarget,
+                        engineImplementation = runtime.implementation,
                         facts = projection.facts,
                         host = host,
                     )
@@ -593,21 +598,27 @@ class HostRolloutParticipant(
         suspend fun activate() =
             transition(
                 ordered = runtimes,
+                operationName = "activate",
                 operation = { it.runtime.activate() },
+                compensationName = "quiesce",
                 compensate = { it.runtime.quiesce() },
             )
 
         suspend fun quiesce() =
             transition(
                 ordered = runtimes.asReversed(),
+                operationName = "quiesce",
                 operation = { it.runtime.quiesce() },
+                compensationName = "resume",
                 compensate = { it.runtime.resume() },
             )
 
         suspend fun resume() =
             transition(
                 ordered = runtimes,
+                operationName = "resume",
                 operation = { it.runtime.resume() },
+                compensationName = "quiesce",
                 compensate = { it.runtime.quiesce() },
             )
 
@@ -618,7 +629,7 @@ class HostRolloutParticipant(
             val failures = mutableListOf<Throwable>()
             pendingClose.toList().asReversed().forEach { runtime ->
                 try {
-                    withTimeout(lifecycleTimeout) { runtime.close() }
+                    withinLifecycleDeadline("close") { runtime.close() }
                     pendingClose.remove(runtime)
                 } catch (failure: Throwable) {
                     failures += failure
@@ -632,24 +643,37 @@ class HostRolloutParticipant(
 
         private suspend fun transition(
             ordered: List<LoadedHostedRuntime>,
+            operationName: String,
             operation: suspend (LoadedHostedRuntime) -> Unit,
+            compensationName: String,
             compensate: suspend (LoadedHostedRuntime) -> Unit,
         ) {
             val completed = mutableListOf<LoadedHostedRuntime>()
             try {
                 ordered.forEach { runtime ->
-                    withTimeout(lifecycleTimeout) { operation(runtime) }
+                    withinLifecycleDeadline(operationName) { operation(runtime) }
                     completed += runtime
                 }
             } catch (failure: Throwable) {
                 withContext(NonCancellable) {
                     completed.asReversed().forEach { runtime ->
                         runCatchingSuspend {
-                            withTimeout(lifecycleTimeout) { compensate(runtime) }
+                            withinLifecycleDeadline("$compensationName compensation") { compensate(runtime) }
                         }.exceptionOrNull()?.let(failure::addSuppressed)
                     }
                 }
                 throw failure
+            }
+        }
+
+        private suspend fun withinLifecycleDeadline(
+            operationName: String,
+            operation: suspend () -> Unit,
+        ) {
+            val completed = withTimeoutOrNull(lifecycleTimeout) { operation() }
+            currentCoroutineContext().ensureActive()
+            if (completed == null) {
+                throw TimeoutException("Hosted runtime $operationName exceeded lifecycle deadline of $lifecycleTimeout")
             }
         }
 
@@ -733,7 +757,7 @@ private suspend fun <Value> runCatchingSuspend(block: suspend () -> Value): Resu
     try {
         Result.success(block())
     } catch (failure: Throwable) {
-        rethrowExceptionalThrowable(failure)
+        failure.rethrowExceptional()
         Result.failure(failure)
     }
 

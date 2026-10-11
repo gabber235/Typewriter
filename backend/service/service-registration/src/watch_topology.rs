@@ -5,8 +5,6 @@
 //! and runtime update events. Each collection is ordered by record identifier for deterministic
 //! initialization; subsequent changes arrive on the typed topology subject.
 
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
@@ -14,12 +12,10 @@ use wasmcloud_utils::{
         RecordId, read_query,
         topology::{EngineInstanceViewRecord, RealmInstanceViewRecord, ServiceHostRecord},
     },
-    decode_skir, extract_params,
     skir::base::service::v1::topology::{
-        WatchOrganizationTopologyRequest, WatchOrganizationTopologyResponse,
-        WatchOrganizationTopologyResponse_List,
+        OrganizationTopologySnapshot, WatchOrganizationTopologyRequest,
+        WatchOrganizationTopologyResponse,
     },
-    skir_variant,
     wasmcloud::messaging::types::NatsMessage,
 };
 
@@ -30,23 +26,26 @@ struct TopologyListRecord {
     engines: Vec<EngineInstanceViewRecord>,
 }
 
-#[tracing::instrument(skip(msg, params))]
+#[tracing::instrument(skip_all)]
 /// Decodes the topology watch request and returns the caller's organization snapshot.
 ///
 /// The organization path parameter defines the query scope. The actor parameter is retained for
 /// tracing context supplied by the subject, while the request body currently carries no fields
 /// beyond the Skir boundary.
 pub async fn handle_watch(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
+    _request: WatchOrganizationTopologyRequest,
 ) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
-    let (actor_id, org_id) = extract_params!(params, user_id, org_id)?;
-    let _ = decode_skir!(WatchOrganizationTopologyRequest, &msg.body)?;
+    let actor_id = scope.user.as_str();
+    let org_id = scope.organization.as_str();
     otel_wasi::main_attribute!(
         "actor.id" = actor_id.to_string(),
         "organization.id" = org_id.to_string(),
     );
-    snapshot(org_id).await
+    snapshot(org_id)
+        .await
+        .map(|snapshot| WatchOrganizationTopologyResponse::List(Box::new(snapshot)))
 }
 
 /// Reads all topology resources belonging to one organization.
@@ -54,7 +53,7 @@ pub async fn handle_watch(
 /// The query excludes resources owned by other organizations and projects Realm and engine rows
 /// through the database view functions before serialization. The complete list initializes a
 /// consumer; configuration and runtime handlers publish incremental topology events afterward.
-pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationTopologyResponse, otel_wasi::Error> {
+pub async fn snapshot(org_id: &str) -> Result<OrganizationTopologySnapshot, otel_wasi::Error> {
     let organization_id = RecordId::new("organization", org_id);
     let topology = read_query!(
         r#"
@@ -88,9 +87,10 @@ pub async fn snapshot(org_id: &str) -> Result<WatchOrganizationTopologyResponse,
         "topology.realm_count" = topology.realms.len() as i64,
         "topology.engine_count" = topology.engines.len() as i64,
     );
-    Ok(skir_variant!(WatchOrganizationTopologyResponse::List {
+    Ok(OrganizationTopologySnapshot {
         hosts: topology.hosts.into_iter().map(Into::into).collect(),
         realms: topology.realms.into_iter().map(Into::into).collect(),
         engines: topology.engines.into_iter().map(Into::into).collect(),
-    }))
+        ..Default::default()
+    })
 }

@@ -1,81 +1,33 @@
 package com.typewritermc.library
 
-import com.typewritermc.types.RecordIdKey
 import com.typewritermc.types.Ref
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
-/**
- * Identifies a book using its database record key, including nonstring key forms.
- *
- * Use [ref] to add the book table when constructing a resource reference.
- */
 @JvmInline
 @Serializable
 value class BookId(
-    val key: RecordIdKey,
-) {
-    constructor(value: String) : this(
-        com.typewritermc.types.RecordIdKey
-            .String(value),
-    )
-}
+    val value: ResourceId,
+)
 
-/**
- * Identifies a tag independently of its display name and hierarchy placement.
- *
- * The record key retains its original type; string construction is a convenience for string keys.
- */
+fun BookId(value: String): BookId = BookId(ResourceId(value))
+
 @JvmInline
 @Serializable
 value class TagId(
-    val key: RecordIdKey,
-) {
-    constructor(value: String) : this(
-        com.typewritermc.types.RecordIdKey
-            .String(value),
-    )
-}
+    val value: ResourceId,
+)
 
-/**
- * Validates names used by authored library records.
- *
- * Names require at least three characters and lowercase alphanumeric segments separated by single underscores.
- * Display text requiring spaces needs a separate representation.
- */
-@JvmInline
-@Serializable
-value class LibraryName(
-    val value: String,
-) {
-    init {
-        require(value.length >= 3 && value.matches(PATTERN)) {
-            "Library names must contain lowercase alphanumeric segments separated by single underscores."
-        }
-    }
+fun TagId(value: String): TagId = TagId(ResourceId(value))
 
-    private companion object {
-        val PATTERN = Regex("^[a-z0-9]+(_[a-z0-9]+)*$")
-    }
-}
+fun BookId.pageOwnerRef(): Ref<BookPages.Page, Book> = Ref(value)
 
-fun BookId.ref(): Ref<Book> = Ref(ResourceId("book", key))
+fun TagId.parentRef(): Ref<TagParents.Child, Tag> = Ref(value)
 
-fun TagId.ref(): Ref<Tag> = Ref(ResourceId("tag", key))
+fun PageId.bookPageRef(): Ref<BookPages.Book, Page> = Ref(value)
 
-fun PageId.ref(): Ref<Page> = Ref(ResourceId("page", key))
+fun Ref<*, Book>.bookId(): BookId = BookId(target)
 
-fun Ref<Book>.bookId(): BookId {
-    require(id.table == "book") { "Book references must target the book table." }
-    return BookId(id.key)
-}
+fun Ref<*, Tag>.tagId(): TagId = TagId(target)
 
-fun Ref<Tag>.tagId(): TagId {
-    require(id.table == "tag") { "Tag references must target the tag table." }
-    return TagId(id.key)
-}
-
-fun Ref<Page>.pageId(): PageId {
-    require(id.table == "page") { "Page references must target the page table." }
-    return PageId(id.key)
-}
+fun Ref<*, Page>.pageId(): PageId = PageId(target)

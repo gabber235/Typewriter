@@ -13,17 +13,11 @@ part of 'context_menu.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$MenuItem implements DiagnosticableTreeMixin {
+mixin _$MenuItem {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'MenuItem'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -35,7 +29,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'MenuItem()';
 }
 
@@ -199,7 +193,7 @@ return divider();case _:
 /// @nodoc
 
 
-class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
+class _MenuItem implements MenuItem {
   const _MenuItem({required this.label, this.icon, this.color, this.onPressed,  List<ShortcutActivator> shortcuts = const []}): assert(label != "", 'Label must not be empty.'),_shortcuts = shortcuts;
   
 
@@ -222,12 +216,6 @@ class _MenuItem with DiagnosticableTreeMixin implements MenuItem {
 _$MenuItemCopyWith<_MenuItem> get copyWith => __$MenuItemCopyWithImpl<_MenuItem>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'MenuItem'))
-    ..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color))..add(DiagnosticsProperty('onPressed', onPressed))..add(DiagnosticsProperty('shortcuts', shortcuts));
-}
 
 @override
 bool operator ==(Object other) {
@@ -241,7 +229,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'MenuItem(label: $label, icon: $icon, color: $color, onPressed: $onPressed, shortcuts: $shortcuts)';
 }
 
@@ -287,7 +275,7 @@ as List<ShortcutActivator>,
 /// @nodoc
 
 
-class MenuItemSubmenu with DiagnosticableTreeMixin implements MenuItem {
+class MenuItemSubmenu implements MenuItem {
   const MenuItemSubmenu({required this.label, required  List<MenuItem> items, this.icon, this.color}): assert(label != "", 'Label must not be empty.'),assert(items.length > 0, 'Items must not be empty.'),_items = items;
   
 
@@ -309,12 +297,6 @@ class MenuItemSubmenu with DiagnosticableTreeMixin implements MenuItem {
 $MenuItemSubmenuCopyWith<MenuItemSubmenu> get copyWith => _$MenuItemSubmenuCopyWithImpl<MenuItemSubmenu>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'MenuItem.submenu'))
-    ..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color));
-}
 
 @override
 bool operator ==(Object other) {
@@ -328,7 +310,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'MenuItem.submenu(label: $label, items: $items, icon: $icon, color: $color)';
 }
 
@@ -373,7 +355,7 @@ as Color?,
 /// @nodoc
 
 
-class MenuItemSection with DiagnosticableTreeMixin implements MenuItem {
+class MenuItemSection implements MenuItem {
   const MenuItemSection({required  List<MenuItem> items, this.label, this.icon, this.color}): assert(items.length > 0, 'Items must not be empty.'),assert(label == null || label != "", 'Label must be null or nonempty.'),_items = items;
   
 
@@ -395,12 +377,6 @@ class MenuItemSection with DiagnosticableTreeMixin implements MenuItem {
 $MenuItemSectionCopyWith<MenuItemSection> get copyWith => _$MenuItemSectionCopyWithImpl<MenuItemSection>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'MenuItem.section'))
-    ..add(DiagnosticsProperty('items', items))..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color));
-}
 
 @override
 bool operator ==(Object other) {
@@ -414,7 +390,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'MenuItem.section(items: $items, label: $label, icon: $icon, color: $color)';
 }
 
@@ -459,7 +435,7 @@ as Color?,
 /// @nodoc
 
 
-class MenuItemDivider with DiagnosticableTreeMixin implements MenuItem {
+class MenuItemDivider implements MenuItem {
   const MenuItemDivider();
   
 
@@ -467,12 +443,6 @@ class MenuItemDivider with DiagnosticableTreeMixin implements MenuItem {
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'MenuItem.divider'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -484,7 +454,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'MenuItem.divider()';
 }
 

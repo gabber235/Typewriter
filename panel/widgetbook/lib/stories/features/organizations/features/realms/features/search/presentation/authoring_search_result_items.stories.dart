@@ -1,19 +1,15 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/features/pages/presentation/route.stories.dart";
-import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_catalog.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_fixtures.dart";
 
-@widgetbook.UseCase(name: "Book result", type: AuthoringBookSearchResultItem)
+@widgetbook.UseCase(name: "Book result", type: AuthoringSearchResultItem)
 Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringBookSearchResultItem(
-        book: fixtures.mainQuest,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mainQuest,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -22,12 +18,12 @@ Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Tag result", type: AuthoringTagSearchResultItem)
+@widgetbook.UseCase(name: "Tag result", type: AuthoringSearchResultItem)
 Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringTagSearchResultItem(
-        tag: fixtures.mainQuestTag,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mainQuestTag,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -36,12 +32,12 @@ Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Page result", type: AuthoringPageSearchResultItem)
+@widgetbook.UseCase(name: "Page result", type: AuthoringSearchResultItem)
 Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringPageSearchResultItem(
-        page: fixtures.meetTheMayor,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.meetTheMayor,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -50,15 +46,12 @@ Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(
-  name: "Element result",
-  type: AuthoringElementSearchResultItem,
-)
+@widgetbook.UseCase(name: "Element result", type: AuthoringSearchResultItem)
 Widget authoringElementSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringElementSearchResultItem(
-        element: fixtures.mayorGreeting,
+      (fixtures, state) => AuthoringSearchResultItem(
+        payload: fixtures.mayorGreeting,
         selected: state.selected,
         focused: state.focused,
         loading: state.loading,
@@ -71,25 +64,7 @@ Widget _authoringSearchResultStory(
   BuildContext context,
   Widget Function(AuthoringSearchStoryFixtures, _ResultStoryState) builder,
 ) {
-  final storyElements = graphPageStoryElements(
-    count: 6,
-    direction: GraphDirection.leftToRight,
-  );
-  final pageDefinition = graphPageStoryDefinition(
-    GraphDirection.leftToRight,
-    storyElements,
-  );
-  final definition = switch (storyElements.first) {
-    PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-      definition.elementDefinition,
-    _ => throw StateError(
-      "The authoring search story needs an entry definition",
-    ),
-  };
-  final fixtures = AuthoringSearchStoryFixtures(
-    elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
-  );
+  final fixtures = AuthoringSearchStoryFixtures();
   final state = _ResultStoryState(
     selected: context.knobs.boolean(label: "Selected"),
     focused: context.knobs.boolean(label: "Focused", initialValue: true),
@@ -100,17 +75,7 @@ Widget _authoringSearchResultStory(
   );
 
   return FakeApp(
-    overrides: [
-      pageIdProvider.overrideWith((ref) => null),
-      realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
-          authoringSearchStoryCatalog(
-            pageStoryPageCatalog(pageDefinition, storyElements),
-          ),
-        ),
-      ),
-      ...appearanceProviderOverrides(),
-    ],
+    overrides: appearanceProviderOverrides(),
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 760),
       child: builder(fixtures, state),
@@ -119,70 +84,42 @@ Widget _authoringSearchResultStory(
 }
 
 Widget authoringSearchResultGalleryStory() {
-  final storyElements = graphPageStoryElements(
-    count: 6,
-    direction: GraphDirection.leftToRight,
-  );
-  final pageDefinition = graphPageStoryDefinition(
-    GraphDirection.leftToRight,
-    storyElements,
-  );
-  final definition = switch (storyElements.first) {
-    PageElementEntry(entry: DefinitionPageEntry(:final definition)) =>
-      definition.elementDefinition,
-    _ => throw StateError(
-      "The authoring search story needs an entry definition",
-    ),
-  };
-  final fixtures = AuthoringSearchStoryFixtures(
-    elementType: definition.typeId.uuid,
-    pageKind: pageDefinition.kind.toSkir(),
-  );
+  final fixtures = AuthoringSearchStoryFixtures();
 
   return FakeApp(
-    overrides: [
-      pageIdProvider.overrideWith((ref) => null),
-      realmEditorCatalogProvider.overrideWith(
-        (ref) => Stream.value(
-          authoringSearchStoryCatalog(
-            pageStoryPageCatalog(pageDefinition, storyElements),
-          ),
-        ),
-      ),
-      ...appearanceProviderOverrides(),
-    ],
+    overrides: appearanceProviderOverrides(),
     child: SizedBox(
       width: 760,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          AuthoringBookSearchResultItem(
-            book: fixtures.mainQuest,
+          AuthoringSearchResultItem(
+            payload: fixtures.mainQuest,
             selected: false,
             focused: true,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringTagSearchResultItem(
-            tag: fixtures.mainQuestTag,
+          AuthoringSearchResultItem(
+            payload: fixtures.mainQuestTag,
             selected: false,
             focused: false,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringPageSearchResultItem(
-            page: fixtures.meetTheMayor,
+          AuthoringSearchResultItem(
+            payload: fixtures.meetTheMayor,
             selected: false,
             focused: false,
             loading: false,
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringElementSearchResultItem(
-            element: fixtures.mayorGreeting,
+          AuthoringSearchResultItem(
+            payload: fixtures.mayorGreeting,
             selected: false,
             focused: false,
             loading: false,

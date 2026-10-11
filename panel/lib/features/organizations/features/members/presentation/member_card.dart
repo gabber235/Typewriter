@@ -1,11 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Responsive member row for touch layouts.
@@ -205,12 +197,13 @@ class MemberTabletCard extends HookConsumerWidget {
                                 selectedRoles: member.roles,
                                 onRolesChanged: (newRoles) {
                                   ref
-                                      .read(
-                                        organizationMembersProvider.notifier,
+                                      .executeMembership(
+                                        ref.membershipCommands.updateRoles([
+                                          member.userId,
+                                        ], newRoles),
+                                        (response) =>
+                                            response.requireAccepted(),
                                       )
-                                      .updateMemberRoles([
-                                        member.userId,
-                                      ], newRoles)
                                       .catchApiExceptionsAndDisplay(context);
                                 },
                               ),
@@ -259,9 +252,10 @@ class MemberTabletCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        await ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

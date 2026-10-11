@@ -1,4 +1,6 @@
-import "dart:typed_data";
+import "package:typewriter_panel/typewriter_panel.dart";
+
+part "nats_client.freezed.dart";
 
 /// Stable failure categories exposed by the panel transport boundary.
 ///
@@ -26,39 +28,15 @@ enum NatsFailureKind {
 /// Terminal failures retain their typed cause. [NatsClosed] is reserved for an
 /// explicit local close, so consumers never need to infer failure from a bare
 /// status value.
-sealed class NatsConnectionState {
-  const NatsConnectionState();
-}
-
-/// The connection attempt has started but is not usable yet.
-final class NatsConnecting extends NatsConnectionState {
-  const NatsConnecting();
-}
-
-/// The transport has an active connection and accepts operations.
-final class NatsConnected extends NatsConnectionState {
-  const NatsConnected();
-}
-
-/// The connection was lost, but the underlying client will try to recover.
-final class NatsReconnecting extends NatsConnectionState {
-  const NatsReconnecting(this.failure);
-
-  /// The translated reason for the disconnect.
-  final NatsClientException failure;
-}
-
-/// The transport cannot recover without a new client or explicit retry.
-final class NatsFailed extends NatsConnectionState {
-  const NatsFailed(this.failure);
-
-  /// The translated terminal failure.
-  final NatsClientException failure;
-}
-
-/// Local shutdown completed. No further operations are accepted.
-final class NatsClosed extends NatsConnectionState {
-  const NatsClosed();
+@freezed
+sealed class NatsConnectionState with _$NatsConnectionState {
+  const factory NatsConnectionState.connecting() = NatsConnecting;
+  const factory NatsConnectionState.connected() = NatsConnected;
+  const factory NatsConnectionState.reconnecting(NatsClientException failure) =
+      NatsReconnecting;
+  const factory NatsConnectionState.failed(NatsClientException failure) =
+      NatsFailed;
+  const factory NatsConnectionState.closed() = NatsClosed;
 }
 
 /// Transport failure with a safe message and an optional diagnostic cause.
@@ -103,6 +81,9 @@ final class NatsClientConfiguration {
     required this.url,
     required this.seed,
     required this.requestInboxPrefix,
+    required this.actorId,
+    required this.organizationId,
+    required this.connectionSession,
     this.jwt,
     this.username,
     this.password,
@@ -129,6 +110,15 @@ final class NatsClientConfiguration {
 
   /// Prefix used to isolate request replies for this authenticated session.
   final String requestInboxPrefix;
+
+  /// Verified actor identity retained by this connection owner.
+  final String actorId;
+
+  /// Selected organization identity retained by this connection owner.
+  final String? organizationId;
+
+  /// Exact session identity used for reply and projection ownership.
+  final String connectionSession;
 }
 
 /// Immutable transport data crossing the NATS boundary.
@@ -197,10 +187,19 @@ abstract interface class NatsClient {
   /// [NatsSubscription.unsubscribe] or connection shutdown.
   Future<NatsSubscription> subscribe(String subject);
 
-  /// Creates an ordered JetStream subscription for one stream filter.
-  /// Sequence recovery remains the responsibility of the protocol adapter.
-  Future<NatsSubscription> subscribeOrdered(
+  /// Verified actor identity retained by this connection owner.
+  String get actorId;
+
+  /// Selected organization identity retained by this connection owner.
+  String? get organizationId;
+
+  /// Exact session identity retained by this connection owner.
+  String get connectionSession;
+
+  /// Creates and owns one exact named persistent projection consumer.
+  Future<NatsSubscription> subscribePersistent(
     String stream,
+    String consumer,
     String filterSubject,
   );
 

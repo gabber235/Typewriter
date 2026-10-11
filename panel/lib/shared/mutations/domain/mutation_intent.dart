@@ -25,26 +25,26 @@ final class IndependentMutation<T> extends MutationIntent {
 ///
 /// Reuse the same combiner for operations that belong to the same domain scope.
 /// The combiner prepares one response for the collected operations.
-final class MutationCombiner<Operation, Response> {
+final class MutationCombiner<Operation, ResponseT> {
   const MutationCombiner({required this.prepare});
 
-  final PreparedCommit<Response> Function(List<Operation>) prepare;
+  final PreparedCommit<ResponseT> Function(List<Operation>) prepare;
 }
 
 /// Contributes one operation to the transaction identified by [combiner].
 ///
 /// Resource membership is declared before preparation. This lets the
 /// coordinator reserve participants without reading mutable draft state.
-final class CombinedMutation<Operation, Response> extends MutationIntent {
+final class CombinedMutation<Operation, ResponseT> extends MutationIntent {
   CombinedMutation({
     required this.combiner,
     required Set<Object> resources,
     required this.prepare,
   }) : resources = Set.unmodifiable(resources);
 
-  final MutationCombiner<Operation, Response> combiner;
+  final MutationCombiner<Operation, ResponseT> combiner;
   final Set<Object> resources;
-  final MutationContribution<Operation, Response> Function() prepare;
+  final MutationContribution<Operation, ResponseT> Function() prepare;
 
   @override
   void collect(MutationPreparation preparation) {
@@ -53,11 +53,11 @@ final class CombinedMutation<Operation, Response> extends MutationIntent {
 }
 
 /// Captured operation data and optional local response integration.
-final class MutationContribution<Operation, Response> {
+final class MutationContribution<Operation, ResponseT> {
   const MutationContribution({required this.operation, this.integrate});
 
   final Operation operation;
-  final Future<void> Function(SubmissionResult<Response>)? integrate;
+  final Future<void> Function(SubmissionResult<ResponseT>)? integrate;
 }
 
 /// Collects an explicit set of mutation intents into pending commits.
@@ -82,31 +82,31 @@ final class MutationPreparation {
     return List.unmodifiable(preparation._entries.map((collect) => collect()));
   }
 
-  void _combine<Operation, Response>(
-    CombinedMutation<Operation, Response> intent,
+  void _combine<Operation, ResponseT>(
+    CombinedMutation<Operation, ResponseT> intent,
   ) {
     final existing = _groups[intent.combiner];
     if (existing != null) {
       // The combiner instance fixes both generic types for this group.
-      final group = existing as _MutationGroup<Operation, Response>;
+      final group = existing as _MutationGroup<Operation, ResponseT>;
       group.intents.add(intent);
       return;
     }
-    final group = _MutationGroup<Operation, Response>(intent.combiner);
+    final group = _MutationGroup<Operation, ResponseT>(intent.combiner);
     group.intents.add(intent);
     _groups[intent.combiner] = group;
     _entries.add(group.collect);
   }
 }
 
-final class _MutationGroup<Operation, Response> {
+final class _MutationGroup<Operation, ResponseT> {
   _MutationGroup(this.combiner);
-  final MutationCombiner<Operation, Response> combiner;
-  final intents = <CombinedMutation<Operation, Response>>[];
+  final MutationCombiner<Operation, ResponseT> combiner;
+  final intents = <CombinedMutation<Operation, ResponseT>>[];
 
-  PendingCommit<Response> collect() {
+  PendingCommit<ResponseT> collect() {
     final participants =
-        List<CombinedMutation<Operation, Response>>.unmodifiable(intents);
+        List<CombinedMutation<Operation, ResponseT>>.unmodifiable(intents);
     return PendingCommit(
       resources: participants.expand((intent) => intent.resources).toSet(),
       prepare: () {

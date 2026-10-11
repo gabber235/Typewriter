@@ -1,0 +1,364 @@
+import {
+  EditExpectation,
+  ExpectationConflict,
+  LinkProjection,
+  TraversalDirection,
+} from "editor/v1/authoring_facts.skir";
+import {
+  PreparedValue,
+  ResourceDefinitionId,
+} from "editor/v1/catalog.skir";
+import { FindingSet } from "editor/v1/checking.skir";
+import {
+  DeclarationDiagnostic,
+  Diagnostic,
+  ValueProblem,
+} from "editor/v1/diagnostic.skir";
+import {
+  AuthoringRecord,
+  CatalogGeneration,
+  DataValue,
+  EndpointId,
+  ItemId,
+  LinkTarget,
+  ListItem,
+  NamedTypeUse,
+  RelationFamilyId,
+  RelationId,
+  ResourceId,
+  TypeDefinitionId,
+  TypeSelection,
+  ValueLocation,
+  ValuePath,
+} from "editor/v1/type_catalog.skir";
+import { PortableValue } from "editor/v1/typed_value.skir";
+import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+struct AuthoringResource(812200001) {
+  id: ResourceId = 0;
+  definition: ResourceDefinitionId = 1;
+  content: AuthoringRecord = 2;
+}
+
+struct LinkOccurrenceId(812200002) {
+  endpoint: EndpointId = 0;
+  location: ValueLocation = 1;
+}
+
+struct LinkOccurrence(812200003) {
+  id: LinkOccurrenceId = 0;
+  source: ResourceId = 1;
+  target: LinkTarget = 2;
+}
+
+struct RelationProjectionDelta(812200004) {
+  removals: [LinkProjection] = 0;
+  created: [LinkProjection] = 1;
+  metadata_changed: [LinkProjection] = 2;
+}
+
+struct FamilyRelationSelection(812200005) {
+  id: RelationFamilyId = 0;
+  direction: TraversalDirection = 1;
+}
+
+struct ContractRelationSelection(812200006) {
+  ids: [RelationId] = 0;
+  direction: TraversalDirection = 1;
+}
+
+struct AllRelationSelection(812200007) {
+  direction: TraversalDirection = 0;
+}
+
+enum RelationSelection(812200008) {
+  family: FamilyRelationSelection = 1;
+  contracts: ContractRelationSelection = 2;
+  all: AllRelationSelection = 3;
+}
+
+struct TraversalBudget(812200009) {
+  max_resources: int64 = 0;
+  max_links: int64 = 1;
+  max_routes: int64 = 2;
+  max_steps: int64 = 3;
+}
+
+struct GraphEndpoint(812200010) {
+  resource: ResourceId = 0;
+  endpoint: EndpointId = 1;
+  path: ValuePath? = 2;
+}
+
+struct GraphStep(812200011) {
+  relation: RelationId = 0;
+  from: GraphEndpoint = 1;
+  to: GraphEndpoint = 2;
+}
+
+enum UnresolvedLink(812200012) {
+  unfilled: LinkOccurrenceId = 1;
+  unavailable_target: LinkOccurrenceId = 2;
+}
+
+struct PresentationSubject(812200013) {
+  resource: ResourceId = 0;
+  definition: ResourceDefinitionId = 1;
+  content: AuthoringRecord = 2;
+  descriptor: DataValue = 3;
+}
+
+enum PresentationSubjectChange(812200014) {
+  upsert: struct {
+    resource: ResourceId = 0;
+    subject: PresentationSubject = 1;
+  } = 1;
+  remove: ResourceId = 2;
+}
+
+struct AuthoringDiagnostic(812200015) {
+  code: string = 0;
+  message: string = 1;
+  resource: ResourceId? = 2;
+  path: ValuePath? = 3;
+}
+
+struct AuthoringInvalid(812200016) {
+  diagnostics: [AuthoringDiagnostic] = 0;
+}
+
+struct CatalogChanged(812200017) {
+  actual_generation: CatalogGeneration = 0;
+}
+
+struct AuthoringState(812200018) {
+  generation: CatalogGeneration = 0;
+  resources: [AuthoringResource] = 1;
+  links: [LinkProjection] = 2;
+  findings: [FindingSet] = 3;
+}
+
+struct SetValueIntent(812200019) {
+  at: ValueLocation = 0;
+  value: DataValue = 1;
+}
+
+struct InsertIntent(812200020) {
+  at: ValueLocation = 0;
+  after: ItemId? = 1;
+  item: ListItem = 2;
+}
+
+struct RemoveIntent(812200021) {
+  at: ValueLocation = 0;
+  item: ItemId = 1;
+}
+
+struct MoveIntent(812200022) {
+  at: ValueLocation = 0;
+  item: ItemId = 1;
+  after: ItemId? = 2;
+}
+
+struct CreateResourceIntent(812200023) {
+  id: ResourceId = 0;
+  record: AuthoringRecord = 1;
+}
+
+struct DeleteResourceIntent(812200024) {
+  id: ResourceId = 0;
+}
+
+struct NewCounterpartChoice(812200025) {
+  containing: ValueLocation = 0;
+  prepared: PreparedValue = 1;
+}
+
+enum CounterpartChoice(812200026) {
+  existing: LinkOccurrence = 1;
+  new: NewCounterpartChoice = 2;
+}
+
+struct ConnectIntent(812200027) {
+  source: LinkOccurrence = 0;
+  target: ResourceId = 1;
+  counterpart: CounterpartChoice? = 2;
+}
+
+struct RetagIntent(812200028) {
+  at: ValueLocation = 0;
+  type: NamedTypeUse = 1;
+}
+
+struct ResourceConfigurationIntent(812200029) {
+  resource: ResourceId = 0;
+  configuration: TypeSelection = 1;
+}
+
+enum EditIntent(812200030) {
+  create_resource: CreateResourceIntent = 1;
+  delete_resource: DeleteResourceIntent = 2;
+  set_value: SetValueIntent = 3;
+  insert: InsertIntent = 4;
+  remove: RemoveIntent = 5;
+  move: MoveIntent = 6;
+  connect_relation: ConnectIntent = 7;
+  disconnect_relation: LinkOccurrenceId = 8;
+  retag: RetagIntent = 9;
+  configure_resource: ResourceConfigurationIntent = 10;
+}
+
+struct PreparedEdit(812200031) {
+  catalog: CatalogGeneration = 0;
+  expectations: [EditExpectation] = 1;
+  intents: [EditIntent] = 2;
+}
+
+struct PreparedEditReady(812200032) {
+  edit: PreparedEdit = 0;
+}
+
+enum PreparedEditResult(812200033) {
+  prepared: PreparedEditReady = 1;
+  needs_input: [ValueLocation] = 2;
+  rejected: [ValueProblem] = 3;
+}
+
+enum CommitResult(812200034) {
+  committed = 1;
+  conflict: [ExpectationConflict] = 2;
+  rejected: [ValueProblem] = 3;
+  catalog_changed: CatalogGeneration = 4;
+}
+
+enum AuthoringOperation(812200035) {
+  commit_prepared: PreparedEdit = 1;
+}
+
+struct AuthoringChanged(812200036) {
+  generation: CatalogGeneration = 0;
+}
+
+enum LinkRepairIntent(812200037) {
+  clear: LinkOccurrenceId = 1;
+  remove: LinkOccurrenceId = 2;
+}
+
+struct TypeArgumentChangePreview(812200038) {
+  resource: ResourceId = 0;
+  next: TypeSelection = 1;
+  edit: PreparedEdit = 2;
+  link_repairs: [LinkRepairIntent] = 3;
+  cleared_locations: [ValueLocation] = 4;
+}
+
+struct ArgumentLocation(812200039) {
+  index: int32 = 0;
+}
+
+enum TypePreviewResult(812200040) {
+  ready: TypeArgumentChangePreview = 1;
+  invalid_arguments: [DeclarationDiagnostic] = 2;
+  incomplete: [ArgumentLocation] = 3;
+  rejected: [ValueProblem] = 4;
+}
+
+struct AuthoringSearchHit(812200041) {
+  resource: ResourceId = 0;
+  definition: ResourceDefinitionId = 1;
+  subject: PresentationSubject = 2;
+  context: PortableValue = 3;
+}
+
+struct AuthoringSearchResult(812200042) {
+  generation: CatalogGeneration = 0;
+  hits: [AuthoringSearchHit] = 1;
+  diagnostics: [Diagnostic] = 2;
+}
+
+enum CollectionProjectionSource(812200043) {
+  resource_id = 1;
+  content: ValuePath = 2;
+  literal: DataValue = 3;
+}
+
+struct CollectionProjectionField(812200044) {
+  target: ValuePath = 0;
+  source: CollectionProjectionSource = 1;
+}
+
+struct CollectionProjectionDefinition(812200045) {
+  source_id: string = 0;
+  root: TypeDefinitionId = 1;
+  row_type: NamedTypeUse = 2;
+  fields: [CollectionProjectionField] = 3;
+}
+
+struct AuthoringStateTransferChunk(812200046) {
+  generation: CatalogGeneration = 0;
+  transfer: BoundedTransferChunk = 1;
+}
+
+enum AuthoringTransferUnavailableReason(812200047) {
+  encoded_size_limit = 1;
+}
+
+struct AuthoringTransferUnavailable(812200048) {
+  generation: CatalogGeneration = 0;
+  reason: AuthoringTransferUnavailableReason = 1;
+  encoded_size: int64 = 2;
+  max_encoded_size: int64 = 3;
+}
+
+method QueryAuthoringState(
+  struct {
+    generation: CatalogGeneration = 0;
+    transfer_id: string = 1;
+  }
+): enum {
+  chunk: AuthoringStateTransferChunk = 1;
+  catalog_changed: CatalogChanged = 2;
+  unavailable: AuthoringTransferUnavailable = 3;
+  internal_error: InternalError = 4;
+} = 920010;
+
+method SearchAuthoring(
+  struct {
+    generation: CatalogGeneration = 0;
+    query: string = 1;
+    roots: [TypeDefinitionId] = 2;
+    contexts: [ResourceId] = 3;
+    target: NamedTypeUse? = 4;
+  }
+): enum {
+  success: AuthoringSearchResult = 1;
+  invalid: AuthoringInvalid = 2;
+  catalog_changed: CatalogChanged = 3;
+  internal_error: InternalError = 4;
+} = 920011;
+
+method CommitPreparedEdit(
+  PreparedEdit
+): enum {
+  result: CommitResult = 1;
+  internal_error: InternalError = 2;
+} = 920012;
+
+method PreviewTypeArgumentChange(
+  struct {
+    resource: ResourceId = 0;
+    requested: TypeSelection = 1;
+    catalog: CatalogGeneration = 2;
+  }
+): enum {
+  result: TypePreviewResult = 1;
+  internal_error: InternalError = 2;
+} = 920013;
+
+method PrepareTypeArgumentChange(
+  TypeArgumentChangePreview
+): enum {
+  result: PreparedEditResult = 1;
+  internal_error: InternalError = 2;
+} = 920014;

@@ -1,5 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
@@ -9,7 +10,7 @@ void main() {
     "organization sidebar builds distinct member routes and positive badge",
     (tester) async {
       final links = OrganizationSidebarContent.organizationLinks(
-        recordId("organization:org1"),
+        skir.recordId("organization:org1"),
         3,
       );
       final sidebarLinks = links.whereType<SidebarLink>().toList();
@@ -35,7 +36,7 @@ void main() {
     tester,
   ) async {
     final links = OrganizationSidebarContent.organizationLinks(
-      recordId("organization:org1"),
+      skir.recordId("organization:org1"),
       0,
     );
 

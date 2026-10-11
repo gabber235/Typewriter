@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  */
 @JvmInline
 @Serializable
-value class ChapterPath private constructor(
+value class ChapterPath(
     val value: String,
 ) {
     val isRoot: Boolean

@@ -1,5 +1,6 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../../../support/test_utils.dart";
@@ -104,10 +105,11 @@ void main() {
   });
 
   testWidgets("shows offline realm details", (tester) async {
+    var retries = 0;
     final realm = TopologyRealm(
-      realmId: recordId("realm:test"),
+      realmId: skir.recordId("realm:test"),
       ownerHost: TopologyOwnerHost(
-        id: recordId("service:test"),
+        id: skir.recordId("service:test"),
         name: "story_realm",
       ),
       revision: 1,
@@ -132,6 +134,7 @@ void main() {
             connectionState: RealmConnectionState.offline,
           ),
           realm: realm,
+          onRetry: () => retries++,
           child: const ColoredBox(color: Colors.blue),
         ),
       ),
@@ -143,6 +146,8 @@ void main() {
       findsOneWidget,
     );
     expect(find.text("4m ago"), findsOneWidget);
+    await tester.tap(find.text("Check again"));
+    expect(retries, 1);
   });
 }
 

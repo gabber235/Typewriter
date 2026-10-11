@@ -11,6 +11,7 @@ import com.typewritermc.services.libs.registrar.IdentityIssueResult
 import com.typewritermc.services.libs.registrar.IdentityIssuer
 import com.typewritermc.services.libs.registrar.RegistrarRuntime
 import com.typewritermc.services.libs.registrar.RegistrarRuntimeFactory
+import com.typewritermc.services.libs.registrar.RegistrationLeaseResult
 import com.typewritermc.services.libs.registrar.RetryRandom
 import com.typewritermc.services.libs.registrar.RuntimeCloseResult
 import com.typewritermc.services.libs.registrar.RuntimeConnectivity
@@ -66,6 +67,8 @@ sealed interface RegistrarAction {
     data object Reconnect : RegistrarAction
 
     data object QueryBinding : RegistrarAction
+
+    data object EnsureRegistrationLease : RegistrarAction
 
     data object Heartbeat : RegistrarAction
 
@@ -141,6 +144,7 @@ class FakeRegistrarRuntime(
     private val connectionResults = ArrayDeque<RuntimeResult<Unit>>()
     private val reconnectResults = ArrayDeque<RuntimeResult<Unit>>()
     private val queryResults = ArrayDeque<RuntimeResult<BindingStatus>>()
+    private val leaseResults = ArrayDeque<RuntimeResult<RegistrationLeaseResult>>()
     private val heartbeatResults = ArrayDeque<RuntimeResult<Unit>>()
     private val shutdownResults = ArrayDeque<RuntimeResult<Unit>>()
     private val watchScripts = ArrayDeque<List<RuntimeResult<BindingObservation>>>()
@@ -172,6 +176,10 @@ class FakeRegistrarRuntime(
 
     @Synchronized fun enqueueQuery(result: RuntimeResult<BindingStatus>) {
         queryResults += result
+    }
+
+    @Synchronized fun enqueueLease(vararg results: RuntimeResult<RegistrationLeaseResult>) {
+        leaseResults += results
     }
 
     @Synchronized fun enqueueHeartbeat(result: RuntimeResult<Unit>) {
@@ -231,6 +239,12 @@ class FakeRegistrarRuntime(
         synchronized(this) {
             ledger.record(RegistrarAction.QueryBinding)
             checkNotNull(queryResults.removeFirstOrNull()) { "No binding query scripted" }
+        }
+
+    override suspend fun ensureRegistrationLease(): RuntimeResult<RegistrationLeaseResult> =
+        synchronized(this) {
+            ledger.record(RegistrarAction.EnsureRegistrationLease)
+            checkNotNull(leaseResults.removeFirstOrNull()) { "No registration lease result scripted" }
         }
 
     override suspend fun sendHeartbeat(): RuntimeResult<Unit> =

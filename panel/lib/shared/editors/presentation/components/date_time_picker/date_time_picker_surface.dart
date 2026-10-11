@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Groups calendar and clock controls for [DateTimePickerField].
@@ -53,7 +52,7 @@ class DateTimePickerSurface extends StatelessWidget {
                   value: value,
                   enabled: enabled,
                   autofocus: true,
-                  onChanged: (date) => onChanged(replaceDatePart(value, date)),
+                  onChanged: (date) => onChanged(value.withDate(date)),
                 ),
               if (includeDate && includeTime)
                 Padding(

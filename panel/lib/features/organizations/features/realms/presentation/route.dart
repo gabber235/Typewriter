@@ -1,6 +1,3 @@
-import "package:auto_route/auto_route.dart";
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Nested route that activates the authoring session for the selected realm.
@@ -18,11 +15,30 @@ class RealmPage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final organizationId = ref.watch(organizationIdProvider);
     final selectedRealmId = ref.watch(realmIdProvider);
+    AuthoringWorkspace? workspace;
+    AuthoringScope? scope;
     if (organizationId != null &&
         selectedRealmId != null &&
         selectedRealmId.id == realmId) {
-      ref.watch(authoringSessionProvider(organizationId, selectedRealmId));
+      scope = AuthoringScope(
+        organizationId: organizationId,
+        realmId: selectedRealmId,
+      );
+      workspace = ref.watch(
+        authoringWorkspaceProvider(
+          AuthoringScope(
+            organizationId: organizationId,
+            realmId: selectedRealmId,
+          ),
+        ),
+      );
     }
-    return AutoRouter();
+    return Column(
+      children: [
+        if (workspace != null && scope != null)
+          RealmWorkToolbar(workspace: workspace, scope: scope),
+        const Expanded(child: AutoRouter()),
+      ],
+    );
   }
 }

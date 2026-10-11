@@ -2,7 +2,6 @@ package com.typewritermc.loader
 
 import com.typewritermc.loader.artifact.FileDigestBlobStore
 import com.typewritermc.loader.shared.FileSharedArtifactRepository
-import com.typewritermc.loader.shared.SharedArtifactOutboxPublisher
 import com.typewritermc.loader.shared.SharedArtifactService
 import com.typewritermc.services.libs.registrar.RegistrarConfiguration
 import com.typewritermc.services.libs.registrar.console.MordantBindingTokenOutput
@@ -18,9 +17,9 @@ import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Composes persistent registration, shared artifact storage, and publication workers for one host. Shared
+ * Composes persistent registration, registrar observation, and shared artifact storage for one host. Shared
  * repositories and services are cached by Realm within the created service lifetime. The service close callback
- * stops the outbox publisher and joins the registrar observer after registration shutdown.
+ * joins the registrar observer after registration shutdown.
  */
 internal class DefaultLoaderServiceFactory(
     private val configuration: RegistrarConfiguration,
@@ -44,34 +43,21 @@ internal class DefaultLoaderServiceFactory(
         val artifactsRoot = workDirectory.resolve("artifacts")
         val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry)
         val shared = ConcurrentHashMap<String, SharedArtifactService>()
-        val sharedRepositories = ConcurrentHashMap<String, FileSharedArtifactRepository>()
-        val sharedPublisher =
-            SharedArtifactOutboxPublisher(
-                scope,
-                service.states,
-                service::communicatorFor,
-                sharedRepositories::values,
-            )
         return RegistrarLoaderService(
             service,
             openTelemetry,
             telemetry,
             { realmId ->
                 shared.computeIfAbsent(realmId) {
-                    val repository =
-                        sharedRepositories.computeIfAbsent(realmId) {
-                            FileSharedArtifactRepository(artifactsRoot.resolve("shared").resolve("$realmId.cbor"))
-                        }
                     SharedArtifactService(
                         realmId,
                         blobs,
-                        repository,
+                        FileSharedArtifactRepository(artifactsRoot.resolve("shared").resolve("$realmId.cbor")),
                         telemetry,
                     )
                 }
             },
         ) {
-            sharedPublisher.stop()
             observerJob.cancelAndJoin()
         }
     }

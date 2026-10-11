@@ -1,6 +1,6 @@
-// ignore_for_file: sort_constructors_first
-
 import "package:typewriter_panel/typewriter_panel.dart";
+
+// ignore_for_file: sort_constructors_first
 
 /// Produces context aware completions from a parsed query.
 ///

@@ -1,10 +1,4 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/shared/selectables/operations/operation_story.dart";
 
@@ -80,31 +74,11 @@ class _DeleteSelectableIdentifier extends SelectableIdentifier {
 }
 
 class _DeleteSelectable
-    extends EditableSelectable<_DeleteSelectableIdentifier> {
+    extends InspectableSelectable<_DeleteSelectableIdentifier> {
   _DeleteSelectable({required this.id, required this.onDelete});
-
-  static final TypeDefinition _rootDefinition = TypeDefinition(
-    id: ResolvedTypeRef(
-      id: QualifiedTypeId(namespace: "widgetbook", name: "delete_story"),
-      revision: 1,
-    ),
-    kind: NominalTypeKind.concrete,
-    representation: RecordType(fields: const {}),
-  );
-
-  static final TypeCatalog _typeCatalog = TypeCatalog([_rootDefinition]);
 
   @override
   final _DeleteSelectableIdentifier id;
-
-  @override
-  EditorDocument get document => EditorDocument(
-    rootType: NamedType(_rootDefinition.id),
-    typeCatalog: _typeCatalog,
-    confirmedValue: RecordValue(const {}),
-    revision: 1,
-    readOnly: true,
-  );
 
   @override
   String get name => id.id.titleCase();
@@ -117,37 +91,8 @@ class _DeleteSelectable
   ];
 
   @override
-  Widget? buildInspectorHeader(EditOwner owner) => null;
-
-  @override
-  EditorMutationResult validate(DataPath path, DataValue value) =>
-      EditorMutationResult.invalid([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPath,
-          message: "The delete story has no editable fields",
-          path: path,
-        ),
-      ]);
-
-  @override
-  EditorSnapshot get snapshot =>
-      FakeEditorSnapshot(document, validation: validate);
-
-  @override
-  late final EditableResource resource = FakeEditableResource(
-    key: EditorResourceKey(scope: null, identity: id.resourceId),
-    current: snapshot,
-    commit: commit,
-    load: () async => snapshot,
-  );
-
-  Future<TypedMutationResult> commit(EditorCommit commit) async =>
-      TypedMutationResult.unavailable([
-        const TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidValue,
-          message: "The delete story has no editable fields",
-        ),
-      ]);
+  InspectionContent buildInspection(EditorOwnerScope owners) =>
+      InspectionContent(body: const SizedBox.shrink());
 
   @override
   int get hashCode => id.hashCode;

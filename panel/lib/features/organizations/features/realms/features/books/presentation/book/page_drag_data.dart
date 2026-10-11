@@ -5,16 +5,16 @@ part of "route.dart";
 /// The source chapter is retained as the expected value for the later
 /// optimistic mutation.
 class PageDrag implements ReferenceResourceDragData {
-  const PageDrag({required this.pageId, required this.chapter});
+  const PageDrag({required this.pageId, required this.expectedChapter});
 
-  final skir.RecordId pageId;
-  final String chapter;
-
-  @override
-  skir.RecordId get referenceId => pageId;
+  final skir.ResourceId pageId;
+  final skir.DataValue? expectedChapter;
 
   @override
-  List<ResolvedTypeRef> get referenceTypes => const [];
+  skir.ResourceId get referenceId => pageId;
+
+  @override
+  List<skir.TypeDefinitionId> get referenceTypes => const [];
 }
 
 /// Drag payload for moving a chapter subtree.

@@ -19,57 +19,68 @@ class _QueryBarView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           spacing: context.spacing.space1,
           children: [
-            AnchoredOverlayPortal(
-              visible: controller.popupVisible,
-              config: const AnchoredOverlayConfig(
-                preferredSide: AnchoredOverlaySide.bottom,
-                spacing: 4,
-                sharedAxisConstraintMode: SharedAxisConstraintMode.matchAnchor,
-              ),
-              child: EditorTextField(
-                inputFieldController: controller.inputFieldController,
-                controller: controller.textController,
-                autofocus: bar.autofocus,
-                decoration: bar.inputDecoration.copyWith(
-                  errorText:
-                      controller.parseResult.issues.isNotEmpty ||
-                          bar.validationIssues.isNotEmpty
-                      ? [
-                          ...controller.parseResult.issues,
-                          ...bar.validationIssues,
-                        ].first.message
-                      : null,
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: context.spacing.space3,
-                    horizontal: context.spacing.space2,
+            Actions(
+              actions: {
+                if (bar.onCancel case final cancel?)
+                  CancelIntent: CallbackAction<CancelIntent>(
+                    onInvoke: (_) {
+                      cancel();
+                      return null;
+                    },
                   ),
+              },
+              child: AnchoredOverlayPortal(
+                visible: controller.popupVisible,
+                config: const AnchoredOverlayConfig(
+                  preferredSide: AnchoredOverlaySide.bottom,
+                  spacing: 4,
+                  sharedAxisConstraintMode:
+                      SharedAxisConstraintMode.matchAnchor,
                 ),
-                maxLines: null,
-                inputFormatters: [
-                  FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
-                ],
-                textFieldActions: [
-                  ...?bar.textFieldActions,
-                  ...controller.shortcuts,
-                ],
-                selectAllOnFocus: bar.selectAllOnFocus,
-                enabled: bar.enabled,
-                readOnly: bar.readOnly,
-                onInputFocus: bar.onInputFocus,
-                onDismiss: bar.onDismiss,
-                onCancel: bar.onCancel,
-                onChanged: controller.onQueryChanged,
-                onDone: bar.onDone,
-                onEditingComplete: bar.onEditingComplete,
-                onSubmitted: controller.onSubmitted,
-              ),
-              overlayBuilder: (context, _) => _buildSuggestionPanel(
-                context: context,
-                suggestions: controller.suggestions,
-                warning: controller.completionWarning,
-                activeSuggestionIndex: controller.activeSuggestionIndex,
-                onTapSuggestion: controller.applySuggestion,
-                onHoverIndex: controller.onHoverIndex,
+                child: EditorTextField(
+                  inputFieldController: controller.inputFieldController,
+                  controller: controller.textController,
+                  autofocus: bar.autofocus,
+                  decoration: bar.inputDecoration.copyWith(
+                    errorText:
+                        controller.parseResult.issues.isNotEmpty ||
+                            bar.validationIssues.isNotEmpty
+                        ? [
+                            ...controller.parseResult.issues,
+                            ...bar.validationIssues,
+                          ].first.message
+                        : null,
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: context.spacing.space3,
+                      horizontal: context.spacing.space2,
+                    ),
+                  ),
+                  maxLines: null,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.deny(RegExp(r"[\n\r]")),
+                  ],
+                  textFieldActions: [
+                    ...?bar.textFieldActions,
+                    ...controller.shortcuts,
+                  ],
+                  selectAllOnFocus: bar.selectAllOnFocus,
+                  enabled: bar.enabled,
+                  readOnly: bar.readOnly,
+                  onInputFocus: bar.onInputFocus,
+                  onDismiss: bar.onDismiss,
+                  onChanged: controller.onQueryChanged,
+                  onDone: bar.onDone,
+                  onEditingComplete: bar.onEditingComplete,
+                  onSubmitted: controller.onSubmitted,
+                ),
+                overlayBuilder: (context, _) => _buildSuggestionPanel(
+                  context: context,
+                  suggestions: controller.suggestions,
+                  warning: controller.completionWarning,
+                  activeSuggestionIndex: controller.activeSuggestionIndex,
+                  onTapSuggestion: controller.applySuggestion,
+                  onHoverIndex: controller.onHoverIndex,
+                ),
               ),
             ),
             _QueryBarHelperRow(

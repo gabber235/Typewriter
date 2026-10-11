@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
     database::{RecordId, transaction_query},
-    decode_skir, extract_param,
+    publication::{
+        CapturedOnly, CommittedChange, MembershipFact, PublicationEffect, PublicationExecutor,
+    },
     skir::base::organization::v1::organization::*,
     skir_domain_result, skir_variant,
     wasmcloud::messaging::types::NatsMessage,
@@ -22,33 +22,45 @@ struct CreatedOrganization {
     sequence: i64,
 }
 
+impl CreatedOrganization {
+    fn into_committed_change(self, user: &str) -> CommittedChange<CreateOrganizationResponse> {
+        let organization: Organization = self.organization.into();
+        let event = UserOrganizationsChanged {
+            sequence: self.sequence,
+            changes: vec![UserOrganizationsChange::Add(Box::new(organization.clone()))],
+            ..Default::default()
+        };
+        CommittedChange::new(
+            skir_variant!(CreateOrganizationResponse::Success {
+                organization,
+                event: event.clone(),
+            }),
+            [PublicationEffect::CapturedMembership(
+                MembershipFact::UserOrganizations {
+                    user: user.to_owned(),
+                    event,
+                },
+            )],
+        )
+    }
+}
+
 /// Creates an organization for the user in the message subject.
 ///
 /// The transaction records the organization and advances the user's organization list sequence.
 /// After the transaction commits, the handler persists the corresponding add change and returns
-/// that same event with the created organization. The operation identity makes database work
-/// replayable, while event persistence remains a separate post transaction effect.
-#[tracing::instrument(skip(msg, params))]
+/// that same event with the created organization. Event persistence remains a separate effect
+/// after the database transaction.
+#[tracing::instrument(skip_all)]
 pub async fn handle_create(
-    msg: NatsMessage,
-    params: HashMap<String, String>,
+    _msg: NatsMessage,
+    scope: wasmcloud_utils::transport_routes::UserScope,
+    request: CreateOrganizationRequest,
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
-    let user_id = extract_param!(params, user_id)?;
+    let user_id = scope.user.as_str();
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = RecordId::new("user", user_id);
-    let request = decode_skir!(CreateOrganizationRequest, &msg.body)?;
-    if request.operation_id.is_empty() {
-        return Ok(wasmcloud_utils::skir_variant!(
-            CreateOrganizationResponse::InvalidOperationIdError
-        ));
-    }
-    let receipt = wasmcloud_utils::database::mutation::receipt_id(
-        user_key,
-        "organizations",
-        "CreateOrganization",
-        &request.operation_id,
-    );
 
     let name = request.name;
     let logo_url = request.logo_url;
@@ -58,24 +70,15 @@ pub async fn handle_create(
         r#"
         BEGIN TRANSACTION;
         RETURN {
-            LET $previous = fn::mutation::recall($receipt, $request_bytes);
-            IF $previous != NONE { RETURN $previous.value };
-            LET $result = {
-LET $organization = CREATE ONLY organization SET
-            name = $name,
-            logo_url = $logo_url,
-            founder = $user_id
+            LET $organization = CREATE ONLY organization SET
+                name = $name,
+                logo_url = $logo_url,
+                founder = $user_id
             ;
 
-        LET $sequence = UPDATE ONLY $user_id SET organizations_sequence += 1
-            RETURN VALUE organizations_sequence;
-        RETURN { organization: $organization, sequence: $sequence };
-            };
-            IF $result != NONE {
-                LET $stored = fn::mutation::commit($receipt, $request_bytes, { value: $result });
-                RETURN $stored.value;
-            };
-            RETURN $result;
+            LET $sequence = UPDATE ONLY $user_id SET organizations_sequence += 1
+                RETURN VALUE organizations_sequence;
+            RETURN { organization: $organization, sequence: $sequence };
         };
         COMMIT TRANSACTION;
         "#,
@@ -83,31 +86,17 @@ LET $organization = CREATE ONLY organization SET
     .bind("name", &name)
     .bind("logo_url", &logo_url)
     .bind("user_id", user_id)
-    .bind("receipt", receipt)
-    .bind("request_bytes", msg.body.clone())
     .execute()
     .await
     .error_with_slug("organization-create-query-failed")?
     .decode()
     .error_with_slug("organization-create-result-parse-failed")?;
-    let created = skir_domain_result!(CreateOrganizationResponse, organization,
-        "operation-identity-reused-error" => {});
-    let organization: Organization = created.organization.into();
-
-    otel_wasi::main_attribute!("organization.id" = organization.organization_id.to_string());
-    let event = UserOrganizationsChanged {
-        sequence: created.sequence,
-        operation_id: request.operation_id,
-        changes: vec![UserOrganizationsChange::Add(Box::new(organization.clone()))],
-        ..Default::default()
-    };
-    wasmcloud_utils::skir_subjects::user_organizations_changed(user_key)
-        .persist(event.clone())
-        .await?;
-
+    let created = skir_domain_result!(CreateOrganizationResponse, organization);
     otel_wasi::main_attribute!("organization.outcome" = "created");
-    Ok(skir_variant!(CreateOrganizationResponse::Success {
-        organization,
-        event
-    }))
+    created
+        .into_committed_change(user_key)
+        .publish_with(&PublicationExecutor {
+            refresher: CapturedOnly,
+        })
+        .await
 }

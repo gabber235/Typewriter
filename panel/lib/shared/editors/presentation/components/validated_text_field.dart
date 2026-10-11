@@ -1,9 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/ic.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The current state of the duration editor
@@ -35,8 +29,11 @@ class _Valid<T> extends _State {
 ///
 /// [deserialize] and [serialize] define the representation boundary. Invalid
 /// input is shown locally and is not sent to [onChanged]. Set [mixed] when
-/// there is no single starting value; the first valid edit then replaces the
-/// selected values.
+/// selected owners have differing values; a null value without mixed is empty.
+/// The first valid edit of a mixed selection replaces the
+/// selected values. Supply [onCleared] to allow empty text to remove the value.
+/// Invalid partial input remains local while the bound value stays unchanged.
+/// A changed bound value replaces the text and resets its prior validation.
 class ValidatedTextField<T> extends HookConsumerWidget {
   const ValidatedTextField({
     required this.value,
@@ -55,13 +52,13 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.formatted,
     this.validator,
     this.onChanged,
+    this.onCleared,
     this.onDone,
     this.onEditingComplete,
     this.onSubmitted,
     this.onInputFocus,
     this.onInputBlur,
     this.onDismiss,
-    this.onCancel,
     this.actions,
     this.textFieldActions,
     this.surroundingActions,
@@ -73,7 +70,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.selectAllOnFocus = false,
     this.mixed = false,
     super.key,
-  }) : assert((value == null) == mixed);
+  }) : assert(!mixed || value == null);
   final T? value;
   final TextEditingController? controller;
   final FocusNode? focusNode;
@@ -90,8 +87,13 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final String Function(T)? formatted;
   final String? Function(T)? validator;
 
-  /// Called any time the text changes.
+  /// Called when an edited draft parses and validates successfully.
   final ValueChanged<T>? onChanged;
+
+  /// Allows empty text to remove the value instead of being an invalid draft.
+  /// Other invalid text retains the last valid value. Called when text changes
+  /// to empty, including whitespace, rather than again on submit or blur.
+  final VoidCallback? onCleared;
 
   /// Called when the user is done editing, either by pressing done or losing
   /// focus.
@@ -107,7 +109,6 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final VoidCallback? onInputFocus;
   final VoidCallback? onInputBlur;
   final VoidCallback? onDismiss;
-  final VoidCallback? onCancel;
 
   /// Actions available while either focus boundary is active.
   final List<ActionShortcut>? actions;
@@ -127,6 +128,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final bool mixed;
 
   _State _parse(String value) {
+    if (_clears(value)) return _initial;
     try {
       final object = serialize != null ? serialize?.call(value) : value as T;
       if (object == null) return _Invalid("Invalid $name: $value");
@@ -138,6 +140,8 @@ class ValidatedTextField<T> extends HookConsumerWidget {
       return _Invalid(message.isNotEmpty ? message : "Invalid $name: $value");
     }
   }
+
+  bool _clears(String value) => onCleared != null && value.trim().isEmpty;
 
   T? _updateState(String value, ValueNotifier<_State> state) {
     final parsed = _parse(value);
@@ -158,11 +162,18 @@ class ValidatedTextField<T> extends HookConsumerWidget {
         ? null
         : deserialize?.call(current) ?? current.toString();
 
+    useEffect(() {
+      state.value = _initial;
+      return null;
+    }, [focus, formattedValue]);
+
     useFocusedChange(focus, ({required hasFocus}) {
       if (!hasFocus && !keepErrorVisibleWhenUnfocused) {
         state.value = _initial;
         return;
       }
+
+      if (hasFocus) state.value = _initial;
 
       if (hasFocus &&
           formattedValue != null &&
@@ -201,7 +212,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           inputFieldController: inputFieldController,
           autofocus: autofocus,
           controller: controller,
-          text: formattedValue,
+          text: formattedValue ?? "",
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           decoration: effectiveDecoration,
@@ -214,6 +225,11 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           textFieldActions: textFieldActions,
           surroundingActions: surroundingActions,
           onChanged: (value) {
+            if (_clears(value)) {
+              state.value = _initial;
+              onCleared!();
+              return;
+            }
             final object = _updateState(value, state);
             if (object != null) onChanged?.call(object);
           },
@@ -231,7 +247,6 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           },
           onInputFocus: onInputFocus,
           onDismiss: onDismiss,
-          onCancel: onCancel,
         ),
         _StateText(
           name: name,

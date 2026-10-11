@@ -1,9 +1,9 @@
 import {
-  ResolvedTypeRef,
-  TypedValue,
+  DataValue,
+  TypeUse,
 } from "editor/v1/type_catalog.skir";
 
-struct TypedValueEnvelope(810200008) {
-  root_type: ResolvedTypeRef = 0;
-  root_value: TypedValue = 1;
+struct PortableValue(810200001) {
+  actual_type: TypeUse = 0;
+  payload: DataValue = 1;
 }

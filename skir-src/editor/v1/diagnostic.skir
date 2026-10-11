@@ -1,7 +1,15 @@
-// Diagnostics carry structured explanations for invalid editor data and operations. Codes support consumer handling;
-// message and details provide context.
-
-import { DataPath } from "editor/v1/path.skir";
+import {
+  CheckedType,
+  DataValue,
+  DeclarationOwner,
+  DiagnosticId,
+  FieldOwner,
+  RelativeFieldPattern,
+  RuleOrigin,
+  TypeDefinitionId,
+  ValueLocation,
+  ValuePath,
+} from "editor/v1/type_catalog.skir";
 
 enum DiagnosticSeverity(810300001) {
   information = 1;
@@ -9,42 +17,58 @@ enum DiagnosticSeverity(810300001) {
   error = 3;
 }
 
-enum DiagnosticCode(810300002) {
-  invalid_type_id = 1;
-  invalid_revision = 2;
-  duplicate_definition = 3;
-  invalid_arity = 4;
-  unsatisfied_bound = 5;
-  invalid_variance = 6;
-  inheritance_cycle = 7;
-  inheritance_conflict = 8;
-  weakened_constraint = 9;
-  incompatible_representation = 10;
-  invalid_value = 11;
-  missing_required_field = 12;
-  unknown_field = 13;
-  invalid_path = 14;
-  invalid_concrete_type = 15;
-  conversion_not_found = 16;
-  conversion_ambiguous = 17;
-  conversion_failed = 18;
-  invalid_expression = 19;
-  evaluation_budget_exceeded = 20;
-  invalid_presentation = 21;
-  mutation_conflict = 22;
-  permission_denied = 23;
+struct DeclarationOrigin(810300002) {
+  owner: DeclarationOwner = 0;
 }
 
-struct TypeDiagnostic(810300003) {
-  code: DiagnosticCode = 0;
-  severity: DiagnosticSeverity = 1;
+struct DeclarationDiagnostic(810300003) {
+  affected: TypeDefinitionId = 0;
+  code: string = 1;
+  origins: [DeclarationOrigin] = 2;
+  field: RelativeFieldPattern? = 3;
+}
+
+struct DiagnosticTemplate(810300004) {
+  code: string = 0;
+  message: string = 1;
+  severity: DiagnosticSeverity = 2;
+  targets: [RelativeFieldPattern] = 3;
+}
+
+struct Diagnostic(810300005) {
+  id: DiagnosticId = 0;
+  origin: RuleOrigin = 1;
+  code: string = 2;
+  message: string = 3;
+  severity: DiagnosticSeverity = 4;
+  primary: ValueLocation? = 5;
+  related: [ValueLocation] = 6;
+}
+
+struct ValueProblem(810300006) {
+  location: ValueLocation = 0;
+  code: string = 1;
+}
+
+struct InitializationDiagnostic(810300007) {
+  field: FieldOwner? = 0;
+  code: string = 1;
   message: string = 2;
-  path: DataPath? = 3;
-  related_type: string? = 4;
-  details: [DiagnosticDetail] = 5;
+  relative_path: ValuePath? = 3;
 }
 
-struct DiagnosticDetail(810300004) {
-  key: string = 0;
-  value: string = 1;
+struct CompleteValue(810300008) {
+  schema: CheckedType = 0;
+  value: DataValue = 1;
+}
+
+enum StructuralResult(810300009) {
+  valid = 1;
+  invalid: [ValueProblem] = 2;
+}
+
+enum CompletenessResult(810300010) {
+  complete: CompleteValue = 1;
+  unfinished: [ValueLocation] = 2;
+  invalid: [ValueProblem] = 3;
 }

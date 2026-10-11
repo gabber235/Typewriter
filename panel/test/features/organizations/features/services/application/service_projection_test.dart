@@ -1,13 +1,12 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
-final _organization = recordId("organization:projection");
-final _firstId = recordId("service:first");
-final _secondId = recordId("service:second");
+final _organization = skir.recordId("organization:projection");
+final _firstId = skir.recordId("service:first");
+final _secondId = skir.recordId("service:second");
 
 Service _service(
   skir.RecordId id,
@@ -33,8 +32,15 @@ void main() {
     () {
       final canonical = _service(_firstId, "Canonical");
       final local = LocalEditorValue(
-        value: RecordValue({"name": "Edited".asValue}),
-        editedPaths: {DataPath.root.field("name")},
+        value: skir.DataValue.createRecord(
+          fields: [
+            skir.FieldValue(
+              name: "name",
+              value: skir.DataValue.wrapStringValue("Edited"),
+            ),
+          ],
+        ),
+        editedPaths: {editorRootPath.field("name")},
       );
 
       final projected = canonical.projected(local);
@@ -65,24 +71,17 @@ void main() {
         targetId: _firstId,
         scope: EditorResourceScope(organizationId: _organization),
         label: "First",
-        document: EditorDocument(
-          rootType: RecordType(
-            fields: {"name": TypeField(name: "name", type: StringType())},
-          ),
-          typeCatalog: const TypeCatalog([]),
-          confirmedValue: first.identityValue,
-          revision: first.revision,
-        ),
+        document: first.editorSnapshot.document,
+        validation: acceptTestEditorMutation,
         commitPolicy: EditorCommitPolicy.applyResource,
         commit: (_) async => throw StateError("No save expected"),
       );
       workspace
           .editor(target)
-          .update(DataPath.root.field("name"), "Edited first".asValue);
-      await container.read(canonicalServicesProvider.future);
-      await container.read(canonicalServiceProvider(_firstId).future);
-      await container.read(canonicalServiceProvider(_secondId).future);
-      await container.pump();
+          .update(
+            editorRootPath.field("name"),
+            skir.DataValue.wrapStringValue("Edited first"),
+          );
       final firstProjection = container.listen(
         projectedServiceProvider(_firstId),
         (_, _) {},
@@ -98,7 +97,10 @@ void main() {
       addTearDown(firstProjection.close);
       addTearDown(secondProjection.close);
       addTearDown(listProjection.close);
-      await Future<void>.delayed(Duration.zero);
+      await container.read(canonicalServicesProvider.future);
+      await container.read(canonicalServiceProvider(_firstId).future);
+      await container.read(canonicalServiceProvider(_secondId).future);
+      await container.pump();
 
       expect(
         container.read(projectedServiceProvider(_firstId)).requireValue?.name,

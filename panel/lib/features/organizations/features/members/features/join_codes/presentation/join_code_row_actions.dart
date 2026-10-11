@@ -1,9 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row control for revoking one invitation code.
@@ -46,9 +40,10 @@ class JoinCodeRowActions extends HookConsumerWidget {
       confirmIcon: Fa6Solid.link_slash,
       onConfirm: () async {
         isRevoking.value = true;
-        await ref
-            .read(organizationJoinCodesProvider.notifier)
-            .revokeCode(code.code);
+        await ref.executeMembership(
+          ref.membershipCommands.revoke(code.code),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

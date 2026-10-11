@@ -1,9 +1,9 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/support/realm_runtime.dart";
 import "package:widgetbook_workspace/support/widgetbook_utils.dart";
 
 @widgetbook.UseCase(name: "Default", type: TagsPage)
@@ -21,24 +21,24 @@ Widget tagsPageStory({
   DisplayState tagsState = DisplayState.fewItems,
   RealmConnectionState connectionState = RealmConnectionState.online,
 }) {
-  final tags = tagsState.generateReadyBatch(generateTagBatch);
-  return FakeApp(
+  return AuthoringFixtureApp(
+    scenario: tagsState,
+    state: tagsState,
+    createDocument: () => fixtureAuthoringDocument(
+      tags: tagsState.generateReadyBatch(generateTagBatch) ?? const [],
+    ),
     overrides: [
-      ...authoringSessionMockOverrides(tags: tags ?? const []),
       realmInteractionProvider.overrideWith(
         (ref) => RealmInteractionState(connectionState: connectionState),
       ),
-      ...tagsProviderOverrides(state: tagsState, tags: tags),
+
       ...canonicalServicesProviderOverrides(state: DisplayState.manyItems),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
       selectedRealmProvider.overrideWith((ref) async => null),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.fewItems),
       ...authProviderOverrides(),
       ...appearanceProviderOverrides(),
-      activeRealmEditorRuntimeProvider.overrideWithValue(
-        storyRealmRuntime(tags ?? const []),
-      ),
     ],
     child: OrganizationScaffold(child: TagsPage()),
   );

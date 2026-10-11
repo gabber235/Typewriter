@@ -1,8 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Edits one date, one time, or one date and time value.
@@ -10,43 +5,46 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The parent owns [value] and receives valid updates through [onChanged].
 /// This field owns picker visibility and delegates interaction boundaries to
 /// the surrounding editor. Opening starts an interaction, ordinary dismissal
-/// commits it, and cancellation is reported without fabricating a replacement
-/// for a mixed value. The picker uses the current value, or a stable day seed,
-/// while [replacing] communicates that the first selection replaces several
-/// differing values.
+/// commits it. The picker uses the current value, or a stable day seed,
+/// while [mixed] communicates that the first selection replaces several
+/// differing values. Supply [onCleared] to allow empty text to remove the value.
 class DateTimePickerField extends HookConsumerWidget {
   const DateTimePickerField({
     required this.value,
     required this.includeDate,
     required this.includeTime,
     required this.onChanged,
+    this.onCleared,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
-  });
+  }) : mixed = false;
 
   const DateTimePickerField.mixed({
     required this.includeDate,
     required this.includeTime,
     required this.onChanged,
+    this.onCleared,
     this.onInteractionStart,
     this.onInteractionCommit,
-    this.onInteractionCancel,
     this.enabled = true,
     this.readOnly = false,
     super.key,
-  }) : value = null;
+  }) : value = null,
+       mixed = true;
 
   final DateTime? value;
+
+  /// Whether selected owners disagree, independently of an empty timestamp.
+  final bool mixed;
   final bool includeDate;
   final bool includeTime;
   final ValueChanged<DateTime> onChanged;
+  final VoidCallback? onCleared;
   final VoidCallback? onInteractionStart;
   final VoidCallback? onInteractionCommit;
-  final VoidCallback? onInteractionCancel;
   final bool enabled;
   final bool readOnly;
 
@@ -76,14 +74,10 @@ class DateTimePickerField extends HookConsumerWidget {
       includeTime: includeTime,
     );
 
-    void close({bool cancel = false}) {
+    void close() {
       if (!open.value) return;
       open.value = false;
-      if (cancel) {
-        onInteractionCancel?.call();
-      } else {
-        onInteractionCommit?.call();
-      }
+      onInteractionCommit?.call();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (pickerFocus.canRequestFocus) pickerFocus.requestFocus();
       });
@@ -103,8 +97,7 @@ class DateTimePickerField extends HookConsumerWidget {
       if (currentValue == null) return Future.value();
       return Clipboard.setData(
         ClipboardData(
-          text: formatDateTimeEditorValue(
-            currentValue,
+          text: currentValue.toEditorText(
             includeDate: includeDate,
             includeTime: includeTime,
           ),
@@ -136,7 +129,7 @@ class DateTimePickerField extends HookConsumerWidget {
               ),
               CancelIntent: CallbackAction<CancelIntent>(
                 onInvoke: (intent) {
-                  close(cancel: true);
+                  close();
                   return null;
                 },
               ),
@@ -154,7 +147,7 @@ class DateTimePickerField extends HookConsumerWidget {
                     includeDate: includeDate,
                     includeTime: includeTime,
                     enabled: editable,
-                    replacing: currentValue == null,
+                    replacing: mixed,
                     onChanged: onChanged,
                   ),
                 ),
@@ -164,7 +157,7 @@ class DateTimePickerField extends HookConsumerWidget {
         ),
         child: ValidatedTextField<DateTime>(
           value: currentValue,
-          mixed: currentValue == null,
+          mixed: mixed,
           name: includeDate && includeTime
               ? "date and time"
               : includeDate
@@ -174,13 +167,11 @@ class DateTimePickerField extends HookConsumerWidget {
               ? MaterialSymbols.calendar_month_rounded
               : MaterialSymbols.schedule_rounded,
           readOnly: !editable,
-          deserialize: (value) => formatDateTimeEditorValue(
-            value,
+          deserialize: (value) => value.toEditorText(
             includeDate: includeDate,
             includeTime: includeTime,
           ),
-          serialize: (draft) => parseDateTimeEditorValue(
-            draft,
+          serialize: (draft) => draft.parseEditorDateTime(
             current: pickerValue,
             includeDate: includeDate,
             includeTime: includeTime,
@@ -191,9 +182,9 @@ class DateTimePickerField extends HookConsumerWidget {
           ],
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 13),
           onChanged: onChanged,
+          onCleared: onCleared,
           onInputFocus: onInteractionStart,
           onInputBlur: onInteractionCommit,
-          onCancel: onInteractionCancel,
           surroundingActions: [
             if (enabled && currentValue != null)
               ActionShortcut(
@@ -222,7 +213,10 @@ class DateTimePickerField extends HookConsumerWidget {
               ),
           ],
           decoration: InputDecoration(
-            hintText: currentValue == null ? "Multiple values" : format,
+            hintText: mixed ? "Multiple values" : format,
+            helperText: !mixed && currentValue == null
+                ? "This value is Unfilled"
+                : null,
             suffixIcon: readOnly
                 ? null
                 : Row(

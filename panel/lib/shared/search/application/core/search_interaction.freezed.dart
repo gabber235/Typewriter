@@ -13,7 +13,7 @@ part of 'search_interaction.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$SearchCommandId implements DiagnosticableTreeMixin {
+mixin _$SearchCommandId {
 
  String get value;
 /// Create a copy of SearchCommandId
@@ -23,13 +23,6 @@ mixin _$SearchCommandId implements DiagnosticableTreeMixin {
 $SearchCommandIdCopyWith<SearchCommandId> get copyWith => _$SearchCommandIdCopyWithImpl<SearchCommandId>(this as SearchCommandId, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchCommandId;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandId'))
-    ..add(DiagnosticsProperty('value', _this.value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchCommandId;
   return 'SearchCommandId(value: ${_this.value})';
 }
@@ -218,7 +211,7 @@ return $default(_that.value);case _:
 /// @nodoc
 
 
-class _SearchCommandId with DiagnosticableTreeMixin implements SearchCommandId {
+class _SearchCommandId implements SearchCommandId {
   const _SearchCommandId(this.value): assert(value != "", 'Command ID must not be empty.');
   
 
@@ -231,12 +224,6 @@ class _SearchCommandId with DiagnosticableTreeMixin implements SearchCommandId {
 _$SearchCommandIdCopyWith<_SearchCommandId> get copyWith => __$SearchCommandIdCopyWithImpl<_SearchCommandId>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandId'))
-    ..add(DiagnosticsProperty('value', value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -250,7 +237,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandId(value: $value)';
 }
 
@@ -290,7 +277,7 @@ as String,
 }
 
 /// @nodoc
-mixin _$SearchCommandPresentation implements DiagnosticableTreeMixin {
+mixin _$SearchCommandPresentation {
 
  String get label; int get priority; String? get icon; Color? get color; ShortcutActivator? get shortcut;
 /// Create a copy of SearchCommandPresentation
@@ -300,13 +287,6 @@ mixin _$SearchCommandPresentation implements DiagnosticableTreeMixin {
 $SearchCommandPresentationCopyWith<SearchCommandPresentation> get copyWith => _$SearchCommandPresentationCopyWithImpl<SearchCommandPresentation>(this as SearchCommandPresentation, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchCommandPresentation;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandPresentation'))
-    ..add(DiagnosticsProperty('label', _this.label))..add(DiagnosticsProperty('priority', _this.priority))..add(DiagnosticsProperty('icon', _this.icon))..add(DiagnosticsProperty('color', _this.color))..add(DiagnosticsProperty('shortcut', _this.shortcut));
-}
 
 @override
 bool operator ==(Object other) {
@@ -322,7 +302,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchCommandPresentation;
   return 'SearchCommandPresentation(label: ${_this.label}, priority: ${_this.priority}, icon: ${_this.icon}, color: ${_this.color}, shortcut: ${_this.shortcut})';
 }
@@ -499,7 +479,7 @@ return $default(_that.label,_that.priority,_that.icon,_that.color,_that.shortcut
 /// @nodoc
 
 
-class _SearchCommandPresentation with DiagnosticableTreeMixin implements SearchCommandPresentation {
+class _SearchCommandPresentation implements SearchCommandPresentation {
   const _SearchCommandPresentation({required this.label, this.priority = 0, this.icon, this.color, this.shortcut}): assert(label != "", 'Command label must not be empty.');
   
 
@@ -516,12 +496,6 @@ class _SearchCommandPresentation with DiagnosticableTreeMixin implements SearchC
 _$SearchCommandPresentationCopyWith<_SearchCommandPresentation> get copyWith => __$SearchCommandPresentationCopyWithImpl<_SearchCommandPresentation>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandPresentation'))
-    ..add(DiagnosticsProperty('label', label))..add(DiagnosticsProperty('priority', priority))..add(DiagnosticsProperty('icon', icon))..add(DiagnosticsProperty('color', color))..add(DiagnosticsProperty('shortcut', shortcut));
-}
 
 @override
 bool operator ==(Object other) {
@@ -535,7 +509,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandPresentation(label: $label, priority: $priority, icon: $icon, color: $color, shortcut: $shortcut)';
 }
 
@@ -579,17 +553,11 @@ as ShortcutActivator?,
 }
 
 /// @nodoc
-mixin _$SearchCommandState implements DiagnosticableTreeMixin {
+mixin _$SearchCommandState {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandState'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -601,7 +569,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandState()';
 }
 
@@ -753,7 +721,7 @@ return enabled();case _:
 /// @nodoc
 
 
-class SearchCommandHidden with DiagnosticableTreeMixin implements SearchCommandState {
+class SearchCommandHidden implements SearchCommandState {
   const SearchCommandHidden();
   
 
@@ -761,12 +729,6 @@ class SearchCommandHidden with DiagnosticableTreeMixin implements SearchCommandS
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandState.hidden'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -778,7 +740,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandState.hidden()';
 }
 
@@ -791,7 +753,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchCommandDisabled with DiagnosticableTreeMixin implements SearchCommandState {
+class SearchCommandDisabled implements SearchCommandState {
   const SearchCommandDisabled(this.reason): assert(reason != "", 'Disabled reason must not be empty.');
   
 
@@ -804,12 +766,6 @@ class SearchCommandDisabled with DiagnosticableTreeMixin implements SearchComman
 $SearchCommandDisabledCopyWith<SearchCommandDisabled> get copyWith => _$SearchCommandDisabledCopyWithImpl<SearchCommandDisabled>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandState.disabled'))
-    ..add(DiagnosticsProperty('reason', reason));
-}
 
 @override
 bool operator ==(Object other) {
@@ -823,7 +779,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandState.disabled(reason: $reason)';
 }
 
@@ -865,7 +821,7 @@ as String,
 /// @nodoc
 
 
-class SearchCommandEnabled with DiagnosticableTreeMixin implements SearchCommandState {
+class SearchCommandEnabled implements SearchCommandState {
   const SearchCommandEnabled();
   
 
@@ -873,12 +829,6 @@ class SearchCommandEnabled with DiagnosticableTreeMixin implements SearchCommand
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandState.enabled'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -890,7 +840,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandState.enabled()';
 }
 
@@ -901,7 +851,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchCommandTarget implements DiagnosticableTreeMixin {
+mixin _$SearchCommandTarget {
 
  SearchResult get primary; List<SearchResult> get selection; SearchQueryContext get query;
 /// Create a copy of SearchCommandTarget
@@ -911,13 +861,6 @@ mixin _$SearchCommandTarget implements DiagnosticableTreeMixin {
 $SearchCommandTargetCopyWith<SearchCommandTarget> get copyWith => _$SearchCommandTargetCopyWithImpl<SearchCommandTarget>(this as SearchCommandTarget, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchCommandTarget;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandTarget'))
-    ..add(DiagnosticsProperty('primary', _this.primary))..add(DiagnosticsProperty('selection', _this.selection))..add(DiagnosticsProperty('query', _this.query));
-}
 
 @override
 bool operator ==(Object other) {
@@ -933,7 +876,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchCommandTarget;
   return 'SearchCommandTarget(primary: ${_this.primary}, selection: ${_this.selection}, query: ${_this.query})';
 }
@@ -1126,7 +1069,7 @@ return $default(_that.primary,_that.selection,_that.query);case _:
 /// @nodoc
 
 
-class _SearchCommandTarget with DiagnosticableTreeMixin implements SearchCommandTarget {
+class _SearchCommandTarget implements SearchCommandTarget {
   const _SearchCommandTarget({required this.primary, required  List<SearchResult> selection, required this.query}): assert(selection.length > 0, 'Selection must not be empty.'),_selection = selection;
   
 
@@ -1147,12 +1090,6 @@ class _SearchCommandTarget with DiagnosticableTreeMixin implements SearchCommand
 _$SearchCommandTargetCopyWith<_SearchCommandTarget> get copyWith => __$SearchCommandTargetCopyWithImpl<_SearchCommandTarget>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandTarget'))
-    ..add(DiagnosticsProperty('primary', primary))..add(DiagnosticsProperty('selection', selection))..add(DiagnosticsProperty('query', query));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1166,7 +1103,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandTarget(primary: $primary, selection: $selection, query: $query)';
 }
 
@@ -1226,7 +1163,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 /// @nodoc
-mixin _$SearchResultMatcher<P extends Object> implements DiagnosticableTreeMixin {
+mixin _$SearchResultMatcher<P extends Object> {
 
  SearchResultType get type;
 /// Create a copy of SearchResultMatcher
@@ -1236,13 +1173,6 @@ mixin _$SearchResultMatcher<P extends Object> implements DiagnosticableTreeMixin
 $SearchResultMatcherCopyWith<P, SearchResultMatcher<P>> get copyWith => _$SearchResultMatcherCopyWithImpl<P, SearchResultMatcher<P>>(this as SearchResultMatcher<P>, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchResultMatcher<P>;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchResultMatcher<$P>'))
-    ..add(DiagnosticsProperty('type', _this.type));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1258,7 +1188,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchResultMatcher<P>;
   return 'SearchResultMatcher<$P>(type: ${_this.type})';
 }
@@ -1440,7 +1370,7 @@ return $default(_that.type);case _:
 /// @nodoc
 
 
-class _SearchResultMatcher<P extends Object> extends SearchResultMatcher<P> with DiagnosticableTreeMixin {
+class _SearchResultMatcher<P extends Object> extends SearchResultMatcher<P> {
   const _SearchResultMatcher(this.type): super._();
   
 
@@ -1453,12 +1383,6 @@ class _SearchResultMatcher<P extends Object> extends SearchResultMatcher<P> with
 _$SearchResultMatcherCopyWith<P, _SearchResultMatcher<P>> get copyWith => __$SearchResultMatcherCopyWithImpl<P, _SearchResultMatcher<P>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResultMatcher<$P>'))
-    ..add(DiagnosticsProperty('type', type));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1472,7 +1396,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResultMatcher<$P>(type: $type)';
 }
 
@@ -1521,7 +1445,7 @@ $SearchResultTypeCopyWith<$Res> get type {
 }
 
 /// @nodoc
-mixin _$ResolvedSearchCommand implements DiagnosticableTreeMixin {
+mixin _$ResolvedSearchCommand {
 
  SearchCommand get command; SearchCommandState get state;
 /// Create a copy of ResolvedSearchCommand
@@ -1531,13 +1455,6 @@ mixin _$ResolvedSearchCommand implements DiagnosticableTreeMixin {
 $ResolvedSearchCommandCopyWith<ResolvedSearchCommand> get copyWith => _$ResolvedSearchCommandCopyWithImpl<ResolvedSearchCommand>(this as ResolvedSearchCommand, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as ResolvedSearchCommand;
-  properties
-    ..add(DiagnosticsProperty('type', 'ResolvedSearchCommand'))
-    ..add(DiagnosticsProperty('command', _this.command))..add(DiagnosticsProperty('state', _this.state));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1553,7 +1470,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as ResolvedSearchCommand;
   return 'ResolvedSearchCommand(command: ${_this.command}, state: ${_this.state})';
 }
@@ -1736,7 +1653,7 @@ return $default(_that.command,_that.state);case _:
 /// @nodoc
 
 
-class _ResolvedSearchCommand with DiagnosticableTreeMixin implements ResolvedSearchCommand {
+class _ResolvedSearchCommand implements ResolvedSearchCommand {
   const _ResolvedSearchCommand({required this.command, required this.state});
   
 
@@ -1750,12 +1667,6 @@ class _ResolvedSearchCommand with DiagnosticableTreeMixin implements ResolvedSea
 _$ResolvedSearchCommandCopyWith<_ResolvedSearchCommand> get copyWith => __$ResolvedSearchCommandCopyWithImpl<_ResolvedSearchCommand>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'ResolvedSearchCommand'))
-    ..add(DiagnosticsProperty('command', command))..add(DiagnosticsProperty('state', state));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1769,7 +1680,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'ResolvedSearchCommand(command: $command, state: $state)';
 }
 
@@ -1819,17 +1730,11 @@ $SearchCommandStateCopyWith<$Res> get state {
 }
 
 /// @nodoc
-mixin _$SearchResultVisibility implements DiagnosticableTreeMixin {
+mixin _$SearchResultVisibility {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResultVisibility'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -1841,7 +1746,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResultVisibility()';
 }
 
@@ -1987,7 +1892,7 @@ return hidden();case _:
 /// @nodoc
 
 
-class SearchResultVisible with DiagnosticableTreeMixin implements SearchResultVisibility {
+class SearchResultVisible implements SearchResultVisibility {
   const SearchResultVisible();
   
 
@@ -1995,12 +1900,6 @@ class SearchResultVisible with DiagnosticableTreeMixin implements SearchResultVi
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResultVisibility.visible'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2012,7 +1911,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResultVisibility.visible()';
 }
 
@@ -2025,7 +1924,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchResultHidden with DiagnosticableTreeMixin implements SearchResultVisibility {
+class SearchResultHidden implements SearchResultVisibility {
   const SearchResultHidden();
   
 
@@ -2033,12 +1932,6 @@ class SearchResultHidden with DiagnosticableTreeMixin implements SearchResultVis
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResultVisibility.hidden'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2050,7 +1943,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResultVisibility.hidden()';
 }
 
@@ -2061,17 +1954,11 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchActivationState implements DiagnosticableTreeMixin {
+mixin _$SearchActivationState {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationState'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2083,7 +1970,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationState()';
 }
 
@@ -2235,7 +2122,7 @@ return enabled();case _:
 /// @nodoc
 
 
-class SearchActivationHidden with DiagnosticableTreeMixin implements SearchActivationState {
+class SearchActivationHidden implements SearchActivationState {
   const SearchActivationHidden();
   
 
@@ -2243,12 +2130,6 @@ class SearchActivationHidden with DiagnosticableTreeMixin implements SearchActiv
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationState.hidden'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2260,7 +2141,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationState.hidden()';
 }
 
@@ -2273,7 +2154,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchActivationDisabled with DiagnosticableTreeMixin implements SearchActivationState {
+class SearchActivationDisabled implements SearchActivationState {
   const SearchActivationDisabled(this.reason): assert(reason != "", 'Disabled reason must not be empty.');
   
 
@@ -2286,12 +2167,6 @@ class SearchActivationDisabled with DiagnosticableTreeMixin implements SearchAct
 $SearchActivationDisabledCopyWith<SearchActivationDisabled> get copyWith => _$SearchActivationDisabledCopyWithImpl<SearchActivationDisabled>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationState.disabled'))
-    ..add(DiagnosticsProperty('reason', reason));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2305,7 +2180,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationState.disabled(reason: $reason)';
 }
 
@@ -2347,7 +2222,7 @@ as String,
 /// @nodoc
 
 
-class SearchActivationEnabled with DiagnosticableTreeMixin implements SearchActivationState {
+class SearchActivationEnabled implements SearchActivationState {
   const SearchActivationEnabled();
   
 
@@ -2355,12 +2230,6 @@ class SearchActivationEnabled with DiagnosticableTreeMixin implements SearchActi
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationState.enabled'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2372,7 +2241,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationState.enabled()';
 }
 
@@ -2383,17 +2252,11 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchActivationResult<T> implements DiagnosticableTreeMixin {
+mixin _$SearchActivationResult<T> {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationResult<$T>'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2405,7 +2268,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationResult<$T>()';
 }
 
@@ -2563,7 +2426,7 @@ return cancelled();case _:
 /// @nodoc
 
 
-class SearchActivationComplete<T> with DiagnosticableTreeMixin implements SearchActivationResult<T> {
+class SearchActivationComplete<T> implements SearchActivationResult<T> {
   const SearchActivationComplete(this.value);
   
 
@@ -2576,12 +2439,6 @@ class SearchActivationComplete<T> with DiagnosticableTreeMixin implements Search
 $SearchActivationCompleteCopyWith<T, SearchActivationComplete<T>> get copyWith => _$SearchActivationCompleteCopyWithImpl<T, SearchActivationComplete<T>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationResult<$T>.complete'))
-    ..add(DiagnosticsProperty('value', value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2595,7 +2452,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationResult<$T>.complete(value: $value)';
 }
 
@@ -2637,7 +2494,7 @@ as T,
 /// @nodoc
 
 
-class SearchActivationCommand<T> with DiagnosticableTreeMixin implements SearchActivationResult<T> {
+class SearchActivationCommand<T> implements SearchActivationResult<T> {
   const SearchActivationCommand(this.id);
   
 
@@ -2650,12 +2507,6 @@ class SearchActivationCommand<T> with DiagnosticableTreeMixin implements SearchA
 $SearchActivationCommandCopyWith<T, SearchActivationCommand<T>> get copyWith => _$SearchActivationCommandCopyWithImpl<T, SearchActivationCommand<T>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationResult<$T>.command'))
-    ..add(DiagnosticsProperty('id', id));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2669,7 +2520,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationResult<$T>.command(id: $id)';
 }
 
@@ -2720,7 +2571,7 @@ $SearchCommandIdCopyWith<$Res> get id {
 /// @nodoc
 
 
-class SearchActivationKeepOpen<T> with DiagnosticableTreeMixin implements SearchActivationResult<T> {
+class SearchActivationKeepOpen<T> implements SearchActivationResult<T> {
   const SearchActivationKeepOpen();
   
 
@@ -2728,12 +2579,6 @@ class SearchActivationKeepOpen<T> with DiagnosticableTreeMixin implements Search
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationResult<$T>.keepOpen'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2745,7 +2590,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationResult<$T>.keepOpen()';
 }
 
@@ -2758,7 +2603,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchActivationCancelled<T> with DiagnosticableTreeMixin implements SearchActivationResult<T> {
+class SearchActivationCancelled<T> implements SearchActivationResult<T> {
   const SearchActivationCancelled();
   
 
@@ -2766,12 +2611,6 @@ class SearchActivationCancelled<T> with DiagnosticableTreeMixin implements Searc
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationResult<$T>.cancelled'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2783,7 +2622,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationResult<$T>.cancelled()';
 }
 
@@ -2794,7 +2633,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchCommandExecutionContext implements DiagnosticableTreeMixin {
+mixin _$SearchCommandExecutionContext {
 
  SearchPromptHost get prompts;
 /// Create a copy of SearchCommandExecutionContext
@@ -2804,13 +2643,6 @@ mixin _$SearchCommandExecutionContext implements DiagnosticableTreeMixin {
 $SearchCommandExecutionContextCopyWith<SearchCommandExecutionContext> get copyWith => _$SearchCommandExecutionContextCopyWithImpl<SearchCommandExecutionContext>(this as SearchCommandExecutionContext, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchCommandExecutionContext;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionContext'))
-    ..add(DiagnosticsProperty('prompts', _this.prompts));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2826,7 +2658,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchCommandExecutionContext;
   return 'SearchCommandExecutionContext(prompts: ${_this.prompts})';
 }
@@ -2999,7 +2831,7 @@ return $default(_that.prompts);case _:
 /// @nodoc
 
 
-class _SearchCommandExecutionContext with DiagnosticableTreeMixin implements SearchCommandExecutionContext {
+class _SearchCommandExecutionContext implements SearchCommandExecutionContext {
   const _SearchCommandExecutionContext({required this.prompts});
   
 
@@ -3012,12 +2844,6 @@ class _SearchCommandExecutionContext with DiagnosticableTreeMixin implements Sea
 _$SearchCommandExecutionContextCopyWith<_SearchCommandExecutionContext> get copyWith => __$SearchCommandExecutionContextCopyWithImpl<_SearchCommandExecutionContext>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionContext'))
-    ..add(DiagnosticsProperty('prompts', prompts));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3031,7 +2857,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionContext(prompts: $prompts)';
 }
 
@@ -3071,7 +2897,7 @@ as SearchPromptHost,
 }
 
 /// @nodoc
-mixin _$SearchActivationContext implements DiagnosticableTreeMixin {
+mixin _$SearchActivationContext {
 
  SearchPromptHost get prompts; SearchCommandDispatcher get commands; SearchQueryContext get query;
 /// Create a copy of SearchActivationContext
@@ -3081,13 +2907,6 @@ mixin _$SearchActivationContext implements DiagnosticableTreeMixin {
 $SearchActivationContextCopyWith<SearchActivationContext> get copyWith => _$SearchActivationContextCopyWithImpl<SearchActivationContext>(this as SearchActivationContext, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchActivationContext;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationContext'))
-    ..add(DiagnosticsProperty('prompts', _this.prompts))..add(DiagnosticsProperty('commands', _this.commands))..add(DiagnosticsProperty('query', _this.query));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3103,7 +2922,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchActivationContext;
   return 'SearchActivationContext(prompts: ${_this.prompts}, commands: ${_this.commands}, query: ${_this.query})';
 }
@@ -3287,7 +3106,7 @@ return $default(_that.prompts,_that.commands,_that.query);case _:
 /// @nodoc
 
 
-class _SearchActivationContext with DiagnosticableTreeMixin implements SearchActivationContext {
+class _SearchActivationContext implements SearchActivationContext {
   const _SearchActivationContext({required this.prompts, required this.commands, required this.query});
   
 
@@ -3302,12 +3121,6 @@ class _SearchActivationContext with DiagnosticableTreeMixin implements SearchAct
 _$SearchActivationContextCopyWith<_SearchActivationContext> get copyWith => __$SearchActivationContextCopyWithImpl<_SearchActivationContext>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationContext'))
-    ..add(DiagnosticsProperty('prompts', prompts))..add(DiagnosticsProperty('commands', commands))..add(DiagnosticsProperty('query', query));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3321,7 +3134,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationContext(prompts: $prompts, commands: $commands, query: $query)';
 }
 
@@ -3372,7 +3185,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 /// @nodoc
-mixin _$SearchActivationEvaluationContext implements DiagnosticableTreeMixin {
+mixin _$SearchActivationEvaluationContext {
 
  SearchQueryContext get query; SearchCommandDispatcher get commands;
 /// Create a copy of SearchActivationEvaluationContext
@@ -3382,13 +3195,6 @@ mixin _$SearchActivationEvaluationContext implements DiagnosticableTreeMixin {
 $SearchActivationEvaluationContextCopyWith<SearchActivationEvaluationContext> get copyWith => _$SearchActivationEvaluationContextCopyWithImpl<SearchActivationEvaluationContext>(this as SearchActivationEvaluationContext, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchActivationEvaluationContext;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationEvaluationContext'))
-    ..add(DiagnosticsProperty('query', _this.query))..add(DiagnosticsProperty('commands', _this.commands));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3404,7 +3210,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchActivationEvaluationContext;
   return 'SearchActivationEvaluationContext(query: ${_this.query}, commands: ${_this.commands})';
 }
@@ -3587,7 +3393,7 @@ return $default(_that.query,_that.commands);case _:
 /// @nodoc
 
 
-class _SearchActivationEvaluationContext with DiagnosticableTreeMixin implements SearchActivationEvaluationContext {
+class _SearchActivationEvaluationContext implements SearchActivationEvaluationContext {
   const _SearchActivationEvaluationContext({required this.query, required this.commands});
   
 
@@ -3601,12 +3407,6 @@ class _SearchActivationEvaluationContext with DiagnosticableTreeMixin implements
 _$SearchActivationEvaluationContextCopyWith<_SearchActivationEvaluationContext> get copyWith => __$SearchActivationEvaluationContextCopyWithImpl<_SearchActivationEvaluationContext>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchActivationEvaluationContext'))
-    ..add(DiagnosticsProperty('query', query))..add(DiagnosticsProperty('commands', commands));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3620,7 +3420,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchActivationEvaluationContext(query: $query, commands: $commands)';
 }
 
@@ -3670,7 +3470,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 /// @nodoc
-mixin _$SearchInteraction<T> implements DiagnosticableTreeMixin {
+mixin _$SearchInteraction<T> {
 
  SearchActivation<T> get activation; SearchSelectionMode get selectionMode; List<SearchCommand> get commands;
 /// Create a copy of SearchInteraction
@@ -3680,13 +3480,6 @@ mixin _$SearchInteraction<T> implements DiagnosticableTreeMixin {
 $SearchInteractionCopyWith<T, SearchInteraction<T>> get copyWith => _$SearchInteractionCopyWithImpl<T, SearchInteraction<T>>(this as SearchInteraction<T>, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchInteraction<T>;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchInteraction<$T>'))
-    ..add(DiagnosticsProperty('activation', _this.activation))..add(DiagnosticsProperty('selectionMode', _this.selectionMode))..add(DiagnosticsProperty('commands', _this.commands));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3702,7 +3495,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchInteraction<T>;
   return 'SearchInteraction<$T>(activation: ${_this.activation}, selectionMode: ${_this.selectionMode}, commands: ${_this.commands})';
 }
@@ -3877,7 +3670,7 @@ return $default(_that.activation,_that.selectionMode,_that.commands);case _:
 /// @nodoc
 
 
-class _SearchInteraction<T> with DiagnosticableTreeMixin implements SearchInteraction<T> {
+class _SearchInteraction<T> implements SearchInteraction<T> {
   const _SearchInteraction({required this.activation, required this.selectionMode,  List<SearchCommand> commands = const []}): _commands = commands;
   
 
@@ -3898,12 +3691,6 @@ class _SearchInteraction<T> with DiagnosticableTreeMixin implements SearchIntera
 _$SearchInteractionCopyWith<T, _SearchInteraction<T>> get copyWith => __$SearchInteractionCopyWithImpl<T, _SearchInteraction<T>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchInteraction<$T>'))
-    ..add(DiagnosticsProperty('activation', activation))..add(DiagnosticsProperty('selectionMode', selectionMode))..add(DiagnosticsProperty('commands', commands));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3917,7 +3704,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchInteraction<$T>(activation: $activation, selectionMode: $selectionMode, commands: $commands)';
 }
 
@@ -3959,7 +3746,7 @@ as List<SearchCommand>,
 }
 
 /// @nodoc
-mixin _$SearchSession<T> implements DiagnosticableTreeMixin {
+mixin _$SearchSession<T> {
 
  SearchSource get source; SearchInteraction<T> get interaction; SearchScope get scope; String get initialQuery;
 /// Create a copy of SearchSession
@@ -3969,13 +3756,6 @@ mixin _$SearchSession<T> implements DiagnosticableTreeMixin {
 $SearchSessionCopyWith<T, SearchSession<T>> get copyWith => _$SearchSessionCopyWithImpl<T, SearchSession<T>>(this as SearchSession<T>, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchSession<T>;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchSession<$T>'))
-    ..add(DiagnosticsProperty('source', _this.source))..add(DiagnosticsProperty('interaction', _this.interaction))..add(DiagnosticsProperty('scope', _this.scope))..add(DiagnosticsProperty('initialQuery', _this.initialQuery));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3991,7 +3771,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchSession<T>;
   return 'SearchSession<$T>(source: ${_this.source}, interaction: ${_this.interaction}, scope: ${_this.scope}, initialQuery: ${_this.initialQuery})';
 }
@@ -4176,7 +3956,7 @@ return $default(_that.source,_that.interaction,_that.scope,_that.initialQuery);c
 /// @nodoc
 
 
-class _SearchSession<T> with DiagnosticableTreeMixin implements SearchSession<T> {
+class _SearchSession<T> implements SearchSession<T> {
   const _SearchSession({required this.source, required this.interaction, this.scope = const AllSearchScope(), this.initialQuery = ""});
   
 
@@ -4192,12 +3972,6 @@ class _SearchSession<T> with DiagnosticableTreeMixin implements SearchSession<T>
 _$SearchSessionCopyWith<T, _SearchSession<T>> get copyWith => __$SearchSessionCopyWithImpl<T, _SearchSession<T>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSession<$T>'))
-    ..add(DiagnosticsProperty('source', source))..add(DiagnosticsProperty('interaction', interaction))..add(DiagnosticsProperty('scope', scope))..add(DiagnosticsProperty('initialQuery', initialQuery));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4211,7 +3985,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSession<$T>(source: $source, interaction: $interaction, scope: $scope, initialQuery: $initialQuery)';
 }
 
@@ -4263,17 +4037,11 @@ $SearchInteractionCopyWith<T, $Res> get interaction {
 }
 
 /// @nodoc
-mixin _$SearchCommandResult implements DiagnosticableTreeMixin {
+mixin _$SearchCommandResult {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandResult'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -4285,7 +4053,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandResult()';
 }
 
@@ -4437,7 +4205,7 @@ return cancelled();case _:
 /// @nodoc
 
 
-class SearchCommandResultCompleted with DiagnosticableTreeMixin implements SearchCommandResult {
+class SearchCommandResultCompleted implements SearchCommandResult {
   const SearchCommandResultCompleted({this.surfaceEffect = const SearchSurfaceEffect.close(),  List<SearchHostEffect> hostEffects = const []}): _hostEffects = hostEffects;
   
 
@@ -4457,12 +4225,6 @@ class SearchCommandResultCompleted with DiagnosticableTreeMixin implements Searc
 $SearchCommandResultCompletedCopyWith<SearchCommandResultCompleted> get copyWith => _$SearchCommandResultCompletedCopyWithImpl<SearchCommandResultCompleted>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandResult.completed'))
-    ..add(DiagnosticsProperty('surfaceEffect', surfaceEffect))..add(DiagnosticsProperty('hostEffects', hostEffects));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4476,7 +4238,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandResult.completed(surfaceEffect: $surfaceEffect, hostEffects: $hostEffects)';
 }
 
@@ -4528,7 +4290,7 @@ $SearchSurfaceEffectCopyWith<$Res> get surfaceEffect {
 /// @nodoc
 
 
-class SearchCommandResultFailed with DiagnosticableTreeMixin implements SearchCommandResult {
+class SearchCommandResultFailed implements SearchCommandResult {
   const SearchCommandResultFailed({required this.message, this.surfaceEffect = const SearchSurfaceEffect.refresh()}): assert(message != "", 'Message must not be empty.');
   
 
@@ -4542,12 +4304,6 @@ class SearchCommandResultFailed with DiagnosticableTreeMixin implements SearchCo
 $SearchCommandResultFailedCopyWith<SearchCommandResultFailed> get copyWith => _$SearchCommandResultFailedCopyWithImpl<SearchCommandResultFailed>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandResult.failed'))
-    ..add(DiagnosticsProperty('message', message))..add(DiagnosticsProperty('surfaceEffect', surfaceEffect));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4561,7 +4317,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandResult.failed(message: $message, surfaceEffect: $surfaceEffect)';
 }
 
@@ -4613,7 +4369,7 @@ $SearchSurfaceEffectCopyWith<$Res> get surfaceEffect {
 /// @nodoc
 
 
-class SearchCommandResultCancelled with DiagnosticableTreeMixin implements SearchCommandResult {
+class SearchCommandResultCancelled implements SearchCommandResult {
   const SearchCommandResultCancelled();
   
 
@@ -4621,12 +4377,6 @@ class SearchCommandResultCancelled with DiagnosticableTreeMixin implements Searc
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandResult.cancelled'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -4638,7 +4388,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandResult.cancelled()';
 }
 
@@ -4649,17 +4399,11 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchCommandExecutionState implements DiagnosticableTreeMixin {
+mixin _$SearchCommandExecutionState {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionState'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -4671,7 +4415,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionState()';
 }
 
@@ -4829,7 +4573,7 @@ return failed(_that.command,_that.resultIds,_that.message);case _:
 /// @nodoc
 
 
-class SearchCommandIdle with DiagnosticableTreeMixin implements SearchCommandExecutionState {
+class SearchCommandIdle implements SearchCommandExecutionState {
   const SearchCommandIdle();
   
 
@@ -4837,12 +4581,6 @@ class SearchCommandIdle with DiagnosticableTreeMixin implements SearchCommandExe
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionState.idle'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -4854,7 +4592,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionState.idle()';
 }
 
@@ -4867,7 +4605,7 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchCommandRunning with DiagnosticableTreeMixin implements SearchCommandExecutionState {
+class SearchCommandRunning implements SearchCommandExecutionState {
   const SearchCommandRunning({required this.command, required  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
   
 
@@ -4887,12 +4625,6 @@ class SearchCommandRunning with DiagnosticableTreeMixin implements SearchCommand
 $SearchCommandRunningCopyWith<SearchCommandRunning> get copyWith => _$SearchCommandRunningCopyWithImpl<SearchCommandRunning>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionState.running'))
-    ..add(DiagnosticsProperty('command', command))..add(DiagnosticsProperty('resultIds', resultIds));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4906,7 +4638,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionState.running(command: $command, resultIds: $resultIds)';
 }
 
@@ -4958,7 +4690,7 @@ $SearchCommandIdCopyWith<$Res> get command {
 /// @nodoc
 
 
-class SearchCommandCompleted with DiagnosticableTreeMixin implements SearchCommandExecutionState {
+class SearchCommandCompleted implements SearchCommandExecutionState {
   const SearchCommandCompleted({required this.command, required  Set<String> resultIds}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),_resultIds = resultIds;
   
 
@@ -4978,12 +4710,6 @@ class SearchCommandCompleted with DiagnosticableTreeMixin implements SearchComma
 $SearchCommandCompletedCopyWith<SearchCommandCompleted> get copyWith => _$SearchCommandCompletedCopyWithImpl<SearchCommandCompleted>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionState.completed'))
-    ..add(DiagnosticsProperty('command', command))..add(DiagnosticsProperty('resultIds', resultIds));
-}
 
 @override
 bool operator ==(Object other) {
@@ -4997,7 +4723,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionState.completed(command: $command, resultIds: $resultIds)';
 }
 
@@ -5049,7 +4775,7 @@ $SearchCommandIdCopyWith<$Res> get command {
 /// @nodoc
 
 
-class SearchCommandFailed with DiagnosticableTreeMixin implements SearchCommandExecutionState {
+class SearchCommandFailed implements SearchCommandExecutionState {
   const SearchCommandFailed({required this.command, required  Set<String> resultIds, required this.message}): assert(resultIds.length > 0, 'Result IDs must not be empty.'),assert(message != "", 'Message must not be empty.'),_resultIds = resultIds;
   
 
@@ -5070,12 +4796,6 @@ class SearchCommandFailed with DiagnosticableTreeMixin implements SearchCommandE
 $SearchCommandFailedCopyWith<SearchCommandFailed> get copyWith => _$SearchCommandFailedCopyWithImpl<SearchCommandFailed>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchCommandExecutionState.failed'))
-    ..add(DiagnosticsProperty('command', command))..add(DiagnosticsProperty('resultIds', resultIds))..add(DiagnosticsProperty('message', message));
-}
 
 @override
 bool operator ==(Object other) {
@@ -5089,7 +4809,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchCommandExecutionState.failed(command: $command, resultIds: $resultIds, message: $message)';
 }
 
@@ -5140,7 +4860,7 @@ $SearchCommandIdCopyWith<$Res> get command {
 }
 
 /// @nodoc
-mixin _$SearchContribution<T> implements DiagnosticableTreeMixin {
+mixin _$SearchContribution<T> {
 
  SearchSession<T> get session; List<QuerySelectorDefinition> get baseSelectors; List<SearchHostEffectExecutor<SearchHostEffect>> get hostEffectExecutors;
 /// Create a copy of SearchContribution
@@ -5150,13 +4870,6 @@ mixin _$SearchContribution<T> implements DiagnosticableTreeMixin {
 $SearchContributionCopyWith<T, SearchContribution<T>> get copyWith => _$SearchContributionCopyWithImpl<T, SearchContribution<T>>(this as SearchContribution<T>, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchContribution<T>;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchContribution<$T>'))
-    ..add(DiagnosticsProperty('session', _this.session))..add(DiagnosticsProperty('baseSelectors', _this.baseSelectors))..add(DiagnosticsProperty('hostEffectExecutors', _this.hostEffectExecutors));
-}
 
 @override
 bool operator ==(Object other) {
@@ -5172,7 +4885,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchContribution<T>;
   return 'SearchContribution<$T>(session: ${_this.session}, baseSelectors: ${_this.baseSelectors}, hostEffectExecutors: ${_this.hostEffectExecutors})';
 }
@@ -5356,7 +5069,7 @@ return $default(_that.session,_that.baseSelectors,_that.hostEffectExecutors);cas
 /// @nodoc
 
 
-class _SearchContribution<T> with DiagnosticableTreeMixin implements SearchContribution<T> {
+class _SearchContribution<T> implements SearchContribution<T> {
   const _SearchContribution({required this.session,  List<QuerySelectorDefinition> baseSelectors = const [],  List<SearchHostEffectExecutor<SearchHostEffect>> hostEffectExecutors = const []}): _baseSelectors = baseSelectors,_hostEffectExecutors = hostEffectExecutors;
   
 
@@ -5383,12 +5096,6 @@ class _SearchContribution<T> with DiagnosticableTreeMixin implements SearchContr
 _$SearchContributionCopyWith<T, _SearchContribution<T>> get copyWith => __$SearchContributionCopyWithImpl<T, _SearchContribution<T>>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchContribution<$T>'))
-    ..add(DiagnosticsProperty('session', session))..add(DiagnosticsProperty('baseSelectors', baseSelectors))..add(DiagnosticsProperty('hostEffectExecutors', hostEffectExecutors));
-}
 
 @override
 bool operator ==(Object other) {
@@ -5402,7 +5109,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchContribution<$T>(session: $session, baseSelectors: $baseSelectors, hostEffectExecutors: $hostEffectExecutors)';
 }
 

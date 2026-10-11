@@ -1,4 +1,3 @@
-import "package:flutter/widgets.dart" as flutter;
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -668,10 +667,7 @@ void main() {
         overscanExtent: 50,
       );
 
-      expect(
-        viewport.visibleBounds,
-        const flutter.Rect.fromLTRB(100, 150, 400, 350),
-      );
+      expect(viewport.visibleBounds, const Rect.fromLTRB(100, 150, 400, 350));
     });
 
     testWidgets("expands content width for far preview geometry", (

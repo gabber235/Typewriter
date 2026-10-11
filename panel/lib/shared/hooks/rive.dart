@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:rive/rive.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Creates and manages a Rive [FileLoader] for a widget lifetime.
 ///
@@ -26,13 +24,13 @@ class _RiveFileLoaderHookCreator {
   /// when they change without changing the hook call position.
   FileLoader fromAsset(
     String asset, {
-    Factory? riveFactory,
+    RiveFactory? riveFactory,
     List<Object?>? keys,
   }) {
     return use(
       _RiveFileLoaderHook.fromAsset(
         asset,
-        riveFactory: riveFactory ?? Factory.rive,
+        riveFactory: riveFactory ?? RiveFactory.rive,
         keys: keys,
       ),
     );
@@ -42,11 +40,15 @@ class _RiveFileLoaderHookCreator {
   ///
   /// [riveFactory] selects the renderer. Include source dependencies in [keys]
   /// when they change without changing the hook call position.
-  FileLoader fromUrl(String url, {Factory? riveFactory, List<Object?>? keys}) {
+  FileLoader fromUrl(
+    String url, {
+    RiveFactory? riveFactory,
+    List<Object?>? keys,
+  }) {
     return use(
       _RiveFileLoaderHook.fromUrl(
         url,
-        riveFactory: riveFactory ?? Factory.rive,
+        riveFactory: riveFactory ?? RiveFactory.rive,
         keys: keys,
       ),
     );
@@ -56,11 +58,15 @@ class _RiveFileLoaderHookCreator {
   ///
   /// [riveFactory] selects the renderer. Include source dependencies in [keys]
   /// when they change without changing the hook call position.
-  FileLoader fromFile(File file, {Factory? riveFactory, List<Object?>? keys}) {
+  FileLoader fromFile(
+    RiveFile file, {
+    RiveFactory? riveFactory,
+    List<Object?>? keys,
+  }) {
     return use(
       _RiveFileLoaderHook.fromFile(
         file,
-        riveFactory: riveFactory ?? Factory.rive,
+        riveFactory: riveFactory ?? RiveFactory.rive,
         keys: keys,
       ),
     );
@@ -89,7 +95,7 @@ class _RiveFileLoaderHook extends Hook<FileLoader> {
        _file = null;
 
   const _RiveFileLoaderHook.fromFile(
-    File file, {
+    RiveFile file, {
     required this.riveFactory,
     super.keys,
   }) : _source = _FileLoaderSource.file,
@@ -100,8 +106,8 @@ class _RiveFileLoaderHook extends Hook<FileLoader> {
   final _FileLoaderSource _source;
   final String? _asset;
   final String? _url;
-  final File? _file;
-  final Factory riveFactory;
+  final RiveFile? _file;
+  final RiveFactory riveFactory;
 
   @override
   _RiveFileLoaderHookState createState() => _RiveFileLoaderHookState();

@@ -30,7 +30,7 @@ sealed interface InvocationId_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class InvocationId private constructor(
     override val value: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.InvocationId>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.InvocationId>? =
         null,
 ): skirout.editor.v1.capability.InvocationId_OrMutable {
     constructor(
@@ -77,7 +77,7 @@ class InvocationId private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.InvocationId.serializerImpl,
+            _SerializerRegistry.InvocationIdSerializerImpl,
         )
     }
 
@@ -121,41 +121,18 @@ class InvocationId private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:InvocationId",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [InvocationId] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.InvocationIdSerializer;
 
         /** Describes the [InvocationId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "value",
-                "value",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.InvocationIdSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface SearchCapabilityDefinition_OrMutable {
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+    val requestType: skirout.editor.v1.type_catalog.TypeUse;
+    val resultType: skirout.editor.v1.type_catalog.TypeUse;
 
     fun toFrozen(): skirout.editor.v1.capability.SearchCapabilityDefinition;
 }
@@ -164,23 +141,23 @@ sealed interface SearchCapabilityDefinition_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class SearchCapabilityDefinition private constructor(
     override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
-    override val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.SearchCapabilityDefinition>? =
+    override val requestType: skirout.editor.v1.type_catalog.TypeUse,
+    override val resultType: skirout.editor.v1.type_catalog.TypeUse,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.SearchCapabilityDefinition>? =
         null,
 ): skirout.editor.v1.capability.SearchCapabilityDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        requestType: skirout.editor.v1.type_catalog.TypeUse,
+        resultType: skirout.editor.v1.type_catalog.TypeUse,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.SearchCapabilityDefinition>? =
             null,
     ): this(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
-        resultType.toFrozen(),
+        requestType,
+        resultType,
         _unrecognizedFields,
     ) {}
 
@@ -200,14 +177,14 @@ class SearchCapabilityDefinition private constructor(
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        requestType: skirout.editor.v1.type_catalog.TypeUse =
             this.requestType,
-        resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        resultType: skirout.editor.v1.type_catalog.TypeUse =
             this.resultType,
     ) = skirout.editor.v1.capability.SearchCapabilityDefinition(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
-        resultType.toFrozen(),
+        requestType,
+        resultType,
         this._unrecognizedFields,
     );
 
@@ -225,7 +202,7 @@ class SearchCapabilityDefinition private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.SearchCapabilityDefinition.serializerImpl,
+            _SerializerRegistry.SearchCapabilityDefinitionSerializerImpl,
         )
     }
 
@@ -235,10 +212,10 @@ class SearchCapabilityDefinition private constructor(
             _MustNameArguments,
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        override var requestType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var resultType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.SearchCapabilityDefinition>? =
             null,
     ): skirout.editor.v1.capability.SearchCapabilityDefinition_OrMutable {
@@ -251,7 +228,7 @@ class SearchCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -265,46 +242,14 @@ class SearchCapabilityDefinition private constructor(
                 is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [requestType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-         */
-        val mutableRequestType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.requestType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.requestType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [resultType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-         */
-        val mutableResultType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.resultType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.resultType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.capability.SearchCapabilityDefinition(
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -320,10 +265,10 @@ class SearchCapabilityDefinition private constructor(
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            requestType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            resultType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         ) = skirout.editor.v1.capability.SearchCapabilityDefinition(
             capabilityId = capabilityId,
             requestType = requestType,
@@ -331,59 +276,18 @@ class SearchCapabilityDefinition private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:SearchCapabilityDefinition",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [SearchCapabilityDefinition] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.SearchCapabilityDefinitionSerializer;
 
         /** Describes the [SearchCapabilityDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "capability_id",
-                "capabilityId",
-                0,
-                skirout.editor.v1.type_catalog.CapabilityId.serializer,
-                "",
-                { it.capabilityId },
-                { mut, v -> mut.capabilityId = v },
-            );
-            serializerImpl.addField(
-                "request_type",
-                "requestType",
-                1,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.requestType },
-                { mut, v -> mut.requestType = v },
-            );
-            serializerImpl.addField(
-                "result_type",
-                "resultType",
-                2,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.resultType },
-                { mut, v -> mut.resultType = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.SearchCapabilityDefinitionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ComputationCapabilityDefinition_OrMutable {
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+    val requestType: skirout.editor.v1.type_catalog.TypeUse;
+    val resultType: skirout.editor.v1.type_catalog.TypeUse;
 
     fun toFrozen(): skirout.editor.v1.capability.ComputationCapabilityDefinition;
 }
@@ -392,23 +296,23 @@ sealed interface ComputationCapabilityDefinition_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ComputationCapabilityDefinition private constructor(
     override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
-    override val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationCapabilityDefinition>? =
+    override val requestType: skirout.editor.v1.type_catalog.TypeUse,
+    override val resultType: skirout.editor.v1.type_catalog.TypeUse,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationCapabilityDefinition>? =
         null,
 ): skirout.editor.v1.capability.ComputationCapabilityDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        requestType: skirout.editor.v1.type_catalog.TypeUse,
+        resultType: skirout.editor.v1.type_catalog.TypeUse,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationCapabilityDefinition>? =
             null,
     ): this(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
-        resultType.toFrozen(),
+        requestType,
+        resultType,
         _unrecognizedFields,
     ) {}
 
@@ -428,14 +332,14 @@ class ComputationCapabilityDefinition private constructor(
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        requestType: skirout.editor.v1.type_catalog.TypeUse =
             this.requestType,
-        resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        resultType: skirout.editor.v1.type_catalog.TypeUse =
             this.resultType,
     ) = skirout.editor.v1.capability.ComputationCapabilityDefinition(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
-        resultType.toFrozen(),
+        requestType,
+        resultType,
         this._unrecognizedFields,
     );
 
@@ -453,7 +357,7 @@ class ComputationCapabilityDefinition private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.ComputationCapabilityDefinition.serializerImpl,
+            _SerializerRegistry.ComputationCapabilityDefinitionSerializerImpl,
         )
     }
 
@@ -463,10 +367,10 @@ class ComputationCapabilityDefinition private constructor(
             _MustNameArguments,
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        override var requestType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var resultType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationCapabilityDefinition>? =
             null,
     ): skirout.editor.v1.capability.ComputationCapabilityDefinition_OrMutable {
@@ -479,7 +383,7 @@ class ComputationCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -493,46 +397,14 @@ class ComputationCapabilityDefinition private constructor(
                 is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [requestType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-         */
-        val mutableRequestType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.requestType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.requestType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [resultType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resultType] and returns it.
-         */
-        val mutableResultType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.resultType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.resultType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.capability.ComputationCapabilityDefinition(
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -548,10 +420,10 @@ class ComputationCapabilityDefinition private constructor(
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            requestType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            resultType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         ) = skirout.editor.v1.capability.ComputationCapabilityDefinition(
             capabilityId = capabilityId,
             requestType = requestType,
@@ -559,58 +431,17 @@ class ComputationCapabilityDefinition private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:ComputationCapabilityDefinition",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ComputationCapabilityDefinition] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ComputationCapabilityDefinitionSerializer;
 
         /** Describes the [ComputationCapabilityDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "capability_id",
-                "capabilityId",
-                0,
-                skirout.editor.v1.type_catalog.CapabilityId.serializer,
-                "",
-                { it.capabilityId },
-                { mut, v -> mut.capabilityId = v },
-            );
-            serializerImpl.addField(
-                "request_type",
-                "requestType",
-                1,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.requestType },
-                { mut, v -> mut.requestType = v },
-            );
-            serializerImpl.addField(
-                "result_type",
-                "resultType",
-                2,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.resultType },
-                { mut, v -> mut.resultType = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ComputationCapabilityDefinitionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface CommandCapabilityDefinition_OrMutable {
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
+    val requestType: skirout.editor.v1.type_catalog.TypeUse;
 
     fun toFrozen(): skirout.editor.v1.capability.CommandCapabilityDefinition;
 }
@@ -619,20 +450,20 @@ sealed interface CommandCapabilityDefinition_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CommandCapabilityDefinition private constructor(
     override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
-    override val requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandCapabilityDefinition>? =
+    override val requestType: skirout.editor.v1.type_catalog.TypeUse,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandCapabilityDefinition>? =
         null,
 ): skirout.editor.v1.capability.CommandCapabilityDefinition_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+        requestType: skirout.editor.v1.type_catalog.TypeUse,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandCapabilityDefinition>? =
             null,
     ): this(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
+        requestType,
         _unrecognizedFields,
     ) {}
 
@@ -651,11 +482,11 @@ class CommandCapabilityDefinition private constructor(
             _MustNameArguments,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        requestType: skirout.editor.v1.type_catalog.TypeUse =
             this.requestType,
     ) = skirout.editor.v1.capability.CommandCapabilityDefinition(
         capabilityId.toFrozen(),
-        requestType.toFrozen(),
+        requestType,
         this._unrecognizedFields,
     );
 
@@ -673,7 +504,7 @@ class CommandCapabilityDefinition private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CommandCapabilityDefinition.serializerImpl,
+            _SerializerRegistry.CommandCapabilityDefinitionSerializerImpl,
         )
     }
 
@@ -683,8 +514,8 @@ class CommandCapabilityDefinition private constructor(
             _MustNameArguments,
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+        override var requestType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandCapabilityDefinition>? =
             null,
     ): skirout.editor.v1.capability.CommandCapabilityDefinition_OrMutable {
@@ -696,7 +527,7 @@ class CommandCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -710,29 +541,13 @@ class CommandCapabilityDefinition private constructor(
                 is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
             }
         }
-
-        /**
-         * If the value of [requestType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [requestType] and returns it.
-         */
-        val mutableRequestType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.requestType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.requestType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.capability.CommandCapabilityDefinition(
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -748,51 +563,19 @@ class CommandCapabilityDefinition private constructor(
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
+            requestType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
         ) = skirout.editor.v1.capability.CommandCapabilityDefinition(
             capabilityId = capabilityId,
             requestType = requestType,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:CommandCapabilityDefinition",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CommandCapabilityDefinition] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CommandCapabilityDefinitionSerializer;
 
         /** Describes the [CommandCapabilityDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "capability_id",
-                "capabilityId",
-                0,
-                skirout.editor.v1.type_catalog.CapabilityId.serializer,
-                "",
-                { it.capabilityId },
-                { mut, v -> mut.capabilityId = v },
-            );
-            serializerImpl.addField(
-                "request_type",
-                "requestType",
-                1,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.requestType },
-                { mut, v -> mut.requestType = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CommandCapabilityDefinitionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -882,7 +665,7 @@ sealed class CapabilityDefinition private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CapabilityDefinition._serializerImpl,
+            _SerializerRegistry.CapabilityDefinitionSerializerImpl,
         )
     }
 
@@ -899,8 +682,8 @@ sealed class CapabilityDefinition private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-            resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+            requestType: skirout.editor.v1.type_catalog.TypeUse,
+            resultType: skirout.editor.v1.type_catalog.TypeUse,
         ) = SearchWrapper(
             skirout.editor.v1.capability.SearchCapabilityDefinition(
                 capabilityId = capabilityId,
@@ -915,8 +698,8 @@ sealed class CapabilityDefinition private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-            resultType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+            requestType: skirout.editor.v1.type_catalog.TypeUse,
+            resultType: skirout.editor.v1.type_catalog.TypeUse,
         ) = ComputationWrapper(
             skirout.editor.v1.capability.ComputationCapabilityDefinition(
                 capabilityId = capabilityId,
@@ -931,7 +714,7 @@ sealed class CapabilityDefinition private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-            requestType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
+            requestType: skirout.editor.v1.type_catalog.TypeUse,
         ) = CommandWrapper(
             skirout.editor.v1.capability.CommandCapabilityDefinition(
                 capabilityId = capabilityId,
@@ -939,68 +722,17 @@ sealed class CapabilityDefinition private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.CapabilityDefinition, Unknown>(
-                recordId = "editor/v1/capability.skir:CapabilityDefinition",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [CapabilityDefinition] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.CapabilityDefinitionSerializer;
 
         /** Describes the [CapabilityDefinition] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "search",
-                    Kind.SEARCH_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.SearchCapabilityDefinition.serializer,
-                    "",
-                    { SearchWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "computation",
-                    Kind.COMPUTATION_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.ComputationCapabilityDefinition.serializer,
-                    "",
-                    { ComputationWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "command",
-                    Kind.COMMAND_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CommandCapabilityDefinition.serializer,
-                    "",
-                    { CommandWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.CapabilityDefinitionSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ResourceAddress_OrMutable {
-    val resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val identity: skirout.editor.v1.type_catalog.TypedValue;
+    val resourceType: skirout.editor.v1.type_catalog.TypeUse;
+    val identity: skirout.editor.v1.type_catalog.DataValue;
 
     fun toFrozen(): skirout.editor.v1.capability.ResourceAddress;
 }
@@ -1008,20 +740,20 @@ sealed interface ResourceAddress_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResourceAddress private constructor(
-    override val resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val identity: skirout.editor.v1.type_catalog.TypedValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ResourceAddress>? =
+    override val resourceType: skirout.editor.v1.type_catalog.TypeUse,
+    override val identity: skirout.editor.v1.type_catalog.DataValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ResourceAddress>? =
         null,
 ): skirout.editor.v1.capability.ResourceAddress_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        identity: skirout.editor.v1.type_catalog.TypedValue,
+        resourceType: skirout.editor.v1.type_catalog.TypeUse,
+        identity: skirout.editor.v1.type_catalog.DataValue,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ResourceAddress>? =
             null,
     ): this(
-        resourceType.toFrozen(),
+        resourceType,
         identity,
         _unrecognizedFields,
     ) {}
@@ -1039,12 +771,12 @@ class ResourceAddress private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
+        resourceType: skirout.editor.v1.type_catalog.TypeUse =
             this.resourceType,
-        identity: skirout.editor.v1.type_catalog.TypedValue =
+        identity: skirout.editor.v1.type_catalog.DataValue =
             this.identity,
     ) = skirout.editor.v1.capability.ResourceAddress(
-        resourceType.toFrozen(),
+        resourceType,
         identity,
         this._unrecognizedFields,
     );
@@ -1063,7 +795,7 @@ class ResourceAddress private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.ResourceAddress.serializerImpl,
+            _SerializerRegistry.ResourceAddressSerializerImpl,
         )
     }
 
@@ -1071,10 +803,10 @@ class ResourceAddress private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var identity: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        override var resourceType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var identity: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ResourceAddress>? =
             null,
     ): skirout.editor.v1.capability.ResourceAddress_OrMutable {
@@ -1084,29 +816,13 @@ class ResourceAddress private constructor(
             identity = this.identity,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [resourceType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [resourceType] and returns it.
-         */
-        val mutableResourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.resourceType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.resourceType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
             skirout.editor.v1.capability.ResourceAddress(
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1120,53 +836,21 @@ class ResourceAddress private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            resourceType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            identity: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            resourceType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            identity: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         ) = skirout.editor.v1.capability.ResourceAddress(
             resourceType = resourceType,
             identity = identity,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:ResourceAddress",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ResourceAddress] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ResourceAddressSerializer;
 
         /** Describes the [ResourceAddress] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "resource_type",
-                "resourceType",
-                0,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.resourceType },
-                { mut, v -> mut.resourceType = v },
-            );
-            serializerImpl.addField(
-                "identity",
-                "identity",
-                1,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.identity },
-                { mut, v -> mut.identity = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ResourceAddressSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1180,7 +864,7 @@ sealed interface InvalidateResourceInstruction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class InvalidateResourceInstruction private constructor(
     override val resource: skirout.editor.v1.capability.ResourceAddress,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.InvalidateResourceInstruction>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.InvalidateResourceInstruction>? =
         null,
 ): skirout.editor.v1.capability.InvalidateResourceInstruction_OrMutable {
     constructor(
@@ -1227,7 +911,7 @@ class InvalidateResourceInstruction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.InvalidateResourceInstruction.serializerImpl,
+            _SerializerRegistry.InvalidateResourceInstructionSerializerImpl,
         )
     }
 
@@ -1247,7 +931,7 @@ class InvalidateResourceInstruction private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as-is.
+         * If the value of [resource] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.capability.ResourceAddress.Mutable get() {
@@ -1287,34 +971,11 @@ class InvalidateResourceInstruction private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:InvalidateResourceInstruction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [InvalidateResourceInstruction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.InvalidateResourceInstructionSerializer;
 
         /** Describes the [InvalidateResourceInstruction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "resource",
-                "resource",
-                0,
-                skirout.editor.v1.capability.ResourceAddress.serializer,
-                "",
-                { it.resource },
-                { mut, v -> mut.resource = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.InvalidateResourceInstructionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1328,7 +989,7 @@ sealed interface OpenResourceInstruction_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OpenResourceInstruction private constructor(
     override val resource: skirout.editor.v1.capability.ResourceAddress,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.OpenResourceInstruction>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.OpenResourceInstruction>? =
         null,
 ): skirout.editor.v1.capability.OpenResourceInstruction_OrMutable {
     constructor(
@@ -1375,7 +1036,7 @@ class OpenResourceInstruction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.OpenResourceInstruction.serializerImpl,
+            _SerializerRegistry.OpenResourceInstructionSerializerImpl,
         )
     }
 
@@ -1395,7 +1056,7 @@ class OpenResourceInstruction private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as-is.
+         * If the value of [resource] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.capability.ResourceAddress.Mutable get() {
@@ -1435,34 +1096,11 @@ class OpenResourceInstruction private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:OpenResourceInstruction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OpenResourceInstruction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OpenResourceInstructionSerializer;
 
         /** Describes the [OpenResourceInstruction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "resource",
-                "resource",
-                0,
-                skirout.editor.v1.capability.ResourceAddress.serializer,
-                "",
-                { it.resource },
-                { mut, v -> mut.resource = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OpenResourceInstructionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1502,10 +1140,6 @@ sealed class NotificationSeverity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.INFO_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object SUCCESS : skirout.editor.v1.capability.NotificationSeverity() {
@@ -1517,10 +1151,6 @@ sealed class NotificationSeverity private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.SUCCESS_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -1534,10 +1164,6 @@ sealed class NotificationSeverity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.WARNING_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object ERROR : skirout.editor.v1.capability.NotificationSeverity() {
@@ -1550,10 +1176,6 @@ sealed class NotificationSeverity private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.ERROR_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.capability.NotificationSeverity>? get() = null;
@@ -1563,7 +1185,7 @@ sealed class NotificationSeverity private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.NotificationSeverity._serializerImpl,
+            _SerializerRegistry.NotificationSeveritySerializerImpl,
         )
     }
 
@@ -1574,67 +1196,11 @@ sealed class NotificationSeverity private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.NotificationSeverity, Unknown>(
-                recordId = "editor/v1/capability.skir:NotificationSeverity",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [NotificationSeverity] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.NotificationSeveritySerializer;
 
         /** Describes the [NotificationSeverity] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            INFO;
-            SUCCESS;
-            WARNING;
-            ERROR;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 5) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "info",
-                    Kind.INFO_CONST.ordinal,
-                    "",
-                    INFO,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_CONST.ordinal,
-                    "",
-                    SUCCESS,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "warning",
-                    Kind.WARNING_CONST.ordinal,
-                    "",
-                    WARNING,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "error",
-                    Kind.ERROR_CONST.ordinal,
-                    "",
-                    ERROR,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.NotificationSeveritySerializerImpl.typeDescriptor;
     }
 }
 
@@ -1650,7 +1216,7 @@ sealed interface NotifyInstruction_OrMutable {
 class NotifyInstruction private constructor(
     override val severity: skirout.editor.v1.capability.NotificationSeverity,
     override val message: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.NotifyInstruction>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.NotifyInstruction>? =
         null,
 ): skirout.editor.v1.capability.NotifyInstruction_OrMutable {
     constructor(
@@ -1703,7 +1269,7 @@ class NotifyInstruction private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.NotifyInstruction.serializerImpl,
+            _SerializerRegistry.NotifyInstructionSerializerImpl,
         )
     }
 
@@ -1754,43 +1320,11 @@ class NotifyInstruction private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:NotifyInstruction",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [NotifyInstruction] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.NotifyInstructionSerializer;
 
         /** Describes the [NotifyInstruction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "severity",
-                "severity",
-                0,
-                skirout.editor.v1.capability.NotificationSeverity.serializer,
-                "",
-                { it.severity },
-                { mut, v -> mut.severity = v },
-            );
-            serializerImpl.addField(
-                "message",
-                "message",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.message },
-                { mut, v -> mut.message = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.NotifyInstructionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1880,7 +1414,7 @@ sealed class PanelInstruction private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.PanelInstruction._serializerImpl,
+            _SerializerRegistry.PanelInstructionSerializerImpl,
         )
     }
 
@@ -1929,62 +1463,11 @@ sealed class PanelInstruction private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.PanelInstruction, Unknown>(
-                recordId = "editor/v1/capability.skir:PanelInstruction",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [PanelInstruction] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.PanelInstructionSerializer;
 
         /** Describes the [PanelInstruction] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "invalidate_resource",
-                    Kind.INVALIDATE_RESOURCE_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.InvalidateResourceInstruction.serializer,
-                    "",
-                    { InvalidateResourceWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "open_resource",
-                    Kind.OPEN_RESOURCE_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.OpenResourceInstruction.serializer,
-                    "",
-                    { OpenResourceWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "notify",
-                    Kind.NOTIFY_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.NotifyInstruction.serializer,
-                    "",
-                    { NotifyWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.PanelInstructionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1992,8 +1475,8 @@ sealed interface CapabilityInvocationRequest_OrMutable {
     val invocationId: skirout.editor.v1.capability.InvocationId_OrMutable;
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
-    val payload: skirout.editor.v1.type_catalog.TypedValue;
-    val expectedResultType: skirout.editor.v1.type_catalog.TypeExpression?;
+    val payload: skirout.editor.v1.type_catalog.DataValue;
+    val expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate?;
 
     fun toFrozen(): skirout.editor.v1.capability.CapabilityInvocationRequest;
 }
@@ -2004,9 +1487,9 @@ class CapabilityInvocationRequest private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
-    override val payload: skirout.editor.v1.type_catalog.TypedValue,
-    override val expectedResultType: skirout.editor.v1.type_catalog.TypeExpression?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityInvocationRequest>? =
+    override val payload: skirout.editor.v1.type_catalog.DataValue,
+    override val expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityInvocationRequest>? =
         null,
 ): skirout.editor.v1.capability.CapabilityInvocationRequest_OrMutable {
     constructor(
@@ -2015,8 +1498,8 @@ class CapabilityInvocationRequest private constructor(
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
         generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
-        payload: skirout.editor.v1.type_catalog.TypedValue,
-        expectedResultType: skirout.editor.v1.type_catalog.TypeExpression?,
+        payload: skirout.editor.v1.type_catalog.DataValue,
+        expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityInvocationRequest>? =
             null,
     ): this(
@@ -2050,9 +1533,9 @@ class CapabilityInvocationRequest private constructor(
             this.generation,
         capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             this.capabilityId,
-        payload: skirout.editor.v1.type_catalog.TypedValue =
+        payload: skirout.editor.v1.type_catalog.DataValue =
             this.payload,
-        expectedResultType: skirout.editor.v1.type_catalog.TypeExpression? =
+        expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate? =
             this.expectedResultType,
     ) = skirout.editor.v1.capability.CapabilityInvocationRequest(
         invocationId.toFrozen(),
@@ -2077,7 +1560,7 @@ class CapabilityInvocationRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CapabilityInvocationRequest.serializerImpl,
+            _SerializerRegistry.CapabilityInvocationRequestSerializerImpl,
         )
     }
 
@@ -2091,9 +1574,9 @@ class CapabilityInvocationRequest private constructor(
             skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
         override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
             skirout.editor.v1.type_catalog.CapabilityId.partial(),
-        override var payload: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        override var expectedResultType: skirout.editor.v1.type_catalog.TypeExpression? =
+        override var payload: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+        override var expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate? =
             null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityInvocationRequest>? =
             null,
@@ -2109,7 +1592,7 @@ class CapabilityInvocationRequest private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2125,7 +1608,7 @@ class CapabilityInvocationRequest private constructor(
         }
 
         /**
-         * If the value of [generation] is already mutable, returns it as-is.
+         * If the value of [generation] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
         val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -2141,7 +1624,7 @@ class CapabilityInvocationRequest private constructor(
         }
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as-is.
+         * If the value of [capabilityId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -2163,7 +1646,7 @@ class CapabilityInvocationRequest private constructor(
                 skirout.editor.v1.capability.InvocationId.partial(),
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
                 null,
             );
 
@@ -2184,9 +1667,9 @@ class CapabilityInvocationRequest private constructor(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
             capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
                 skirout.editor.v1.type_catalog.CapabilityId.partial(),
-            payload: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-            expectedResultType: skirout.editor.v1.type_catalog.TypeExpression? =
+            payload: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+            expectedResultType: skirout.editor.v1.type_catalog.TypeTemplate? =
                 null,
         ) = skirout.editor.v1.capability.CapabilityInvocationRequest(
             invocationId = invocationId,
@@ -2197,78 +1680,17 @@ class CapabilityInvocationRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:CapabilityInvocationRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CapabilityInvocationRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CapabilityInvocationRequestSerializer;
 
         /** Describes the [CapabilityInvocationRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "generation",
-                "generation",
-                1,
-                skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-                "",
-                { it.generation },
-                { mut, v -> mut.generation = v },
-            );
-            serializerImpl.addField(
-                "capability_id",
-                "capabilityId",
-                2,
-                skirout.editor.v1.type_catalog.CapabilityId.serializer,
-                "",
-                { it.capabilityId },
-                { mut, v -> mut.capabilityId = v },
-            );
-            serializerImpl.addField(
-                "payload",
-                "payload",
-                3,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.payload },
-                { mut, v -> mut.payload = v },
-            );
-            serializerImpl.addField(
-                "expected_result_type",
-                "expectedResultType",
-                4,
-                build.skir.Serializers.optional(
-                    skirout.editor.v1.type_catalog.TypeExpression.serializer,
-                ),
-                "",
-                { it.expectedResultType },
-                { mut, v -> mut.expectedResultType = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CapabilityInvocationRequestSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ComputationSuccess_OrMutable {
     val invocationId: skirout.editor.v1.capability.InvocationId_OrMutable;
-    val value: skirout.editor.v1.type_catalog.TypedValue;
+    val value: skirout.editor.v1.type_catalog.DataValue;
 
     fun toFrozen(): skirout.editor.v1.capability.ComputationSuccess;
 }
@@ -2277,15 +1699,15 @@ sealed interface ComputationSuccess_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ComputationSuccess private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
-    override val value: skirout.editor.v1.type_catalog.TypedValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationSuccess>? =
+    override val value: skirout.editor.v1.type_catalog.DataValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationSuccess>? =
         null,
 ): skirout.editor.v1.capability.ComputationSuccess_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-        value: skirout.editor.v1.type_catalog.TypedValue,
+        value: skirout.editor.v1.type_catalog.DataValue,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationSuccess>? =
             null,
     ): this(
@@ -2309,7 +1731,7 @@ class ComputationSuccess private constructor(
             _MustNameArguments,
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
             this.invocationId,
-        value: skirout.editor.v1.type_catalog.TypedValue =
+        value: skirout.editor.v1.type_catalog.DataValue =
             this.value,
     ) = skirout.editor.v1.capability.ComputationSuccess(
         invocationId.toFrozen(),
@@ -2331,7 +1753,7 @@ class ComputationSuccess private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.ComputationSuccess.serializerImpl,
+            _SerializerRegistry.ComputationSuccessSerializerImpl,
         )
     }
 
@@ -2341,8 +1763,8 @@ class ComputationSuccess private constructor(
             _MustNameArguments,
         override var invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
             skirout.editor.v1.capability.InvocationId.partial(),
-        override var value: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+        override var value: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.ComputationSuccess>? =
             null,
     ): skirout.editor.v1.capability.ComputationSuccess_OrMutable {
@@ -2354,7 +1776,7 @@ class ComputationSuccess private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2374,7 +1796,7 @@ class ComputationSuccess private constructor(
         private val default =
             skirout.editor.v1.capability.ComputationSuccess(
                 skirout.editor.v1.capability.InvocationId.partial(),
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2390,51 +1812,19 @@ class ComputationSuccess private constructor(
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
                 skirout.editor.v1.capability.InvocationId.partial(),
-            value: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            value: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
         ) = skirout.editor.v1.capability.ComputationSuccess(
             invocationId = invocationId,
             value = value,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:ComputationSuccess",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ComputationSuccess] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ComputationSuccessSerializer;
 
         /** Describes the [ComputationSuccess] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "value",
-                "value",
-                1,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.value },
-                { mut, v -> mut.value = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ComputationSuccessSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2450,7 +1840,7 @@ sealed interface CommandSuccess_OrMutable {
 class CommandSuccess private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
     override val instructions: kotlin.collections.List<skirout.editor.v1.capability.PanelInstruction>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandSuccess>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CommandSuccess>? =
         null,
 ): skirout.editor.v1.capability.CommandSuccess_OrMutable {
     constructor(
@@ -2503,7 +1893,7 @@ class CommandSuccess private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CommandSuccess.serializerImpl,
+            _SerializerRegistry.CommandSuccessSerializerImpl,
         )
     }
 
@@ -2526,7 +1916,7 @@ class CommandSuccess private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2542,7 +1932,7 @@ class CommandSuccess private constructor(
         }
 
         /**
-         * If the value of [instructions] is already mutable, returns it as-is.
+         * If the value of [instructions] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [instructions] and returns it.
          */
         val mutableInstructions: kotlin.collections.MutableList<skirout.editor.v1.capability.PanelInstruction> get() {
@@ -2586,45 +1976,11 @@ class CommandSuccess private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:CommandSuccess",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CommandSuccess] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CommandSuccessSerializer;
 
         /** Describes the [CommandSuccess] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "instructions",
-                "instructions",
-                1,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.capability.PanelInstruction.serializer,
-                ),
-                "",
-                { it.instructions },
-                { mut, v -> mut.instructions = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CommandSuccessSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2640,7 +1996,7 @@ sealed interface CapabilityPermissionDenied_OrMutable {
 class CapabilityPermissionDenied private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
     override val message: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityPermissionDenied>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityPermissionDenied>? =
         null,
 ): skirout.editor.v1.capability.CapabilityPermissionDenied_OrMutable {
     constructor(
@@ -2693,7 +2049,7 @@ class CapabilityPermissionDenied private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CapabilityPermissionDenied.serializerImpl,
+            _SerializerRegistry.CapabilityPermissionDeniedSerializerImpl,
         )
     }
 
@@ -2716,7 +2072,7 @@ class CapabilityPermissionDenied private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2760,43 +2116,11 @@ class CapabilityPermissionDenied private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:CapabilityPermissionDenied",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CapabilityPermissionDenied] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CapabilityPermissionDeniedSerializer;
 
         /** Describes the [CapabilityPermissionDenied] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "message",
-                "message",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.message },
-                { mut, v -> mut.message = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CapabilityPermissionDeniedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2812,7 +2136,7 @@ sealed interface StaleCatalogGeneration_OrMutable {
 class StaleCatalogGeneration private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
     override val actualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.StaleCatalogGeneration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.StaleCatalogGeneration>? =
         null,
 ): skirout.editor.v1.capability.StaleCatalogGeneration_OrMutable {
     constructor(
@@ -2865,7 +2189,7 @@ class StaleCatalogGeneration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.StaleCatalogGeneration.serializerImpl,
+            _SerializerRegistry.StaleCatalogGenerationSerializerImpl,
         )
     }
 
@@ -2888,7 +2212,7 @@ class StaleCatalogGeneration private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2904,7 +2228,7 @@ class StaleCatalogGeneration private constructor(
         }
 
         /**
-         * If the value of [actualGeneration] is already mutable, returns it as-is.
+         * If the value of [actualGeneration] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
          */
         val mutableActualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -2948,49 +2272,17 @@ class StaleCatalogGeneration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:StaleCatalogGeneration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [StaleCatalogGeneration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.StaleCatalogGenerationSerializer;
 
         /** Describes the [StaleCatalogGeneration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "actual_generation",
-                "actualGeneration",
-                1,
-                skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
-                "",
-                { it.actualGeneration },
-                { mut, v -> mut.actualGeneration = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.StaleCatalogGenerationSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface CapabilityFailure_OrMutable {
     val invocationId: skirout.editor.v1.capability.InvocationId_OrMutable;
-    val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>;
+    val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.capability.CapabilityFailure;
 }
@@ -2999,15 +2291,15 @@ sealed interface CapabilityFailure_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CapabilityFailure private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
-    override val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityFailure>? =
+    override val diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.Diagnostic>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityFailure>? =
         null,
 ): skirout.editor.v1.capability.CapabilityFailure_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-        diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+        diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityFailure>? =
             null,
     ): this(
@@ -3031,7 +2323,7 @@ class CapabilityFailure private constructor(
             _MustNameArguments,
         invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
             this.invocationId,
-        diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
+        diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> =
             this.diagnostics,
     ) = skirout.editor.v1.capability.CapabilityFailure(
         invocationId.toFrozen(),
@@ -3053,7 +2345,7 @@ class CapabilityFailure private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CapabilityFailure.serializerImpl,
+            _SerializerRegistry.CapabilityFailureSerializerImpl,
         )
     }
 
@@ -3063,8 +2355,8 @@ class CapabilityFailure private constructor(
             _MustNameArguments,
         override var invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
             skirout.editor.v1.capability.InvocationId.partial(),
-        override var diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+        override var diagnostics: kotlin.collections.List<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.Diagnostic>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.CapabilityFailure>? =
             null,
     ): skirout.editor.v1.capability.CapabilityFailure_OrMutable {
@@ -3076,7 +2368,7 @@ class CapabilityFailure private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as-is.
+         * If the value of [invocationId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -3092,10 +2384,10 @@ class CapabilityFailure private constructor(
         }
 
         /**
-         * If the value of [diagnostics] is already mutable, returns it as-is.
+         * If the value of [diagnostics] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
          */
-        val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> get() {
+        val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {
             var value = this.diagnostics;
             return when (value) {
                 is build.skir.internal.MutableList -> value;
@@ -3112,7 +2404,7 @@ class CapabilityFailure private constructor(
         private val default =
             skirout.editor.v1.capability.CapabilityFailure(
                 skirout.editor.v1.capability.InvocationId.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.Diagnostic>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -3128,53 +2420,19 @@ class CapabilityFailure private constructor(
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable =
                 skirout.editor.v1.capability.InvocationId.partial(),
-            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.TypeDiagnostic>(),
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.Diagnostic>(),
         ) = skirout.editor.v1.capability.CapabilityFailure(
             invocationId = invocationId,
             diagnostics = diagnostics,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/capability.skir:CapabilityFailure",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [CapabilityFailure] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.CapabilityFailureSerializer;
 
         /** Describes the [CapabilityFailure] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "invocation_id",
-                "invocationId",
-                0,
-                skirout.editor.v1.capability.InvocationId.serializer,
-                "",
-                { it.invocationId },
-                { mut, v -> mut.invocationId = v },
-            );
-            serializerImpl.addField(
-                "diagnostics",
-                "diagnostics",
-                1,
-                build.skir.Serializers.list(
-                    skirout.editor.v1.diagnostic.TypeDiagnostic.serializer,
-                ),
-                "",
-                { it.diagnostics },
-                { mut, v -> mut.diagnostics = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.CapabilityFailureSerializerImpl.typeDescriptor;
     }
 }
 
@@ -3302,7 +2560,7 @@ sealed class ComputationResult private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.ComputationResult._serializerImpl,
+            _SerializerRegistry.ComputationResultSerializerImpl,
         )
     }
 
@@ -3319,7 +2577,7 @@ sealed class ComputationResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-            value: skirout.editor.v1.type_catalog.TypedValue,
+            value: skirout.editor.v1.type_catalog.DataValue,
         ) = SuccessWrapper(
             skirout.editor.v1.capability.ComputationSuccess(
                 invocationId = invocationId,
@@ -3333,7 +2591,7 @@ sealed class ComputationResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
         ) = InvalidWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
@@ -3347,7 +2605,7 @@ sealed class ComputationResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
         ) = UnavailableWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
@@ -3383,80 +2641,11 @@ sealed class ComputationResult private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.ComputationResult, Unknown>(
-                recordId = "editor/v1/capability.skir:ComputationResult",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ComputationResult] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ComputationResultSerializer;
 
         /** Describes the [ComputationResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.ComputationSuccess.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "invalid",
-                    Kind.INVALID_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityFailure.serializer,
-                    "",
-                    { InvalidWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "unavailable",
-                    Kind.UNAVAILABLE_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityFailure.serializer,
-                    "",
-                    { UnavailableWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "permission_denied",
-                    Kind.PERMISSION_DENIED_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityPermissionDenied.serializer,
-                    "",
-                    { PermissionDeniedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "stale_generation",
-                    Kind.STALE_GENERATION_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.StaleCatalogGeneration.serializer,
-                    "",
-                    { StaleGenerationWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ComputationResultSerializerImpl.typeDescriptor;
     }
 }
 
@@ -3584,7 +2773,7 @@ sealed class CommandResult private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.capability.CommandResult._serializerImpl,
+            _SerializerRegistry.CommandResultSerializerImpl,
         )
     }
 
@@ -3615,7 +2804,7 @@ sealed class CommandResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
         ) = InvalidWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
@@ -3629,7 +2818,7 @@ sealed class CommandResult private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             invocationId: skirout.editor.v1.capability.InvocationId_OrMutable,
-            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.TypeDiagnostic_OrMutable>,
+            diagnostics: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.Diagnostic_OrMutable>,
         ) = UnavailableWrapper(
             skirout.editor.v1.capability.CapabilityFailure(
                 invocationId = invocationId,
@@ -3665,80 +2854,11 @@ sealed class CommandResult private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.CommandResult, Unknown>(
-                recordId = "editor/v1/capability.skir:CommandResult",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [CommandResult] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.CommandResultSerializer;
 
         /** Describes the [CommandResult] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CommandSuccess.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "invalid",
-                    Kind.INVALID_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityFailure.serializer,
-                    "",
-                    { InvalidWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "unavailable",
-                    Kind.UNAVAILABLE_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityFailure.serializer,
-                    "",
-                    { UnavailableWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "permission_denied",
-                    Kind.PERMISSION_DENIED_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.CapabilityPermissionDenied.serializer,
-                    "",
-                    { PermissionDeniedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "stale_generation",
-                    Kind.STALE_GENERATION_WRAPPER.ordinal,
-                    skirout.editor.v1.capability.StaleCatalogGeneration.serializer,
-                    "",
-                    { StaleGenerationWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.CommandResultSerializerImpl.typeDescriptor;
     }
 }
 
@@ -3766,4 +2886,727 @@ val InvokeRealmCommand: build.skir.service.Method<
         skirout.editor.v1.capability.CommandResult.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val CapabilityDefinitionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.CapabilityDefinition, skirout.editor.v1.capability.CapabilityDefinition.Unknown>(
+            recordId = "editor/v1/capability.skir:CapabilityDefinition",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.capability.CapabilityDefinition.Kind.values().size,
+            unknownInstance = skirout.editor.v1.capability.CapabilityDefinition.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.capability.CapabilityDefinition.Unknown(skirout.editor.v1.capability.CapabilityDefinition.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CapabilityDefinitionSerializer = build.skir.internal.makeSerializer(CapabilityDefinitionSerializerImpl);
+
+    val CapabilityFailureSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:CapabilityFailure",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.CapabilityFailure.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CapabilityFailure.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CapabilityFailureSerializer = build.skir.internal.makeSerializer(CapabilityFailureSerializerImpl);
+
+    val CapabilityInvocationRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:CapabilityInvocationRequest",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.CapabilityInvocationRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CapabilityInvocationRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CapabilityInvocationRequestSerializer = build.skir.internal.makeSerializer(CapabilityInvocationRequestSerializerImpl);
+
+    val CapabilityPermissionDeniedSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:CapabilityPermissionDenied",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.CapabilityPermissionDenied.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CapabilityPermissionDenied.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CapabilityPermissionDeniedSerializer = build.skir.internal.makeSerializer(CapabilityPermissionDeniedSerializerImpl);
+
+    val CommandCapabilityDefinitionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:CommandCapabilityDefinition",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.CommandCapabilityDefinition.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CommandCapabilityDefinition.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CommandCapabilityDefinitionSerializer = build.skir.internal.makeSerializer(CommandCapabilityDefinitionSerializerImpl);
+
+    val CommandResultSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.CommandResult, skirout.editor.v1.capability.CommandResult.Unknown>(
+            recordId = "editor/v1/capability.skir:CommandResult",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.capability.CommandResult.Kind.values().size,
+            unknownInstance = skirout.editor.v1.capability.CommandResult.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.capability.CommandResult.Unknown(skirout.editor.v1.capability.CommandResult.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val CommandResultSerializer = build.skir.internal.makeSerializer(CommandResultSerializerImpl);
+
+    val CommandSuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:CommandSuccess",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.CommandSuccess.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CommandSuccess.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val CommandSuccessSerializer = build.skir.internal.makeSerializer(CommandSuccessSerializerImpl);
+
+    val ComputationCapabilityDefinitionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:ComputationCapabilityDefinition",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.ComputationCapabilityDefinition.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.ComputationCapabilityDefinition.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ComputationCapabilityDefinitionSerializer = build.skir.internal.makeSerializer(ComputationCapabilityDefinitionSerializerImpl);
+
+    val ComputationResultSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.ComputationResult, skirout.editor.v1.capability.ComputationResult.Unknown>(
+            recordId = "editor/v1/capability.skir:ComputationResult",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.capability.ComputationResult.Kind.values().size,
+            unknownInstance = skirout.editor.v1.capability.ComputationResult.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.capability.ComputationResult.Unknown(skirout.editor.v1.capability.ComputationResult.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ComputationResultSerializer = build.skir.internal.makeSerializer(ComputationResultSerializerImpl);
+
+    val ComputationSuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:ComputationSuccess",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.ComputationSuccess.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.ComputationSuccess.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ComputationSuccessSerializer = build.skir.internal.makeSerializer(ComputationSuccessSerializerImpl);
+
+    val InvalidateResourceInstructionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:InvalidateResourceInstruction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.InvalidateResourceInstruction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.InvalidateResourceInstruction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InvalidateResourceInstructionSerializer = build.skir.internal.makeSerializer(InvalidateResourceInstructionSerializerImpl);
+
+    val InvocationIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:InvocationId",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.InvocationId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.InvocationId.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InvocationIdSerializer = build.skir.internal.makeSerializer(InvocationIdSerializerImpl);
+
+    val NotificationSeveritySerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.NotificationSeverity, skirout.editor.v1.capability.NotificationSeverity.Unknown>(
+            recordId = "editor/v1/capability.skir:NotificationSeverity",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.capability.NotificationSeverity.Kind.values().size,
+            unknownInstance = skirout.editor.v1.capability.NotificationSeverity.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.capability.NotificationSeverity.Unknown(skirout.editor.v1.capability.NotificationSeverity.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val NotificationSeveritySerializer = build.skir.internal.makeSerializer(NotificationSeveritySerializerImpl);
+
+    val NotifyInstructionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:NotifyInstruction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.NotifyInstruction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.NotifyInstruction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val NotifyInstructionSerializer = build.skir.internal.makeSerializer(NotifyInstructionSerializerImpl);
+
+    val OpenResourceInstructionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:OpenResourceInstruction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.OpenResourceInstruction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.OpenResourceInstruction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OpenResourceInstructionSerializer = build.skir.internal.makeSerializer(OpenResourceInstructionSerializerImpl);
+
+    val PanelInstructionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.PanelInstruction, skirout.editor.v1.capability.PanelInstruction.Unknown>(
+            recordId = "editor/v1/capability.skir:PanelInstruction",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.capability.PanelInstruction.Kind.values().size,
+            unknownInstance = skirout.editor.v1.capability.PanelInstruction.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.capability.PanelInstruction.Unknown(skirout.editor.v1.capability.PanelInstruction.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PanelInstructionSerializer = build.skir.internal.makeSerializer(PanelInstructionSerializerImpl);
+
+    val ResourceAddressSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:ResourceAddress",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.ResourceAddress.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.ResourceAddress.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceAddressSerializer = build.skir.internal.makeSerializer(ResourceAddressSerializerImpl);
+
+    val SearchCapabilityDefinitionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:SearchCapabilityDefinition",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.SearchCapabilityDefinition.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.SearchCapabilityDefinition.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val SearchCapabilityDefinitionSerializer = build.skir.internal.makeSerializer(SearchCapabilityDefinitionSerializerImpl);
+
+    val StaleCatalogGenerationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:StaleCatalogGeneration",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.StaleCatalogGeneration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.StaleCatalogGeneration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val StaleCatalogGenerationSerializer = build.skir.internal.makeSerializer(StaleCatalogGenerationSerializerImpl);
+
+    init {
+        CapabilityDefinitionSerializerImpl.addWrapperVariant(
+            1,
+            "search",
+            skirout.editor.v1.capability.CapabilityDefinition.Kind.SEARCH_WRAPPER.ordinal,
+            _SerializerRegistry.SearchCapabilityDefinitionSerializer,
+            "",
+            { skirout.editor.v1.capability.CapabilityDefinition.SearchWrapper(it) },
+            { it.value },
+        );
+        CapabilityDefinitionSerializerImpl.addWrapperVariant(
+            2,
+            "computation",
+            skirout.editor.v1.capability.CapabilityDefinition.Kind.COMPUTATION_WRAPPER.ordinal,
+            _SerializerRegistry.ComputationCapabilityDefinitionSerializer,
+            "",
+            { skirout.editor.v1.capability.CapabilityDefinition.ComputationWrapper(it) },
+            { it.value },
+        );
+        CapabilityDefinitionSerializerImpl.addWrapperVariant(
+            3,
+            "command",
+            skirout.editor.v1.capability.CapabilityDefinition.Kind.COMMAND_WRAPPER.ordinal,
+            _SerializerRegistry.CommandCapabilityDefinitionSerializer,
+            "",
+            { skirout.editor.v1.capability.CapabilityDefinition.CommandWrapper(it) },
+            { it.value },
+        );
+        CapabilityDefinitionSerializerImpl.finalizeEnum();
+
+        CapabilityFailureSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        CapabilityFailureSerializerImpl.addField(
+            "diagnostics",
+            "diagnostics",
+            1,
+            build.skir.Serializers.list(
+                skirout.editor.v1.diagnostic.Diagnostic.serializer,
+            ),
+            "",
+            { it.diagnostics },
+            { mut, v -> mut.diagnostics = v },
+        );
+        CapabilityFailureSerializerImpl.finalizeStruct();
+
+        CapabilityInvocationRequestSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        CapabilityInvocationRequestSerializerImpl.addField(
+            "generation",
+            "generation",
+            1,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { it.generation },
+            { mut, v -> mut.generation = v },
+        );
+        CapabilityInvocationRequestSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            2,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
+        );
+        CapabilityInvocationRequestSerializerImpl.addField(
+            "payload",
+            "payload",
+            3,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.payload },
+            { mut, v -> mut.payload = v },
+        );
+        CapabilityInvocationRequestSerializerImpl.addField(
+            "expected_result_type",
+            "expectedResultType",
+            4,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.type_catalog.TypeTemplate.serializer,
+            ),
+            "",
+            { it.expectedResultType },
+            { mut, v -> mut.expectedResultType = v },
+        );
+        CapabilityInvocationRequestSerializerImpl.finalizeStruct();
+
+        CapabilityPermissionDeniedSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        CapabilityPermissionDeniedSerializerImpl.addField(
+            "message",
+            "message",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        CapabilityPermissionDeniedSerializerImpl.finalizeStruct();
+
+        CommandCapabilityDefinitionSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
+        );
+        CommandCapabilityDefinitionSerializerImpl.addField(
+            "request_type",
+            "requestType",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.requestType },
+            { mut, v -> mut.requestType = v },
+        );
+        CommandCapabilityDefinitionSerializerImpl.finalizeStruct();
+
+        CommandResultSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.editor.v1.capability.CommandResult.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.CommandSuccessSerializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.SuccessWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.addWrapperVariant(
+            2,
+            "invalid",
+            skirout.editor.v1.capability.CommandResult.Kind.INVALID_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityFailureSerializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.InvalidWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.addWrapperVariant(
+            3,
+            "unavailable",
+            skirout.editor.v1.capability.CommandResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityFailureSerializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.UnavailableWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.addWrapperVariant(
+            4,
+            "permission_denied",
+            skirout.editor.v1.capability.CommandResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityPermissionDeniedSerializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.PermissionDeniedWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.addWrapperVariant(
+            5,
+            "stale_generation",
+            skirout.editor.v1.capability.CommandResult.Kind.STALE_GENERATION_WRAPPER.ordinal,
+            _SerializerRegistry.StaleCatalogGenerationSerializer,
+            "",
+            { skirout.editor.v1.capability.CommandResult.StaleGenerationWrapper(it) },
+            { it.value },
+        );
+        CommandResultSerializerImpl.finalizeEnum();
+
+        CommandSuccessSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        CommandSuccessSerializerImpl.addField(
+            "instructions",
+            "instructions",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.PanelInstructionSerializer,
+            ),
+            "",
+            { it.instructions },
+            { mut, v -> mut.instructions = v },
+        );
+        CommandSuccessSerializerImpl.finalizeStruct();
+
+        ComputationCapabilityDefinitionSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
+        );
+        ComputationCapabilityDefinitionSerializerImpl.addField(
+            "request_type",
+            "requestType",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.requestType },
+            { mut, v -> mut.requestType = v },
+        );
+        ComputationCapabilityDefinitionSerializerImpl.addField(
+            "result_type",
+            "resultType",
+            2,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.resultType },
+            { mut, v -> mut.resultType = v },
+        );
+        ComputationCapabilityDefinitionSerializerImpl.finalizeStruct();
+
+        ComputationResultSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.editor.v1.capability.ComputationResult.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.ComputationSuccessSerializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.SuccessWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.addWrapperVariant(
+            2,
+            "invalid",
+            skirout.editor.v1.capability.ComputationResult.Kind.INVALID_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityFailureSerializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.InvalidWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.addWrapperVariant(
+            3,
+            "unavailable",
+            skirout.editor.v1.capability.ComputationResult.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityFailureSerializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.UnavailableWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.addWrapperVariant(
+            4,
+            "permission_denied",
+            skirout.editor.v1.capability.ComputationResult.Kind.PERMISSION_DENIED_WRAPPER.ordinal,
+            _SerializerRegistry.CapabilityPermissionDeniedSerializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.PermissionDeniedWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.addWrapperVariant(
+            5,
+            "stale_generation",
+            skirout.editor.v1.capability.ComputationResult.Kind.STALE_GENERATION_WRAPPER.ordinal,
+            _SerializerRegistry.StaleCatalogGenerationSerializer,
+            "",
+            { skirout.editor.v1.capability.ComputationResult.StaleGenerationWrapper(it) },
+            { it.value },
+        );
+        ComputationResultSerializerImpl.finalizeEnum();
+
+        ComputationSuccessSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        ComputationSuccessSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        ComputationSuccessSerializerImpl.finalizeStruct();
+
+        InvalidateResourceInstructionSerializerImpl.addField(
+            "resource",
+            "resource",
+            0,
+            _SerializerRegistry.ResourceAddressSerializer,
+            "",
+            { it.resource },
+            { mut, v -> mut.resource = v },
+        );
+        InvalidateResourceInstructionSerializerImpl.finalizeStruct();
+
+        InvocationIdSerializerImpl.addField(
+            "value",
+            "value",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        InvocationIdSerializerImpl.finalizeStruct();
+
+        NotificationSeveritySerializerImpl.addConstantVariant(
+            1,
+            "info",
+            skirout.editor.v1.capability.NotificationSeverity.Kind.INFO_CONST.ordinal,
+            "",
+            skirout.editor.v1.capability.NotificationSeverity.INFO,
+        );
+        NotificationSeveritySerializerImpl.addConstantVariant(
+            2,
+            "success",
+            skirout.editor.v1.capability.NotificationSeverity.Kind.SUCCESS_CONST.ordinal,
+            "",
+            skirout.editor.v1.capability.NotificationSeverity.SUCCESS,
+        );
+        NotificationSeveritySerializerImpl.addConstantVariant(
+            3,
+            "warning",
+            skirout.editor.v1.capability.NotificationSeverity.Kind.WARNING_CONST.ordinal,
+            "",
+            skirout.editor.v1.capability.NotificationSeverity.WARNING,
+        );
+        NotificationSeveritySerializerImpl.addConstantVariant(
+            4,
+            "error",
+            skirout.editor.v1.capability.NotificationSeverity.Kind.ERROR_CONST.ordinal,
+            "",
+            skirout.editor.v1.capability.NotificationSeverity.ERROR,
+        );
+        NotificationSeveritySerializerImpl.finalizeEnum();
+
+        NotifyInstructionSerializerImpl.addField(
+            "severity",
+            "severity",
+            0,
+            _SerializerRegistry.NotificationSeveritySerializer,
+            "",
+            { it.severity },
+            { mut, v -> mut.severity = v },
+        );
+        NotifyInstructionSerializerImpl.addField(
+            "message",
+            "message",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        NotifyInstructionSerializerImpl.finalizeStruct();
+
+        OpenResourceInstructionSerializerImpl.addField(
+            "resource",
+            "resource",
+            0,
+            _SerializerRegistry.ResourceAddressSerializer,
+            "",
+            { it.resource },
+            { mut, v -> mut.resource = v },
+        );
+        OpenResourceInstructionSerializerImpl.finalizeStruct();
+
+        PanelInstructionSerializerImpl.addWrapperVariant(
+            1,
+            "invalidate_resource",
+            skirout.editor.v1.capability.PanelInstruction.Kind.INVALIDATE_RESOURCE_WRAPPER.ordinal,
+            _SerializerRegistry.InvalidateResourceInstructionSerializer,
+            "",
+            { skirout.editor.v1.capability.PanelInstruction.InvalidateResourceWrapper(it) },
+            { it.value },
+        );
+        PanelInstructionSerializerImpl.addWrapperVariant(
+            2,
+            "open_resource",
+            skirout.editor.v1.capability.PanelInstruction.Kind.OPEN_RESOURCE_WRAPPER.ordinal,
+            _SerializerRegistry.OpenResourceInstructionSerializer,
+            "",
+            { skirout.editor.v1.capability.PanelInstruction.OpenResourceWrapper(it) },
+            { it.value },
+        );
+        PanelInstructionSerializerImpl.addWrapperVariant(
+            3,
+            "notify",
+            skirout.editor.v1.capability.PanelInstruction.Kind.NOTIFY_WRAPPER.ordinal,
+            _SerializerRegistry.NotifyInstructionSerializer,
+            "",
+            { skirout.editor.v1.capability.PanelInstruction.NotifyWrapper(it) },
+            { it.value },
+        );
+        PanelInstructionSerializerImpl.finalizeEnum();
+
+        ResourceAddressSerializerImpl.addField(
+            "resource_type",
+            "resourceType",
+            0,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.resourceType },
+            { mut, v -> mut.resourceType = v },
+        );
+        ResourceAddressSerializerImpl.addField(
+            "identity",
+            "identity",
+            1,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.identity },
+            { mut, v -> mut.identity = v },
+        );
+        ResourceAddressSerializerImpl.finalizeStruct();
+
+        SearchCapabilityDefinitionSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
+        );
+        SearchCapabilityDefinitionSerializerImpl.addField(
+            "request_type",
+            "requestType",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.requestType },
+            { mut, v -> mut.requestType = v },
+        );
+        SearchCapabilityDefinitionSerializerImpl.addField(
+            "result_type",
+            "resultType",
+            2,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.resultType },
+            { mut, v -> mut.resultType = v },
+        );
+        SearchCapabilityDefinitionSerializerImpl.finalizeStruct();
+
+        StaleCatalogGenerationSerializerImpl.addField(
+            "invocation_id",
+            "invocationId",
+            0,
+            _SerializerRegistry.InvocationIdSerializer,
+            "",
+            { it.invocationId },
+            { mut, v -> mut.invocationId = v },
+        );
+        StaleCatalogGenerationSerializerImpl.addField(
+            "actual_generation",
+            "actualGeneration",
+            1,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { it.actualGeneration },
+            { mut, v -> mut.actualGeneration = v },
+        );
+        StaleCatalogGenerationSerializerImpl.finalizeStruct();
+    }
 }

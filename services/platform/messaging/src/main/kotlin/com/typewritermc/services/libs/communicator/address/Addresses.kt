@@ -136,11 +136,10 @@ class AddressTemplate<Address : Any> internal constructor(
  * Literal segments and placeholder names are validated immediately. [render] must return exactly one value for each
  * placeholder, and [parse] receives only values from a structurally matching address.
  */
-fun <Address : Any> addressTemplate(
-    pattern: String,
+fun <Address : Any> String.addressTemplate(
     render: (Address) -> AddressValues,
     parse: (AddressValues) -> Address,
-): AddressTemplate<Address> = AddressTemplate(pattern, render, parse)
+): AddressTemplate<Address> = AddressTemplate(this, render, parse)
 
 private data class PatternSegment(
     val source: String,

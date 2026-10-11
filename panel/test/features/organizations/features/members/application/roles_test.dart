@@ -1,20 +1,15 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 const _userId = "user1";
-final _organizationId = recordId("organization:org1");
-const _publishSubject = "cloud.to.user.user1.organization.org1.roles.watch";
-const _listenSubject = "cloud.from.organization.org1.roles.watch";
+final _organizationId = skir.recordId("organization:org1");
+const _subject = "cloud.to.user.user1.organization.org1.roles.watch";
 
 OrganizationRole _role(String id, {String? name}) => OrganizationRole(
-  roleId: recordId("organization_role:$id"),
+  roleId: skir.recordId("organization_role:$id"),
   name: name ?? "Role $id",
   color: const Color(0xff2196f3),
   assignable: true,
@@ -28,19 +23,17 @@ Future<void> _waitFor(bool Function() condition) async {
   }).timeout(const Duration(seconds: 2));
 }
 
-class _Harness {
-  _Harness() {
+final class _Harness {
+  _Harness(this.response) {
     nats.registerHandler(
-      _publishSubject,
-      (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(
-        skir.WatchOrganizationRolesResponse.wrapList([]),
-      ),
+      _subject,
+      (_) => skir.WatchOrganizationRolesResponse.serializer.toBytes(response),
     );
     container = ProviderContainer.test(
       overrides: [
         userIdProvider.overrideWith((ref) async => _userId),
         organizationIdProvider.overrideWith((ref) => _organizationId),
-        natsProvider.overrideWithValue(nats),
+        natsProvider.overrideWith(() => FakeNats(nats)),
       ],
     );
     subscription = container.listen(
@@ -54,50 +47,16 @@ class _Harness {
   late final ProviderContainer container;
   late final ProviderSubscription<AsyncValue<List<OrganizationRole>>>
   subscription;
+  skir.WatchOrganizationRolesResponse response;
   AsyncValue<List<OrganizationRole>> value = const AsyncLoading();
 
-  Future<void> start() => _waitFor(
-    () =>
-        nats.requests.isNotEmpty &&
-        nats.subscriptionSubjects.contains(_listenSubject),
-  );
+  Future<void> start() => _waitFor(() => value.hasValue || value.hasError);
 
-  Future<List<OrganizationRole>> emit(
-    skir.WatchOrganizationRolesResponse response,
-  ) async {
-    final previous = value;
-    nats.emitMessageOnSubject(
-      _listenSubject,
-      skir.WatchOrganizationRolesResponse.serializer.toBytes(response),
-    );
-    await _waitFor(() => !identical(value, previous));
-    return value.requireValue;
-  }
-
-  Future<Object> emitError(skir.WatchOrganizationRolesResponse response) async {
-    final errorCompleter = Completer<Object>();
-    final errorSubscription = container.listen(organizationRolesProvider, (
-      previous,
-      next,
-    ) {
-      if (!next.hasError || errorCompleter.isCompleted) return;
-      errorCompleter.complete(next.error!);
-    });
-
-    try {
-      nats.emitMessageOnSubject(
-        _listenSubject,
-        skir.WatchOrganizationRolesResponse.serializer.toBytes(response),
-      );
-      return await errorCompleter.future.timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => throw TestFailure(
-          "Provider did not emit an error within two seconds",
-        ),
-      );
-    } finally {
-      errorSubscription.close();
-    }
+  Future<void> reload(skir.WatchOrganizationRolesResponse next) async {
+    response = next;
+    final requestCount = nats.requests.length;
+    container.invalidate(organizationRolesProvider);
+    await _waitFor(() => nats.requests.length > requestCount && value.hasValue);
   }
 
   void dispose() {
@@ -108,115 +67,72 @@ class _Harness {
 }
 
 void main() {
-  late _Harness harness;
-
-  setUp(() async {
-    harness = _Harness();
+  test("requests the exact role snapshot operation", () async {
+    final harness = _Harness(
+      skir.WatchOrganizationRolesResponse.wrapList([
+        _role("one").toSkir(),
+        _role("two").toSkir(),
+      ]),
+    );
+    addTearDown(harness.dispose);
     await harness.start();
-  });
 
-  tearDown(() {
-    harness.dispose();
-  });
-
-  test("requests initial state and subscribes to exact subject", () {
+    expect(harness.value.requireValue, [_role("one"), _role("two")]);
     expect(harness.nats.requests, hasLength(1));
     final request = harness.nats.requests.single;
-    expect(request.subject, _publishSubject);
-    expect(harness.nats.subscriptionSubjects, contains(_listenSubject));
+    expect(request.subject, _subject);
     expect(
       request.payload,
       skir.WatchOrganizationRolesRequest.serializer.toBytes(
         skir.WatchOrganizationRolesRequest(),
       ),
     );
-    expect(
-      skir.WatchOrganizationRolesRequest.serializer.fromBytes(request.payload),
-      isA<skir.WatchOrganizationRolesRequest>(),
-    );
+    expect(harness.nats.subscriptionSubjects, isEmpty);
   });
 
-  test("list replaces state", () async {
-    await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapAdd(_role("old").toSkir()),
-    );
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapList([
-        _role("one").toSkir(),
-        _role("two").toSkir(),
-      ]),
-    );
-    expect(roles, [_role("one"), _role("two")]);
-  });
-
-  test("add appends role", () async {
-    await harness.emit(
+  test("provider invalidation reloads the authoritative snapshot", () async {
+    final harness = _Harness(
       skir.WatchOrganizationRolesResponse.wrapList([_role("one").toSkir()]),
     );
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapAdd(_role("two").toSkir()),
-    );
-    expect(roles, [_role("one"), _role("two")]);
-  });
+    addTearDown(harness.dispose);
+    await harness.start();
 
-  test("update replaces matching role", () async {
-    await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapList([_role("one").toSkir()]),
-    );
     final updated = _role("one", name: "Updated");
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapUpdate(updated.toSkir()),
+    await harness.reload(
+      skir.WatchOrganizationRolesResponse.wrapList([updated.toSkir()]),
     );
-    expect(roles, [updated]);
+
+    expect(harness.value.requireValue, [updated]);
+    expect(harness.nats.requests, hasLength(2));
   });
 
-  test("update appends unknown role", () async {
-    await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapList([_role("one").toSkir()]),
-    );
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapUpdate(_role("two").toSkir()),
-    );
-    expect(roles, [_role("one"), _role("two")]);
-  });
-
-  test("remove deletes matching role", () async {
-    await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapList([
-        _role("one").toSkir(),
-        _role("two").toSkir(),
-      ]),
-    );
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapRemove(_role("one").roleId),
-    );
-    expect(roles, [_role("two")]);
-  });
-
-  test("remove before initial list returns empty list", () async {
-    final roles = await harness.emit(
-      skir.WatchOrganizationRolesResponse.wrapRemove(_role("one").roleId),
-    );
-    expect(roles, isEmpty);
-  });
-
-  test("internal error yields ApiException", () async {
-    final error = await harness.emitError(
+  for (final (name, response, code) in [
+    (
+      "internal error",
       skir.WatchOrganizationRolesResponse.createInternalError(),
-    );
-    expect(
-      error,
-      isA<ApiException>().having((error) => error.code, "code", 500),
-    );
-  });
+      500,
+    ),
+    ("unknown response", skir.WatchOrganizationRolesResponse.unknown, 422),
+  ]) {
+    test("$name yields ApiException", () async {
+      final harness = _Harness(response);
+      addTearDown(harness.dispose);
+      await harness.start();
 
-  test("unknown response yields ApiException", () async {
-    final error = await harness.emitError(
-      skir.WatchOrganizationRolesResponse.unknown,
+      expect(
+        harness.value.error,
+        isA<ApiException>().having((error) => error.code, "code", code),
+      );
+    });
+  }
+
+  test("role change response is rejected at the snapshot boundary", () async {
+    final harness = _Harness(
+      skir.WatchOrganizationRolesResponse.wrapAdd(_role("one").toSkir()),
     );
-    expect(
-      error,
-      isA<ApiException>().having((error) => error.code, "code", 422),
-    );
+    addTearDown(harness.dispose);
+    await harness.start();
+
+    expect(harness.value.error, isA<StateError>());
   });
 }

@@ -43,7 +43,7 @@ struct ServiceState {
   last_seen: timestamp;
 }
 
-// Temporary capability for binding an unbound service to an organization. GetServiceStatus creates or renews it
+// Temporary capability for binding an unbound service to an organization. EnsureRegistrationLease creates or renews it
 // only while the service is unbound. BindService requires an unexpired token, then consumes it atomically with the
 // organization binding, so the lease cannot substitute for an established binding or durable identity.
 struct ServiceRegistration {

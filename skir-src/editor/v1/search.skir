@@ -1,9 +1,9 @@
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
+import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CapabilityId,
   CatalogGeneration,
-  TypeExpression,
-  TypedValue,
+  DataValue,
+  TypeTemplate,
 } from "editor/v1/type_catalog.skir";
 
 // Realm presentation search carries typed capability input and query state to a Realm owned producer. Results are
@@ -45,11 +45,11 @@ struct RealmSearchQuery(811000006) {
 
 struct RealmPresentationSearchRequest(811000007) {
   subscription_id: string = 0;
-  generation: CatalogGeneration = 5;
-  capability_id: CapabilityId = 1;
-  payload: TypedValue = 2;
-  result_type: TypeExpression = 3;
-  query: RealmSearchQuery = 4;
+  generation: CatalogGeneration = 1;
+  capability_id: CapabilityId = 2;
+  payload: DataValue = 3;
+  result_type: TypeTemplate = 4;
+  query: RealmSearchQuery = 5;
 }
 
 enum RealmPresentationSearchStatus(811000008) {
@@ -61,14 +61,14 @@ enum RealmPresentationSearchStatus(811000008) {
 struct RealmPresentationSearchSnapshot(811000009) {
   subscription_id: string = 0;
   status: RealmPresentationSearchStatus = 1;
-  values: [TypedValue] = 2;
+  values: [DataValue] = 2;
   guidance: [string] = 3;
-  diagnostics: [TypeDiagnostic] = 4;
+  diagnostics: [Diagnostic] = 4;
 }
 
 struct RealmPresentationSearchUnavailable(811000010) {
   subscription_id: string = 0;
-  diagnostics: [TypeDiagnostic] = 1;
+  diagnostics: [Diagnostic] = 1;
 }
 
 enum RealmPresentationSearchUpdate(811000011) {
@@ -78,7 +78,7 @@ enum RealmPresentationSearchUpdate(811000011) {
 
 method WatchRealmPresentationSearch(
   RealmPresentationSearchRequest
-): RealmPresentationSearchUpdate = 910003;
+): RealmPresentationSearchUpdate = 919103;
 
 struct CancelRealmPresentationSearchRequest(811000012) {
   subscription_id: string = 0;
@@ -92,4 +92,4 @@ enum CancelRealmPresentationSearchResult(811000013) {
 
 method CancelRealmPresentationSearch(
   CancelRealmPresentationSearchRequest
-): CancelRealmPresentationSearchResult = 919103;
+): CancelRealmPresentationSearchResult = 919104;

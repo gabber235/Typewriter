@@ -1,9 +1,3 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row action that confirms and delegates membership removal.
@@ -53,9 +47,10 @@ class MemberRowActions extends HookConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () async {
         isRemoving.value = true;
-        await ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        await ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

@@ -1,33 +1,29 @@
-import { TypeDiagnostic } from "editor/v1/diagnostic.skir";
-import { DataPath } from "editor/v1/path.skir";
 import {
-  TypeExpression,
-  TypedValue,
+  DataValue,
+  ExpressionBindingId,
+  TypeUse,
+  ValuePath,
 } from "editor/v1/type_catalog.skir";
 
-// Bindings connect a presentation or action to a value owned by the current
-// editor context. Resolution returns a typed snapshot plus write authority and
-// revision, or diagnostics explaining why the reference cannot be used.
-
-struct BindingId(810400006) {
-  value: int64 = 0;
+struct BindingRef(810400001) {
+  path: ValuePath = 0;
+  binding_id: ExpressionBindingId = 1;
 }
 
-struct BindingRef(810400007) {
-  path: DataPath = 0;
-  binding_id: BindingId = 1;
-}
-
-// Resolved binding snapshot. The owner supplies value, write authority, and revision together.
-struct ResolvedBinding(810400008) {
+struct ResolvedBinding(810400002) {
   reference: BindingRef = 0;
-  value_type: TypeExpression = 1;
-  value: TypedValue = 2;
+  value_type: TypeUse = 1;
+  value: DataValue = 2;
   writable: bool = 3;
   revision: int64 = 4;
 }
 
-enum BindingResolution(810400009) {
+struct BindingDiagnostic(810400003) {
+  code: string = 0;
+  message: string = 1;
+}
+
+enum BindingResolution(810400004) {
   resolved: ResolvedBinding = 1;
-  diagnostics: [TypeDiagnostic] = 2;
+  diagnostics: [BindingDiagnostic] = 2;
 }

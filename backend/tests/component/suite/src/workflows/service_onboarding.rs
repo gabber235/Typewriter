@@ -12,7 +12,7 @@ use wasmcloud_utils::{
         identity::{IssueServiceIdentityRequest, IssueServiceIdentityResponse},
         registration::{BindServiceRequest, BindServiceResponse},
         service::{ServiceRole, ServiceRole_Host},
-        status::{GetServiceStatusRequest, GetServiceStatusResponse, ServiceBinding},
+        status::{EnsureRegistrationLeaseRequest, EnsureRegistrationLeaseResponse},
     },
     skir_client::UnrecognizedValues,
     skir_variant,
@@ -45,7 +45,7 @@ impl FixtureSpec for ServiceOnboarding {
             })
             .dependency("service-registration", |component| {
                 component
-                    .subscription("typewriter.from.service.*.status")
+                    .subscription("typewriter.from.service.*.registration.ensure")
                     .subscription("typewriter.from.user.*.organization.*.services.*")
             })
             .messaging()
@@ -102,26 +102,21 @@ async fn issued_service_can_register_with_an_organization(
             "CREATE user:owner SET name = 'owner'; CREATE organization:alpha SET name = 'alpha', founder = user:owner",
         )
         .await?;
-    let status = context
+    let lease = context
         .messaging()?
         .request_skir(
-            "typewriter.from.service.onboarding.status",
-            &GetServiceStatusRequest::default(),
-            GetServiceStatusRequest::serializer(),
-            GetServiceStatusResponse::serializer(),
+            "typewriter.from.service.onboarding.registration.ensure",
+            &EnsureRegistrationLeaseRequest::default(),
+            EnsureRegistrationLeaseRequest::serializer(),
+            EnsureRegistrationLeaseResponse::serializer(),
             Duration::from_secs(2),
             UnrecognizedValues::Drop,
         )
         .await?;
-    let GetServiceStatusResponse::Status(status) = status else {
-        anyhow::bail!("expected unbound service status");
+    let EnsureRegistrationLeaseResponse::Issued(lease) = lease else {
+        anyhow::bail!("expected issued registration lease");
     };
-    let ServiceBinding::Unbound(binding) = status.binding else {
-        anyhow::bail!("expected unbound service binding");
-    };
-    let registration_token = binding
-        .registration_token
-        .ok_or_else(|| anyhow::anyhow!("registration token missing"))?;
+    let registration_token = lease.token;
 
     context
         .messaging_mock()?
@@ -134,7 +129,6 @@ async fn issued_service_can_register_with_an_organization(
         .request_skir(
             "typewriter.from.user.owner.organization.alpha.services.bind",
             &BindServiceRequest {
-                operation_id: crate::framework::operation_id(),
                 registration_token,
                 _unrecognized: None,
             },

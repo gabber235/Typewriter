@@ -1,8 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
-
-import "selection_test_support.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   group("Selected provider", () {
@@ -17,14 +15,8 @@ void main() {
 
     test("returns resolved selectables for valid identifiers", () {
       final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier(
-        "A",
-        RecordValue({"field": const StringValue("valueA")}),
-      );
-      final idB = MockSelectableIdentifier(
-        "B",
-        RecordValue({"field": const StringValue("valueB")}),
-      );
+      final idA = TestSelectableIdentifier(id: "A");
+      final idB = TestSelectableIdentifier(id: "B");
 
       container.read(selectionProvider.notifier).selectAll([idA, idB]);
 
@@ -32,14 +24,14 @@ void main() {
 
       expect(selected.hasValue, isTrue);
       expect(selected.requireValue.length, 2);
-      expect(selected.requireValue[0].name, "Mock A");
-      expect(selected.requireValue[1].name, "Mock B");
+      expect(selected.requireValue[0].name, "A");
+      expect(selected.requireValue[1].name, "B");
     });
 
     test("returns loading state when identifier returns loading", () {
       final container = ProviderContainer.test();
-      final idA = MockSelectableIdentifier("A");
-      final loadingId = LoadingSelectableIdentifier("loading");
+      final idA = TestSelectableIdentifier(id: "A");
+      const loadingId = _LoadingSelectableIdentifier("loading");
 
       container.read(selectionProvider.notifier).selectAll([idA, loadingId]);
 
@@ -48,4 +40,14 @@ void main() {
       expect(selected.isLoading, isTrue);
     });
   });
+}
+
+final class _LoadingSelectableIdentifier extends SelectableIdentifier {
+  const _LoadingSelectableIdentifier(this.id);
+
+  @override
+  final String id;
+
+  @override
+  AsyncValue<Selectable> create(Ref ref) => const AsyncLoading();
 }

@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -67,10 +66,8 @@ Widget blurRevealCardUseCase(BuildContext context) {
                 const SizedBox(height: 8),
                 Text(
                   "4242 4242 4242 4242",
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontFamily: "JetBrainsMono",
-                    letterSpacing: 2,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium
+                      ?.copyWith(fontFamily: "JetBrainsMono", letterSpacing: 2),
                 ),
                 const SizedBox(height: 4),
                 Text(

@@ -1,12 +1,6 @@
 package com.typewritermc.loader.artifact
 
 import com.typewritermc.loader.api.HostedMessagingSession
-import com.typewritermc.loader.api.artifact.ArtifactDigest
-import com.typewritermc.loader.api.artifact.BlobChunk
-import com.typewritermc.loader.api.artifact.BlobMetadata
-import com.typewritermc.loader.api.artifact.BlobResult
-import com.typewritermc.loader.api.artifact.BlobWriteSession
-import com.typewritermc.loader.api.artifact.DigestAlgorithm
 import com.typewritermc.loader.api.artifact.ProducerMetadata
 import com.typewritermc.loader.api.artifact.PublishResult
 import com.typewritermc.loader.api.artifact.PublishSharedArtifact
@@ -17,22 +11,24 @@ import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactProvenance
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
 import com.typewritermc.loader.api.artifact.SharedCatalogRevision
-import com.typewritermc.loader.api.artifact.TransferId
-import com.typewritermc.loader.api.realmRequestAddress
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
+import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.sharedCatalogFetch
+import com.typewritermc.protocol.transport.generated.sharedPublish
 import com.typewritermc.services.libs.communicator.client.Communicator
-import com.typewritermc.services.libs.communicator.contract.OperationName
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
 import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.UnaryContract
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
-import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
-import com.typewritermc.services.libs.telemetry.ErrorSlug
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
+import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
+import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
+import com.typewritermc.services.libs.filetransfer.blob.BlobResult
+import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
+import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
+import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -141,13 +137,13 @@ class ReconnectingSharedArtifactAccess(
     private fun endpoint(session: HostedMessagingSession): CommunicatorBlobEndpoint =
         CommunicatorBlobEndpoint(
             session.communicator,
-            RealmArtifactAddress(realmId = realmId, organizationId = session.organizationId),
+            RealmRouteScope(realmId = realmId, organizationId = session.organizationId),
         )
 
     private fun metadataClient(session: HostedMessagingSession): CommunicatorSharedMetadataClient =
         CommunicatorSharedMetadataClient(
             session.communicator,
-            RealmArtifactAddress(realmId = realmId, organizationId = session.organizationId),
+            RealmRouteScope(realmId = realmId, organizationId = session.organizationId),
         )
 
     private suspend fun <Value> withSessionRetry(block: suspend (HostedMessagingSession) -> Value): Value {
@@ -169,10 +165,10 @@ private fun <Value> BlobResult<*>.cast(): BlobResult<Value> = this as BlobResult
 /** Encodes shared artifact catalog and mutation operations for one Realm session. */
 private class CommunicatorSharedMetadataClient(
     private val communicator: Communicator,
-    private val address: RealmArtifactAddress,
+    private val address: RealmRouteScope,
 ) {
     suspend fun catalog(): SharedArtifactCatalog =
-        when (val response = request(sharedContracts.catalog, FetchSharedArtifactCatalogRequest(afterRevision = null))) {
+        when (val response = request(sharedContracts.catalog(address), FetchSharedArtifactCatalogRequest(afterRevision = null))) {
             is FetchSharedArtifactCatalogResponse.SuccessWrapper -> {
                 SharedArtifactCatalog(
                     SharedCatalogRevision(response.value.revision),
@@ -220,7 +216,7 @@ private class CommunicatorSharedMetadataClient(
         )
 
     private suspend fun publish(request: PublishSharedArtifactRequest): PublishResult =
-        when (val response = request(sharedContracts.publish, request)) {
+        when (val response = request(sharedContracts.publish(address), request)) {
             is PublishSharedArtifactResponse.PublishedWrapper -> {
                 PublishResult.Published(response.value.toApi(), catalog().revision)
             }
@@ -239,7 +235,7 @@ private class CommunicatorSharedMetadataClient(
         }
 
     private suspend fun <Request : Any, Response : Any> request(
-        contract: UnaryContract<RealmArtifactAddress, Request, Response>,
+        contract: UnaryContract<RealmRouteScope, Request, Response>,
         value: Request,
     ): Response =
         when (val result = communicator.request(contract, address, value)) {
@@ -257,32 +253,23 @@ private class CommunicatorSharedMetadataClient(
 }
 
 internal class SharedContracts {
-    val catalog = contract(FetchSharedArtifactCatalog, "shared.catalog.fetch", FetchSharedArtifactCatalogResponse.createUnavailable())
-    val publish = contract(PublishSharedArtifactMethod, "shared.publish", PublishSharedArtifactResponse.createUnavailable())
+    fun catalog(scope: RealmRouteScope) =
+        scope.sharedCatalogFetch(ResponsePolicy(FetchSharedArtifactCatalogResponse.createUnavailable(), unavailableClassifier()))
 
-    private fun <Request : Any, Response : Any> contract(
-        method: build.skir.service.Method<Request, Response>,
-        suffix: String,
-        unavailable: Response,
-    ): UnaryContract<RealmArtifactAddress, Request, Response> =
-        skirUnaryContract(
-            method,
-            OperationName.of(suffix),
-            sharedAddress(suffix),
-            ResponsePolicy(unavailable) { response ->
-                val failed = response::class.simpleName == "UnavailableWrapper"
-                ResponseClassification(
-                    if (failed) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
-                    ResponseVariant.of(if (failed) "unavailable" else "success"),
-                )
-            },
-            ErrorSlug.of(suffix.replace('.', '-')),
-        )
+    fun publish(scope: RealmRouteScope) =
+        scope.sharedPublish(ResponsePolicy(PublishSharedArtifactResponse.createUnavailable(), unavailableClassifier()))
 }
 
 internal val sharedContracts = SharedContracts()
 
-private fun sharedAddress(suffix: String): AddressTemplate<RealmArtifactAddress> = realmRequestAddress(suffix)
+private fun <Response : Any> unavailableClassifier() =
+    com.typewritermc.services.libs.communicator.contract.ResponseClassifier<Response> { response ->
+        val failed = response::class.simpleName == "UnavailableWrapper"
+        ResponseClassification(
+            if (failed) ResponseOutcome.INTERNAL_ERROR else ResponseOutcome.SUCCESS,
+            ResponseVariant.of(if (failed) "unavailable" else "success"),
+        )
+    }
 
 private fun ArtifactDigest.toSkir() = SkirArtifactDigest(algorithm = SkirDigestAlgorithm.SHA256, value = value)
 

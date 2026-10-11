@@ -1,11 +1,6 @@
-// ignore_for_file: prefer_initializing_formals
-
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/services.dart";
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+// ignore_for_file: prefer_initializing_formals
 
 /// Coordinates one source, scope, interaction, and search surface lifecycle.
 class SearchController<T> extends ChangeNotifier
@@ -124,6 +119,7 @@ class SearchController<T> extends ChangeNotifier
         ),
         result,
       );
+      if (_disposed) return;
       switch (outcome) {
         case SearchActivationComplete(:final value):
           await _onCompleted?.call(value);

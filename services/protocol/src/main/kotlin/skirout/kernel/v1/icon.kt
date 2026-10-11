@@ -79,7 +79,7 @@ sealed class Icon private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.kernel.v1.icon.Icon._serializerImpl,
+            _SerializerRegistry.IconSerializerImpl,
         )
     }
 
@@ -90,52 +90,47 @@ sealed class Icon private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.kernel.v1.icon.Icon, Unknown>(
-                recordId = "kernel/v1/icon.skir:Icon",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [Icon] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.IconSerializer;
 
         /** Describes the [Icon] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.IconSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            _maybeFinalizeSerializer();
-        }
+private object _SerializerRegistry {
+    val IconSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.kernel.v1.icon.Icon, skirout.kernel.v1.icon.Icon.Unknown>(
+            recordId = "kernel/v1/icon.skir:Icon",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.kernel.v1.icon.Icon.Kind.values().size,
+            unknownInstance = skirout.kernel.v1.icon.Icon.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.kernel.v1.icon.Icon.Unknown(skirout.kernel.v1.icon.Icon.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
 
-        private var _finalizationCounter = 0;
+    val IconSerializer = build.skir.internal.makeSerializer(IconSerializerImpl);
 
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "iconify",
-                    Kind.ICONIFY_WRAPPER.ordinal,
-                    build.skir.Serializers.string,
-                    "",
-                    { IconifyWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "svg",
-                    Kind.SVG_WRAPPER.ordinal,
-                    build.skir.Serializers.string,
-                    "",
-                    { SvgWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+    init {
+        IconSerializerImpl.addWrapperVariant(
+            1,
+            "iconify",
+            skirout.kernel.v1.icon.Icon.Kind.ICONIFY_WRAPPER.ordinal,
+            build.skir.Serializers.string,
+            "",
+            { skirout.kernel.v1.icon.Icon.IconifyWrapper(it) },
+            { it.value },
+        );
+        IconSerializerImpl.addWrapperVariant(
+            2,
+            "svg",
+            skirout.kernel.v1.icon.Icon.Kind.SVG_WRAPPER.ordinal,
+            build.skir.Serializers.string,
+            "",
+            { skirout.kernel.v1.icon.Icon.SvgWrapper(it) },
+            { it.value },
+        );
+        IconSerializerImpl.finalizeEnum();
     }
 }

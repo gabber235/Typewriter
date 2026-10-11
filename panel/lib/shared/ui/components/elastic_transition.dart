@@ -1,7 +1,3 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies the standard elastic entrance and exit transition to [child].

@@ -98,14 +98,22 @@ abstract class Service with _$Service {
 /// should use the canonical service for mutation expectations.
 extension ServiceIdentityConversion on Service {
   /// The canonical value owned by the service identity editor.
-  RecordValue get identityValue => RecordValue({"name": name.asValue});
+  skir.DataValue get identityValue => skir.DataValue.createRecord(
+    fields: [
+      skir.FieldValue(
+        name: "name",
+        value: skir.DataValue.wrapStringValue(name),
+      ),
+    ],
+  );
 
   /// Returns this identity with [value] applied when it is valid.
-  Service? withIdentityValue(DataValue value) {
-    if (value is! RecordValue) return null;
-    final name = value.fields["name"];
-    if (name is! StringValue || name.value.trim().isEmpty) return null;
-    return copyWith(name: name.value);
+  Service? withIdentityValue(skir.DataValue value) {
+    final name = value
+        .editorValueAt(editorRootPath.field("name"))
+        ?.authoredString;
+    if (name == null || name.trim().isEmpty) return null;
+    return copyWith(name: name);
   }
 
   /// Projects unsaved identity edits over canonical data for presentation.
@@ -247,34 +255,31 @@ enum ServiceStateStatus {
   }
 }
 
-({List<Service> values, Service canonical}) _upsertCanonicalService(
-  List<Service>? values,
-  Service incoming,
-) => reconcileCanonicalRevision(
-  values: values,
-  incoming: incoming,
-  keyOf: (service) => service.serviceId,
-  revisionOf: (service) => service.revision,
-  identityOf: (service) => "Service ${service.serviceId.id}",
-  entityName: "Service",
-);
+extension ServiceCollectionReconciliation on List<Service>? {
+  CanonicalReconciliation<Service> reconcileCanonical(Service incoming) =>
+      reconcileRevision(
+        incoming: incoming,
+        keyOf: (service) => service.serviceId,
+        revisionOf: (service) => service.revision,
+        identityOf: (service) => "Service ${service.serviceId.id}",
+        entityName: "Service",
+      );
 
-({List<Service> values, Service canonical}) _upsertWatchedService(
-  List<Service>? values,
-  Service incoming,
-) {
-  final current = values?.firstWhereOrNull(
-    (service) => service.serviceId == incoming.serviceId,
-  );
-  if (current?.revision == incoming.revision &&
-      current?.copyWith(state: incoming.state) == incoming) {
-    return (
-      values: [
-        for (final service in values!)
-          if (service.serviceId == incoming.serviceId) incoming else service,
-      ],
-      canonical: incoming,
+  CanonicalReconciliation<Service> reconcileWatched(Service incoming) {
+    final values = this;
+    final current = values?.firstWhereOrNull(
+      (service) => service.serviceId == incoming.serviceId,
     );
+    if (current?.revision == incoming.revision &&
+        current?.copyWith(state: incoming.state) == incoming) {
+      return CanonicalReconciliation(
+        values: [
+          for (final service in values!)
+            if (service.serviceId == incoming.serviceId) incoming else service,
+        ],
+        canonical: incoming,
+      );
+    }
+    return reconcileCanonical(incoming);
   }
-  return _upsertCanonicalService(values, incoming);
 }

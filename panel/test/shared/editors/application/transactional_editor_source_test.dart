@@ -1,13 +1,15 @@
 // ignore_for_file: cascade_invocations
 
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/editor_fixture.dart";
+
 void main() {
-  final title = DataPath.root.field("title");
-  final color = DataPath.root.field("color");
+  final title = editorRootPath.field("title");
+  final color = editorRootPath.field("color");
 
   test("timer scheduler cancellation settles without executing", () async {
     final task = const TimerEditorDelayScheduler().schedule(
@@ -31,11 +33,11 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     expect(commits, isEmpty);
     expect(source.saveState(title).phase, EditorSavePhase.pending);
-    expect(source.saveState(DataPath.root).phase, EditorSavePhase.pending);
-    expect(source.saveState(DataPath.root).path, title);
+    expect(source.saveState(editorRootPath).phase, EditorSavePhase.pending);
+    expect(source.saveState(editorRootPath).path, title);
 
     await source.flush();
     expect(commits.single.changedPaths, {title});
@@ -46,7 +48,7 @@ void main() {
           .having(
             (mutation) => mutation.value,
             "value",
-            const StringValue("New"),
+            skir.DataValue.wrapStringValue("New"),
           ),
     );
     expect(source.document.revision, 2);
@@ -79,7 +81,7 @@ void main() {
         },
       );
 
-      source.update(title, const StringValue("New"));
+      source.update(title, skir.DataValue.wrapStringValue("New"));
       await source.flush();
 
       expect(scheduler.delays, const [
@@ -105,15 +107,21 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("Yours"));
+    source.update(title, skir.DataValue.wrapStringValue("Yours"));
     await source.flush();
 
     expect(calls, 1);
-    expect(source.value(title).valueOrNull, const StringValue("Yours"));
+    expect(
+      source.value(title).valueOrNull,
+      skir.DataValue.wrapStringValue("Yours"),
+    );
     expect(source.saveState(title).phase, EditorSavePhase.conflict);
 
     source.useRemote(title);
-    expect(source.value(title).valueOrNull, const StringValue("Theirs"));
+    expect(
+      source.value(title).valueOrNull,
+      skir.DataValue.wrapStringValue("Theirs"),
+    );
     source.dispose();
   });
 
@@ -138,14 +146,17 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("Yours"));
-    source.update(color, const StringValue("Blue"));
+    source.update(title, skir.DataValue.wrapStringValue("Yours"));
+    source.update(color, skir.DataValue.wrapStringValue("Blue"));
     await source.flush();
 
     expect(commits, hasLength(2));
     expect(commits.last.changedPaths, {color});
     expect(commits.last.rootValue, _value(title: "Theirs", color: "Blue"));
-    expect(source.value(title).valueOrNull, const StringValue("Yours"));
+    expect(
+      source.value(title).valueOrNull,
+      skir.DataValue.wrapStringValue("Yours"),
+    );
     expect(source.saveState(title).phase, EditorSavePhase.conflict);
     expect(source.saveState(color).phase, EditorSavePhase.saved);
 
@@ -174,7 +185,7 @@ void main() {
         },
       );
 
-      source.update(title, const StringValue("New"));
+      source.update(title, skir.DataValue.wrapStringValue("New"));
       final flush = source.flush();
       source.acceptRemote(
         revision: 3,
@@ -195,7 +206,7 @@ void main() {
         _value(title: "Old", color: "Blue"),
       );
       expect(
-        source.value(DataPath.root).valueOrNull,
+        source.value(editorRootPath).valueOrNull,
         _value(title: "Old", color: "Blue"),
       );
       expect(source.saveState(title).phase, EditorSavePhase.saved);
@@ -207,7 +218,7 @@ void main() {
     final pending = Completer<TypedMutationResult>();
     final source = _source(commit: (_) => pending.future);
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
     source.acceptRemote(
       revision: 2,
@@ -232,7 +243,7 @@ void main() {
       final pending = Completer<TypedMutationResult>();
       final source = _source(commit: (_) => pending.future);
 
-      source.update(title, const StringValue("New"));
+      source.update(title, skir.DataValue.wrapStringValue("New"));
       final flush = source.flush();
       source.acceptRemote(
         revision: 2,
@@ -251,7 +262,10 @@ void main() {
         source.document.confirmedValue,
         _value(title: "Old", color: "Blue"),
       );
-      expect(source.value(title).valueOrNull, const StringValue("New"));
+      expect(
+        source.value(title).valueOrNull,
+        skir.DataValue.wrapStringValue("New"),
+      );
       expect(
         source.document.diagnostics.map((diagnostic) => diagnostic.message),
         contains("Different values share the same revision"),
@@ -278,8 +292,8 @@ void main() {
     );
 
     source.beginInteraction(title);
-    source.update(title, const StringValue("Typing"));
-    source.update(color, const StringValue("Blue"));
+    source.update(title, skir.DataValue.wrapStringValue("Typing"));
+    source.update(color, skir.DataValue.wrapStringValue("Blue"));
     scheduler.tasks.last.execute();
     await committed.future;
     await source.flush(paths: {color});
@@ -295,8 +309,8 @@ void main() {
     final source = _source(
       commit: (commit) async => fail
           ? TypedMutationResult.unavailable([
-              const TypeDiagnostic(
-                code: TypeDiagnosticCode.invalidValue,
+              const EditorDiagnostic(
+                code: EditorDiagnosticCode.invalidValue,
                 message: "Rejected",
               ),
             ])
@@ -306,18 +320,18 @@ void main() {
             ),
     );
 
-    source.update(title, const StringValue("First"));
+    source.update(title, skir.DataValue.wrapStringValue("First"));
     await source.flush();
     expect(source.saveState(title).phase, EditorSavePhase.failed);
-    expect(source.saveState(DataPath.root).phase, EditorSavePhase.failed);
+    expect(source.saveState(editorRootPath).phase, EditorSavePhase.failed);
 
     fail = false;
-    source.update(title, const StringValue("Second"));
+    source.update(title, skir.DataValue.wrapStringValue("Second"));
     expect(source.saveState(title).phase, EditorSavePhase.pending);
 
     await source.flush();
     expect(source.saveState(title).phase, EditorSavePhase.saved);
-    expect(source.saveState(DataPath.root).phase, EditorSavePhase.saved);
+    expect(source.saveState(editorRootPath).phase, EditorSavePhase.saved);
     source.dispose();
   });
 
@@ -331,15 +345,15 @@ void main() {
         calls++;
         if (!firstCommit.isCompleted) firstCommit.complete();
         return TypedMutationResult.unavailable([
-          const TypeDiagnostic(
-            code: TypeDiagnosticCode.invalidValue,
+          const EditorDiagnostic(
+            code: EditorDiagnosticCode.invalidValue,
             message: "Rejected",
           ),
         ]);
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     scheduler.tasks.single.execute();
     await firstCommit.future;
     await source.flush(paths: {color});
@@ -367,9 +381,9 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("First"));
+    source.update(title, skir.DataValue.wrapStringValue("First"));
     final firstTask = scheduler.tasks.single;
-    source.update(title, const StringValue("Second"));
+    source.update(title, skir.DataValue.wrapStringValue("Second"));
 
     expect(firstTask.cancelled, isTrue);
     expect(scheduler.delays, const [
@@ -400,7 +414,7 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final task = scheduler.tasks.single;
     source.acceptRemoteDeletion();
 
@@ -424,7 +438,7 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final task = scheduler.tasks.single;
     source.dispose();
 
@@ -449,7 +463,7 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
     final retry = await scheduler.scheduledAt(1);
     source.acceptRemoteDeletion();
@@ -469,7 +483,7 @@ void main() {
     );
 
     final interaction = source.beginInteraction(title);
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     await interaction.commit();
     expect(interaction.active, isFalse);
     await interaction.commit();
@@ -492,14 +506,17 @@ void main() {
         },
       );
       final cancelled = source.beginInteraction(title);
-      source.update(title, const StringValue("Cancelled"));
+      source.update(title, skir.DataValue.wrapStringValue("Cancelled"));
       cancelled.cancel();
-      expect(source.value(title).valueOrNull, const StringValue("Old"));
+      expect(
+        source.value(title).valueOrNull,
+        skir.DataValue.wrapStringValue("Old"),
+      );
 
       expect(calls, 0);
 
       final committed = source.beginInteraction(title);
-      source.update(title, const StringValue("Saved"));
+      source.update(title, skir.DataValue.wrapStringValue("Saved"));
       await committed.commit();
       expect(calls, 1);
       source.dispose();
@@ -524,7 +541,7 @@ void main() {
       },
     );
 
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     await source.flush();
 
     expect(scheduler.delays, const [
@@ -534,7 +551,10 @@ void main() {
       Duration(milliseconds: 200),
     ]);
     expect(calls, 4);
-    expect(source.value(title).valueOrNull, const StringValue("New"));
+    expect(
+      source.value(title).valueOrNull,
+      skir.DataValue.wrapStringValue("New"),
+    );
     expect(source.saveState(title).phase, EditorSavePhase.repeatedContention);
     final contention = source.saveState(title).contention!;
     expect(contention.kind, EditorContentionKind.versionMismatch);
@@ -553,7 +573,7 @@ void main() {
       commit: (_) => pending.future,
       onDeleted: () => deleted = true,
     );
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
     source.acceptRemoteDeletion();
 
@@ -580,7 +600,7 @@ void main() {
         return pending.future;
       },
     )..addListener(() => notifications++);
-    source.update(title, const StringValue("New"));
+    source.update(title, skir.DataValue.wrapStringValue("New"));
     final flush = source.flush();
 
     final notificationsAtDispose = notifications;
@@ -611,7 +631,7 @@ void main() {
     source.acceptRemoteDeletion();
 
     expect(
-      source.saveState(DataPath.root).phase,
+      source.saveState(editorRootPath).phase,
       EditorSavePhase.deletedElsewhere,
     );
     source.dispose();
@@ -626,22 +646,23 @@ void main() {
     );
     var notifications = 0;
     source.addListener(() => notifications++);
-    source.update(title, const StringValue("Local"));
+    source.update(title, skir.DataValue.wrapStringValue("Local"));
     final notificationsBeforeRefresh = notifications;
 
-    final refreshed = EditorDocument(
-      rootType: source.document.rootType,
-      typeCatalog: const TypeCatalog([]),
+    final refreshed = source.document.copyWith(
       confirmedValue: _value(title: "Old", color: "Remote"),
       revision: 2,
       readOnly: true,
     );
     source.refreshDocument(refreshed);
 
-    expect(source.value(title).valueOrNull, const StringValue("Local"));
     expect(
-      source.value(DataPath.root.field("color")).valueOrNull,
-      const StringValue("Remote"),
+      source.value(title).valueOrNull,
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(
+      source.value(editorRootPath.field("color")).valueOrNull,
+      skir.DataValue.wrapStringValue("Remote"),
     );
     expect(source.document.readOnly, isTrue);
     expect(notifications, greaterThan(notificationsBeforeRefresh));
@@ -661,17 +682,18 @@ TransactionalEditorSource _source({
   void Function()? onDeleted,
 }) {
   return TransactionalEditorSource(
-    document: EditorDocument(
-      rootType: RecordType(
-        fields: const {
-          "title": TypeField(name: "title", type: StringType()),
-          "color": TypeField(name: "color", type: StringType()),
-        },
-      ),
-      typeCatalog: const TypeCatalog([]),
-      confirmedValue: _value(title: "Old", color: "Red"),
-      revision: 1,
+    document: recordEditorDocument(
+      {
+        "title": skir.DataValue.wrapStringValue("Old"),
+        "color": skir.DataValue.wrapStringValue("Red"),
+      },
+      {
+        "title": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+        "color": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+      },
+      1,
     ),
+    validation: (path, value) => EditorMutationResult.applied(value),
     debounce: debounce,
     commit: commit,
     scheduler: scheduler ?? _ControlledScheduler(),
@@ -680,8 +702,11 @@ TransactionalEditorSource _source({
   );
 }
 
-RecordValue _value({required String title, required String color}) =>
-    RecordValue({"title": StringValue(title), "color": StringValue(color)});
+skir.DataValue _value({required String title, required String color}) =>
+    recordEditorValue({
+      "title": skir.DataValue.wrapStringValue(title),
+      "color": skir.DataValue.wrapStringValue(color),
+    });
 
 final class _Scheduler implements EditorDelayScheduler {
   final delays = <Duration>[];

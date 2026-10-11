@@ -1,36 +1,38 @@
 package com.typewritermc.extensions.basic.entries.sequence.events
 
-import com.typewritermc.elements.ElementInstanceId
-import com.typewritermc.elements.TypewriterElement
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
-import com.typewritermc.presentation.PresentationBuildContext
-import com.typewritermc.presentation.TypewriterPresentation
-import com.typewritermc.presentation.presentation
+import com.typewritermc.expression.literal
+import com.typewritermc.expression.orElse
+import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
+import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
+import com.typewritermc.types.TypewriterDisplay
+import com.typewritermc.types.TypewriterType
 
-@TypewriterElement(
-    id = "01a0b180-cac6-770c-bbe8-101a740011ac",
-    revision = 1,
+@TypewriterType(id = "01a0b180-cac6-770c-bbe8-101a740011ac", revision = 1)
+@TypewriterDisplay(
     name = "Player Message Contains Text Event Entry",
     description = "This event entry is triggered when a player sends a message that contains a specific text.",
     icon = "fluent:note-48-filled",
     color = Color.Hex.YELLOW,
 )
 class PlayerMessageContainsTextEventEntry(
-    override val id: ElementInstanceId,
     override val name: String,
-    val triggers: Set<Ref<SequenceEntry>>,
+    override val placement: GraphPlacement,
+    val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,
     val text: String,
     val exactSame: Boolean,
 ) : SequenceEntry
 
-// @TypewriterPresentation(
-//    default = true,
-//    priority = 100,
-// )
-// context(_: PresentationBuildContext)
-// fun playerMessageContainsTextEventEntryEditor() =
-//    presentation<PlayerMessageContainsTextEventEntry>(name = "default") {
-//
-//    }
+object PlayerMessageContainsTextEventEntryInspector : PlayerMessageContainsTextEventEntryPresentation {
+    override fun PlayerMessageContainsTextEventEntryPresentationScope.present() {
+        resourceHeading(
+            title = expressions.name.orElse(literal("Unnamed event")),
+            color = literal(Color.parseRgb(requireNotNull(PlayerMessageContainsTextEventEntryDefinition.display?.color))),
+            identifier = subject.identifier,
+        )
+        remainingFields {}
+    }
+}

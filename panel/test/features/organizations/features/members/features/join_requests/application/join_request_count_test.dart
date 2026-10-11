@@ -1,7 +1,6 @@
-import "dart:async";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/join_requests_test_support.dart";
@@ -19,10 +18,10 @@ void main() {
     OrganizationJoinRequest createRequest({required bool expired}) {
       final now = DateTime.now();
       return OrganizationJoinRequest(
-        requestId: recordId(
+        requestId: skir.recordId(
           "request_to_join:req-${now.millisecondsSinceEpoch}-${expired ? "exp" : "active"}",
         ),
-        userId: recordId("user:user1"),
+        userId: skir.recordId("user:user1"),
         userName: "Test User",
         userEmail: "test@example.com",
         userAvatarUrl: "https://example.com/avatar.png",

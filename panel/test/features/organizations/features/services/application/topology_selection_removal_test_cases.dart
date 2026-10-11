@@ -10,7 +10,7 @@ void _testTopologySelectionRemoval() {
         harness = await _Harness.create();
         final container = harness.container;
         addTearDown(harness.dispose);
-        final engineId = recordId("engine_instance:paper");
+        final engineId = skir.recordId("engine_instance:paper");
         final topology =
             (container.read(
               organizationTopologyControllerProvider(_organizationId).notifier,
@@ -37,7 +37,7 @@ void _testTopologySelectionRemoval() {
             );
         await container.pump();
 
-        await container.read(organizationTopologyStreamProvider.future);
+        await container.read(organizationTopologyProvider.future);
         final identifier = switch (kind) {
           "host" => ServiceHostIdentifier(harness.host.hostId),
           "realm" => RealmInstanceIdentifier(harness.realm.realmId),

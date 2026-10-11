@@ -6,6 +6,7 @@ class _Harness {
     required this.container,
     required this.service,
     required this.host,
+    required this.secondHost,
     required this.realm,
     required this.selectable,
     required this.servicesSubscription,
@@ -16,10 +17,11 @@ class _Harness {
     skir.RecordId Function()? organization,
     List<String> supportedEngineIds = const ["paper"],
     List<skir.RealmInstance> realms = const [],
+    bool includeSecondHost = false,
   }) async {
     final nats = FakeNatsClient();
     final service = Service(
-      serviceId: recordId("service:paper"),
+      serviceId: skir.recordId("service:paper"),
       revision: 1,
       name: "Paper",
       role: HostServiceRole(version: "1.0.0"),
@@ -31,7 +33,7 @@ class _Harness {
     );
 
     final host = skir.ServiceHost(
-      hostId: recordId("service_host:paper"),
+      hostId: skir.recordId("service_host:paper"),
       serviceId: service.serviceId,
       revision: 1,
       entrypoint: "PAPER",
@@ -46,9 +48,28 @@ class _Harness {
         updatedAt: DateTime.utc(2026, 8, 21),
       ),
     );
+    final secondHost = includeSecondHost
+        ? skir.ServiceHost(
+            hostId: skir.recordId("service_host:paper_backup"),
+            serviceId: service.serviceId,
+            revision: 1,
+            entrypoint: "PAPER_BACKUP",
+            canHostRealm: true,
+            supportedEngines: [
+              for (final id in supportedEngineIds)
+                skir.SupportedEngine(engineId: id),
+            ],
+            topologyRevision: skir.ReconciledRevision(desired: 1, applied: 1),
+            state: skir.HostRuntimeState(
+              status: skir.HostRuntimeStatus.active,
+              message: null,
+              updatedAt: DateTime.utc(2026, 8, 21),
+            ),
+          )
+        : null;
 
     final realm = skir.RealmInstance(
-      realmId: recordId("realm_instance:paper"),
+      realmId: skir.recordId("realm_instance:paper"),
       ownerHost: skir.OwnerHost(id: host.hostId, name: service.name),
       revision: 1,
       targetEngine: skir.EngineTarget(
@@ -59,7 +80,10 @@ class _Harness {
     );
 
     final topology = OrganizationTopology(
-      hosts: [TopologyHost.fromSkir(host)],
+      hosts: [
+        TopologyHost.fromSkir(host),
+        if (secondHost != null) TopologyHost.fromSkir(secondHost),
+      ],
       realmInstances: realms.map(TopologyRealm.fromSkir).toList(),
       engineInstances: [],
     );
@@ -69,7 +93,7 @@ class _Harness {
         "cloud.to.user.user1.organization.${_organizationId.id}.topology.watch",
         (_) => skir.WatchOrganizationTopologyResponse.serializer.toBytes(
           skir.WatchOrganizationTopologyResponse.createList(
-            hosts: [host],
+            hosts: [host, ?secondHost],
             realms: realms,
             engines: [],
           ),
@@ -87,7 +111,7 @@ class _Harness {
         organizationIdProvider.overrideWith(
           (ref) => organization?.call() ?? _organizationId,
         ),
-        natsProvider.overrideWith(() => _ReplaceableNats(nats)),
+        natsProvider.overrideWith(() => FakeNats(nats)),
         panelTelemetryProvider.overrideWithValue(
           const AsyncData(NoopPanelTelemetry()),
         ),
@@ -104,11 +128,11 @@ class _Harness {
       (previous, next) {},
     );
     final topologySubscription = container.listen(
-      organizationTopologyStreamProvider,
+      organizationTopologyProvider,
       (previous, next) {},
     );
     await container.read(canonicalServicesProvider.future);
-    await container.read(organizationTopologyStreamProvider.future);
+    await container.read(organizationTopologyProvider.future);
     container
         .read(selectionProvider.notifier)
         .select(ServiceHostIdentifier(host.hostId));
@@ -125,6 +149,7 @@ class _Harness {
       container: container,
       service: service,
       host: host,
+      secondHost: secondHost,
       realm: realm,
       selectable: selectable,
       servicesSubscription: servicesSubscription,
@@ -136,6 +161,7 @@ class _Harness {
   final ProviderContainer container;
   final Service service;
   final skir.ServiceHost host;
+  final skir.ServiceHost? secondHost;
   final skir.RealmInstance realm;
   final InspectableSelectable selectable;
   final ProviderSubscription<AsyncValue<List<Service>>> servicesSubscription;
@@ -154,15 +180,39 @@ class _Harness {
   }
 }
 
-class _ReplaceableNats extends Nats {
-  _ReplaceableNats(this.client);
-  final NatsClient client;
-
-  @override
-  NatsClient build() => client;
-  NatsClient get connection => state;
-  set connection(NatsClient next) => state = next;
+InspectionContent _buildInspection(
+  _Harness harness,
+  EditorOwnerRegistry owners,
+) {
+  final content = harness.selectable.buildInspection(owners);
+  addTearDown(() {
+    content.host?.dispose();
+    for (final host in content.additionalHosts) {
+      host.dispose();
+    }
+  });
+  return content;
 }
+
+EditorSource _identitySource(EditorOwnerRegistry owners) => owners
+    .workspace
+    .resources
+    .values
+    .singleWhere(
+      (resource) =>
+          resource.source.commitPolicy == EditorCommitPolicy.autosaveChanges,
+    )
+    .source;
+
+EditorSource _configurationSource(EditorOwnerRegistry owners) => owners
+    .workspace
+    .resources
+    .values
+    .singleWhere(
+      (resource) =>
+          resource.source.commitPolicy == EditorCommitPolicy.applyResource,
+    )
+    .source;
 
 class _SeededServices extends CanonicalOrganizationServices {
   _SeededServices(this.services);

@@ -6,7 +6,7 @@ import com.typewritermc.loader.artifactSpan
 import com.typewritermc.loader.deployment.DeploymentGeneration
 import com.typewritermc.loader.deployment.DeploymentSnapshot
 import com.typewritermc.loader.deployment.HostDeploymentProjection
-import com.typewritermc.loader.deployment.RealmTopology
+import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
@@ -70,20 +70,20 @@ interface RolloutStateRepository {
 }
 
 /**
- * Stages and activates projections across responding assigned hosts, then proves a healthy stability interval.
+ * Stages and activates projections across responding selected hosts, then proves a healthy stability interval.
  *
- * The Realm host must answer discovery; absent engine hosts can reconcile later. Topology must remain unchanged
+ * The Realm host must answer discovery; absent engine hosts can reconcile later. Selection must remain unchanged
  * before commit. Failure triggers abort before committing or rollback afterward; compensation itself may fail and
  * is not an atomic distributed transaction.
  */
 class CoordinatedRollout(
     private val realmId: RealmId,
-    private val topology: RealmTopology,
+    private val selection: RealmDeploymentSelection,
     private val manifests: Map<ArtifactId, ImprintManifest>,
     private val messenger: RolloutMessenger,
     private val projections: ProjectionRepository,
     private val state: RolloutStateRepository,
-    private val currentTopology: suspend () -> RealmTopology = { topology },
+    private val currentSelection: suspend () -> RealmDeploymentSelection = { selection },
     private val requestTimeout: Duration = 5.seconds,
     private val commandTimeout: Duration = 5.minutes,
     private val participantDeadline: Duration = 5.minutes,
@@ -111,19 +111,25 @@ class CoordinatedRollout(
         try {
             persisted = persisted.copy(phase = RolloutPhase.DISCOVERING)
             state.persist(persisted)
-            val active = discover()
-            val references = publishProjections(snapshot, active.keys)
-            persisted = persisted.copy(phase = RolloutPhase.STAGING, projections = references, previous = active.baselines())
+            val participants = discoverParticipants()
+            val references = publishProjections(snapshot, participants.hosts.keys)
+            persisted = persisted.copy(phase = RolloutPhase.STAGING, projections = references, previous = participants.hosts.baselines())
             state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout), active.keys)
+            requireAccepted(
+                messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout),
+                participants.hosts.keys,
+            )
             awaitStatuses(attempt, references.keys) { host, status ->
                 status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
             }
-            require(currentTopology() == topology) { "Realm topology changed while the deployment was staged." }
+            require(currentSelection() == selection) { "Realm selection changed while the deployment was staged." }
 
             persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
             state.persist(persisted)
-            requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout), active.keys)
+            requireAccepted(
+                messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout),
+                participants.hosts.keys,
+            )
             persisted = persisted.copy(phase = RolloutPhase.STABILIZING)
             state.persist(persisted)
             awaitStableHealthy(attempt, references)
@@ -138,15 +144,15 @@ class CoordinatedRollout(
     /**
      * Repairs stale or unhealthy responding hosts to the current committed snapshot.
      *
-     * Only stale participants receive commands. Topology and stability checks still apply, and no newer content is
+     * Only stale participants receive commands. Selection and stability checks still apply, and no newer content is
      * selected.
      */
     suspend fun reconcileCommitted(deployment: CommittedDeployment) {
         require(state.committed()?.snapshot == deployment.snapshot) { "Only the committed deployment can be reconciled." }
-        val active = discover()
-        val expected = publishProjections(deployment.snapshot, active.keys)
+        val participants = discoverParticipants()
+        val expected = publishProjections(deployment.snapshot, participants.hosts.keys)
         val stale =
-            active
+            participants.hosts
                 .filter { (host, presence) ->
                     presence.activeProjection?.projection != expected.getValue(host) ||
                         presence.activeProjection.health != RuntimeHealthSnapshot.Healthy
@@ -155,14 +161,21 @@ class CoordinatedRollout(
 
         val attempt = state.nextAttempt(deployment.snapshot.generation)
         val references = expected.filterKeys { it in stale }
-        var persisted = PersistedRollout(realmId, attempt, RolloutPhase.STAGING, references, active.filterKeys { it in stale }.baselines())
+        var persisted =
+            PersistedRollout(
+                realmId,
+                attempt,
+                RolloutPhase.STAGING,
+                references,
+                participants.hosts.filterKeys { it in stale }.baselines(),
+            )
         state.persist(persisted)
         try {
             requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Stage), commandTimeout), stale)
             awaitStatuses(attempt, stale) { host, status ->
                 status is ParticipantStatus.Staged && status.candidate == references.getValue(host)
             }
-            require(currentTopology() == topology) { "Realm topology changed while participants reconciled." }
+            require(currentSelection() == selection) { "Realm selection changed while participants reconciled." }
             persisted = persisted.copy(phase = RolloutPhase.COMMITTING)
             state.persist(persisted)
             requireAccepted(messenger.command(envelope(attempt, references, RolloutCommand.Commit), commandTimeout), stale)
@@ -221,16 +234,16 @@ class CoordinatedRollout(
     }
 
     /** Uses a fresh probe to define the responding participant set for this attempt. */
-    private suspend fun discover(): Map<ServiceId, RealmHostPresence> {
+    private suspend fun discoverParticipants(): RolloutParticipants {
         val probe = ProbeRealmHosts(realmId)
-        val assigned = topology.assignedServices()
-        val active =
+        val selected = selection.selectedServices()
+        val responding =
             messenger
-                .discover(probe, assigned, requestTimeout)
-                .filter { it.probeId == probe.probeId && it.serviceId in assigned }
+                .discover(probe, selected, requestTimeout)
+                .filter { it.probeId == probe.probeId && it.serviceId in selected }
                 .associateBy(RealmHostPresence::serviceId)
-        require(topology.realmService in active) { "The Realm service did not answer its rollout presence probe." }
-        return active
+        require(selection.realmService in responding) { "The Realm service did not answer its rollout presence probe." }
+        return RolloutParticipants(responding)
     }
 
     private suspend fun publishProjections(
@@ -238,7 +251,7 @@ class CoordinatedRollout(
         participants: Set<ServiceId>,
     ): Map<ServiceId, ProjectionReference> =
         participants.associateWith { host ->
-            projections.publish(snapshot.projectFor(realmId.value, topology, host, manifests))
+            projections.publish(snapshot.projectFor(realmId.value, selection, host, manifests))
         }
 
     private fun envelope(
@@ -300,3 +313,8 @@ class CoordinatedRollout(
         error("Timed out waiting for rollout participants.")
     }
 }
+
+/** Responding selected hosts for one rollout probe, including the required Realm host. */
+data class RolloutParticipants(
+    val hosts: Map<ServiceId, RealmHostPresence>,
+)
