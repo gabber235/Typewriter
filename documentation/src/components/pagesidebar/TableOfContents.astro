@@ -1,224 +1,63 @@
 ---
-import TableOfContentsList from "./TableOfContentsList.astro";
+import ProgressRing from "./ProgressRing.astro";
+import { tocStyles } from "./styles";
+import TocList from "./TocList.astro";
 
 const { toc } = Astro.locals.starlightRoute;
 ---
 
 {
   toc && (
-    <starlight-toc
-      data-min-h={toc.minHeadingLevel}
-      data-max-h={toc.maxHeadingLevel}>
-      <nav
-        aria-labelledby="starlight__on-this-page"
-        class="toc-nav flex flex-col max-h-[calc(100vh-5rem)]">
-        
-        <!-- Progress Pill (always visible at top) -->
-        <div class="toc-progress-pill">
-          <span class="pill-title" id="starlight__on-this-page">{Astro.locals.t("tableOfContents.onThisPage")}</span>
-            <div class="pill-progress-ring">
-              <svg viewBox="0 0 36 36">
-                <circle
-                  class="pill-ring-bg"
-                  cx="18"
-                  cy="18"
-                  r="15.5"
-                  fill="none"
-                  stroke-width="3"
-                />
-                <circle
-                  class="pill-ring-fill progress-circle"
-                  cx="18"
-                  cy="18"
-                  r="15.5"
-                  fill="none"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-dasharray="97.39"
-                  stroke-dashoffset="97.39"
-                  transform="rotate(-90 18 18)"
-                />
-              </svg>
-            <span class="pill-ring-text progress-text">0%</span>
+    <page-toc class={tocStyles.root}>
+      <nav aria-labelledby="starlight__on-this-page" class={tocStyles.nav}>
+        <div class={tocStyles.header}>
+          <h2 id="starlight__on-this-page" class={tocStyles.title}>
+            {Astro.locals.t("tableOfContents.onThisPage")}
+          </h2>
+          <ProgressRing class={tocStyles.ring} size="inline" />
+        </div>
+        <div data-toc-scroll class={tocStyles.scroller}>
+          <div data-toc-rail class={tocStyles.rail}>
+            <svg
+              data-toc-line
+              class={tocStyles.line}
+              width="0"
+              height="0"
+              aria-hidden="true"
+              focusable="false">
+              <path data-toc-track class={tocStyles.track} />
+              <path data-toc-thumb class={tocStyles.thumb} />
+            </svg>
+            <TocList toc={toc.items} variant="rail" />
           </div>
         </div>
-        
-        <div class="toc-scroll-container flex-1 overflow-y-auto overflow-x-hidden pr-2 -mr-2 mt-3">
-          <TableOfContentsList toc={toc.items} />
-        </div>
       </nav>
-
-      <!-- Back to Top Button (fixed bottom right) -->
-      <!-- Starts hidden so it doesn't flash in before the scroll handler runs. -->
-      <button
-        class="back-to-top-pill-fixed hidden print:hidden"
-        aria-label="Back to top"
-        type="button">
-        <svg viewBox="0 0 20 20" fill="currentColor">
-          <path
-            fill-rule="evenodd"
-            d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z"
-            clip-rule="evenodd"
-          />
-        </svg>
-      </button>
-    </starlight-toc>
+    </page-toc>
   )
 }
 
 <style>
-  /* Progress Pill */
-  .toc-progress-pill {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 8px 6px 6px;
-    transition: all 0.2s ease;
+  /* Fades the clipped edge of a long list; the attributes are set only while
+     there is more to scroll in that direction. */
+  .toc-scroller {
+    --fade-top: 0px;
+    --fade-bottom: 0px;
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--fade-top),
+      #000 calc(100% - var(--fade-bottom)),
+      transparent
+    );
   }
 
-  .pill-progress-ring {
-    position: relative;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
+  .toc-scroller[data-fade-top] {
+    --fade-top: 1.5rem;
   }
 
-  .pill-progress-ring svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  .pill-ring-bg {
-    stroke: rgba(var(--color-primary-rgb), 0.12);
-  }
-
-  .pill-ring-fill {
-    stroke: var(--color-primary);
-    filter: drop-shadow(0 0 3px rgba(var(--color-primary-rgb), 0.4));
-  }
-
-  .pill-ring-text {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 7px;
-    font-weight: 700;
-    color: var(--color-primary);
-    letter-spacing: -0.02em;
-  }
-
-  .pill-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.8);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  :root[data-theme="light"] .pill-title {
-    color: rgba(0, 0, 0, 0.7);
-  }
-
-  .back-to-top-pill {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(var(--color-primary-rgb), 0.1);
-    border: none;
-    border-radius: 50%;
-    color: var(--color-primary);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.2s ease;
-  }
-
-  .back-to-top-pill:hover {
-    background: rgba(var(--color-primary-rgb), 0.2);
-    transform: translateY(-2px);
-  }
-
-  .back-to-top-pill:active {
-    transform: translateY(0) scale(0.95);
-  }
-
-  .back-to-top-pill svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .back-to-top-pill:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .back-to-top-pill-fixed {
-    position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(var(--color-primary-rgb), 0.1);
-    border: none;
-    border-radius: 50%;
-    color: var(--color-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 40;
-  }
-
-  .back-to-top-pill-fixed:hover {
-    background: rgba(var(--color-primary-rgb), 0.2);
-    transform: translateY(-2px);
-  }
-
-  .back-to-top-pill-fixed:active {
-    transform: translateY(0) scale(0.95);
-  }
-
-  .back-to-top-pill-fixed svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .back-to-top-pill-fixed:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-
-  .back-to-top-pill-fixed.hidden {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-
-  .back-to-top-pill-fixed {
-    opacity: 1;
-    transition: opacity 0.3s ease;
-  }
-
-  .toc-scroll-container {
-    scrollbar-width: none;
-  }
-
-  .toc-scroll-container::-webkit-scrollbar {
-    display: none;
-  }
-
-  .progress-circle {
-    transition: stroke-dashoffset 0.3s ease-out;
-  }
-
-  .progress-text {
-    transition: color 0.3s ease-out;
+  .toc-scroller[data-fade-bottom] {
+    --fade-bottom: 1.5rem;
   }
 </style>
 
-<script src="./starlight-toc.ts"></script>
+<script src="./toc-elements.ts"></script>

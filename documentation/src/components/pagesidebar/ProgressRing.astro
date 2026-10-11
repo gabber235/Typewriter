@@ -1,0 +1,41 @@
+---
+import { ringStyles } from "./styles";
+
+interface Props {
+	class: string;
+	// "inline" matches a line of text: the number alone, without "%", is
+	// all that fits inside a 20px ring.
+	size?: "inline" | "large";
+}
+
+const { class: className, size = "large" } = Astro.props;
+const inline = size === "inline";
+const strokeWidth = inline ? 4 : 3;
+---
+
+{/* Decorative: screen reader users already know where they are, and a live
+    percentage would only add noise. */}
+<span
+  class:list={[ringStyles.root, className]}
+  aria-hidden="true"
+  data-audit-allow={inline ? "small-text" : undefined}>
+  <svg viewBox="0 0 40 40" class={ringStyles.svg} focusable="false">
+    <circle cx="20" cy="20" r="18" fill="none" stroke-width={strokeWidth} class={ringStyles.track}></circle>
+    <circle
+      data-toc-ring
+      cx="20"
+      cy="20"
+      r="18"
+      fill="none"
+      stroke-width={strokeWidth}
+      pathLength="100"
+      stroke-dasharray="100"
+      stroke-dashoffset="100"
+      class={ringStyles.fill}></circle>
+  </svg>
+  <span
+    data-toc-percent={inline ? "bare" : ""}
+    class={ringStyles.percent[size]}>
+    {inline ? "0" : "0%"}
+  </span>
+</span>

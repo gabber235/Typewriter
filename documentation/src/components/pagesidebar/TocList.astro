@@ -1,0 +1,33 @@
+---
+import { tocListStyles } from "./styles";
+import type { TocItem, TocVariant } from "./types";
+
+interface Props {
+	toc: TocItem[];
+	variant: TocVariant;
+	depth?: number;
+}
+
+const { toc, variant, depth = 0 } = Astro.props;
+const styles = tocListStyles[variant];
+---
+
+<ul class={styles.list}>
+  {
+    toc.map((item) => (
+      <li>
+        <a
+          href={`#${item.slug}`}
+          data-toc-link
+          data-depth={depth}
+          class={styles.link}
+          style={`--toc-depth: ${depth}`}>
+          {item.text}
+        </a>
+        {item.children.length > 0 && (
+          <Astro.self toc={item.children} variant={variant} depth={depth + 1} />
+        )}
+      </li>
+    ))
+  }
+</ul>
