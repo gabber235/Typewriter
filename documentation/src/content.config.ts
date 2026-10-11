@@ -4,6 +4,7 @@ import { docsSchema } from "@astrojs/starlight/schema";
 import { glob } from "astro/loaders";
 import { z } from "astro/zod";
 import { badgeSchema } from "./components/badge";
+import { originSchema } from "./components/origin";
 
 export const collections = {
 	docs: defineCollection({
@@ -12,6 +13,8 @@ export const collections = {
 			extend: z.object({
 				/** Badge variant: new, experimental, or deprecated */
 				badge: badgeSchema,
+				/** How the page was written, shown as a disclosure above the title */
+				aiDisclosure: originSchema,
 			}),
 		}),
 	}),

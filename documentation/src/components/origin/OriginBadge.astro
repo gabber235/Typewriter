@@ -1,0 +1,18 @@
+---
+import { originIcons } from "./icons";
+import { originInfo } from "./levels";
+import { originStyles as s } from "./styles";
+import type { OriginLevel } from "./types";
+
+interface Props {
+	level: OriginLevel;
+}
+
+const { level } = Astro.props;
+const info = originInfo[level];
+---
+
+<span class={s.footerItem} title={info.description}>
+  <span class={s.footerIcon} aria-hidden="true" set:html={originIcons[level]} />
+  {info.label}
+</span>

@@ -1,10 +1,12 @@
 ---
+import { OriginBadge } from "../origin";
 import Pagination from "../pagination/Pagination.astro";
 import { avatarUrl, type Editor, getEditors } from "./git-editors";
 import { pencilIcon } from "./icons";
 import { footerStyles as s } from "./styles";
 
 const { editUrl, entry, lang, lastUpdated } = Astro.locals.starlightRoute;
+const { aiDisclosure } = entry.data;
 
 // Splash pages (the homepage) and virtual routes carry no page authorship.
 const isSplash = entry.data.template === "splash";
@@ -29,7 +31,9 @@ const formattedDate = lastUpdated
 	: undefined;
 
 const showByline = lastUpdated !== undefined && lastEditor !== undefined;
-const showMeta = !isSplash && (editUrl !== undefined || showByline);
+const showMeta =
+	!isSplash &&
+	(editUrl !== undefined || showByline || aiDisclosure !== undefined);
 const { prev, next } = Astro.locals.starlightRoute.pagination;
 const hasPagination = Boolean(prev || next);
 
@@ -47,12 +51,15 @@ const AVATAR_PLACEHOLDER =
 	{
 		showMeta && (
 			<div class:list={[s.meta, !hasPagination && s.metaRule]}>
-				{editUrl && (
-					<a href={editUrl} class={s.editLink}>
-						<span class={s.editIcon} aria-hidden="true" set:html={pencilIcon} />
-						Edit this page
-					</a>
-				)}
+				<div class={s.metaActions}>
+					{editUrl && (
+						<a href={editUrl} class={s.editLink}>
+							<span class={s.editIcon} aria-hidden="true" set:html={pencilIcon} />
+							Edit this page
+						</a>
+					)}
+					{aiDisclosure && <OriginBadge level={aiDisclosure} />}
+				</div>
 				{showByline && lastUpdated && lastEditor && (
 					<div class={s.byline}>
 						<p class={s.updated}>

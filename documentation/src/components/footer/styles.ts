@@ -7,8 +7,9 @@ export const footerStyles = {
 
 	// Sits directly under the previous/next row as one "about this page" block;
 	// it only draws its own rule when there is no pagination above it.
-	meta: "flex flex-col items-start gap-1 @md:flex-row @md:flex-wrap @md:items-center @md:justify-between @md:gap-x-6",
+	meta: "flex flex-col items-start gap-3 @md:flex-row @md:flex-wrap @md:items-center @md:justify-between @md:gap-x-6 @md:gap-y-1",
 	metaRule: "mt-12 border-t border-[var(--sl-color-hairline)] pt-4",
+	metaActions: "flex flex-wrap items-center gap-x-5 gap-y-1",
 
 	editLink:
 		"flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-[var(--sl-color-white)] no-underline transition-colors duration-200 hover:text-[var(--color-primary)]",

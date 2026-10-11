@@ -2,6 +2,7 @@
 title: Writing Syntax
 description: Every authoring feature of this site on one page, each with its source and the rendered result.
 badge: new
+aiDisclosure: human-checked
 ---
 import { Steps } from '@components/steps';
 import { Tabs, Tab } from '@components/tabs';
@@ -13,13 +14,14 @@ Pages are Markdown plus a handful of directives. Inline ones look like `:name[te
 
 ## Page basics
 
-Every page starts with frontmatter. `title` and `description` are required; `badge` is optional and shows next to the page title in the sidebar.
+Every page starts with frontmatter. `title` and `description` are required; `badge` is optional and shows next to the page title in the sidebar. `aiDisclosure` is optional and shows above the title: `human`, `human-checked`, `human-assisted`, `ai-drafted-rewritten`, `ai-drafted-reviewed`, or `ai-generated`, in that order from no AI involvement to fully AI-written.
 
 ```md
 ---
 title: Writing Syntax
 description: Every authoring feature on one page.
 badge: new
+aiDisclosure: human-assisted
 ---
 ```
 
