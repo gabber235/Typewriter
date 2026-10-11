@@ -33,7 +33,7 @@
 	--on-secondary-container: var(--material-white);
 	--color-error: var(--material-red-accent-200);
 	--on-error: var(--material-black);
-	--surface:#111318;
+	--surface: #111318;
 	--on-surface-variant: #c4c6d0;
 	--surface-container-lowest: #1f2123;
 	--surface-container: #1f1d23;

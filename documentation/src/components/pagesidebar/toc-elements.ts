@@ -342,7 +342,7 @@ class PageTocSheet extends TocElement {
 	private onDialogClick(event: MouseEvent): void {
 		const target = event.target;
 		if (target === this.dialog) {
-			this.dialog.close();
+			this.dialog?.close();
 			return;
 		}
 		if (target instanceof Element && target.closest("[data-toc-close]")) {
