@@ -5,28 +5,46 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The scope is a focus lookup boundary, not selection state. It lets graph
 /// navigation and other consumers map Flutter's primary focus back to an item
 /// without making focus imply that the item is selected.
-class SelectableScope extends InheritedWidget {
-  const SelectableScope({required this.id, required super.child, super.key});
+class SelectableScope extends HookWidget {
+  const SelectableScope({required this.id, required this.child, super.key});
 
   final SelectableIdentifier id;
-
-  static SelectableIdentifier? maybeOf(BuildContext? context) {
-    if (context == null) return null;
-    final scope = context.getInheritedWidgetOfExactType<SelectableScope>();
-    return scope?.id;
-  }
+  final Widget child;
 
   /// Returns the identifier under Flutter's primary focus, if any.
   ///
-  /// This reads the focused node's build context. It returns null when focus
-  /// is outside a [SelectableScope].
+  /// Identity belongs to the focus tree, so this remains safe during widget
+  /// removal and layout. It returns null outside a [SelectableScope].
   static SelectableIdentifier? primaryFocusedId() {
-    final node = FocusManager.instance.primaryFocus;
-    return maybeOf(node?.context);
+    for (
+      var node = FocusManager.instance.primaryFocus;
+      node != null;
+      node = node.parent
+    ) {
+      if (node is _SelectableFocusNode) return node.id;
+    }
+    return null;
   }
 
   @override
-  bool updateShouldNotify(SelectableScope oldWidget) => id != oldWidget.id;
+  Widget build(BuildContext context) {
+    final node = useMemoized(() => _SelectableFocusNode(id))..id = id;
+    useEffect(() => node.dispose, [node]);
+    return Focus(
+      focusNode: node,
+      canRequestFocus: false,
+      skipTraversal: true,
+      includeSemantics: false,
+      child: child,
+    );
+  }
+}
+
+final class _SelectableFocusNode extends FocusNode {
+  _SelectableFocusNode(this.id)
+    : super(canRequestFocus: false, skipTraversal: true);
+
+  SelectableIdentifier id;
 }
 
 /// Combines selection gestures, focus handling, context actions, and item UI.
