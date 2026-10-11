@@ -575,17 +575,44 @@ const sidebarWithBadges = await processSidebarBadges(
     // (re)attached whenever a new sidebar appears.
     const getSidebar = () => document.getElementById("starlight__sidebar");
     const getBackdrop = () => document.getElementById("sidebar-backdrop");
+    // Starlight 0.42 renders its menu toggle as a plain popover button
+    // (the <starlight-menu-button> element is gone), aimed at a popover this
+    // custom sidebar doesn't have; the drawer is driven from here instead.
     const getToggle = () =>
-      document.querySelector<HTMLElement>("starlight-menu-button");
+      document.querySelector<HTMLElement>(
+        "[data-mobile-menu-toggle-wrapper] button",
+      );
+    const getPane = () => document.querySelector<HTMLElement>(".content-pane");
+    const isMobile = () => window.innerWidth < 768;
 
-    // Starlight tracks the expanded state on its custom element; assistive
-    // tech reads it from the <button>, so mirror it there too.
     function setToggleExpanded(expanded: boolean) {
       const toggle = getToggle();
       if (!toggle) return;
-      const value = String(expanded);
-      toggle.setAttribute("aria-expanded", value);
-      toggle.querySelector("button")?.setAttribute("aria-expanded", value);
+      toggle.setAttribute("aria-controls", "starlight__sidebar");
+      toggle.setAttribute("aria-expanded", String(expanded));
+    }
+
+    // Everything in the pane except the sidebar itself: the article and the
+    // site footer. Inert while the drawer is open so focus can't wander
+    // behind the backdrop; the header (and its toggle) stays usable.
+    function getPageBehind(): Element[] {
+      const wrapper = getSidebar()?.closest("[data-astro-transition-persist]");
+      const row = wrapper?.parentElement;
+      if (!wrapper || !row?.parentElement) return [];
+      return [
+        ...[...row.children].filter((el) => el !== wrapper),
+        ...[...row.parentElement.children].filter((el) => el !== row),
+      ];
+    }
+
+    // The closed drawer only slides off-screen, so its links would still be
+    // reachable by Tab; inert removes them on mobile.
+    function syncInert() {
+      const sidebar = getSidebar();
+      sidebar?.toggleAttribute("inert", isMobile() && !isOpen);
+      for (const el of getPageBehind()) {
+        el.toggleAttribute("inert", isOpen);
+      }
     }
 
     let isOpen = false;
@@ -604,13 +631,24 @@ const sidebarWithBadges = await processSidebarBadges(
       sidebar.classList.add("translate-y-0");
       backdrop.classList.remove("invisible", "opacity-0");
       backdrop.classList.add("visible", "opacity-100");
-      document.body.style.overflow = "hidden";
+      // The pane scrolls, not the body.
+      const pane = getPane();
+      if (pane) pane.style.overflow = "hidden";
       setToggleExpanded(true);
+      syncInert();
+      const current = sidebar.querySelector<HTMLElement>(
+        'a[aria-current="page"], summary[data-current="true"]',
+      );
+      (current ?? sidebar.querySelector<HTMLElement>("a, summary"))?.focus({
+        preventScroll: true,
+      });
+      current?.scrollIntoView({ block: "center" });
     }
 
-    function closeDrawer() {
+    function closeDrawer(returnFocus = false) {
       const sidebar = getSidebar();
       const backdrop = getBackdrop();
+      const wasOpen = isOpen;
       isOpen = false;
       if (sidebar) {
         sidebar.classList.add("translate-y-[calc(-100%-3.5rem)]");
@@ -621,12 +659,15 @@ const sidebarWithBadges = await processSidebarBadges(
         backdrop.classList.add("invisible", "opacity-0");
         backdrop.classList.remove("visible", "opacity-100");
       }
-      document.body.style.overflow = "";
+      const pane = getPane();
+      if (pane) pane.style.overflow = "";
       setToggleExpanded(false);
+      syncInert();
+      if (wasOpen && returnFocus) getToggle()?.focus();
     }
 
     function toggleDrawer() {
-      if (isOpen) closeDrawer();
+      if (isOpen) closeDrawer(true);
       else openDrawer();
     }
 
@@ -705,14 +746,14 @@ const sidebarWithBadges = await processSidebarBadges(
         sidebar.addEventListener("click", function (e) {
           const target = e.target as HTMLElement | null;
           const link = target?.closest("a");
-          if (link && window.innerWidth < 768) setTimeout(closeDrawer, 150);
+          if (link && window.innerWidth < 768) setTimeout(() => closeDrawer(), 150);
         });
       }
 
       const backdrop = getBackdrop();
       if (backdrop && backdrop.dataset.drawerWired !== "true") {
         backdrop.dataset.drawerWired = "true";
-        backdrop.addEventListener("click", closeDrawer);
+        backdrop.addEventListener("click", () => closeDrawer(true));
       }
 
       const toggle = getToggle();
@@ -724,7 +765,7 @@ const sidebarWithBadges = await processSidebarBadges(
 
     // Document/window-level listeners — registered exactly once.
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && isOpen) closeDrawer();
+      if (e.key === "Escape" && isOpen) closeDrawer(true);
     });
 
     let resizeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -732,6 +773,7 @@ const sidebarWithBadges = await processSidebarBadges(
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function () {
         if (window.innerWidth >= 768 && isOpen) closeDrawer();
+        syncInert();
       }, 150);
     });
 
