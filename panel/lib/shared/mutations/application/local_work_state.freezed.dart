@@ -1727,7 +1727,7 @@ as List<WorkEntryState>,
 /// @nodoc
 mixin _$LocalWorkSubmissionState {
 
- Object get id; String get label; bool get sending; bool get canReplay; bool get integrationFailed; LocalWorkSubmissionResult get result; String? get message;
+ Object get id; String get label; LocalWorkSubmissionPhase get phase; Set<Object> get resources;
 /// Create a copy of LocalWorkSubmissionState
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1739,20 +1739,20 @@ $LocalWorkSubmissionStateCopyWith<LocalWorkSubmissionState> get copyWith => _$Lo
 @override
 bool operator ==(Object other) {
   final _this = this as LocalWorkSubmissionState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalWorkSubmissionState&&const DeepCollectionEquality().equals(other.id, _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.sending, _this.sending) || other.sending == _this.sending)&&(identical(other.canReplay, _this.canReplay) || other.canReplay == _this.canReplay)&&(identical(other.integrationFailed, _this.integrationFailed) || other.integrationFailed == _this.integrationFailed)&&(identical(other.result, _this.result) || other.result == _this.result)&&(identical(other.message, _this.message) || other.message == _this.message));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalWorkSubmissionState&&const DeepCollectionEquality().equals(other.id, _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.phase, _this.phase) || other.phase == _this.phase)&&const DeepCollectionEquality().equals(other.resources, _this.resources));
 }
 
 
 @override
 int get hashCode {
   final _this = this as LocalWorkSubmissionState;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.id),_this.label,_this.sending,_this.canReplay,_this.integrationFailed,_this.result,_this.message);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.id),_this.label,_this.phase,const DeepCollectionEquality().hash(_this.resources));
 }
 
 @override
 String toString() {
   final _this = this as LocalWorkSubmissionState;
-  return 'LocalWorkSubmissionState(id: ${_this.id}, label: ${_this.label}, sending: ${_this.sending}, canReplay: ${_this.canReplay}, integrationFailed: ${_this.integrationFailed}, result: ${_this.result}, message: ${_this.message})';
+  return 'LocalWorkSubmissionState(id: ${_this.id}, label: ${_this.label}, phase: ${_this.phase}, resources: ${_this.resources})';
 }
 
 
@@ -1763,11 +1763,11 @@ abstract mixin class $LocalWorkSubmissionStateCopyWith<$Res>  {
   factory $LocalWorkSubmissionStateCopyWith(LocalWorkSubmissionState value, $Res Function(LocalWorkSubmissionState) _then) = _$LocalWorkSubmissionStateCopyWithImpl;
 @useResult
 $Res call({
- Object id, String label, bool sending, bool canReplay, bool integrationFailed, LocalWorkSubmissionResult result, String? message
+ Object id, String label, LocalWorkSubmissionPhase phase, Set<Object> resources
 });
 
 
-
+$LocalWorkSubmissionPhaseCopyWith<$Res> get phase;
 
 }
 /// @nodoc
@@ -1780,18 +1780,24 @@ class _$LocalWorkSubmissionStateCopyWithImpl<$Res>
 
 /// Create a copy of LocalWorkSubmissionState
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? sending = null,Object? canReplay = null,Object? integrationFailed = null,Object? result = null,Object? message = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? resources = null,}) {
   return _then(LocalWorkSubmissionState(
 id: null == id ? _self.id : id ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,sending: null == sending ? _self.sending : sending // ignore: cast_nullable_to_non_nullable
-as bool,canReplay: null == canReplay ? _self.canReplay : canReplay // ignore: cast_nullable_to_non_nullable
-as bool,integrationFailed: null == integrationFailed ? _self.integrationFailed : integrationFailed // ignore: cast_nullable_to_non_nullable
-as bool,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
-as LocalWorkSubmissionResult,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
+as LocalWorkSubmissionPhase,resources: null == resources ? _self.resources : resources // ignore: cast_nullable_to_non_nullable
+as Set<Object>,
   ));
 }
+/// Create a copy of LocalWorkSubmissionState
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocalWorkSubmissionPhaseCopyWith<$Res> get phase {
 
+  return $LocalWorkSubmissionPhaseCopyWith<$Res>(_self.phase, (value) {
+    return _then(_self.copyWith(phase: value));
+  });
+}
 }
 
 
@@ -1873,10 +1879,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Object id,  String label,  bool sending,  bool canReplay,  bool integrationFailed,  LocalWorkSubmissionResult result,  String? message)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Object id,  String label,  LocalWorkSubmissionPhase phase,  Set<Object> resources)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocalWorkSubmissionState() when $default != null:
-return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integrationFailed,_that.result,_that.message);case _:
+return $default(_that.id,_that.label,_that.phase,_that.resources);case _:
   return orElse();
 
 }
@@ -1894,10 +1900,10 @@ return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integra
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Object id,  String label,  bool sending,  bool canReplay,  bool integrationFailed,  LocalWorkSubmissionResult result,  String? message)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Object id,  String label,  LocalWorkSubmissionPhase phase,  Set<Object> resources)  $default,) {final _that = this;
 switch (_that) {
 case _LocalWorkSubmissionState():
-return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integrationFailed,_that.result,_that.message);case _:
+return $default(_that.id,_that.label,_that.phase,_that.resources);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1914,10 +1920,10 @@ return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integra
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Object id,  String label,  bool sending,  bool canReplay,  bool integrationFailed,  LocalWorkSubmissionResult result,  String? message)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Object id,  String label,  LocalWorkSubmissionPhase phase,  Set<Object> resources)?  $default,) {final _that = this;
 switch (_that) {
 case _LocalWorkSubmissionState() when $default != null:
-return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integrationFailed,_that.result,_that.message);case _:
+return $default(_that.id,_that.label,_that.phase,_that.resources);case _:
   return null;
 
 }
@@ -1928,17 +1934,20 @@ return $default(_that.id,_that.label,_that.sending,_that.canReplay,_that.integra
 /// @nodoc
 
 
-class _LocalWorkSubmissionState implements LocalWorkSubmissionState {
-  const _LocalWorkSubmissionState({required this.id, required this.label, required this.sending, required this.canReplay, required this.integrationFailed, required this.result, this.message});
+class _LocalWorkSubmissionState extends LocalWorkSubmissionState {
+  const _LocalWorkSubmissionState({required this.id, required this.label, required this.phase,  Set<Object> resources = const {}}): _resources = resources,super._();
 
 
 @override final  Object id;
 @override final  String label;
-@override final  bool sending;
-@override final  bool canReplay;
-@override final  bool integrationFailed;
-@override final  LocalWorkSubmissionResult result;
-@override final  String? message;
+@override final  LocalWorkSubmissionPhase phase;
+ final  Set<Object> _resources;
+@override@JsonKey() Set<Object> get resources {
+  if (_resources is EqualUnmodifiableSetView) return _resources;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_resources);
+}
+
 
 /// Create a copy of LocalWorkSubmissionState
 /// with the given fields replaced by the non null parameter values.
@@ -1950,18 +1959,18 @@ _$LocalWorkSubmissionStateCopyWith<_LocalWorkSubmissionState> get copyWith => __
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalWorkSubmissionState&&const DeepCollectionEquality().equals(other.id, id)&&(identical(other.label, label) || other.label == label)&&(identical(other.sending, sending) || other.sending == sending)&&(identical(other.canReplay, canReplay) || other.canReplay == canReplay)&&(identical(other.integrationFailed, integrationFailed) || other.integrationFailed == integrationFailed)&&(identical(other.result, result) || other.result == result)&&(identical(other.message, message) || other.message == message));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocalWorkSubmissionState&&const DeepCollectionEquality().equals(other.id, id)&&(identical(other.label, label) || other.label == label)&&(identical(other.phase, phase) || other.phase == phase)&&const DeepCollectionEquality().equals(other.resources, _resources));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(id),label,sending,canReplay,integrationFailed,result,message);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(id),label,phase,const DeepCollectionEquality().hash(_resources));
 }
 
 @override
 String toString() {
-    return 'LocalWorkSubmissionState(id: $id, label: $label, sending: $sending, canReplay: $canReplay, integrationFailed: $integrationFailed, result: $result, message: $message)';
+    return 'LocalWorkSubmissionState(id: $id, label: $label, phase: $phase, resources: $resources)';
 }
 
 
@@ -1972,11 +1981,11 @@ abstract mixin class _$LocalWorkSubmissionStateCopyWith<$Res> implements $LocalW
   factory _$LocalWorkSubmissionStateCopyWith(_LocalWorkSubmissionState value, $Res Function(_LocalWorkSubmissionState) _then) = __$LocalWorkSubmissionStateCopyWithImpl;
 @override @useResult
 $Res call({
- Object id, String label, bool sending, bool canReplay, bool integrationFailed, LocalWorkSubmissionResult result, String? message
+ Object id, String label, LocalWorkSubmissionPhase phase, Set<Object> resources
 });
 
 
-
+@override $LocalWorkSubmissionPhaseCopyWith<$Res> get phase;
 
 }
 /// @nodoc
@@ -1989,15 +1998,1009 @@ class __$LocalWorkSubmissionStateCopyWithImpl<$Res>
 
 /// Create a copy of LocalWorkSubmissionState
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? sending = null,Object? canReplay = null,Object? integrationFailed = null,Object? result = null,Object? message = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? resources = null,}) {
   return _then(_LocalWorkSubmissionState(
 id: null == id ? _self.id : id ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,sending: null == sending ? _self.sending : sending // ignore: cast_nullable_to_non_nullable
-as bool,canReplay: null == canReplay ? _self.canReplay : canReplay // ignore: cast_nullable_to_non_nullable
-as bool,integrationFailed: null == integrationFailed ? _self.integrationFailed : integrationFailed // ignore: cast_nullable_to_non_nullable
-as bool,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
-as LocalWorkSubmissionResult,message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String?,
+as String,phase: null == phase ? _self.phase : phase // ignore: cast_nullable_to_non_nullable
+as LocalWorkSubmissionPhase,resources: null == resources ? _self._resources : resources // ignore: cast_nullable_to_non_nullable
+as Set<Object>,
+  ));
+}
+
+/// Create a copy of LocalWorkSubmissionState
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocalWorkSubmissionPhaseCopyWith<$Res> get phase {
+
+  return $LocalWorkSubmissionPhaseCopyWith<$Res>(_self.phase, (value) {
+    return _then(_self.copyWith(phase: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$LocalWorkSubmissionPhase {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalWorkSubmissionPhase);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkSubmissionPhase()';
+}
+
+
+}
+
+/// @nodoc
+class $LocalWorkSubmissionPhaseCopyWith<$Res>  {
+$LocalWorkSubmissionPhaseCopyWith(LocalWorkSubmissionPhase _, $Res Function(LocalWorkSubmissionPhase) __);
+}
+
+
+/// Adds pattern matching related methods to [LocalWorkSubmissionPhase].
+extension LocalWorkSubmissionPhasePatterns on LocalWorkSubmissionPhase {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PreparedLocalWorkSubmission value)?  prepared,TResult Function( ActiveLocalWorkSubmission value)?  active,TResult Function( SettledLocalWorkSubmission value)?  settled,TResult Function( UncertainLocalWorkSubmission value)?  uncertain,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission() when prepared != null:
+return prepared(_that);case ActiveLocalWorkSubmission() when active != null:
+return active(_that);case SettledLocalWorkSubmission() when settled != null:
+return settled(_that);case UncertainLocalWorkSubmission() when uncertain != null:
+return uncertain(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PreparedLocalWorkSubmission value)  prepared,required TResult Function( ActiveLocalWorkSubmission value)  active,required TResult Function( SettledLocalWorkSubmission value)  settled,required TResult Function( UncertainLocalWorkSubmission value)  uncertain,}){
+final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission():
+return prepared(_that);case ActiveLocalWorkSubmission():
+return active(_that);case SettledLocalWorkSubmission():
+return settled(_that);case UncertainLocalWorkSubmission():
+return uncertain(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PreparedLocalWorkSubmission value)?  prepared,TResult? Function( ActiveLocalWorkSubmission value)?  active,TResult? Function( SettledLocalWorkSubmission value)?  settled,TResult? Function( UncertainLocalWorkSubmission value)?  uncertain,}){
+final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission() when prepared != null:
+return prepared(_that);case ActiveLocalWorkSubmission() when active != null:
+return active(_that);case SettledLocalWorkSubmission() when settled != null:
+return settled(_that);case UncertainLocalWorkSubmission() when uncertain != null:
+return uncertain(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  prepared,TResult Function()?  active,TResult Function( LocalWorkKnownOutcome outcome,  LocalWorkIntegration integration)?  settled,TResult Function( String message,  SubmissionReplay replay)?  uncertain,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission() when prepared != null:
+return prepared();case ActiveLocalWorkSubmission() when active != null:
+return active();case SettledLocalWorkSubmission() when settled != null:
+return settled(_that.outcome,_that.integration);case UncertainLocalWorkSubmission() when uncertain != null:
+return uncertain(_that.message,_that.replay);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  prepared,required TResult Function()  active,required TResult Function( LocalWorkKnownOutcome outcome,  LocalWorkIntegration integration)  settled,required TResult Function( String message,  SubmissionReplay replay)  uncertain,}) {final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission():
+return prepared();case ActiveLocalWorkSubmission():
+return active();case SettledLocalWorkSubmission():
+return settled(_that.outcome,_that.integration);case UncertainLocalWorkSubmission():
+return uncertain(_that.message,_that.replay);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  prepared,TResult? Function()?  active,TResult? Function( LocalWorkKnownOutcome outcome,  LocalWorkIntegration integration)?  settled,TResult? Function( String message,  SubmissionReplay replay)?  uncertain,}) {final _that = this;
+switch (_that) {
+case PreparedLocalWorkSubmission() when prepared != null:
+return prepared();case ActiveLocalWorkSubmission() when active != null:
+return active();case SettledLocalWorkSubmission() when settled != null:
+return settled(_that.outcome,_that.integration);case UncertainLocalWorkSubmission() when uncertain != null:
+return uncertain(_that.message,_that.replay);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class PreparedLocalWorkSubmission implements LocalWorkSubmissionPhase {
+  const PreparedLocalWorkSubmission();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PreparedLocalWorkSubmission);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkSubmissionPhase.prepared()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class ActiveLocalWorkSubmission implements LocalWorkSubmissionPhase {
+  const ActiveLocalWorkSubmission();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveLocalWorkSubmission);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkSubmissionPhase.active()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class SettledLocalWorkSubmission implements LocalWorkSubmissionPhase {
+  const SettledLocalWorkSubmission(this.outcome, this.integration);
+
+
+ final  LocalWorkKnownOutcome outcome;
+ final  LocalWorkIntegration integration;
+
+/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SettledLocalWorkSubmissionCopyWith<SettledLocalWorkSubmission> get copyWith => _$SettledLocalWorkSubmissionCopyWithImpl<SettledLocalWorkSubmission>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SettledLocalWorkSubmission&&(identical(other.outcome, outcome) || other.outcome == outcome)&&(identical(other.integration, integration) || other.integration == integration));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,outcome,integration);
+}
+
+@override
+String toString() {
+    return 'LocalWorkSubmissionPhase.settled(outcome: $outcome, integration: $integration)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SettledLocalWorkSubmissionCopyWith<$Res> implements $LocalWorkSubmissionPhaseCopyWith<$Res> {
+  factory $SettledLocalWorkSubmissionCopyWith(SettledLocalWorkSubmission value, $Res Function(SettledLocalWorkSubmission) _then) = _$SettledLocalWorkSubmissionCopyWithImpl;
+@useResult
+$Res call({
+ LocalWorkKnownOutcome outcome, LocalWorkIntegration integration
+});
+
+
+$LocalWorkKnownOutcomeCopyWith<$Res> get outcome;$LocalWorkIntegrationCopyWith<$Res> get integration;
+
+}
+/// @nodoc
+class _$SettledLocalWorkSubmissionCopyWithImpl<$Res>
+    implements $SettledLocalWorkSubmissionCopyWith<$Res> {
+  _$SettledLocalWorkSubmissionCopyWithImpl(this._self, this._then);
+
+  final SettledLocalWorkSubmission _self;
+  final $Res Function(SettledLocalWorkSubmission) _then;
+
+/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? outcome = null,Object? integration = null,}) {
+  return _then(SettledLocalWorkSubmission(
+null == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
+as LocalWorkKnownOutcome,null == integration ? _self.integration : integration // ignore: cast_nullable_to_non_nullable
+as LocalWorkIntegration,
+  ));
+}
+
+/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocalWorkKnownOutcomeCopyWith<$Res> get outcome {
+
+  return $LocalWorkKnownOutcomeCopyWith<$Res>(_self.outcome, (value) {
+    return _then(_self.copyWith(outcome: value));
+  });
+}/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocalWorkIntegrationCopyWith<$Res> get integration {
+
+  return $LocalWorkIntegrationCopyWith<$Res>(_self.integration, (value) {
+    return _then(_self.copyWith(integration: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class UncertainLocalWorkSubmission implements LocalWorkSubmissionPhase {
+  const UncertainLocalWorkSubmission(this.message, this.replay);
+
+
+ final  String message;
+ final  SubmissionReplay replay;
+
+/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UncertainLocalWorkSubmissionCopyWith<UncertainLocalWorkSubmission> get copyWith => _$UncertainLocalWorkSubmissionCopyWithImpl<UncertainLocalWorkSubmission>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UncertainLocalWorkSubmission&&(identical(other.message, message) || other.message == message)&&(identical(other.replay, replay) || other.replay == replay));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message,replay);
+}
+
+@override
+String toString() {
+    return 'LocalWorkSubmissionPhase.uncertain(message: $message, replay: $replay)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UncertainLocalWorkSubmissionCopyWith<$Res> implements $LocalWorkSubmissionPhaseCopyWith<$Res> {
+  factory $UncertainLocalWorkSubmissionCopyWith(UncertainLocalWorkSubmission value, $Res Function(UncertainLocalWorkSubmission) _then) = _$UncertainLocalWorkSubmissionCopyWithImpl;
+@useResult
+$Res call({
+ String message, SubmissionReplay replay
+});
+
+
+
+
+}
+/// @nodoc
+class _$UncertainLocalWorkSubmissionCopyWithImpl<$Res>
+    implements $UncertainLocalWorkSubmissionCopyWith<$Res> {
+  _$UncertainLocalWorkSubmissionCopyWithImpl(this._self, this._then);
+
+  final UncertainLocalWorkSubmission _self;
+  final $Res Function(UncertainLocalWorkSubmission) _then;
+
+/// Create a copy of LocalWorkSubmissionPhase
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? replay = null,}) {
+  return _then(UncertainLocalWorkSubmission(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,null == replay ? _self.replay : replay // ignore: cast_nullable_to_non_nullable
+as SubmissionReplay,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$LocalWorkKnownOutcome {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalWorkKnownOutcome);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkKnownOutcome()';
+}
+
+
+}
+
+/// @nodoc
+class $LocalWorkKnownOutcomeCopyWith<$Res>  {
+$LocalWorkKnownOutcomeCopyWith(LocalWorkKnownOutcome _, $Res Function(LocalWorkKnownOutcome) __);
+}
+
+
+/// Adds pattern matching related methods to [LocalWorkKnownOutcome].
+extension LocalWorkKnownOutcomePatterns on LocalWorkKnownOutcome {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ConfirmedLocalWorkOutcome value)?  confirmed,TResult Function( RejectedLocalWorkOutcome value)?  rejected,TResult Function( NotSubmittedLocalWorkOutcome value)?  notSubmitted,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome() when confirmed != null:
+return confirmed(_that);case RejectedLocalWorkOutcome() when rejected != null:
+return rejected(_that);case NotSubmittedLocalWorkOutcome() when notSubmitted != null:
+return notSubmitted(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ConfirmedLocalWorkOutcome value)  confirmed,required TResult Function( RejectedLocalWorkOutcome value)  rejected,required TResult Function( NotSubmittedLocalWorkOutcome value)  notSubmitted,}){
+final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome():
+return confirmed(_that);case RejectedLocalWorkOutcome():
+return rejected(_that);case NotSubmittedLocalWorkOutcome():
+return notSubmitted(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ConfirmedLocalWorkOutcome value)?  confirmed,TResult? Function( RejectedLocalWorkOutcome value)?  rejected,TResult? Function( NotSubmittedLocalWorkOutcome value)?  notSubmitted,}){
+final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome() when confirmed != null:
+return confirmed(_that);case RejectedLocalWorkOutcome() when rejected != null:
+return rejected(_that);case NotSubmittedLocalWorkOutcome() when notSubmitted != null:
+return notSubmitted(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  confirmed,TResult Function( String message)?  rejected,TResult Function( String message)?  notSubmitted,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome() when confirmed != null:
+return confirmed();case RejectedLocalWorkOutcome() when rejected != null:
+return rejected(_that.message);case NotSubmittedLocalWorkOutcome() when notSubmitted != null:
+return notSubmitted(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  confirmed,required TResult Function( String message)  rejected,required TResult Function( String message)  notSubmitted,}) {final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome():
+return confirmed();case RejectedLocalWorkOutcome():
+return rejected(_that.message);case NotSubmittedLocalWorkOutcome():
+return notSubmitted(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  confirmed,TResult? Function( String message)?  rejected,TResult? Function( String message)?  notSubmitted,}) {final _that = this;
+switch (_that) {
+case ConfirmedLocalWorkOutcome() when confirmed != null:
+return confirmed();case RejectedLocalWorkOutcome() when rejected != null:
+return rejected(_that.message);case NotSubmittedLocalWorkOutcome() when notSubmitted != null:
+return notSubmitted(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class ConfirmedLocalWorkOutcome implements LocalWorkKnownOutcome {
+  const ConfirmedLocalWorkOutcome();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfirmedLocalWorkOutcome);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkKnownOutcome.confirmed()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class RejectedLocalWorkOutcome implements LocalWorkKnownOutcome {
+  const RejectedLocalWorkOutcome(this.message);
+
+
+ final  String message;
+
+/// Create a copy of LocalWorkKnownOutcome
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$RejectedLocalWorkOutcomeCopyWith<RejectedLocalWorkOutcome> get copyWith => _$RejectedLocalWorkOutcomeCopyWithImpl<RejectedLocalWorkOutcome>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RejectedLocalWorkOutcome&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'LocalWorkKnownOutcome.rejected(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $RejectedLocalWorkOutcomeCopyWith<$Res> implements $LocalWorkKnownOutcomeCopyWith<$Res> {
+  factory $RejectedLocalWorkOutcomeCopyWith(RejectedLocalWorkOutcome value, $Res Function(RejectedLocalWorkOutcome) _then) = _$RejectedLocalWorkOutcomeCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$RejectedLocalWorkOutcomeCopyWithImpl<$Res>
+    implements $RejectedLocalWorkOutcomeCopyWith<$Res> {
+  _$RejectedLocalWorkOutcomeCopyWithImpl(this._self, this._then);
+
+  final RejectedLocalWorkOutcome _self;
+  final $Res Function(RejectedLocalWorkOutcome) _then;
+
+/// Create a copy of LocalWorkKnownOutcome
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(RejectedLocalWorkOutcome(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class NotSubmittedLocalWorkOutcome implements LocalWorkKnownOutcome {
+  const NotSubmittedLocalWorkOutcome(this.message);
+
+
+ final  String message;
+
+/// Create a copy of LocalWorkKnownOutcome
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$NotSubmittedLocalWorkOutcomeCopyWith<NotSubmittedLocalWorkOutcome> get copyWith => _$NotSubmittedLocalWorkOutcomeCopyWithImpl<NotSubmittedLocalWorkOutcome>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is NotSubmittedLocalWorkOutcome&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'LocalWorkKnownOutcome.notSubmitted(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $NotSubmittedLocalWorkOutcomeCopyWith<$Res> implements $LocalWorkKnownOutcomeCopyWith<$Res> {
+  factory $NotSubmittedLocalWorkOutcomeCopyWith(NotSubmittedLocalWorkOutcome value, $Res Function(NotSubmittedLocalWorkOutcome) _then) = _$NotSubmittedLocalWorkOutcomeCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$NotSubmittedLocalWorkOutcomeCopyWithImpl<$Res>
+    implements $NotSubmittedLocalWorkOutcomeCopyWith<$Res> {
+  _$NotSubmittedLocalWorkOutcomeCopyWithImpl(this._self, this._then);
+
+  final NotSubmittedLocalWorkOutcome _self;
+  final $Res Function(NotSubmittedLocalWorkOutcome) _then;
+
+/// Create a copy of LocalWorkKnownOutcome
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(NotSubmittedLocalWorkOutcome(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$LocalWorkIntegration {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalWorkIntegration);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkIntegration()';
+}
+
+
+}
+
+/// @nodoc
+class $LocalWorkIntegrationCopyWith<$Res>  {
+$LocalWorkIntegrationCopyWith(LocalWorkIntegration _, $Res Function(LocalWorkIntegration) __);
+}
+
+
+/// Adds pattern matching related methods to [LocalWorkIntegration].
+extension LocalWorkIntegrationPatterns on LocalWorkIntegration {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( AppliedLocalWorkIntegration value)?  applied,TResult Function( FailedLocalWorkIntegration value)?  failed,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration() when applied != null:
+return applied(_that);case FailedLocalWorkIntegration() when failed != null:
+return failed(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( AppliedLocalWorkIntegration value)  applied,required TResult Function( FailedLocalWorkIntegration value)  failed,}){
+final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration():
+return applied(_that);case FailedLocalWorkIntegration():
+return failed(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( AppliedLocalWorkIntegration value)?  applied,TResult? Function( FailedLocalWorkIntegration value)?  failed,}){
+final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration() when applied != null:
+return applied(_that);case FailedLocalWorkIntegration() when failed != null:
+return failed(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  applied,TResult Function( String message)?  failed,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration() when applied != null:
+return applied();case FailedLocalWorkIntegration() when failed != null:
+return failed(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  applied,required TResult Function( String message)  failed,}) {final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration():
+return applied();case FailedLocalWorkIntegration():
+return failed(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  applied,TResult? Function( String message)?  failed,}) {final _that = this;
+switch (_that) {
+case AppliedLocalWorkIntegration() when applied != null:
+return applied();case FailedLocalWorkIntegration() when failed != null:
+return failed(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class AppliedLocalWorkIntegration implements LocalWorkIntegration {
+  const AppliedLocalWorkIntegration();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppliedLocalWorkIntegration);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'LocalWorkIntegration.applied()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class FailedLocalWorkIntegration implements LocalWorkIntegration {
+  const FailedLocalWorkIntegration(this.message);
+
+
+ final  String message;
+
+/// Create a copy of LocalWorkIntegration
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FailedLocalWorkIntegrationCopyWith<FailedLocalWorkIntegration> get copyWith => _$FailedLocalWorkIntegrationCopyWithImpl<FailedLocalWorkIntegration>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is FailedLocalWorkIntegration&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'LocalWorkIntegration.failed(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FailedLocalWorkIntegrationCopyWith<$Res> implements $LocalWorkIntegrationCopyWith<$Res> {
+  factory $FailedLocalWorkIntegrationCopyWith(FailedLocalWorkIntegration value, $Res Function(FailedLocalWorkIntegration) _then) = _$FailedLocalWorkIntegrationCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$FailedLocalWorkIntegrationCopyWithImpl<$Res>
+    implements $FailedLocalWorkIntegrationCopyWith<$Res> {
+  _$FailedLocalWorkIntegrationCopyWithImpl(this._self, this._then);
+
+  final FailedLocalWorkIntegration _self;
+  final $Res Function(FailedLocalWorkIntegration) _then;
+
+/// Create a copy of LocalWorkIntegration
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(FailedLocalWorkIntegration(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

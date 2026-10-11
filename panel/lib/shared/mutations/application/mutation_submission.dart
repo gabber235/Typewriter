@@ -36,6 +36,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
   bool get unsettled => sending || _result is! SubmissionConfirmed<T>;
   bool get canReplay =>
       !sending &&
+      _integrationError == null &&
       (_result is SubmissionNotSubmitted<T> ||
           (_result is SubmissionUncertain<T> &&
               replay == SubmissionReplay.identicalRequest));
@@ -49,6 +50,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
     if (_disposed) throw StateError("Submission is disposed");
     final active = _active;
     if (active != null) return active;
+    if (_integrationError != null) return retryIntegration();
     final previous = _result;
     if (previous != null && !canReplay && _integrationError == null) {
       return Future.value(previous);
@@ -74,6 +76,26 @@ final class MutationSubmission<T> extends ChangeNotifier {
       return result;
     });
 
+    notifyListeners();
+    return _active!;
+  }
+
+  /// Applies the captured known response again without sending the request.
+  Future<SubmissionResult<T>> retryIntegration() {
+    if (_disposed) throw StateError("Submission is disposed");
+    if (_active case final active?) return active;
+    final previous = _result;
+    if (previous == null || previous is SubmissionUncertain<T>) {
+      throw StateError("Local integration requires a known response");
+    }
+    if (_integrationError == null) return Future.value(previous);
+    _active = _integrateResult(previous).then((result) {
+      if (!_disposed) {
+        _active = null;
+        notifyListeners();
+      }
+      return result;
+    });
     notifyListeners();
     return _active!;
   }

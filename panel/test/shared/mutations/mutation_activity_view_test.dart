@@ -186,19 +186,15 @@ void main() {
       const failed = LocalWorkSubmissionState(
         id: 1,
         label: "Failed",
-        sending: false,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.rejected,
-        message: "Rejected",
+        phase: LocalWorkSubmissionPhase.settled(
+          LocalWorkKnownOutcome.rejected("Rejected"),
+          LocalWorkIntegration.applied(),
+        ),
       );
       const saving = LocalWorkSubmissionState(
         id: 2,
         label: "Saving",
-        sending: true,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.ready,
+        phase: LocalWorkSubmissionPhase.active(),
       );
       expect(
         MutationActivityPhase.resolve([failed, saving], const []),
@@ -207,10 +203,10 @@ void main() {
       const completed = LocalWorkSubmissionState(
         id: 2,
         label: "Saving",
-        sending: false,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.confirmed,
+        phase: LocalWorkSubmissionPhase.settled(
+          LocalWorkKnownOutcome.confirmed(),
+          LocalWorkIntegration.applied(),
+        ),
       );
       expect(
         MutationActivityPhase.resolve([failed, completed], const []),

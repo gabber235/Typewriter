@@ -46,25 +46,36 @@ extension _LocalWorkSnapshot on ScopedWorkSession {
     MutationSubmission<Object?> submission,
   ) {
     final result = submission.result;
+    final phase = submission.sending
+        ? const LocalWorkSubmissionPhase.active()
+        : switch (result) {
+            null => const LocalWorkSubmissionPhase.prepared(),
+            SubmissionUncertain(:final message) =>
+              LocalWorkSubmissionPhase.uncertain(message, submission.replay),
+            final known => LocalWorkSubmissionPhase.settled(
+              switch (known) {
+                SubmissionConfirmed() =>
+                  const LocalWorkKnownOutcome.confirmed(),
+                SubmissionRejected(:final message) =>
+                  LocalWorkKnownOutcome.rejected(message),
+                SubmissionNotSubmitted(:final message) =>
+                  LocalWorkKnownOutcome.notSubmitted(message),
+                _ => throw StateError(
+                  "A settled submission requires a known delivery outcome",
+                ),
+              },
+              submission.integrationError != null
+                  ? LocalWorkIntegration.failed(
+                      submission.integrationError!.error.toString(),
+                    )
+                  : const LocalWorkIntegration.applied(),
+            ),
+          };
     return LocalWorkSubmissionState(
       id: submission.id,
       label: submission.label,
-      sending: submission.sending,
-      canReplay: submission.canReplay,
-      integrationFailed: submission.integrationError != null,
-      result: switch (result) {
-        null => LocalWorkSubmissionResult.ready,
-        SubmissionConfirmed() => LocalWorkSubmissionResult.confirmed,
-        SubmissionRejected() => LocalWorkSubmissionResult.rejected,
-        SubmissionUncertain() => LocalWorkSubmissionResult.uncertain,
-        SubmissionNotSubmitted() => LocalWorkSubmissionResult.notSubmitted,
-      },
-      message: switch (result) {
-        SubmissionRejected(:final message) ||
-        SubmissionNotSubmitted(:final message) ||
-        SubmissionUncertain(:final message) => message,
-        _ => null,
-      },
+      resources: submission.resources,
+      phase: phase,
     );
   }
 }

@@ -76,25 +76,88 @@ abstract class WorkDriverSnapshot with _$WorkDriverSnapshot {
 /// Whether a resource has a usable destination and whether it is visible.
 enum LocalWorkDestinationState { unavailable, current, available }
 
-/// Presentation state for one journaled mutation submission.
-///
-/// [result] describes delivery certainty. [integrationFailed] means the
-/// mutation was confirmed but applying its response locally failed, so the
-/// caller should refresh rather than resend the request.
+/// Delivery and local integration are separate phases of one captured request.
 @freezed
 abstract class LocalWorkSubmissionState with _$LocalWorkSubmissionState {
   const factory LocalWorkSubmissionState({
     required Object id,
     required String label,
-    required bool sending,
-    required bool canReplay,
-    required bool integrationFailed,
-    required LocalWorkSubmissionResult result,
-    String? message,
+    required LocalWorkSubmissionPhase phase,
+    @Default({}) Set<Object> resources,
   }) = _LocalWorkSubmissionState;
+  const LocalWorkSubmissionState._();
+  bool get sending => phase is ActiveLocalWorkSubmission;
+  bool get integrationFailed =>
+      phase is SettledLocalWorkSubmission &&
+      (phase as SettledLocalWorkSubmission).integration
+          is FailedLocalWorkIntegration;
+  bool get canReplay => switch (phase) {
+    UncertainLocalWorkSubmission(:final replay) =>
+      replay == SubmissionReplay.identicalRequest,
+    SettledLocalWorkSubmission(
+      outcome: NotSubmittedLocalWorkOutcome(),
+      integration: AppliedLocalWorkIntegration(),
+    ) =>
+      true,
+    _ => false,
+  };
+  String? get message => switch (phase) {
+    UncertainLocalWorkSubmission(:final message) => message,
+    SettledLocalWorkSubmission(
+      integration: FailedLocalWorkIntegration(:final message),
+    ) =>
+      message,
+    SettledLocalWorkSubmission(
+      outcome: RejectedLocalWorkOutcome(:final message) ||
+          NotSubmittedLocalWorkOutcome(:final message),
+    ) =>
+      message,
+    _ => null,
+  };
+  LocalWorkSubmissionResult get result => switch (phase) {
+    PreparedLocalWorkSubmission() ||
+    ActiveLocalWorkSubmission() => LocalWorkSubmissionResult.ready,
+    UncertainLocalWorkSubmission() => LocalWorkSubmissionResult.uncertain,
+    SettledLocalWorkSubmission(outcome: ConfirmedLocalWorkOutcome()) =>
+      LocalWorkSubmissionResult.confirmed,
+    SettledLocalWorkSubmission(outcome: RejectedLocalWorkOutcome()) =>
+      LocalWorkSubmissionResult.rejected,
+    SettledLocalWorkSubmission(outcome: NotSubmittedLocalWorkOutcome()) =>
+      LocalWorkSubmissionResult.notSubmitted,
+  };
 }
 
-/// Delivery states exposed by the mutation activity read model.
+@freezed
+sealed class LocalWorkSubmissionPhase with _$LocalWorkSubmissionPhase {
+  const factory LocalWorkSubmissionPhase.prepared() =
+      PreparedLocalWorkSubmission;
+  const factory LocalWorkSubmissionPhase.active() = ActiveLocalWorkSubmission;
+  const factory LocalWorkSubmissionPhase.settled(
+    LocalWorkKnownOutcome outcome,
+    LocalWorkIntegration integration,
+  ) = SettledLocalWorkSubmission;
+  const factory LocalWorkSubmissionPhase.uncertain(
+    String message,
+    SubmissionReplay replay,
+  ) = UncertainLocalWorkSubmission;
+}
+
+@freezed
+sealed class LocalWorkKnownOutcome with _$LocalWorkKnownOutcome {
+  const factory LocalWorkKnownOutcome.confirmed() = ConfirmedLocalWorkOutcome;
+  const factory LocalWorkKnownOutcome.rejected(String message) =
+      RejectedLocalWorkOutcome;
+  const factory LocalWorkKnownOutcome.notSubmitted(String message) =
+      NotSubmittedLocalWorkOutcome;
+}
+
+@freezed
+sealed class LocalWorkIntegration with _$LocalWorkIntegration {
+  const factory LocalWorkIntegration.applied() = AppliedLocalWorkIntegration;
+  const factory LocalWorkIntegration.failed(String message) =
+      FailedLocalWorkIntegration;
+}
+
 enum LocalWorkSubmissionResult {
   ready,
   confirmed,
