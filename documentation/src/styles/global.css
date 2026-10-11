@@ -33,7 +33,7 @@
 	--on-secondary-container: var(--material-white);
 	--color-error: var(--material-red-accent-200);
 	--on-error: var(--material-black);
-	--surface: #141218;
+	--surface:#111318;
 	--on-surface-variant: #c4c6d0;
 	--surface-container-lowest: #1f2123;
 	--surface-container: #1f1d23;
@@ -194,16 +194,45 @@
 	display: none;
 }
 
+/* ############################## */
+/* Table of contents layout       */
+/* ############################## */
+/* The pane, not the window, scrolls, so Starlight's html scroll-padding never
+   applies. Anchored headings land just below the pane edge, and on narrow
+   screens focus is never parked under the floating "On this page" pill. */
+.content-pane {
+	scroll-padding-top: 1.5rem;
+}
+
+@media (width < 72em) {
+	[data-has-toc] .content-pane {
+		scroll-padding-bottom: 5rem;
+		padding-bottom: 4.5rem;
+	}
+}
+
+/* The mobile sheet is a modal dialog; keep the page behind it still. */
+:root:has(#page-toc-dialog[open]) .content-pane {
+	overflow: hidden;
+}
+
 @layer utilities {
 	/* The table of contents scrolls inside the content pane like the sidebar
 	   does, so it ends with the article instead of floating over the
-	   full-width site footer. */
+	   full-width site footer. Sized to its content rather than the viewport:
+	   it stays pinned until the article ends, then leaves with it, keeping its
+	   bottom padding as a gap above the footer. */
 	@media (min-width: 72em) {
 		.right-sidebar {
 			position: sticky;
 			top: 0;
-			height: calc(100vh - 3.5rem);
-			padding-top: 1rem;
+			display: flex;
+			flex-direction: column;
+			height: auto;
+			max-height: calc(100dvh - 3.5rem);
+			overflow: visible;
+			padding: 2rem 1.5rem 3rem 1rem;
+			border-inline-start: 0;
 		}
 	}
 
