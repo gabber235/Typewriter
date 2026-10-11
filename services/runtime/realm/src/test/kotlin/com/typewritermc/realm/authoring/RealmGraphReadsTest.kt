@@ -3,15 +3,9 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.Availability
-import com.typewritermc.authoring.CheckedWriteResult
-import com.typewritermc.authoring.CommitResult
 import com.typewritermc.authoring.DraftBinding
-import com.typewritermc.authoring.DraftView
-import com.typewritermc.authoring.EditPreparationId
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkInspectionQuery
-import com.typewritermc.authoring.PreparedEdit
-import com.typewritermc.authoring.PreparedEditResult
 import com.typewritermc.authoring.ReachabilityQuery
 import com.typewritermc.authoring.ReadContext
 import com.typewritermc.authoring.RelationSelection
@@ -35,7 +29,6 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.checking.EmptyProviders
 import com.typewritermc.realm.checking.dependencies
-import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.valueAt
 import com.typewritermc.types.CollectionKind
@@ -257,85 +250,47 @@ class RealmGraphReadsTest {
         store.close()
     }
 
-    suspend fun editContextGraphReadsUseTheCurrentStagedSnapshot() {
-        val catalog = GraphCatalogLease()
+    fun graphReadsUseTheCurrentStagedSnapshot() {
         val source = ResourceId("source")
         val originalTarget = ResourceId("original_target")
         val stagedTarget = ResourceId("staged_target")
-        val original =
-            mapOf(
-                source to graphRecord(source, listOf(originalTarget)),
-                originalTarget to graphRecord(originalTarget, emptyList()),
-                stagedTarget to graphRecord(stagedTarget, emptyList()),
-            )
-        val store =
-            InMemoryAuthoringViewStore(
-                catalog,
-                AuthoringSeed(original),
-            )
-        val edits = RealmDraftEdits(store, GraphRepository())
-        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
-        val outgoing =
-            ValueLocation(
-                source,
-                ValuePath(
-                    listOf(
-                        com.typewritermc.authoring.PathSegment
-                            .Field("outgoing"),
-                    ),
+        val store = InMemoryAuthoringViewStore(
+            GraphCatalogLease(),
+            AuthoringSeed(
+                mapOf(
+                    source to graphRecord(source, listOf(originalTarget)),
+                    originalTarget to graphRecord(originalTarget, emptyList()),
+                    stagedTarget to graphRecord(stagedTarget, emptyList()),
                 ),
+            ),
+        )
+        val lease = store.capture()
+        val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
+        val originalReads = CapturedAuthoringReads(lease.originalView())
+        val originalReachable = with(originalReads) {
+            RealmGraphReads.reachable(
+                ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
             )
-        val view =
-            object : DraftView {
-                override val catalog = GRAPH_GENERATION
-                override val readContext = store.capture().use { it.root.readContext }
-                override val location = ValueLocation(source, ValuePath())
-                override val actualType = Availability.Available(NODE_USE)
-            }
+        }
+        assertEquals(setOf(source, originalTarget), originalReachable.resources.mapTo(linkedSetOf()) { it.id })
 
-        val result =
-            with(edits) {
-                view.prepareEdit(EditPreparationId("test")) {
-                    val originalReachable =
-                        RealmGraphReads.reachable(
-                            ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
-                        )
-                    assertEquals(setOf(source, originalTarget), originalReachable.resources.mapTo(linkedSetOf()) { it.id })
-
-                    val stagedValue =
-                        DataValue.Named(
-                            EDGE_LIST_USE,
-                            DataValue.ListValue(
-                                listOf(
-                                    ListItem(
-                                        ItemId("staged"),
-                                        DataValue.Named(
-                                            EDGE_LINK_USE,
-                                            DataValue.Link(EDGE_SOURCE, LinkTarget(stagedTarget, null)),
-                                        ),
-                                    ),
-                                ),
-                            ),
-                        )
-                    assertIs<CheckedWriteResult.Applied>(checkedSet(outgoing, stagedValue))
-
-                    val stagedReachable =
-                        RealmGraphReads.reachable(
-                            ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
-                        )
-                    assertEquals(setOf(source, stagedTarget), stagedReachable.resources.mapTo(linkedSetOf()) { it.id })
-                    val occurrence =
-                        RealmGraphReads
-                            .occurrences(LinkInspectionQuery(setOf(source), selection))
-                            .occurrences
-                            .single()
-                    val followed = assertIs<Availability.Available<DraftBinding>>(RealmGraphReads.follow(occurrence))
-                    assertEquals(stagedTarget, followed.value.location.resource)
-                }
-            }
-        val prepared = assertIs<PreparedEditResult.Prepared>(result).edit
-        assertTrue(prepared.expectations.any { InputIdentity.Incoming(source, EDGE.id) in it.dependencies() })
-        assertTrue(prepared.expectations.any { InputIdentity.Value(outgoing) in it.dependencies() })
+        val stagedReads = CapturedAuthoringReads(
+            lease.stagedView(mapOf(source to graphRecord(source, listOf(stagedTarget)))),
+        )
+        with(stagedReads) {
+            val stagedReachable = RealmGraphReads.reachable(
+                ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+            )
+            assertEquals(setOf(source, stagedTarget), stagedReachable.resources.mapTo(linkedSetOf()) { it.id })
+            val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
+            val followed = assertIs<Availability.Available<DraftBinding>>(RealmGraphReads.follow(occurrence))
+            assertEquals(stagedTarget, followed.value.location.resource)
+        }
+        val outgoing = ValueLocation(source, ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("outgoing"))))
+        val dependencies = stagedReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
+        assertTrue(InputIdentity.Incoming(source, EDGE.id) in dependencies)
+        assertTrue(InputIdentity.Value(outgoing) in dependencies)
+        lease.close()
         store.close()
     }
 
@@ -642,10 +597,6 @@ class RealmGraphReadsTest {
     }
 }
 
-private class GraphRepository : AuthoringRepository {
-    override suspend fun commit(edit: PreparedEdit): CommitResult = CommitResult.Committed
-}
-
 private class GraphCatalogLease(
     override val generation: CatalogGeneration = GRAPH_GENERATION,
 ) : AuthoringCatalogLease {
@@ -895,8 +846,8 @@ val RealmGraphReadsTestSuite by testSuite {
     test("traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch") {
         RealmGraphReadsTest().traversalUsesTheSelectedStagedGraphWithBoundedBreadthFirstSearch()
     }
-    test("editContextGraphReadsUseTheCurrentStagedSnapshot") {
-        RealmGraphReadsTest().editContextGraphReadsUseTheCurrentStagedSnapshot()
+    test("graphReadsUseTheCurrentStagedSnapshot") {
+        RealmGraphReadsTest().graphReadsUseTheCurrentStagedSnapshot()
     }
     test("pendingUnavailableTargetProducesAnUndecidedIncomingCandidate") {
         RealmGraphReadsTest().pendingUnavailableTargetProducesAnUndecidedIncomingCandidate()
