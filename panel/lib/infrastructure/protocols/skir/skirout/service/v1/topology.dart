@@ -2858,7 +2858,6 @@ final class HostConfigurationChange_mutable
 // struct ConfigureServiceHostRequest
 
 sealed class ConfigureServiceHostRequest_orMutable {
-  _core.String get operationId;
   _lib_kernel_v1_record_id.RecordId_orMutable get hostId;
   _core.int get expectedRevision;
   HostExecutionConfiguration_orMutable get execution;
@@ -2870,8 +2869,6 @@ sealed class ConfigureServiceHostRequest_orMutable {
 final class ConfigureServiceHostRequest
     implements ConfigureServiceHostRequest_orMutable {
   @_core.override
-  final _core.String operationId;
-  @_core.override
   final _lib_kernel_v1_record_id.RecordId hostId;
   @_core.override
   final _core.int expectedRevision;
@@ -2880,19 +2877,16 @@ final class ConfigureServiceHostRequest
   _skir.internal__UnrecognizedFields? _u;
 
   factory ConfigureServiceHostRequest({
-    required _core.String operationId,
     required _lib_kernel_v1_record_id.RecordId_orMutable hostId,
     required _core.int expectedRevision,
     required HostExecutionConfiguration_orMutable execution,
   }) => ConfigureServiceHostRequest._(
-    operationId,
     hostId.toFrozen(),
     expectedRevision,
     execution.toFrozen(),
   );
 
   ConfigureServiceHostRequest._(
-    this.operationId,
     this.hostId,
     this.expectedRevision,
     this.execution,
@@ -2900,7 +2894,6 @@ final class ConfigureServiceHostRequest
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ConfigureServiceHostRequest._(
-    "",
     _lib_kernel_v1_record_id.RecordId.defaultInstance,
     0,
     HostExecutionConfiguration.defaultInstance,
@@ -2910,7 +2903,6 @@ final class ConfigureServiceHostRequest
   /// Fields are initialized to their default values.
   static ConfigureServiceHostRequest_mutable mutable() =>
       ConfigureServiceHostRequest_mutable._(
-        "",
         _lib_kernel_v1_record_id.RecordId.defaultInstance,
         0,
         HostExecutionConfiguration.defaultInstance,
@@ -2924,7 +2916,6 @@ final class ConfigureServiceHostRequest
   /// Returns a mutable shallow copy of this instance.
   ConfigureServiceHostRequest_mutable toMutable() =>
       ConfigureServiceHostRequest_mutable._(
-        this.operationId,
         this.hostId,
         this.expectedRevision,
         this.execution,
@@ -2944,7 +2935,6 @@ final class ConfigureServiceHostRequest
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.operationId,
     this.hostId,
     this.expectedRevision,
     this.execution,
@@ -2961,18 +2951,9 @@ final class ConfigureServiceHostRequest
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "operation_id",
-        "operationId",
-        0,
-        _skir.Serializers.string,
-        "",
-        (it) => it.operationId,
-        (it, v) => it.operationId = v,
-      );
-      _serializerBuilder.addField(
         "host_id",
         "hostId",
-        1,
+        0,
         _lib_kernel_v1_record_id.RecordId.serializer,
         "",
         (it) => it.hostId,
@@ -2981,7 +2962,7 @@ final class ConfigureServiceHostRequest
       _serializerBuilder.addField(
         "expected_revision",
         "expectedRevision",
-        2,
+        1,
         _skir.Serializers.int64,
         "",
         (it) => it.expectedRevision,
@@ -2990,7 +2971,7 @@ final class ConfigureServiceHostRequest
       _serializerBuilder.addField(
         "execution",
         "execution",
-        3,
+        2,
         HostExecutionConfiguration.serializer,
         "",
         (it) => it.execution,
@@ -3015,14 +2996,12 @@ final class ConfigureServiceHostRequest
 /// Mutable version of [ConfigureServiceHostRequest].
 final class ConfigureServiceHostRequest_mutable
     implements ConfigureServiceHostRequest_orMutable {
-  _core.String operationId;
   _lib_kernel_v1_record_id.RecordId_orMutable hostId;
   _core.int expectedRevision;
   HostExecutionConfiguration_orMutable execution;
   _skir.internal__UnrecognizedFields? _u;
 
   ConfigureServiceHostRequest_mutable._(
-    this.operationId,
     this.hostId,
     this.expectedRevision,
     this.execution,
@@ -3054,7 +3033,6 @@ final class ConfigureServiceHostRequest_mutable
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ConfigureServiceHostRequest toFrozen() => ConfigureServiceHostRequest(
-    operationId: this.operationId,
     hostId: this.hostId,
     expectedRevision: this.expectedRevision,
     execution: this.execution,
@@ -3542,192 +3520,6 @@ final class ConfigureServiceHostResponse_RealmNotFoundError_mutable
         .._u = this._u;
 }
 
-// struct ConfigureServiceHostResponse.InvalidOperationIdError
-
-sealed class ConfigureServiceHostResponse_InvalidOperationIdError_orMutable {
-  ConfigureServiceHostResponse_InvalidOperationIdError toFrozen();
-}
-
-/// Deeply immutable.
-final class ConfigureServiceHostResponse_InvalidOperationIdError
-    implements ConfigureServiceHostResponse_InvalidOperationIdError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ConfigureServiceHostResponse_InvalidOperationIdError() =>
-      ConfigureServiceHostResponse_InvalidOperationIdError._();
-
-  ConfigureServiceHostResponse_InvalidOperationIdError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      ConfigureServiceHostResponse_InvalidOperationIdError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_InvalidOperationIdError_mutable
-  mutable() => ConfigureServiceHostResponse_InvalidOperationIdError_mutable._();
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ConfigureServiceHostResponse_InvalidOperationIdError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_InvalidOperationIdError_mutable toMutable() =>
-      ConfigureServiceHostResponse_InvalidOperationIdError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ConfigureServiceHostResponse_InvalidOperationIdError)
-      return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ConfigureServiceHostResponse_InvalidOperationIdError` instances.
-  static _skir.StructSerializer<
-    ConfigureServiceHostResponse_InvalidOperationIdError,
-    ConfigureServiceHostResponse_InvalidOperationIdError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidOperationIdError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (
-      ConfigureServiceHostResponse_InvalidOperationIdError_mutable it,
-    ) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ConfigureServiceHostResponse_InvalidOperationIdError].
-final class ConfigureServiceHostResponse_InvalidOperationIdError_mutable
-    implements ConfigureServiceHostResponse_InvalidOperationIdError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  ConfigureServiceHostResponse_InvalidOperationIdError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ConfigureServiceHostResponse_InvalidOperationIdError toFrozen() =>
-      ConfigureServiceHostResponse_InvalidOperationIdError().._u = this._u;
-}
-
-// struct ConfigureServiceHostResponse.OperationIdentityReusedError
-
-sealed class ConfigureServiceHostResponse_OperationIdentityReusedError_orMutable {
-  ConfigureServiceHostResponse_OperationIdentityReusedError toFrozen();
-}
-
-/// Deeply immutable.
-final class ConfigureServiceHostResponse_OperationIdentityReusedError
-    implements
-        ConfigureServiceHostResponse_OperationIdentityReusedError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory ConfigureServiceHostResponse_OperationIdentityReusedError() =>
-      ConfigureServiceHostResponse_OperationIdentityReusedError._();
-
-  ConfigureServiceHostResponse_OperationIdentityReusedError._();
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance =
-      ConfigureServiceHostResponse_OperationIdentityReusedError._();
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
-  mutable() =>
-      ConfigureServiceHostResponse_OperationIdentityReusedError_mutable._();
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  ConfigureServiceHostResponse_OperationIdentityReusedError toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
-  toMutable() =>
-      ConfigureServiceHostResponse_OperationIdentityReusedError_mutable._();
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! ConfigureServiceHostResponse_OperationIdentityReusedError)
-      return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `ConfigureServiceHostResponse_OperationIdentityReusedError` instances.
-  static _skir.StructSerializer<
-    ConfigureServiceHostResponse_OperationIdentityReusedError,
-    ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "service/v1/topology.skir:ConfigureServiceHostResponse.OperationIdentityReusedError",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (
-      ConfigureServiceHostResponse_OperationIdentityReusedError_mutable it,
-    ) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [ConfigureServiceHostResponse_OperationIdentityReusedError].
-final class ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
-    implements
-        ConfigureServiceHostResponse_OperationIdentityReusedError_orMutable {
-  _skir.internal__UnrecognizedFields? _u;
-
-  ConfigureServiceHostResponse_OperationIdentityReusedError_mutable._();
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  ConfigureServiceHostResponse_OperationIdentityReusedError toFrozen() =>
-      ConfigureServiceHostResponse_OperationIdentityReusedError().._u = this._u;
-}
-
 // enum ConfigureServiceHostResponse
 
 /// To switch on the variants:
@@ -3739,8 +3531,6 @@ final class ConfigureServiceHostResponse_OperationIdentityReusedError_mutable
 ///     case ConfigureServiceHostResponse_invalidConfigurationError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_incompatibleEngineError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_realmNotFoundError(:var value): { ... }
-///     case ConfigureServiceHostResponse_invalidOperationIdError(:var value): { ... }
-///     case ConfigureServiceHostResponse_operationIdentityReusedError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_invalidRecordIdError(:var value): { ... }
 ///     case ConfigureServiceHostResponse_internalError(:var value): { ... }
 ///   }
@@ -3821,29 +3611,6 @@ sealed class ConfigureServiceHostResponse {
   }) => ConfigureServiceHostResponse.wrapRealmNotFoundError(
     ConfigureServiceHostResponse_RealmNotFoundError(realmId: realmId),
   );
-
-  /// Create a 'invalid_operation_id_error' variant wrapping around the given value.
-  factory ConfigureServiceHostResponse.wrapInvalidOperationIdError(
-    ConfigureServiceHostResponse_InvalidOperationIdError value,
-  ) => ConfigureServiceHostResponse_invalidOperationIdErrorWrapper._(value);
-
-  /// Same as `wrapInvalidOperationIdError(ConfigureServiceHostResponse_InvalidOperationIdError(...))`.
-  factory ConfigureServiceHostResponse.createInvalidOperationIdError() =>
-      ConfigureServiceHostResponse.wrapInvalidOperationIdError(
-        ConfigureServiceHostResponse_InvalidOperationIdError(),
-      );
-
-  /// Create a 'operation_identity_reused_error' variant wrapping around the given value.
-  factory ConfigureServiceHostResponse.wrapOperationIdentityReusedError(
-    ConfigureServiceHostResponse_OperationIdentityReusedError value,
-  ) =>
-      ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper._(value);
-
-  /// Same as `wrapOperationIdentityReusedError(ConfigureServiceHostResponse_OperationIdentityReusedError(...))`.
-  factory ConfigureServiceHostResponse.createOperationIdentityReusedError() =>
-      ConfigureServiceHostResponse.wrapOperationIdentityReusedError(
-        ConfigureServiceHostResponse_OperationIdentityReusedError(),
-      );
 
   /// Create a 'invalid_record_id_error' variant wrapping around the given value.
   factory ConfigureServiceHostResponse.wrapInvalidRecordIdError(
@@ -3937,30 +3704,6 @@ sealed class ConfigureServiceHostResponse {
       );
       _serializerBuilder.addWrapperVariant(
         6,
-        "invalid_operation_id_error",
-        "wrapInvalidOperationIdError",
-        ConfigureServiceHostResponse_InvalidOperationIdError.serializer,
-        "",
-        ConfigureServiceHostResponse_invalidOperationIdErrorWrapper._,
-        (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind
-            .invalidOperationIdErrorWrapper
-            ._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        7,
-        "operation_identity_reused_error",
-        "wrapOperationIdentityReusedError",
-        ConfigureServiceHostResponse_OperationIdentityReusedError.serializer,
-        "",
-        ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper._,
-        (it) => it.value,
-        ordinal: ConfigureServiceHostResponse_kind
-            .operationIdentityReusedErrorWrapper
-            ._ordinal,
-      );
-      _serializerBuilder.addWrapperVariant(
-        8,
         "invalid_record_id_error",
         "wrapInvalidRecordIdError",
         _lib_kernel_v1_errors.InvalidRecordIdError.serializer,
@@ -3972,7 +3715,7 @@ sealed class ConfigureServiceHostResponse {
             ._ordinal,
       );
       _serializerBuilder.addWrapperVariant(
-        9,
+        7,
         "internal_error",
         "wrapInternalError",
         _lib_kernel_v1_errors.InternalError.serializer,
@@ -4007,10 +3750,8 @@ enum ConfigureServiceHostResponse_kind {
   invalidConfigurationErrorWrapper(3),
   incompatibleEngineErrorWrapper(4),
   realmNotFoundErrorWrapper(5),
-  invalidOperationIdErrorWrapper(6),
-  operationIdentityReusedErrorWrapper(7),
-  invalidRecordIdErrorWrapper(8),
-  internalErrorWrapper(9);
+  invalidRecordIdErrorWrapper(6),
+  internalErrorWrapper(7);
 
   final _core.int _ordinal;
 
@@ -4110,30 +3851,6 @@ final class ConfigureServiceHostResponse_realmNotFoundErrorWrapper
   @_core.override
   ConfigureServiceHostResponse_kind get kind =>
       ConfigureServiceHostResponse_kind.realmNotFoundErrorWrapper;
-}
-
-final class ConfigureServiceHostResponse_invalidOperationIdErrorWrapper
-    extends _ConfigureServiceHostResponse_wrapper {
-  final ConfigureServiceHostResponse_InvalidOperationIdError value;
-
-  ConfigureServiceHostResponse_invalidOperationIdErrorWrapper._(this.value);
-
-  @_core.override
-  ConfigureServiceHostResponse_kind get kind =>
-      ConfigureServiceHostResponse_kind.invalidOperationIdErrorWrapper;
-}
-
-final class ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper
-    extends _ConfigureServiceHostResponse_wrapper {
-  final ConfigureServiceHostResponse_OperationIdentityReusedError value;
-
-  ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper._(
-    this.value,
-  );
-
-  @_core.override
-  ConfigureServiceHostResponse_kind get kind =>
-      ConfigureServiceHostResponse_kind.operationIdentityReusedErrorWrapper;
 }
 
 final class ConfigureServiceHostResponse_invalidRecordIdErrorWrapper

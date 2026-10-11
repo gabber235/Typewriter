@@ -3,8 +3,8 @@
 //! Requests arrive on user scoped subjects and carry the organization identifier in the subject
 //! parameters. Mutations execute their database transaction first, then publish sequenced changes
 //! for every affected projection. Watch operations return a snapshot containing the current
-//! projection and its sequence. The database functions own validation, invariants, and mutation
-//! receipts; these handlers own protocol decoding, response conversion, and event publication.
+//! projection and its sequence. The database functions own validation and invariants; these
+//! handlers own protocol decoding, response conversion, and event publication.
 
 wit_bindgen::generate!({
     with: {

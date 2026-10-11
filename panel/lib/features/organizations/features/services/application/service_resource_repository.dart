@@ -98,20 +98,15 @@ final class ServiceResourceRepository {
     _identities.add(skir.OrganizationServicesChanged.wrapRemove(service));
   }
 
-  /// Prepares a service binding with stable request identity and replay bytes.
+  /// Prepares a service binding for the current organization.
   PreparedCommit<skir.BindServiceResponse> bind(String token) {
     session.checkActive();
-    final request = skir.BindServiceRequest(
-      operationId: uuid.v4(),
-      registrationToken: token,
-    );
+    final request = skir.BindServiceRequest(registrationToken: token);
     return session.transport.prepare(
       request.operation(
         userId: session.requireUserId(),
         organizationId: organization,
       ),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Bind service",
       classify: (response) => switch (response) {
         skir.BindServiceResponse_successWrapper() =>
@@ -135,9 +130,7 @@ final class ServiceResourceRepository {
             values.map((service) => service.toSkir()).toList(),
           ),
         );
-      case skir.BindServiceResponse_invalidOperationIdErrorWrapper() ||
-          skir.BindServiceResponse_operationIdentityReusedErrorWrapper() ||
-          skir.BindServiceResponse_invalidRegistrationTokenErrorWrapper() ||
+      case skir.BindServiceResponse_invalidRegistrationTokenErrorWrapper() ||
           skir.BindServiceResponse_organizationNotFoundErrorWrapper() ||
           skir.BindServiceResponse_internalErrorWrapper() ||
           skir.BindServiceResponse_unknown():
@@ -147,17 +140,12 @@ final class ServiceResourceRepository {
   /// Prepares removal of one service binding from this organization.
   PreparedCommit<skir.UnbindServiceResponse> unbind(skir.RecordId service) {
     session.checkActive();
-    final request = skir.UnbindServiceRequest(
-      operationId: uuid.v4(),
-      serviceId: service.id,
-    );
+    final request = skir.UnbindServiceRequest(serviceId: service.id);
     return session.transport.prepare(
       request.operation(
         userId: session.requireUserId(),
         organizationId: organization,
       ),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       resources: {(organization, service)},
       label: "Unbind service: ${service.id}",
       classify: (response) => switch (response) {
@@ -179,9 +167,7 @@ final class ServiceResourceRepository {
     switch (response) {
       case skir.UnbindServiceResponse_successWrapper():
         acceptServiceRemoval(service);
-      case skir.UnbindServiceResponse_invalidOperationIdErrorWrapper() ||
-          skir.UnbindServiceResponse_operationIdentityReusedErrorWrapper() ||
-          skir.UnbindServiceResponse_serviceNotFoundErrorWrapper() ||
+      case skir.UnbindServiceResponse_serviceNotFoundErrorWrapper() ||
           skir.UnbindServiceResponse_internalErrorWrapper() ||
           skir.UnbindServiceResponse_unknown():
     }
@@ -199,7 +185,6 @@ final class ServiceResourceRepository {
   ) {
     session.checkActive();
     final request = skir.ConfigureServiceHostRequest(
-      operationId: uuid.v4(),
       hostId: host,
       expectedRevision: revision,
       execution: execution,
@@ -209,8 +194,6 @@ final class ServiceResourceRepository {
         userId: session.requireUserId(),
         organizationId: organization,
       ),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       resources: {(organization, host)},
       label: "Apply Host configuration: ${host.id}",
       classify: (response) => switch (response) {
@@ -235,8 +218,6 @@ final class ServiceResourceRepository {
         acceptConfiguration(value.actual);
       case skir.ConfigureServiceHostResponse_unknown() ||
           skir.ConfigureServiceHostResponse_internalErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_invalidOperationIdErrorWrapper() ||
-          skir.ConfigureServiceHostResponse_operationIdentityReusedErrorWrapper() ||
           skir.ConfigureServiceHostResponse_invalidRecordIdErrorWrapper() ||
           skir.ConfigureServiceHostResponse_invalidConfigurationErrorWrapper() ||
           skir.ConfigureServiceHostResponse_incompatibleEngineErrorWrapper() ||
@@ -255,7 +236,6 @@ final class ServiceResourceRepository {
   ) {
     session.checkActive();
     final request = skir.UpdateOrganizationServiceRequest(
-      operationId: uuid.v4(),
       serviceId: service,
       expectedRevision: revision,
       name: name,
@@ -265,8 +245,6 @@ final class ServiceResourceRepository {
         userId: session.requireUserId(),
         organizationId: organization,
       ),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       resources: {(organization, service)},
       label: "Update service: ${service.id}",
       classify: (response) => switch (response) {
@@ -293,8 +271,6 @@ final class ServiceResourceRepository {
         acceptService(Service.fromSkir(value.actual));
       case skir.UpdateOrganizationServiceResponse_unknown() ||
           skir.UpdateOrganizationServiceResponse_internalErrorWrapper() ||
-          skir.UpdateOrganizationServiceResponse_invalidOperationIdErrorWrapper() ||
-          skir.UpdateOrganizationServiceResponse_operationIdentityReusedErrorWrapper() ||
           skir.UpdateOrganizationServiceResponse_invalidRecordIdErrorWrapper() ||
           skir.UpdateOrganizationServiceResponse_serviceNotFoundErrorWrapper() ||
           skir.UpdateOrganizationServiceResponse_validationErrorWrapper():
@@ -311,12 +287,6 @@ final class ServiceResourceRepository {
 extension BindServiceResult on skir.BindServiceResponse {
   void requireAcceptedBinding() => switch (this) {
     skir.BindServiceResponse_successWrapper() => null,
-    skir.BindServiceResponse_invalidOperationIdErrorWrapper() =>
-      throw ApiException.badRequest("Operation identity is required"),
-    skir.BindServiceResponse_operationIdentityReusedErrorWrapper() =>
-      throw ApiException.conflict(
-        "Operation identity was reused with different input",
-      ),
     skir.BindServiceResponse_invalidRegistrationTokenErrorWrapper() =>
       throw ApiException.badRequest("Invalid or expired registration token"),
     skir.BindServiceResponse_organizationNotFoundErrorWrapper() =>
@@ -331,12 +301,6 @@ extension BindServiceResult on skir.BindServiceResponse {
 extension UnbindServiceResult on skir.UnbindServiceResponse {
   void requireAcceptedUnbinding() => switch (this) {
     skir.UnbindServiceResponse_successWrapper() => null,
-    skir.UnbindServiceResponse_invalidOperationIdErrorWrapper() =>
-      throw ApiException.badRequest("Operation identity is required"),
-    skir.UnbindServiceResponse_operationIdentityReusedErrorWrapper() =>
-      throw ApiException.conflict(
-        "Operation identity was reused with different input",
-      ),
     skir.UnbindServiceResponse_serviceNotFoundErrorWrapper() =>
       throw ApiException.notFound("Service"),
     skir.UnbindServiceResponse_internalErrorWrapper() =>

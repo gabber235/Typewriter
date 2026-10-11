@@ -13,7 +13,7 @@ part of 'services.dart';
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 
@@ -26,7 +26,7 @@ final canonicalOrganizationServicesProvider =
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 final class CanonicalOrganizationServicesProvider
@@ -37,7 +37,7 @@ final class CanonicalOrganizationServicesProvider
   /// The provider combines the backend watch with committed mutation results
   /// published by the resource repository. Its state is canonical, while
   /// [projectedServices] and [projectedService] overlay unsaved editor values for
-  /// presentation. Mutations use operation identities and optimistic revisions;
+  /// presentation. Mutations use optimistic revisions;
   /// conflicts update this projection with the backend value before returning a
   /// conflict result so the caller can refresh or merge.
   CanonicalOrganizationServicesProvider._({
@@ -85,7 +85,7 @@ String _$canonicalOrganizationServicesHash() =>
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 
@@ -112,7 +112,7 @@ final class CanonicalOrganizationServicesFamily extends $Family
   /// The provider combines the backend watch with committed mutation results
   /// published by the resource repository. Its state is canonical, while
   /// [projectedServices] and [projectedService] overlay unsaved editor values for
-  /// presentation. Mutations use operation identities and optimistic revisions;
+  /// presentation. Mutations use optimistic revisions;
   /// conflicts update this projection with the backend value before returning a
   /// conflict result so the caller can refresh or merge.
 
@@ -131,7 +131,7 @@ final class CanonicalOrganizationServicesFamily extends $Family
 /// The provider combines the backend watch with committed mutation results
 /// published by the resource repository. Its state is canonical, while
 /// [projectedServices] and [projectedService] overlay unsaved editor values for
-/// presentation. Mutations use operation identities and optimistic revisions;
+/// presentation. Mutations use optimistic revisions;
 /// conflicts update this projection with the backend value before returning a
 /// conflict result so the caller can refresh or merge.
 

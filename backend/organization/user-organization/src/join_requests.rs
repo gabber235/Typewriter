@@ -83,7 +83,7 @@ pub async fn handle_watch(
 /// resulting user and organization changes after commit and return the user scoped event.
 #[tracing::instrument(skip_all)]
 pub async fn handle_request(
-    msg: NatsMessage,
+    _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::UserScope,
     request: SubmitUserJoinRequestRequest,
 ) -> Result<SubmitUserJoinRequestResponse, otel_wasi::Error> {
@@ -91,19 +91,6 @@ pub async fn handle_request(
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = DatabaseRecordId::new("user", user_key);
-    if request.operation_id.is_empty() {
-        return Ok(wasmcloud_utils::skir_variant!(
-            SubmitUserJoinRequestResponse::InvalidOperationIdError
-        ));
-    }
-    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
-        user_key,
-        "join_requests",
-        "SubmitUserJoinRequest",
-        &request.operation_id,
-        msg.body,
-    );
-    let operation_id = request.operation_id.clone();
     wasmcloud_utils::validate_record_ids!(
         SubmitUserJoinRequestResponse,
         request.code,
@@ -111,23 +98,19 @@ pub async fn handle_request(
     );
 
     let code = request.code;
-    let result = receipt
-        .bind(
-            transaction_query_file!(
-                JoinSubmissionOutcome,
-                "src/join_submission_transaction.surql",
-            )
-            .bind("user", user_id)
-            .bind("code", DatabaseRecordId::from(&code)),
-        )
-        .execute()
-        .await
-        .error_with_slug("join-request-query-failed")?
-        .decode()
-        .error_with_slug("join-request-result-parse-failed")?;
+    let result = transaction_query_file!(
+        JoinSubmissionOutcome,
+        "src/join_submission_transaction.surql",
+    )
+    .bind("user", user_id)
+    .bind("code", DatabaseRecordId::from(&code))
+    .execute()
+    .await
+    .error_with_slug("join-request-query-failed")?
+    .decode()
+    .error_with_slug("join-request-result-parse-failed")?;
 
-    let outcome = skir_domain_result!(SubmitUserJoinRequestResponse, result,
-        "operation-identity-reused-error" => {});
+    let outcome = skir_domain_result!(SubmitUserJoinRequestResponse, result);
     match outcome {
         JoinSubmissionOutcome::CodeNotFoundError => {
             otel_wasi::main_attribute!("join_request.outcome" = "code_not_found");
@@ -171,7 +154,6 @@ pub async fn handle_request(
             let user_request: UserJoinRequest = request.clone().into();
             let user_event = UserJoinRequestsChanged {
                 sequence: user_sequence,
-                operation_id: operation_id.clone(),
                 changes: vec![UserJoinRequestsChange::Add(Box::new(user_request.clone()))],
                 ..Default::default()
             };
@@ -182,7 +164,6 @@ pub async fn handle_request(
             .await?;
             let organization_event = OrganizationJoinRequestsChanged {
                 sequence: organization_sequence,
-                operation_id: operation_id.clone(),
                 changes: vec![OrganizationJoinRequestsChange::Add(Box::new(
                     request.clone().into(),
                 ))],
@@ -193,14 +174,8 @@ pub async fn handle_request(
             )
             .persist(organization_event)
             .await?;
-            publish_consumed_code(
-                organization_id,
-                single_use,
-                code_id,
-                join_codes_sequence,
-                &operation_id,
-            )
-            .await?;
+            publish_consumed_code(organization_id, single_use, code_id, join_codes_sequence)
+                .await?;
 
             otel_wasi::main_attribute!("join_request.outcome" = "request_made");
             Ok(skir_variant!(SubmitUserJoinRequestResponse::RequestMade {
@@ -228,7 +203,6 @@ pub async fn handle_request(
                 organization.clone().into();
             let user_event = wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChanged {
                 sequence: user_sequence,
-                operation_id: operation_id.clone(),
                 changes: vec![wasmcloud_utils::skir::base::organization::v1::organization::UserOrganizationsChange::Add(Box::new(organization_value))],
                 ..Default::default()
             };
@@ -241,7 +215,6 @@ pub async fn handle_request(
                 member.clone().into();
             let member_event = wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChanged {
                 sequence: organization_sequence,
-                operation_id: operation_id.clone(),
                 changes: vec![wasmcloud_utils::skir::base::organization::v1::member::OrganizationMembersChange::Add(Box::new(member_value))],
                 ..Default::default()
             };
@@ -250,14 +223,8 @@ pub async fn handle_request(
             )
             .persist(member_event)
             .await?;
-            publish_consumed_code(
-                organization_id,
-                single_use,
-                code_id,
-                join_codes_sequence,
-                &operation_id,
-            )
-            .await?;
+            publish_consumed_code(organization_id, single_use, code_id, join_codes_sequence)
+                .await?;
 
             otel_wasi::main_attribute!("join_request.outcome" = "auto_accepted");
             Ok(skir_variant!(SubmitUserJoinRequestResponse::AutoAccepted {
@@ -284,7 +251,6 @@ async fn publish_consumed_code(
     single_use: bool,
     code_id: DatabaseRecordId,
     sequence: Option<i64>,
-    operation_id: &str,
 ) -> Result<(), otel_wasi::Error> {
     if single_use {
         let event = wasmcloud_utils::skir::base::organization::v1::join_codes::OrganizationJoinCodesChanged {
@@ -292,7 +258,6 @@ async fn publish_consumed_code(
                 "join-code-sequence-missing",
                 "single use code mutation omitted its sequence",
             ))?,
-            operation_id: operation_id.to_owned(),
             changes: vec![wasmcloud_utils::skir::base::organization::v1::join_codes::OrganizationJoinCodesChange::Remove(Box::new(code_id.into()))],
             ..Default::default()
         };
@@ -312,7 +277,7 @@ async fn publish_consumed_code(
 /// returned as a domain result and produces no change event.
 #[tracing::instrument(skip_all)]
 pub async fn handle_cancel(
-    msg: NatsMessage,
+    _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::UserScope,
     request: CancelUserJoinRequestRequest,
 ) -> Result<CancelUserJoinRequestResponse, otel_wasi::Error> {
@@ -320,18 +285,6 @@ pub async fn handle_cancel(
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = DatabaseRecordId::new("user", user_id);
-    if request.operation_id.is_empty() {
-        return Ok(wasmcloud_utils::skir_variant!(
-            CancelUserJoinRequestResponse::InvalidOperationIdError
-        ));
-    }
-    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
-        user_key,
-        "join_requests",
-        "CancelUserJoinRequest",
-        &request.operation_id,
-        msg.body,
-    );
     wasmcloud_utils::validate_record_ids!(
         CancelUserJoinRequestResponse,
         request.request_id,
@@ -340,17 +293,13 @@ pub async fn handle_cancel(
 
     let request_id = request.request_id;
 
-    let join_request = receipt
-        .bind(transaction_query!(
+    let join_request = transaction_query!(
         Option<CancelledJoinRequest>,
         r#"
-            BEGIN TRANSACTION;
+        BEGIN TRANSACTION;
         RETURN {
-            LET $previous = fn::mutation::recall($receipt, $request_bytes);
-            IF $previous != NONE { RETURN $previous.value };
-            LET $result = {
-LET $request = SELECT id, in.* as user, out.* as organization, requested_at, expires_at FROM $request
-            WHERE in = $user_id;
+            LET $request = SELECT id, in.* as user, out.* as organization, requested_at, expires_at FROM $request
+                WHERE in = $user_id;
 
             IF array::len($request) = 0 { RETURN NONE };
             DELETE $request.id;
@@ -364,28 +313,21 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
                 user_sequence: $user_sequence,
                 organization_sequence: $organization_sequence
             };
-            };
-            IF $result != NONE {
-                LET $stored = fn::mutation::commit($receipt, $request_bytes, { value: $result });
-                RETURN $stored.value;
-            };
-            RETURN $result;
         };
         COMMIT TRANSACTION;
-            "#,
+        "#,
         )
         .bind(
             "request",
             DatabaseRecordId::from(&request_id),
         )
-    .bind("user_id", user_id))
+    .bind("user_id", user_id)
     .execute()
     .await
     .error_with_slug("join-request-cancel-query-failed")?
     .decode()
     .error_with_slug("join-request-cancel-result-parse-failed")?;
-    let join_request = skir_domain_result!(CancelUserJoinRequestResponse, join_request,
-        "operation-identity-reused-error" => {});
+    let join_request = skir_domain_result!(CancelUserJoinRequestResponse, join_request);
 
     let Some(join_request) = join_request else {
         otel_wasi::main_attribute!("join_request.outcome" = "request_not_found");
@@ -396,7 +338,6 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
 
     let event = UserJoinRequestsChanged {
         sequence: join_request.user_sequence,
-        operation_id: request.operation_id.clone(),
         changes: vec![UserJoinRequestsChange::Remove(Box::new(request_id.clone()))],
         ..Default::default()
     };
@@ -408,7 +349,6 @@ LET $request = SELECT id, in.* as user, out.* as organization, requested_at, exp
 
     let organization_event = OrganizationJoinRequestsChanged {
         sequence: join_request.organization_sequence,
-        operation_id: request.operation_id,
         changes: vec![OrganizationJoinRequestsChange::Remove(Box::new(request_id))],
         ..Default::default()
     };

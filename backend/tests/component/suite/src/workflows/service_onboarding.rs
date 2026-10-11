@@ -129,7 +129,6 @@ async fn issued_service_can_register_with_an_organization(
         .request_skir(
             "typewriter.from.user.owner.organization.alpha.services.bind",
             &BindServiceRequest {
-                operation_id: crate::framework::operation_id(),
                 registration_token,
                 _unrecognized: None,
             },

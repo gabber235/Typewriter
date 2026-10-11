@@ -733,7 +733,6 @@ sealed class OrganizationJoinRequestsChange private constructor() {
 
 sealed interface OrganizationJoinRequestsChanged_OrMutable {
     val sequence: kotlin.Long;
-    val operationId: kotlin.String;
     val changes: kotlin.collections.List<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>;
 
     fun toFrozen(): skirout.organization.v1.join_request.OrganizationJoinRequestsChanged;
@@ -743,7 +742,6 @@ sealed interface OrganizationJoinRequestsChanged_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OrganizationJoinRequestsChanged private constructor(
     override val sequence: kotlin.Long,
-    override val operationId: kotlin.String,
     override val changes: kotlin.collections.List<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsChanged>? =
         null,
@@ -752,13 +750,11 @@ class OrganizationJoinRequestsChanged private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         sequence: kotlin.Long,
-        operationId: kotlin.String,
         changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsChanged>? =
             null,
     ): this(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         _unrecognizedFields,
     ) {}
@@ -769,7 +765,6 @@ class OrganizationJoinRequestsChanged private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         sequence = this.sequence,
-        operationId = this.operationId,
         changes = this.changes,
     );
 
@@ -779,13 +774,10 @@ class OrganizationJoinRequestsChanged private constructor(
             _MustNameArguments,
         sequence: kotlin.Long =
             this.sequence,
-        operationId: kotlin.String =
-            this.operationId,
         changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.OrganizationJoinRequestsChange> =
             this.changes,
     ) = skirout.organization.v1.join_request.OrganizationJoinRequestsChanged(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         this._unrecognizedFields,
     );
@@ -794,11 +786,11 @@ class OrganizationJoinRequestsChanged private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.join_request.OrganizationJoinRequestsChanged && this.sequence == other.sequence && this.operationId == other.operationId && this.changes == other.changes);
+        return this === other || (other is skirout.organization.v1.join_request.OrganizationJoinRequestsChanged && this.sequence == other.sequence && this.changes == other.changes);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.operationId, this.changes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.changes).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -814,8 +806,6 @@ class OrganizationJoinRequestsChanged private constructor(
             _MustNameArguments,
         override var sequence: kotlin.Long =
             0L,
-        override var operationId: kotlin.String =
-            "",
         override var changes: kotlin.collections.List<skirout.organization.v1.join_request.OrganizationJoinRequestsChange> =
             build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.OrganizationJoinRequestsChanged>? =
@@ -824,7 +814,6 @@ class OrganizationJoinRequestsChanged private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.join_request.OrganizationJoinRequestsChanged(
             sequence = this.sequence,
-            operationId = this.operationId,
             changes = this.changes,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -850,7 +839,6 @@ class OrganizationJoinRequestsChanged private constructor(
         private val default =
             skirout.organization.v1.join_request.OrganizationJoinRequestsChanged(
                 0L,
-                "",
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>(),
             );
 
@@ -867,13 +855,10 @@ class OrganizationJoinRequestsChanged private constructor(
                 _MustNameArguments,
             sequence: kotlin.Long =
                 0L,
-            operationId: kotlin.String =
-                "",
             changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.OrganizationJoinRequestsChange> =
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>(),
         ) = skirout.organization.v1.join_request.OrganizationJoinRequestsChanged(
             sequence = sequence,
-            operationId = operationId,
             changes = changes,
             _unrecognizedFields = null,
         );
@@ -1150,7 +1135,6 @@ sealed class UserJoinRequestsChange private constructor() {
 
 sealed interface UserJoinRequestsChanged_OrMutable {
     val sequence: kotlin.Long;
-    val operationId: kotlin.String;
     val changes: kotlin.collections.List<skirout.organization.v1.join_request.UserJoinRequestsChange>;
 
     fun toFrozen(): skirout.organization.v1.join_request.UserJoinRequestsChanged;
@@ -1160,7 +1144,6 @@ sealed interface UserJoinRequestsChanged_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UserJoinRequestsChanged private constructor(
     override val sequence: kotlin.Long,
-    override val operationId: kotlin.String,
     override val changes: kotlin.collections.List<skirout.organization.v1.join_request.UserJoinRequestsChange>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsChanged>? =
         null,
@@ -1169,13 +1152,11 @@ class UserJoinRequestsChanged private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         sequence: kotlin.Long,
-        operationId: kotlin.String,
         changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.UserJoinRequestsChange>,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsChanged>? =
             null,
     ): this(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         _unrecognizedFields,
     ) {}
@@ -1186,7 +1167,6 @@ class UserJoinRequestsChanged private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         sequence = this.sequence,
-        operationId = this.operationId,
         changes = this.changes,
     );
 
@@ -1196,13 +1176,10 @@ class UserJoinRequestsChanged private constructor(
             _MustNameArguments,
         sequence: kotlin.Long =
             this.sequence,
-        operationId: kotlin.String =
-            this.operationId,
         changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.UserJoinRequestsChange> =
             this.changes,
     ) = skirout.organization.v1.join_request.UserJoinRequestsChanged(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         this._unrecognizedFields,
     );
@@ -1211,11 +1188,11 @@ class UserJoinRequestsChanged private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.join_request.UserJoinRequestsChanged && this.sequence == other.sequence && this.operationId == other.operationId && this.changes == other.changes);
+        return this === other || (other is skirout.organization.v1.join_request.UserJoinRequestsChanged && this.sequence == other.sequence && this.changes == other.changes);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.operationId, this.changes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.changes).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1231,8 +1208,6 @@ class UserJoinRequestsChanged private constructor(
             _MustNameArguments,
         override var sequence: kotlin.Long =
             0L,
-        override var operationId: kotlin.String =
-            "",
         override var changes: kotlin.collections.List<skirout.organization.v1.join_request.UserJoinRequestsChange> =
             build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.UserJoinRequestsChange>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.UserJoinRequestsChanged>? =
@@ -1241,7 +1216,6 @@ class UserJoinRequestsChanged private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.join_request.UserJoinRequestsChanged(
             sequence = this.sequence,
-            operationId = this.operationId,
             changes = this.changes,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -1267,7 +1241,6 @@ class UserJoinRequestsChanged private constructor(
         private val default =
             skirout.organization.v1.join_request.UserJoinRequestsChanged(
                 0L,
-                "",
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.UserJoinRequestsChange>(),
             );
 
@@ -1284,13 +1257,10 @@ class UserJoinRequestsChanged private constructor(
                 _MustNameArguments,
             sequence: kotlin.Long =
                 0L,
-            operationId: kotlin.String =
-                "",
             changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.UserJoinRequestsChange> =
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.join_request.UserJoinRequestsChange>(),
         ) = skirout.organization.v1.join_request.UserJoinRequestsChanged(
             sequence = sequence,
-            operationId = operationId,
             changes = changes,
             _unrecognizedFields = null,
         );
@@ -1695,12 +1665,10 @@ sealed class WatchOrganizationJoinRequestsResponse private constructor() {
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
             sequence: kotlin.Long,
-            operationId: kotlin.String,
             changes: kotlin.collections.Iterable<skirout.organization.v1.join_request.OrganizationJoinRequestsChange>,
         ) = ChangedWrapper(
             skirout.organization.v1.join_request.OrganizationJoinRequestsChanged(
                 sequence = sequence,
-                operationId = operationId,
                 changes = changes,
             )
         );
@@ -1870,7 +1838,6 @@ class ApprovedOrganizationJoinRequest private constructor(
 }
 
 sealed interface ApproveOrganizationJoinRequestsRequest_OrMutable {
-    val operationId: kotlin.String;
     val requestIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
     val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
 
@@ -1880,7 +1847,6 @@ sealed interface ApproveOrganizationJoinRequestsRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ApproveOrganizationJoinRequestsRequest private constructor(
-    override val operationId: kotlin.String,
     override val requestIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     override val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest>? =
@@ -1889,13 +1855,11 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         requestIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
         roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest>? =
             null,
     ): this(
-        operationId,
         build.skir.internal.toFrozenList(requestIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleIds, { it.toFrozen() }),
         _unrecognizedFields,
@@ -1906,7 +1870,6 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         requestIds = this.requestIds,
         roleIds = this.roleIds,
     );
@@ -1915,14 +1878,11 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         requestIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.requestIds,
         roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.roleIds,
     ) = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest(
-        operationId,
         build.skir.internal.toFrozenList(requestIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleIds, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -1932,11 +1892,11 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest && this.operationId == other.operationId && this.requestIds == other.requestIds && this.roleIds == other.roleIds);
+        return this === other || (other is skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest && this.requestIds == other.requestIds && this.roleIds == other.roleIds);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.requestIds, this.roleIds).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.requestIds, this.roleIds).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -1950,8 +1910,6 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var requestIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         override var roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
@@ -1961,7 +1919,6 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest(
-            operationId = this.operationId,
             requestIds = this.requestIds,
             roleIds = this.roleIds,
             _unrecognizedFields = this._unrecognizedFields,
@@ -2003,7 +1960,6 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
     companion object {
         private val default =
             skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest(
-                "",
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
             );
@@ -2019,14 +1975,11 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             requestIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
             roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         ) = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsRequest(
-            operationId = operationId,
             requestIds = requestIds,
             roleIds = roleIds,
             _unrecognizedFields = null,
@@ -2052,7 +2005,6 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER,
         ROLES_REQUIRED_ERROR_WRAPPER,
         USER_ALREADY_MEMBER_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INVALID_SELECTION_ERROR_WRAPPER,
         INVALID_RECORD_ID_ERROR_WRAPPER,
     }
@@ -2198,24 +2150,6 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         }
     }
 
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError,
-    ) : skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse() {
-        constructor(
-            value: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
-        }
-    }
-
     class InvalidSelectionErrorWrapper private constructor (
         val value: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError,
     ) : skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse() {
@@ -2350,15 +2284,6 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.UserAlreadyMemberError(
                 userIds = userIds,
             )
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError()
         );
 
         /** Shortcut for `InvalidSelectionErrorWrapper(skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError(...))`. */
@@ -3158,86 +3083,6 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
         }
     }
 
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer;
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
     sealed interface InvalidSelectionError_OrMutable {
         fun toFrozen(): skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.InvalidSelectionError;
     }
@@ -3320,7 +3165,6 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
 }
 
 sealed interface DeclineOrganizationJoinRequestRequest_OrMutable {
-    val operationId: kotlin.String;
     val requestId: skirout.kernel.v1.record_id.RecordId_OrMutable;
 
     fun toFrozen(): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest;
@@ -3329,7 +3173,6 @@ sealed interface DeclineOrganizationJoinRequestRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class DeclineOrganizationJoinRequestRequest private constructor(
-    override val operationId: kotlin.String,
     override val requestId: skirout.kernel.v1.record_id.RecordId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest>? =
         null,
@@ -3337,12 +3180,10 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         requestId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest>? =
             null,
     ): this(
-        operationId,
         requestId.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -3352,7 +3193,6 @@ class DeclineOrganizationJoinRequestRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         requestId = this.requestId,
     );
 
@@ -3360,12 +3200,9 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         requestId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.requestId,
     ) = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest(
-        operationId,
         requestId.toFrozen(),
         this._unrecognizedFields,
     );
@@ -3374,11 +3211,11 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest && this.operationId == other.operationId && this.requestId == other.requestId);
+        return this === other || (other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest && this.requestId == other.requestId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.requestId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.requestId).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3392,8 +3229,6 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var requestId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest>? =
@@ -3401,7 +3236,6 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest(
-            operationId = this.operationId,
             requestId = this.requestId,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -3426,7 +3260,6 @@ class DeclineOrganizationJoinRequestRequest private constructor(
     companion object {
         private val default =
             skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest(
-                "",
                 skirout.kernel.v1.record_id.RecordId.partial(),
             );
 
@@ -3441,12 +3274,9 @@ class DeclineOrganizationJoinRequestRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             requestId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
         ) = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestRequest(
-            operationId = operationId,
             requestId = requestId,
             _unrecognizedFields = null,
         );
@@ -3464,8 +3294,6 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
     /** The kind of variant held by a `DeclineOrganizationJoinRequestResponse`. */
     enum class Kind {
         UNKNOWN,
-        INVALID_OPERATION_ID_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
         REQUEST_NOT_FOUND_ERROR_WRAPPER,
@@ -3484,42 +3312,6 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
-        }
-    }
-
-    class InvalidOperationIdErrorWrapper private constructor (
-        val value: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError,
-    ) : skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse() {
-        constructor(
-            value: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_OPERATION_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1583533316;
-        }
-    }
-
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError,
-    ) : skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse() {
-        constructor(
-            value: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
         }
     }
 
@@ -3613,24 +3405,6 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `InvalidOperationIdErrorWrapper(skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidOperationIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InvalidOperationIdErrorWrapper(
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError()
-        );
-
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -3683,166 +3457,6 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
 
         /** Describes the [DeclineOrganizationJoinRequestResponse] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface InvalidOperationIdError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidOperationIdError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError>? =
-            null,
-    ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidOperationIdError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError>? =
-                null,
-        ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidOperationIdError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer;
-
-            /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer;
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
-        }
     }
 
     sealed interface Success_OrMutable {
@@ -4185,18 +3799,6 @@ private object _SerializerRegistry {
 
     val ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl);
 
-    val ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl);
-
     val ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/join_request.skir:ApproveOrganizationJoinRequestsResponse.RequestNotFoundError",
         doc = "",
@@ -4305,30 +3907,6 @@ private object _SerializerRegistry {
         );
 
     val DeclineOrganizationJoinRequestResponseSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponseSerializerImpl);
-
-    val DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.InvalidOperationIdError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl);
-
-    val DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl);
 
     val DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/join_request.skir:DeclineOrganizationJoinRequestResponse.RequestNotFoundError",
@@ -4499,18 +4077,9 @@ private object _SerializerRegistry {
         ApprovedOrganizationJoinRequestSerializerImpl.finalizeStruct();
 
         ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
-            "operation_id",
-            "operationId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
             "request_ids",
             "requestIds",
-            1,
+            0,
             build.skir.Serializers.list(
                 skirout.kernel.v1.record_id.RecordId.serializer,
             ),
@@ -4521,7 +4090,7 @@ private object _SerializerRegistry {
         ApproveOrganizationJoinRequestsRequestSerializerImpl.addField(
             "role_ids",
             "roleIds",
-            2,
+            1,
             build.skir.Serializers.list(
                 skirout.kernel.v1.record_id.RecordId.serializer,
             ),
@@ -4596,15 +4165,6 @@ private object _SerializerRegistry {
         );
         ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
             8,
-            "operation_identity_reused_error",
-            skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializer,
-            "",
-            { skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.OperationIdentityReusedErrorWrapper(it) },
-            { it.value },
-        );
-        ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
-            9,
             "invalid_selection_error",
             skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.INVALID_SELECTION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializer,
@@ -4613,7 +4173,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         ApproveOrganizationJoinRequestsResponseSerializerImpl.addWrapperVariant(
-            10,
+            9,
             "invalid_record_id_error",
             skirout.organization.v1.join_request.ApproveOrganizationJoinRequestsResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -4624,8 +4184,6 @@ private object _SerializerRegistry {
         ApproveOrganizationJoinRequestsResponseSerializerImpl.finalizeEnum();
 
         ApproveOrganizationJoinRequestsResponse_InvalidSelectionErrorSerializerImpl.finalizeStruct();
-
-        ApproveOrganizationJoinRequestsResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
 
         ApproveOrganizationJoinRequestsResponse_RequestNotFoundErrorSerializerImpl.addField(
             "request_ids",
@@ -4755,18 +4313,9 @@ private object _SerializerRegistry {
         AutoAcceptedMemberSerializerImpl.finalizeStruct();
 
         DeclineOrganizationJoinRequestRequestSerializerImpl.addField(
-            "operation_id",
-            "operationId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        DeclineOrganizationJoinRequestRequestSerializerImpl.addField(
             "request_id",
             "requestId",
-            1,
+            0,
             skirout.kernel.v1.record_id.RecordId.serializer,
             "",
             { it.requestId },
@@ -4776,24 +4325,6 @@ private object _SerializerRegistry {
 
         DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
             1,
-            "invalid_operation_id_error",
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializer,
-            "",
-            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.InvalidOperationIdErrorWrapper(it) },
-            { it.value },
-        );
-        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
-            2,
-            "operation_identity_reused_error",
-            skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializer,
-            "",
-            { skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.OperationIdentityReusedErrorWrapper(it) },
-            { it.value },
-        );
-        DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
-            3,
             "internal_error",
             skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -4802,7 +4333,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
-            4,
+            2,
             "success",
             skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.SUCCESS_WRAPPER.ordinal,
             _SerializerRegistry.DeclineOrganizationJoinRequestResponse_SuccessSerializer,
@@ -4811,7 +4342,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
-            5,
+            3,
             "request_not_found_error",
             skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.REQUEST_NOT_FOUND_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializer,
@@ -4820,7 +4351,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         DeclineOrganizationJoinRequestResponseSerializerImpl.addWrapperVariant(
-            6,
+            4,
             "invalid_record_id_error",
             skirout.organization.v1.join_request.DeclineOrganizationJoinRequestResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -4829,10 +4360,6 @@ private object _SerializerRegistry {
             { it.value },
         );
         DeclineOrganizationJoinRequestResponseSerializerImpl.finalizeEnum();
-
-        DeclineOrganizationJoinRequestResponse_InvalidOperationIdErrorSerializerImpl.finalizeStruct();
-
-        DeclineOrganizationJoinRequestResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
 
         DeclineOrganizationJoinRequestResponse_RequestNotFoundErrorSerializerImpl.addField(
             "request_id",
@@ -4957,18 +4484,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.sequence = v },
         );
         OrganizationJoinRequestsChangedSerializerImpl.addField(
-            "operation_id",
-            "operationId",
+            "changes",
+            "changes",
             1,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        OrganizationJoinRequestsChangedSerializerImpl.addField(
-            "changes",
-            "changes",
-            2,
             build.skir.Serializers.list(
                 _SerializerRegistry.OrganizationJoinRequestsChangeSerializer,
             ),
@@ -5086,18 +4604,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.sequence = v },
         );
         UserJoinRequestsChangedSerializerImpl.addField(
-            "operation_id",
-            "operationId",
+            "changes",
+            "changes",
             1,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        UserJoinRequestsChangedSerializerImpl.addField(
-            "changes",
-            "changes",
-            2,
             build.skir.Serializers.list(
                 _SerializerRegistry.UserJoinRequestsChangeSerializer,
             ),

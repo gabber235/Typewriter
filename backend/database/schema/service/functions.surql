@@ -114,10 +114,7 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
     $host_id: record<service_host>,
     $organization_id: record<organization>,
     $expected_revision: int,
-    $desired: object,
-    $operation_id: string,
-    $receipt: record<mutation_receipt>,
-    $request_bytes: array<int>
+    $desired: object
 ) -> object {
     LET $has_realm = $desired.realm != NONE AND $desired.realm != NULL;
     LET $has_engine = $desired.primary_engine != NONE AND $desired.primary_engine != NULL;
@@ -139,9 +136,6 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
             message: 'A hosted engine requires a hosted Realm configuration',
         }
     };
-    IF string::len($operation_id) = 0 { THROW 'invalid-operation-id-error' };
-    LET $previous = fn::mutation::recall($receipt, $request_bytes);
-    IF $previous != NONE { RETURN $previous };
     LET $hosts = SELECT * FROM $host_id
         WHERE service_id.organization = $organization_id;
     IF array::is_empty($hosts) {
@@ -293,5 +287,5 @@ DEFINE FUNCTION OVERWRITE fn::service::configure_host(
         removed_realm: $removed_realm,
         removed_engine: $removed_engine,
     };
-    RETURN fn::mutation::commit($receipt, $request_bytes, $result);
+    RETURN $result;
 } PERMISSIONS NONE;

@@ -18,10 +18,6 @@ extension ApproveOrganizationJoinRequestsOutcome
         throw ApiException.notFound("Roles");
       case skir.ApproveOrganizationJoinRequestsResponse_rolesNotAssignableErrorWrapper():
         throw ApiException.badRequest("One or more roles cannot be assigned");
-      case skir.ApproveOrganizationJoinRequestsResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.ApproveOrganizationJoinRequestsResponse_invalidSelectionErrorWrapper():
         throw ApiException.badRequest("Select distinct pending requests");
       case skir.ApproveOrganizationJoinRequestsResponse_rolesRequiredErrorWrapper():
@@ -38,12 +34,6 @@ extension DeclineOrganizationJoinRequestOutcome
     on skir.DeclineOrganizationJoinRequestResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.DeclineOrganizationJoinRequestResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.DeclineOrganizationJoinRequestResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.DeclineOrganizationJoinRequestResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.DeclineOrganizationJoinRequestResponse_internalErrorWrapper():
@@ -64,12 +54,6 @@ extension GenerateOrganizationJoinCodeOutcome
     on skir.GenerateOrganizationJoinCodeResponse {
   SecretFieldRevealed requireAccepted() {
     switch (this) {
-      case skir.GenerateOrganizationJoinCodeResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.GenerateOrganizationJoinCodeResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.GenerateOrganizationJoinCodeResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.GenerateOrganizationJoinCodeResponse_internalErrorWrapper():
@@ -99,12 +83,6 @@ extension RevokeOrganizationJoinCodeOutcome
     on skir.RevokeOrganizationJoinCodeResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.RevokeOrganizationJoinCodeResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.RevokeOrganizationJoinCodeResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.RevokeOrganizationJoinCodeResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.RevokeOrganizationJoinCodeResponse_internalErrorWrapper():
@@ -139,10 +117,6 @@ extension UpdateOrganizationMemberRolesOutcome
         throw ApiException.notFound("Roles");
       case skir.UpdateOrganizationMemberRolesResponse_rolesNotAssignableErrorWrapper():
         throw ApiException.badRequest("One or more roles cannot be assigned");
-      case skir.UpdateOrganizationMemberRolesResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.UpdateOrganizationMemberRolesResponse_invalidSelectionErrorWrapper():
         throw ApiException.badRequest("Select distinct organization members");
       case skir.UpdateOrganizationMemberRolesResponse_rolesRequiredErrorWrapper():
@@ -161,12 +135,6 @@ extension RemoveOrganizationMemberOutcome
     on skir.RemoveOrganizationMemberResponse {
   void requireAccepted() {
     switch (this) {
-      case skir.RemoveOrganizationMemberResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.RemoveOrganizationMemberResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.RemoveOrganizationMemberResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.RemoveOrganizationMemberResponse_internalErrorWrapper():

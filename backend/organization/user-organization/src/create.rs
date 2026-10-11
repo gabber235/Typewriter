@@ -23,15 +23,10 @@ struct CreatedOrganization {
 }
 
 impl CreatedOrganization {
-    fn into_committed_change(
-        self,
-        user: &str,
-        operation_id: String,
-    ) -> CommittedChange<CreateOrganizationResponse> {
+    fn into_committed_change(self, user: &str) -> CommittedChange<CreateOrganizationResponse> {
         let organization: Organization = self.organization.into();
         let event = UserOrganizationsChanged {
             sequence: self.sequence,
-            operation_id,
             changes: vec![UserOrganizationsChange::Add(Box::new(organization.clone()))],
             ..Default::default()
         };
@@ -54,11 +49,11 @@ impl CreatedOrganization {
 ///
 /// The transaction records the organization and advances the user's organization list sequence.
 /// After the transaction commits, the handler persists the corresponding add change and returns
-/// that same event with the created organization. The operation identity makes database work
-/// replayable, while event persistence remains a separate post transaction effect.
+/// that same event with the created organization. Event persistence remains a separate effect
+/// after the database transaction.
 #[tracing::instrument(skip_all)]
 pub async fn handle_create(
-    msg: NatsMessage,
+    _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::UserScope,
     request: CreateOrganizationRequest,
 ) -> Result<CreateOrganizationResponse, otel_wasi::Error> {
@@ -66,65 +61,40 @@ pub async fn handle_create(
     otel_wasi::main_attribute!("user.id" = user_id.to_string());
     let user_key = user_id;
     let user_id = RecordId::new("user", user_id);
-    if request.operation_id.is_empty() {
-        return Ok(wasmcloud_utils::skir_variant!(
-            CreateOrganizationResponse::InvalidOperationIdError
-        ));
-    }
-    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
-        user_key,
-        "organizations",
-        "CreateOrganization",
-        &request.operation_id,
-        msg.body,
-    );
 
     let name = request.name;
     let logo_url = request.logo_url;
 
-    let organization = receipt
-        .bind(
-            transaction_query!(
-                CreatedOrganization,
-                r#"
+    let organization = transaction_query!(
+        CreatedOrganization,
+        r#"
         BEGIN TRANSACTION;
         RETURN {
-            LET $previous = fn::mutation::recall($receipt, $request_bytes);
-            IF $previous != NONE { RETURN $previous.value };
-            LET $result = {
-LET $organization = CREATE ONLY organization SET
-            name = $name,
-            logo_url = $logo_url,
-            founder = $user_id
+            LET $organization = CREATE ONLY organization SET
+                name = $name,
+                logo_url = $logo_url,
+                founder = $user_id
             ;
 
-        LET $sequence = UPDATE ONLY $user_id SET organizations_sequence += 1
-            RETURN VALUE organizations_sequence;
-        RETURN { organization: $organization, sequence: $sequence };
-            };
-            IF $result != NONE {
-                LET $stored = fn::mutation::commit($receipt, $request_bytes, { value: $result });
-                RETURN $stored.value;
-            };
-            RETURN $result;
+            LET $sequence = UPDATE ONLY $user_id SET organizations_sequence += 1
+                RETURN VALUE organizations_sequence;
+            RETURN { organization: $organization, sequence: $sequence };
         };
         COMMIT TRANSACTION;
         "#,
-            )
-            .bind("name", &name)
-            .bind("logo_url", &logo_url)
-            .bind("user_id", user_id),
-        )
-        .execute()
-        .await
-        .error_with_slug("organization-create-query-failed")?
-        .decode()
-        .error_with_slug("organization-create-result-parse-failed")?;
-    let created = skir_domain_result!(CreateOrganizationResponse, organization,
-        "operation-identity-reused-error" => {});
+    )
+    .bind("name", &name)
+    .bind("logo_url", &logo_url)
+    .bind("user_id", user_id)
+    .execute()
+    .await
+    .error_with_slug("organization-create-query-failed")?
+    .decode()
+    .error_with_slug("organization-create-result-parse-failed")?;
+    let created = skir_domain_result!(CreateOrganizationResponse, organization);
     otel_wasi::main_attribute!("organization.outcome" = "created");
     created
-        .into_committed_change(user_key, request.operation_id)
+        .into_committed_change(user_key)
         .publish_with(&PublicationExecutor {
             refresher: CapturedOnly,
         })

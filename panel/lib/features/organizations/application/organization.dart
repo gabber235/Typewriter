@@ -80,8 +80,7 @@ class Organizations extends _$Organizations {
 
   /// Creates an organization for the authenticated user.
   ///
-  /// The operation identity makes replay safe at the mutation boundary. On
-  /// success, the returned user scoped change event is applied locally and the
+  /// On success, the returned user scoped change event is applied locally and the
   /// new organization identity is returned for navigation. Rejected responses
   /// become actionable [ApiException] values; unknown or internal responses stay
   /// uncertain so the shared mutation layer can expose recovery state.
@@ -97,7 +96,6 @@ class Organizations extends _$Organizations {
     }
 
     final request = skir.CreateOrganizationRequest(
-      operationId: uuid.v4(),
       name: name,
       logoUrl: logoUrl,
     );
@@ -108,13 +106,8 @@ class Organizations extends _$Organizations {
 
     final response = await ref.mutateSkir(
       request.operation(userId: userId),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Create organization",
       classify: (response) => switch (response) {
-        skir.CreateOrganizationResponse_invalidOperationIdErrorWrapper() ||
-        skir.CreateOrganizationResponse_operationIdentityReusedErrorWrapper() =>
-          MutationResponseDisposition.rejected,
         skir.CreateOrganizationResponse_successWrapper() =>
           MutationResponseDisposition.confirmed,
         skir.CreateOrganizationResponse_unknown() ||
@@ -124,12 +117,6 @@ class Organizations extends _$Organizations {
     );
 
     switch (response) {
-      case skir.CreateOrganizationResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.CreateOrganizationResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.CreateOrganizationResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.CreateOrganizationResponse_internalErrorWrapper():

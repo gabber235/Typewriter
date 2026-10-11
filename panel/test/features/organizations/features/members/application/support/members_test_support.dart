@@ -49,7 +49,6 @@ skir.UpdateOrganizationMemberRolesResponse successfulMemberUpdate(
   members: members,
   event: skir.OrganizationMembersChanged(
     sequence: 1,
-    operationId: "test-operation",
     changes: members.map(skir.OrganizationMembersChange.wrapUpdate),
   ),
 );
@@ -59,7 +58,6 @@ skir.RemoveOrganizationMemberResponse successfulMemberRemoval(
 ) => skir.RemoveOrganizationMemberResponse.createSuccess(
   event: skir.OrganizationMembersChanged(
     sequence: 1,
-    operationId: "test-operation",
     changes: [skir.OrganizationMembersChange.wrapRemove(userId)],
   ),
 );

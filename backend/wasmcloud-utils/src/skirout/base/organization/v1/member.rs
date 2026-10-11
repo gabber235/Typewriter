@@ -173,7 +173,6 @@ impl OrganizationMembersChange {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OrganizationMembersChanged {
     pub sequence: i64,
-    pub operation_id: String,
     pub changes: Vec<OrganizationMembersChange>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OrganizationMembersChanged>>,
@@ -309,7 +308,6 @@ impl WatchOrganizationMembersResponse {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UpdateOrganizationMemberRolesRequest {
-    pub operation_id: String,
     pub user_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     pub role_ids: Vec<crate::skirout::base::kernel::v1::record_id::RecordId>,
     /// Set this to None when you're creating a struct.
@@ -687,65 +685,6 @@ impl UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError {
 }
 
 // ==============================================================================
-// struct UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-        >,
-    >,
-}
-
-impl UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError {
-    pub fn default_ref()
-    -> &'static UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError {
-        static D: std::sync::LazyLock<
-            UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-        > = std::sync::LazyLock::new(
-            UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError::default,
-        );
-        &D
-    }
-}
-
-impl UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/member.skir",
-                "UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError",
-                "",
-                |x: &UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError| {
-                    &x._unrecognized
-                },
-                |x: &mut UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<
-        UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-    > {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct UpdateOrganizationMemberRolesResponse.InvalidSelectionError
 // ==============================================================================
 
@@ -814,9 +753,6 @@ pub enum UpdateOrganizationMemberRolesResponse {
     RolesNotAssignableError(Box<UpdateOrganizationMemberRolesResponse_RolesNotAssignableError>),
     RolesRequiredError(Box<UpdateOrganizationMemberRolesResponse_RolesRequiredError>),
     FounderRoleRequiredError(Box<UpdateOrganizationMemberRolesResponse_FounderRoleRequiredError>),
-    OperationIdentityReusedError(
-        Box<UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError>,
-    ),
     InvalidSelectionError(Box<UpdateOrganizationMemberRolesResponse_InvalidSelectionError>),
     InvalidRecordIdError(Box<crate::skirout::base::kernel::v1::errors::InvalidRecordIdError>),
 }
@@ -844,9 +780,8 @@ impl UpdateOrganizationMemberRolesResponse {
                     UpdateOrganizationMemberRolesResponse::RolesNotAssignableError(_) => 5,
                     UpdateOrganizationMemberRolesResponse::RolesRequiredError(_) => 6,
                     UpdateOrganizationMemberRolesResponse::FounderRoleRequiredError(_) => 7,
-                    UpdateOrganizationMemberRolesResponse::OperationIdentityReusedError(_) => 8,
-                    UpdateOrganizationMemberRolesResponse::InvalidSelectionError(_) => 9,
-                    UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(_) => 10,
+                    UpdateOrganizationMemberRolesResponse::InvalidSelectionError(_) => 8,
+                    UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(_) => 9,
                 },
                 |u| UpdateOrganizationMemberRolesResponse::Unknown(Some(u)),
                 |x: &UpdateOrganizationMemberRolesResponse| match x {
@@ -874,7 +809,6 @@ impl UpdateOrganizationMemberRolesResponse {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RemoveOrganizationMemberRequest {
-    pub operation_id: String,
     pub user_id: crate::skirout::base::kernel::v1::record_id::RecordId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
@@ -909,119 +843,6 @@ impl RemoveOrganizationMemberRequest {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             RemoveOrganizationMemberRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct RemoveOrganizationMemberResponse.InvalidOperationIdError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RemoveOrganizationMemberResponse_InvalidOperationIdError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            RemoveOrganizationMemberResponse_InvalidOperationIdError,
-        >,
-    >,
-}
-
-impl RemoveOrganizationMemberResponse_InvalidOperationIdError {
-    pub fn default_ref() -> &'static RemoveOrganizationMemberResponse_InvalidOperationIdError {
-        static D: std::sync::LazyLock<RemoveOrganizationMemberResponse_InvalidOperationIdError> =
-            std::sync::LazyLock::new(
-                RemoveOrganizationMemberResponse_InvalidOperationIdError::default,
-            );
-        &D
-    }
-}
-
-impl RemoveOrganizationMemberResponse_InvalidOperationIdError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RemoveOrganizationMemberResponse_InvalidOperationIdError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                RemoveOrganizationMemberResponse_InvalidOperationIdError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/member.skir",
-                "RemoveOrganizationMemberResponse.InvalidOperationIdError",
-                "",
-                |x: &RemoveOrganizationMemberResponse_InvalidOperationIdError| &x._unrecognized,
-                |x: &mut RemoveOrganizationMemberResponse_InvalidOperationIdError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<RemoveOrganizationMemberResponse_InvalidOperationIdError>
-    {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RemoveOrganizationMemberResponse_InvalidOperationIdError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct RemoveOrganizationMemberResponse.OperationIdentityReusedError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RemoveOrganizationMemberResponse_OperationIdentityReusedError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            RemoveOrganizationMemberResponse_OperationIdentityReusedError,
-        >,
-    >,
-}
-
-impl RemoveOrganizationMemberResponse_OperationIdentityReusedError {
-    pub fn default_ref() -> &'static RemoveOrganizationMemberResponse_OperationIdentityReusedError {
-        static D: std::sync::LazyLock<
-            RemoveOrganizationMemberResponse_OperationIdentityReusedError,
-        > = std::sync::LazyLock::new(
-            RemoveOrganizationMemberResponse_OperationIdentityReusedError::default,
-        );
-        &D
-    }
-}
-
-impl RemoveOrganizationMemberResponse_OperationIdentityReusedError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        RemoveOrganizationMemberResponse_OperationIdentityReusedError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                RemoveOrganizationMemberResponse_OperationIdentityReusedError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/member.skir",
-                "RemoveOrganizationMemberResponse.OperationIdentityReusedError",
-                "",
-                |x: &RemoveOrganizationMemberResponse_OperationIdentityReusedError| {
-                    &x._unrecognized
-                },
-                |x: &mut RemoveOrganizationMemberResponse_OperationIdentityReusedError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<RemoveOrganizationMemberResponse_OperationIdentityReusedError>
-    {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            RemoveOrganizationMemberResponse_OperationIdentityReusedError::_adapter(),
         )
     }
 }
@@ -1187,10 +1008,6 @@ impl RemoveOrganizationMemberResponse_FounderCannotBeRemovedError {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RemoveOrganizationMemberResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RemoveOrganizationMemberResponse>>),
-    InvalidOperationIdError(Box<RemoveOrganizationMemberResponse_InvalidOperationIdError>),
-    OperationIdentityReusedError(
-        Box<RemoveOrganizationMemberResponse_OperationIdentityReusedError>,
-    ),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<RemoveOrganizationMemberResponse_Success>),
     UserNotMemberError(Box<RemoveOrganizationMemberResponse_UserNotMemberError>),
@@ -1213,13 +1030,11 @@ impl RemoveOrganizationMemberResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &RemoveOrganizationMemberResponse| match x {
                     RemoveOrganizationMemberResponse::Unknown(_) => 0,
-                    RemoveOrganizationMemberResponse::InvalidOperationIdError(_) => 1,
-                    RemoveOrganizationMemberResponse::OperationIdentityReusedError(_) => 2,
-                    RemoveOrganizationMemberResponse::InternalError(_) => 3,
-                    RemoveOrganizationMemberResponse::Success(_) => 4,
-                    RemoveOrganizationMemberResponse::UserNotMemberError(_) => 5,
-                    RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(_) => 6,
-                    RemoveOrganizationMemberResponse::InvalidRecordIdError(_) => 7,
+                    RemoveOrganizationMemberResponse::InternalError(_) => 1,
+                    RemoveOrganizationMemberResponse::Success(_) => 2,
+                    RemoveOrganizationMemberResponse::UserNotMemberError(_) => 3,
+                    RemoveOrganizationMemberResponse::FounderCannotBeRemovedError(_) => 4,
+                    RemoveOrganizationMemberResponse::InvalidRecordIdError(_) => 5,
                 },
                 |u| RemoveOrganizationMemberResponse::Unknown(Some(u)),
                 |x: &RemoveOrganizationMemberResponse| match x {
@@ -1384,16 +1199,8 @@ fn initialize_module_serializers() {
                 |x: &mut OrganizationMembersChanged, v| x.sequence = v,
             );
             (*a).add_field(
-                "operation_id",
-                1,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &OrganizationMembersChanged| &x.operation_id,
-                |x: &mut OrganizationMembersChanged, v| x.operation_id = v,
-            );
-            (*a).add_field(
                 "changes",
-                2,
+                1,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::enum_serializer_from_static(
                         OrganizationMembersChange::_adapter(),
@@ -1448,16 +1255,8 @@ fn initialize_module_serializers() {
                 UpdateOrganizationMemberRolesRequest,
             > = UpdateOrganizationMemberRolesRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "operation_id",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &UpdateOrganizationMemberRolesRequest| &x.operation_id,
-                |x: &mut UpdateOrganizationMemberRolesRequest, v| x.operation_id = v,
-            );
-            (*a).add_field(
                 "user_ids",
-                1,
+                0,
                 crate::skir_client::Serializer::array(
                     crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
                 ),
@@ -1467,7 +1266,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "role_ids",
-                2,
+                1,
                 crate::skir_client::Serializer::array(
                     crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
                 ),
@@ -1600,13 +1399,6 @@ fn initialize_module_serializers() {
         }
         unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<
-                UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError,
-            > = UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError::_adapter()
-                as *const _ as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
                 UpdateOrganizationMemberRolesResponse_InvalidSelectionError,
             > = UpdateOrganizationMemberRolesResponse_InvalidSelectionError::_adapter() as *const _
                 as *mut _;
@@ -1715,27 +1507,9 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "operation_identity_reused_error",
-                8,
-                8,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    UpdateOrganizationMemberRolesResponse_OperationIdentityReusedError::_adapter(),
-                ),
-                "",
-                |v| {
-                    UpdateOrganizationMemberRolesResponse::OperationIdentityReusedError(Box::new(v))
-                },
-                |x| match x {
-                    UpdateOrganizationMemberRolesResponse::OperationIdentityReusedError(b) => {
-                        b.as_ref()
-                    }
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
                 "invalid_selection_error",
-                9,
-                9,
+                8,
+                8,
                 crate::skir_client::internal::struct_serializer_from_static(
                     UpdateOrganizationMemberRolesResponse_InvalidSelectionError::_adapter(),
                 ),
@@ -1748,8 +1522,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "invalid_record_id_error",
-                10,
-                10,
+                9,
+                9,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
                 "",
                 |v| UpdateOrganizationMemberRolesResponse::InvalidRecordIdError(Box::new(v)),
@@ -1765,35 +1539,13 @@ fn initialize_module_serializers() {
                 RemoveOrganizationMemberRequest,
             > = RemoveOrganizationMemberRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "operation_id",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &RemoveOrganizationMemberRequest| &x.operation_id,
-                |x: &mut RemoveOrganizationMemberRequest, v| x.operation_id = v,
-            );
-            (*a).add_field(
                 "user_id",
-                1,
+                0,
                 crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
                 "",
                 |x: &RemoveOrganizationMemberRequest| &x.user_id,
                 |x: &mut RemoveOrganizationMemberRequest, v| x.user_id = v,
             );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RemoveOrganizationMemberResponse_InvalidOperationIdError,
-            > = RemoveOrganizationMemberResponse_InvalidOperationIdError::_adapter() as *const _
-                as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                RemoveOrganizationMemberResponse_OperationIdentityReusedError,
-            > = RemoveOrganizationMemberResponse_OperationIdentityReusedError::_adapter()
-                as *const _ as *mut _;
             (*a).finalize();
         }
         unsafe {
@@ -1849,37 +1601,9 @@ fn initialize_module_serializers() {
                 RemoveOrganizationMemberResponse,
             > = RemoveOrganizationMemberResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "invalid_operation_id_error",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RemoveOrganizationMemberResponse_InvalidOperationIdError::_adapter(),
-                ),
-                "",
-                |v| RemoveOrganizationMemberResponse::InvalidOperationIdError(Box::new(v)),
-                |x| match x {
-                    RemoveOrganizationMemberResponse::InvalidOperationIdError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "operation_identity_reused_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    RemoveOrganizationMemberResponse_OperationIdentityReusedError::_adapter(),
-                ),
-                "",
-                |v| RemoveOrganizationMemberResponse::OperationIdentityReusedError(Box::new(v)),
-                |x| match x {
-                    RemoveOrganizationMemberResponse::OperationIdentityReusedError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
                 "internal_error",
-                3,
-                3,
+                1,
+                1,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| RemoveOrganizationMemberResponse::InternalError(Box::new(v)),
@@ -1890,8 +1614,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "success",
-                4,
-                4,
+                2,
+                2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RemoveOrganizationMemberResponse_Success::_adapter(),
                 ),
@@ -1904,8 +1628,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "user_not_member_error",
-                5,
-                5,
+                3,
+                3,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RemoveOrganizationMemberResponse_UserNotMemberError::_adapter(),
                 ),
@@ -1918,8 +1642,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "founder_cannot_be_removed_error",
-                6,
-                6,
+                4,
+                4,
                 crate::skir_client::internal::struct_serializer_from_static(
                     RemoveOrganizationMemberResponse_FounderCannotBeRemovedError::_adapter(),
                 ),
@@ -1932,8 +1656,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "invalid_record_id_error",
-                7,
-                7,
+                5,
+                5,
                 crate::skirout::base::kernel::v1::errors::InvalidRecordIdError::serializer(),
                 "",
                 |v| RemoveOrganizationMemberResponse::InvalidRecordIdError(Box::new(v)),

@@ -67,7 +67,6 @@ async fn invalid_registration_token_does_not_bind_service(
         context,
         "typewriter.from.user.actor.organization.test_org.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ZZZZZZZZZZ".into(),
             _unrecognized: None,
         },
@@ -107,7 +106,6 @@ async fn missing_organization_does_not_consume_registration(
         context,
         "typewriter.from.user.actor.organization.missing.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ABCDEFGHIJ".into(),
             _unrecognized: None,
         },
@@ -152,7 +150,6 @@ async fn valid_registration_binds_service_and_publishes_both_views(
         context,
         "typewriter.from.user.actor.organization.test_org.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ABCDEFGHIJ".into(),
             _unrecognized: None,
         },
@@ -213,7 +210,6 @@ async fn unbind_removes_service_and_topology_from_organization_views(
         context,
         "typewriter.from.user.actor.organization.test_org.services.unbind",
         &UnbindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: "bound".into(),
             _unrecognized: None,
         },

@@ -49,7 +49,6 @@ enum OrganizationJoinRequestsChange {
 // Organization request changes. Consumers apply them in sequence order and refresh when a sequence gap appears.
 struct OrganizationJoinRequestsChanged {
   sequence: int64;
-  operation_id: string;
   changes: [OrganizationJoinRequestsChange];
 }
 
@@ -67,7 +66,6 @@ enum UserJoinRequestsChange {
 // User request changes. This sequence is independent from the organization request sequence for the same request.
 struct UserJoinRequestsChanged {
   sequence: int64;
-  operation_id: string;
   changes: [UserJoinRequestsChange];
 }
 
@@ -98,7 +96,6 @@ struct ApprovedOrganizationJoinRequest {
 // Success includes the organization request and member changes so consumers can reconcile both projections.
 method ApproveOrganizationJoinRequests(
   struct {
-    operation_id: string;
     request_ids: [RecordId];
     role_ids: [RecordId];
   }
@@ -122,7 +119,6 @@ method ApproveOrganizationJoinRequests(
   user_already_member_error: struct {
     user_ids: [RecordId];
   };
-  operation_identity_reused_error: struct {};
   invalid_selection_error: struct {};
   invalid_record_id_error: InvalidRecordIdError;
 } = 167357;
@@ -131,12 +127,9 @@ method ApproveOrganizationJoinRequests(
 // The response event is the organization event; the user stream also receives its corresponding removal.
 method DeclineOrganizationJoinRequest(
   struct {
-    operation_id: string;
     request_id: RecordId;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {

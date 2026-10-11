@@ -10,7 +10,7 @@ use otel_wasi::ResultWithSlug;
 use serde::Deserialize;
 use wasmcloud_utils::{
     database::{
-        RecordId, TransactionOutcome,
+        RecordId,
         topology::{
             EngineInstanceViewRecord, EngineTargetRecord, RealmInstanceViewRecord,
             ServiceHostRecord,
@@ -22,8 +22,6 @@ use wasmcloud_utils::{
         ConfigureServiceHostResponse_ConflictError,
         ConfigureServiceHostResponse_IncompatibleEngineError,
         ConfigureServiceHostResponse_InvalidConfigurationError,
-        ConfigureServiceHostResponse_InvalidOperationIdError,
-        ConfigureServiceHostResponse_OperationIdentityReusedError,
         ConfigureServiceHostResponse_RealmNotFoundError, EngineRealmSelection,
         HostConfigurationChange, OrganizationTopologyChanged, WatchHostExecutionResponse,
         WatchHostExecutionResponse_Desired,
@@ -63,12 +61,11 @@ enum ConfigureTopologyOutcome {
 #[tracing::instrument(skip_all)]
 /// Validates and persists one complete host execution configuration.
 ///
-/// `expected_revision` protects concurrent host edits. `operation_id` makes a retried command
-/// replayable through the database mutation receipt. A successful response describes desired
+/// `expected_revision` protects concurrent host edits. A successful response describes desired
 /// resources, not runtime readiness. Invalid assignments and stale revisions return domain
 /// responses without publishing a topology change.
 pub async fn handle_configure(
-    msg: NatsMessage,
+    _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
     request: ConfigureServiceHostRequest,
 ) -> Result<ConfigureServiceHostResponse, otel_wasi::Error> {
@@ -104,58 +101,32 @@ pub async fn handle_configure(
 
     let host_id = RecordId::from(&request.host_id);
     let organization_id = RecordId::new("organization", org_id);
-    if request.operation_id.is_empty() {
-        return Ok(skir_variant!(
-            ConfigureServiceHostResponse::InvalidOperationIdError
-        ));
-    }
-    let receipt = wasmcloud_utils::database::mutation::MutationReceipt::new(
-        actor_id,
-        org_id,
-        "topology.configure",
-        &request.operation_id,
-        msg.body,
-    );
-    let outcome = receipt
-        .bind(
-            transaction_query!(
-                ConfigureTopologyOutcome,
-                r#"
-                BEGIN TRANSACTION;
+    let outcome = transaction_query!(
+        ConfigureTopologyOutcome,
+        r#"
+        BEGIN TRANSACTION;
 
-                RETURN fn::service::configure_host(
-                    $host,
-                    $organization,
-                    $expected_revision,
-                    $desired,
-                    $operation_id,
-                    $receipt,
-                    $request_bytes
-                );
+        RETURN fn::service::configure_host(
+            $host,
+            $organization,
+            $expected_revision,
+            $desired
+        );
 
-                COMMIT TRANSACTION;
-                "#,
-            )
-            .bind("host", host_id)
-            .bind("organization", organization_id)
-            .bind("expected_revision", request.expected_revision)
-            .bind("desired", desired)
-            .bind("operation_id", &request.operation_id),
-        )
-        .execute()
-        .await
-        .error_with_slug("service-host-configure-query-failed")?
-        .decode()
-        .error_with_slug("service-host-configure-result-parse-failed")?;
+        COMMIT TRANSACTION;
+        "#,
+    )
+    .bind("host", host_id)
+    .bind("organization", organization_id)
+    .bind("expected_revision", request.expected_revision)
+    .bind("desired", desired)
+    .execute()
+    .await
+    .error_with_slug("service-host-configure-query-failed")?
+    .decode()
+    .error_with_slug("service-host-configure-result-parse-failed")?;
 
-    let outcome = match outcome {
-        TransactionOutcome::Committed(outcome) => outcome,
-        TransactionOutcome::Rejected(error) => wasmcloud_utils::skir_domain_result!(
-            ConfigureServiceHostResponse,
-            TransactionOutcome::Rejected(error),
-            "operation-identity-reused-error" => {}
-        ),
-    };
+    let outcome = wasmcloud_utils::skir_domain_result!(ConfigureServiceHostResponse, outcome);
     let change = skir_transaction_outcome!(
         ConfigureServiceHostResponse,
         outcome,

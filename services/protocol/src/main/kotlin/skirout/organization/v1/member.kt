@@ -541,7 +541,6 @@ sealed class OrganizationMembersChange private constructor() {
 
 sealed interface OrganizationMembersChanged_OrMutable {
     val sequence: kotlin.Long;
-    val operationId: kotlin.String;
     val changes: kotlin.collections.List<skirout.organization.v1.member.OrganizationMembersChange>;
 
     fun toFrozen(): skirout.organization.v1.member.OrganizationMembersChanged;
@@ -551,7 +550,6 @@ sealed interface OrganizationMembersChanged_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OrganizationMembersChanged private constructor(
     override val sequence: kotlin.Long,
-    override val operationId: kotlin.String,
     override val changes: kotlin.collections.List<skirout.organization.v1.member.OrganizationMembersChange>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.OrganizationMembersChanged>? =
         null,
@@ -560,13 +558,11 @@ class OrganizationMembersChanged private constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
         sequence: kotlin.Long,
-        operationId: kotlin.String,
         changes: kotlin.collections.Iterable<skirout.organization.v1.member.OrganizationMembersChange>,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.OrganizationMembersChanged>? =
             null,
     ): this(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         _unrecognizedFields,
     ) {}
@@ -577,7 +573,6 @@ class OrganizationMembersChanged private constructor(
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
         sequence = this.sequence,
-        operationId = this.operationId,
         changes = this.changes,
     );
 
@@ -587,13 +582,10 @@ class OrganizationMembersChanged private constructor(
             _MustNameArguments,
         sequence: kotlin.Long =
             this.sequence,
-        operationId: kotlin.String =
-            this.operationId,
         changes: kotlin.collections.Iterable<skirout.organization.v1.member.OrganizationMembersChange> =
             this.changes,
     ) = skirout.organization.v1.member.OrganizationMembersChanged(
         sequence,
-        operationId,
         build.skir.internal.toFrozenList(changes),
         this._unrecognizedFields,
     );
@@ -602,11 +594,11 @@ class OrganizationMembersChanged private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.member.OrganizationMembersChanged && this.sequence == other.sequence && this.operationId == other.operationId && this.changes == other.changes);
+        return this === other || (other is skirout.organization.v1.member.OrganizationMembersChanged && this.sequence == other.sequence && this.changes == other.changes);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.operationId, this.changes).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.sequence, this.changes).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -622,8 +614,6 @@ class OrganizationMembersChanged private constructor(
             _MustNameArguments,
         override var sequence: kotlin.Long =
             0L,
-        override var operationId: kotlin.String =
-            "",
         override var changes: kotlin.collections.List<skirout.organization.v1.member.OrganizationMembersChange> =
             build.skir.internal.emptyFrozenList<skirout.organization.v1.member.OrganizationMembersChange>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.OrganizationMembersChanged>? =
@@ -632,7 +622,6 @@ class OrganizationMembersChanged private constructor(
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.member.OrganizationMembersChanged(
             sequence = this.sequence,
-            operationId = this.operationId,
             changes = this.changes,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -658,7 +647,6 @@ class OrganizationMembersChanged private constructor(
         private val default =
             skirout.organization.v1.member.OrganizationMembersChanged(
                 0L,
-                "",
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.member.OrganizationMembersChange>(),
             );
 
@@ -675,13 +663,10 @@ class OrganizationMembersChanged private constructor(
                 _MustNameArguments,
             sequence: kotlin.Long =
                 0L,
-            operationId: kotlin.String =
-                "",
             changes: kotlin.collections.Iterable<skirout.organization.v1.member.OrganizationMembersChange> =
                 build.skir.internal.emptyFrozenList<skirout.organization.v1.member.OrganizationMembersChange>(),
         ) = skirout.organization.v1.member.OrganizationMembersChanged(
             sequence = sequence,
-            operationId = operationId,
             changes = changes,
             _unrecognizedFields = null,
         );
@@ -884,7 +869,6 @@ sealed class WatchOrganizationMembersResponse private constructor() {
 }
 
 sealed interface UpdateOrganizationMemberRolesRequest_OrMutable {
-    val operationId: kotlin.String;
     val userIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
     val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable>;
 
@@ -894,7 +878,6 @@ sealed interface UpdateOrganizationMemberRolesRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class UpdateOrganizationMemberRolesRequest private constructor(
-    override val operationId: kotlin.String,
     override val userIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     override val roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest>? =
@@ -903,13 +886,11 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         userIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
         roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest>? =
             null,
     ): this(
-        operationId,
         build.skir.internal.toFrozenList(userIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleIds, { it.toFrozen() }),
         _unrecognizedFields,
@@ -920,7 +901,6 @@ class UpdateOrganizationMemberRolesRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         userIds = this.userIds,
         roleIds = this.roleIds,
     );
@@ -929,14 +909,11 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         userIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.userIds,
         roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             this.roleIds,
     ) = skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest(
-        operationId,
         build.skir.internal.toFrozenList(userIds, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleIds, { it.toFrozen() }),
         this._unrecognizedFields,
@@ -946,11 +923,11 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest && this.operationId == other.operationId && this.userIds == other.userIds && this.roleIds == other.roleIds);
+        return this === other || (other is skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest && this.userIds == other.userIds && this.roleIds == other.roleIds);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.userIds, this.roleIds).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.userIds, this.roleIds).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -964,8 +941,6 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var userIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         override var roleIds: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId_OrMutable> =
@@ -975,7 +950,6 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     ): skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest(
-            operationId = this.operationId,
             userIds = this.userIds,
             roleIds = this.roleIds,
             _unrecognizedFields = this._unrecognizedFields,
@@ -1017,7 +991,6 @@ class UpdateOrganizationMemberRolesRequest private constructor(
     companion object {
         private val default =
             skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest(
-                "",
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
             );
@@ -1033,14 +1006,11 @@ class UpdateOrganizationMemberRolesRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             userIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
             roleIds: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.kernel.v1.record_id.RecordId>(),
         ) = skirout.organization.v1.member.UpdateOrganizationMemberRolesRequest(
-            operationId = operationId,
             userIds = userIds,
             roleIds = roleIds,
             _unrecognizedFields = null,
@@ -1066,7 +1036,6 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         ROLES_NOT_ASSIGNABLE_ERROR_WRAPPER,
         ROLES_REQUIRED_ERROR_WRAPPER,
         FOUNDER_ROLE_REQUIRED_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INVALID_SELECTION_ERROR_WRAPPER,
         INVALID_RECORD_ID_ERROR_WRAPPER,
     }
@@ -1212,24 +1181,6 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError,
-    ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
-        constructor(
-            value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
-        }
-    }
-
     class InvalidSelectionErrorWrapper private constructor (
         val value: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidSelectionError,
     ) : skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse() {
@@ -1364,15 +1315,6 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
                 _MustNameArguments,
         ) = FounderRoleRequiredErrorWrapper(
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.FounderRoleRequiredError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError()
         );
 
         /** Shortcut for `InvalidSelectionErrorWrapper(skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidSelectionError(...))`. */
@@ -2172,86 +2114,6 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
         }
     }
 
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer get() = _SerializerRegistry.UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializer;
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
     sealed interface InvalidSelectionError_OrMutable {
         fun toFrozen(): skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.InvalidSelectionError;
     }
@@ -2334,7 +2196,6 @@ sealed class UpdateOrganizationMemberRolesResponse private constructor() {
 }
 
 sealed interface RemoveOrganizationMemberRequest_OrMutable {
-    val operationId: kotlin.String;
     val userId: skirout.kernel.v1.record_id.RecordId_OrMutable;
 
     fun toFrozen(): skirout.organization.v1.member.RemoveOrganizationMemberRequest;
@@ -2343,7 +2204,6 @@ sealed interface RemoveOrganizationMemberRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RemoveOrganizationMemberRequest private constructor(
-    override val operationId: kotlin.String,
     override val userId: skirout.kernel.v1.record_id.RecordId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberRequest>? =
         null,
@@ -2351,12 +2211,10 @@ class RemoveOrganizationMemberRequest private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         userId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberRequest>? =
             null,
     ): this(
-        operationId,
         userId.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -2366,7 +2224,6 @@ class RemoveOrganizationMemberRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         userId = this.userId,
     );
 
@@ -2374,12 +2231,9 @@ class RemoveOrganizationMemberRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         userId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.userId,
     ) = skirout.organization.v1.member.RemoveOrganizationMemberRequest(
-        operationId,
         userId.toFrozen(),
         this._unrecognizedFields,
     );
@@ -2388,11 +2242,11 @@ class RemoveOrganizationMemberRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.organization.v1.member.RemoveOrganizationMemberRequest && this.operationId == other.operationId && this.userId == other.userId);
+        return this === other || (other is skirout.organization.v1.member.RemoveOrganizationMemberRequest && this.userId == other.userId);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.userId).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.userId).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2406,8 +2260,6 @@ class RemoveOrganizationMemberRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var userId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberRequest>? =
@@ -2415,7 +2267,6 @@ class RemoveOrganizationMemberRequest private constructor(
     ): skirout.organization.v1.member.RemoveOrganizationMemberRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.organization.v1.member.RemoveOrganizationMemberRequest(
-            operationId = this.operationId,
             userId = this.userId,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -2440,7 +2291,6 @@ class RemoveOrganizationMemberRequest private constructor(
     companion object {
         private val default =
             skirout.organization.v1.member.RemoveOrganizationMemberRequest(
-                "",
                 skirout.kernel.v1.record_id.RecordId.partial(),
             );
 
@@ -2455,12 +2305,9 @@ class RemoveOrganizationMemberRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             userId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
         ) = skirout.organization.v1.member.RemoveOrganizationMemberRequest(
-            operationId = operationId,
             userId = userId,
             _unrecognizedFields = null,
         );
@@ -2478,8 +2325,6 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
     /** The kind of variant held by a `RemoveOrganizationMemberResponse`. */
     enum class Kind {
         UNKNOWN,
-        INVALID_OPERATION_ID_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
         SUCCESS_WRAPPER,
         USER_NOT_MEMBER_ERROR_WRAPPER,
@@ -2499,42 +2344,6 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return kind.ordinal;
-        }
-    }
-
-    class InvalidOperationIdErrorWrapper private constructor (
-        val value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError,
-    ) : skirout.organization.v1.member.RemoveOrganizationMemberResponse() {
-        constructor(
-            value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_OPERATION_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1583533316;
-        }
-    }
-
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError,
-    ) : skirout.organization.v1.member.RemoveOrganizationMemberResponse() {
-        constructor(
-            value: skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
         }
     }
 
@@ -2646,24 +2455,6 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `InvalidOperationIdErrorWrapper(skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidOperationIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InvalidOperationIdErrorWrapper(
-            skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError()
-        );
-
         /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInternalError(
@@ -2728,166 +2519,6 @@ sealed class RemoveOrganizationMemberResponse private constructor() {
 
         /** Describes the [RemoveOrganizationMemberResponse] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.RemoveOrganizationMemberResponseSerializerImpl.typeDescriptor;
-    }
-
-    sealed interface InvalidOperationIdError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidOperationIdError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError>? =
-            null,
-    ): skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidOperationIdError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError>? =
-                null,
-        ): skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidOperationIdError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer get() = _SerializerRegistry.RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializer;
-
-            /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializerImpl.typeDescriptor;
-        }
-    }
-
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        internal val _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                _SerializerRegistry.RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializerImpl,
-            )
-        }
-
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
-
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer get() = _SerializerRegistry.RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializer;
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = _SerializerRegistry.RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializerImpl.typeDescriptor;
-        }
     }
 
     sealed interface Success_OrMutable {
@@ -3392,30 +3023,6 @@ private object _SerializerRegistry {
 
     val RemoveOrganizationMemberResponse_FounderCannotBeRemovedErrorSerializer = build.skir.internal.makeSerializer(RemoveOrganizationMemberResponse_FounderCannotBeRemovedErrorSerializerImpl);
 
-    val RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/member.skir:RemoveOrganizationMemberResponse.InvalidOperationIdError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializer = build.skir.internal.makeSerializer(RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializerImpl);
-
-    val RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/member.skir:RemoveOrganizationMemberResponse.OperationIdentityReusedError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializerImpl);
-
     val RemoveOrganizationMemberResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/member.skir:RemoveOrganizationMemberResponse.Success",
         doc = "",
@@ -3488,18 +3095,6 @@ private object _SerializerRegistry {
     );
 
     val UpdateOrganizationMemberRolesResponse_InvalidSelectionErrorSerializer = build.skir.internal.makeSerializer(UpdateOrganizationMemberRolesResponse_InvalidSelectionErrorSerializerImpl);
-
-    val UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "organization/v1/member.skir:UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError",
-        doc = "",
-        defaultInstance = skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedError.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializer = build.skir.internal.makeSerializer(UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializerImpl);
 
     val UpdateOrganizationMemberRolesResponse_RolesNotAssignableErrorSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "organization/v1/member.skir:UpdateOrganizationMemberRolesResponse.RolesNotAssignableError",
@@ -3690,18 +3285,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.sequence = v },
         );
         OrganizationMembersChangedSerializerImpl.addField(
-            "operation_id",
-            "operationId",
+            "changes",
+            "changes",
             1,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        OrganizationMembersChangedSerializerImpl.addField(
-            "changes",
-            "changes",
-            2,
             build.skir.Serializers.list(
                 _SerializerRegistry.OrganizationMembersChangeSerializer,
             ),
@@ -3734,18 +3320,9 @@ private object _SerializerRegistry {
         OrganizationMembersSnapshotSerializerImpl.finalizeStruct();
 
         RemoveOrganizationMemberRequestSerializerImpl.addField(
-            "operation_id",
-            "operationId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        RemoveOrganizationMemberRequestSerializerImpl.addField(
             "user_id",
             "userId",
-            1,
+            0,
             skirout.kernel.v1.record_id.RecordId.serializer,
             "",
             { it.userId },
@@ -3755,24 +3332,6 @@ private object _SerializerRegistry {
 
         RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
             1,
-            "invalid_operation_id_error",
-            skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializer,
-            "",
-            { skirout.organization.v1.member.RemoveOrganizationMemberResponse.InvalidOperationIdErrorWrapper(it) },
-            { it.value },
-        );
-        RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            2,
-            "operation_identity_reused_error",
-            skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializer,
-            "",
-            { skirout.organization.v1.member.RemoveOrganizationMemberResponse.OperationIdentityReusedErrorWrapper(it) },
-            { it.value },
-        );
-        RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            3,
             "internal_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InternalError.serializer,
@@ -3781,7 +3340,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            4,
+            2,
             "success",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.SUCCESS_WRAPPER.ordinal,
             _SerializerRegistry.RemoveOrganizationMemberResponse_SuccessSerializer,
@@ -3790,7 +3349,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            5,
+            3,
             "user_not_member_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.USER_NOT_MEMBER_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RemoveOrganizationMemberResponse_UserNotMemberErrorSerializer,
@@ -3799,7 +3358,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            6,
+            4,
             "founder_cannot_be_removed_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.FOUNDER_CANNOT_BE_REMOVED_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.RemoveOrganizationMemberResponse_FounderCannotBeRemovedErrorSerializer,
@@ -3808,7 +3367,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         RemoveOrganizationMemberResponseSerializerImpl.addWrapperVariant(
-            7,
+            5,
             "invalid_record_id_error",
             skirout.organization.v1.member.RemoveOrganizationMemberResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -3828,10 +3387,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.userId = v },
         );
         RemoveOrganizationMemberResponse_FounderCannotBeRemovedErrorSerializerImpl.finalizeStruct();
-
-        RemoveOrganizationMemberResponse_InvalidOperationIdErrorSerializerImpl.finalizeStruct();
-
-        RemoveOrganizationMemberResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
 
         RemoveOrganizationMemberResponse_SuccessSerializerImpl.addField(
             "event",
@@ -3856,18 +3411,9 @@ private object _SerializerRegistry {
         RemoveOrganizationMemberResponse_UserNotMemberErrorSerializerImpl.finalizeStruct();
 
         UpdateOrganizationMemberRolesRequestSerializerImpl.addField(
-            "operation_id",
-            "operationId",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.operationId },
-            { mut, v -> mut.operationId = v },
-        );
-        UpdateOrganizationMemberRolesRequestSerializerImpl.addField(
             "user_ids",
             "userIds",
-            1,
+            0,
             build.skir.Serializers.list(
                 skirout.kernel.v1.record_id.RecordId.serializer,
             ),
@@ -3878,7 +3424,7 @@ private object _SerializerRegistry {
         UpdateOrganizationMemberRolesRequestSerializerImpl.addField(
             "role_ids",
             "roleIds",
-            2,
+            1,
             build.skir.Serializers.list(
                 skirout.kernel.v1.record_id.RecordId.serializer,
             ),
@@ -3953,15 +3499,6 @@ private object _SerializerRegistry {
         );
         UpdateOrganizationMemberRolesResponseSerializerImpl.addWrapperVariant(
             8,
-            "operation_identity_reused_error",
-            skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-            _SerializerRegistry.UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializer,
-            "",
-            { skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.OperationIdentityReusedErrorWrapper(it) },
-            { it.value },
-        );
-        UpdateOrganizationMemberRolesResponseSerializerImpl.addWrapperVariant(
-            9,
             "invalid_selection_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.INVALID_SELECTION_ERROR_WRAPPER.ordinal,
             _SerializerRegistry.UpdateOrganizationMemberRolesResponse_InvalidSelectionErrorSerializer,
@@ -3970,7 +3507,7 @@ private object _SerializerRegistry {
             { it.value },
         );
         UpdateOrganizationMemberRolesResponseSerializerImpl.addWrapperVariant(
-            10,
+            9,
             "invalid_record_id_error",
             skirout.organization.v1.member.UpdateOrganizationMemberRolesResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
             skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
@@ -3983,8 +3520,6 @@ private object _SerializerRegistry {
         UpdateOrganizationMemberRolesResponse_FounderRoleRequiredErrorSerializerImpl.finalizeStruct();
 
         UpdateOrganizationMemberRolesResponse_InvalidSelectionErrorSerializerImpl.finalizeStruct();
-
-        UpdateOrganizationMemberRolesResponse_OperationIdentityReusedErrorSerializerImpl.finalizeStruct();
 
         UpdateOrganizationMemberRolesResponse_RolesNotAssignableErrorSerializerImpl.addField(
             "user_ids",

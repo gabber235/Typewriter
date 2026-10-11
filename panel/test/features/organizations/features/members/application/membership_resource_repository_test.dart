@@ -25,7 +25,7 @@ final class _Telemetry implements PanelTelemetry {
 
 void main() {
   test(
-    "prepared membership command freezes identity and emits confirmed fact",
+    "prepared membership command freezes values and emits confirmed fact",
     () async {
       final nats = FakeNatsClient(actorId: testUserId);
       addTearDown(nats.dispose);
@@ -50,7 +50,6 @@ void main() {
             members: const [],
             event: skir.OrganizationMembersChanged(
               sequence: 4,
-              operationId: request.operationId,
               changes: const [],
             ),
           ),
@@ -61,8 +60,7 @@ void main() {
       final first = await command.send();
       final second = await command.send();
 
-      expect(command.id, firstRequest.operationId);
-      expect(command.replay, SubmissionReplay.identicalRequest);
+      expect(command.replay, SubmissionReplay.unsupported);
       expect(firstRequest.userIds, [testMemberId]);
       expect(firstRequest.roleIds, [role.roleId]);
       expect(nats.requests[0].payload, nats.requests[1].payload);
@@ -77,7 +75,6 @@ void main() {
 
       await command.integrate!(first);
       expect(events.single.sequence, 4);
-      expect(events.single.operationId, command.id);
     },
   );
 
@@ -122,7 +119,6 @@ void main() {
         skir.RemoveOrganizationMemberResponse.createSuccess(
           event: skir.OrganizationMembersChanged(
             sequence: 7,
-            operationId: command.id as String,
             changes: [skir.OrganizationMembersChange.wrapRemove(testMemberId)],
           ),
         ),

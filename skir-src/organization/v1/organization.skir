@@ -28,7 +28,6 @@ enum UserOrganizationsChange {
 // Changes to a user's organization list. Remove carries the organization identity.
 struct UserOrganizationsChanged {
   sequence: int64;
-  operation_id: string;
   changes: [UserOrganizationsChange];
 }
 
@@ -36,13 +35,10 @@ struct UserOrganizationsChanged {
 // The success event is scoped to that user projection.
 method CreateOrganization(
   struct {
-    operation_id: string;
     name: string;
     logo_url: string?;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {

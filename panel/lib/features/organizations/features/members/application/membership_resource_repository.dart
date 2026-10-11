@@ -43,14 +43,11 @@ final class MembershipResourceRepository {
     final ids = List<skir.RecordId>.unmodifiable(requestIds);
     final selectedRoles = List<OrganizationRole>.unmodifiable(roles);
     final request = skir.ApproveOrganizationJoinRequestsRequest(
-      operationId: uuid.v4(),
       requestIds: ids,
       roleIds: selectedRoles.map((role) => role.roleId),
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Approve membership",
       resources: {for (final id in ids) (organization, id)},
       classify: _classifyApprove,
@@ -70,18 +67,14 @@ final class MembershipResourceRepository {
   PreparedCommit<skir.DeclineOrganizationJoinRequestResponse> decline(
     skir.RecordId requestId,
   ) {
+    final submissionId = uuid.v4();
     final request = skir.DeclineOrganizationJoinRequestRequest(
-      operationId: uuid.v4(),
       requestId: requestId,
     );
-    _removals[request.operationId] = (
-      MembershipRemovalKind.joinRequest,
-      requestId,
-    );
+    _removals[submissionId] = (MembershipRemovalKind.joinRequest, requestId);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
+      submissionId: submissionId,
       label: "Decline membership",
       resources: {(organization, requestId)},
       classify: _classifyDecline,
@@ -101,7 +94,6 @@ final class MembershipResourceRepository {
     JoinCodeOptions options = const JoinCodeOptions(),
   }) {
     final request = skir.GenerateOrganizationJoinCodeRequest(
-      operationId: uuid.v4(),
       singleUse: options.singleUse,
       expiration: switch (options.expiration) {
         JoinCodeExpirationNever() =>
@@ -117,8 +109,6 @@ final class MembershipResourceRepository {
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Generate join code",
       classify: _classifyGenerate,
       onResponse: (response) async {
@@ -136,15 +126,12 @@ final class MembershipResourceRepository {
   PreparedCommit<skir.RevokeOrganizationJoinCodeResponse> revoke(
     skir.RecordId codeId,
   ) {
-    final request = skir.RevokeOrganizationJoinCodeRequest(
-      operationId: uuid.v4(),
-      codeId: codeId,
-    );
-    _removals[request.operationId] = (MembershipRemovalKind.joinCode, codeId);
+    final submissionId = uuid.v4();
+    final request = skir.RevokeOrganizationJoinCodeRequest(codeId: codeId);
+    _removals[submissionId] = (MembershipRemovalKind.joinCode, codeId);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
+      submissionId: submissionId,
       label: "Revoke join code",
       resources: {(organization, codeId)},
       classify: _classifyRevoke,
@@ -167,7 +154,6 @@ final class MembershipResourceRepository {
     final ids = List<skir.RecordId>.unmodifiable(memberIds);
     final roles = List<OrganizationRole>.unmodifiable(requestedRoles);
     final request = skir.UpdateOrganizationMemberRolesRequest(
-      operationId: uuid.v4(),
       userIds: ids,
       roleIds: roles
           .where((role) => role.assignable)
@@ -175,8 +161,6 @@ final class MembershipResourceRepository {
     );
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Update member roles",
       resources: {for (final id in ids) (organization, id)},
       classify: _classifyUpdate,
@@ -195,14 +179,9 @@ final class MembershipResourceRepository {
   PreparedCommit<skir.RemoveOrganizationMemberResponse> remove(
     skir.RecordId memberId,
   ) {
-    final request = skir.RemoveOrganizationMemberRequest(
-      operationId: uuid.v4(),
-      userId: memberId,
-    );
+    final request = skir.RemoveOrganizationMemberRequest(userId: memberId);
     return session.transport.prepare(
       request.operation(userId: _userId, organizationId: organization),
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
       label: "Remove member",
       resources: {(organization, memberId)},
       classify: _classifyRemove,

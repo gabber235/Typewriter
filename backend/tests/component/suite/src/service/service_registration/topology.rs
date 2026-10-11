@@ -547,7 +547,6 @@ async fn configure(
         context,
         "typewriter.from.user.actor.organization.test_org.topology.configure",
         &ConfigureServiceHostRequest {
-            operation_id: crate::framework::operation_id(),
             host_id: skir_record_id("service_host", "host"),
             expected_revision,
             execution,

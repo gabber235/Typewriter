@@ -223,7 +223,7 @@ void main() {
   });
 
   test(
-    "uncertain update preserves the cause and a newer observation",
+    "uncertain update preserves the cause and observation without resending",
     () async {
       final newest = _service(name: "Newest", revision: 4);
       harness.respond(_updateSubject, (data) {
@@ -238,7 +238,7 @@ void main() {
       expect(result, isA<MutationUncertain>());
       final uncertain = result as MutationUncertain;
       expect(uncertain.cause, isA<StateError>());
-      expect(uncertain.replay, isNotNull);
+      expect(uncertain.replay, isNull);
       expect(uncertain.submissionId, isNotNull);
       await harness.container.pump();
       expect(await harness.container.read(canonicalServicesProvider.future), [
@@ -252,7 +252,12 @@ void main() {
           .submissions
           .single;
       expect(submission.result, LocalWorkSubmissionResult.uncertain);
-      expect(submission.canReplay, isTrue);
+      expect(submission.canReplay, isFalse);
+      final requestsBefore = harness.nats.requests.length;
+      await harness.container
+          .read(localWorkControllerProvider)
+          .retrySubmission(submission.id);
+      expect(harness.nats.requests.length, requestsBefore);
     },
   );
 

@@ -32,10 +32,9 @@ method WatchOrganizationServices(
 // Performs an organization scoped compare and set update of service metadata.
 // The registration service owns revision and increments it only after accepting the name change. A stale expected
 // revision returns the current service in conflict_error, while service_not_found_error means the service is absent
-// from this organization. Operation identity protects retries and rejects reuse with different input.
+// from this organization.
 method UpdateOrganizationService(
   struct {
-    operation_id: string;
     service_id: RecordId;
     expected_revision: int64;
     name: string;
@@ -53,8 +52,5 @@ method UpdateOrganizationService(
   service_not_found_error: struct {};
 
   validation_error: ServiceUpdateValidationError;
-
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   invalid_record_id_error: InvalidRecordIdError;
 } = 872501;

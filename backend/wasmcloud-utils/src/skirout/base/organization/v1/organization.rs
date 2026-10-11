@@ -154,7 +154,6 @@ impl UserOrganizationsChange {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct UserOrganizationsChanged {
     pub sequence: i64,
-    pub operation_id: String,
     pub changes: Vec<UserOrganizationsChange>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UserOrganizationsChanged>>,
@@ -198,7 +197,6 @@ impl UserOrganizationsChanged {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CreateOrganizationRequest {
-    pub operation_id: String,
     pub name: String,
     pub logo_url: Option<String>,
     /// Set this to None when you're creating a struct.
@@ -233,108 +231,6 @@ impl CreateOrganizationRequest {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             CreateOrganizationRequest::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CreateOrganizationResponse.InvalidOperationIdError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CreateOrganizationResponse_InvalidOperationIdError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<CreateOrganizationResponse_InvalidOperationIdError>,
-    >,
-}
-
-impl CreateOrganizationResponse_InvalidOperationIdError {
-    pub fn default_ref() -> &'static CreateOrganizationResponse_InvalidOperationIdError {
-        static D: std::sync::LazyLock<CreateOrganizationResponse_InvalidOperationIdError> =
-            std::sync::LazyLock::new(CreateOrganizationResponse_InvalidOperationIdError::default);
-        &D
-    }
-}
-
-impl CreateOrganizationResponse_InvalidOperationIdError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        CreateOrganizationResponse_InvalidOperationIdError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                CreateOrganizationResponse_InvalidOperationIdError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/organization.skir",
-                "CreateOrganizationResponse.InvalidOperationIdError",
-                "",
-                |x: &CreateOrganizationResponse_InvalidOperationIdError| &x._unrecognized,
-                |x: &mut CreateOrganizationResponse_InvalidOperationIdError, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<CreateOrganizationResponse_InvalidOperationIdError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CreateOrganizationResponse_InvalidOperationIdError::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
-// struct CreateOrganizationResponse.OperationIdentityReusedError
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CreateOrganizationResponse_OperationIdentityReusedError {
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<
-        crate::skir_client::UnrecognizedFields<
-            CreateOrganizationResponse_OperationIdentityReusedError,
-        >,
-    >,
-}
-
-impl CreateOrganizationResponse_OperationIdentityReusedError {
-    pub fn default_ref() -> &'static CreateOrganizationResponse_OperationIdentityReusedError {
-        static D: std::sync::LazyLock<CreateOrganizationResponse_OperationIdentityReusedError> =
-            std::sync::LazyLock::new(
-                CreateOrganizationResponse_OperationIdentityReusedError::default,
-            );
-        &D
-    }
-}
-
-impl CreateOrganizationResponse_OperationIdentityReusedError {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
-        CreateOrganizationResponse_OperationIdentityReusedError,
-    > {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<
-                CreateOrganizationResponse_OperationIdentityReusedError,
-            >,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "organization/v1/organization.skir",
-                "CreateOrganizationResponse.OperationIdentityReusedError",
-                "",
-                |x: &CreateOrganizationResponse_OperationIdentityReusedError| &x._unrecognized,
-                |x: &mut CreateOrganizationResponse_OperationIdentityReusedError, u| {
-                    x._unrecognized = u
-                },
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer()
-    -> crate::skir_client::Serializer<CreateOrganizationResponse_OperationIdentityReusedError> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            CreateOrganizationResponse_OperationIdentityReusedError::_adapter(),
         )
     }
 }
@@ -392,8 +288,6 @@ impl CreateOrganizationResponse_Success {
 #[derive(Debug, Clone, PartialEq)]
 pub enum CreateOrganizationResponse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CreateOrganizationResponse>>),
-    InvalidOperationIdError(Box<CreateOrganizationResponse_InvalidOperationIdError>),
-    OperationIdentityReusedError(Box<CreateOrganizationResponse_OperationIdentityReusedError>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
     Success(Box<CreateOrganizationResponse_Success>),
 }
@@ -413,10 +307,8 @@ impl CreateOrganizationResponse {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &CreateOrganizationResponse| match x {
                     CreateOrganizationResponse::Unknown(_) => 0,
-                    CreateOrganizationResponse::InvalidOperationIdError(_) => 1,
-                    CreateOrganizationResponse::OperationIdentityReusedError(_) => 2,
-                    CreateOrganizationResponse::InternalError(_) => 3,
-                    CreateOrganizationResponse::Success(_) => 4,
+                    CreateOrganizationResponse::InternalError(_) => 1,
+                    CreateOrganizationResponse::Success(_) => 2,
                 },
                 |u| CreateOrganizationResponse::Unknown(Some(u)),
                 |x: &CreateOrganizationResponse| match x {
@@ -679,16 +571,8 @@ fn initialize_module_serializers() {
                 |x: &mut UserOrganizationsChanged, v| x.sequence = v,
             );
             (*a).add_field(
-                "operation_id",
-                1,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &UserOrganizationsChanged| &x.operation_id,
-                |x: &mut UserOrganizationsChanged, v| x.operation_id = v,
-            );
-            (*a).add_field(
                 "changes",
-                2,
+                1,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::enum_serializer_from_static(
                         UserOrganizationsChange::_adapter(),
@@ -704,16 +588,8 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<CreateOrganizationRequest> =
                 CreateOrganizationRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "operation_id",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &CreateOrganizationRequest| &x.operation_id,
-                |x: &mut CreateOrganizationRequest, v| x.operation_id = v,
-            );
-            (*a).add_field(
                 "name",
-                1,
+                0,
                 crate::skir_client::Serializer::string(),
                 "",
                 |x: &CreateOrganizationRequest| &x.name,
@@ -721,26 +597,12 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "logo_url",
-                2,
+                1,
                 crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()),
                 "",
                 |x: &CreateOrganizationRequest| &x.logo_url,
                 |x: &mut CreateOrganizationRequest, v| x.logo_url = v,
             );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                CreateOrganizationResponse_InvalidOperationIdError,
-            > = CreateOrganizationResponse_InvalidOperationIdError::_adapter() as *const _
-                as *mut _;
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<
-                CreateOrganizationResponse_OperationIdentityReusedError,
-            > = CreateOrganizationResponse_OperationIdentityReusedError::_adapter() as *const _
-                as *mut _;
             (*a).finalize();
         }
         unsafe {
@@ -773,37 +635,9 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::EnumAdapter<CreateOrganizationResponse> =
                 CreateOrganizationResponse::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
-                "invalid_operation_id_error",
-                1,
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CreateOrganizationResponse_InvalidOperationIdError::_adapter(),
-                ),
-                "",
-                |v| CreateOrganizationResponse::InvalidOperationIdError(Box::new(v)),
-                |x| match x {
-                    CreateOrganizationResponse::InvalidOperationIdError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
-                "operation_identity_reused_error",
-                2,
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CreateOrganizationResponse_OperationIdentityReusedError::_adapter(),
-                ),
-                "",
-                |v| CreateOrganizationResponse::OperationIdentityReusedError(Box::new(v)),
-                |x| match x {
-                    CreateOrganizationResponse::OperationIdentityReusedError(b) => b.as_ref(),
-                    _ => unreachable!(),
-                },
-            );
-            (*a).add_wrapper_variant(
                 "internal_error",
-                3,
-                3,
+                1,
+                1,
                 crate::skirout::base::kernel::v1::errors::InternalError::serializer(),
                 "",
                 |v| CreateOrganizationResponse::InternalError(Box::new(v)),
@@ -814,8 +648,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "success",
-                4,
-                4,
+                2,
+                2,
                 crate::skir_client::internal::struct_serializer_from_static(
                     CreateOrganizationResponse_Success::_adapter(),
                 ),
