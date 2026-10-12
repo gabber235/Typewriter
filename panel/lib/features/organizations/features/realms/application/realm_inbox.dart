@@ -137,7 +137,11 @@ bool realmOwnsReservation(AuthoringScope scope, Object resource) =>
     switch (resource) {
       WorkDriverId() => realmOwnsWork(scope, resource),
       EditorResourceKey() => resource.scope == scope,
-      (skir.RecordId organization, skir.RecordId realm, skir.ResourceId _) =>
+      (
+        final skir.RecordId organization,
+        final skir.RecordId realm,
+        skir.ResourceId _,
+      ) =>
         organization == scope.organizationId && realm == scope.realmId,
       _ => false,
     };

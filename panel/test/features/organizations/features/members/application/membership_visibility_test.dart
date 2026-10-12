@@ -41,13 +41,15 @@ void main() {
       );
       addTearDown(subscription.close);
 
-      async.flushMicrotasks();
-      async.elapse(Duration.zero);
+      async
+        ..flushMicrotasks()
+        ..elapse(Duration.zero);
       expect(observations.last, [request]);
       async.elapse(const Duration(milliseconds: 199));
       expect(observations.last, [request]);
-      async.elapse(const Duration(milliseconds: 1));
-      async.flushMicrotasks();
+      async
+        ..elapse(const Duration(milliseconds: 1))
+        ..flushMicrotasks();
       expect(observations.last, isEmpty);
       expect(container.read(organizationJoinRequestsProvider).requireValue, [
         request,

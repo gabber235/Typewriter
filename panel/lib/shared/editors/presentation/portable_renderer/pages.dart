@@ -11,7 +11,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       return _diagnostic("The page elements binding is unavailable");
     }
     final pageHost = switch (host) {
-      PortablePageHost value => value,
+      final PortablePageHost value => value,
       _ => throw StateError("Page host checked before projection"),
     };
     final projection = pageHost.projectPage(
@@ -104,7 +104,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       return _diagnostic("The page elements binding is unavailable");
     }
     final pageHost = switch (host) {
-      PortablePageHost value => value,
+      final PortablePageHost value => value,
       _ => throw StateError("Page host checked before projection"),
     };
     final projection = pageHost.projectPage(
@@ -171,7 +171,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
               enabled: editable,
               onSelected: (action) {
                 final pageHost = switch (childScope.host) {
-                  PortablePageHost value => value,
+                  final PortablePageHost value => value,
                   _ => null,
                 };
                 if (pageHost == null) return;
@@ -209,7 +209,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     final catalog = parent.catalog;
     final host = parent.host;
     final projectionHost = switch (host) {
-      PortableCollectionProjectionHost value => value,
+      final PortableCollectionProjectionHost value => value,
       _ => null,
     };
     final projected = projectionHost?.projectResource(

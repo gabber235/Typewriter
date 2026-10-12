@@ -9,7 +9,7 @@ Future<void> _chooseLink({
   required skir.PresentationCollectionDefinition? candidateDefinition,
 }) async {
   final linkHost = switch (scope.host) {
-    PortableLinkHost value => value,
+    final PortableLinkHost value => value,
     _ => null,
   };
   if (linkHost == null) return;
@@ -163,7 +163,7 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
       if (candidates != null && row == null) continue;
       final host = scope.host;
       final projectionHost = switch (host) {
-        PortableCollectionProjectionHost value => value,
+        final PortableCollectionProjectionHost value => value,
         _ => null,
       };
       final resource = projectionHost?.projectResource(

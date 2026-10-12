@@ -70,7 +70,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     final host = childScope.host;
     final resource = childScope.resource;
     final projectionHost = switch (host) {
-      PortableCollectionProjectionHost value => value,
+      final PortableCollectionProjectionHost value => value,
       _ => null,
     };
     if (projectionHost != null && resource != null) {
@@ -253,7 +253,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     final resource = childScope.resource;
     final host = childScope.host;
     final projectionHost = switch (host) {
-      PortableCollectionProjectionHost value => value,
+      final PortableCollectionProjectionHost value => value,
       _ => null,
     };
     return resource == null || projectionHost == null

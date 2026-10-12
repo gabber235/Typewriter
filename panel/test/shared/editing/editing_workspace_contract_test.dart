@@ -58,11 +58,14 @@ void main() {
       ],
     ),
     change: (document, value) {
-      final edit = AuthoringEdit.fromDocument(document);
-      edit.set(
-        skir.ValueLocation(resource: _page, path: editorRootPath.field("name")),
-        _text(value),
-      );
+      final edit = AuthoringEdit.fromDocument(document)
+        ..set(
+          skir.ValueLocation(
+            resource: _page,
+            path: editorRootPath.field("name"),
+          ),
+          _text(value),
+        );
       return RealmPreparedEdit(request: edit.prepare());
     },
     read: (document) =>

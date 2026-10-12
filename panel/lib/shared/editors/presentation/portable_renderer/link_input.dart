@@ -193,7 +193,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
             link == null
                 ? "No resource selected"
                 : switch (scope.host) {
-                    PortableCollectionProjectionHost host =>
+                    final PortableCollectionProjectionHost host =>
                       host
                               .projectResource(
                                 link.target.resource,
@@ -238,7 +238,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                 onPressed: enabled
                     ? () {
                         final linkHost = switch (scope.host) {
-                          PortableLinkHost value => value,
+                          final PortableLinkHost value => value,
                           _ => null,
                         };
                         if (linkHost == null) return;

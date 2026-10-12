@@ -43,8 +43,7 @@ void main() {
     addTearDown(session.dispose);
     final bindings = InspectionBindings(workspace: session);
     addTearDown(bindings.dispose);
-    final owner = bindings.editor(_target("first"));
-    owner.dispose();
+    final owner = bindings.editor(_target("first"))..dispose();
     expect(owner.workspace.closed, isFalse);
     expect(
       owner.update(editorRootPath, skir.DataValue.wrapStringValue("Draft")),
@@ -84,8 +83,7 @@ void main() {
     final installed = bindings.beginRefresh();
     final first = installed.editor(_target("first"));
     installed.commit();
-    final next = bindings.beginRefresh();
-    next.editor(_target("first"));
+    final next = bindings.beginRefresh()..editor(_target("first"));
     final abandoned = next.editor(_target("second"));
     next.rollback();
     expect(first.workspace.closed, isFalse);
@@ -103,8 +101,8 @@ void main() {
     addTearDown(bindings.dispose);
     final initial = bindings.beginRefresh();
     final clean = initial.editor(_target("clean"));
-    final dirty = initial.editor(_target("dirty"));
-    dirty.update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
+    final dirty = initial.editor(_target("dirty"))
+      ..update(editorRootPath, skir.DataValue.wrapStringValue("Draft"));
     initial.commit();
     final next = bindings.beginRefresh();
     final replacement = next.editor(_target("replacement"));

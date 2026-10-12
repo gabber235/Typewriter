@@ -148,40 +148,41 @@ void main() {
       id: skir.PublicationViewId(value: "first"),
       status: readyPublicationStatus(),
     );
-    nats.registerHandler(
-      _watchSubject,
-      (_) => skir.PublicationViewChanged.serializer.toBytes(
-        skir.PublicationViewChanged(current: view.id),
-      ),
-    );
-    nats.registerHandler(_querySubject, (bytes) {
-      final request = skir.QueryPublicationViewRequest.serializer.fromBytes(
-        bytes,
-      );
-      if (request.expected != view.id) {
-        return skir.QueryPublicationViewResponse.serializer.toBytes(
-          skir.QueryPublicationViewResponse.wrapChanged(
-            skir.PublicationViewChanged(current: view.id),
-          ),
+    nats
+      ..registerHandler(
+        _watchSubject,
+        (_) => skir.PublicationViewChanged.serializer.toBytes(
+          skir.PublicationViewChanged(current: view.id),
+        ),
+      )
+      ..registerHandler(_querySubject, (bytes) {
+        final request = skir.QueryPublicationViewRequest.serializer.fromBytes(
+          bytes,
         );
-      }
-      final encoded = skir.PublicationView.serializer.toBytes(view);
-      return skir.QueryPublicationViewResponse.serializer.toBytes(
-        skir.QueryPublicationViewResponse.wrapChunk(
-          skir.PublicationViewChunk(
-            view: view.id,
-            transfer: skir.BoundedTransferChunk(
-              transferId: request.transferId,
-              index: 0,
-              chunkCount: 1,
-              encodedSize: encoded.length,
-              sha256: sha256.convert(encoded).toString(),
-              payload: skir.ByteString.copy(encoded),
+        if (request.expected != view.id) {
+          return skir.QueryPublicationViewResponse.serializer.toBytes(
+            skir.QueryPublicationViewResponse.wrapChanged(
+              skir.PublicationViewChanged(current: view.id),
+            ),
+          );
+        }
+        final encoded = skir.PublicationView.serializer.toBytes(view);
+        return skir.QueryPublicationViewResponse.serializer.toBytes(
+          skir.QueryPublicationViewResponse.wrapChunk(
+            skir.PublicationViewChunk(
+              view: view.id,
+              transfer: skir.BoundedTransferChunk(
+                transferId: request.transferId,
+                index: 0,
+                chunkCount: 1,
+                encodedSize: encoded.length,
+                sha256: sha256.convert(encoded).toString(),
+                payload: skir.ByteString.copy(encoded),
+              ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      });
     final container = ProviderContainer.test(
       overrides: [
         natsProvider.overrideWith(() => FakeNats(nats)),

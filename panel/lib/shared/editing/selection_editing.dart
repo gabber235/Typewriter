@@ -85,8 +85,7 @@ extension SelectionInteractionCommit on Iterable<EditorInteractionSession> {
     }
     final requests = <EditApplyRequest>[];
     for (final session in prepared) {
-      final interaction = session.interaction;
-      interaction.close();
+      final interaction = session.interaction..close();
       if (interaction.workspace.policyFor(interaction.group) ==
           EditorCommitPolicy.autosaveChanges) {
         requests.add(interaction.workspace.applyRequest(interaction.group));

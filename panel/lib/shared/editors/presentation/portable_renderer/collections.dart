@@ -235,7 +235,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
       );
     }
     final collectionHost = switch (host) {
-      PortableCollectionProjectionHost value => value,
+      final PortableCollectionProjectionHost value => value,
       _ => throw StateError("Collection host checked before projection"),
     };
     final material = scope.material;

@@ -1064,8 +1064,7 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
   Set<Object> get resources => prepared.resources;
   @override
   Future<void> start(MutationReservation reservation) async {
-    final group = workspace._groups[capture.group]!;
-    group
+    final group = workspace._groups[capture.group]!
       ..frozen = capture.operations
       ..phase = const EditGroupPhase.saving();
     workspace._rebuild();

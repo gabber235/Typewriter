@@ -248,8 +248,7 @@ void main() {
       session,
       "first",
       policy: EditorCommitPolicy.applyResource,
-    );
-    source.update(editorRootPath, _text("Draft"));
+    )..update(editorRootPath, _text("Draft"));
     await _apply([source, source]);
     expect(session.submissions, hasLength(1));
     expect(source.hasWork, isFalse);
@@ -309,8 +308,8 @@ void main() {
           return MutationSuccess(revision: 2, value: capture.rootValue);
         },
       );
-      final source = _owner(session, "first", persistence: boundary);
-      source.update(editorRootPath, _text("Draft"));
+      final source = _owner(session, "first", persistence: boundary)
+        ..update(editorRootPath, _text("Draft"));
       final held = await session.reserve(boundary.reservations);
       final applying = _apply([source]);
       await Future<void>.delayed(Duration.zero);
@@ -329,8 +328,8 @@ void main() {
       final session = ScopedWorkSession();
       addTearDown(session.dispose);
       final boundary = _WideningPersistence();
-      final source = _owner(session, "first", persistence: boundary);
-      source.update(editorRootPath, _text("Draft"));
+      final source = _owner(session, "first", persistence: boundary)
+        ..update(editorRootPath, _text("Draft"));
       final extra = await session.reserve({"extra"});
       final applying = _apply([source]);
       await boundary.readStarted.future;
