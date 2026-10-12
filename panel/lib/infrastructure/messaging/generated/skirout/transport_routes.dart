@@ -1,4 +1,5 @@
-import "dart:convert";
+// GENERATED CODE. DO NOT MODIFY BY HAND
+// ignore_for_file: cascade_invocations, constant_identifier_names, curly_braces_in_flow_control_structures, no_leading_underscores_for_library_prefixes, prefer_adjacent_string_concatenation, prefer_interpolation_to_compose_strings, unnecessary_this, use_raw_strings
 
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as _skir;
@@ -395,8 +396,6 @@ extension OrganizationMembersWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
-
     final organization = organizationId.id._transportIdentity;
 
     final operation = this.operation(
@@ -584,8 +583,6 @@ extension OrganizationJoinRequestsWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
-
     final organization = organizationId.id._transportIdentity;
 
     final operation = this.operation(
@@ -779,8 +776,6 @@ extension OrganizationJoinCodesWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
-
     final organization = organizationId.id._transportIdentity;
 
     final operation = this.operation(
@@ -1030,8 +1025,6 @@ extension OrganizationServicesWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
-
     final organization = organizationId.id._transportIdentity;
 
     final operation = this.operation(
@@ -1230,8 +1223,6 @@ extension OrganizationTopologyWatchRouteNats
     TData Function(TData, TData)? reconcileSnapshot,
     TData? initialValue,
   }) {
-    final user = userId._transportIdentity;
-
     final organization = organizationId.id._transportIdentity;
 
     final operation = this.operation(
