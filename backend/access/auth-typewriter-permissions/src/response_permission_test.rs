@@ -15,6 +15,7 @@ use wasmcloud_utils::transport_routes::{
 use crate::services::service_response_permission;
 
 const REQUEST_SUBJECT: &str = "typewriter.organization.writers.realm.quests.hosts.probe";
+const READINESS_SUBJECT: &str = "fixture.ready";
 const PASSWORD: &str = "fixture-secret";
 const FIRST_REPLY: &str = "_INBOX.requester.first";
 const ARBITRARY_REPLY: &str = "_INBOX.requester.arbitrary";
@@ -93,8 +94,8 @@ async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
 
     let mut first_requests = first.subscribe(REQUEST_SUBJECT).await?;
     let mut second_requests = second.subscribe(REQUEST_SUBJECT).await?;
-    first.flush().await?;
-    second.flush().await?;
+    confirm_subscriptions(&first).await?;
+    confirm_subscriptions(&second).await?;
 
     let mut replies = requester.subscribe(FIRST_REPLY).await?;
     requester
@@ -165,14 +166,28 @@ async fn exercise_response_permissions(endpoint: &str) -> Result<()> {
     Ok(())
 }
 
+async fn confirm_subscriptions(client: &Client) -> Result<()> {
+    let mut readiness = client.subscribe(READINESS_SUBJECT).await?;
+    client.publish(READINESS_SUBJECT, "ready".into()).await?;
+    // Delivery proves the broker processed the preceding subscriptions on this connection.
+    receive(&mut readiness)
+        .await
+        .context("confirming responder subscriptions")?;
+    Ok(())
+}
+
 fn server_config(
     publish: &BTreeSet<String>,
     subscribe: &BTreeSet<String>,
     max_messages: i32,
     expires_milliseconds: i64,
 ) -> String {
-    let publish = serde_json::to_string(&publish.iter().collect::<Vec<_>>()).unwrap();
-    let subscribe = serde_json::to_string(&subscribe.iter().collect::<Vec<_>>()).unwrap();
+    let mut publish = publish.clone();
+    let mut subscribe = subscribe.clone();
+    publish.insert(READINESS_SUBJECT.to_owned());
+    subscribe.insert(READINESS_SUBJECT.to_owned());
+    let publish = serde_json::to_string(&publish).unwrap();
+    let subscribe = serde_json::to_string(&subscribe).unwrap();
     format!(
         r#"
 authorization {{
