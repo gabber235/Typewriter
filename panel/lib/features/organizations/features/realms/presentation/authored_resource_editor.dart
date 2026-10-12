@@ -141,6 +141,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     required String? searchHistoryNamespace,
   }) {
     final renderer = PortablePresentationRenderer(
+      key: ValueKey(resource),
       host: host,
       fillAvailableSpace: fillAvailableSpace,
       onStatus: onStatus,

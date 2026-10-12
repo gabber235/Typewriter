@@ -198,7 +198,7 @@ class _PortableDiagnosticBoundary extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tree = useMemoized(PortableDiagnosticTree.new, [operations]);
+    final tree = useMemoized(PortableDiagnosticTree.new);
     useEffect(() => tree.dispose, [tree]);
     useListenable(operations);
     useListenable(tree);

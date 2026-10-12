@@ -83,7 +83,10 @@ abstract class ValueEditingRegistration with _$ValueEditingRegistration {
             return host == null
                 ? null
                 : WorkReviewContent(
-                    body: PortablePresentationRenderer(host: host),
+                    body: PortablePresentationRenderer(
+                      key: ValueKey(targetId),
+                      host: host,
+                    ),
                     dispose: host.dispose,
                   );
           };

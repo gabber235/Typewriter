@@ -18,12 +18,13 @@ class _Harness {
     List<String> supportedEngineIds = const ["paper"],
     List<skir.RealmInstance> realms = const [],
     bool includeSecondHost = false,
+    String serviceName = "Paper",
   }) async {
     final nats = FakeNatsClient();
     final service = Service(
       serviceId: skir.recordId("service:paper"),
       revision: 1,
-      name: "Paper",
+      name: serviceName,
       role: HostServiceRole(version: "1.0.0"),
       createdAt: DateTime.utc(2026, 8, 21),
       state: ServiceState(

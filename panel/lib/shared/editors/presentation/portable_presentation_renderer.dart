@@ -44,7 +44,10 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
   Widget build(BuildContext context) {
     if (PortableDiagnosticScope.maybeOf(context) == null) {
       return _PortableDiagnosticBoundary(
-        key: ObjectKey(scope.operations),
+        key: ValueKey(
+          scope.catalog?.snapshot.generation ??
+              scope.host?.document.catalog.snapshot.generation,
+        ),
         operations: scope.operations,
         diagnostics: scope.host?.document.diagnostics ?? const [],
         observations:
@@ -345,6 +348,11 @@ typedef PortablePresentationScopeBuilder = PortablePresentationScope Function({
   required ValueChanged<String> reportStatus,
 });
 
+/// Renders one logical editor through a replaceable presentation adapter.
+///
+/// Supply a resource key when the parent can rebind this widget. Compatible
+/// host refreshes retain controls and completed diagnostic feedback. A new
+/// catalog generation starts a new interpretation lifetime.
 final class PortablePresentationRenderer extends HookWidget {
   const PortablePresentationRenderer({
     required this.host,
@@ -363,11 +371,13 @@ final class PortablePresentationRenderer extends HookWidget {
     useListenable(host);
     final document = host.document;
     final generation = document.catalog.snapshot.generation;
-    final operations = useMemoized(PortableOperationResults.new, [
-      host,
-      generation,
-    ])..onStatus = onStatus;
+    final operations = useMemoized(PortableOperationResults.new, [generation])
+      ..onStatus = onStatus;
     useEffect(() => operations.dispose, [operations]);
+    useEffect(() {
+      operations.retirePending();
+      return null;
+    }, [host, operations]);
     final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
     try {
       bindings =
@@ -415,7 +425,7 @@ final class PortablePresentationRenderer extends HookWidget {
           fillAvailableSpace || document.role == skir.PresentationRole.editor,
     );
     return _PortableDiagnosticBoundary(
-      key: ObjectKey(operations),
+      key: ValueKey(generation),
       operations: operations,
       diagnostics: document.diagnostics,
       observations: document.diagnosticObservations,

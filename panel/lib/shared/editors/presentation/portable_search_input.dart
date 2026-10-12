@@ -188,7 +188,7 @@ final class PortableSearchInput extends HookWidget {
     if (PortableDiagnosticScope.maybeOf(context) != null) return content;
     final document = host.document;
     return _PortableDiagnosticBoundary(
-      key: ObjectKey(scope.operations),
+      key: ValueKey(document.catalog.snapshot.generation),
       operations: scope.operations,
       observations: document.diagnosticObservations,
       diagnostics: document.diagnostics,

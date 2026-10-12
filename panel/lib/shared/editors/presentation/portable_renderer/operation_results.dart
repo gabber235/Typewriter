@@ -19,6 +19,7 @@ abstract class PortableOperationOutcome with _$PortableOperationOutcome {
   const factory PortableOperationOutcome({
     required Object request,
     PortableDiagnosticObservation? input,
+    @Default(false) bool pending,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
   }) = _PortableOperationOutcome;
 }
@@ -63,6 +64,7 @@ class PortableOperationResults extends ValueNotifier<PortableOperationState> {
       PortableOperationOutcome(
         request: request,
         input: input,
+        pending: true,
         diagnostics: previous?.input == input
             ? previous?.diagnostics ?? const []
             : const [],
@@ -107,6 +109,14 @@ class PortableOperationResults extends ValueNotifier<PortableOperationState> {
           onStatus?.call(diagnostic.message);
         }
     }
+  }
+
+  /// Stops completions from a replaced adapter while retaining settled feedback.
+  void retirePending() {
+    retire({
+      for (final outcome in value.outcomes.values)
+        if (outcome.pending) outcome.request,
+    });
   }
 
   void retire(Set<Object> requests) {

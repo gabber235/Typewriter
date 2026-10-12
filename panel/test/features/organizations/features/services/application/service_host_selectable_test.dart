@@ -9,6 +9,7 @@ import "../../../../../support/test_utils.dart";
 
 part "host_apply_test_cases.dart";
 part "host_target_selection_test_cases.dart";
+part "inspector_name_refresh_test_cases.dart";
 part "resource_connection_test_cases.dart";
 part "service_host_selectable_test_support.dart";
 part "topology_selection_removal_test_cases.dart";
@@ -25,6 +26,7 @@ void main() {
   _testHostApply();
   _testHostTargetSelection();
   _testResourceConnections();
+  _testInspectorNameRefresh();
 
   test("host presentation owns separate runtime and resource inputs", () async {
     final harness = await _Harness.create();
