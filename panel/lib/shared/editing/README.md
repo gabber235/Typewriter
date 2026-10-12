@@ -13,6 +13,14 @@
 
 Realm uses `RealmEditModel` and `RealmEditPersistence`. Service identity and host configuration both use `ValueEditModel`, with their respective persistence adapters. Their server endpoints and transaction boundaries remain separate.
 
+| Domain | Edit admission | Save boundary | Publication boundary |
+| :--- | :--- | :--- | :--- |
+| Service identity | Valid service name | Snapshot and backend validation | Direct metadata, no separate publication |
+| Realm authoring | Representable prepared intent | Structure, consistency, catalog and graph invariants | Completeness and semantic findings |
+| Host configuration | Representable configuration | Complete valid execution configuration | Explicit Apply changes desired execution |
+
+`EditorCommitPolicy` chooses when work is submitted. The composed model chooses which work may be saved. Presentation diagnostics explain findings; their severity alone never defines a universal save policy.
+
 | Registration | Timing | Admission |
 | :--- | :--- | :--- |
 | Realm form or command | Existing manual or automatic policy | Preserve blocked intent and semantic group dependencies |

@@ -13,9 +13,12 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.authoredDatabaseValues
+import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.location
 import com.typewritermc.realm.checking.record
+import com.typewritermc.realm.compiler.AuthoringAcceptance
+import com.typewritermc.realm.compiler.AuthoringAssessment
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.DataValue
@@ -24,6 +27,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 val SurrealAuthoringRepositoryTestSuite by testSuite {
     val id = ResourceId("quest")
@@ -66,6 +70,32 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         owner.commit(edit(catalog.generation, "Story", "Quest")) shouldBe CommitResult.Committed
         owner.commit(edit(catalog.generation)) shouldBe CommitResult.Committed
         views.close()
+    }
+    test("unfinished authoring content persists but publication rejects it") {
+        val catalog = TestCatalogLease()
+        val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
+        val views = InMemoryAuthoringViewStore(catalog, storage.seed)
+        val checks = RealmCheckRuntime(views)
+        try {
+            val request = edit(catalog.generation).copy(intents = listOf(EditIntent.SetValue(title, DataValue.Unfilled)))
+            RealmAuthoringOwner(storage, views).commit(request) shouldBe CommitResult.Committed
+            storage.writes shouldBe 1
+            storage
+                .readCoherent()
+                .resources
+                .getValue(id)
+                .fields["name"] shouldBe DataValue.Unfilled
+            views.capture().use { saved ->
+                saved.root.resources
+                    .getValue(id)
+                    .fields["name"] shouldBe DataValue.Unfilled
+                val blocked = AuthoringAcceptance(views, checks).evaluate(saved).shouldBeInstanceOf<AuthoringAssessment.Blocked>()
+                blocked.blockers.all.any { it.diagnostic.code == "unfinished_value" && it.diagnostic.primary == title } shouldBe true
+            }
+        } finally {
+            checks.close()
+            views.close()
+        }
     }
     test("an unguarded write is rejected and never persisted") {
         val catalog = TestCatalogLease()

@@ -14,7 +14,8 @@ abstract class EditorSnapshot {
   /// Canonical content and metadata observed at one resource revision.
   EditorDocument get document;
 
-  /// Applies resource specific validation to the complete local draft.
+  /// Reports reasons this value snapshot cannot be committed.
+  /// This boundary is domain owned and is not a publication assessment.
   List<EditorDiagnostic> validateDraft(skir.DataValue value) {
     final result = validate(editorRootPath, value);
     return switch (result) {
