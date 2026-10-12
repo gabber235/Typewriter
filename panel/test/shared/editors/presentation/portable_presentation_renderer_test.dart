@@ -191,10 +191,10 @@ void main() {
       findsOneWidget,
     );
     await tester.tap(find.byTooltip("Collapse"));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text("Section body"), findsNothing);
     await tester.tap(find.byTooltip("Expand"));
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text("Section body"), findsOneWidget);
   });
 

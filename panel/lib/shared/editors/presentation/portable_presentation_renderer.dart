@@ -90,6 +90,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         ? rendered
         : _AuthoredPresentationHeader(
             header: node.header!,
+            contained: element is skir.PresentationElement_sectionWrapper,
             body: rendered,
             scope: childScope,
           );

@@ -30,6 +30,31 @@ void main() {
       ),
       findsOneWidget,
     );
+    final frame = find.byType(PortableDiagnosticFrame).first;
+    final frameContext = tester.element(frame);
+    final label = tester.widget<LabeledMessage>(
+      find.descendant(of: frame, matching: find.byType(LabeledMessage)),
+    );
+    expect(label.labelStyle?.color, frameContext.colors.danger);
+    final container = tester.widget<AnimatedContainer>(
+      find
+          .descendant(of: frame, matching: find.byType(AnimatedContainer))
+          .first,
+    );
+    expect(
+      (container.decoration! as BoxDecoration).color,
+      frameContext.theme.colorScheme.errorContainer,
+    );
+    expect(container.padding, EdgeInsets.all(frameContext.spacing.space2));
+    expect(
+      find.descendant(of: frame, matching: find.byType(ElasticMessageSwitcher)),
+      findsOneWidget,
+    );
+    final marker = find.byType(PortableDiagnosticHeaderMarker);
+    expect(
+      tester.getCenter(marker).dx,
+      lessThan(tester.getCenter(find.text("Portable presentation host")).dx),
+    );
     final field = find.byType(TextFormField).first;
     await tester.showKeyboard(field);
     await tester.pumpAndSettle();
@@ -64,11 +89,35 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byType(PortableDiagnosticHeaderMarker), findsOneWidget);
+    final before = tester.state<EditableTextState>(
+      find.byType(EditableText).first,
+    );
     await tester.tap(find.byTooltip("Collapse"));
     await tester.pumpAndSettle();
     expect(find.byType(TextFormField), findsNothing);
     expect(find.byType(PortableDiagnosticHeaderMarker), findsOneWidget);
     expect(find.byTooltip("1 field diagnostic"), findsOneWidget);
+    final marker = find.byType(PortableDiagnosticHeaderMarker);
+    final headerFrame = tester.widget<AnimatedContainer>(
+      find.ancestor(of: marker, matching: find.byType(AnimatedContainer)).first,
+    );
+    final headerContext = tester.element(marker);
+    expect(
+      (headerFrame.decoration! as BoxDecoration).border,
+      Border.all(color: headerContext.colors.warning.withValues(alpha: 0.8)),
+    );
+    final hidden = tester.state<EditableTextState>(
+      find.byType(EditableText, skipOffstage: false).first,
+    );
+    expect(hidden, same(before));
+    expect(hidden.widget.focusNode.canRequestFocus, isFalse);
+    await tester.tap(find.byTooltip("Expand"));
+    await tester.pumpAndSettle();
+    expect(
+      tester.state<EditableTextState>(find.byType(EditableText).first),
+      same(before),
+    );
+    expect(before.widget.focusNode.canRequestFocus, isTrue);
     expect(tester.takeException(), isNull);
   });
 

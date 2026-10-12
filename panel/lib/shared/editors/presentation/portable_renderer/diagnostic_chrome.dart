@@ -14,8 +14,12 @@ class PortableDiagnosticFrame extends HookWidget {
     required this.target,
     required this.value,
     required this.child,
+    this.label,
+    this.description,
     super.key,
   });
+  final String? label;
+  final String? description;
   final PortableDiagnosticTarget target;
   final skir.DataValue? value;
   final Widget child;
@@ -63,33 +67,52 @@ class PortableDiagnosticFrame extends HookWidget {
           direct: direct,
           descendants: summary.descendants,
         );
-        final color = effective.highestSeverity?.color(context);
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: context.shapes.smallBorderRadius,
-            border: Border.all(
-              color:
-                  color ?? context.colors.contentPrimary.withValues(alpha: 0),
+        final severity = effective.highestSeverity;
+        final color = severity?.color(context);
+        final colors = context.theme.colorScheme;
+        final fill = severity == skir.DiagnosticSeverity.error
+            ? colors.errorContainer
+            : color?.withValues(alpha: 0.18);
+        final hasLabel =
+            (label != null && label!.isNotEmpty) ||
+            (description != null && description!.isNotEmpty);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LabeledMessage(
+              label: label,
+              message: description,
+              labelStyle: context.theme.textTheme.labelLarge?.copyWith(
+                color: color,
+              ),
             ),
-            color:
-                color?.withValues(alpha: 0.08) ??
-                context.colors.contentPrimary.withValues(alpha: 0),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(context.spacing.space1),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PortableControlDiagnostics(
-                  identity: identity,
-                  onValidationChanged: reportParseMessage,
-                  child: child,
-                ),
-                PortableDiagnosticMessages(diagnostics: direct),
-              ],
+            if (hasLabel) const SizedBox(height: 6),
+            AnimatedContainer(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 120),
+              decoration: BoxDecoration(
+                color: fill ?? context.colors.surface.withValues(alpha: 0),
+                borderRadius: context.shapes.mediumBorderRadius,
+              ),
+              padding: severity == null
+                  ? EdgeInsets.zero
+                  : EdgeInsets.all(context.spacing.space2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  PortableControlDiagnostics(
+                    identity: identity,
+                    onValidationChanged: reportParseMessage,
+                    child: child,
+                  ),
+                  PortableDiagnosticMessages(diagnostics: direct),
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
     );
@@ -118,28 +141,43 @@ class PortableDiagnosticMessages extends StatelessWidget {
   final List<PortablePresentationDiagnostic> diagnostics;
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      liveRegion: true,
-      label: diagnostics.map((item) => item.message).join("\n"),
-      child: ExcludeSemantics(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final diagnostic in diagnostics)
-              Padding(
-                key: ValueKey(diagnostic),
-                padding: EdgeInsets.only(top: context.spacing.space1),
-                child: Text(
-                  diagnostic.message,
-                  style: context.theme.textTheme.bodySmall?.copyWith(
-                    color: diagnostic.severity.color(context),
+    return ElasticMessageSwitcher(
+      child: diagnostics.isEmpty
+          ? const SizedBox.shrink()
+          : Padding(
+              key: ValueKey(PortableDiagnosticSummary(direct: diagnostics)),
+              padding: EdgeInsets.only(
+                top: context.spacing.space1,
+                left: context.spacing.space2,
+                right: context.spacing.space2,
+              ),
+              child: Semantics(
+                liveRegion: true,
+                label: diagnostics.map((item) => item.message).join("\n"),
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final diagnostic in diagnostics)
+                        Text(
+                          diagnostic.message,
+                          style: context.theme.textTheme.bodySmall?.copyWith(
+                            color: Color.alphaBlend(
+                              diagnostic.severity
+                                  .color(context)
+                                  .withValues(
+                                    alpha: context.isDarkMode ? 0.4 : 0.9,
+                                  ),
+                              Surface.colorOf(context).on(context),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
-          ],
-        ),
-      ),
+            ),
     );
   }
 }
@@ -157,17 +195,15 @@ class PortableDiagnosticHeaderMarker extends StatelessWidget {
       message: label,
       child: Semantics(
         label: label,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 18,
-              color: summary.highestSeverity?.color(context),
-            ),
-            SizedBox(width: context.spacing.space1),
-            Text("$count"),
-          ],
+        child: Icon(
+          switch (summary.highestSeverity?.kind) {
+            skir.DiagnosticSeverity_kind.informationConst => Icons.info_outline,
+            skir.DiagnosticSeverity_kind.warningConst =>
+              Icons.warning_amber_rounded,
+            _ => Icons.error_outline,
+          },
+          size: 18,
+          color: summary.highestSeverity?.color(context),
         ),
       ),
     );

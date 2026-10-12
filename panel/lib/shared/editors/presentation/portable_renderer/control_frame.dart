@@ -24,21 +24,12 @@ Widget _controlFrame(
         final label = resolvedLabel?.trim() == enclosingTitle?.trim()
             ? null
             : resolvedLabel;
-        final hasMessage =
-            (label != null && label.isNotEmpty) ||
-            (description != null && description.isNotEmpty);
         return PortableDiagnosticFrame(
           target: childScope.diagnosticTarget(control.binding),
           value: childScope.read(control.binding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              LabeledMessage(label: label, message: description),
-              if (hasMessage) const SizedBox(height: 6),
-              semanticChild,
-            ],
-          ),
+          label: label,
+          description: description,
+          child: semanticChild,
         );
       },
     ),

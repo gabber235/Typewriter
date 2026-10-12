@@ -5,20 +5,28 @@ final class _AuthoredPresentationHeader extends HookWidget {
     required this.header,
     required this.body,
     required this.scope,
+    this.contained = false,
   });
   final skir.PresentationHeader header;
   final Widget body;
   final PortablePresentationScope scope;
+  final bool contained;
 
   @override
   Widget build(BuildContext context) {
-    final expanded = useState(header.initiallyExpanded ?? true);
+    final controller = useExpansibleController();
+    useListenable(controller);
     useEffect(() {
-      expanded.value = header.initiallyExpanded ?? true;
+      if (header.initiallyExpanded ?? true) {
+        controller.expand();
+      } else {
+        controller.collapse();
+      }
       return null;
     }, [header.initiallyExpanded]);
+    final expanded = controller.isExpanded;
     void toggleExpanded() {
-      expanded.value = !expanded.value;
+      controller.toggle();
     }
 
     return PortableDiagnosticAnchor(
@@ -70,9 +78,19 @@ final class _AuthoredPresentationHeader extends HookWidget {
               )
             : _presentationInsets(header.contentPadding);
         final headerWidget = Material(
+          animationDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 120),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: context.shapes.mediumRadius,
+              bottom: expanded ? Radius.zero : context.shapes.mediumRadius,
+            ),
+          ),
           color: context.colors.surface.withValues(alpha: 0),
           child: InkWell(
             onTap: collapsible && scope.enabled ? toggleExpanded : null,
+            borderRadius: context.shapes.mediumBorderRadius,
             child: Padding(
               padding: header.headerPadding == null
                   ? EdgeInsets.symmetric(
@@ -87,7 +105,19 @@ final class _AuthoredPresentationHeader extends HookWidget {
                     _PortableHeaderRow(
                       before: [
                         if (collapsible)
-                          _expandButton(expanded.value, toggleExpanded),
+                          _expandButton(expanded, toggleExpanded),
+                        ElasticSwitcher(
+                          child: summary.isEmpty
+                              ? null
+                              : Padding(
+                                  padding: EdgeInsets.only(
+                                    right: context.spacing.space3,
+                                  ),
+                                  child: PortableDiagnosticHeaderMarker(
+                                    summary: summary,
+                                  ),
+                                ),
+                        ),
                         for (final item in before) item.widget,
                       ],
                       title: ConstrainedBox(
@@ -97,11 +127,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
                         child: title,
                       ),
                       after: [for (final item in after) item.widget],
-                      end: [
-                        if (!summary.isEmpty)
-                          PortableDiagnosticHeaderMarker(summary: summary),
-                        for (final item in end) item.widget,
-                      ],
+                      end: [for (final item in end) item.widget],
                     ),
                     if (description != null)
                       Padding(
@@ -131,19 +157,71 @@ final class _AuthoredPresentationHeader extends HookWidget {
               ? body
               : _PortableHeaderTitle(title: plainTitle, child: body),
         );
-        return Column(
+        final severity = summary.highestSeverity;
+        final color = severity?.color(context);
+        final fill = severity == skir.DiagnosticSeverity.error
+            ? context.theme.colorScheme.errorContainer
+            : color;
+        final headerContent = Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             headerWidget,
             PortableDiagnosticMessages(diagnostics: summary.direct),
-            Visibility(
-              visible: expanded.value,
-              maintainState: true,
-              maintainAnimation: true,
-              child: bodyWidget,
-            ),
           ],
         );
+        final content = AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 120),
+          decoration: BoxDecoration(
+            color:
+                fill?.withValues(alpha: 0.18) ??
+                context.colors.surface.withValues(alpha: 0),
+            borderRadius: context.shapes.mediumBorderRadius,
+            border: color != null && !expanded
+                ? Border.all(color: color.withValues(alpha: 0.8))
+                : null,
+          ),
+          padding: EdgeInsets.only(
+            bottom: severity != null && expanded ? context.spacing.space1 : 0,
+          ),
+          child: collapsible
+              ? Expansible(
+                  controller: controller,
+                  animationStyle: AnimationStyle(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 240),
+                    curve: Curves.easeOut,
+                  ),
+                  maintainState: true,
+                  headerBuilder: (context, animation) {
+                    return headerContent;
+                  },
+                  bodyBuilder: (context, animation) {
+                    return ExcludeFocus(
+                      excluding: !expanded,
+                      child: bodyWidget,
+                    );
+                  },
+                  expansibleBuilder: (context, header, body, animation) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [header, body],
+                    );
+                  },
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [headerContent, bodyWidget],
+                ),
+        );
+        return contained
+            ? content
+            : DepthBox(enabled: collapsible, child: content);
       },
     );
   }
@@ -152,7 +230,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
     return IconButton(
       tooltip: expanded ? "Collapse" : "Expand",
       onPressed: scope.enabled ? toggleExpanded : null,
-      icon: Icon(expanded ? Icons.expand_less : Icons.expand_more),
+      icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
     );
   }
 
@@ -161,12 +239,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
       scope,
       value,
     )) {
-      _ResolvedValue(:final value) => Text(
-        value,
-        style: context.theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      _ResolvedValue(:final value) => SectionTitle(title: value),
       _ResolvedFailure(:final message) => _diagnostic(message),
     },
     skir.PresentationHeaderTitle_presentationWrapper(:final value) =>
