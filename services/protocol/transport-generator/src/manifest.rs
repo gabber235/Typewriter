@@ -448,9 +448,9 @@ mod tests {
     #[test]
     fn complete_route_inventory_parses() {
         let manifest = Manifest::parse(include_str!("../../transport-routes.yaml")).unwrap();
-        assert_eq!(manifest.routes.len(), 61);
+        assert_eq!(manifest.routes.len(), 62);
         let symbols = manifest.requested_symbols();
-        assert_eq!(symbols.methods.len(), 51);
+        assert_eq!(symbols.methods.len(), 52);
         assert_eq!(symbols.records.len(), 17);
         manifest
             .validate_component_subscriptions(
