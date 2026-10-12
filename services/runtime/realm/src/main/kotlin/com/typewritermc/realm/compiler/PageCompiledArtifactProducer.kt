@@ -38,17 +38,22 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
         val compiler = PageCompiler(ownership, inputs.bindingRequirements.associateBy(NativeBindingRequirement::actual))
         return roots.sortedBy { root -> root.resource.value }.map { root ->
             when (val result = with(inputs.view) { compiler.compile(root.resource) }) {
-                is PageCompileResult.Blocked -> CompilationResult.Blocked(root, result.inputFingerprint, result.diagnostics)
-                is PageCompileResult.Success -> CompilationResult.Success(
-                    CompiledArtifact(
-                        root = root,
-                        formatRevision = result.shard.facts.formatRevision,
-                        mediaType = mediaType,
-                        inputFingerprint = result.inputFingerprint,
-                        semanticDigest = result.shard.digest,
-                        payload = result.shard.facts.encodeShard(),
-                    ),
-                )
+                is PageCompileResult.Blocked -> {
+                    CompilationResult.Blocked(root, result.inputFingerprint, result.diagnostics)
+                }
+
+                is PageCompileResult.Success -> {
+                    CompilationResult.Success(
+                        CompiledArtifact(
+                            root = root,
+                            formatRevision = result.shard.facts.formatRevision,
+                            mediaType = mediaType,
+                            inputFingerprint = result.inputFingerprint,
+                            semanticDigest = result.shard.digest,
+                            payload = result.shard.facts.encodeShard(),
+                        ),
+                    )
+                }
             }
         }
     }

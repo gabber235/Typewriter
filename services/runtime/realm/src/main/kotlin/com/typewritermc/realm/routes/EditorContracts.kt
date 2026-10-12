@@ -38,8 +38,8 @@ import skirout.editor.v1.catalog.PrepareValueResult
 import skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
 import skirout.editor.v1.publication.PublicationViewChanged
-import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.publication.PublishAuthoringResponse
+import skirout.editor.v1.publication.QueryPublicationViewResponse
 import skirout.editor.v1.search.CancelRealmPresentationSearchResult
 import skirout.editor.v1.search.RealmPresentationSearchStatus
 import skirout.editor.v1.search.RealmPresentationSearchUpdate
@@ -104,7 +104,11 @@ internal class EditorContracts(
     val queryCompiledResourceStatus =
         address.authoringCompiledStatusQuery(policy(QueryCompiledResourceStatusResponse.createInternalError()))
     val publishAuthoring = address.authoringPublish(policy(PublishAuthoringResponse.createInternalError()))
-    val queryPublicationView = address.authoringPublicationQuery(policy(QueryPublicationViewResponse.createInternalError()), responseClassifier())
+    val queryPublicationView =
+        address.authoringPublicationQuery(
+            policy(QueryPublicationViewResponse.createInternalError()),
+            responseClassifier(),
+        )
     val watchPublication =
         address.authoringPublicationWatch(
             policy(PublicationViewChanged.partial(), responseClassifier(ResponseOutcome.INTERNAL_ERROR)),

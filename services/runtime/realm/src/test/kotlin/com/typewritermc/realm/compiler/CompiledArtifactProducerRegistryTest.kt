@@ -1,12 +1,12 @@
 package com.typewritermc.realm.compiler
 
 import com.typewritermc.engine.CompilationProjectionId
-import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompiledArtifact
-import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.CompilationResult
+import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompileDiagnostic
 import com.typewritermc.engine.CompileDiagnosticSeverity
+import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.checking.TestCatalogLease
@@ -30,14 +30,25 @@ val CompiledArtifactProducerRegistryTest by testSuite {
             val blocked =
                 producer("fixture.blocked", "application/blocked") { incoming ->
                     received += incoming
-                    listOf(CompilationResult.Blocked(CompilationRoot(CompilationProjectionId("fixture.blocked"), ResourceId("root")), ContentDigest("a".repeat(64)), listOf(CompileDiagnostic("blocked", "Blocked", CompileDiagnosticSeverity.ERROR))))
+                    listOf(
+                        CompilationResult.Blocked(
+                            CompilationRoot(CompilationProjectionId("fixture.blocked"), ResourceId("root")),
+                            ContentDigest("a".repeat(64)),
+                            listOf(CompileDiagnostic("blocked", "Blocked", CompileDiagnosticSeverity.ERROR)),
+                        ),
+                    )
                 }
 
             val result = with(inputs) { CompiledArtifactProducerRegistry(listOf(ready, blocked)).compile() }
 
             result.size shouldBe 2
             result.filterIsInstance<CompilationResult.Success>().size shouldBe 1
-            result.filterIsInstance<CompilationResult.Blocked>().single().diagnostics.single().code shouldBe "blocked"
+            result
+                .filterIsInstance<CompilationResult.Blocked>()
+                .single()
+                .diagnostics
+                .single()
+                .code shouldBe "blocked"
             received.size shouldBe 2
             received.all { it === inputs && it.view === capture.root } shouldBe true
         }

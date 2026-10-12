@@ -46,8 +46,8 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
-import com.typewritermc.realm.compiler.AuthoringAssessment
 import com.typewritermc.realm.compiler.AuthoringAcceptance
+import com.typewritermc.realm.compiler.AuthoringAssessment
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
@@ -432,8 +432,18 @@ val RealmCheckRuntimeTest by testSuite {
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
 
-            assertEquals(listOf("check_needs_input"), blocked.blockers.all.map { it.diagnostic }.map { it.code })
-            assertEquals(listOf(unavailable), blocked.blockers.all.map { it.diagnostic }.map { it.primary })
+            assertEquals(
+                listOf("check_needs_input"),
+                blocked.blockers.all
+                    .map { it.diagnostic }
+                    .map { it.code },
+            )
+            assertEquals(
+                listOf(unavailable),
+                blocked.blockers.all
+                    .map { it.diagnostic }
+                    .map { it.primary },
+            )
 
             runtime.close()
             store.close()
@@ -501,7 +511,14 @@ val RealmCheckRuntimeTest by testSuite {
                 assertIs<AuthoringAssessment.Blocked>(
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
-            val intrinsic = blocked.blockers.all.map { it.diagnostic }.filter { it.code in setOf("duplicate_set_value", "duplicate_map_key") }
+            val intrinsic =
+                blocked.blockers.all.map { it.diagnostic }.filter {
+                    it.code in
+                        setOf(
+                            "duplicate_set_value",
+                            "duplicate_map_key",
+                        )
+                }
 
             assertEquals(listOf("duplicate_set_value", "duplicate_map_key"), intrinsic.map { it.code })
             assertEquals(
@@ -549,8 +566,18 @@ val RealmCheckRuntimeTest by testSuite {
                     capturedAcceptance(store, runtime, catalog.generation),
                 )
 
-            assertEquals(listOf("pending_type"), blocked.blockers.all.map { it.diagnostic }.map { it.code })
-            assertEquals(listOf(ValueLocation(resource, ValuePath())), blocked.blockers.all.map { it.diagnostic }.map { it.primary })
+            assertEquals(
+                listOf("pending_type"),
+                blocked.blockers.all
+                    .map { it.diagnostic }
+                    .map { it.code },
+            )
+            assertEquals(
+                listOf(ValueLocation(resource, ValuePath())),
+                blocked.blockers.all
+                    .map { it.diagnostic }
+                    .map { it.primary },
+            )
 
             runtime.close()
             store.close()

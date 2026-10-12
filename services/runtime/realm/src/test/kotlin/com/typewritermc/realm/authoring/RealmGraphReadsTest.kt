@@ -254,39 +254,52 @@ class RealmGraphReadsTest {
         val source = ResourceId("source")
         val originalTarget = ResourceId("original_target")
         val stagedTarget = ResourceId("staged_target")
-        val store = InMemoryAuthoringViewStore(
-            GraphCatalogLease(),
-            AuthoringSeed(
-                mapOf(
-                    source to graphRecord(source, listOf(originalTarget)),
-                    originalTarget to graphRecord(originalTarget, emptyList()),
-                    stagedTarget to graphRecord(stagedTarget, emptyList()),
+        val store =
+            InMemoryAuthoringViewStore(
+                GraphCatalogLease(),
+                AuthoringSeed(
+                    mapOf(
+                        source to graphRecord(source, listOf(originalTarget)),
+                        originalTarget to graphRecord(originalTarget, emptyList()),
+                        stagedTarget to graphRecord(stagedTarget, emptyList()),
+                    ),
                 ),
-            ),
-        )
+            )
         val lease = store.capture()
         val selection = RelationSelection.Contracts(setOf(EDGE.id), TraversalDirection.Forward)
         val originalReads = CapturedAuthoringReads(lease.originalView())
-        val originalReachable = with(originalReads) {
-            RealmGraphReads.reachable(
-                ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
-            )
-        }
+        val originalReachable =
+            with(originalReads) {
+                RealmGraphReads.reachable(
+                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                )
+            }
         assertEquals(setOf(source, originalTarget), originalReachable.resources.mapTo(linkedSetOf()) { it.id })
 
-        val stagedReads = CapturedAuthoringReads(
-            lease.stagedView(mapOf(source to graphRecord(source, listOf(stagedTarget)))),
-        )
-        with(stagedReads) {
-            val stagedReachable = RealmGraphReads.reachable(
-                ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+        val stagedReads =
+            CapturedAuthoringReads(
+                lease.stagedView(mapOf(source to graphRecord(source, listOf(stagedTarget)))),
             )
+        with(stagedReads) {
+            val stagedReachable =
+                RealmGraphReads.reachable(
+                    ReachabilityQuery(setOf(source), selection, ResourceDrafts, maxDepth = 1),
+                )
             assertEquals(setOf(source, stagedTarget), stagedReachable.resources.mapTo(linkedSetOf()) { it.id })
             val occurrence = RealmGraphReads.occurrences(LinkInspectionQuery(setOf(source), selection)).occurrences.single()
             val followed = assertIs<Availability.Available<DraftBinding>>(RealmGraphReads.follow(occurrence))
             assertEquals(stagedTarget, followed.value.location.resource)
         }
-        val outgoing = ValueLocation(source, ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("outgoing"))))
+        val outgoing =
+            ValueLocation(
+                source,
+                ValuePath(
+                    listOf(
+                        com.typewritermc.authoring.PathSegment
+                            .Field("outgoing"),
+                    ),
+                ),
+            )
         val dependencies = stagedReads.observations().flatMapTo(linkedSetOf()) { it.dependencies() }
         assertTrue(InputIdentity.Incoming(source, EDGE.id) in dependencies)
         assertTrue(InputIdentity.Value(outgoing) in dependencies)

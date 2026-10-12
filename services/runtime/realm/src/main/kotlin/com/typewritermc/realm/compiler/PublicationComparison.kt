@@ -12,21 +12,37 @@ data class PublicationRuntimeContent(
     val signatures: Set<com.typewritermc.scripting.RuntimeMemberSignature>,
 ) {
     companion object {
-        fun selected(content: PublishedContent) = PublicationRuntimeContent(
-            content.outputs.associate { it.reference.root to it.reference },
-            content.implementationToken, content.runtimeSignatures,
-        )
-        fun prepared(artifacts: List<CompiledArtifact>, engine: EngineImplementationInputs) = PublicationRuntimeContent(
+        fun selected(content: PublishedContent) =
+            PublicationRuntimeContent(
+                content.outputs.associate { it.reference.root to it.reference },
+                content.implementationToken,
+                content.runtimeSignatures,
+            )
+
+        fun prepared(
+            artifacts: List<CompiledArtifact>,
+            engine: EngineImplementationInputs,
+        ) = PublicationRuntimeContent(
             artifacts.associate { it.root to CompiledArtifactReference(it.root, it.formatRevision, it.mediaType, it.semanticDigest) },
-            engine.token.value, engine.signatures,
+            engine.token.value,
+            engine.signatures,
         )
     }
 }
 
 sealed interface PublicationChange {
-    data class RootAdded(val root: CompilationRoot) : PublicationChange
-    data class RootUpdated(val root: CompilationRoot) : PublicationChange
-    data class RootRemoved(val root: CompilationRoot) : PublicationChange
+    data class RootAdded(
+        val root: CompilationRoot,
+    ) : PublicationChange
+
+    data class RootUpdated(
+        val root: CompilationRoot,
+    ) : PublicationChange
+
+    data class RootRemoved(
+        val root: CompilationRoot,
+    ) : PublicationChange
+
     data object RequirementsChanged : PublicationChange
 }
 
@@ -37,12 +53,18 @@ data class PublicationDelta internal constructor(
     val additional: List<PublicationChange> = emptyList(),
 ) {
     val allChanges: List<PublicationChange> get() = listOf(first) + additional
-    init { require(allChanges.distinct().size == allChanges.size) }
+
+    init {
+        require(allChanges.distinct().size == allChanges.size)
+    }
 }
 
 sealed interface PublicationComparison {
     data object Unchanged : PublicationComparison
-    data class Changed(val delta: PublicationDelta) : PublicationComparison
+
+    data class Changed(
+        val delta: PublicationDelta,
+    ) : PublicationComparison
 
     companion object {
         fun between(
@@ -75,11 +97,16 @@ sealed interface PublicationComparison {
             require(artifacts.map { it.root }.distinct().size == artifacts.size)
             require(artifacts.all { it.root in candidateRoots })
             val old = selected?.roots.orEmpty()
-            val next = artifacts.associate { artifact ->
-                artifact.root to CompiledArtifactReference(
-                    artifact.root, artifact.formatRevision, artifact.mediaType, artifact.semanticDigest,
-                )
-            }
+            val next =
+                artifacts.associate { artifact ->
+                    artifact.root to
+                        CompiledArtifactReference(
+                            artifact.root,
+                            artifact.formatRevision,
+                            artifact.mediaType,
+                            artifact.semanticDigest,
+                        )
+                }
             val ordering = compareBy<CompilationRoot>({ it.projection.value }, { it.resource.value })
             return buildList {
                 (old.keys + candidateRoots).sortedWith(ordering).forEach { root ->

@@ -26,30 +26,31 @@ internal class CompiledArtifactProducerRegistry(
 
     context(inputs: CompilationInputs)
     fun compile(): List<CompilationResult> {
-        val results = ordered.flatMap { producer ->
-            val roots = producer.roots(inputs.view)
-            require(roots.all { root -> root.projection == producer.projection }) {
-                "Compilation roots must match their producer projection."
-            }
-            producer.compile(roots).also { results ->
-                require(results.map { it.root }.toSet() == roots && results.size == roots.size) {
-                    "Compilation must report every supplied root exactly once."
+        val results =
+            ordered.flatMap { producer ->
+                val roots = producer.roots(inputs.view)
+                require(roots.all { root -> root.projection == producer.projection }) {
+                    "Compilation roots must match their producer projection."
                 }
-                require(results.none { it is CompilationResult.Removed }) {
-                    "A supplied root cannot be reported as removed."
-                }
-                results.filterIsInstance<CompilationResult.Success>().forEach { result ->
-                    require(result.artifact.mediaType == producer.mediaType) {
-                        "Compiled output must match its producer media type."
+                producer.compile(roots).also { results ->
+                    require(results.map { it.root }.toSet() == roots && results.size == roots.size) {
+                        "Compilation must report every supplied root exactly once."
+                    }
+                    require(results.none { it is CompilationResult.Removed }) {
+                        "A supplied root cannot be reported as removed."
+                    }
+                    results.filterIsInstance<CompilationResult.Success>().forEach { result ->
+                        require(result.artifact.mediaType == producer.mediaType) {
+                            "Compiled output must match its producer media type."
+                        }
+                    }
+                    results.filterIsInstance<CompilationResult.Blocked>().forEach { result ->
+                        require(result.diagnostics.any { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR }) {
+                            "A blocked root must contain a blocking diagnostic."
+                        }
                     }
                 }
-                results.filterIsInstance<CompilationResult.Blocked>().forEach { result ->
-                    require(result.diagnostics.any { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR }) {
-                        "A blocked root must contain a blocking diagnostic."
-                    }
-                }
             }
-        }
         require(results.map { it.root }.distinct().size == results.size) {
             "Compiled roots must be unique within one publication."
         }

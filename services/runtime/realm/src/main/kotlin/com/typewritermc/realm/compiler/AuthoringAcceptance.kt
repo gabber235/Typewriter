@@ -16,8 +16,8 @@ import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.checking.InputToken
 import com.typewritermc.configuration.RuleOrigin
-import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.CheckInstanceId
@@ -89,7 +89,9 @@ data class AcceptedAuthoring internal constructor(
     val evidence: List<EditExpectation>,
     val bindingRequirements: List<NativeBindingRequirement>,
 ) {
-    init { require(coverage.complete) { "Accepted authoring requires complete check coverage." } }
+    init {
+        require(coverage.complete) { "Accepted authoring requires complete check coverage." }
+    }
 }
 
 /** Classifies diagnostics once at the saved candidate evaluation boundary. */
@@ -97,23 +99,38 @@ sealed interface PublicationNotice {
     val diagnostic: Diagnostic
 
     @ConsistentCopyVisibility
-    data class Information internal constructor(override val diagnostic: Diagnostic) : PublicationNotice {
-        init { require(diagnostic.severity == DiagnosticSeverity.Info) }
+    data class Information internal constructor(
+        override val diagnostic: Diagnostic,
+    ) : PublicationNotice {
+        init {
+            require(diagnostic.severity == DiagnosticSeverity.Info)
+        }
     }
 
     @ConsistentCopyVisibility
-    data class Warning internal constructor(override val diagnostic: Diagnostic) : PublicationNotice {
-        init { require(diagnostic.severity == DiagnosticSeverity.Warning) }
+    data class Warning internal constructor(
+        override val diagnostic: Diagnostic,
+    ) : PublicationNotice {
+        init {
+            require(diagnostic.severity == DiagnosticSeverity.Warning)
+        }
     }
 }
 
 @ConsistentCopyVisibility
-data class PublicationBlocker internal constructor(val diagnostic: Diagnostic) {
-    init { require(diagnostic.severity == DiagnosticSeverity.Error) }
+data class PublicationBlocker internal constructor(
+    val diagnostic: Diagnostic,
+) {
+    init {
+        require(diagnostic.severity == DiagnosticSeverity.Error)
+    }
 }
 
 /** A blocking assessment always has at least one reason. */
-data class PublicationBlockers(val first: PublicationBlocker, val additional: List<PublicationBlocker> = emptyList()) {
+data class PublicationBlockers(
+    val first: PublicationBlocker,
+    val additional: List<PublicationBlocker> = emptyList(),
+) {
     val all: List<PublicationBlocker> get() = listOf(first) + additional
 
     companion object {
@@ -257,17 +274,22 @@ internal class AuthoringAcceptance(
             }
             val distinct = findings.distinctBy { it.id }
             val blockers = distinct.filter { it.severity == DiagnosticSeverity.Error }
-            val notices = distinct.mapNotNull { finding ->
-                when (finding.severity) {
-                    DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
-                    DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
-                    DiagnosticSeverity.Error -> null
+            val notices =
+                distinct.mapNotNull { finding ->
+                    when (finding.severity) {
+                        DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
+                        DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
+                        DiagnosticSeverity.Error -> null
+                    }
                 }
-            }
             val evidence = report.results.flatMap { it.expectations }.distinct()
             if (blockers.isNotEmpty()) {
                 AuthoringAssessment.Blocked(
-                    PublicationBlockers.from(blockers), notices, coverage, evidence, requirements.distinct(),
+                    PublicationBlockers.from(blockers),
+                    notices,
+                    coverage,
+                    evidence,
+                    requirements.distinct(),
                 )
             } else {
                 AuthoringAssessment.Accepted(

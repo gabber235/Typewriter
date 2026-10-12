@@ -27,18 +27,25 @@ internal class EditorCheckEvents(
 ) {
     private val publisher = MutableStateFlow<Publisher?>(null)
     private val publication = MutableStateFlow<com.typewritermc.realm.compiler.RealmPublicationCoordinator?>(null)
-    private val publicationTask = scope.launch {
-        combine(publisher, publication) { connection, source -> connection to source }.collectLatest { (connection, source) ->
-            if (connection == null || source == null) return@collectLatest
-            source.views.collectLatest { view ->
-                try {
-                    connection.communicator.publishUpdate(connection.contracts.watchPublication, connection.address, view.changed()).requirePublished()
-                } catch (cancelled: CancellationException) {
-                    throw cancelled
-                } catch (_: Exception) { }
+    private val publicationTask =
+        scope.launch {
+            combine(publisher, publication) { connection, source -> connection to source }.collectLatest { (connection, source) ->
+                if (connection == null || source == null) return@collectLatest
+                source.views.collectLatest { view ->
+                    try {
+                        connection.communicator
+                            .publishUpdate(
+                                connection.contracts.watchPublication,
+                                connection.address,
+                                view.changed(),
+                            ).requirePublished()
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                    }
+                }
             }
         }
-    }
     private var findings: () -> List<FindingSet> = { emptyList() }
     private val wakeups = Channel<Unit>(Channel.CONFLATED)
     private val task =

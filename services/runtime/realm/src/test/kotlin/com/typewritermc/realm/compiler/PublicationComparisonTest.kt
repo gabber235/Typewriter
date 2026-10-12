@@ -3,7 +3,14 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
-import com.typewritermc.engine.*
+import com.typewritermc.engine.CompilationProjectionId
+import com.typewritermc.engine.CompilationRoot
+import com.typewritermc.engine.CompiledArtifact
+import com.typewritermc.engine.CompiledArtifactReference
+import com.typewritermc.engine.CompiledBlobPointer
+import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PublishedContent
+import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.scripting.RuntimeMemberId
 import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
@@ -18,20 +25,47 @@ val PublicationComparisonTest by testSuite {
         val artifact = comparisonArtifact()
         val selected = comparisonSelected(artifact)
         val candidate = artifact.copy(inputFingerprint = ContentDigest("c".repeat(64)))
-        PublicationComparison.between(selected.copy(publication = PublicationId("other"), catalog = CatalogGeneration("other")), listOf(candidate), testEngineInputs()) shouldBe PublicationComparison.Unchanged
+        PublicationComparison.between(
+            selected.copy(publication = PublicationId("other"), catalog = CatalogGeneration("other")),
+            listOf(candidate),
+            testEngineInputs(),
+        ) shouldBe
+            PublicationComparison.Unchanged
     }
     test("format media and semantic digest changes each update the root") {
         val original = comparisonArtifact()
         val selected = comparisonSelected(original)
-        listOf(original.copy(formatRevision = 3), original.copy(mediaType = "application/other"), original.copy(semanticDigest = ContentDigest("b".repeat(64)))).forEach { artifact ->
-            PublicationComparison.between(selected, listOf(artifact), testEngineInputs()).shouldBeInstanceOf<PublicationComparison.Changed>().delta.allChanges shouldBe listOf(PublicationChange.RootUpdated(original.root))
+        listOf(
+            original.copy(formatRevision = 3),
+            original.copy(mediaType = "application/other"),
+            original.copy(semanticDigest = ContentDigest("b".repeat(64))),
+        ).forEach { artifact ->
+            PublicationComparison
+                .between(
+                    selected,
+                    listOf(artifact),
+                    testEngineInputs(),
+                ).shouldBeInstanceOf<PublicationComparison.Changed>()
+                .delta.allChanges shouldBe
+                listOf(PublicationChange.RootUpdated(original.root))
         }
     }
     test("token and signature changes are meaningful even with no roots") {
         val selected = comparisonSelected(comparisonArtifact()).copy(outputs = emptyList())
-        val signature = RuntimeMemberSignature(RuntimeMemberId("fixture.member"), null, emptyList(), TypeUse.Scalar(ScalarKind.Text), emptySet())
-        listOf(EngineImplementationInputs(emptySet(), InputToken("new")), EngineImplementationInputs(setOf(signature), InputToken("implementation"))).forEach { engine ->
-            PublicationComparison.between(selected, emptyList(), engine).shouldBeInstanceOf<PublicationComparison.Changed>().delta.allChanges shouldBe listOf(PublicationChange.RequirementsChanged)
+        val signature =
+            RuntimeMemberSignature(RuntimeMemberId("fixture.member"), null, emptyList(), TypeUse.Scalar(ScalarKind.Text), emptySet())
+        listOf(
+            EngineImplementationInputs(emptySet(), InputToken("new")),
+            EngineImplementationInputs(setOf(signature), InputToken("implementation")),
+        ).forEach { engine ->
+            PublicationComparison
+                .between(
+                    selected,
+                    emptyList(),
+                    engine,
+                ).shouldBeInstanceOf<PublicationComparison.Changed>()
+                .delta.allChanges shouldBe
+                listOf(PublicationChange.RequirementsChanged)
         }
         PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
     }
@@ -39,16 +73,37 @@ val PublicationComparisonTest by testSuite {
         val old = comparisonArtifact()
         val fresh = comparisonArtifact("new")
         val pending = comparisonArtifact("pending").root
-        PublicationComparison.confirmedChanges(comparisonSelected(old), listOf(fresh), setOf(fresh.root, pending), testEngineInputs()) shouldBe listOf(PublicationChange.RootAdded(fresh.root), PublicationChange.RootRemoved(old.root))
+        PublicationComparison.confirmedChanges(
+            comparisonSelected(old),
+            listOf(fresh),
+            setOf(fresh.root, pending),
+            testEngineInputs(),
+        ) shouldBe
+            listOf(PublicationChange.RootAdded(fresh.root), PublicationChange.RootRemoved(old.root))
     }
 }
 
-private fun comparisonArtifact(id: String = "root") = CompiledArtifact(
-    CompilationRoot(CompilationProjectionId("fixture"), ResourceId(id)), 2, "application/fixture",
-    ContentDigest("1".repeat(64)), ContentDigest("a".repeat(64)), byteArrayOf(1),
-)
+private fun comparisonArtifact(id: String = "root") =
+    CompiledArtifact(
+        CompilationRoot(CompilationProjectionId("fixture"), ResourceId(id)),
+        2,
+        "application/fixture",
+        ContentDigest("1".repeat(64)),
+        ContentDigest("a".repeat(64)),
+        byteArrayOf(1),
+    )
 
-private fun comparisonSelected(artifact: CompiledArtifact) = PublishedContent(
-    PublicationId("selected"), 2, CatalogGeneration("catalog"), "implementation", emptySet(),
-    listOf(PublishedOutput(CompiledArtifactReference(artifact.root, artifact.formatRevision, artifact.mediaType, artifact.semanticDigest), CompiledBlobPointer(ContentDigest("2".repeat(64)), 1))),
-)
+private fun comparisonSelected(artifact: CompiledArtifact) =
+    PublishedContent(
+        PublicationId("selected"),
+        2,
+        CatalogGeneration("catalog"),
+        "implementation",
+        emptySet(),
+        listOf(
+            PublishedOutput(
+                CompiledArtifactReference(artifact.root, artifact.formatRevision, artifact.mediaType, artifact.semanticDigest),
+                CompiledBlobPointer(ContentDigest("2".repeat(64)), 1),
+            ),
+        ),
+    )
