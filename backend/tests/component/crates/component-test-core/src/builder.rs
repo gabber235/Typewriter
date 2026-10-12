@@ -112,7 +112,8 @@ impl<F: FixtureDeclaration> FixtureBuilder<F> {
             http_mocks: MockRegistry::default(),
             mock_handles: HashMap::new(),
             configuration_errors: Vec::new(),
-            start_timeout: Duration::from_secs(30),
+            // Startup includes cold component compilation on CI.
+            start_timeout: Duration::from_secs(120),
             body_timeout: Duration::from_secs(30),
             drain_timeout: Duration::from_secs(10),
             stop_timeout: Duration::from_secs(10),
