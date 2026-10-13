@@ -199,6 +199,18 @@ void main() {
     expect(find.text("Message"), findsOneWidget);
     expect(find.text("Deployment needs attention"), findsOneWidget);
     expect(find.byType(PortablePresentationRenderer), findsOneWidget);
+    for (final label in ["Artifact", "Updated"]) {
+      expect(
+        tester.getTopLeft(find.text(label)).dx,
+        closeTo(tester.getTopLeft(find.text("STATUS")).dx, 0.01),
+      );
+    }
+    for (final label in ["Owner host", "Target"]) {
+      expect(
+        tester.getTopLeft(find.text(label)).dx,
+        closeTo(tester.getTopLeft(find.text("ASSIGNMENT")).dx, 0.01),
+      );
+    }
   });
 
   testWidgets("offline Realm selection does not expose open", (tester) async {

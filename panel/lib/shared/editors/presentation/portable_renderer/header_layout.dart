@@ -25,11 +25,8 @@ final class _PortableHeaderRowState extends State<_PortableHeaderRow> {
     final overflow = widget.end
         .skip(_visibleEndCount.clamp(0, widget.end.length))
         .toList();
-    Widget spaced(Widget child) => Padding(
-      padding: EdgeInsetsDirectional.only(end: context.spacing.space2),
-      child: child,
-    );
     return _PortableHeaderLayout(
+      spacing: context.spacing.space2,
       beforeTitleCount: widget.before.length,
       afterTitleCount: widget.after.length,
       endCount: widget.end.length,
@@ -40,10 +37,10 @@ final class _PortableHeaderRowState extends State<_PortableHeaderRow> {
         }
       },
       children: [
-        for (final item in widget.before) spaced(item),
+        ...widget.before,
         widget.title,
-        for (final item in widget.after) spaced(item),
-        for (final item in widget.end) spaced(item),
+        ...widget.after,
+        ...widget.end,
         if (widget.end.isNotEmpty)
           _PortableHeaderOverflow(
             items: overflow.isEmpty ? widget.end : overflow,
@@ -82,6 +79,7 @@ final class _PortableHeaderParentData
 
 final class _PortableHeaderLayout extends MultiChildRenderObjectWidget {
   const _PortableHeaderLayout({
+    required this.spacing,
     required this.beforeTitleCount,
     required this.afterTitleCount,
     required this.endCount,
@@ -90,6 +88,7 @@ final class _PortableHeaderLayout extends MultiChildRenderObjectWidget {
     required super.children,
   });
 
+  final double spacing;
   final int beforeTitleCount;
   final int afterTitleCount;
   final int endCount;
@@ -99,6 +98,7 @@ final class _PortableHeaderLayout extends MultiChildRenderObjectWidget {
   @override
   RenderObject createRenderObject(BuildContext context) =>
       _RenderPortableHeaderLayout(
+        spacing,
         beforeTitleCount,
         afterTitleCount,
         endCount,
@@ -112,6 +112,7 @@ final class _PortableHeaderLayout extends MultiChildRenderObjectWidget {
     covariant _RenderPortableHeaderLayout renderObject,
   ) {
     renderObject
+      ..spacing = spacing
       ..beforeTitleCount = beforeTitleCount
       ..afterTitleCount = afterTitleCount
       ..endCount = endCount
@@ -125,12 +126,21 @@ final class _RenderPortableHeaderLayout extends RenderBox
         ContainerRenderObjectMixin<RenderBox, _PortableHeaderParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, _PortableHeaderParentData> {
   _RenderPortableHeaderLayout(
+    this._spacing,
     this._beforeTitleCount,
     this._afterTitleCount,
     this._endCount,
     this._textDirection,
     this.onVisibleEndCountChanged,
   );
+
+  double _spacing;
+  double get spacing => _spacing;
+  set spacing(double value) {
+    if (_spacing == value) return;
+    _spacing = value;
+    markNeedsLayout();
+  }
 
   int _beforeTitleCount;
   int get beforeTitleCount => _beforeTitleCount;
@@ -182,6 +192,8 @@ final class _RenderPortableHeaderLayout extends RenderBox
     final overflowIndex = endStart + endCount;
     final childConstraints = constraints.loosen();
     final title = children[titleIndex];
+    double spacedWidth(RenderBox child) =>
+        child.size.width == 0 ? 0 : child.size.width + spacing;
     var fixedWidth = 0.0;
     var maxHeight = 0.0;
     for (var index = 0; index < children.length; index++) {
@@ -189,12 +201,12 @@ final class _RenderPortableHeaderLayout extends RenderBox
       final child = children[index]
         ..layout(childConstraints, parentUsesSize: true);
       maxHeight = max(maxHeight, child.size.height);
-      if (index < endStart) fixedWidth += child.size.width;
+      if (index < endStart) fixedWidth += spacedWidth(child);
     }
     final endWidth = children
         .skip(endStart)
         .take(endCount)
-        .fold(0.0, (width, child) => width + child.size.width);
+        .fold(0.0, (width, child) => width + spacedWidth(child));
     if (!constraints.hasBoundedWidth) {
       title.layout(childConstraints, parentUsesSize: true);
     }
@@ -210,8 +222,9 @@ final class _RenderPortableHeaderLayout extends RenderBox
     var visibleEndCount = 0;
     var visibleEndWidth = 0.0;
     for (final child in children.skip(endStart).take(endCount)) {
-      if (visibleEndWidth + child.size.width > inlineBudget) break;
-      visibleEndWidth += child.size.width;
+      final width = spacedWidth(child);
+      if (visibleEndWidth + width > inlineBudget) break;
+      visibleEndWidth += width;
       visibleEndCount++;
     }
     if (!showOverflow) visibleEndCount = endCount;
@@ -245,6 +258,8 @@ final class _RenderPortableHeaderLayout extends RenderBox
       if (!visible) continue;
       final allocatedWidth = index == titleIndex
           ? titleWidth
+          : index < overflowIndex
+          ? spacedWidth(child)
           : child.size.width;
       final x = textDirection == TextDirection.ltr
           ? logicalOffset
