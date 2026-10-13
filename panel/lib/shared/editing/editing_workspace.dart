@@ -390,10 +390,20 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     for (final id in _tasks.keys.toList()) {
       if (!_canCapture(id)) _tasks.remove(id)?.cancel();
     }
+    final previousGroups = _state.groups;
     _state = _state.copyWith(
       working: model.publish(working, ++_revision),
       groups: snapshots,
     );
+    for (final group in snapshots.values) {
+      if (group.policy == EditorCommitPolicy.autosaveChanges &&
+          group.phase is EditGroupDirty<S> &&
+          previousGroups[group.id]?.phase is EditGroupAwaitingDependency<S> &&
+          !_tasks.containsKey(group.id) &&
+          !_requested.contains(group.id)) {
+        _schedule(group.id);
+      }
+    }
     _notify();
   }
 
