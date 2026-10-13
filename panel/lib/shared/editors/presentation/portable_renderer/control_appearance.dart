@@ -230,8 +230,16 @@ Widget? _entryLeading(
     return IconTheme.merge(
       data: IconThemeData(color: style.iconColor, size: style.iconSize),
       child: DefaultTextStyle.merge(
-        style: style.valueStyle,
-        child: PortablePresentationNodeRenderer(node: node, scope: scope),
+        style: style.valueStyle.copyWith(
+          color: style.iconColor,
+          fontSize: style.iconSize,
+        ),
+        child: Align(
+          alignment: Alignment.center,
+          widthFactor: 1,
+          heightFactor: 1,
+          child: PortablePresentationNodeRenderer(node: node, scope: scope),
+        ),
       ),
     );
   }

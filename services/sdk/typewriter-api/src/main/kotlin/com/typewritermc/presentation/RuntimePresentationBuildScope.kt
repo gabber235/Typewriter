@@ -45,7 +45,7 @@ internal class RuntimePresentationBuildScope(
     internal fun presentation(body: Layout.() -> Unit): PresentationNode {
         val children = mutableListOf<PresentationNode>()
         state.withTarget(children) { state.scope(children, checked = checked, base = base).body() }
-        return state.column(children)
+        return children.singleOrNull() ?: state.column(children)
     }
 
     override fun registerExpressions(factory: ExpressionFactory<*>) = state.expressions.register(factory)

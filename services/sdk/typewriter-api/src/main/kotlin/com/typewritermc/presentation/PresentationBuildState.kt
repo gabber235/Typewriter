@@ -234,7 +234,7 @@ internal class PresentationAxisNodeList(private val horizontal: Boolean) : Abstr
 internal fun PresentationBuildState.presentation(body: Layout.() -> Unit): PresentationNode {
     val children = mutableListOf<PresentationNode>()
     withTarget(children) { scope(children).body() }
-    return column(children)
+    return children.singleOrNull() ?: column(children)
 }
 
 internal fun publishField(target: MutableList<PresentationNode>, node: PresentationNode) {

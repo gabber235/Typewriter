@@ -53,6 +53,33 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    for (count in 0..2) {
+        test("presentation bodies preserve their content with $count nodes") {
+            val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation bodies"), StandardTypes.definitions)
+            val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+            val result = DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.EDITOR)) { build ->
+                val field: PresentedField<String, TextControl> = build.value(TextControl::class)
+                field {
+                    textInput {
+                        prefix { repeat(count) { text(literal("prefix $it")) } }
+                    }
+                }
+                build.tooltip(literal("Details")) { repeat(count) { text(literal("tooltip $it")) } }
+            }
+            val roots = result.layout.fixedChildren()
+            val prefix = ((roots[0].element as PresentationElement.TextInputWrapper).value.content!!.leading as skirout.editor.v1.presentation.InputAdornment.ContentWrapper).value
+            val tooltip = (roots[1].element as PresentationElement.TooltipWrapper).value.child
+            for ((node, label) in listOf(prefix to "prefix", tooltip to "tooltip")) {
+                val contents = if (count == 1) listOf(node) else node.fixedChildren()
+                contents.size shouldBe count
+                contents.map { child ->
+                    val text = (child.element as PresentationElement.TextWrapper).value.value
+                    ((text as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper).value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
+                } shouldBe List(count) { "$label $it" }
+            }
+        }
+    }
+
     test("display families lower their declared options through shared appearance and glyph delegates") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("display options"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))

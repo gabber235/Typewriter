@@ -6,6 +6,116 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  for (final wrapped in [false, true]) {
+    testWidgets(
+      "leading glyph is centered and inherits icon defaults with column $wrapped",
+      (tester) async {
+        final fixture = _Fixture(
+          skir.DataValue.wrapInteger("7"),
+          skir.ScalarKind.createInteger(
+            width: skir.IntegerWidth.signedThirtyTwo,
+          ),
+        );
+        final text =
+            (skir.PresentationNode.mutable()
+                  ..nodeId = "glyph"
+                  ..element = skir.PresentationElement.wrapText(
+                    (skir.TextContent.mutable()..value = _text("X")).toFrozen(),
+                  ))
+                .toFrozen();
+        final leading = wrapped
+            ? (skir.PresentationNode.mutable()
+                    ..nodeId = "glyph.column"
+                    ..element = skir.PresentationElement.wrapChildren(
+                      skir.ChildrenElement.wrapColumn(
+                        (skir.AxisChildrenElement.mutable()
+                              ..children = [skir.AxisChild.wrapFixed(text)])
+                            .toFrozen(),
+                      ),
+                    ))
+                  .toFrozen()
+            : text;
+        final input =
+            (skir.NumericControl.mutable()
+                  ..control = fixture.control
+                  ..content =
+                      (skir.InputContent.mutable()
+                            ..leading = skir.InputAdornment.wrapContent(
+                              leading,
+                            ))
+                          .toFrozen()
+                  ..appearance =
+                      (skir.InputAppearance.mutable()
+                            ..iconSize = wrapped ? _number(22) : null
+                            ..iconColor = skir.PresentationColor.wrapValue(
+                              _literal(
+                                skir.DataValue.wrapInteger("4292030255"),
+                              ),
+                            ))
+                          .toFrozen())
+                .toFrozen();
+        await fixture.pump(
+          tester,
+          skir.PresentationElement.wrapNumericInput(input),
+        );
+        final glyph = find.text("X");
+        final native = tester.widget<TextField>(find.byType(TextField));
+        final slot = tester.getRect(
+          find.byWidget(native.decoration!.prefixIcon!),
+        );
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(of: glyph, matching: find.byType(RichText)),
+        );
+        final bounds = paragraph
+            .getBoxesForSelection(
+              const TextSelection(baseOffset: 0, extentOffset: 1),
+            )
+            .single
+            .toRect()
+            .shift(paragraph.localToGlobal(Offset.zero));
+        expect(bounds.center.dx, closeTo(slot.center.dx, 0.5));
+        expect(bounds.center.dy, closeTo(slot.center.dy, 0.5));
+        final style = tester.widget<Text>(glyph).style!;
+        expect(style.fontSize, wrapped ? 22 : 18);
+        expect(style.color, const Color(0xffd32f2f));
+        expect(tester.takeException(), isNull);
+
+        final explicitText =
+            (text.toMutable()
+                  ..element = skir.PresentationElement.wrapText(
+                    (skir.TextContent.mutable()
+                          ..value = _text("X")
+                          ..sizing = skir.TextSizing.wrapExact(_number(24))
+                          ..color = skir.PresentationColor.wrapValue(
+                            _literal(skir.DataValue.wrapInteger("4278255360")),
+                          ))
+                        .toFrozen(),
+                  ))
+                .toFrozen();
+        final configured =
+            (input.toMutable()
+                  ..appearance =
+                      (input.appearance!.toMutable()..iconSize = _number(20))
+                          .toFrozen()
+                  ..content =
+                      (input.content!.toMutable()
+                            ..leading = skir.InputAdornment.wrapContent(
+                              explicitText,
+                            ))
+                          .toFrozen())
+                .toFrozen();
+        await fixture.pump(
+          tester,
+          skir.PresentationElement.wrapNumericInput(configured),
+        );
+        final explicitStyle = tester.widget<Text>(find.text("X")).style!;
+        expect(explicitStyle.fontSize, 24);
+        expect(explicitStyle.color, const Color(0xff00ff00));
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets(
     "text options reach the native editing widget and composition aware filtering",
     (tester) async {
