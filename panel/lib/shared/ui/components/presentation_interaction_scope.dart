@@ -12,6 +12,8 @@ abstract class PresentationInteraction with _$PresentationInteraction {
     @Default(false) bool focused,
     @Default(false) bool pressed,
     @Default(false) bool disabled,
+    @Default(false) bool readOnly,
+    @Default(false) bool invalid,
   }) = _PresentationInteraction;
 
   const PresentationInteraction._();

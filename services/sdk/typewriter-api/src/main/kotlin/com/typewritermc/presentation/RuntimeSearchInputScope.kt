@@ -10,18 +10,26 @@ import skirout.editor.v1.presentation.PresentationNode
 
 internal class RuntimeSearchInputScope<Value, Row>(
     private val state: PresentationBuildState,
-) : SearchInputScope<Value, Row> {
+    private val author: RuntimePresentationBuildScope,
+    private val common: InputConfigurationDraft = InputConfigurationDraft(),
+) : SearchInputScope<Value, Row>,
+    TextEntryAppearanceScope by common.appearance(),
+    InputContentScope by common.content(state, author),
+    PopupAppearanceScope by common.popup() {
     override val query = Expr<String, Handled>(ExpressionNode.Read(SEARCH_QUERY, ValuePath()))
     override val sources: SearchSources = SearchSources
     private val selectors = mutableListOf<skirout.editor.v1.presentation.SearchSelectorDefinition>()
     private var result: skirout.editor.v1.presentation.SearchResultMapping? = null
     private var summary: PresentationNode? = null
     private var initialQuery: skirout.editor.v1.expression.ExpressionNode? = null
-    private var placeholder: skirout.editor.v1.expression.ExpressionNode? = null
     private var customValue: skirout.editor.v1.expression.ExpressionNode? = null
-    private var maximumExtent = expression(400.0)
     private var selectionMode = SearchSelectionMode.Single
     private var provider: DefaultSearchProviderSpec<Row>? = null
+    private var popupSide: skirout.editor.v1.presentation.PopupSide = skirout.editor.v1.presentation.PopupSide.AUTOMATIC
+    private var emptyText: skirout.editor.v1.expression.ExpressionNode? = null
+    private var loadingText: skirout.editor.v1.expression.ExpressionNode? = null
+    private var empty: PresentationNode? = null
+    private var loading: PresentationNode? = null
 
     override fun selectors(configure: SearchSelectorsScope.() -> Unit) {
         val scope =
@@ -60,24 +68,31 @@ internal class RuntimeSearchInputScope<Value, Row>(
     }
 
     override fun summary(body: Layout.() -> Unit) {
-        summary = state.presentation(body)
+        summary = author.presentation(body)
     }
 
     override fun initialQuery(value: Expr<String, Handled>) {
         initialQuery = expression(value)
     }
 
-    override fun placeholder(value: Expr<String, Handled>) {
-        placeholder = expression(value)
-    }
-
     override fun customValue(value: Expr<Value, Handled>) {
         customValue = expression(value)
     }
 
-    override fun maximumExtent(value: Expr<Double, Handled>) {
-        maximumExtent = expression(value)
+    override fun initialQuery(value: String) { initialQuery = expression(value) }
+    override fun popupSide(value: PopupSide) {
+        popupSide = when (value) {
+            PopupSide.Automatic -> skirout.editor.v1.presentation.PopupSide.AUTOMATIC
+            PopupSide.Above -> skirout.editor.v1.presentation.PopupSide.ABOVE
+            PopupSide.Below -> skirout.editor.v1.presentation.PopupSide.BELOW
+        }
     }
+    override fun emptyText(value: String) { emptyText = expression(value) }
+    override fun emptyText(value: Expr<String, Handled>) { emptyText = expression(value) }
+    override fun loadingText(value: String) { loadingText = expression(value) }
+    override fun loadingText(value: Expr<String, Handled>) { loadingText = expression(value) }
+    override fun empty(body: Layout.() -> Unit) { empty = author.presentation(body) }
+    override fun loading(body: Layout.() -> Unit) { loading = author.presentation(body) }
 
     override fun selectionMode(value: SearchSelectionMode) {
         selectionMode = value
@@ -90,17 +105,26 @@ internal class RuntimeSearchInputScope<Value, Row>(
     fun element(control: BoundControl): PresentationElement {
         val mapping = requireNotNull(result) { "Search input must declare its result mapping." }
         val source = requireNotNull(provider) { "Search input must declare a provider." }
+        val frozen = common.freeze()
         return PresentationElement.createSearchInput(
             control = control,
             selectionMode = selectionMode.wire(),
             queryBindingId = SEARCH_QUERY.wire(),
             summaryBindingId = ExpressionBindingId("search_summary").wire(),
-            maximumExtent = maximumExtent,
+            maximumExtent = frozen.popup.maximumExtent ?: expression(400.0),
             provider = source.wire(state, mapping, selectors),
             summary = summary,
-            placeholder = placeholder,
+            placeholder = frozen.content.placeholder,
             customValue = customValue,
             initialQuery = initialQuery,
+            appearance = frozen.appearance,
+            content = frozen.content,
+            popup = frozen.popup,
+            popupSide = popupSide,
+            emptyText = emptyText,
+            loadingText = loadingText,
+            empty = empty,
+            loading = loading,
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.presentation.TextLines
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
@@ -132,7 +133,7 @@ object LiteralMessageEditorPresentation : LiteralMessagePresentation {
     override val priority: Int = 100
 
     override fun LiteralMessagePresentationScope.present() {
-        value { textInput(multiline = true) }
+        value { textInput { lines(TextLines.Multiple()) } }
     }
 }
 
@@ -183,7 +184,7 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
                 )
             }
         }
-        remainingFields { exclude(message) }
+        remainingFields()
     }
 }
 
@@ -208,7 +209,7 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
                 )
             }
         }
-        remainingFields { exclude(message) }
+        remainingFields()
     }
 }
 

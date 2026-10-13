@@ -40,6 +40,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.controller,
     this.focusNode,
     this.inputFieldController,
+    this.statesController,
     this.autofocus = EditorTextFieldAutoFocus.none,
     this.name = "",
     this.icon = Ic.round_text_fields,
@@ -50,10 +51,12 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.deserialize,
     this.serialize,
     this.formatted,
+    this.display,
     this.validator,
     this.onChanged,
     this.onCleared,
     this.onDone,
+    this.onCommittedDone,
     this.onEditingComplete,
     this.onSubmitted,
     this.onInputFocus,
@@ -67,17 +70,20 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     this.maxLines = 1,
     this.textAlign = TextAlign.start,
     this.readOnly = false,
+    this.enabled = true,
     this.selectAllOnFocus = false,
     this.mixed = false,
     this.onValidationChanged,
     this.validationIdentity,
     this.showValidationMessage = true,
+    this.showDefaultIcon = true,
     super.key,
   }) : assert(!mixed || value == null);
   final T? value;
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final InputFieldController? inputFieldController;
+  final WidgetStatesController? statesController;
   final EditorTextFieldAutoFocus autofocus;
   final String name;
   final String icon;
@@ -88,6 +94,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final String Function(T)? deserialize;
   final T Function(String)? serialize;
   final String Function(T)? formatted;
+  final String Function(T)? display;
   final String? Function(T)? validator;
 
   /// Called when an edited draft parses and validates successfully.
@@ -101,6 +108,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   /// Called when the user is done editing, either by pressing done or losing
   /// focus.
   final ValueChanged<T>? onDone;
+  final ValueChanged<TextEditingValue>? onCommittedDone;
 
   /// Called when editing completes to control the next focus transition.
   /// Prefer [onDone] or [onSubmitted] when only the value needs handling. If
@@ -127,6 +135,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
   final int? maxLines;
   final TextAlign textAlign;
   final bool readOnly;
+  final bool enabled;
   final bool selectAllOnFocus;
   final bool mixed;
 
@@ -138,6 +147,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
 
   /// Shared presentation frames can render the message beside the whole control.
   final bool showValidationMessage;
+  final bool showDefaultIcon;
 
   _State _parse(String value) {
     if (_clears(value)) return _initial;
@@ -168,16 +178,40 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     final focus =
         inputFieldController?.inputFocusNode ?? focusNode ?? fallbackFocus;
     final state = useState<_State>(_initial);
+    final focused = useState(focus.hasFocus);
+    useFocusedChange(focus, ({required hasFocus}) {
+      focused.value = hasFocus;
+    });
+    final ownValue = useRef<T?>(null);
+    final hasOwnValue = useRef(false);
+    final ownCandidates = useRef(<T>[]);
+    final observedValue = useRef(value);
+    final observedOwnEcho = useRef(false);
 
     final current = value;
     final formattedValue = current == null
         ? null
         : deserialize?.call(current) ?? current.toString();
+    if (current != observedValue.value) {
+      final acknowledged = ownCandidates.value.indexWhere(
+        (candidate) => candidate == current,
+      );
+      observedOwnEcho.value =
+          acknowledged >= 0 || hasOwnValue.value && current == ownValue.value;
+      if (acknowledged >= 0) {
+        ownCandidates.value.removeRange(0, acknowledged + 1);
+      } else if (!observedOwnEcho.value) {
+        ownCandidates.value.clear();
+      }
+      observedValue.value = current;
+    }
+    final ownEcho =
+        observedOwnEcho.value || hasOwnValue.value && current == ownValue.value;
 
     useEffect(() {
       state.value = _initial;
       return null;
-    }, [focus, formattedValue]);
+    }, [focus, if (ownEcho) null else formattedValue]);
 
     final validationMessage = state.value is _Invalid
         ? (state.value as _Invalid).message
@@ -217,14 +251,18 @@ class ValidatedTextField<T> extends HookConsumerWidget {
     final effectiveDecoration = baseDecoration.copyWith(
       prefixIcon:
           baseDecoration.prefixIcon ??
-          Padding(
-            padding: EdgeInsets.all(context.spacing.space2),
-            child: Icones(
-              icon,
-              size: 18,
-              color: state.value is _Invalid ? context.colors.danger : null,
-            ),
-          ),
+          (showDefaultIcon
+              ? Padding(
+                  padding: EdgeInsets.all(context.spacing.space2),
+                  child: Icones(
+                    icon,
+                    size: 18,
+                    color: state.value is _Invalid
+                        ? context.colors.danger
+                        : null,
+                  ),
+                )
+              : null),
       hintText: baseDecoration.hintText ?? "Enter a $name",
       errorText: showValidationMessage
           ? state.value.cast<_Invalid>()?.message ?? baseDecoration.errorText
@@ -238,9 +276,15 @@ class ValidatedTextField<T> extends HookConsumerWidget {
         EditorTextField(
           focusNode: focus,
           inputFieldController: inputFieldController,
+          statesController: statesController,
           autofocus: autofocus,
           controller: controller,
-          text: formattedValue ?? "",
+          text: state.value is _Invalid || (focus.hasFocus && ownEcho)
+              ? null
+              : formattedValue ?? "",
+          displayText: state.value is _Invalid || current == null
+              ? null
+              : display?.call(current),
           keyboardType: keyboardType,
           inputFormatters: inputFormatters,
           decoration: effectiveDecoration,
@@ -248,6 +292,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
           maxLines: maxLines,
           textAlign: textAlign,
           readOnly: readOnly,
+          enabled: enabled,
           selectAllOnFocus: selectAllOnFocus,
           actions: actions,
           textFieldActions: textFieldActions,
@@ -259,7 +304,12 @@ class ValidatedTextField<T> extends HookConsumerWidget {
               return;
             }
             final object = _updateState(value, state);
-            if (object != null) onChanged?.call(object);
+            if (object != null) {
+              ownValue.value = object;
+              hasOwnValue.value = true;
+              ownCandidates.value.add(object);
+              onChanged?.call(object);
+            }
           },
           onDone: (value) {
             if (keepErrorVisibleWhenUnfocused) {
@@ -269,6 +319,7 @@ class ValidatedTextField<T> extends HookConsumerWidget {
             onInputBlur?.call();
           },
           onEditingComplete: onEditingComplete,
+          onCommittedDone: onCommittedDone,
           onSubmitted: (value) {
             final object = _updateState(value, state);
             if (object != null) onSubmitted?.call(object);

@@ -38,6 +38,17 @@ internal class PresentationBuildState(
     private val presentations = linkedSetOf<skirout.editor.v1.type_catalog.PresentationId>()
     private val capabilities = linkedSetOf<skirout.editor.v1.type_catalog.CapabilityId>()
     private val collections = linkedMapOf<String, PresentationCollectionDefinition>()
+    private val expressionTypes = linkedMapOf(
+        CONFIGURED_VALUE to type.type,
+        ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Text),
+        ExpressionBindingId("presentation.context.selection_count") to TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)),
+    )
+
+    internal fun checkMapping(body: ExpressionNode, input: ExpressionBindingId, payload: TypeTemplate, output: TypeTemplate) {
+        val errors = type.checkExpression(body, expressionTypes + (input to payload), output, setOf(input))
+        require(errors.isEmpty()) { "Invalid control expression: ${errors.joinToString()}." }
+    }
+
 
     val currentTarget: MutableList<PresentationNode> get() = activeTarget
 
@@ -110,8 +121,10 @@ internal class PresentationBuildState(
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
         base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
-    ): RuntimePresentationBuildScope =
-        RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
+    ): RuntimePresentationBuildScope {
+        if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(base.bindingId.value)] = checked.type
+        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
+    }
 
     fun node(
         element: PresentationElement?,
@@ -166,7 +179,7 @@ internal class PresentationBuildState(
     }
 }
 
-internal class PresentationAxisNodeList : AbstractMutableList<PresentationNode>() {
+internal class PresentationAxisNodeList(private val horizontal: Boolean) : AbstractMutableList<PresentationNode>() {
     private val nodes = mutableListOf<PresentationNode>()
     val children = mutableListOf<AxisChild>()
 
@@ -195,6 +208,10 @@ internal class PresentationAxisNodeList : AbstractMutableList<PresentationNode>(
         return nodes.set(index, element)
     }
 
+    fun addField(node: PresentationNode) {
+        if (horizontal) addFlexible(node, 1, FlexFit.Tight) else add(node)
+    }
+
     fun addFlexible(
         node: PresentationNode,
         flex: Int,
@@ -218,4 +235,8 @@ internal fun PresentationBuildState.presentation(body: Layout.() -> Unit): Prese
     val children = mutableListOf<PresentationNode>()
     withTarget(children) { scope(children).body() }
     return column(children)
+}
+
+internal fun publishField(target: MutableList<PresentationNode>, node: PresentationNode) {
+    if (target is PresentationAxisNodeList) target.addField(node) else target.add(node)
 }

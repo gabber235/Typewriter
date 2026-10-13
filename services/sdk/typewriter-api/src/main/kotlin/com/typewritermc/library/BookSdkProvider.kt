@@ -57,10 +57,10 @@ object BookInspectorPresentation : BookPresentation {
                 }
             }
             inspectorSection("color", "Color") {
-                color { colorInput(includeAlpha = false) }
+                color { colorInput { includeAlpha(false) } }
             }
             inspectorSection("tags", "Direct Tags") {
-                tags { collectionInput { linkInput(source = tagOptions) } }
+                tags { collectionInput { items { linkInput(source = tagOptions) } } }
             }
             inspectorSection("effective-tags", "Effective Tags") {
                 collectionGraph(tagOptions) {
@@ -74,10 +74,6 @@ object BookInspectorPresentation : BookPresentation {
                 }
             }
             remainingFields {
-                exclude(title)
-                exclude(icon)
-                exclude(color)
-                exclude(tags)
                 exclude(pages)
             }
         }

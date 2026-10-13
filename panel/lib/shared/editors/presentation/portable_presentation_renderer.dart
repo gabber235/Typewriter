@@ -9,6 +9,8 @@ part "portable_renderer/collection_inputs.dart";
 part "portable_renderer/collections.dart";
 part "portable_renderer/content.dart";
 part "portable_renderer/control_frame.dart";
+part "portable_renderer/control_appearance.dart";
+part "portable_renderer/control_editing.dart";
 part "portable_renderer/operation_results.dart";
 part "portable_renderer/diagnostic_tree.dart";
 part "portable_renderer/diagnostic_placement.dart";
@@ -64,6 +66,13 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       );
     }
     final enabled = _boolean(scope, node.properties.enabledIf, fallback: true);
+    if (scope.authoredIndex == null) {
+      return PortablePresentationNodeRenderer(
+        node: node,
+        scope: scope.withAuthoredLayout(node),
+        fillAvailableSpace: fillAvailableSpace,
+      );
+    }
     if (enabled case _ResolvedFailure(:final message)) {
       return _diagnostic(message);
     }
@@ -79,6 +88,8 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       return _renderNode(context, element, childScope, available);
     } on PresentationColorFailure catch (failure) {
       return _diagnostic(failure.message);
+    } on FormatException catch (failure) {
+      return _diagnostic(failure.message);
     }
   }
 
@@ -86,9 +97,11 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     BuildContext context,
     skir.PresentationElement element,
     PortablePresentationScope childScope,
-    bool available,
-  ) {
-    final rendered = _renderElement(context, element, childScope);
+    bool available, {
+    Widget? renderedContent,
+  }) {
+    final rendered =
+        renderedContent ?? _renderElement(context, element, childScope);
     var child = node.header == null
         ? rendered
         : _AuthoredPresentationHeader(
@@ -150,6 +163,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_imageWrapper(:final value) => _renderImage(
+      context,
       value,
       childScope,
     ),
@@ -164,6 +178,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_progressWrapper(:final value) => _renderProgress(
+      context,
       value,
       childScope,
     ),
@@ -195,6 +210,12 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       value,
       childScope,
     ),
+    skir.PresentationElement_appearanceDefaultsWrapper(:final value) =>
+      PortablePresentationNodeRenderer(
+        node: value.child,
+        scope: childScope.withAppearance(value.appearance),
+        fillAvailableSpace: fillAvailableSpace,
+      ),
     skir.PresentationElement_namedInputWrapper(:final value) => _renderNamed(
       value,
       childScope,
@@ -275,6 +296,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       childScope,
     ),
     skir.PresentationElement_tooltipWrapper(:final value) => _renderTooltip(
+      context,
       value,
       childScope,
     ),
@@ -311,7 +333,11 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         scope: childScope,
       ),
     ),
-    skir.PresentationElement.divider => const Divider(),
+    skir.PresentationElement_dividerWrapper(:final value) => _renderDivider(
+      context,
+      value,
+      childScope,
+    ),
     skir.PresentationElement_spacerWrapper(:final value) => _renderSpacer(
       value,
       childScope,

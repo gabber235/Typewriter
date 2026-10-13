@@ -16,8 +16,12 @@ class PortableDiagnosticFrame extends HookWidget {
     required this.child,
     this.label,
     this.description,
+    this.scope,
+    this.appearance,
     super.key,
   });
+  final PortablePresentationScope? scope;
+  final skir.InputAppearance? appearance;
   final String? label;
   final String? description;
   final PortableDiagnosticTarget target;
@@ -76,6 +80,31 @@ class PortableDiagnosticFrame extends HookWidget {
         final hasLabel =
             (label != null && label!.isNotEmpty) ||
             (description != null && description!.isNotEmpty);
+        final nativeInteraction = PresentationInteractionScope.of(context);
+        _PortableControlStyle? style;
+        try {
+          style = scope == null
+              ? null
+              : _controlStyle(
+                  context,
+                  scope!,
+                  appearance,
+                  environment: PresentationColorEnvironment.of(context)
+                      .copyWith(
+                        interaction: nativeInteraction.copyWith(
+                          invalid: severity == skir.DiagnosticSeverity.error,
+                        ),
+                      ),
+                );
+        } on PresentationColorFailure catch (failure) {
+          return _diagnostic(failure.message);
+        }
+        final authoredLabelColor =
+            appearance?.labelStyle?.color != null ||
+            (scope?.appearanceLayers.any(
+                  (layer) => layer.appearance.labelStyle?.color != null,
+                ) ??
+                false);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -83,9 +112,14 @@ class PortableDiagnosticFrame extends HookWidget {
             LabeledMessage(
               label: label,
               message: description,
-              labelStyle: context.theme.textTheme.labelLarge?.copyWith(
-                color: color,
-              ),
+              labelStyle:
+                  style?.labelStyle.copyWith(
+                    color: authoredLabelColor
+                        ? style.labelStyle.color
+                        : color ?? style.labelStyle.color,
+                  ) ??
+                  context.theme.textTheme.labelLarge?.copyWith(color: color),
+              messageStyle: style?.descriptionStyle,
             ),
             if (hasLabel) const SizedBox(height: 6),
             AnimatedContainer(
@@ -105,6 +139,7 @@ class PortableDiagnosticFrame extends HookWidget {
                 children: [
                   PortableControlDiagnostics(
                     identity: identity,
+                    invalid: severity == skir.DiagnosticSeverity.error,
                     onValidationChanged: reportParseMessage,
                     child: child,
                   ),
@@ -124,14 +159,17 @@ class PortableControlDiagnostics extends InheritedWidget {
     required this.identity,
     required this.onValidationChanged,
     required super.child,
+    this.invalid = false,
     super.key,
   });
+  final bool invalid;
   final PortableControlValidationIdentity identity;
   final ValueChanged<String?> onValidationChanged;
   static PortableControlDiagnostics of(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<PortableControlDiagnostics>()!;
   @override
   bool updateShouldNotify(PortableControlDiagnostics old) =>
+      invalid != old.invalid ||
       identity != old.identity ||
       onValidationChanged != old.onValidationChanged;
 }

@@ -46,71 +46,56 @@ data class SelectOption<V>(
 interface ChoiceControl<V> : Control {
     fun selectInput(
         options: List<SelectOption<V>>,
-        allowCustomValue: Boolean = false,
+        configure: SelectInputScope<V>.() -> Unit = {},
     )
 
     fun <Row> searchInput(configure: SearchInputScope<V, Row>.() -> Unit)
 }
 
 interface TextControl : ChoiceControl<String> {
-    fun textInput(
-        multiline: Boolean = false,
-        placeholder: Expr<String, Handled>? = null,
-        formatters: List<TextInputFormat> = emptyList(),
-    )
+    fun textInput(configure: TextInputScope.() -> Unit = {})
 }
 
 interface NumberControl<N> : ChoiceControl<N> {
-    fun numericInput()
+    fun numericInput(configure: NumericInputScope<N>.() -> Unit = {})
 
     fun sliderInput(
         minimum: N,
         maximum: N,
-        divisions: Int? = null,
+        configure: SliderInputScope<N>.() -> Unit = {},
     )
 
     fun sliderInput(
         minimum: Expr<N, Handled>,
         maximum: Expr<N, Handled>,
-        divisions: Expr<Int, Handled>? = null,
+        configure: SliderInputScope<N>.() -> Unit = {},
     )
 }
 
 interface BooleanControl : ChoiceControl<Boolean> {
-    fun toggleInput()
+    fun toggleInput(configure: ToggleInputScope.() -> Unit = {})
 }
 
 interface ColorControl : ChoiceControl<Color> {
-    fun colorInput(includeAlpha: Boolean = false)
+    fun colorInput(configure: ColorInputScope.() -> Unit = {})
 }
 
 interface BytesControl : ChoiceControl<List<Byte>> {
-    fun bytesInput()
+    fun bytesInput(configure: BytesInputScope.() -> Unit = {})
 }
 
 interface EnumControl<E> : ChoiceControl<E> {
-    fun enumInput()
+    fun enumInput(configure: SelectInputScope<E>.() -> Unit = {})
 }
 
 interface DateTimeControl : ChoiceControl<Instant> {
-    fun dateTimeInput(
-        includeDate: Boolean = true,
-        includeTime: Boolean = true,
-    )
+    fun dateTimeInput(configure: DateTimeInputScope.() -> Unit = {})
 }
 
 interface DurationControl : ChoiceControl<Duration> {
-    fun durationInput()
+    fun durationInput(configure: DurationInputScope.() -> Unit = {})
 }
 
 interface NamedControl<V, PayloadScope> : ChoiceControl<V> {
-    fun namedInput(payload: ControlConfiguration<PayloadScope> = {})
-}
-
-sealed interface TextInputFormat {
-    data object Trim : TextInputFormat
-
-    data class Pattern(
-        val regex: String,
-    ) : TextInputFormat
+    fun namedInput(configure: NamedInputScope<PayloadScope>.() -> Unit = {})
 }

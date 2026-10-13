@@ -30,6 +30,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
       return _AuthoredLinkValueInput(
         key: ValueKey("${node.nodeId}.link"),
         control: control,
+        owner: node,
         scope: childScope,
         reference: control.control.binding,
         location: location,
@@ -37,11 +38,17 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
         candidateDefinition: candidateDefinition,
       );
     }
+    final rowControl =
+        (control.toMutable()
+              ..control = (control.control.toMutable()..prefix = null)
+                  .toFrozen())
+            .toFrozen();
     final rows = [
       for (final (index, item) in items.indexed)
         _AuthoredLinkValueInput(
           key: ValueKey("${node.nodeId}.link.${item.id.value}"),
-          control: control,
+          control: rowControl,
+          owner: node,
           scope: childScope,
           reference: skir.BindingRef(
             bindingId: control.control.binding.bindingId,
@@ -64,11 +71,16 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
           candidates: candidates,
           candidateDefinition: candidateDefinition,
           framed: false,
-          showPrefix: false,
+          showPrefix: true,
           leading: control.allowReorder
               ? _AuthoredReorderHandle(
                   index: index,
                   label: "Reorder linked resource ${index + 1}",
+                  icon: _operationGlyph(
+                    control.content?.reorderIcon,
+                    childScope,
+                    const Icon(Icons.drag_handle),
+                  ),
                   enabled: childScope.enabled && !childScope.readOnly,
                   canMoveEarlier: index > 0,
                   canMoveLater: index < items.length - 1,
@@ -109,17 +121,27 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
         : Column(children: rows);
     return _controlFrame(
       control.control,
-      childScope,
-      _withControlPrefix(
-        control.control,
-        childScope,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            list,
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
+      control.inputAppearance == null
+          ? childScope
+          : childScope.withAppearance(control.inputAppearance!),
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (items.isEmpty)
+            _collectionEmpty(
+              context,
+              childScope,
+              control.content,
+              "No linked resources",
+            ),
+          list,
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: _operationAppearance(
+              control.content,
+              childScope,
+              (states, style) => TextButton.icon(
+                statesController: states,
                 onPressed: childScope.enabled && !childScope.readOnly
                     ? () async {
                         final item = skir.ItemId(
@@ -143,13 +165,25 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
                         );
                       }
                     : null,
-                icon: const Icon(Icons.add_link),
-                label: const Text("Add link"),
+                style: style,
+                icon: _operationGlyph(
+                  control.content?.addIcon,
+                  childScope,
+                  const Icon(Icons.add_link),
+                ),
+                label: Text(
+                  _operationText(
+                    childScope,
+                    control.content?.addLabel,
+                    "Add link",
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+      renderPrefix: true,
     );
   }
 }
@@ -157,6 +191,7 @@ extension _PortableLinkInputRendering on PortablePresentationNodeRenderer {
 final class _AuthoredLinkValueInput extends StatelessWidget {
   const _AuthoredLinkValueInput({
     required this.control,
+    required this.owner,
     required this.scope,
     required this.reference,
     required this.location,
@@ -169,6 +204,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
   });
 
   final skir.LinkControl control;
+  final skir.PresentationNode owner;
   final PortablePresentationScope scope;
   final skir.BindingRef reference;
   final skir.ValueLocation location;
@@ -180,6 +216,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final style = _controlStyle(context, scope, control.inputAppearance);
     final value = scope.read(reference);
     final link = value?.authoredLink;
     final enabled = scope.enabled && !scope.readOnly;
@@ -191,7 +228,12 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
           )
         : Text(
             link == null
-                ? "No resource selected"
+                ? _entryPlaceholder(control.inputContent, scope) ??
+                      _operationText(
+                        scope,
+                        control.content?.emptyText,
+                        "No resource selected",
+                      )
                 : switch (scope.host) {
                     final PortableCollectionProjectionHost host =>
                       host
@@ -205,72 +247,143 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
                   },
             overflow: TextOverflow.ellipsis,
           );
-    final content = DepthBox(
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.space2),
-        child: Row(
-          children: [
-            ?leading,
-            if (leading != null) SizedBox(width: context.spacing.space2),
-            if (showPrefix) ?_controlPrefix(control.control, scope),
-            if (showPrefix && control.control.prefix != null)
-              SizedBox(width: context.spacing.space2),
-            Expanded(child: summary),
-            IconButton(
-              tooltip: link == null
-                  ? "Choose linked resource"
-                  : "Change linked resource",
-              onPressed: enabled
-                  ? () => _chooseLink(
-                      context: context,
-                      scope: scope,
-                      control: control,
-                      location: location,
-                      candidates: candidates,
-                      candidateDefinition: candidateDefinition,
-                    )
-                  : null,
-              icon: Icon(link == null ? Icons.link : Icons.edit_outlined),
-            ),
-            if (link != null)
-              IconButton(
-                tooltip: "Clear link",
-                onPressed: enabled
-                    ? () {
-                        final linkHost = switch (scope.host) {
-                          final PortableLinkHost value => value,
-                          _ => null,
-                        };
-                        if (linkHost == null) return;
-                        final address = scope.diagnosticTarget(reference);
-                        unawaited(
-                          scope.operations.run(
-                            key: PortableOperationKey.write(address),
-                            input: PortableDiagnosticObservation(
-                              target: address,
-                              value: scope.read(reference),
-                            ),
-                            operation: () => linkHost.disconnectLink(
-                              skir.LinkOccurrence(
-                                id: skir.LinkOccurrenceId(
-                                  endpoint: link.endpoint,
-                                  location: location,
-                                ),
-                                source: location.resource,
-                                target: link.target,
-                              ),
-                              context: scope.invocation,
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
-                icon: const Icon(Icons.link_off),
+    final content = InputDecorator(
+      decoration: style.decoration.copyWith(enabled: enabled),
+      child: DefaultTextStyle.merge(
+        style: style.valueStyle,
+        child: Padding(
+          padding: style.padding ?? EdgeInsets.all(context.spacing.space2),
+          child: Row(
+            children: [
+              ?leading,
+              if (leading != null) SizedBox(width: context.spacing.space2),
+              if (showPrefix)
+                ?_entryLeading(
+                  context,
+                  control.control,
+                  control.inputContent,
+                  scope,
+                  style,
+                  Icons.link,
+                ),
+              if (showPrefix &&
+                  control.inputContent?.leading != skir.InputAdornment.none)
+                SizedBox(width: context.spacing.space2),
+              Expanded(child: summary),
+              ?_entrySuffix(control.inputContent, scope),
+              _operationAppearance(
+                control.content,
+                scope,
+                (states, style) => IconButton(
+                  statesController: states,
+                  style: style,
+                  tooltip: _operationText(
+                    scope,
+                    control.content?.operationTooltip ??
+                        control.content?.chooseLabel,
+                    link == null
+                        ? "Choose linked resource"
+                        : "Change linked resource",
+                  ),
+                  onPressed: enabled
+                      ? () => _chooseLink(
+                          context: context,
+                          scope: scope,
+                          control: control,
+                          location: location,
+                          candidates: candidates,
+                          candidateDefinition: candidateDefinition,
+                        )
+                      : null,
+                  icon: _operationGlyph(
+                    control.content?.chooseIcon,
+                    scope,
+                    Icon(link == null ? Icons.link : Icons.edit_outlined),
+                  ),
+                ),
+                tooltip: false,
               ),
-          ],
+              if (link != null)
+                _operationAppearance(
+                  control.content,
+                  scope,
+                  (states, style) => IconButton(
+                    statesController: states,
+                    style: style,
+                    tooltip: _operationText(
+                      scope,
+                      control.content?.operationTooltip ??
+                          control.content?.unlinkLabel,
+                      "Clear link",
+                    ),
+                    onPressed: enabled
+                        ? () {
+                            final linkHost = switch (scope.host) {
+                              final PortableLinkHost value => value,
+                              _ => null,
+                            };
+                            if (linkHost == null) return;
+                            final address = scope.diagnosticTarget(reference);
+                            unawaited(
+                              scope.operations.run(
+                                key: PortableOperationKey.write(address),
+                                input: PortableDiagnosticObservation(
+                                  target: address,
+                                  value: scope.read(reference),
+                                ),
+                                operation: () => linkHost.disconnectLink(
+                                  skir.LinkOccurrence(
+                                    id: skir.LinkOccurrenceId(
+                                      endpoint: link.endpoint,
+                                      location: location,
+                                    ),
+                                    source: location.resource,
+                                    target: link.target,
+                                  ),
+                                  context: scope.invocation,
+                                ),
+                              ),
+                            );
+                          }
+                        : null,
+                    icon: _operationGlyph(
+                      control.content?.unlinkIcon,
+                      scope,
+                      const Icon(Icons.link_off),
+                    ),
+                  ),
+                  tooltip: false,
+                ),
+            ],
+          ),
         ),
       ),
     );
-    return framed ? _controlFrame(control.control, scope, content) : content;
+    final framedContent = framed
+        ? _controlFrame(
+            control.control,
+            control.inputAppearance == null
+                ? scope
+                : scope.withAppearance(control.inputAppearance!),
+            content,
+          )
+        : content;
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: _collectionSpacing(context, control.appearance),
+      ),
+      child: _collectionSurface(
+        context,
+        control.appearance,
+        scope,
+        owner,
+        Padding(
+          padding: control.appearance?.itemPadding == null
+              ? EdgeInsets.zero
+              : _presentationInsets(control.appearance!.itemPadding),
+          child: framedContent,
+        ),
+      ),
+    );
   }
 }

@@ -9,18 +9,34 @@ import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.presentation.PresentationNode
 
+/** Owns completion for one configured scope before its parent captures child nodes. */
+internal class ControlScopeSession<S>(
+    val receiver: S,
+    private val finish: (MutableList<PresentationNode>) -> Unit,
+) {
+    private var finished = false
+
+    fun finishInto(target: MutableList<PresentationNode>) {
+        check(!finished) { "The scoped configuration has already finished." }
+        finish(target)
+        finished = true
+    }
+}
+
 open class PresentationInput<Value, Scope> internal constructor(
     val binding: BindingRef,
-    val scope: Scope,
+    internal val session: ControlScopeSession<Scope>,
     internal val expected: TypeTemplate? = null,
-    internal val rebind: ((BindingRef, MutableList<PresentationNode>) -> Scope)? = null,
-)
+    internal val rebind: ((BindingRef, MutableList<PresentationNode>) -> ControlScopeSession<Scope>)? = null,
+) {
+    val scope: Scope get() = session.receiver
+}
 
 class EditablePresentationInput<Value, Scope> internal constructor(
     binding: BindingRef,
-    scope: Scope,
+    session: ControlScopeSession<Scope>,
     internal val actions: PresentationActionFactory,
-) : PresentationInput<Value, Scope>(binding, scope)
+) : PresentationInput<Value, Scope>(binding, session)
 
 data class PresentationParameter<Value>(
     val binding: ExpressionBindingId,

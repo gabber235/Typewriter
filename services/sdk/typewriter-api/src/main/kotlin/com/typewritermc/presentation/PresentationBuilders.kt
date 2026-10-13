@@ -37,22 +37,25 @@ interface PresentationContent {
     fun image(
         source: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>? = null,
+        configure: ImageScope.() -> Unit = {},
     )
 
     fun badge(
         label: Expr<String, Handled>,
-        tone: String,
+        configure: DisplayAppearanceScope.() -> Unit = {},
     )
 
     fun chip(
         label: Expr<String, Handled>,
         color: PresentationColor? = null,
+        configure: DisplayAppearanceScope.() -> Unit = {},
     )
 
     fun <N> progress(
         value: Expr<N, Handled>,
         maximum: Expr<N, Handled>,
         label: Expr<String, Handled>? = null,
+        configure: ProgressAppearanceScope.() -> Unit = {},
     )
 
     fun <V> status(
@@ -65,12 +68,14 @@ interface PresentationContent {
         value: Expr<Instant, Handled>,
         format: Expr<String, Handled>,
         zone: DateTimeZone = DateTimeZone.Local,
+        configure: DisplayAppearanceScope.() -> Unit = {},
     )
 
     fun relativeTime(
         value: Expr<Instant, Handled>,
         style: RelativeTimeStyle = RelativeTimeStyle.Compact,
         zone: DateTimeZone = DateTimeZone.Local,
+        configure: DisplayAppearanceScope.() -> Unit = {},
     )
 }
 
@@ -121,32 +126,27 @@ interface PresentationData {
 interface PresentationInteractions {
     fun button(
         label: Expr<String, Handled>,
-        action: EditorAction,
+        action: skirout.editor.v1.action.EditorAction,
+        configure: ButtonScope.() -> Unit = {},
     )
-
     fun iconButton(
         icon: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>,
-        action: EditorAction,
+        action: skirout.editor.v1.action.EditorAction,
+        configure: IconButtonScope.() -> Unit = {},
     )
-
-    fun menu(
-        label: Expr<String, Handled>? = null,
-        body: MenuScope.() -> Unit,
-    )
-
-    fun tooltip(
-        message: Expr<String, Handled>,
-        body: Layout.() -> Unit,
-    )
-
+    fun menu(label: Expr<String, Handled>? = null, body: MenuScope.() -> Unit)
+    fun tooltip(message: Expr<String, Handled>, configure: TooltipAppearanceScope.() -> Unit = {}, body: Layout.() -> Unit)
     fun commitControls(binding: PresentationInput<*, *>)
 }
 
-interface TabsScope {
+interface TabsScope : InputAppearanceScope {
+    fun spacing(value: Double)
+    fun contentSpacing(value: Double)
     fun tab(
         id: String,
         label: Expr<String, Handled>,
+        icon: String? = null,
         body: Layout.() -> Unit,
     )
 }
@@ -162,14 +162,6 @@ interface RichTextScope {
     fun paragraph(paragraph: TextParagraph)
 
     fun sizing(sizing: TextSizing)
-}
-
-interface MenuScope {
-    fun item(
-        id: String,
-        label: Expr<String, Handled>,
-        action: EditorAction,
-    )
 }
 
 interface HeaderScope {
@@ -263,6 +255,7 @@ data class StatusCase<V>(
 data class StatusAppearance(
     val label: String,
     val tone: String,
+    val configure: DisplayAppearanceScope.() -> Unit = {},
 )
 
 enum class DateTimeZone { Local, Utc }

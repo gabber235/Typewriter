@@ -18,6 +18,10 @@ const authoredPortableOperationIds = <String>{
   "typewriter.number.negate",
   "typewriter.number.remainder",
   "typewriter.number.subtract",
+  "typewriter.number.round_to",
+  "typewriter.number.format",
+  "typewriter.duration.format",
+  "typewriter.timestamp.format",
   "typewriter.link.target",
   "typewriter.record.field",
   "typewriter.regex.capture",
@@ -751,6 +755,19 @@ final class PortableExpressionEvaluator {
         _Arithmetic.remainder,
       ),
       "typewriter.number.negate" => _arithmetic(values, _Arithmetic.negate),
+      "typewriter.number.round_to" => _roundPortableNumber(values),
+      "typewriter.number.format" => _chargeFormattedValue(
+        _formatPortableNumber(values),
+        _consumeStep,
+      ),
+      "typewriter.duration.format" => _chargeFormattedValue(
+        _formatPortableDuration(values),
+        _consumeStep,
+      ),
+      "typewriter.timestamp.format" => _chargeFormattedValue(
+        _formatPortableTimestamp(values),
+        _consumeStep,
+      ),
       "typewriter.text.length" => skir.DataValue.wrapInteger(
         _text(values.single).runes.length.toString(),
       ),
@@ -1320,6 +1337,17 @@ void _validateOperationArity(String id, int count) {
       "Unknown expression operation $id",
     );
   }
+  if (!portableOperationAcceptsArity(id, count)) {
+    throw _ExpressionFailure(
+      "operation_arity",
+      "Expression operation $id received $count arguments",
+    );
+  }
+}
+
+/// Shares operation arity between catalog checking and the existing evaluator.
+bool portableOperationAcceptsArity(String id, int count) {
+  if (!authoredPortableOperationIds.contains(id)) return false;
   final (minimum, maximum) = switch (id) {
     "typewriter.value.is_null" ||
     "typewriter.boolean.not" ||
@@ -1369,6 +1397,9 @@ void _validateOperationArity(String id, int count) {
     "typewriter.rule.maximumItems" ||
     "typewriter.rule.notBefore" ||
     "typewriter.rule.notAfter" => (2, 2),
+    "typewriter.number.round_to" ||
+    "typewriter.number.format" ||
+    "typewriter.duration.format" ||
     "typewriter.text.replace" ||
     "typewriter.regex.capture" ||
     "typewriter.regex.replace" ||
@@ -1384,15 +1415,11 @@ void _validateOperationArity(String id, int count) {
     "typewriter.number.divide" ||
     "typewriter.number.remainder" ||
     "typewriter.rule.one_of" => (2, null),
+    "typewriter.timestamp.format" => (4, 4),
     "typewriter.text.interpolate" => (0, null),
     _ => throw StateError("Registered operation $id has no arity"),
   };
-  if (count < minimum || (maximum != null && count > maximum)) {
-    throw _ExpressionFailure(
-      "operation_arity",
-      "Expression operation $id received $count arguments",
-    );
-  }
+  return count >= minimum && (maximum == null || count <= maximum);
 }
 
 enum _Arithmetic { add, subtract, multiply, divide, remainder, negate }
@@ -2173,4 +2200,287 @@ skir.DataValue _linkTarget(skir.DataValue value) {
     "expected_link",
     "The expression value is not a relationship link",
   );
+}
+
+BigInt _roundQuotient(BigInt numerator, BigInt denominator, String mode) {
+  final quotient = numerator ~/ denominator;
+  final remainder = numerator.remainder(denominator);
+  final direction = numerator.isNegative ? -BigInt.one : BigInt.one;
+  return switch (mode) {
+    "TowardZero" => quotient,
+    "Floor" => quotient - (remainder.isNegative ? BigInt.one : BigInt.zero),
+    "Ceiling" =>
+      quotient + (remainder > BigInt.zero ? BigInt.one : BigInt.zero),
+    "NearestTiesToEven" =>
+      remainder.abs() * BigInt.two > denominator ||
+              (remainder.abs() * BigInt.two == denominator && quotient.isOdd)
+          ? quotient + direction
+          : quotient,
+    _ => throw const _ExpressionFailure(
+      "invalid_rounding_mode",
+      "The rounding mode is unavailable",
+    ),
+  };
+}
+
+skir.DataValue _chargeFormattedValue(
+  skir.DataValue value,
+  void Function() consumeStep,
+) {
+  if (value case skir.DataValue_stringValueWrapper(:final value)) {
+    for (final _ in value.runes) {
+      consumeStep();
+    }
+  }
+  return value;
+}
+
+_Decimal _formatNumber(skir.DataValue value) {
+  if (_unwrap(value) case skir.DataValue_floatWrapper(:final value)) {
+    if (!value.isFinite) {
+      throw const _ExpressionFailure(
+        "non_finite_number",
+        "The numeric value must be finite",
+      );
+    }
+  }
+  final source = switch (_unwrap(value)) {
+    skir.DataValue_integerWrapper(:final value) => value,
+    skir.DataValue_decimalWrapper(:final value) => value,
+    skir.DataValue_floatWrapper(:final value) => value.toString(),
+    _ => throw const _ExpressionFailure(
+      "expected_number",
+      "The expression value is not numeric",
+    ),
+  };
+  final exponentText = RegExp(r"[eE]([+-]?[0-9]+)$")
+      .firstMatch(source)
+      ?.group(1);
+  final exponent = exponentText == null ? 0 : int.tryParse(exponentText);
+  if (source.length > 4096 ||
+      exponent == null ||
+      exponent.abs() + source.length > 4096) {
+    throw const _ExpressionFailure(
+      "format_size_limit",
+      "The formatted value exceeds its size limit",
+    );
+  }
+  return _number(value);
+}
+
+skir.DataValue _roundPortableNumber(List<skir.DataValue> values) {
+  final value = _unwrap(values[0]);
+  final increment = _unwrap(values[1]);
+  if (value.kind != increment.kind) {
+    throw const _ExpressionFailure(
+      "numeric_family_mismatch",
+      "Rounding operands must use one numeric representation",
+    );
+  }
+  final source = _formatNumber(value);
+  final step = _formatNumber(increment);
+  if (step.compareTo(_Decimal.zero) <= 0) {
+    throw const _ExpressionFailure(
+      "invalid_rounding_increment",
+      "The rounding increment must be positive",
+    );
+  }
+  final numerator = source.unscaled * _tenPow(step.scale);
+  final denominator = step.unscaled * _tenPow(source.scale);
+  final rounded =
+      _Decimal(_roundQuotient(numerator, denominator, _text(values[2])), 0) *
+      step;
+  return switch (value) {
+    skir.DataValue_integerWrapper() => skir.DataValue.wrapInteger(
+      rounded.canonical,
+    ),
+    skir.DataValue_decimalWrapper() => skir.DataValue.wrapDecimal(
+      rounded.canonical,
+    ),
+    skir.DataValue_floatWrapper() => _formatFiniteFloat(
+      double.parse(rounded.canonical),
+    ),
+    _ => throw const _ExpressionFailure(
+      "expected_number",
+      "The expression value is not numeric",
+    ),
+  };
+}
+
+int _formatPrecision(skir.DataValue value, int maximum) {
+  final precision = _integer(value);
+  if (precision < BigInt.zero || precision > BigInt.from(maximum)) {
+    throw const _ExpressionFailure(
+      "invalid_format_precision",
+      "Display precision is outside its supported range",
+    );
+  }
+  return precision.toInt();
+}
+
+/// Localized grouping uses the host locale data. Locale und remains deterministic.
+skir.DataValue _formatPortableNumber(List<skir.DataValue> values) {
+  final digits = _formatPrecision(values[1], 20);
+  final source = _formatNumber(values[0]);
+  if (source.unscaled.abs().toString().length + source.scale > 4096) {
+    throw const _ExpressionFailure(
+      "format_size_limit",
+      "The formatted value exceeds its size limit",
+    );
+  }
+  final coefficient = source.scale <= digits
+      ? source.unscaled * _tenPow(digits - source.scale)
+      : _roundQuotient(
+          source.unscaled,
+          _tenPow(source.scale - digits),
+          "NearestTiesToEven",
+        );
+  final magnitude = coefficient.abs().toString().padLeft(digits + 1, "0");
+  var whole = digits == 0
+      ? magnitude
+      : magnitude.substring(0, magnitude.length - digits);
+  final fraction = digits == 0
+      ? ""
+      : magnitude.substring(magnitude.length - digits);
+  final locale = _text(values[2]);
+  if (locale == "und") {
+    return _string(
+      "${coefficient.isNegative ? "-" : ""}$whole${digits == 0 ? "" : ".$fraction"}",
+    );
+  }
+  NumberFormat formatter;
+  try {
+    final canonical = Intl.canonicalizedLocale(locale);
+    final resolved = NumberFormat.localeExists(canonical)
+        ? canonical
+        : canonical.split("_").first;
+    if (!NumberFormat.localeExists(resolved)) {
+      throw const _ExpressionFailure(
+        "invalid_format_locale",
+        "The display locale is unavailable",
+      );
+    }
+    formatter = NumberFormat.decimalPattern(resolved);
+  } on ArgumentError {
+    throw const _ExpressionFailure(
+      "invalid_format_locale",
+      "The display locale is unavailable",
+    );
+  }
+  final symbols = formatter.symbols;
+  final pattern = symbols.DECIMAL_PATTERN.split(";").first.split(".").first;
+  final groups = pattern.split(",");
+  if (groups.length > 1) {
+    final primary = groups.last.replaceAll(RegExp("[^0#]"), "").length;
+    final secondary = groups.length > 2
+        ? groups[groups.length - 2].replaceAll(RegExp("[^0#]"), "").length
+        : primary;
+    final chunks = <String>[];
+    var end = whole.length;
+    var size = primary;
+    while (end > size) {
+      chunks.insert(0, whole.substring(end - size, end));
+      end -= size;
+      size = secondary;
+    }
+    chunks.insert(0, whole.substring(0, end));
+    whole = chunks.join(symbols.GROUP_SEP);
+  }
+  var result =
+      "${coefficient.isNegative ? symbols.MINUS_SIGN : ""}$whole${digits == 0 ? "" : "${symbols.DECIMAL_SEP}$fraction"}";
+  final zero = symbols.ZERO_DIGIT.runes.first;
+  if (zero != 48) {
+    result = String.fromCharCodes(
+      result.runes.map(
+        (rune) => rune >= 48 && rune <= 57 ? zero + rune - 48 : rune,
+      ),
+    );
+  }
+  return _string(result);
+}
+
+skir.DataValue _formatPortableDuration(List<skir.DataValue> values) {
+  final value = _unwrap(values[0]);
+  if (value is! skir.DataValue_durationWrapper) {
+    throw const _ExpressionFailure(
+      "expected_duration",
+      "The expression value is not a duration",
+    );
+  }
+  if (!value.value.value.isPortable) {
+    throw const _ExpressionFailure(
+      "duration_range",
+      "Duration millisecond count exceeds the finite portable range",
+    );
+  }
+  final units = _text(values[1]);
+  if (units != "MinutesAndSeconds" && units != "HoursMinutesAndSeconds") {
+    throw const _ExpressionFailure(
+      "invalid_duration_units",
+      "The duration display units are unavailable",
+    );
+  }
+  final digits = _formatPrecision(values[2], 3);
+  final milliseconds = BigInt.from(value.value.value.milliseconds);
+  final magnitude = milliseconds.abs();
+  final seconds = magnitude ~/ BigInt.from(1000);
+  final minutes = seconds ~/ BigInt.from(60);
+  final secondsPart = seconds
+      .remainder(BigInt.from(60))
+      .toString()
+      .padLeft(2, "0");
+  final whole = units == "MinutesAndSeconds"
+      ? "$minutes:$secondsPart"
+      : "${minutes ~/ BigInt.from(60)}:${minutes.remainder(BigInt.from(60)).toString().padLeft(2, "0")}:$secondsPart";
+  final fraction = digits == 0
+      ? ""
+      : ".${magnitude.remainder(BigInt.from(1000)).toString().padLeft(3, "0").substring(0, digits)}";
+  return _string("${milliseconds.isNegative ? "-" : ""}$whole$fraction");
+}
+
+skir.DataValue _formatPortableTimestamp(List<skir.DataValue> values) {
+  final value = _unwrap(values[0]);
+  if (value is! skir.DataValue_timestampWrapper) {
+    throw const _ExpressionFailure(
+      "expected_timestamp",
+      "The expression value is not a timestamp",
+    );
+  }
+  final pattern = _text(values[1]);
+  if (pattern.length > 128 ||
+      !RegExp(r"^(?:yyyy|MM|dd|HH|mm|ss|SSS|[^A-Za-z])+$").hasMatch(pattern)) {
+    throw const _ExpressionFailure(
+      "invalid_timestamp_pattern",
+      "The timestamp pattern is not portable",
+    );
+  }
+  final timestamp = switch (_text(values[2])) {
+    "UTC" || "utc" => value.value.toUtc(),
+    "local" => value.value.toLocal(),
+    _ => throw const _ExpressionFailure(
+      "invalid_timestamp_zone",
+      "The timestamp zone is unavailable",
+    ),
+  };
+  final locale = _text(values[3]);
+  final canonical = locale == "und"
+      ? "en_US"
+      : Intl.canonicalizedLocale(locale);
+  if (!DateFormat.localeExists(canonical)) {
+    throw const _ExpressionFailure(
+      "invalid_format_locale",
+      "The display locale is unavailable",
+    );
+  }
+  return _string(DateFormat(pattern, canonical).format(timestamp));
+}
+
+skir.DataValue _formatFiniteFloat(double value) {
+  if (!value.isFinite) {
+    throw const _ExpressionFailure(
+      "non_finite_number",
+      "The numeric result must be finite",
+    );
+  }
+  return skir.DataValue.wrapFloat(value);
 }

@@ -52,184 +52,97 @@ internal class PresentationControlFactories {
     }
 }
 
-private class RuntimeChoiceControl<V>(
-    private val binding: RuntimeControlBinding,
-) : ChoiceControl<V>,
-    Control by binding {
-    override fun selectInput(
-        options: List<SelectOption<V>>,
-        allowCustomValue: Boolean,
-    ) = binding.selectInput(options, allowCustomValue)
-
+private class RuntimeChoiceControl<V>(private val binding: RuntimeControlBinding) : ChoiceControl<V>, Control by binding {
+    override fun selectInput(options: List<SelectOption<V>>, configure: SelectInputScope<V>.() -> Unit) =
+        binding.selectInput(options, configure)
     override fun <Row> searchInput(configure: SearchInputScope<V, Row>.() -> Unit) = binding.searchInput(configure)
 }
 
-private class RuntimeTextControl(
-    private val binding: RuntimeControlBinding,
-) : TextControl,
+private class RuntimeTextControl(private val binding: RuntimeControlBinding) : TextControl,
     ChoiceControl<String> by RuntimeChoiceControl(binding) {
-    override fun textInput(
-        multiline: Boolean,
-        placeholder: Expr<String, Handled>?,
-        formatters: List<TextInputFormat>,
-    ) = binding.textInput(multiline, placeholder, formatters)
+    override fun textInput(configure: TextInputScope.() -> Unit) = binding.textInput(configure)
 }
 
-private class RuntimeNumberControl<N>(
-    private val binding: RuntimeControlBinding,
-) : NumberControl<N>,
+private class RuntimeNumberControl<N>(private val binding: RuntimeControlBinding) : NumberControl<N>,
     ChoiceControl<N> by RuntimeChoiceControl(binding) {
-    override fun numericInput() = binding.numericInput()
-
-    override fun sliderInput(
-        minimum: N,
-        maximum: N,
-        divisions: Int?,
-    ) = binding.sliderInput(minimum, maximum, divisions)
-
-    override fun sliderInput(
-        minimum: Expr<N, Handled>,
-        maximum: Expr<N, Handled>,
-        divisions: Expr<Int, Handled>?,
-    ) = binding.sliderInput(minimum, maximum, divisions)
+    override fun numericInput(configure: NumericInputScope<N>.() -> Unit) = binding.numericInput(configure)
+    override fun sliderInput(minimum: N, maximum: N, configure: SliderInputScope<N>.() -> Unit) =
+        binding.sliderInput(minimum, maximum, configure)
+    override fun sliderInput(minimum: Expr<N, Handled>, maximum: Expr<N, Handled>, configure: SliderInputScope<N>.() -> Unit) =
+        binding.sliderInput(minimum, maximum, configure)
 }
 
-private class RuntimeBooleanControl(
-    private val binding: RuntimeControlBinding,
-) : BooleanControl,
+private class RuntimeBooleanControl(private val binding: RuntimeControlBinding) : BooleanControl,
     ChoiceControl<Boolean> by RuntimeChoiceControl(binding) {
-    override fun toggleInput() = binding.toggleInput()
+    override fun toggleInput(configure: ToggleInputScope.() -> Unit) = binding.toggleInput(configure)
 }
 
-private class RuntimeColorControl(
-    private val binding: RuntimeControlBinding,
-) : ColorControl,
+private class RuntimeColorControl(private val binding: RuntimeControlBinding) : ColorControl,
     ChoiceControl<com.typewritermc.types.Color> by RuntimeChoiceControl(binding) {
-    override fun colorInput(includeAlpha: Boolean) = binding.colorInput(includeAlpha)
+    override fun colorInput(configure: ColorInputScope.() -> Unit) = binding.colorInput(configure)
 }
 
-private class RuntimeBytesControl(
-    private val binding: RuntimeControlBinding,
-) : BytesControl,
+private class RuntimeBytesControl(private val binding: RuntimeControlBinding) : BytesControl,
     ChoiceControl<List<Byte>> by RuntimeChoiceControl(binding) {
-    override fun bytesInput() = binding.bytesInput()
+    override fun bytesInput(configure: BytesInputScope.() -> Unit) = binding.bytesInput(configure)
 }
 
-private class RuntimeEnumControl<E>(
-    private val binding: RuntimeControlBinding,
-) : EnumControl<E>,
+private class RuntimeEnumControl<E>(private val binding: RuntimeControlBinding) : EnumControl<E>,
     ChoiceControl<E> by RuntimeChoiceControl(binding) {
-    override fun enumInput() = binding.enumInput()
+    override fun enumInput(configure: SelectInputScope<E>.() -> Unit) = binding.enumInput(configure)
 }
 
-private class RuntimeDateTimeControl(
-    private val binding: RuntimeControlBinding,
-) : DateTimeControl,
+private class RuntimeDateTimeControl(private val binding: RuntimeControlBinding) : DateTimeControl,
     ChoiceControl<kotlin.time.Instant> by RuntimeChoiceControl(binding) {
-    override fun dateTimeInput(
-        includeDate: Boolean,
-        includeTime: Boolean,
-    ) = binding.dateTimeInput(includeDate, includeTime)
+    override fun dateTimeInput(configure: DateTimeInputScope.() -> Unit) = binding.dateTimeInput(configure)
 }
 
-private class RuntimeDurationControl(
-    private val binding: RuntimeControlBinding,
-) : DurationControl,
+private class RuntimeDurationControl(private val binding: RuntimeControlBinding) : DurationControl,
     ChoiceControl<kotlin.time.Duration> by RuntimeChoiceControl(binding) {
-    override fun durationInput() = binding.durationInput()
+    override fun durationInput(configure: DurationInputScope.() -> Unit) = binding.durationInput(configure)
 }
 
-private class RuntimeNamedControl<V, PayloadScope>(
-    private val binding: RuntimeControlBinding,
-) : NamedControl<V, PayloadScope>,
+private class RuntimeNamedControl<V, PayloadScope>(private val binding: RuntimeControlBinding) : NamedControl<V, PayloadScope>,
     ChoiceControl<V> by RuntimeChoiceControl(binding) {
-    override fun namedInput(payload: ControlConfiguration<PayloadScope>) = binding.namedInput(payload)
+    override fun namedInput(configure: NamedInputScope<PayloadScope>.() -> Unit) = binding.namedInput(configure)
 }
 
-private class RuntimeRecordControl<Fields : Layout>(
-    private val binding: RuntimeControlBinding,
-) : RecordControl<Fields>,
-    Control by binding {
-    override fun recordInput(fields: ControlConfiguration<Fields>) = binding.recordInput(fields)
+private class RuntimeRecordControl<Fields : Layout>(private val binding: RuntimeControlBinding) : RecordControl<Fields>, Control by binding {
+    override fun recordInput(configure: RecordInputScope<Fields>.() -> Unit) = binding.recordInput(configure)
 }
 
-private class RuntimeListControl<ItemScope>(
-    private val binding: RuntimeControlBinding,
-) : ListControl<ItemScope>,
-    Control by binding {
-    override fun listInput(
-        allowAdd: Boolean,
-        allowRemove: Boolean,
-        allowReorder: Boolean,
-        items: ControlConfiguration<ItemScope>,
-    ) = binding.listInput(allowAdd, allowRemove, allowReorder, items)
+private class RuntimeListControl<ItemScope>(private val binding: RuntimeControlBinding) : ListControl<ItemScope>, Control by binding {
+    override fun listInput(configure: ListInputScope<ItemScope>.() -> Unit) = binding.listInput(configure)
 }
 
-private class RuntimeSetControl<ItemScope>(
-    private val binding: RuntimeControlBinding,
-) : SetControl<ItemScope>,
-    Control by binding {
-    override fun collectionInput(
-        allowAdd: Boolean,
-        allowRemove: Boolean,
-        items: ControlConfiguration<ItemScope>,
-    ) = binding.collectionInput(allowAdd, allowRemove, items)
+private class RuntimeSetControl<ItemScope>(private val binding: RuntimeControlBinding) : SetControl<ItemScope>, Control by binding {
+    override fun collectionInput(configure: SetInputScope<ItemScope>.() -> Unit) = binding.collectionInput(configure)
 }
 
-private class RuntimeMapControl<KeyScope, ValueScope>(
-    private val binding: RuntimeControlBinding,
-) : MapControl<KeyScope, ValueScope>,
-    Control by binding {
-    override fun mapInput(
-        allowAdd: Boolean,
-        allowRemove: Boolean,
-        keys: ControlConfiguration<KeyScope>,
-        values: ControlConfiguration<ValueScope>,
-    ) = binding.mapInput(allowAdd, allowRemove, keys, values)
+private class RuntimeMapControl<KeyScope, ValueScope>(private val binding: RuntimeControlBinding) : MapControl<KeyScope, ValueScope>, Control by binding {
+    override fun mapInput(configure: MapInputScope<KeyScope, ValueScope>.() -> Unit) = binding.mapInput(configure)
 }
 
-private class RuntimeNullableControl<ValueScope>(
-    private val binding: RuntimeControlBinding,
-) : NullableControl<ValueScope>,
-    Control by binding {
-    override fun nullableInput(value: ControlConfiguration<ValueScope>) = binding.nullableInput(value)
+private class RuntimeNullableControl<ValueScope>(private val binding: RuntimeControlBinding) : NullableControl<ValueScope>, Control by binding {
+    override fun nullableInput(configure: NullableInputScope<ValueScope>.() -> Unit) = binding.nullableInput(configure)
 }
 
-private class RuntimePolymorphicControl<V>(
-    private val binding: RuntimeControlBinding,
-) : PolymorphicControl<V>,
-    Control by binding {
-    override fun polymorphicInput(configure: ConcreteForms<V>.() -> Unit) = binding.polymorphicInput(configure)
+private class RuntimePolymorphicControl<V>(private val binding: RuntimeControlBinding) : PolymorphicControl<V>, Control by binding {
+    override fun polymorphicInput(configure: PolymorphicInputScope<V>.() -> Unit) = binding.polymorphicInput(configure)
 }
 
-private class RuntimeLinkControl<R : Resource>(
-    private val binding: RuntimeControlBinding,
-) : LinkControl<R>,
-    Control by binding {
-    override fun linkInput(
-        source: CollectionSource<*, ResourceId>?,
-        policy: LinkCandidatePolicyId?,
-        rejection: LinkRejectionDisplay,
-    ) = binding.linkInput(false, source, policy, rejection)
+private class RuntimeLinkControl<R : Resource>(private val binding: RuntimeControlBinding) : LinkControl<R>, Control by binding {
+    override fun linkInput(source: CollectionSource<*, ResourceId>?, policy: LinkCandidatePolicyId?, rejection: LinkRejectionDisplay, configure: LinkInputScope.() -> Unit) =
+        binding.linkInput(false, source, policy, rejection, configure)
 }
 
-private class RuntimeLinkCollectionControl<R : Resource>(
-    private val binding: RuntimeControlBinding,
-) : LinkCollectionControl<R>,
-    Control by binding {
-    override fun linkInput(
-        allowReorder: Boolean,
-        source: CollectionSource<*, ResourceId>?,
-        policy: LinkCandidatePolicyId?,
-        rejection: LinkRejectionDisplay,
-    ) = binding.linkInput(allowReorder, source, policy, rejection)
+private class RuntimeLinkCollectionControl<R : Resource>(private val binding: RuntimeControlBinding) : LinkCollectionControl<R>, Control by binding {
+    override fun linkInput(source: CollectionSource<*, ResourceId>?, policy: LinkCandidatePolicyId?, rejection: LinkRejectionDisplay, configure: LinkInputScope.() -> Unit) =
+        binding.linkInput(true, source, policy, rejection, configure)
 }
 
-private class RuntimeResourceLinksControl<R : Resource>(
-    private val binding: RuntimeControlBinding,
-) : ResourceLinksControl<R>,
+private class RuntimeResourceLinksControl<R : Resource>(private val binding: RuntimeControlBinding) : ResourceLinksControl<R>,
     ListControl<LinkControl<R>> by RuntimeListControl(binding) {
-    override fun graphPage(direction: GraphDirection) = binding.graphPage(direction)
-
-    override fun timelinePage() = binding.timelinePage()
+    override fun graphPage(direction: GraphDirection, configure: GraphPageScope.() -> Unit) = binding.graphPage(direction, configure)
+    override fun timelinePage(configure: TimelinePageScope.() -> Unit) = binding.timelinePage(configure)
 }

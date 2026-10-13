@@ -21,7 +21,9 @@ void main() {
       final result = evaluator.evaluate(
         _expression(fixture["expression"]! as Map<String, Object?>),
       );
-      final expected = fixture["expected"]! as Map<String, Object?>;
+      final byHost = fixture["expectedByHost"] as Map<String, Object?>?;
+      final expected =
+          (byHost?["dart"] ?? fixture["expected"])! as Map<String, Object?>;
       final expectedReads = (expected["evaluatedReads"]! as List<Object?>)
           .cast<String>();
 
@@ -31,7 +33,12 @@ void main() {
         reason: fixture["id"]! as String,
       );
       if (expected["available"] case final Map<String, Object?> available) {
-        expect(result, isA<PortableExpressionAvailable>());
+        expect(
+          result,
+          isA<PortableExpressionAvailable>(),
+          reason:
+              "${fixture["id"]}: ${result is PortableExpressionFailed ? result.code : result.runtimeType}",
+        );
         expect(
           _valueKey((result as PortableExpressionAvailable).value),
           _valueKey(_value(available)),
@@ -136,7 +143,7 @@ void main() {
   });
 
   test("publishes the complete portable operation registry", () {
-    expect(authoredPortableOperationIds, hasLength(64));
+    expect(authoredPortableOperationIds, hasLength(68));
     expect(
       authoredPortableOperationIds,
       containsAll(const {
@@ -1172,6 +1179,17 @@ skir.DataValue _value(Map<String, Object?> source) {
   }
   if (source["decimal"] case final String value) {
     return skir.DataValue.wrapDecimal(value);
+  }
+  if (source["duration"] case final String value) {
+    return skir.DataValue.createDuration(
+      value: skir.Duration(milliseconds: int.parse(value)),
+    );
+  }
+  if (source["timestamp"] case final String value) {
+    return skir.DataValue.wrapTimestamp(DateTime.parse(value));
+  }
+  if (source["float"] case final String value) {
+    return skir.DataValue.wrapFloat(double.parse(value));
   }
   if (source["string"] case final String value) {
     return skir.DataValue.wrapStringValue(value);

@@ -42,10 +42,10 @@ object TagInspectorPresentation : TagPresentation {
                 name { textInput() }
             }
             inspectorSection("color", "Color") {
-                color { colorInput(includeAlpha = false) }
+                color { colorInput { includeAlpha(false) } }
             }
             inspectorSection("parents", "Direct Parents") {
-                parents { collectionInput { linkInput() } }
+                parents { collectionInput { items { linkInput() } } }
             }
             inspectorSection("inheritance", "Inheritance") {
                 collectionGraph(tagOptions) {
@@ -61,12 +61,7 @@ object TagInspectorPresentation : TagPresentation {
             inspectorSection("placement", "Placement") {
                 placement(using = PlacementSdkProvider)
             }
-            remainingFields {
-                exclude(name)
-                exclude(color)
-                exclude(parents)
-                exclude(placement)
-            }
+            remainingFields {}
         }
     }
 }
@@ -150,10 +145,6 @@ object PageInspectorPresentation : PagePresentation {
                 priority { numericInput() }
             }
             remainingFields {
-                exclude(book)
-                exclude(name)
-                exclude(chapter)
-                exclude(priority)
                 exclude(elements)
             }
         }

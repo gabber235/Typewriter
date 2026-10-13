@@ -40,6 +40,8 @@ class _QueryBarView extends StatelessWidget {
                 child: EditorTextField(
                   inputFieldController: controller.inputFieldController,
                   controller: controller.textController,
+                  style: bar.style,
+                  textAlign: bar.textAlign,
                   autofocus: bar.autofocus,
                   decoration: bar.inputDecoration.copyWith(
                     errorText:
@@ -50,10 +52,12 @@ class _QueryBarView extends StatelessWidget {
                             ...bar.validationIssues,
                           ].first.message
                         : null,
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: context.spacing.space3,
-                      horizontal: context.spacing.space2,
-                    ),
+                    contentPadding:
+                        bar.inputDecoration.contentPadding ??
+                        EdgeInsets.symmetric(
+                          vertical: context.spacing.space3,
+                          horizontal: context.spacing.space2,
+                        ),
                   ),
                   maxLines: null,
                   inputFormatters: [

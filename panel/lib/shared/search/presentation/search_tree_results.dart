@@ -8,9 +8,16 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// delegated by result type identifier through [rowRenderers]. Empty states
 /// replace the scroll view only when the projected row count is zero.
 class SearchTreeResults extends HookConsumerWidget {
-  const SearchTreeResults({required this.rowRenderers, super.key});
+  const SearchTreeResults({
+    required this.rowRenderers,
+    this.empty,
+    this.loading,
+    super.key,
+  });
 
   final Map<String, SearchResultRowBuilder> rowRenderers;
+  final Widget? empty;
+  final Widget? loading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +34,19 @@ class SearchTreeResults extends HookConsumerWidget {
     );
 
     if (viewModel.rowCount == 0) {
-      return SearchResultEmptyState(snapshot: snapshot);
+      return switch (snapshot.status) {
+        .loading when loading != null => loading!,
+        .idle ||
+        .ready when empty != null && snapshot.errorSummaries.isEmpty => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (snapshot.guidance.isNotEmpty)
+              Flexible(child: SearchResultEmptyState(snapshot: snapshot)),
+            Flexible(child: empty!),
+          ],
+        ),
+        _ => SearchResultEmptyState(snapshot: snapshot),
+      };
     }
 
     return ClipPath(

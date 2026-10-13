@@ -21,6 +21,15 @@ interface ExpressionEvaluator {
         bindings: ExpressionBindings,
         budget: EvaluationBudget,
     ): Availability<DataValue>
+
+    /** Evaluates a local candidate without assigning it a persisted resource location. */
+    context(reads: AuthoredReads)
+    fun evaluateScoped(
+        expression: ExpressionNode,
+        bindings: ExpressionBindings,
+        localValues: Map<ExpressionBindingId, DataValue>,
+        budget: EvaluationBudget,
+    ): Availability<DataValue>
 }
 
 fun interface ExpressionValueReader {
@@ -71,7 +80,18 @@ class DefaultExpressionEvaluator(
         expression: ExpressionNode,
         bindings: ExpressionBindings,
         budget: EvaluationBudget,
-    ): Availability<DataValue> = EvaluatorState(reader, operations, bindings, budget).evaluate(expression)
+    ): Availability<DataValue> = evaluateScoped(expression, bindings, emptyMap(), budget)
+
+    context(reads: AuthoredReads)
+    override fun evaluateScoped(
+        expression: ExpressionNode,
+        bindings: ExpressionBindings,
+        localValues: Map<ExpressionBindingId, DataValue>,
+        budget: EvaluationBudget,
+    ): Availability<DataValue> {
+        require(localValues.keys.none(bindings.locations::containsKey)) { "Local expression bindings must not replace source bindings." }
+        return EvaluatorState(reader, operations, bindings, budget, localValues).evaluate(expression)
+    }
 }
 
 object PortableExpressionLimits {
@@ -85,11 +105,12 @@ private class EvaluatorState(
     private val operations: PortableOperationRegistry,
     private val bindings: ExpressionBindings,
     private val budget: EvaluationBudget,
+    initialValues: Map<ExpressionBindingId, DataValue>,
 ) {
     private var steps = 0L
     private var collectionItems = 0L
     private var depth = 0
-    private val localValues = mutableMapOf<ExpressionBindingId, DataValue>()
+    private val localValues = initialValues.toMutableMap()
     private val localLocations = mutableMapOf<ExpressionBindingId, ValueLocation>()
     private val observedLocations = linkedSetOf<ValueLocation>()
 
@@ -772,7 +793,7 @@ private data class OperationDefinition(
     val evaluate: (List<DataValue>, () -> Unit, (Int) -> Unit) -> DataValue,
 )
 
-private class OperationFailure(
+internal class OperationFailure(
     val code: String,
     message: String,
 ) : IllegalArgumentException(message)
@@ -947,7 +968,7 @@ private fun DataValue.at(path: ValuePath): DataValue {
 
 private fun ValueLocation.append(path: ValuePath): ValueLocation = copy(path = ValuePath(this.path.segments + path.segments))
 
-private fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
+internal fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
 
 private fun DataValue.boolean(): Boolean =
     (unwrapNamed() as? DataValue.Boolean)?.value
@@ -988,6 +1009,16 @@ private fun standardOperations(): List<OperationDefinition> =
         operation("typewriter.number.divide", 2, Int.MAX_VALUE, "numeric division") { arithmetic(it, Arithmetic.Divide) }
         operation("typewriter.number.remainder", 2, Int.MAX_VALUE, "numeric remainder") { arithmetic(it, Arithmetic.Remainder) }
         operation("typewriter.number.negate", 1, "numeric negation") { arithmetic(it, Arithmetic.Negate) }
+        operation("typewriter.number.round_to", 3, "numeric increment rounding") { roundPortableNumber(it) }
+        operationWithBudgets("typewriter.number.format", 3, "exact numeric display") { values, consumeStep, _ ->
+            formatPortableNumber(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+        }
+        operationWithBudgets("typewriter.duration.format", 3, "duration display") { values, consumeStep, _ ->
+            formatPortableDuration(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+        }
+        operationWithBudgets("typewriter.timestamp.format", 4, "timestamp display") { values, consumeStep, _ ->
+            formatPortableTimestamp(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+        }
         operation("typewriter.text.length", 1, "Unicode text length") { DataValue.Integer(text(it).codePointCount().toBigInteger()) }
         operation("typewriter.text.has_line_break", 1, "text line boundary test") { DataValue.Boolean(text(it).hasLineBreak()) }
         operation("typewriter.text.trim", 1, "trimmed text") { DataValue.StringValue(text(it).portableTrim()) }

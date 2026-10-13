@@ -11,6 +11,7 @@ import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.ContributionKey
+import com.typewritermc.discovery.assemble
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
@@ -372,13 +373,22 @@ val FrameworkCatalogCreationTest by testSuite {
         val placementRoot = placementMaterial.layout.element as PresentationElement.ChildrenWrapper
         val placementColumn = placementRoot.value as ChildrenElement.ColumnWrapper
         val placementLabels =
-            placementColumn.value.children.take(4).map { child ->
+            placementColumn.value.children.flatMap { child ->
                 val node = (child as AxisChild.FixedWrapper).value
-                val numeric = node.element as PresentationElement.NumericInputWrapper
-                val label = numeric.value.label as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
+                when (val element = node.element) {
+                    is PresentationElement.NumericInputWrapper -> listOf(element.value)
+                    is PresentationElement.ChildrenWrapper -> (element.value as ChildrenElement.RowWrapper).value.children.map {
+                        val field = (it as AxisChild.FlexibleWrapper).value.child
+                        (field.element as PresentationElement.NumericInputWrapper).value
+                    }
+                    else -> emptyList()
+                }
+            }.map { numeric ->
+                val label = numeric.control.label as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
                 (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
             }
         placementLabels shouldBe listOf("X", "Y", "Width", "Height")
+        exportFrameworkControlFixture(entries, tag.record, tag.record.fields.getValue("placement"))
     }
 }
 
@@ -556,3 +566,51 @@ private fun origin(name: String): ProviderOrigin =
         artifact = ArtifactId("test:framework"),
         sourcePart = "main",
     )
+
+
+private fun exportFrameworkControlFixture(
+    entries: List<com.typewritermc.discovery.GeneratedProviderIndexEntry>,
+    tag: com.typewritermc.authoring.AuthoringRecord,
+    placement: DataValue,
+) {
+    val directory = System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { java.io.File(it) } ?: return
+    val runtime = DefaultPresentationRuntime()
+    fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any {
+        val type = Class.forName(entry.providerClass)
+        return if (entry.kind == GeneratedProviderKind.Presentation) type.getConstructor(PresentationRuntime::class.java).newInstance(runtime) else instantiateGeneratedProvider(type)
+    }
+    val exportedKinds = setOf(GeneratedProviderKind.Type, GeneratedProviderKind.Presentation, GeneratedProviderKind.Configuration, GeneratedProviderKind.NativeBinding, GeneratedProviderKind.Resource, GeneratedProviderKind.Relation, GeneratedProviderKind.EndpointBindings)
+    val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
+    val declarations = providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
+        val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
+        com.typewritermc.discovery.OwnedTypeDeclaration(origin(entry.providerClass.substringAfterLast('.')), provider.definition, provider.display)
+    }
+    val presentations = providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
+        val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
+        val owner = origin(entry.providerClass.substringAfterLast('.'))
+        com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
+    }
+    val contributions = com.typewritermc.discovery.CatalogContributions(
+        declarations = declarations,
+        presentations = presentations,
+        configurations = providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
+            val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
+            com.typewritermc.discovery.OwnedConfiguration(origin(entry.providerClass.substringAfterLast('.')), provider.target, provider)
+        },
+        nativeBindings = providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
+            com.typewritermc.discovery.OwnedNativeBinding(origin(entry.providerClass.substringAfterLast('.')), value as NativeBindingFactory)
+        },
+        resources = providers.filterKeys { it.kind == GeneratedProviderKind.Resource }.values.map { (it as com.typewritermc.discovery.GeneratedResourceProvider).definition },
+        relations = providers.filterKeys { it.kind == GeneratedProviderKind.Relation }.values.map { (it as com.typewritermc.discovery.GeneratedRelationProvider).contract },
+        endpointBindings = providers.filterKeys { it.kind == GeneratedProviderKind.EndpointBindings }.values.flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
+    )
+    val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
+    assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
+    val wire = com.typewritermc.types.skir.SkirTypeCodec.encode(assembly.snapshot).getOrThrow()
+    directory.mkdirs()
+    java.io.File(directory, "catalog.bin").writeBytes(skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer.toBytes(wire).toByteArray())
+    java.io.File(directory, "tag.bin").writeBytes(skirout.editor.v1.type_catalog.AuthoringRecord.serializer.toBytes(SkirAuthoringValueCodec.encode(tag).getOrThrow()).toByteArray())
+    java.io.File(directory, "tag-value.bin").writeBytes(skirout.editor.v1.type_catalog.DataValue.serializer.toBytes(SkirDataValueCodec.encode(DataValue.Named(TagDefinition.use, DataValue.Record(tag.fields))).getOrThrow()).toByteArray())
+    java.io.File(directory, "placement.bin").writeBytes(skirout.editor.v1.type_catalog.DataValue.serializer.toBytes(SkirDataValueCodec.encode(placement).getOrThrow()).toByteArray())
+    java.io.File(directory, "manifest.json").writeText("""{"generation":"${wire.generation.value}","materials":${wire.presentationMaterials.size},"types":${wire.types.size},"tagType":"${TagDefinition.id}","placementType":"${GraphPlacementDefinition.id}"}""")
+}

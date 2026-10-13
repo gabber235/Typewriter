@@ -34,57 +34,67 @@ data class OwnedFieldPresentation(
     val selected: PresentationId,
 )
 
+internal data class AuthoredBindingUse(
+    val field: RelativeFieldPattern,
+    val selected: PresentationId?,
+)
+
 fun PresentationMaterial.explicitFieldSelections(): List<OwnedFieldPresentation> =
     layout
-        .explicitSelections(
+        .authoredBindingUses(
             bindings = mapOf("configured_value" to RelativeFieldPattern()),
-        ).map { selection ->
+        ).mapNotNull { use ->
+            val selected = use.selected ?: return@mapNotNull null
             OwnedFieldPresentation(
                 provider = provider,
                 target = target,
                 role = role,
-                field = selection.first,
-                selected = selection.second,
+                field = use.field,
+                selected = selected,
             )
         }
 
-private fun PresentationNode.explicitSelections(
+private fun PresentationNode.authoredBindingUses(
     bindings: Map<String, RelativeFieldPattern>,
     field: RelativeFieldPattern? = null,
-): List<Pair<RelativeFieldPattern, PresentationId>> =
+): List<AuthoredBindingUse> =
     buildList {
+        val control = element?.boundControl()
+        control?.binding?.resolve(bindings)?.let { address ->
+            val selected = (element as? PresentationElement.DefaultPresentationWrapper)
+                ?.value?.presentationId?.let { PresentationId(it.namespace, it.name) }
+            val authoredField = address.takeIf { it.segments.isNotEmpty() } ?: field
+            if (authoredField != null) add(AuthoredBindingUse(authoredField, selected))
+        }
+        decorations().forEach { child -> addAll(child.authoredBindingUses(bindings, field)) }
         when (val element = element) {
             is PresentationElement.DefaultPresentationWrapper -> {
-                val selected = element.value.presentationId ?: return@buildList
-                val ownField =
-                    element.value.binding.resolve(bindings)
-                val selectedField = ownField?.takeIf { it.segments.isNotEmpty() } ?: field ?: return@buildList
-                add(selectedField to PresentationId(selected.namespace, selected.name))
+                bodyChildren().forEach { addAll(it.authoredBindingUses(bindings, field)) }
             }
 
             is PresentationElement.TypedFieldWrapper -> {
                 val selectedField = element.value.binding.resolve(bindings) ?: field
-                element.value.presentation?.let { addAll(it.explicitSelections(bindings, selectedField)) }
+                element.value.presentation?.let { addAll(it.authoredBindingUses(bindings, selectedField)) }
             }
 
             is PresentationElement.ScopedBindingWrapper -> {
                 val selectedField = element.value.binding.resolve(bindings) ?: field
                 val scoped = bindings.withBinding(element.value.scopeBindingId.value, selectedField)
-                addAll(element.value.child.explicitSelections(scoped, selectedField))
+                addAll(element.value.child.authoredBindingUses(scoped, selectedField))
             }
 
             is PresentationElement.NamedInputWrapper -> {
                 val selectedField =
                     element.value.control.binding
                         .resolve(bindings) ?: field
-                element.value.payloadPresentation?.let { addAll(it.explicitSelections(bindings, selectedField)) }
+                element.value.payloadPresentation?.let { addAll(it.authoredBindingUses(bindings, selectedField)) }
             }
 
             is PresentationElement.RecordInputWrapper -> {
                 val selectedField =
                     element.value.control.binding
                         .resolve(bindings) ?: field
-                element.value.fieldPresentation?.let { addAll(it.explicitSelections(bindings, selectedField)) }
+                element.value.fieldPresentation?.let { addAll(it.authoredBindingUses(bindings, selectedField)) }
             }
 
             is PresentationElement.ListInputWrapper -> {
@@ -92,8 +102,8 @@ private fun PresentationNode.explicitSelections(
                     element.value.control.binding
                         .resolve(bindings) ?: field
                 val itemField = selectedField?.append(FieldPatternSegment.Items)
-                val itemBindings = bindings.withBinding("list_item", itemField)
-                element.value.itemPresentation?.let { addAll(it.explicitSelections(itemBindings, itemField)) }
+                val itemBindings = bindings.withBinding(element.value.itemBindingId.value, itemField)
+                element.value.itemPresentation?.let { addAll(it.authoredBindingUses(itemBindings, itemField)) }
             }
 
             is PresentationElement.SetInputWrapper -> {
@@ -101,8 +111,8 @@ private fun PresentationNode.explicitSelections(
                     element.value.control.binding
                         .resolve(bindings) ?: field
                 val itemField = selectedField?.append(FieldPatternSegment.Items)
-                val itemBindings = bindings.withBinding("set_item", itemField)
-                element.value.itemPresentation?.let { addAll(it.explicitSelections(itemBindings, itemField)) }
+                val itemBindings = bindings.withBinding(element.value.itemBindingId.value, itemField)
+                element.value.itemPresentation?.let { addAll(it.authoredBindingUses(itemBindings, itemField)) }
             }
 
             is PresentationElement.MapInputWrapper -> {
@@ -112,10 +122,10 @@ private fun PresentationNode.explicitSelections(
                 val keyField = selectedField?.append(FieldPatternSegment.Keys)
                 val valueField = selectedField?.append(FieldPatternSegment.Values)
                 element.value.keyPresentation?.let {
-                    addAll(it.explicitSelections(bindings.withBinding("map_key", keyField), keyField))
+                    addAll(it.authoredBindingUses(bindings.withBinding(element.value.keyBindingId.value, keyField), keyField))
                 }
                 element.value.valuePresentation?.let {
-                    addAll(it.explicitSelections(bindings.withBinding("map_value", valueField), valueField))
+                    addAll(it.authoredBindingUses(bindings.withBinding(element.value.valueBindingId.value, valueField), valueField))
                 }
             }
 
@@ -123,14 +133,14 @@ private fun PresentationNode.explicitSelections(
                 val selectedField =
                     element.value.control.binding
                         .resolve(bindings) ?: field
-                element.value.valuePresentation?.let { addAll(it.explicitSelections(bindings, selectedField)) }
+                element.value.valuePresentation?.let { addAll(it.authoredBindingUses(bindings, selectedField)) }
             }
 
             is PresentationElement.PolymorphicMatchWrapper -> {
                 val selectedField = element.value.binding.resolve(bindings) ?: field
                 val scoped = bindings.withBinding(element.value.scopeBindingId.value, selectedField)
-                element.value.cases.forEach { case -> addAll(case.child.explicitSelections(scoped, selectedField)) }
-                element.value.fallback?.let { addAll(it.explicitSelections(bindings, field)) }
+                element.value.cases.forEach { case -> addAll(case.child.authoredBindingUses(scoped, selectedField)) }
+                element.value.fallback?.let { addAll(it.authoredBindingUses(bindings, field)) }
             }
 
             is PresentationElement.RepeatedWrapper -> {
@@ -139,16 +149,16 @@ private fun PresentationNode.explicitSelections(
                 val itemBindings = bindings.withBinding(element.value.itemBindingId.value, itemField)
                 addAll(
                     element.value.presentation.item
-                        .explicitSelections(itemBindings, itemField),
+                        .authoredBindingUses(itemBindings, itemField),
                 )
                 element.value.presentation.empty
-                    ?.let { addAll(it.explicitSelections(bindings, field)) }
+                    ?.let { addAll(it.authoredBindingUses(bindings, field)) }
                 element.value.presentation.separator
-                    ?.let { addAll(it.explicitSelections(bindings, field)) }
+                    ?.let { addAll(it.authoredBindingUses(bindings, field)) }
             }
 
             else -> {
-                children().forEach { child -> addAll(child.explicitSelections(bindings, field)) }
+                bodyChildren().forEach { child -> addAll(child.authoredBindingUses(bindings, field)) }
             }
         }
     }
@@ -166,7 +176,7 @@ private fun Map<String, RelativeFieldPattern>.withBinding(
     field: RelativeFieldPattern?,
 ): Map<String, RelativeFieldPattern> =
     if (field == null) {
-        this
+        this - bindingId
     } else {
         this + (bindingId to field)
     }
@@ -188,9 +198,49 @@ private fun skirout.editor.v1.type_catalog.ValuePath.toRelativePattern() =
         },
     )
 
-private fun PresentationNode.children(): List<PresentationNode> =
+private fun PresentationNode.decorations(): List<PresentationNode> = buildList {
+    (header?.title as? PresentationHeaderTitle.PresentationWrapper)?.value?.let(::add)
+    element?.boundControl()?.prefix?.let(::add)
+    when (val element = element) {
+        is PresentationElement.TextInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.NumericInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.SelectInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.DateTimeInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.DurationInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.ColorInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.BytesInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.EnumInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.SearchInputWrapper -> addInputContent(element.value.content)
+        is PresentationElement.NamedInputWrapper -> addCollectionContent(element.value.content)
+        is PresentationElement.ListInputWrapper -> addCollectionContent(element.value.content)
+        is PresentationElement.SetInputWrapper -> addCollectionContent(element.value.content)
+        is PresentationElement.MapInputWrapper -> addCollectionContent(element.value.content)
+        is PresentationElement.RecordInputWrapper -> addCollectionContent(element.value.content)
+        is PresentationElement.PolymorphicInputWrapper -> {
+            addInputContent(element.value.inputContent)
+            addCollectionContent(element.value.content)
+        }
+        is PresentationElement.LinkInputWrapper -> {
+            addInputContent(element.value.inputContent)
+            addCollectionContent(element.value.content)
+        }
+        is PresentationElement.TabsWrapper -> element.value.tabs.mapNotNullTo(this) { it.icon }
+        is PresentationElement.ButtonWrapper -> element.value.icon?.let(::add)
+        is PresentationElement.MenuWrapper -> element.value.items.mapNotNullTo(this) { it.icon }
+        is PresentationElement.BadgeWrapper -> addDisplayAppearance(element.value.options)
+        is PresentationElement.ChipWrapper -> addDisplayAppearance(element.value.options)
+        is PresentationElement.StatusWrapper -> {
+            element.value.cases.forEach { addDisplayAppearance(it.appearance.options) }
+            addDisplayAppearance(element.value.fallback?.options)
+        }
+        is PresentationElement.DateTimeWrapper -> addDisplayAppearance(element.value.options)
+        is PresentationElement.RelativeTimeWrapper -> addDisplayAppearance(element.value.options)
+        else -> Unit
+    }
+}
+
+private fun PresentationNode.bodyChildren(): List<PresentationNode> =
     buildList {
-        (header?.title as? PresentationHeaderTitle.PresentationWrapper)?.value?.let(::add)
         when (val element = element) {
             is PresentationElement.ChildrenWrapper -> {
                 addChildren(element.value)
@@ -233,74 +283,47 @@ private fun PresentationNode.children(): List<PresentationNode> =
                 addAll(element.value.children.nodes())
             }
 
-            is PresentationElement.TextInputWrapper -> {
-                addControl(element.value.control)
-            }
 
-            is PresentationElement.NumericInputWrapper -> {
-                addControl(element.value)
-            }
 
-            is PresentationElement.ToggleInputWrapper -> {
-                addControl(element.value)
-            }
 
             is PresentationElement.SelectInputWrapper -> {
-                addControl(element.value.control)
+                element.value.options.mapNotNullTo(this) { it.content }
+                element.value.optionsConfig?.optionOverrides?.mapNotNullTo(this) { it.content }
             }
 
-            is PresentationElement.SliderInputWrapper -> {
-                addControl(element.value.control)
-            }
 
-            is PresentationElement.DateTimeInputWrapper -> {
-                addControl(element.value.control)
-            }
 
-            is PresentationElement.DurationInputWrapper -> {
-                addControl(element.value)
-            }
 
-            is PresentationElement.ColorInputWrapper -> {
-                addControl(element.value.control)
-            }
 
-            is PresentationElement.BytesInputWrapper -> {
-                addControl(element.value)
-            }
 
             is PresentationElement.NamedInputWrapper -> {
-                addControl(element.value.control)
                 element.value.payloadPresentation?.let(::add)
             }
 
             is PresentationElement.ListInputWrapper -> {
-                addControl(element.value.control)
                 element.value.itemPresentation?.let(::add)
             }
 
             is PresentationElement.MapInputWrapper -> {
-                addControl(element.value.control)
                 element.value.keyPresentation?.let(::add)
                 element.value.valuePresentation?.let(::add)
             }
 
             is PresentationElement.RecordInputWrapper -> {
-                addControl(element.value.control)
                 element.value.fieldPresentation?.let(::add)
             }
 
             is PresentationElement.EnumInputWrapper -> {
-                addControl(element.value)
+                element.value.options?.optionOverrides?.mapNotNullTo(this) { it.content }
             }
 
             is PresentationElement.PolymorphicInputWrapper -> {
-                addControl(element.value.control)
                 element.value.concreteTypes.mapNotNullTo(this) { it.presentation }
             }
 
             is PresentationElement.SearchInputWrapper -> {
-                addControl(element.value.control)
+                element.value.empty?.let(::add)
+                element.value.loading?.let(::add)
                 element.value.summary?.let(::add)
                 addAll(element.value.provider.nodes())
             }
@@ -308,6 +331,11 @@ private fun PresentationNode.children(): List<PresentationNode> =
             is PresentationElement.TooltipWrapper -> {
                 add(element.value.child)
             }
+
+            is PresentationElement.AppearanceDefaultsWrapper -> {
+                add(element.value.child)
+            }
+
 
             is PresentationElement.AlignWrapper -> {
                 add(element.value.child)
@@ -338,18 +366,13 @@ private fun PresentationNode.children(): List<PresentationNode> =
             }
 
             is PresentationElement.NullableInputWrapper -> {
-                addControl(element.value.control)
                 element.value.valuePresentation?.let(::add)
             }
 
             is PresentationElement.SetInputWrapper -> {
-                addControl(element.value.control)
                 element.value.itemPresentation?.let(::add)
             }
 
-            is PresentationElement.LinkInputWrapper -> {
-                addControl(element.value.control)
-            }
 
             else -> {}
         }
@@ -366,9 +389,47 @@ private fun MutableList<PresentationNode>.addChildren(children: ChildrenElement)
     }
 }
 
-private fun MutableList<PresentationNode>.addControl(control: BoundControl) {
-    control.prefix?.let(::add)
+private fun MutableList<PresentationNode>.addInputContent(content: skirout.editor.v1.presentation.InputContent?) {
+    (content?.leading as? skirout.editor.v1.presentation.InputAdornment.ContentWrapper)?.value?.let(::add)
+    content?.suffix?.let(::add)
 }
+
+private fun MutableList<PresentationNode>.addDisplayAppearance(appearance: skirout.editor.v1.presentation.DisplayAppearance?) {
+    (appearance?.icon as? skirout.editor.v1.presentation.InputAdornment.ContentWrapper)?.value?.let(::add)
+}
+
+private fun MutableList<PresentationNode>.addCollectionContent(content: skirout.editor.v1.presentation.CollectionContent?) {
+    content ?: return
+    listOfNotNull(content.empty, content.addIcon, content.removeIcon, content.reorderIcon, content.chooseIcon, content.unlinkIcon)
+        .forEach(::add)
+}
+
+private fun PresentationElement.boundControl(): BoundControl? =
+    when (this) {
+        is PresentationElement.DefaultPresentationWrapper -> value.control
+        is PresentationElement.TextInputWrapper -> value.control
+        is PresentationElement.NumericInputWrapper -> value.control
+        is PresentationElement.ToggleInputWrapper -> value.control
+        is PresentationElement.SelectInputWrapper -> value.control
+        is PresentationElement.SliderInputWrapper -> value.control
+        is PresentationElement.DateTimeInputWrapper -> value.control
+        is PresentationElement.DurationInputWrapper -> value.control
+        is PresentationElement.ColorInputWrapper -> value.control
+        is PresentationElement.BytesInputWrapper -> value.control
+        is PresentationElement.NamedInputWrapper -> value.control
+        is PresentationElement.ListInputWrapper -> value.control
+        is PresentationElement.SetInputWrapper -> value.control
+        is PresentationElement.MapInputWrapper -> value.control
+        is PresentationElement.RecordInputWrapper -> value.control
+        is PresentationElement.EnumInputWrapper -> value.control
+        is PresentationElement.PolymorphicInputWrapper -> value.control
+        is PresentationElement.SearchInputWrapper -> value.control
+        is PresentationElement.NullableInputWrapper -> value.control
+        is PresentationElement.LinkInputWrapper -> value.control
+        is PresentationElement.PageGraphWrapper -> value.control
+        is PresentationElement.PageTimelineWrapper -> value.control
+        else -> null
+    }
 
 private fun AxisChild.node(): PresentationNode =
     when (this) {

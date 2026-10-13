@@ -16,6 +16,8 @@ extension _PortableCollectionInputRendering
     allowRemove: control.allowRemove,
     allowReorder: control.allowReorder,
     childScope: childScope,
+    appearance: control.appearance,
+    content: control.content,
   );
 
   Widget _renderSetInput(
@@ -32,6 +34,8 @@ extension _PortableCollectionInputRendering
     allowRemove: control.allowRemove,
     allowReorder: false,
     childScope: childScope,
+    appearance: control.appearance,
+    content: control.content,
   );
 
   Widget _renderSequenceInput({
@@ -44,6 +48,8 @@ extension _PortableCollectionInputRendering
     required bool allowRemove,
     required bool allowReorder,
     required PortablePresentationScope childScope,
+    required skir.CollectionAppearance? appearance,
+    required skir.CollectionContent? content,
   }) {
     final current = childScope.read(control.binding);
     final items =
@@ -77,7 +83,7 @@ extension _PortableCollectionInputRendering
           indexBindingId: skir.DataValue.wrapInteger(index.toString()),
         });
       }
-      final content = itemPresentation == null
+      final itemContent = itemPresentation == null
           ? Text(current.value.authoredString ?? current.id.value)
           : PortablePresentationNodeRenderer(
               node: itemPresentation,
@@ -90,10 +96,18 @@ extension _PortableCollectionInputRendering
           false;
       return Padding(
         key: ValueKey(current.id.value),
-        padding: EdgeInsets.only(bottom: context.spacing.space2),
-        child: DepthBox(
-          child: Padding(
-            padding: EdgeInsets.all(context.spacing.space2),
+        padding: EdgeInsets.only(
+          bottom: _collectionSpacing(context, appearance),
+        ),
+        child: _collectionSurface(
+          context,
+          appearance,
+          childScope,
+          node,
+          Padding(
+            padding: appearance?.itemPadding == null
+                ? EdgeInsets.all(context.spacing.space2)
+                : _presentationInsets(appearance!.itemPadding),
             child: Row(
               children: [
                 if (allowReorder && !presentationOwnsHandle)
@@ -103,6 +117,11 @@ extension _PortableCollectionInputRendering
                     enabled: childScope.enabled && !childScope.readOnly,
                     canMoveEarlier: index > 0,
                     canMoveLater: index < items.length - 1,
+                    icon: _operationGlyph(
+                      content?.reorderIcon,
+                      childScope,
+                      const Icon(Icons.drag_handle),
+                    ),
                     onMoveEarlier: () {
                       final after = index == 1 ? null : items[index - 2].id;
                       childScope.moveListItem(
@@ -119,19 +138,34 @@ extension _PortableCollectionInputRendering
                       );
                     },
                   ),
-                Expanded(child: content),
+                Expanded(child: itemContent),
                 if (allowRemove)
-                  IconButton(
-                    tooltip: "Remove item",
-                    onPressed: childScope.enabled && !childScope.readOnly
-                        ? () {
-                            childScope.removeListItem(
-                              control.binding,
-                              current.id,
-                            );
-                          }
-                        : null,
-                    icon: const Icon(Icons.delete_outline),
+                  _operationAppearance(
+                    content,
+                    childScope,
+                    (states, style) => IconButton(
+                      statesController: states,
+                      style: style,
+                      tooltip: _operationText(
+                        childScope,
+                        content?.operationTooltip ?? content?.removeLabel,
+                        "Remove item",
+                      ),
+                      onPressed: childScope.enabled && !childScope.readOnly
+                          ? () {
+                              childScope.removeListItem(
+                                control.binding,
+                                current.id,
+                              );
+                            }
+                          : null,
+                      icon: _operationGlyph(
+                        content?.removeIcon,
+                        childScope,
+                        const Icon(Icons.delete_outline),
+                      ),
+                    ),
+                    tooltip: false,
                   ),
               ],
             ),
@@ -173,32 +207,41 @@ extension _PortableCollectionInputRendering
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (items.isEmpty)
-            Padding(
-              padding: EdgeInsets.only(bottom: context.spacing.space2),
-              child: Text(
-                "No items",
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.colors.contentSecondary),
-              ),
-            ),
+            _collectionEmpty(context, childScope, content, "No items"),
           list,
           if (allowAdd)
             Align(
               alignment: AlignmentDirectional.centerStart,
-              child: FilledButton.icon(
-                onPressed: childScope.enabled && !childScope.readOnly
-                    ? () => unawaited(
-                        _addSequenceItem(
-                          context: context,
-                          control: control,
-                          linkControl: linkControl,
-                          collection: collection,
-                          childScope: childScope,
-                        ),
-                      )
-                    : null,
-                icon: Icon(linkControl == null ? Icons.add : Icons.add_link),
-                label: Text(linkControl == null ? "Add item" : "Add link"),
+              child: _operationAppearance(
+                content,
+                childScope,
+                (states, style) => FilledButton.icon(
+                  statesController: states,
+                  onPressed: childScope.enabled && !childScope.readOnly
+                      ? () => unawaited(
+                          _addSequenceItem(
+                            context: context,
+                            control: control,
+                            linkControl: linkControl,
+                            collection: collection,
+                            childScope: childScope,
+                          ),
+                        )
+                      : null,
+                  style: style,
+                  icon: _operationGlyph(
+                    content?.addIcon,
+                    childScope,
+                    Icon(linkControl == null ? Icons.add : Icons.add_link),
+                  ),
+                  label: Text(
+                    _operationText(
+                      childScope,
+                      content?.addLabel,
+                      linkControl == null ? "Add item" : "Add link",
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -273,17 +316,40 @@ extension _PortableCollectionInputRendering
       Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (rows.isEmpty)
+            _collectionEmpty(
+              context,
+              childScope,
+              control.content,
+              "No entries",
+            ),
           for (final row in rows)
             _renderMapRow(context, control, row, collection, childScope),
           if (control.allowAdd)
             Align(
               alignment: AlignmentDirectional.centerStart,
-              child: FilledButton.icon(
-                onPressed: childScope.enabled && !childScope.readOnly
-                    ? () => childScope.addMapRow(control.control.binding)
-                    : null,
-                icon: const Icon(Icons.add),
-                label: const Text("Add entry"),
+              child: _operationAppearance(
+                control.content,
+                childScope,
+                (states, style) => FilledButton.icon(
+                  statesController: states,
+                  onPressed: childScope.enabled && !childScope.readOnly
+                      ? () => childScope.addMapRow(control.control.binding)
+                      : null,
+                  style: style,
+                  icon: _operationGlyph(
+                    control.content?.addIcon,
+                    childScope,
+                    const Icon(Icons.add),
+                  ),
+                  label: Text(
+                    _operationText(
+                      childScope,
+                      control.content?.addLabel,
+                      "Add entry",
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
@@ -320,41 +386,73 @@ extension _PortableCollectionInputRendering
     }
     return Padding(
       key: ValueKey(row.id.value),
-      padding: EdgeInsets.only(bottom: context.spacing.space2),
-      child: DepthBox(
-        child: Padding(
-          padding: EdgeInsets.all(context.spacing.space2),
+      padding: EdgeInsets.only(
+        bottom: _collectionSpacing(context, control.appearance),
+      ),
+      child: _collectionSurface(
+        context,
+        control.appearance,
+        childScope,
+        node,
+        Padding(
+          padding: control.appearance?.itemPadding == null
+              ? EdgeInsets.all(context.spacing.space2)
+              : _presentationInsets(control.appearance!.itemPadding),
           child: Row(
             children: [
               Expanded(
-                child: control.keyPresentation == null
-                    ? Text(row.key.authoredString ?? "Key")
-                    : PortablePresentationNodeRenderer(
-                        node: control.keyPresentation!,
-                        scope: keyScope,
-                      ),
+                child: _mapGuidance(
+                  childScope,
+                  control.content?.keyLabel,
+                  control.keyPresentation == null
+                      ? Text(row.key.authoredString ?? "Key")
+                      : PortablePresentationNodeRenderer(
+                          node: control.keyPresentation!,
+                          scope: keyScope,
+                        ),
+                ),
               ),
               SizedBox(width: context.spacing.space2),
               Expanded(
-                child: control.valuePresentation == null
-                    ? Text(row.value.authoredString ?? "Value")
-                    : PortablePresentationNodeRenderer(
-                        node: control.valuePresentation!,
-                        scope: valueScope,
-                      ),
+                child: _mapGuidance(
+                  childScope,
+                  control.content?.valueLabel,
+                  control.valuePresentation == null
+                      ? Text(row.value.authoredString ?? "Value")
+                      : PortablePresentationNodeRenderer(
+                          node: control.valuePresentation!,
+                          scope: valueScope,
+                        ),
+                ),
               ),
               if (control.allowRemove)
-                IconButton(
-                  tooltip: "Remove row",
-                  onPressed: childScope.enabled && !childScope.readOnly
-                      ? () {
-                          childScope.removeMapRow(
-                            control.control.binding,
-                            row.id,
-                          );
-                        }
-                      : null,
-                  icon: const Icon(Icons.delete_outline),
+                _operationAppearance(
+                  control.content,
+                  childScope,
+                  (states, style) => IconButton(
+                    statesController: states,
+                    style: style,
+                    tooltip: _operationText(
+                      childScope,
+                      control.content?.operationTooltip ??
+                          control.content?.removeLabel,
+                      "Remove row",
+                    ),
+                    onPressed: childScope.enabled && !childScope.readOnly
+                        ? () {
+                            childScope.removeMapRow(
+                              control.control.binding,
+                              row.id,
+                            );
+                          }
+                        : null,
+                    icon: _operationGlyph(
+                      control.content?.removeIcon,
+                      childScope,
+                      const Icon(Icons.delete_outline),
+                    ),
+                  ),
+                  tooltip: false,
                 ),
             ],
           ),
@@ -367,5 +465,116 @@ extension _PortableCollectionInputRendering
     skir.BoundControl control,
     PortablePresentationScope childScope,
     Widget child,
-  ) => _controlFrame(control, childScope, child);
+  ) => _controlFrame(control, childScope, child, renderPrefix: true);
 }
+
+String _operationText(
+  PortablePresentationScope scope,
+  skir.ExpressionNode? value,
+  String fallback,
+) => value == null
+    ? fallback
+    : switch (_string(scope, value)) {
+        _ResolvedValue(:final value) => value,
+        _ResolvedFailure(:final message) => throw PresentationColorFailure(
+          message,
+        ),
+      };
+Widget _operationGlyph(
+  skir.PresentationNode? node,
+  PortablePresentationScope scope,
+  Widget fallback,
+) => node == null
+    ? fallback
+    : PortablePresentationNodeRenderer(
+        node: node,
+        scope: scope.withReadOnly(true),
+      );
+VisualDensity? _operationDensity(skir.CollectionContent? content) =>
+    switch (content?.operationDensity) {
+      skir.ControlDensity.compact => VisualDensity.compact,
+      skir.ControlDensity.comfortable => VisualDensity.standard,
+      _ => null,
+    };
+ButtonStyle? _operationButtonStyle(skir.CollectionContent? content) =>
+    content?.operationDensity == null
+    ? null
+    : ButtonStyle(visualDensity: _operationDensity(content));
+double _collectionSpacing(
+  BuildContext context,
+  skir.CollectionAppearance? appearance,
+) {
+  final value = appearance?.itemSpacing ?? context.spacing.space2;
+  if (!value.isFinite || value < 0) {
+    throw const PresentationColorFailure(
+      "Collection spacing must be finite and nonnegative",
+    );
+  }
+  return value;
+}
+
+Widget _collectionSurface(
+  BuildContext context,
+  skir.CollectionAppearance? appearance,
+  PortablePresentationScope scope,
+  skir.PresentationNode node,
+  Widget child,
+) => DepthBox(
+  child: appearance == null
+      ? child
+      : _PresentationSurface(
+          style: skir.ContainerLayout(
+            child: node,
+            backgroundColor: appearance.itemBackground,
+            foregroundColor: appearance.itemForeground,
+            border: appearance.itemBorder,
+            radius: appearance.itemRadius ?? skir.PresentationRadius.none,
+            transitionMilliseconds: appearance.itemTransitionMilliseconds ?? 0,
+          ),
+          scope: scope,
+          diagnostic: _diagnostic,
+          child: child,
+        ),
+);
+Widget _collectionEmpty(
+  BuildContext context,
+  PortablePresentationScope scope,
+  skir.CollectionContent? content,
+  String fallback,
+) => Padding(
+  padding: EdgeInsets.only(bottom: context.spacing.space2),
+  child: content?.empty == null
+      ? Text(
+          _operationText(scope, content?.emptyText, fallback),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.colors.contentSecondary),
+        )
+      : PortablePresentationNodeRenderer(node: content!.empty!, scope: scope),
+);
+Widget _mapGuidance(
+  PortablePresentationScope scope,
+  skir.ExpressionNode? label,
+  Widget editor,
+) => label == null
+    ? editor
+    : Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [Text(_operationText(scope, label, "")), editor],
+      );
+
+Widget _operationAppearance(
+  skir.CollectionContent? content,
+  PortablePresentationScope scope,
+  Widget Function(WidgetStatesController, ButtonStyle) action, {
+  bool tooltip = true,
+}) => _actionAppearance(
+  scope,
+  skir.ActionAppearance(
+    appearance: null,
+    variant: null,
+    tooltip: tooltip ? content?.operationTooltip : null,
+  ),
+  (context, states, style, resolved) =>
+      action(states, _operationButtonStyle(content)?.merge(style) ?? style),
+  enabled: scope.enabled && !scope.readOnly,
+);

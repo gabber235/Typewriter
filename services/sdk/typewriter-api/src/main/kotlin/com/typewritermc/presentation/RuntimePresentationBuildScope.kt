@@ -35,12 +35,18 @@ internal class RuntimePresentationBuildScope(
         name: String,
         scope: KClass<S>,
         nested: Map<NestedPresentationSlot, NestedPresentationScope>,
-    ): PresentedField<V, S> = RuntimePresentedField(state, name, scope, nested, base.field(name), checked.field(name))
+    ): PresentedField<V, S> = RuntimePresentedField(state, name, scope, nested, base.field(name), checked.field(name), this)
 
     private fun <V, S : Any> presentedValue(
         scope: KClass<S>,
         nested: Map<NestedPresentationSlot, NestedPresentationScope>,
-    ): PresentedField<V, S> = RuntimePresentedField(state, "value", scope, nested, base, checked)
+    ): PresentedField<V, S> = RuntimePresentedField(state, "value", scope, nested, base, checked, this)
+
+    internal fun presentation(body: Layout.() -> Unit): PresentationNode {
+        val children = mutableListOf<PresentationNode>()
+        state.withTarget(children) { state.scope(children, checked = checked, base = base).body() }
+        return state.column(children)
+    }
 
     override fun registerExpressions(factory: ExpressionFactory<*>) = state.expressions.register(factory)
 

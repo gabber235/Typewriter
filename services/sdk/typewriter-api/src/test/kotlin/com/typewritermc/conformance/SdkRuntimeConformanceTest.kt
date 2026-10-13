@@ -1407,7 +1407,7 @@ private fun fieldPresentationMaterial(
                     .partial(),
             element =
                 skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                    binding = binding,
+                    control = skirout.editor.v1.presentation.BoundControl(binding = binding, label = null, description = null, prefix = null, semanticLabel = null),
                     presentationId =
                         skirout.editor.v1.type_catalog.PresentationId(
                             namespace = selected.namespace,

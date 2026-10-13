@@ -11,6 +11,7 @@ sealed class PortableOperationKey with _$PortableOperationKey {
   const factory PortableOperationKey.addMapRow(
     PortableDiagnosticTarget target,
   ) = _PortableAddMapRowKey;
+  const factory PortableOperationKey.mapping(PortableDiagnosticTarget target, {required bool completion}) = _PortableMappingKey;
   const factory PortableOperationKey.status() = _PortableStatusKey;
 }
 

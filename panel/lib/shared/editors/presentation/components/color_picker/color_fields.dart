@@ -13,9 +13,11 @@ class ColorFields extends StatelessWidget {
     required this.enabled,
     required this.onFormatChanged,
     required this.onChanged,
+    this.showFormatSelector = true,
     super.key,
   });
 
+  final bool showFormatSelector;
   final Color color;
   final ColorFieldFormat format;
   final bool includeAlpha;
@@ -28,18 +30,19 @@ class ColorFields extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     spacing: context.spacing.space2,
     children: [
-      AdaptiveChoiceControl<ColorFieldFormat>(
-        selected: format,
-        enabled: enabled,
-        choices: const {
-          ColorFieldFormat.hex: "Hex",
-          ColorFieldFormat.rgb: "RGB",
-          ColorFieldFormat.hsl: "HSL",
-        },
-        onSelected: (value) {
-          if (value != null) onFormatChanged(value);
-        },
-      ),
+      if (showFormatSelector)
+        AdaptiveChoiceControl<ColorFieldFormat>(
+          selected: format,
+          enabled: enabled,
+          choices: const {
+            ColorFieldFormat.hex: "Hex",
+            ColorFieldFormat.rgb: "RGB",
+            ColorFieldFormat.hsl: "HSL",
+          },
+          onSelected: (value) {
+            if (value != null) onFormatChanged(value);
+          },
+        ),
       switch (format) {
         ColorFieldFormat.hex => _HexField(
           color: color,

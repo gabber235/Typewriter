@@ -317,10 +317,9 @@ final class _AuthoredPresentationHeader extends HookWidget {
                     foregroundColor: Theme.of(context).colorScheme.error,
                   )
                 : null,
-            icon: Icon(
-              iconName == null ? Icons.more_horiz : _materialIcon(iconName),
-              size: 18,
-            ),
+            icon: iconName == null
+                ? const Icon(Icons.more_horiz, size: 18)
+                : Icones(iconName, size: 18),
             label: Text(label),
           );
           resolved.add(

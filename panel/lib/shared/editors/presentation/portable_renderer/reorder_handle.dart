@@ -31,8 +31,10 @@ final class _AuthoredReorderHandle extends StatefulWidget {
     required this.canMoveLater,
     required this.onMoveEarlier,
     required this.onMoveLater,
+    this.icon,
   });
 
+  final Widget? icon;
   final int index;
   final String label;
   final bool enabled;
@@ -99,11 +101,15 @@ final class _AuthoredReorderHandleState extends State<_AuthoredReorderHandle> {
             ),
             child: Padding(
               padding: const EdgeInsets.all(6),
-              child: Icon(
-                Icons.drag_handle,
-                color: widget.enabled ? null : Theme.of(context).disabledColor,
-                semanticLabel: widget.label,
-              ),
+              child:
+                  widget.icon ??
+                  Icon(
+                    Icons.drag_handle,
+                    color: widget.enabled
+                        ? null
+                        : Theme.of(context).disabledColor,
+                    semanticLabel: widget.label,
+                  ),
             ),
           ),
         ),

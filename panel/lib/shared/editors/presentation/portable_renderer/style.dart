@@ -58,17 +58,6 @@ IconData _statusIcon(skir.StatusTone tone) => switch (tone.kind) {
   _ => Icons.help_outline,
 };
 
-IconData _materialIcon(String name) => switch (name) {
-  "add" => Icons.add,
-  "delete" => Icons.delete,
-  "edit" => Icons.edit,
-  "save" => Icons.save,
-  "search" => Icons.search,
-  "more_vert" => Icons.more_vert,
-  "auto_awesome" => Icons.auto_awesome,
-  _ => Icons.help_outline,
-};
-
 BorderRadius? _radius(
   BuildContext context,
   skir.PresentationRadius radius,

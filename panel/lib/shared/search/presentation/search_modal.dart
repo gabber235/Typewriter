@@ -10,6 +10,11 @@ Future<T?> showSearchModal<T>(
   BuildContext context,
   SearchContributionBuilder<T> contributionBuilder, {
   String searchHint = "Search",
+  SearchSurfaceStyle? surfaceStyle,
+  InputDecoration? queryDecoration,
+  TextStyle? queryStyle,
+  TextAlign queryAlignment = TextAlign.start,
+  bool useDefaultQueryIcon = true,
   Map<String, SearchResultRowBuilder> rowRenderers = const {},
   Map<String, SearchResultPreviewBuilder> previewRenderers = const {},
 }) {
@@ -33,6 +38,11 @@ Future<T?> showSearchModal<T>(
               child: SearchModal(
                 contributionBuilder: contributionBuilder,
                 searchHint: searchHint,
+                surfaceStyle: surfaceStyle,
+                queryDecoration: queryDecoration,
+                queryStyle: queryStyle,
+                queryAlignment: queryAlignment,
+                useDefaultQueryIcon: useDefaultQueryIcon,
                 rowRenderers: rowRenderers,
                 previewRenderers: previewRenderers,
               ),
@@ -53,12 +63,22 @@ class SearchModal<T> extends HookWidget {
   const SearchModal({
     required this.contributionBuilder,
     this.searchHint = "Search",
+    this.surfaceStyle,
+    this.queryDecoration,
+    this.queryStyle,
+    this.queryAlignment = TextAlign.start,
+    this.useDefaultQueryIcon = true,
     this.rowRenderers = const {},
     this.previewRenderers = const {},
     super.key,
   });
 
   final SearchContributionBuilder<T> contributionBuilder;
+  final SearchSurfaceStyle? surfaceStyle;
+  final InputDecoration? queryDecoration;
+  final TextStyle? queryStyle;
+  final TextAlign queryAlignment;
+  final bool useDefaultQueryIcon;
   final String searchHint;
   final Map<String, SearchResultRowBuilder> rowRenderers;
   final Map<String, SearchResultPreviewBuilder> previewRenderers;
@@ -86,6 +106,11 @@ class SearchModal<T> extends HookWidget {
       },
       child: SearchModalBody(
         searchHint: searchHint,
+        surfaceStyle: surfaceStyle,
+        queryDecoration: queryDecoration,
+        queryStyle: queryStyle,
+        queryAlignment: queryAlignment,
+        useDefaultQueryIcon: useDefaultQueryIcon,
         rowRenderers: rowRenderers,
         previewRenderers: previewRenderers,
       ),

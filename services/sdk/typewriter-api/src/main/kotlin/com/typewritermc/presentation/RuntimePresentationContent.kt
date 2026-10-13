@@ -17,35 +17,43 @@ internal class RuntimePresentationContent(
     override fun image(
         source: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>?,
+        configure: ImageScope.() -> Unit,
     ) {
-        target += state.node(PresentationElement.createImage(source = expression(source), semanticLabel = semanticLabel?.let(::expression)))
+        val options = skirout.editor.v1.presentation.ImageOptions.partial().toMutable()
+        RuntimeImageScope(options).configure()
+        target += state.node(PresentationElement.createImage(source = expression(source), semanticLabel = semanticLabel?.let(::expression), options = options.toFrozen()))
     }
 
     override fun badge(
         label: Expr<String, Handled>,
-        tone: String,
+        configure: DisplayAppearanceScope.() -> Unit,
     ) {
-        target += state.node(PresentationElement.createBadge(label = expression(label), tone = tone))
+        target += state.node(PresentationElement.createBadge(label = expression(label), options = state.displayAppearance(configure)))
     }
 
     override fun chip(
         label: Expr<String, Handled>,
         color: PresentationColor?,
+        configure: DisplayAppearanceScope.() -> Unit,
     ) {
-        target += state.node(PresentationElement.createChip(label = expression(label), color = color?.wire()))
+        target += state.node(PresentationElement.createChip(label = expression(label), color = color?.wire(), options = state.displayAppearance(configure)))
     }
 
     override fun <N> progress(
         value: Expr<N, Handled>,
         maximum: Expr<N, Handled>,
         label: Expr<String, Handled>?,
+        configure: ProgressAppearanceScope.() -> Unit,
     ) {
+        val appearance = skirout.editor.v1.presentation.ProgressAppearance.partial().toMutable()
+        RuntimeProgressAppearanceScope(appearance).configure()
         target +=
             state.node(
                 PresentationElement.createProgress(
                     value = expression(value),
                     maximum = expression(maximum),
                     label = label?.let(::expression),
+                    appearance = appearance.toFrozen(),
                 ),
             )
     }
@@ -122,11 +130,13 @@ internal class RuntimePresentationContent(
         value: Expr<Instant, Handled>,
         format: Expr<String, Handled>,
         zone: DateTimeZone,
+        configure: DisplayAppearanceScope.() -> Unit,
     ) {
         target +=
             state.node(
                 PresentationElement.createDateTime(
                     value = expression(value),
+                    options = state.displayAppearance(configure),
                     format = expression(format),
                     timeZone =
                         when (zone) {
@@ -191,7 +201,7 @@ internal class RuntimePresentationContent(
                         com.typewritermc.types.skir.SkirDataValueCodec
                             .encode(portableLiteral(candidate.value))
                             .getOrThrow(),
-                    appearance = candidate.appearance.wire(),
+                    appearance = candidate.appearance.wire(state),
                 )
             }
         target +=
@@ -199,7 +209,7 @@ internal class RuntimePresentationContent(
                 PresentationElement.createStatus(
                     value = expression(value),
                     cases = wireCases,
-                    fallback = fallback?.wire(),
+                    fallback = fallback?.wire(state),
                 ),
             )
     }
@@ -208,11 +218,13 @@ internal class RuntimePresentationContent(
         value: Expr<Instant, Handled>,
         style: RelativeTimeStyle,
         zone: DateTimeZone,
+        configure: DisplayAppearanceScope.() -> Unit,
     ) {
         target +=
             state.node(
                 PresentationElement.createRelativeTime(
                     value = expression(value),
+                    options = state.displayAppearance(configure),
                     style =
                         when (style) {
                             RelativeTimeStyle.Compact -> skirout.editor.v1.presentation.RelativeTimeStyle.COMPACT
@@ -272,7 +284,7 @@ private fun TextParagraph.wire(): skirout.editor.v1.presentation.TextParagraph =
             },
     )
 
-private fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =
+internal fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =
     when (this) {
         is TextSizing.Exact -> {
             skirout.editor.v1.presentation.TextSizing
@@ -287,10 +299,11 @@ private fun TextSizing.wire(): skirout.editor.v1.presentation.TextSizing =
         }
     }
 
-private fun StatusAppearance.wire(): skirout.editor.v1.presentation.StatusAppearance =
+private fun StatusAppearance.wire(state: PresentationBuildState): skirout.editor.v1.presentation.StatusAppearance =
     skirout.editor.v1.presentation.StatusAppearance(
         tone = tone.wireStatusTone(),
         label = expression(label),
+        options = state.displayAppearance(configure),
     )
 
 private fun String.wireStatusTone(): skirout.editor.v1.presentation.StatusTone =

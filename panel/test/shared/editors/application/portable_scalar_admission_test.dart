@@ -4,6 +4,46 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test("numeric steps preserve wide integers and exact decimal increments", () {
+    final integer = skir.TypeUse.wrapScalar(
+      skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedSixtyFour),
+    );
+    expect(
+      stepPortableNumericValue(
+        current: skir.DataValue.wrapInteger("9007199254740993"),
+        step: skir.DataValue.wrapInteger("1"),
+        expected: integer,
+        direction: 1,
+      ),
+      skir.DataValue.wrapInteger("9007199254740994"),
+    );
+    expect(
+      stepPortableNumericValue(
+        current: skir.DataValue.wrapDecimal("10000000000000000.01"),
+        step: skir.DataValue.wrapDecimal("0.01"),
+        expected: skir.TypeUse.wrapScalar(skir.ScalarKind.decimal),
+        direction: 1,
+      ),
+      skir.DataValue.wrapDecimal("10000000000000000.02"),
+    );
+    expect(
+      comparePortableNumericValues(
+        skir.DataValue.wrapDecimal("10000000000000000.01"),
+        skir.DataValue.wrapDecimal("10000000000000000.02"),
+      ),
+      -1,
+    );
+    expect(
+      stepPortableNumericValue(
+        current: skir.DataValue.wrapInteger("9223372036854775807"),
+        step: skir.DataValue.wrapInteger("1"),
+        expected: integer,
+        direction: 1,
+      ),
+      isNull,
+    );
+  });
+
   test("integer admission enforces signed and unsigned widths", () {
     final signedEight = skir.TypeUse.wrapScalar(
       skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedEight),

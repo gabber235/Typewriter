@@ -10,9 +10,23 @@ class SearchModalBody extends HookConsumerWidget {
     required this.searchHint,
     this.rowRenderers = const {},
     this.previewRenderers = const {},
+    this.surfaceStyle,
+    this.queryDecoration,
+    this.queryStyle,
+    this.queryAlignment = TextAlign.start,
+    this.useDefaultQueryIcon = true,
+    this.empty,
+    this.loading,
     super.key,
   });
 
+  final SearchSurfaceStyle? surfaceStyle;
+  final InputDecoration? queryDecoration;
+  final TextStyle? queryStyle;
+  final TextAlign queryAlignment;
+  final bool useDefaultQueryIcon;
+  final Widget? empty;
+  final Widget? loading;
   final String searchHint;
   final Map<String, SearchResultRowBuilder> rowRenderers;
   final Map<String, SearchResultPreviewBuilder> previewRenderers;
@@ -26,7 +40,7 @@ class SearchModalBody extends HookConsumerWidget {
     final controller = ref.watch(searchProvider)!;
     final currentPreview = controller.currentPreview;
 
-    return Actions(
+    final surface = Actions(
       actions: {
         if (controller.canClose)
           DismissIntent: CallbackAction<DismissIntent>(
@@ -53,22 +67,31 @@ class SearchModalBody extends HookConsumerWidget {
                       completeSelector: controller.completeSelector,
                       validationIssues: controller.validationIssues,
                       autofocus: EditorTextFieldAutoFocus.textField,
-                      inputDecoration: InputDecoration(
-                        prefixIcon: Padding(
-                          padding: EdgeInsets.only(
-                            left: context.spacing.space1,
+                      style: queryStyle,
+                      textAlign: queryAlignment,
+                      inputDecoration:
+                          (queryDecoration ?? const InputDecoration()).copyWith(
+                            prefixIcon:
+                                queryDecoration?.prefixIcon ??
+                                (useDefaultQueryIcon
+                                    ? Padding(
+                                        padding: EdgeInsets.only(
+                                          left: context.spacing.space1,
+                                        ),
+                                        child: const Icon(Icons.search_rounded),
+                                      )
+                                    : null),
+                            hintText: searchHint,
+                            suffixIcon:
+                                queryDecoration?.suffixIcon ??
+                                (controller.canClose
+                                    ? InputIconButton(
+                                        icon: const Icon(Icons.close_rounded),
+                                        tooltip: "Close",
+                                        onPressed: controller.close,
+                                      )
+                                    : null),
                           ),
-                          child: const Icon(Icons.search_rounded),
-                        ),
-                        hintText: searchHint,
-                        suffixIcon: controller.canClose
-                            ? InputIconButton(
-                                icon: const Icon(Icons.close_rounded),
-                                tooltip: "Close",
-                                onPressed: controller.close,
-                              )
-                            : null,
-                      ),
                       onSubmitted: (_) {
                         var primaryResult = controller.currentPreview;
                         primaryResult ??=
@@ -99,7 +122,11 @@ class SearchModalBody extends HookConsumerWidget {
                 onInvoke: (_) => inputFieldController.requestSurroundingFocus(),
               ),
             },
-            child: SearchTreeResults(rowRenderers: rowRenderers),
+            child: SearchTreeResults(
+              rowRenderers: rowRenderers,
+              empty: empty,
+              loading: loading,
+            ),
           ),
           actionBar: const ActionRow(),
           preview:
@@ -110,5 +137,8 @@ class SearchModalBody extends HookConsumerWidget {
         ),
       ),
     );
+    return surfaceStyle == null
+        ? surface
+        : SearchSurfaceAppearance(style: surfaceStyle!, child: surface);
   }
 }

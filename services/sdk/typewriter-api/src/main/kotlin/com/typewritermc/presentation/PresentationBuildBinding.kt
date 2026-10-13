@@ -23,6 +23,8 @@ class CheckedPresentationTemplate internal constructor(
     private val fieldResolver: (TypeTemplate, String) -> TypeTemplate?,
     private val nestedResolver: (TypeTemplate, NestedPresentationSlot) -> PresentationNestedTemplate?,
     private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
+    private val expressionChecker: (ExpressionNode, Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>, TypeTemplate, Set<com.typewritermc.expression.ExpressionBindingId>) -> List<String>,
+    private val payloadResolver: (TypeTemplate) -> TypeTemplate,
 ) {
     internal fun field(name: String): CheckedPresentationTemplate =
         CheckedPresentationTemplate(
@@ -30,6 +32,8 @@ class CheckedPresentationTemplate internal constructor(
             fieldResolver = fieldResolver,
             nestedResolver = nestedResolver,
             descriptorSelector = descriptorSelector,
+            expressionChecker = expressionChecker,
+            payloadResolver = payloadResolver,
         )
 
     internal fun nested(slot: NestedPresentationSlot): CheckedPresentationNested {
@@ -41,15 +45,26 @@ class CheckedPresentationTemplate internal constructor(
                     fieldResolver = fieldResolver,
                     nestedResolver = nestedResolver,
                     descriptorSelector = descriptorSelector,
+                    expressionChecker = expressionChecker,
+                    payloadResolver = payloadResolver,
                 ),
             collectionKind = nested.collectionKind,
         )
     }
 
     internal fun rebind(type: TypeTemplate): CheckedPresentationTemplate =
-        CheckedPresentationTemplate(type, fieldResolver, nestedResolver, descriptorSelector)
+        CheckedPresentationTemplate(type, fieldResolver, nestedResolver, descriptorSelector, expressionChecker, payloadResolver)
 
     internal fun select(descriptors: List<PresentationDescriptor>): PresentationDescriptor? = descriptorSelector(type, descriptors)
+
+    internal fun payloadType(): TypeTemplate = payloadResolver(type)
+
+    internal fun checkExpression(
+        body: ExpressionNode,
+        bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        expected: TypeTemplate,
+        present: Set<com.typewritermc.expression.ExpressionBindingId> = emptySet(),
+    ): List<String> = expressionChecker(body, bindings, expected, present)
 }
 
 internal data class PresentationNestedTemplate(
@@ -109,6 +124,11 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
                 }
             }
         },
+        expressionChecker = { body, bindings, expected, present -> checkPresentationExpression(body, bindings, expected, present, this::resolve) },
+        payloadResolver = { parent ->
+            val checked = resolve(parent)
+            (checked.schema.representation as? ResolvedRepresentation.Scalar)?.let { TypeTemplate.Scalar(it.kind) } ?: parent
+        },
         descriptorSelector = { template, descriptors ->
             val actual = resolve(template)
             selectMostSpecificDescriptors(
@@ -129,7 +149,8 @@ internal fun TypeUse.template(): TypeTemplate =
 interface Layout :
     PresentationContent,
     PresentationData,
-    PresentationInteractions {
+    PresentationInteractions,
+    InputAppearanceLayout {
     val role: PresentationRole
 
     val subject: PresentationSubjectExpressions
@@ -194,7 +215,7 @@ interface Layout :
 
     fun slot(id: String)
 
-    fun divider()
+    fun divider(configure: DividerAppearanceScope.() -> Unit = {})
 
     fun spacer(
         width: Expr<Double, Handled>? = null,
@@ -417,3 +438,41 @@ class PresentationSubjectExpressions(
 class PresentationContextExpressions(
     val selectionCount: Expr<Int, com.typewritermc.expression.MayBeMissing>,
 )
+
+internal fun checkPresentationExpression(
+    body: ExpressionNode,
+    bindings: Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+    expected: TypeTemplate,
+    present: Set<com.typewritermc.expression.ExpressionBindingId>,
+    resolve: (TypeUse) -> Resolution<CheckedType>,
+): List<String> {
+    val checker = com.typewritermc.configuration.PortableExpressionChecker(resolve)
+    val structural = checker.checkExpressionStructure(body, bindings.keys)
+    if (structural.isNotEmpty()) return structural
+    // Free type parameters receive exact checking when material is applied to concrete arguments.
+    val result = expected.apply(emptyMap()) as? Resolution.Ready ?: return structural
+    val referenced = body.referencedBindingIds()
+    val applied = bindings.filterKeys { it in referenced }.mapValues { (_, template) -> (template.apply(emptyMap()) as? Resolution.Ready)?.value }
+    if (applied.values.any { it == null }) return structural
+    return checker.checkExpressionCodes(
+        body,
+        applied.mapValues { (id, use) -> com.typewritermc.expression.ExpressionType(requireNotNull(use), id !in present) },
+        com.typewritermc.expression.ExpressionType(result.value, false),
+    )
+}
+
+private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> = buildSet {
+    fun visit(node: ExpressionNode) {
+        when (node) {
+            is ExpressionNode.Literal -> Unit
+            is ExpressionNode.Read -> add(node.binding)
+            is ExpressionNode.Call -> node.arguments.forEach(::visit)
+            is ExpressionNode.And -> { visit(node.left); visit(node.right) }
+            is ExpressionNode.Or -> { visit(node.left); visit(node.right) }
+            is ExpressionNode.Conditional -> { visit(node.test); visit(node.yes); visit(node.no) }
+            is ExpressionNode.OrElse -> { visit(node.input); visit(node.fallback) }
+            is ExpressionNode.Collection -> { visit(node.input); node.arguments.forEach(::visit); node.body?.let(::visit) }
+        }
+    }
+    visit(this@referencedBindingIds)
+}

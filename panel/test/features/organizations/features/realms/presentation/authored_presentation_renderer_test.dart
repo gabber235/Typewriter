@@ -35,7 +35,10 @@ void main() {
         final written = <skir.DataValue>[];
         await _pumpControl(
           tester,
-          skir.PresentationElement.wrapNumericInput(_control(_rootReference)),
+          skir.PresentationElement.wrapNumericInput(
+            (skir.NumericControl.mutable()..control = _control(_rootReference))
+                .toFrozen(),
+          ),
           scenario.initial,
           written.add,
           rebindWrites: true,
@@ -95,15 +98,26 @@ void main() {
                     nodeId: "placement.x",
                     properties: skir.PresentationProperties.defaultInstance,
                     element: skir.PresentationElement.wrapNumericInput(
-                      _control(
-                        skir.BindingRef(
-                          bindingId: _configuredBinding,
-                          path: _fieldPath("x"),
-                        ),
-                      ),
+                      (skir.NumericControl.mutable()
+                            ..control = _control(
+                              skir.BindingRef(
+                                bindingId: _rootBinding,
+                                path: skir.ValuePath(
+                                  segments: [
+                                    skir.PathSegment.createField(
+                                      name: "placement",
+                                    ),
+                                    skir.PathSegment.createField(name: "x"),
+                                  ],
+                                ),
+                              ),
+                            ))
+                          .toFrozen(),
                     ),
                     header: null,
                   ),
+                  appearance: null,
+                  content: null,
                 ),
               ),
               header: null,
@@ -147,7 +161,10 @@ void main() {
     await tester.enterText(find.byType(TextFormField), "7");
     await tester.pumpAndSettle();
 
-    expect(written?.$1.path, _fieldPath("x"));
+    expect(written?.$1.path.segments, [
+      skir.PathSegment.createField(name: "placement"),
+      skir.PathSegment.createField(name: "x"),
+    ]);
     expect(written?.$2, skir.DataValue.wrapInteger("7"));
   });
 
@@ -169,7 +186,9 @@ void main() {
               nodeId: "enabled",
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.wrapToggleInput(
-                _control(enabledReference),
+                (skir.ToggleControl.mutable()
+                      ..control = _control(enabledReference))
+                    .toFrozen(),
               ),
               header: null,
             ),
@@ -230,7 +249,9 @@ void main() {
               nodeId: "enabled",
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.wrapToggleInput(
-                _control(enabledReference),
+                (skir.ToggleControl.mutable()
+                      ..control = _control(enabledReference))
+                    .toFrozen(),
               ),
               header: null,
             ),
@@ -452,7 +473,10 @@ void main() {
     final written = <skir.DataValue>[];
     await _pumpControl(
       tester,
-      skir.PresentationElement.wrapDurationInput(_control(_rootReference)),
+      skir.PresentationElement.wrapDurationInput(
+        (skir.DurationControl.mutable()..control = _control(_rootReference))
+            .toFrozen(),
+      ),
       skir.DataValue.unfilled,
       written.add,
     );
@@ -478,7 +502,10 @@ void main() {
     final written = <skir.DataValue>[];
     await _pumpControl(
       tester,
-      skir.PresentationElement.wrapBytesInput(_control(_rootReference)),
+      skir.PresentationElement.wrapBytesInput(
+        (skir.BytesControl.mutable()..control = _control(_rootReference))
+            .toFrozen(),
+      ),
       skir.DataValue.unfilled,
       written.add,
     );
@@ -506,6 +533,12 @@ void main() {
         skir.ColorControl(
           control: _control(_rootReference),
           includeAlpha: false,
+          appearance: null,
+          content: null,
+          entry: null,
+          mappings: null,
+          popup: null,
+          options: null,
         ),
       ),
       skir.DataValue.unfilled,
@@ -539,6 +572,12 @@ void main() {
               control: _control(_rootReference),
               includeDate: parts.$1,
               includeTime: parts.$2,
+              appearance: null,
+              content: null,
+              entry: null,
+              mappings: null,
+              popup: null,
+              options: null,
             ),
           ),
           skir.DataValue.wrapTimestamp(DateTime.utc(2024, 8, 12, 18, 30, 45)),
@@ -623,6 +662,12 @@ void main() {
           skir.ColorControl(
             control: _control(_rootReference),
             includeAlpha: false,
+            appearance: null,
+            content: null,
+            entry: null,
+            mappings: null,
+            popup: null,
+            options: null,
           ),
         ),
         skir.DataValue.wrapInteger(0xFFAABBCC.toString()),
@@ -633,6 +678,12 @@ void main() {
             control: _control(_rootReference),
             includeDate: true,
             includeTime: true,
+            appearance: null,
+            content: null,
+            entry: null,
+            mappings: null,
+            popup: null,
+            options: null,
           ),
         ),
         skir.DataValue.wrapTimestamp(DateTime.utc(2024, 8, 12)),
@@ -670,6 +721,9 @@ void main() {
           minimum: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(2)),
           maximum: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(8)),
           divisions: null,
+          appearance: null,
+          mappings: null,
+          options: null,
         ),
       ),
       skir.DataValue.unfilled,
@@ -693,6 +747,12 @@ void main() {
           control: _control(_rootReference),
           includeDate: false,
           includeTime: true,
+          appearance: null,
+          content: null,
+          entry: null,
+          mappings: null,
+          popup: null,
+          options: null,
         ),
       ),
       skir.DataValue.unfilled,
@@ -721,6 +781,12 @@ void main() {
           control: _control(_rootReference),
           includeDate: true,
           includeTime: false,
+          appearance: null,
+          content: null,
+          entry: null,
+          mappings: null,
+          popup: null,
+          options: null,
         ),
       ),
       skir.DataValue.wrapTimestamp(DateTime.utc(1900, 6, 15)),
@@ -755,7 +821,9 @@ void main() {
                 child: skir.PresentationNode(
                   nodeId: "connection.content",
                   properties: skir.PresentationProperties.defaultInstance,
-                  element: skir.PresentationElement.divider,
+                  element: skir.PresentationElement.wrapDivider(
+                    skir.DividerAppearance.defaultInstance,
+                  ),
                   header: null,
                 ),
                 connections: [
@@ -806,7 +874,6 @@ void main() {
 }
 
 final _rootBinding = skir.ExpressionBindingId(value: "root");
-final _configuredBinding = skir.ExpressionBindingId(value: "configured_value");
 final _rootReference = skir.BindingRef(
   bindingId: _rootBinding,
   path: skir.ValuePath(segments: const []),

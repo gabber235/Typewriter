@@ -67,20 +67,15 @@ internal class RuntimePresentationData(
     ) {
         val children = mutableListOf<PresentationNode>()
         val scopeBinding = if (typed) null else state.bindingId("scoped.value")
-        val receiver =
-            if (typed) {
-                val factory = input.rebind
-                factory?.invoke(input.binding, children) ?: input.scope
-            } else {
-                val rebound =
-                    BindingRef(
-                        path = WireValuePath(segments = emptyList()),
-                        bindingId = requireNotNull(scopeBinding).wire(),
-                    )
-                val factory = input.rebind
-                factory?.invoke(rebound, children) ?: input.scope
-            }
-        state.withTarget(children) { requireNotNull(receiver).body() }
+        val localBinding = if (typed) input.binding else BindingRef(
+            path = WireValuePath(segments = emptyList()),
+            bindingId = requireNotNull(scopeBinding).wire(),
+        )
+        val session = input.rebind?.invoke(localBinding, children) ?: input.session
+        state.withTarget(children) {
+            session.receiver.body()
+            session.finishInto(children)
+        }
         val child = state.column(children)
         target +=
             if (typed) {
@@ -200,26 +195,22 @@ internal class RuntimePresentedField<V, S : Any>(
     private val nested: Map<NestedPresentationSlot, NestedPresentationScope>,
     private val binding: BindingRef,
     private val checked: CheckedPresentationTemplate,
+    private val authorScope: RuntimePresentationBuildScope,
 ) : PresentedField<V, S> {
     override val input: PresentationInput<V, S>
         get() {
-            val createScope: (BindingRef, MutableList<PresentationNode>) -> S = { rebound, children ->
-                state.controls.create(
-                    scope,
-                    RuntimeControlBinding(
-                        state = state,
-                        target = children,
-                        field = name,
-                        fieldBinding = rebound,
-                        checked = checked,
-                        nested = nested,
-                        selectedPresentation = null,
-                    ),
+            val createScope: (BindingRef, MutableList<PresentationNode>) -> ControlScopeSession<S> = { rebound, children ->
+                val runtime = RuntimeControlBinding(
+                    state, children, name, rebound, checked, nested, null, authorScope,
+                )
+                ControlScopeSession(
+                    receiver = state.controls.create(scope, runtime),
+                    finish = runtime::finishInto,
                 )
             }
             return PresentationInput(
                 binding = binding,
-                scope = createScope(binding, state.currentTarget),
+                session = createScope(binding, state.currentTarget),
                 expected = checked.type,
                 rebind = createScope,
             )
@@ -237,9 +228,9 @@ internal class RuntimePresentedField<V, S : Any>(
         require(using == null || presentationId != null) {
             "The selected presentation reference was not registered by its generated provider."
         }
-        val controlBinding = RuntimeControlBinding(state, state.currentTarget, name, binding, checked, nested, presentationId)
+        val controlBinding = RuntimeControlBinding(state, state.currentTarget, name, binding, checked, nested, presentationId, authorScope)
         val control = state.controls.create(scope, controlBinding)
         control.configure()
-        if (!controlBinding.emitted) controlBinding.defaultPresentation()
+        controlBinding.finishInto(state.currentTarget)
     }
 }

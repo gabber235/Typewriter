@@ -49,38 +49,50 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope, {
     required bool vertical,
     required bool fillAvailableSpace,
+    double? spacing,
+    Widget Function(skir.PresentationNode, Widget)? decorateItem,
   }) {
+    final gap = spacing ?? element.layout.spacing;
+    if (spacing != null && (!spacing.isFinite || spacing < 0)) {
+      throw const PresentationColorFailure(
+        "Collection spacing must be finite and nonnegative",
+      );
+    }
+    Widget renderItem(skir.PresentationNode item, {bool fill = false}) {
+      final content = PortablePresentationNodeRenderer(
+        node: item,
+        scope: childScope,
+        fillAvailableSpace: fill,
+      );
+      return decorateItem?.call(item, content) ?? content;
+    }
+
     Widget buildAxis(double? fixedChildMaximumHeight) {
       final children = <Widget>[];
       final forwardsViewport =
           vertical && fillAvailableSpace && element.children.length == 1;
       var first = true;
       for (final child in element.children) {
-        if (!first && element.layout.spacing > 0) {
+        if (!first && gap > 0) {
           children.add(
             SizedBox(
-              width: vertical ? null : element.layout.spacing,
-              height: vertical ? element.layout.spacing : null,
+              width: vertical ? null : gap,
+              height: vertical ? gap : null,
             ),
           );
         }
         first = false;
         var rendered = switch (child) {
-          skir.AxisChild_fixedWrapper(:final value) =>
-            PortablePresentationNodeRenderer(
-              node: value,
-              scope: childScope,
-              fillAvailableSpace: forwardsViewport,
-            ),
+          skir.AxisChild_fixedWrapper(:final value) => renderItem(
+            value,
+            fill: forwardsViewport,
+          ),
           skir.AxisChild_flexibleWrapper(:final value) => Flexible(
             flex: value.flex <= 0 ? 1 : value.flex,
             fit: value.fit == skir.FlexFit.tight
                 ? FlexFit.tight
                 : FlexFit.loose,
-            child: PortablePresentationNodeRenderer(
-              node: value.child,
-              scope: childScope,
-            ),
+            child: renderItem(value.child),
           ),
           _ => _diagnostic("The axis child is unknown"),
         };
@@ -205,7 +217,9 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
               ),
             );
       final itemScope = rowReference == null
-          ? childScope.withValues({element.itemBindingId: row.value})
+          ? childScope.withValues({
+              element.itemBindingId: row.value,
+            }, authoredOrigin: node.nodeId)
           : childScope.withBinding(rowReference, element.itemBindingId);
       children.add(
         itemScope == null
@@ -327,29 +341,7 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     skir.AlignmentLayout layout,
     PortablePresentationScope childScope,
   ) => Align(
-    alignment: switch (layout.alignment.kind) {
-      skir.PresentationAlignment_kind.topStartConst =>
-        AlignmentDirectional.topStart,
-      skir.PresentationAlignment_kind.topCenterConst =>
-        AlignmentDirectional.topCenter,
-      skir.PresentationAlignment_kind.topEndConst =>
-        AlignmentDirectional.topEnd,
-      skir.PresentationAlignment_kind.centerStartConst =>
-        AlignmentDirectional.centerStart,
-      skir.PresentationAlignment_kind.centerConst =>
-        AlignmentDirectional.center,
-      skir.PresentationAlignment_kind.centerEndConst =>
-        AlignmentDirectional.centerEnd,
-      skir.PresentationAlignment_kind.bottomStartConst =>
-        AlignmentDirectional.bottomStart,
-      skir.PresentationAlignment_kind.bottomCenterConst =>
-        AlignmentDirectional.bottomCenter,
-      skir.PresentationAlignment_kind.bottomEndConst =>
-        AlignmentDirectional.bottomEnd,
-      _ => throw const PresentationColorFailure(
-        "Presentation alignment is unavailable",
-      ),
-    },
+    alignment: _presentationAlignment(layout.alignment),
     widthFactor: fillAvailableSpace ? null : 1,
     heightFactor: fillAvailableSpace ? null : 1,
     child: PortablePresentationNodeRenderer(
@@ -446,22 +438,26 @@ final class _AuthoredTabsState extends State<_AuthoredTabs> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Wrap(
-          spacing: context.spacing.space2,
+          spacing: _tabSpacing(widget.tabs.spacing, context.spacing.space2),
           children: [
             for (final tab in tabs)
-              ChoiceChip(
+              _ConfiguredTab(
+                tab: tab,
                 selected: tab.tabId == selected.tabId,
-                label: switch (_string(widget.scope, tab.label)) {
-                  _ResolvedValue(:final value) => Text(value),
-                  _ResolvedFailure() => Text(tab.tabId),
-                },
+                appearance: widget.tabs.appearance,
+                scope: widget.scope,
                 onSelected: widget.scope.enabled
-                    ? (_) => setState(() => _selected = tab.tabId)
+                    ? () => setState(() => _selected = tab.tabId)
                     : null,
               ),
           ],
         ),
-        SizedBox(height: context.spacing.space2),
+        SizedBox(
+          height: _tabSpacing(
+            widget.tabs.contentSpacing,
+            context.spacing.space2,
+          ),
+        ),
         PortablePresentationNodeRenderer(
           node: selected.child,
           scope: widget.scope,
@@ -528,4 +524,147 @@ Widget _presentationGrid(
       ],
     );
   },
+);
+
+AlignmentGeometry _presentationAlignment(
+  skir.PresentationAlignment alignment,
+) => switch (alignment.kind) {
+  skir.PresentationAlignment_kind.topStartConst =>
+    AlignmentDirectional.topStart,
+  skir.PresentationAlignment_kind.topCenterConst =>
+    AlignmentDirectional.topCenter,
+  skir.PresentationAlignment_kind.topEndConst => AlignmentDirectional.topEnd,
+  skir.PresentationAlignment_kind.centerStartConst =>
+    AlignmentDirectional.centerStart,
+  skir.PresentationAlignment_kind.centerConst => AlignmentDirectional.center,
+  skir.PresentationAlignment_kind.centerEndConst =>
+    AlignmentDirectional.centerEnd,
+  skir.PresentationAlignment_kind.bottomStartConst =>
+    AlignmentDirectional.bottomStart,
+  skir.PresentationAlignment_kind.bottomCenterConst =>
+    AlignmentDirectional.bottomCenter,
+  skir.PresentationAlignment_kind.bottomEndConst =>
+    AlignmentDirectional.bottomEnd,
+  _ => throw const PresentationColorFailure(
+    "Presentation alignment is unavailable",
+  ),
+};
+
+double _tabSpacing(double? value, double fallback) {
+  if (value == null) return fallback;
+  if (!value.isFinite || value < 0) {
+    throw const PresentationColorFailure(
+      "Tab spacing must be finite and nonnegative",
+    );
+  }
+  return value;
+}
+
+class _ConfiguredTab extends HookWidget {
+  const _ConfiguredTab({
+    required this.tab,
+    required this.selected,
+    required this.appearance,
+    required this.scope,
+    required this.onSelected,
+  });
+  final skir.TabItem tab;
+  final bool selected;
+  final skir.InputAppearance? appearance;
+  final PortablePresentationScope scope;
+  final VoidCallback? onSelected;
+  @override
+  Widget build(BuildContext context) {
+    final hovered = useState(false);
+    final focus = useFocusNode();
+    useListenable(focus);
+    final pressed = useState(false);
+    return PresentationInteractionScope(
+      value: PresentationInteraction(
+        hovered: hovered.value,
+        focused: focus.hasFocus,
+        pressed: pressed.value,
+        selected: selected,
+        disabled: !scope.enabled,
+        readOnly: scope.readOnly,
+      ),
+      child: Builder(
+        builder: (context) {
+          try {
+            final style = _controlStyle(context, scope, appearance);
+            final border = style.decoration.border;
+            return MouseRegion(
+              onEnter: (_) => hovered.value = true,
+              onExit: (_) => hovered.value = false,
+              child: Listener(
+                onPointerDown: (_) => pressed.value = true,
+                onPointerUp: (_) => pressed.value = false,
+                onPointerCancel: (_) => pressed.value = false,
+                child: ChoiceChip(
+                  selected: selected,
+                  focusNode: focus,
+                  onSelected: onSelected == null ? null : (_) => onSelected!(),
+                  label: Text(_actionText(scope, tab.label)!),
+                  labelStyle: _nativeAppearanceTextStyle(
+                    scope,
+                    appearance,
+                    style,
+                  ),
+                  avatar: tab.icon == null
+                      ? null
+                      : IconTheme.merge(
+                          data: IconThemeData(
+                            size: style.iconSize,
+                            color: style.iconColor,
+                          ),
+                          child: PortablePresentationNodeRenderer(
+                            node: tab.icon!,
+                            scope: scope,
+                          ),
+                        ),
+                  padding: style.padding,
+                  visualDensity: style.dense == null
+                      ? null
+                      : style.dense!
+                      ? VisualDensity.compact
+                      : VisualDensity.standard,
+                  selectedColor: style.decoration.fillColor,
+                  backgroundColor: style.decoration.fillColor,
+                  side:
+                      _hasControlAppearance(scope, appearance, (a) => a.border)
+                      ? border?.borderSide ?? BorderSide.none
+                      : null,
+                  shape:
+                      _hasControlAppearance(
+                            scope,
+                            appearance,
+                            (a) => a.radius,
+                          ) &&
+                          border is OutlineInputBorder
+                      ? RoundedRectangleBorder(
+                          borderRadius: border.borderRadius,
+                        )
+                      : null,
+                ),
+              ),
+            );
+          } on PresentationColorFailure catch (failure) {
+            return _diagnostic(failure.message);
+          }
+        },
+      ),
+    );
+  }
+}
+
+Widget _renderDivider(
+  BuildContext context,
+  skir.DividerAppearance appearance,
+  PortablePresentationScope scope,
+) => Divider(
+  color: _color(context, scope, appearance.color),
+  thickness: _displayDimension(scope, appearance.thickness, positive: true),
+  height: _displayDimension(scope, appearance.space),
+  indent: _displayDimension(scope, appearance.indent),
+  endIndent: _displayDimension(scope, appearance.endIndent),
 );

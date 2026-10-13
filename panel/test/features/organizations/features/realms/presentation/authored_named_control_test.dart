@@ -7,7 +7,7 @@ import "../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
-    "renders a nested named payload and preserves its actual type on write",
+    "renders a nested named payload and writes its authored field path",
     (tester) async {
       skir.BindingRef? writtenReference;
       skir.DataValue? writtenValue;
@@ -47,13 +47,12 @@ void main() {
       );
       await tester.pump();
 
-      expect(writtenReference, _styleReference);
-      final named = writtenValue! as skir.DataValue_namedWrapper;
-      expect(named.value.actualType, _styleType);
-      expect(
-        named.value.payload.authoredField("title")?.authoredString,
-        "Changed",
-      );
+      expect(writtenReference?.bindingId, _rootBinding);
+      expect(writtenReference?.path.segments, [
+        skir.PathSegment.createField(name: "style"),
+        skir.PathSegment.createField(name: "title"),
+      ]);
+      expect(writtenValue, skir.DataValue.wrapStringValue("Changed"));
 
       await tester.pumpWidget(host(false));
       await tester.pump();
@@ -89,20 +88,7 @@ void main() {
             node: disabled,
             scope: PortablePresentationScope(
               operations: testPortableOperations(),
-              bindings: {
-                skir.ExpressionBindingId(
-                  value: "configured_value",
-                ): PortableExpressionBinding(
-                  value: skir.DataValue.createRecord(
-                    fields: [
-                      skir.FieldValue(
-                        name: "title",
-                        value: skir.DataValue.wrapStringValue("Original"),
-                      ),
-                    ],
-                  ),
-                ),
-              },
+              bindings: _bindings(true),
               budget: skir.EvaluationBudget(
                 maxSteps: 100,
                 maxCollectionItems: 100,
@@ -195,8 +181,13 @@ skir.NamedControl _control() => skir.NamedControl(
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.createConditional(
                 condition: skir.ExpressionNode.createRead(
-                  binding: skir.ExpressionBindingId(value: "configured_value"),
-                  path: _fieldPath("visible"),
+                  binding: _rootBinding,
+                  path: skir.ValuePath(
+                    segments: [
+                      skir.PathSegment.createField(name: "style"),
+                      skir.PathSegment.createField(name: "visible"),
+                    ],
+                  ),
                 ),
                 whenTrue: skir.PresentationNode(
                   nodeId: "style.visible",
@@ -233,19 +224,24 @@ skir.NamedControl _control() => skir.NamedControl(
               element: skir.PresentationElement.createTextInput(
                 control: skir.BoundControl(
                   binding: skir.BindingRef(
-                    bindingId: skir.ExpressionBindingId(
-                      value: "configured_value",
+                    bindingId: _rootBinding,
+                    path: skir.ValuePath(
+                      segments: [
+                        skir.PathSegment.createField(name: "style"),
+                        skir.PathSegment.createField(name: "title"),
+                      ],
                     ),
-                    path: _fieldPath("title"),
                   ),
                   label: null,
                   description: null,
                   prefix: null,
                   semanticLabel: null,
                 ),
-                multiline: false,
-                placeholder: null,
-                inputFormatters: const [],
+                appearance: null,
+                content: null,
+                entry: null,
+                mappings: null,
+                options: skir.TextEditingOptions.defaultInstance,
               ),
               header: null,
             ),
@@ -260,6 +256,8 @@ skir.NamedControl _control() => skir.NamedControl(
     ),
     header: null,
   ),
+  appearance: null,
+  content: null,
 );
 
 skir.PresentationNode _rootPresentation() => skir.PresentationNode(

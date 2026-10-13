@@ -156,7 +156,7 @@ val SyntheticDiscoveryTest by testSuite {
             ).value
                 .axisNodes()
         val repetitions = repeatedFields[1].element as PresentationElement.NumericInputWrapper
-        repetitions.value.binding.path.segments.single().let { segment ->
+        repetitions.value.control.binding.path.segments.single().let { segment ->
             (segment as skirout.editor.v1.type_catalog.PathSegment.FieldWrapper).value.name shouldBe "repeat_count"
         }
     }

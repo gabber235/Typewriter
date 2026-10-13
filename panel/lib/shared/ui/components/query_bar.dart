@@ -25,6 +25,8 @@ class QueryBar extends HookWidget {
     this.validationIssues = const [],
     this.inputFieldController,
     this.inputDecoration = const InputDecoration(hintText: "Search"),
+    this.style,
+    this.textAlign = TextAlign.start,
     this.autofocus = EditorTextFieldAutoFocus.none,
     this.onSubmitted,
     this.onEditingComplete,
@@ -54,6 +56,8 @@ class QueryBar extends HookWidget {
   completeSelector;
   final List<QueryParseIssue> validationIssues;
   final InputDecoration inputDecoration;
+  final TextStyle? style;
+  final TextAlign textAlign;
   final EditorTextFieldAutoFocus autofocus;
 
   /// Receives the query after suggestion handling declines the submission.

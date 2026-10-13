@@ -14,9 +14,21 @@ class DateTimePickerSurface extends StatelessWidget {
     required this.enabled,
     required this.onChanged,
     this.replacing = false,
+    this.minimum,
+    this.maximum,
+    this.timeIncrementMilliseconds,
+    this.popupPadding,
+    this.popupColor,
+    this.popupShape,
     super.key,
   });
 
+  final DateTime? minimum;
+  final DateTime? maximum;
+  final int? timeIncrementMilliseconds;
+  final EdgeInsetsGeometry? popupPadding;
+  final Color? popupColor;
+  final ShapeBorder? popupShape;
   final DateTime value;
   final bool includeDate;
   final bool includeTime;
@@ -28,8 +40,11 @@ class DateTimePickerSurface extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       elevation: 12,
-      color: Theme.of(context).colorScheme.surface,
-      borderRadius: context.shapes.mediumBorderRadius,
+      color: popupColor ?? Theme.of(context).colorScheme.surface,
+      shape: popupShape,
+      borderRadius: popupShape == null
+          ? context.shapes.mediumBorderRadius
+          : null,
       clipBehavior: Clip.antiAlias,
       child: Semantics(
         scopesRoute: true,
@@ -37,7 +52,7 @@ class DateTimePickerSurface extends StatelessWidget {
         explicitChildNodes: true,
         label: "Date and time picker",
         child: Padding(
-          padding: EdgeInsets.all(context.spacing.space2),
+          padding: popupPadding ?? EdgeInsets.all(context.spacing.space2),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,6 +65,11 @@ class DateTimePickerSurface extends StatelessWidget {
               if (includeDate)
                 DateTimeCalendar(
                   value: value,
+                  selectableDate: (date) {
+                    final candidate = value.withDate(date);
+                    return (minimum == null || !candidate.isBefore(minimum!)) &&
+                        (maximum == null || !candidate.isAfter(maximum!));
+                  },
                   enabled: enabled,
                   autofocus: true,
                   onChanged: (date) => onChanged(value.withDate(date)),
@@ -66,7 +86,49 @@ class DateTimePickerSurface extends StatelessWidget {
                   value: value,
                   enabled: enabled,
                   autofocus: !includeDate,
-                  onChanged: onChanged,
+                  onChanged: (candidate) {
+                    if ((minimum == null || !candidate.isBefore(minimum!)) &&
+                        (maximum == null || !candidate.isAfter(maximum!))) {
+                      onChanged(candidate);
+                    }
+                  },
+                ),
+              if (includeTime && timeIncrementMilliseconds != null)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    for (final direction in [-1, 1])
+                      IconButton(
+                        tooltip: direction < 0
+                            ? "Decrease time"
+                            : "Increase time",
+                        onPressed: enabled
+                            ? () {
+                                final milliseconds =
+                                    BigInt.from(value.millisecondsSinceEpoch) +
+                                    BigInt.from(timeIncrementMilliseconds!) *
+                                        BigInt.from(direction);
+                                final limit = BigInt.from(8640000000000000);
+                                if (milliseconds < -limit ||
+                                    milliseconds > limit) {
+                                  return;
+                                }
+                                final candidate =
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                      milliseconds.toInt(),
+                                      isUtc: value.isUtc,
+                                    );
+                                if ((minimum == null ||
+                                        !candidate.isBefore(minimum!)) &&
+                                    (maximum == null ||
+                                        !candidate.isAfter(maximum!))) {
+                                  onChanged(candidate);
+                                }
+                              }
+                            : null,
+                        icon: Icon(direction < 0 ? Icons.remove : Icons.add),
+                      ),
+                  ],
                 ),
             ],
           ),

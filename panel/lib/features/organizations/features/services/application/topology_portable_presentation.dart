@@ -231,7 +231,8 @@ BoundPresentationHost topologyHostPortableHost({
               "serviceHost.name",
               _serviceNameBinding,
               label: "Name",
-              inputFormatters: _serviceNameInputFormats,
+              mappings: _serviceNameMappings,
+              characterFilters: _serviceNameFilters,
             ),
           _inspectorCard(
             "serviceHost.connection",
@@ -282,6 +283,7 @@ BoundPresentationHost topologyHostPortableHost({
                         appearance: skir.StatusAppearance(
                           tone: skir.StatusTone.active,
                           label: _portableLiteral("Available"),
+                          options: null,
                         ),
                       ),
                       skir.StatusCase(
@@ -289,6 +291,7 @@ BoundPresentationHost topologyHostPortableHost({
                         appearance: skir.StatusAppearance(
                           tone: skir.StatusTone.inactive,
                           label: _portableLiteral("Unavailable"),
+                          options: null,
                         ),
                       ),
                     ],
@@ -314,6 +317,7 @@ BoundPresentationHost topologyHostPortableHost({
                           skir.PresentationElement.createChip(
                             label: _portableLiteral(engine.engineId),
                             color: _inspectorColor(engineServiceRoleColor),
+                            options: null,
                           ),
                         ),
                     ],
@@ -564,9 +568,16 @@ skir.PresentationNode _portableSelect(
           optionId: option.id,
           label: _portableLiteral(option.label),
           value: _portableLiteral(option.value),
+          content: null,
+          enabledIf: null,
+          disabledReason: null,
         ),
     ],
     allowCustomValue: false,
+    appearance: null,
+    content: null,
+    popup: null,
+    optionsConfig: null,
   ),
   header: null,
 );

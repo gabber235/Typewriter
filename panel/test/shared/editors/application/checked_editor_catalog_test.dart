@@ -4,6 +4,185 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test("concrete generic material mappings reject incompatible candidate operations", () {
+    final fixture = _catalog();
+    final parameter = fixture.catalog
+        .published(fixture.root)!
+        .definition
+        .parameters
+        .first
+        .key;
+    final original = fixture.catalog.snapshot.presentationMaterials.first;
+    final candidate = skir.ExpressionBindingId(value: "completion_candidate");
+    final control = skir.TextControl(
+      appearance: null,
+      content: null,
+      entry: null,
+      options: skir.TextEditingOptions.defaultInstance,
+      control: skir.BoundControl(
+        label: null,
+        description: null,
+        prefix: null,
+        semanticLabel: null,
+        binding: skir.BindingRef(
+          bindingId: skir.ExpressionBindingId(value: "configured_value"),
+          path: skir.ValuePath.defaultInstance,
+        ),
+      ),
+      mappings: skir.ValueMappings(
+        display: null,
+        completion: skir.ExpressionMapping(
+          inputBinding: candidate,
+          body: skir.ExpressionNode.createCall(
+            operation: skir.OperationId(value: "typewriter.text.trim"),
+            arguments: [
+              skir.ExpressionNode.createRead(
+                binding: candidate,
+                path: skir.ValuePath.defaultInstance,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    final material = skir.PresentationMaterial(
+      provider: original.provider,
+      target: original.target,
+      role: original.role,
+      dependencies: original.dependencies,
+      subject: skir.TypeTemplate.wrapParameter(parameter),
+      layout: skir.PresentationNode(
+        properties: skir.PresentationProperties.defaultInstance,
+        header: null,
+        nodeId: "generic_completion",
+        element: skir.PresentationElement.wrapTextInput(control),
+      ),
+    );
+    final textSelection = skir.TypeSelection.createComplete(
+      definition: fixture.root,
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+    );
+    final decimalSelection = skir.TypeSelection.createComplete(
+      definition: fixture.root,
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.decimal)],
+    );
+    expect(
+      fixture.catalog.presentationExpressionProblems(material, textSelection),
+      isEmpty,
+    );
+    expect(
+      fixture.catalog.presentationExpressionProblems(
+        material,
+        decimalSelection,
+      ),
+      contains("invalid_expression_operand_type"),
+    );
+  });
+  test(
+    "material mapping candidate aliases cannot collide with parent bindings",
+    () {
+      final fixture = _catalog();
+      final original = fixture.catalog.snapshot.presentationMaterials.first;
+      final configured = skir.ExpressionBindingId(value: "configured_value");
+      final material = skir.PresentationMaterial(
+        provider: original.provider,
+        target: original.target,
+        role: original.role,
+        dependencies: original.dependencies,
+        subject: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+        layout: skir.PresentationNode(
+          properties: skir.PresentationProperties.defaultInstance,
+          header: null,
+          nodeId: "colliding_completion",
+          element: skir.PresentationElement.createTextInput(
+            appearance: null,
+            content: null,
+            entry: null,
+            options: skir.TextEditingOptions.defaultInstance,
+            control: skir.BoundControl(
+              label: null,
+              description: null,
+              prefix: null,
+              semanticLabel: null,
+              binding: skir.BindingRef(
+                bindingId: configured,
+                path: skir.ValuePath.defaultInstance,
+              ),
+            ),
+            mappings: skir.ValueMappings(
+              display: null,
+              completion: skir.ExpressionMapping(
+                inputBinding: configured,
+                body: skir.ExpressionNode.createRead(
+                  binding: configured,
+                  path: skir.ValuePath.defaultInstance,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      final selection = skir.TypeSelection.createComplete(
+        definition: fixture.root,
+        arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+      );
+      expect(
+        fixture.catalog.presentationExpressionProblems(material, selection),
+        contains("duplicate_expression_binding"),
+      );
+    },
+  );
+  test("custom choices require an editable query mapping", () {
+    final fixture = _catalog();
+    final selection = skir.TypeSelection.createComplete(
+      definition: fixture.root,
+      arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+    );
+    final original = fixture.catalog.snapshot.presentationMaterials.first;
+    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final query = skir.ExpressionBindingId(value: "choice_query");
+    final options = skir.SelectInteractionOptions.mutable();
+    final control = skir.SelectControl.mutable()
+      ..control = skir.BoundControl(
+        binding: skir.BindingRef(
+          bindingId: configured,
+          path: skir.ValuePath.defaultInstance,
+        ),
+        label: null,
+        description: null,
+        prefix: null,
+        semanticLabel: null,
+      )
+      ..allowCustomValue = true
+      ..optionsConfig = options;
+    List<String> problems() {
+      final material = original.toMutable()
+        ..subject = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)
+        ..layout = skir.PresentationNode(
+          properties: skir.PresentationProperties.defaultInstance,
+          header: null,
+          nodeId: "custom_choice",
+          element: skir.PresentationElement.wrapSelectInput(control.toFrozen()),
+        );
+      return fixture.catalog.presentationExpressionProblems(
+        material.toFrozen(),
+        selection,
+      );
+    }
+
+    expect(problems(), contains("missing_choice_custom_mapping"));
+    options
+      ..queryBindingId = query
+      ..customValue = skir.ExpressionNode.createRead(
+        binding: query,
+        path: skir.ValuePath.defaultInstance,
+      );
+    expect(problems(), isEmpty);
+    options.presentation = skir.ChoicePresentation.radio;
+    expect(problems(), contains("unsupported_choice_custom_presentation"));
+    options.presentation = skir.ChoicePresentation.segmented;
+    expect(problems(), contains("unsupported_choice_custom_presentation"));
+  });
   test(
     "type names prefer published display metadata with readable fallback",
     () {
@@ -342,15 +521,12 @@ void main() {
   test("role fallbacks preserve published breadth first order", () {
     final fixture = _catalog();
 
-    expect(
-      fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspector),
-      [
-        skir.PresentationRole.inspector,
-        skir.PresentationRole.editor,
-        skir.PresentationRole.referenceSummary,
-        skir.PresentationRole.catalogOption,
-      ],
-    );
+    expect(fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspector), [
+      skir.PresentationRole.inspector,
+      skir.PresentationRole.editor,
+      skir.PresentationRole.referenceSummary,
+      skir.PresentationRole.catalogOption,
+    ]);
   });
 
   test("presentation selection uses fallback specificity then priority", () {

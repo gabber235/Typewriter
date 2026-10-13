@@ -157,9 +157,14 @@ final _root = skir.PresentationNode(
             "title",
             skir.PresentationElement.createTextInput(
               control: _control(_title, "Title"),
-              multiline: false,
-              placeholder: _literal("Quest objective"),
-              inputFormatters: const [],
+              content:
+                  (skir.InputContent.mutable()
+                        ..placeholder = _literal("Quest objective"))
+                      .toFrozen(),
+              appearance: null,
+              entry: null,
+              mappings: null,
+              options: skir.TextEditingOptions.defaultInstance,
             ),
           ),
         ),
@@ -167,7 +172,9 @@ final _root = skir.PresentationNode(
           _node(
             "count",
             skir.PresentationElement.wrapNumericInput(
-              _control(_count, "Count"),
+              (skir.NumericControl.mutable()
+                    ..control = _control(_count, "Count"))
+                  .toFrozen(),
             ),
           ),
         ),

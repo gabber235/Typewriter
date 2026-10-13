@@ -35,7 +35,10 @@ void main() {
                     nodeId: id,
                     properties: skir.PresentationProperties.defaultInstance,
                     header: null,
-                    element: skir.PresentationElement.wrapNumericInput(control),
+                    element: skir.PresentationElement.wrapNumericInput(
+                      (skir.NumericControl.mutable()..control = control)
+                          .toFrozen(),
+                    ),
                   ),
                 ),
             ],
@@ -646,9 +649,11 @@ final class _DiagnosticTextHost extends ChangeNotifier
             prefix: null,
             semanticLabel: null,
           ),
-          multiline: false,
-          placeholder: null,
-          inputFormatters: const [],
+          appearance: null,
+          content: null,
+          entry: null,
+          mappings: null,
+          options: skir.TextEditingOptions.defaultInstance,
         ),
       ),
       bindings: [

@@ -21,6 +21,14 @@ class Dropdown<T extends Object> extends HookWidget {
     this.surroundingActions,
     this.inputDecorationTheme,
     this.menuStyle,
+    this.enableFilter = true,
+    this.menuHeight,
+    this.hintText,
+    this.leadingIcon,
+    this.trailingIcon,
+    this.textStyle,
+    this.textAlign = TextAlign.start,
+    this.onCustomValue,
     super.key,
   });
 
@@ -58,6 +66,14 @@ class Dropdown<T extends Object> extends HookWidget {
 
   /// Style of the dropdown menu.
   final MenuStyle? menuStyle;
+  final bool enableFilter;
+  final double? menuHeight;
+  final String? hintText;
+  final Widget? leadingIcon;
+  final Widget? trailingIcon;
+  final TextStyle? textStyle;
+  final TextAlign textAlign;
+  final ValueChanged<String>? onCustomValue;
 
   @override
   Widget build(BuildContext context) {
@@ -104,16 +120,48 @@ class Dropdown<T extends Object> extends HookWidget {
       child: InputFieldContainer(
         controller: inputFieldController,
         actions: actions,
-        inputActions: menuActions,
+        inputActions: [
+          ...?menuActions,
+          if (onCustomValue != null)
+            ActionShortcut(
+              id: "choice_custom_value",
+              priority: 1002,
+              label: "Use typed value",
+              description: "Use the current query as a custom value",
+              activators: [
+                AdaptiveSingleActivator(
+                  LogicalKeyboardKey.enter,
+                  control: true,
+                ),
+              ],
+              onInvoke: (_) {
+                if (enabled && controller.text.isNotEmpty) {
+                  onCustomValue!(controller.text);
+                }
+              },
+            ),
+        ],
         surroundingActions: surroundingActions,
         child: DropdownMenu<T>(
           focusNode: focusNode,
           controller: controller,
           enabled: enabled,
-          enableFilter: true,
+          enableFilter: enableFilter,
+          menuHeight: menuHeight,
+          hintText: hintText,
+          leadingIcon: leadingIcon,
+          trailingIcon: trailingIcon,
+          textStyle: textStyle,
+          textAlign: textAlign,
           initialSelection: selected,
           onSelected: (value) {
-            onSelected?.call(value);
+            if (value == null &&
+                onCustomValue != null &&
+                controller.text.isNotEmpty) {
+              onCustomValue!(controller.text);
+            } else {
+              onSelected?.call(value);
+            }
             if (value != null) {
               inputFieldController.endInteraction();
             }

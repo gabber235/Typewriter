@@ -268,11 +268,15 @@ struct TabItem(810800036) {
   tab_id: string = 0;
   label: ExpressionNode = 1;
   child: PresentationNode = 2;
+  icon: PresentationNode? = 3;
 }
 
 struct TabsLayout(810800037) {
   tabs: [TabItem|tab_id] = 0;
   initially_selected_tab_id: string? = 1;
+  appearance: InputAppearance? = 2;
+  spacing: float64? = 3;
+  content_spacing: float64? = 4;
 }
 
 struct SpacerLayout(810800038) {
@@ -354,22 +358,25 @@ struct IconContent(810800047) {
 struct ImageContent(810800048) {
   source: ExpressionNode = 0;
   semantic_label: ExpressionNode? = 1;
+  options: ImageOptions? = 2;
 }
 
 struct BadgeContent(810800049) {
   label: ExpressionNode = 0;
-  tone: string = 1;
+  options: DisplayAppearance? = 1;
 }
 
 struct ChipContent(810800050) {
   label: ExpressionNode = 0;
   color: PresentationColor? = 1;
+  options: DisplayAppearance? = 2;
 }
 
 struct ProgressContent(810800051) {
   value: ExpressionNode = 0;
   maximum: ExpressionNode = 1;
   label: ExpressionNode? = 2;
+  appearance: ProgressAppearance? = 3;
 }
 
 enum StatusTone(810800052) {
@@ -391,6 +398,7 @@ enum StatusTone(810800052) {
 struct StatusAppearance(810800053) {
   tone: StatusTone = 0;
   label: ExpressionNode? = 1;
+  options: DisplayAppearance? = 2;
 }
 
 struct StatusCase(810800054) {
@@ -413,6 +421,7 @@ struct DateTimeContent(810800057) {
   value: ExpressionNode = 0;
   format: ExpressionNode = 1;
   time_zone: DateTimeZone = 2;
+  options: DisplayAppearance? = 3;
 }
 
 enum RelativeTimeStyle(810800058) {
@@ -424,6 +433,7 @@ struct RelativeTimeContent(810800059) {
   value: ExpressionNode = 0;
   style: RelativeTimeStyle = 1;
   time_zone: DateTimeZone = 2;
+  options: DisplayAppearance? = 3;
 }
 
 struct TypedFieldElement(810800060) {
@@ -666,57 +676,59 @@ struct BoundControl(810800095) {
   semantic_label: ExpressionNode? = 4;
 }
 
-struct TextInputReplacement(810800096) {
-  pattern: string = 0;
-  replacement: string = 1;
-}
-
-enum TextInputFormat(810800097) {
-  lowercase = 1;
-  uppercase = 2;
-  replace: TextInputReplacement = 3;
-  allow: string = 4;
-  deny: string = 5;
-}
-
-struct TextControl(810800098) {
-  control: BoundControl = 0;
-  multiline: bool? = 1;
-  placeholder: ExpressionNode? = 2;
-  input_formatters: [TextInputFormat] = 3;
-}
-
-struct ColorControl(810800099) {
+struct ColorControl(810800096) {
   control: BoundControl = 0;
   include_alpha: bool = 1;
+  appearance: InputAppearance? = 2;
+  content: InputContent? = 3;
+  entry: TextEntryInteractionOptions? = 4;
+  mappings: ValueMappings? = 5;
+  popup: PopupAppearance? = 6;
+  options: ColorInteractionOptions? = 7;
 }
 
-struct DateTimeControl(810800100) {
+struct DateTimeControl(810800097) {
   control: BoundControl = 0;
   include_date: bool? = 1;
   include_time: bool? = 2;
+  appearance: InputAppearance? = 3;
+  content: InputContent? = 4;
+  entry: TextEntryInteractionOptions? = 5;
+  mappings: ValueMappings? = 6;
+  popup: PopupAppearance? = 7;
+  options: DateTimeInteractionOptions? = 8;
 }
 
-struct SelectOption(810800101) {
+struct SelectOption(810800098) {
   option_id: string = 0;
   label: ExpressionNode = 1;
   value: ExpressionNode = 2;
+  content: PresentationNode? = 3;
+  enabled_if: ExpressionNode? = 4;
+  disabled_reason: ExpressionNode? = 5;
 }
 
-struct SelectControl(810800102) {
+struct SelectControl(810800099) {
   control: BoundControl = 0;
   options: [SelectOption|option_id] = 1;
   allow_custom_value: bool = 2;
+  appearance: InputAppearance? = 3;
+  content: InputContent? = 4;
+  popup: PopupAppearance? = 5;
+  options_config: SelectInteractionOptions? = 6;
 }
 
-struct SliderControl(810800103) {
+struct SliderControl(810800100) {
   control: BoundControl = 0;
   minimum: ExpressionNode = 1;
   maximum: ExpressionNode = 2;
   divisions: ExpressionNode? = 3;
+  appearance: InputAppearance? = 4;
+  mappings: ValueMappings? = 5;
+  options: SliderInteractionOptions? = 6;
 }
 
-struct ListControl(810800104) {
+struct ListControl(810800101) {
   control: BoundControl = 0;
   item_presentation: PresentationNode? = 1;
   allow_add: bool = 2;
@@ -724,9 +736,11 @@ struct ListControl(810800104) {
   allow_reorder: bool = 4;
   item_binding_id: ExpressionBindingId = 5;
   index_binding_id: ExpressionBindingId = 6;
+  appearance: CollectionAppearance? = 7;
+  content: CollectionContent? = 8;
 }
 
-struct MapControl(810800105) {
+struct MapControl(810800102) {
   control: BoundControl = 0;
   key_presentation: PresentationNode? = 1;
   value_presentation: PresentationNode? = 2;
@@ -734,61 +748,72 @@ struct MapControl(810800105) {
   allow_remove: bool = 4;
   key_binding_id: ExpressionBindingId = 5;
   value_binding_id: ExpressionBindingId = 6;
+  appearance: CollectionAppearance? = 7;
+  content: CollectionContent? = 8;
 }
 
-struct RecordControl(810800106) {
+struct RecordControl(810800103) {
   control: BoundControl = 0;
   field_presentation: PresentationNode? = 1;
+  appearance: CollectionAppearance? = 2;
+  content: CollectionContent? = 3;
 }
 
-struct ConcreteTypePresentation(810800107) {
+struct ConcreteTypePresentation(810800104) {
   concrete_type: TypeUse = 0;
   label: ExpressionNode = 1;
   presentation: PresentationNode? = 2;
 }
 
-struct PolymorphicControl(810800108) {
+struct PolymorphicControl(810800105) {
   control: BoundControl = 0;
   concrete_types: [ConcreteTypePresentation] = 1;
+  appearance: CollectionAppearance? = 2;
+  content: CollectionContent? = 3;
+  input_appearance: InputAppearance? = 4;
+  input_content: InputContent? = 5;
+  search_hint: ExpressionNode? = 6;
 }
 
-struct NamedControl(810800109) {
+struct NamedControl(810800106) {
   control: BoundControl = 0;
   payload_presentation: PresentationNode? = 1;
+  appearance: CollectionAppearance? = 2;
+  content: CollectionContent? = 3;
 }
 
-struct PolymorphicMatchCase(810800110) {
+struct PolymorphicMatchCase(810800107) {
   concrete_type: TypeUse = 0;
   child: PresentationNode = 1;
 }
 
-struct PolymorphicMatchElement(810800111) {
+struct PolymorphicMatchElement(810800108) {
   binding: BindingRef = 0;
   scope_binding_id: ExpressionBindingId = 1;
   cases: [PolymorphicMatchCase] = 2;
   fallback: PresentationNode? = 3;
 }
 
-enum SearchSelectionMode(810800112) {
+enum SearchSelectionMode(810800109) {
   single = 1;
   multiple = 2;
 }
 
-enum SearchSelectorMultiplicity(810800113) {
+enum SearchSelectorMultiplicity(810800110) {
   single = 1;
   multiple = 2;
 }
 
-struct SearchSelectorEnumValues(810800114) {
+struct SearchSelectorEnumValues(810800111) {
   values: [string] = 0;
 }
 
-enum SearchSelectorValues(810800115) {
+enum SearchSelectorValues(810800112) {
   free_text = 1;
   enumeration: SearchSelectorEnumValues = 2;
 }
 
-struct SearchSelectorDefinition(810800116) {
+struct SearchSelectorDefinition(810800113) {
   selector_id: string = 0;
   key: string = 1;
   value_binding_id: ExpressionBindingId = 2;
@@ -798,7 +823,7 @@ struct SearchSelectorDefinition(810800116) {
   color: int64? = 6;
 }
 
-struct SearchResultMapping(810800117) {
+struct SearchResultMapping(810800114) {
   binding_id: ExpressionBindingId = 0;
   key: ExpressionNode = 1;
   selected_value: ExpressionNode = 2;
@@ -806,32 +831,32 @@ struct SearchResultMapping(810800117) {
   label: ExpressionNode? = 4;
 }
 
-struct HttpQueryParameter(810800118) {
+struct HttpQueryParameter(810800115) {
   name: string = 0;
   value: ExpressionNode = 1;
   omit_if_empty: bool = 2;
 }
 
-struct HttpJsonContextBinding(810800119) {
+struct HttpJsonContextBinding(810800116) {
   binding_id: ExpressionBindingId = 0;
   path: string = 1;
   value_type: TypeTemplate = 2;
 }
 
-struct StaticSearchProvider(810800120) {
+struct StaticSearchProvider(810800117) {
   values: ExpressionNode = 0;
   result: SearchResultMapping = 1;
   selectors: [SearchSelectorDefinition|selector_id] = 2;
 }
 
-struct CollectionSearchProvider(810800121) {
+struct CollectionSearchProvider(810800118) {
   source_id: string = 0;
   result: SearchResultMapping = 1;
   where: ExpressionNode? = 2;
   selectors: [SearchSelectorDefinition|selector_id] = 3;
 }
 
-struct HttpJsonSearchProvider(810800122) {
+struct HttpJsonSearchProvider(810800119) {
   uri: ExpressionNode = 0;
   parameters: [HttpQueryParameter|name] = 1;
   result_path: string = 2;
@@ -842,67 +867,67 @@ struct HttpJsonSearchProvider(810800122) {
   timeout_milliseconds: int64 = 7;
 }
 
-struct RealmCallbackSearchProvider(810800123) {
+struct RealmCallbackSearchProvider(810800120) {
   capability_id: CapabilityId = 0;
   payload: ExpressionNode = 1;
   result: SearchResultMapping = 2;
   selectors: [SearchSelectorDefinition|selector_id] = 3;
 }
 
-struct GatedSearchProvider(810800124) {
+struct GatedSearchProvider(810800121) {
   condition: ExpressionNode = 0;
   guidance: ExpressionNode? = 1;
   child: SearchProvider = 2;
 }
 
-struct DebouncedSearchProvider(810800125) {
+struct DebouncedSearchProvider(810800122) {
   duration_milliseconds: int64 = 0;
   child: SearchProvider = 1;
 }
 
-struct CachedSearchProvider(810800126) {
+struct CachedSearchProvider(810800123) {
   capacity: int32 = 0;
   retain_stale_results: bool = 1;
   child: SearchProvider = 2;
 }
 
-struct SearchRankingField(810800127) {
+struct SearchRankingField(810800124) {
   expression: ExpressionNode = 0;
   weight: int32 = 1;
 }
 
-struct RankedSearchProvider(810800128) {
+struct RankedSearchProvider(810800125) {
   fields: [SearchRankingField] = 0;
   child: SearchProvider = 1;
 }
 
-struct LimitedSearchProvider(810800129) {
+struct LimitedSearchProvider(810800126) {
   maximum: ExpressionNode = 0;
   child: SearchProvider = 1;
 }
 
-struct DistinctSearchProvider(810800130) {
+struct DistinctSearchProvider(810800127) {
   child: SearchProvider = 0;
 }
 
-struct HistoricalSearchProvider(810800131) {
+struct HistoricalSearchProvider(810800128) {
   history_key: string = 0;
   label: ExpressionNode = 1;
   capacity: int32 = 2;
   child: SearchProvider = 3;
 }
 
-struct SectionSearchProvider(810800132) {
+struct SectionSearchProvider(810800129) {
   section_id: string = 0;
   label: ExpressionNode = 1;
   child: SearchProvider = 2;
 }
 
-struct MergedSearchProvider(810800133) {
+struct MergedSearchProvider(810800130) {
   children: [SearchProvider] = 0;
 }
 
-enum SearchProvider(810800134) {
+enum SearchProvider(810800131) {
   static_values: StaticSearchProvider = 1;
   http_json: HttpJsonSearchProvider = 2;
   realm_callback: RealmCallbackSearchProvider = 3;
@@ -918,7 +943,7 @@ enum SearchProvider(810800134) {
   collection: CollectionSearchProvider = 13;
 }
 
-struct SearchControl(810800135) {
+struct SearchControl(810800132) {
   control: BoundControl = 0;
   selection_mode: SearchSelectionMode = 1;
   query_binding_id: ExpressionBindingId = 2;
@@ -929,53 +954,72 @@ struct SearchControl(810800135) {
   placeholder: ExpressionNode? = 7;
   custom_value: ExpressionNode? = 8;
   initial_query: ExpressionNode? = 9;
+  appearance: InputAppearance? = 10;
+  content: InputContent? = 11;
+  popup: PopupAppearance? = 12;
+  popup_side: PopupSide? = 13;
+  empty_text: ExpressionNode? = 14;
+  loading_text: ExpressionNode? = 15;
+  empty: PresentationNode? = 16;
+  loading: PresentationNode? = 17;
 }
 
-struct DefaultPresentationElement(810800136) {
-  binding: BindingRef = 0;
+struct DefaultPresentationElement(810800133) {
+  control: BoundControl = 0;
   presentation_id: PresentationId? = 1;
 }
 
 // Places controls for the complete edit transaction owning this binding.
 // Presentation placement does not change persistence policy or grant edit access.
-struct CommitControlsElement(810800137) {
+struct CommitControlsElement(810800134) {
   binding: BindingRef = 0;
 }
 
-struct ButtonElement(810800138) {
+struct ButtonElement(810800135) {
   label: ExpressionNode = 0;
   action: EditorAction = 1;
+  appearance: ActionAppearance? = 2;
+  icon: PresentationNode? = 3;
 }
 
-struct IconButtonElement(810800139) {
+struct IconButtonElement(810800136) {
   icon: ExpressionNode = 0;
   semantic_label: ExpressionNode = 1;
   action: EditorAction = 2;
+  appearance: ActionAppearance? = 3;
 }
 
-struct MenuItem(810800140) {
+struct MenuItem(810800137) {
   item_id: string = 0;
   label: ExpressionNode = 1;
-  action: EditorAction = 2;
+  action: EditorAction? = 2;
+  icon: PresentationNode? = 3;
+  description: ExpressionNode? = 4;
+  enabled_if: ExpressionNode? = 5;
+  disabled_reason: ExpressionNode? = 6;
+  separator: bool = 7;
 }
 
-struct MenuElement(810800141) {
+struct MenuElement(810800138) {
   label: ExpressionNode? = 0;
   items: [MenuItem|item_id] = 1;
+  appearance: ActionAppearance? = 2;
+  popup: PopupAppearance? = 3;
 }
 
-struct TooltipElement(810800142) {
+struct TooltipElement(810800139) {
   message: ExpressionNode = 0;
   child: PresentationNode = 1;
+  appearance: TooltipAppearance? = 2;
 }
 
-enum PresentationElement(810800143) {
+enum PresentationElement(810800140) {
   children: ChildrenElement = 1;
   section: SectionLayout = 2;
   padding: PaddingLayout = 3;
   slot: PresentationSlotElement = 4;
   tabs: TabsLayout = 5;
-  divider = 6;
+  divider: DividerAppearance = 6;
   spacer: SpacerLayout = 7;
   text: TextContent = 8;
   markdown: TextContent = 9;
@@ -992,14 +1036,14 @@ enum PresentationElement(810800143) {
   repeated: RepeatedElement = 20;
   scoped_binding: ScopedBindingElement = 21;
   text_input: TextControl = 22;
-  numeric_input: BoundControl = 23;
-  toggle_input: BoundControl = 24;
+  numeric_input: NumericControl = 23;
+  toggle_input: ToggleControl = 24;
   select_input: SelectControl = 25;
   slider_input: SliderControl = 26;
   date_time_input: DateTimeControl = 27;
-  duration_input: BoundControl = 28;
+  duration_input: DurationControl = 28;
   color_input: ColorControl = 29;
-  bytes_input: BoundControl = 30;
+  bytes_input: BytesControl = 30;
   named_input: NamedControl = 31;
   commit_controls: CommitControlsElement = 32;
   button: ButtonElement = 33;
@@ -1009,7 +1053,7 @@ enum PresentationElement(810800143) {
   list_input: ListControl = 37;
   map_input: MapControl = 38;
   record_input: RecordControl = 39;
-  enum_input: BoundControl = 40;
+  enum_input: EnumControl = 40;
   polymorphic_input: PolymorphicControl = 41;
   default_presentation: DefaultPresentationElement = 42;
   search_input: SearchControl = 43;
@@ -1029,9 +1073,10 @@ enum PresentationElement(810800143) {
   page_graph: PageGraphElement = 57;
   page_timeline: PageTimelineElement = 58;
   align: AlignmentLayout = 59;
+  appearance_defaults: AppearanceDefaultsElement = 60;
 }
 
-struct PresentationDefinition(810800144) {
+struct PresentationDefinition(810800141) {
   presentation_id: PresentationId = 0;
   inputs: [PresentationInput] = 1;
   root: PresentationNode = 2;
@@ -1039,7 +1084,7 @@ struct PresentationDefinition(810800144) {
   primary_input: ExpressionBindingId? = 4;
 }
 
-struct PresentationDependencies(810800145) {
+struct PresentationDependencies(810800142) {
   types: [TypeUse] = 0;
   presentations: [PresentationId] = 1;
   conversions: [ConversionId] = 2;
@@ -1047,14 +1092,14 @@ struct PresentationDependencies(810800145) {
   collections: [PresentationCollectionDefinition|source_id] = 4;
 }
 
-struct PresentationCollectionRelationDefinition(810800146) {
+struct PresentationCollectionRelationDefinition(810800143) {
   relation_id: string = 0;
   targets: ExpressionNode = 1;
 }
 
 /// Authoritative typed schema for a collection referenced by presentation nodes.
 /// The row binding scopes key, selectability, and relation expressions to one row.
-struct PresentationCollectionDefinition(810800147) {
+struct PresentationCollectionDefinition(810800144) {
   source_id: string = 0;
   row_type: TypeTemplate = 1;
   row_binding_id: ExpressionBindingId = 2;
@@ -1065,125 +1110,138 @@ struct PresentationCollectionDefinition(810800147) {
   resources: PresentationResourceCollection? = 7;
 }
 
-enum PresentationCollectionProjectionValue(810800148) {
+enum PresentationCollectionProjectionValue(810800145) {
   content: ValuePath = 1;
   literal: DataValue = 2;
 }
 
-struct PresentationCollectionProjectionField(810800149) {
+struct PresentationCollectionProjectionField(810800146) {
   target: ValuePath = 0;
   source: PresentationCollectionProjectionValue = 1;
 }
 
-struct PresentationCollectionProjection(810800150) {
+struct PresentationCollectionProjection(810800147) {
   root: NamedTypeTemplate = 0;
   resource_binding_id: ExpressionBindingId = 1;
   fields: [PresentationCollectionProjectionField] = 2;
 }
 
-struct PresentationResourceCollection(810800151) {
+struct PresentationResourceCollection(810800148) {
   root: TypeDefinitionId = 0;
   resource_binding_id: ExpressionBindingId = 1;
   appearance: PresentationId? = 2;
 }
 
-enum PresentationInputAccess(810800152) {
+enum PresentationInputAccess(810800149) {
   read = 1;
   edit = 2;
 }
 
-struct PresentationInput(810800153) {
+struct PresentationInput(810800150) {
   binding_id: ExpressionBindingId = 0;
   name: string = 1;
   value_type: TypeTemplate = 2;
   access: PresentationInputAccess = 3;
 }
 
-struct PresentationArgument(810800154) {
+struct PresentationArgument(810800151) {
   input: ExpressionBindingId = 0;
   binding: BindingRef = 1;
 }
 
-struct PresentationInvocation(810800155) {
+struct PresentationInvocation(810800152) {
   presentation_id: PresentationId = 0;
   arguments: [PresentationArgument] = 1;
 }
 
-struct LinkControl(810800156) {
+struct LinkControl(810800153) {
   control: BoundControl = 0;
   allow_reorder: bool = 1;
   candidate_policy: LinkCandidatePolicyId? = 2;
   rejection_display: LinkRejectionDisplay = 3;
   source_id: string? = 4;
+  appearance: CollectionAppearance? = 5;
+  content: CollectionContent? = 6;
+  input_appearance: InputAppearance? = 7;
+  input_content: InputContent? = 8;
+  popup: PopupAppearance? = 9;
 }
 
-struct LinkCandidatePolicyId(810800157) {
+struct LinkCandidatePolicyId(810800154) {
   value: string = 0;
 }
 
-enum LinkRejectionDisplay(810800158) {
+enum LinkRejectionDisplay(810800155) {
   hidden = 1;
   disabled = 2;
 }
 
-struct RemainingFieldsElement(810800159) {
+struct RemainingFieldsElement(810800156) {
   excluded: [RelativeFieldPattern] = 0;
 }
 
-struct NullableControl(810800160) {
+struct NullableControl(810800157) {
   control: BoundControl = 0;
   value_presentation: PresentationNode? = 1;
+  empty_text: ExpressionNode? = 2;
+  clear_label: ExpressionNode? = 3;
 }
 
-struct SetControl(810800161) {
+struct SetControl(810800158) {
   control: BoundControl = 0;
   item_presentation: PresentationNode? = 1;
   allow_add: bool = 2;
   allow_remove: bool = 3;
   item_binding_id: ExpressionBindingId = 4;
+  appearance: CollectionAppearance? = 5;
+  content: CollectionContent? = 6;
 }
 
-enum PageGraphDirection(810800162) {
+enum PageGraphDirection(810800159) {
   left_to_right = 1;
   right_to_left = 2;
   top_to_bottom = 3;
   bottom_to_top = 4;
 }
 
-struct PageGraphElement(810800163) {
+struct PageGraphElement(810800160) {
   control: BoundControl = 0;
   direction: PageGraphDirection = 1;
+  appearance: PageGraphAppearance? = 2;
 }
 
-struct PageTimelineElement(810800164) {
+struct PageTimelineElement(810800161) {
   control: BoundControl = 0;
+  appearance: PageTimelineAppearance? = 1;
 }
 
 // Fit bounds are positive whole logical font sizes, with minimum at most maximum.
-struct TextFit(810800165) {
+struct TextFit(810800162) {
   minimum: ExpressionNode = 0;
   maximum: ExpressionNode = 1;
 }
 
-enum TextSizing(810800166) {
+enum TextSizing(810800163) {
   exact: ExpressionNode = 1;
   fit: TextFit = 2;
 }
 
-enum PresentationInteractionState(810800167) {
+enum PresentationInteractionState(810800164) {
   hovered = 1;
   selected = 2;
   focused = 3;
   pressed = 4;
   disabled = 5;
+  read_only = 6;
+  invalid = 7;
 }
 
-struct PresentationStateMatch(810800168) {
+struct PresentationStateMatch(810800165) {
   required: [PresentationInteractionState] = 0;
   excluded: [PresentationInteractionState] = 1;
 }
 
-enum PresentationThemeColor(810800169) {
+enum PresentationThemeColor(810800166) {
   primary = 1;
   on_primary = 2;
   surface = 3;
@@ -1192,43 +1250,43 @@ enum PresentationThemeColor(810800169) {
   focus_outline = 6;
 }
 
-enum PresentationAmbientColor(810800170) {
+enum PresentationAmbientColor(810800167) {
   background = 1;
   foreground = 2;
   secondary_foreground = 3;
 }
 
-enum PresentationContrastMode(810800171) {
+enum PresentationContrastMode(810800168) {
   tonal = 1;
   monochrome = 2;
 }
 
-struct PresentationContrastColor(810800172) {
+struct PresentationContrastColor(810800169) {
   source: PresentationColor = 0;
   mode: PresentationContrastMode = 1;
 }
 
-struct PresentationAlphaColor(810800173) {
+struct PresentationAlphaColor(810800170) {
   source: PresentationColor = 0;
   alpha: float64 = 1;
 }
 
-struct PresentationBlendColor(810800174) {
+struct PresentationBlendColor(810800171) {
   foreground: PresentationColor = 0;
   background: PresentationColor = 1;
 }
 
-struct PresentationStateColorRule(810800175) {
+struct PresentationStateColorRule(810800172) {
   match: PresentationStateMatch = 0;
   color: PresentationColor = 1;
 }
 
-struct PresentationStateColor(810800176) {
+struct PresentationStateColor(810800173) {
   rules: [PresentationStateColorRule] = 0;
   fallback: PresentationColor = 1;
 }
 
-enum PresentationColor(810800177) {
+enum PresentationColor(810800174) {
   value: ExpressionNode = 1;
   theme: PresentationThemeColor = 2;
   ambient: PresentationAmbientColor = 3;
@@ -1238,7 +1296,424 @@ enum PresentationColor(810800177) {
   states: PresentationStateColor = 7;
 }
 
-struct AlignmentLayout(810800178) {
+struct AlignmentLayout(810800175) {
   child: PresentationNode = 0;
   alignment: PresentationAlignment = 1;
+}
+
+enum ControlDensity(810800176) {
+  comfortable = 1;
+  compact = 2;
+}
+
+enum InputTextAlignment(810800177) {
+  start = 1;
+  center = 2;
+  end = 3;
+}
+
+struct InputTextStyle(810800178) {
+  color: PresentationColor? = 0;
+  weight: int32? = 1;
+  sizing: TextSizing? = 2;
+}
+
+enum BorderOverride(810800179) {
+  none = 1;
+  value: PresentationBorder = 2;
+}
+
+enum InputAdornment(810800180) {
+  default = 1;
+  none = 2;
+  content: PresentationNode = 3;
+}
+
+struct InputAppearance(810800181) {
+  icon_color: PresentationColor? = 0;
+  icon_size: ExpressionNode? = 1;
+  value_style: InputTextStyle? = 2;
+  placeholder_style: InputTextStyle? = 3;
+  label_style: InputTextStyle? = 4;
+  description_style: InputTextStyle? = 5;
+  alignment: InputTextAlignment? = 6;
+  density: ControlDensity? = 7;
+  padding: PresentationInsets? = 8;
+  fill: PresentationColor? = 9;
+  border: BorderOverride? = 10;
+  radius: PresentationRadius? = 11;
+}
+
+struct InputContent(810800182) {
+  placeholder: ExpressionNode? = 0;
+  leading: InputAdornment? = 1;
+  suffix: PresentationNode? = 2;
+}
+
+struct AppearanceDefaultsElement(810800183) {
+  appearance: InputAppearance = 0;
+  child: PresentationNode = 1;
+}
+
+struct TextEntryInteractionOptions(810800184) {
+  select_all_on_focus: bool? = 0;
+}
+
+enum NumericSteppers(810800185) {
+  hidden = 1;
+  inline = 2;
+}
+
+struct NumericInteractionOptions(810800186) {
+  minimum: ExpressionNode? = 0;
+  maximum: ExpressionNode? = 1;
+  step: ExpressionNode? = 2;
+  steppers: NumericSteppers? = 3;
+  editing_locale: ExpressionNode? = 4;
+}
+
+struct ExpressionMapping(810800187) {
+  input_binding: ExpressionBindingId = 0;
+  body: ExpressionNode = 1;
+}
+
+struct ValueMappings(810800188) {
+  completion: ExpressionMapping? = 0;
+  display: ExpressionMapping? = 1;
+}
+
+struct MultipleTextLines(810800189) {
+  minimum: int32 = 0;
+  maximum: int32? = 1;
+}
+
+enum TextLines(810800190) {
+  single = 1;
+  multiple: MultipleTextLines = 2;
+}
+
+enum TextPurpose(810800191) {
+  plain = 1;
+  email = 2;
+  url = 3;
+  password = 4;
+}
+
+enum TextCapitalization(810800192) {
+  none = 1;
+  words = 2;
+  sentences = 3;
+  characters = 4;
+}
+
+enum CharacterFilter(810800193) {
+  allow: string = 1;
+  deny: string = 2;
+}
+
+struct TextLengthPolicy(810800194) {
+  maximum_graphemes: int32 = 0;
+  enforce_after_composition: bool = 1;
+}
+
+struct TextEditingOptions(810800195) {
+  lines: TextLines? = 0;
+  purpose: TextPurpose? = 1;
+  capitalization: TextCapitalization? = 2;
+  suggestions: bool? = 3;
+  length: TextLengthPolicy? = 4;
+  character_filters: [CharacterFilter] = 5;
+}
+
+struct NumericControl(810800196) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  content: InputContent? = 2;
+  mappings: ValueMappings? = 3;
+  entry: TextEntryInteractionOptions? = 4;
+  options: NumericInteractionOptions = 5;
+}
+
+struct TextControl(810800197) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  content: InputContent? = 2;
+  mappings: ValueMappings? = 3;
+  entry: TextEntryInteractionOptions? = 4;
+  options: TextEditingOptions = 5;
+}
+
+struct PopupAppearance(810800198) {
+  minimum_width: ExpressionNode? = 0;
+  maximum_width: ExpressionNode? = 1;
+  maximum_extent: ExpressionNode? = 2;
+  padding: PresentationInsets? = 3;
+  fill: PresentationColor? = 4;
+  border: PresentationBorder? = 5;
+  radius: PresentationRadius? = 6;
+}
+
+enum PopupSide(810800199) {
+  automatic = 1;
+  above = 2;
+  below = 3;
+}
+
+enum ChoicePresentation(810800200) {
+  automatic = 1;
+  dropdown = 2;
+  segmented = 3;
+  radio = 4;
+}
+
+struct SelectInteractionOptions(810800201) {
+  presentation: ChoicePresentation? = 0;
+  filtering: bool? = 1;
+  maximum_menu_height: ExpressionNode? = 2;
+  selected_text_style: InputTextStyle? = 3;
+  query_binding_id: ExpressionBindingId? = 4;
+  custom_value: ExpressionNode? = 5;
+  option_overrides: [ChoiceOptionAppearance|option_id] = 6;
+}
+
+struct EnumControl(810800202) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  content: InputContent? = 2;
+  popup: PopupAppearance? = 3;
+  options: SelectInteractionOptions? = 4;
+}
+
+enum DateTimePickerPresentation(810800203) {
+  calendar = 1;
+  text = 2;
+}
+
+struct DateTimeInteractionOptions(810800204) {
+  minimum: ExpressionNode? = 0;
+  maximum: ExpressionNode? = 1;
+  time_increment: ExpressionNode? = 2;
+  presentation: DateTimePickerPresentation? = 3;
+}
+
+struct DurationInteractionOptions(810800205) {
+  minimum: ExpressionNode? = 0;
+  maximum: ExpressionNode? = 1;
+  step: ExpressionNode? = 2;
+}
+
+struct DurationControl(810800206) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  content: InputContent? = 2;
+  entry: TextEntryInteractionOptions? = 3;
+  mappings: ValueMappings? = 4;
+  options: DurationInteractionOptions? = 5;
+}
+
+enum ColorEditingRepresentation(810800207) {
+  hex = 1;
+  rgb = 2;
+  hsl = 3;
+}
+
+enum ColorPickerFormat(810800208) {
+  hex = 1;
+  rgb = 2;
+  hsl = 3;
+}
+
+struct ColorInteractionOptions(810800209) {
+  editing_representation: ColorEditingRepresentation? = 0;
+  picker_format: ColorPickerFormat? = 1;
+  show_swatch: bool? = 2;
+  show_format_selector: bool? = 3;
+  show_copy_action: bool? = 4;
+  offered_swatches: ExpressionNode? = 5;
+}
+
+enum BytesEditingEncoding(810800210) {
+  hexadecimal = 1;
+  base64 = 2;
+}
+
+struct BytesInteractionOptions(810800211) {
+  editing_encoding: BytesEditingEncoding? = 0;
+  group_size: int32? = 1;
+  show_count: bool? = 2;
+}
+
+struct BytesControl(810800212) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  content: InputContent? = 2;
+  entry: TextEntryInteractionOptions? = 3;
+  mappings: ValueMappings? = 4;
+  options: BytesInteractionOptions? = 5;
+}
+
+enum TogglePresentation(810800213) {
+  switch = 1;
+  checkbox = 2;
+}
+
+enum TogglePosition(810800214) {
+  leading = 1;
+  trailing = 2;
+}
+
+struct ToggleInteractionOptions(810800215) {
+  presentation: TogglePresentation? = 0;
+  position: TogglePosition? = 1;
+  true_label: ExpressionNode? = 2;
+  false_label: ExpressionNode? = 3;
+  thumb_color: PresentationColor? = 4;
+  track_color: PresentationColor? = 5;
+  check_color: PresentationColor? = 6;
+}
+
+struct ToggleControl(810800216) {
+  control: BoundControl = 0;
+  appearance: InputAppearance? = 1;
+  options: ToggleInteractionOptions? = 2;
+}
+
+enum SliderValueDisplay(810800217) {
+  hidden = 1;
+  while_interacting = 2;
+  always = 3;
+}
+
+enum SliderOrientation(810800218) {
+  horizontal = 1;
+  vertical = 2;
+}
+
+enum SliderInteraction(810800219) {
+  tap_and_drag = 1;
+  drag_only = 2;
+}
+
+struct SliderInteractionOptions(810800220) {
+  show_value: SliderValueDisplay? = 0;
+  show_ticks: bool? = 1;
+  orientation: SliderOrientation? = 2;
+  interaction: SliderInteraction? = 3;
+  active_color: PresentationColor? = 4;
+  inactive_color: PresentationColor? = 5;
+  thumb_color: PresentationColor? = 6;
+  track_height: float64? = 7;
+}
+
+enum ButtonVariant(810800221) {
+  filled = 1;
+  outlined = 2;
+  text = 3;
+}
+
+struct ActionAppearance(810800222) {
+  appearance: InputAppearance? = 0;
+  variant: ButtonVariant? = 1;
+  tooltip: ExpressionNode? = 2;
+}
+
+struct CollectionAppearance(810800223) {
+  item_spacing: float64? = 0;
+  item_padding: PresentationInsets? = 1;
+  item_background: PresentationColor? = 2;
+  item_foreground: PresentationColor? = 3;
+  item_border: PresentationBorder? = 4;
+  item_radius: PresentationRadius? = 5;
+  item_transition_milliseconds: int32? = 6;
+}
+
+struct CollectionContent(810800224) {
+  empty_text: ExpressionNode? = 0;
+  empty: PresentationNode? = 1;
+  add_label: ExpressionNode? = 2;
+  add_icon: PresentationNode? = 3;
+  remove_label: ExpressionNode? = 4;
+  reorder_icon: PresentationNode? = 5;
+  remove_icon: PresentationNode? = 6;
+  choose_label: ExpressionNode? = 7;
+  choose_icon: PresentationNode? = 8;
+  unlink_label: ExpressionNode? = 9;
+  unlink_icon: PresentationNode? = 10;
+  operation_tooltip: ExpressionNode? = 11;
+  operation_density: ControlDensity? = 12;
+  key_label: ExpressionNode? = 13;
+  value_label: ExpressionNode? = 14;
+}
+
+struct PageGraphAppearance(810800225) {
+  cell_size: ExpressionNode? = 0;
+  edge_color: PresentationColor? = 1;
+  card_padding: PresentationInsets? = 2;
+}
+
+struct PageTimelineAppearance(810800226) {
+  ruler_height: float64? = 0;
+  track_padding: float64? = 1;
+  lane_height: float64? = 2;
+  lane_gap: float64? = 3;
+  header_padding: float64? = 4;
+  header_color: PresentationColor? = 5;
+  ruler_color: PresentationColor? = 6;
+  track_color: PresentationColor? = 7;
+  alternate_track_color: PresentationColor? = 8;
+  grid_minor_color: PresentationColor? = 9;
+  grid_major_color: PresentationColor? = 10;
+  text_muted_color: PresentationColor? = 11;
+}
+
+struct ChoiceOptionAppearance(810800227) {
+  option_id: string = 0;
+  content: PresentationNode? = 1;
+  enabled_if: ExpressionNode? = 2;
+  disabled_reason: ExpressionNode? = 3;
+}
+
+enum ImageFit(810800228) {
+  contain = 1;
+  cover = 2;
+  fill = 3;
+  fit_width = 4;
+  fit_height = 5;
+  none = 6;
+  scale_down = 7;
+}
+
+struct ImageOptions(810800229) {
+  width: ExpressionNode? = 0;
+  height: ExpressionNode? = 1;
+  fit: ImageFit? = 2;
+  alignment: PresentationAlignment? = 3;
+  radius: PresentationRadius? = 4;
+}
+
+struct DisplayAppearance(810800230) {
+  appearance: InputAppearance? = 0;
+  icon: InputAdornment? = 1;
+}
+
+struct ProgressAppearance(810800231) {
+  color: PresentationColor? = 0;
+  background_color: PresentationColor? = 1;
+  minimum_height: ExpressionNode? = 2;
+  radius: PresentationRadius? = 3;
+}
+
+struct TooltipAppearance(810800232) {
+  appearance: InputAppearance? = 0;
+  wait_milliseconds: int32? = 1;
+  show_milliseconds: int32? = 2;
+  prefer_below: bool? = 3;
+}
+
+struct DividerAppearance(810800233) {
+  color: PresentationColor? = 0;
+  thickness: ExpressionNode? = 1;
+  space: ExpressionNode? = 2;
+  indent: ExpressionNode? = 3;
+  end_indent: ExpressionNode? = 4;
 }

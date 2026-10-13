@@ -9,6 +9,8 @@ import com.typewritermc.types.LinkTarget
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.isPortableDuration
+import com.typewritermc.types.isPortableDurationMilliseconds
 import com.typewritermc.types.requireCanonicalDecimal
 import okio.ByteString.Companion.toByteString
 import kotlin.time.Duration.Companion.milliseconds
@@ -77,7 +79,7 @@ internal fun ConversionScope.encodeDataValue(value: DataValue): SkirDataValue =
             }
 
             is DataValue.Duration -> {
-                if (value.value.isInfinite() || value.value.inWholeMilliseconds.milliseconds != value.value) {
+                if (!value.value.isPortableDuration()) {
                     fail("Duration values require finite millisecond precision.")
                 }
                 SkirDataValue.createDuration(value = SkirDuration(milliseconds = value.value.inWholeMilliseconds))
@@ -175,7 +177,9 @@ internal fun ConversionScope.decodeDataValue(value: SkirDataValue): DataValue =
             }
 
             is SkirDataValue.DurationWrapper -> {
-                DataValue.Duration(value.value.value.milliseconds.milliseconds)
+                val milliseconds = value.value.value.milliseconds
+                if (!milliseconds.isPortableDurationMilliseconds()) fail("Duration millisecond count exceeds the finite portable range.")
+                DataValue.Duration(milliseconds.milliseconds)
             }
 
             is SkirDataValue.EnumCaseWrapper -> {

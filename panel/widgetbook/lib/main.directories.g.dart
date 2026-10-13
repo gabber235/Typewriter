@@ -70,8 +70,14 @@ import 'package:widgetbook_workspace/stories/features/organizations/presentation
     as _widgetbook_workspace_stories_features_organizations_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/shared/editing/apply_controls.stories.dart'
     as _widgetbook_workspace_stories_shared_editing_apply_controls_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/compiled_sdk_controls.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/components/editor_text_field.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_components_editor_text_field_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/configured_actions.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_configured_actions_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/configured_scalar_controls.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_configured_scalar_controls_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_location_reveal.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_location_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart'
@@ -589,6 +595,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                         name: 'AuthoredResourceEditor',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
+                            name: 'Compiled SDK Tag',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories
+                                    .compiledTagUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
                             name: 'Graph workspace',
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
@@ -868,6 +880,36 @@ final directories = <_widgetbook.WidgetbookNode>[
               _widgetbook.WidgetbookComponent(
                 name: 'PortablePresentationRenderer',
                 useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Compiled SDK Placement',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories
+                            .compiledPlacementUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Configured actions',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_configured_actions_stories
+                            .configuredActionsUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Configured displays',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_configured_actions_stories
+                            .configuredDisplaysUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Configured projections',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_configured_actions_stories
+                            .configuredProjectionsUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Configured scalar controls',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_configured_scalar_controls_stories
+                            .configuredScalarControlsUseCase,
+                  ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Portable document',
                     builder:

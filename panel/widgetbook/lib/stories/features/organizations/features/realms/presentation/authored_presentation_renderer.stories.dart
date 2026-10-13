@@ -237,19 +237,29 @@ final _gallery = skir.PresentationNode(
           "title",
           skir.PresentationElement.createTextInput(
             control: _control(_title, "Title"),
-            multiline: false,
-            placeholder: _literal("Quest objective"),
-            inputFormatters: const [],
+            content:
+                (skir.InputContent.mutable()
+                      ..placeholder = _literal("Quest objective"))
+                    .toFrozen(),
+            appearance: null,
+            entry: null,
+            mappings: null,
+            options: skir.TextEditingOptions.defaultInstance,
           ),
         ),
         _node(
           "count",
-          skir.PresentationElement.wrapNumericInput(_control(_count, "Count")),
+          skir.PresentationElement.wrapNumericInput(
+            (skir.NumericControl.mutable()..control = _control(_count, "Count"))
+                .toFrozen(),
+          ),
         ),
         _node(
           "enabled",
           skir.PresentationElement.wrapToggleInput(
-            _control(_enabled, "Enabled"),
+            (skir.ToggleControl.mutable()
+                  ..control = _control(_enabled, "Enabled"))
+                .toFrozen(),
           ),
         ),
         _node(
@@ -259,6 +269,9 @@ final _gallery = skir.PresentationNode(
             minimum: _literal(skir.DataValue.wrapFloat(0)),
             maximum: _literal(skir.DataValue.wrapFloat(1)),
             divisions: _literal(skir.DataValue.wrapInteger("20")),
+            appearance: null,
+            mappings: null,
+            options: null,
           ),
         ),
         _node(
@@ -267,12 +280,20 @@ final _gallery = skir.PresentationNode(
             control: _control(_startsAt, "Starts at"),
             includeDate: true,
             includeTime: true,
+            appearance: null,
+            content: null,
+            entry: null,
+            mappings: null,
+            popup: null,
+            options: null,
           ),
         ),
         _node(
           "duration",
           skir.PresentationElement.wrapDurationInput(
-            _control(_duration, "Duration in milliseconds"),
+            (skir.DurationControl.mutable()
+                  ..control = _control(_duration, "Duration in milliseconds"))
+                .toFrozen(),
           ),
         ),
         _node(
@@ -280,12 +301,20 @@ final _gallery = skir.PresentationNode(
           skir.PresentationElement.createColorInput(
             control: _control(_color, "Color"),
             includeAlpha: true,
+            appearance: null,
+            content: null,
+            entry: null,
+            mappings: null,
+            popup: null,
+            options: null,
           ),
         ),
         _node(
           "bytes",
           skir.PresentationElement.wrapBytesInput(
-            _control(_bytes, "Binary payload"),
+            (skir.BytesControl.mutable()
+                  ..control = _control(_bytes, "Binary payload"))
+                .toFrozen(),
           ),
         ),
       ],
@@ -310,9 +339,11 @@ final _interactionGallery = skir.PresentationNode(
             "interaction.status",
             skir.PresentationElement.createTextInput(
               control: _controlRef(_fieldReference("status"), "Status"),
-              multiline: false,
-              placeholder: null,
-              inputFormatters: const [],
+              appearance: null,
+              content: null,
+              entry: null,
+              mappings: null,
+              options: skir.TextEditingOptions.defaultInstance,
             ),
           ),
         ),
@@ -320,7 +351,12 @@ final _interactionGallery = skir.PresentationNode(
           _node(
             "interaction.enabled",
             skir.PresentationElement.wrapToggleInput(
-              _controlRef(_fieldReference("enabled"), "Show details"),
+              (skir.ToggleControl.mutable()
+                    ..control = _controlRef(
+                      _fieldReference("enabled"),
+                      "Show details",
+                    ))
+                  .toFrozen(),
             ),
           ),
         ),
@@ -348,6 +384,9 @@ final _interactionGallery = skir.PresentationNode(
                 _tab("preview", "Preview", "Preview content"),
               ],
               initiallySelectedTabId: "general",
+              appearance: null,
+              spacing: null,
+              contentSpacing: null,
             ),
           ),
         ),
@@ -362,6 +401,8 @@ final _interactionGallery = skir.PresentationNode(
               allowReorder: true,
               itemBindingId: skir.ExpressionBindingId(value: "list_item"),
               indexBindingId: skir.ExpressionBindingId(value: "list_index"),
+              appearance: null,
+              content: null,
             ),
           ),
         ),
@@ -376,6 +417,8 @@ final _interactionGallery = skir.PresentationNode(
                   value: _literal("Item 4"),
                 ),
               ),
+              appearance: null,
+              icon: null,
             ),
           ),
         ),
@@ -390,6 +433,8 @@ final _interactionGallery = skir.PresentationNode(
               allowRemove: true,
               keyBindingId: skir.ExpressionBindingId(value: "map_key"),
               valueBindingId: skir.ExpressionBindingId(value: "map_value"),
+              appearance: null,
+              content: null,
             ),
           ),
         ),
@@ -405,6 +450,8 @@ final _interactionGallery = skir.PresentationNode(
                   value: _literal("Arrival"),
                 ),
               ),
+              appearance: null,
+              icon: null,
             ),
           ),
         ),
@@ -416,6 +463,8 @@ final _interactionGallery = skir.PresentationNode(
               action: skir.EditorAction.wrapRealm(
                 skir.RealmEditorAction.createReload(),
               ),
+              appearance: null,
+              icon: null,
             ),
           ),
         ),
@@ -487,7 +536,7 @@ final _interactionGallery = skir.PresentationNode(
           namespace: "widgetbook",
           name: "unavailable_label",
         ),
-        icon: _literal("edit"),
+        icon: _literal("material-symbols:edit"),
         label: skir.ExpressionNode.createRead(
           binding: skir.ExpressionBindingId(value: "missing_header_value"),
           path: skir.ValuePath(segments: const []),
@@ -521,7 +570,7 @@ skir.HeaderItem _statusHeaderButton(
   skir.HeaderActionPlacement placement,
 ) => skir.HeaderItem.createButton(
   itemId: skir.HeaderItemId(namespace: "widgetbook", name: name),
-  icon: _literal("edit"),
+  icon: _literal("material-symbols:edit"),
   label: _literal(label),
   tooltip: _literal(label),
   action: skir.EditorAction.wrapLocal(
@@ -598,6 +647,7 @@ skir.TabItem _tab(String id, String label, String content) => skir.TabItem(
   tabId: id,
   label: _literal(label),
   child: _textNode("tab.$id", content),
+  icon: null,
 );
 
 skir.PresentationNode _textNode(String id, String value) =>

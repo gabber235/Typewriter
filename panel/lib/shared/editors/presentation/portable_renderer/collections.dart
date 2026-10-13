@@ -10,6 +10,7 @@ final class _AuthoredCollectionRow {
     required this.canonicalKey,
     required this.selectable,
     required this.scope,
+    required this.authoredAddress,
   });
 
   final skir.ResourceId resource;
@@ -20,6 +21,7 @@ final class _AuthoredCollectionRow {
   final String canonicalKey;
   final bool selectable;
   final PortablePresentationScope scope;
+  final AuthoredBindingAddress authoredAddress;
 }
 
 extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
@@ -149,9 +151,17 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
             ),
         ],
       );
-      final nodeScope = row.scope.withValues({
-        element.childrenBindingId: childValues,
-      });
+      final nodeScope = row.scope
+          .withValues({element.childrenBindingId: childValues})
+          .copyWith(
+            authoredAliases: {
+              ...row.scope.authoredAliases,
+              element.childrenBindingId: AuthoredBindingAddress(
+                root: row.authoredAddress.root,
+                path: const [],
+              ),
+            },
+          );
       return PortablePresentationNodeRenderer(
         node: element.node,
         scope: nodeScope.withSlotBuilders({
@@ -206,6 +216,12 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
       final row = indexed.$2;
       final scope = row.scope
           .withValues({itemBinding: row.row})
+          .copyWith(
+            authoredAliases: {
+              ...row.scope.authoredAliases,
+              itemBinding: row.authoredAddress,
+            },
+          )
           .withSlotBuilders({slot: (_) => content(row)});
       children.add(
         PortablePresentationNodeRenderer(node: sequence.item, scope: scope),
@@ -274,12 +290,38 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
             key: row.key,
             canonicalKey: row.canonicalKey,
             selectable: row.selectable,
-            scope: scope.withValues({
-              definition.rowBindingId: row.row,
-              resourceBinding: skir.DataValue.wrapStringValue(
-                row.resource.value,
-              ),
-            }),
+            authoredAddress: AuthoredBindingAddress(
+              root: AuthoredBindingRoot.collection(sourceId),
+              path: [
+                AuthoredPathStep.exact(
+                  skir.PathSegment.createItem(
+                    id: skir.ItemId(value: row.canonicalKey),
+                  ),
+                ),
+              ],
+            ),
+            scope: scope
+                .withValues({
+                  definition.rowBindingId: row.row,
+                  resourceBinding: skir.DataValue.wrapStringValue(
+                    row.resource.value,
+                  ),
+                })
+                .copyWith(
+                  authoredAliases: {
+                    ...scope.authoredAliases,
+                    definition.rowBindingId: AuthoredBindingAddress(
+                      root: AuthoredBindingRoot.collection(sourceId),
+                      path: [
+                        AuthoredPathStep.exact(
+                          skir.PathSegment.createItem(
+                            id: skir.ItemId(value: row.canonicalKey),
+                          ),
+                        ),
+                      ],
+                    ),
+                  },
+                ),
           ),
       ],
       problem: null,
@@ -340,6 +382,12 @@ final class _AuthoredCollectionRowAppearance extends StatelessWidget {
           presentationSubjectIdentifierBindingId:
               skir.DataValue.wrapStringValue(row.resource.value),
         })
+        .copyWith(
+          authoredAliases: {
+            ...row.scope.authoredAliases,
+            _configuredValueBindingId: row.authoredAddress,
+          },
+        )
         .withMaterial(material)
         .withActivePresentation(material.provider);
     return PortablePresentationNodeRenderer(

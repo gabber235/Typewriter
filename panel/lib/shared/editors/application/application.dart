@@ -1,5 +1,6 @@
 library;
 
+export "authored_presentation_index.dart";
 export "bound_presentation_host.dart";
 export "checked_editor_catalog.dart";
 export "color_library.dart";
@@ -7,8 +8,10 @@ export "edit_owner.dart";
 export "editor_retry.dart";
 export "multi_edit_owner.dart";
 export "portable_authoring_document.dart";
+export "portable_duration_admission.dart";
 export "portable_editor_diagnostics.dart";
 export "portable_expression.dart";
+export "portable_expression_checking.dart";
 export "portable_initialization_diagnostics.dart";
 export "portable_link_choices.dart";
 export "portable_presentation_diagnostic.dart";
@@ -19,5 +22,6 @@ export "portable_text_sizing.dart";
 export "portable_value_admission.dart";
 export "portable_value_tree.dart";
 export "presentation_binding_ids.dart";
+export "presentation_expression_checking.dart";
 export "reference_resources.dart";
 export "trusted_local_editor_catalog.dart";

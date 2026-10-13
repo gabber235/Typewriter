@@ -59,8 +59,10 @@ internal class RuntimeLayout(
         target += state.node(PresentationElement.createSlot(slotId = id))
     }
 
-    override fun divider() {
-        target += state.node(PresentationElement.DIVIDER)
+    override fun divider(configure: DividerAppearanceScope.() -> Unit) {
+        val draft = skirout.editor.v1.presentation.DividerAppearance.partial().toMutable()
+        RuntimeDividerAppearanceScope(draft).configure()
+        target += state.node(PresentationElement.DividerWrapper(draft.toFrozen()))
     }
 
     override fun spacer(
@@ -91,7 +93,19 @@ internal class RuntimeLayout(
                         ),
                 )
             }
-        target += state.node(PresentationElement.createRemainingFields(excluded = patterns))
+        val remainder = state.node(PresentationElement.createRemainingFields(excluded = patterns))
+        target +=
+            if (base.bindingId == CONFIGURED_VALUE.wire() && base.path.segments.isEmpty()) {
+                remainder
+            } else {
+                state.node(
+                    PresentationElement.createScopedBinding(
+                        binding = base,
+                        scopeBindingId = CONFIGURED_VALUE.wire(),
+                        child = remainder,
+                    ),
+                )
+            }
     }
 
     override fun tabs(
@@ -99,27 +113,20 @@ internal class RuntimeLayout(
         body: TabsScope.() -> Unit,
     ) {
         val items = mutableListOf<skirout.editor.v1.presentation.TabItem>()
-        val scope =
-            object : TabsScope {
-                override fun tab(
-                    id: String,
-                    label: Expr<String, Handled>,
-                    body: Layout.() -> Unit,
-                ) {
-                    items +=
-                        skirout.editor.v1.presentation.TabItem(
-                            tabId = id,
-                            label = expression(label),
-                            child = child(body),
-                        )
-                }
-            }
+        val visual = skirout.editor.v1.presentation.InputAppearance.partial().toMutable()
+        val scope = RuntimeTabsScope(RuntimeTextEntryAppearance(visual)) { id, label, icon, body ->
+            require(id.isNotBlank() && items.none { it.tabId == id }) { "Tab identifiers must be nonempty and unique." }
+            items += skirout.editor.v1.presentation.TabItem(tabId = id, label = expression(label), child = child(body), icon = icon?.let { state.iconNode(it, IconOptions()) })
+        }
         scope.body()
         target +=
             state.node(
                 PresentationElement.createTabs(
                     tabs = items,
                     initiallySelectedTabId = initial,
+                    appearance = visual.toFrozen(),
+                    spacing = scope.spacing,
+                    contentSpacing = scope.contentSpacing,
                 ),
             )
     }
@@ -137,7 +144,7 @@ internal class RuntimeLayout(
         cross: CrossAxisAlignment,
         body: AxisLayout.() -> Unit,
     ) {
-        val children = PresentationAxisNodeList()
+        val children = PresentationAxisNodeList(horizontal = row)
         state.withTarget(children) { state.scope(children, children).body() }
         target +=
             state.axis(
@@ -247,6 +254,14 @@ internal class RuntimeLayout(
                     transitionMilliseconds = style.transitionMilliseconds,
                 ),
             )
+    }
+
+    override fun withInputAppearance(appearance: InputAppearance, body: Layout.() -> Unit) {
+        target += state.node(
+            PresentationElement.AppearanceDefaultsWrapper(
+                skirout.editor.v1.presentation.AppearanceDefaultsElement(appearance = appearance, child = child(body)),
+            ),
+        )
     }
 
     override fun align(

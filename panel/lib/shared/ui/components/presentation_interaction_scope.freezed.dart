@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PresentationInteraction {
 
- bool get selected; bool get hovered; bool get focused; bool get pressed; bool get disabled;
+ bool get selected; bool get hovered; bool get focused; bool get pressed; bool get disabled; bool get readOnly; bool get invalid;
 /// Create a copy of PresentationInteraction
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $PresentationInteractionCopyWith<PresentationInteraction> get copyWith => _$Pres
 @override
 bool operator ==(Object other) {
   final _this = this as PresentationInteraction;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationInteraction&&(identical(other.selected, _this.selected) || other.selected == _this.selected)&&(identical(other.hovered, _this.hovered) || other.hovered == _this.hovered)&&(identical(other.focused, _this.focused) || other.focused == _this.focused)&&(identical(other.pressed, _this.pressed) || other.pressed == _this.pressed)&&(identical(other.disabled, _this.disabled) || other.disabled == _this.disabled));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PresentationInteraction&&(identical(other.selected, _this.selected) || other.selected == _this.selected)&&(identical(other.hovered, _this.hovered) || other.hovered == _this.hovered)&&(identical(other.focused, _this.focused) || other.focused == _this.focused)&&(identical(other.pressed, _this.pressed) || other.pressed == _this.pressed)&&(identical(other.disabled, _this.disabled) || other.disabled == _this.disabled)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.invalid, _this.invalid) || other.invalid == _this.invalid));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PresentationInteraction;
-  return Object.hash(runtimeType,_this.selected,_this.hovered,_this.focused,_this.pressed,_this.disabled);
+  return Object.hash(runtimeType,_this.selected,_this.hovered,_this.focused,_this.pressed,_this.disabled,_this.readOnly,_this.invalid);
 }
 
 @override
 String toString() {
   final _this = this as PresentationInteraction;
-  return 'PresentationInteraction(selected: ${_this.selected}, hovered: ${_this.hovered}, focused: ${_this.focused}, pressed: ${_this.pressed}, disabled: ${_this.disabled})';
+  return 'PresentationInteraction(selected: ${_this.selected}, hovered: ${_this.hovered}, focused: ${_this.focused}, pressed: ${_this.pressed}, disabled: ${_this.disabled}, readOnly: ${_this.readOnly}, invalid: ${_this.invalid})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $PresentationInteractionCopyWith<$Res>  {
   factory $PresentationInteractionCopyWith(PresentationInteraction value, $Res Function(PresentationInteraction) _then) = _$PresentationInteractionCopyWithImpl;
 @useResult
 $Res call({
- bool selected, bool hovered, bool focused, bool pressed, bool disabled
+ bool selected, bool hovered, bool focused, bool pressed, bool disabled, bool readOnly, bool invalid
 });
 
 
@@ -68,13 +68,15 @@ class _$PresentationInteractionCopyWithImpl<$Res>
 
 /// Create a copy of PresentationInteraction
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,Object? readOnly = null,Object? invalid = null,}) {
   return _then(PresentationInteraction(
 selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable
 as bool,hovered: null == hovered ? _self.hovered : hovered // ignore: cast_nullable_to_non_nullable
 as bool,focused: null == focused ? _self.focused : focused // ignore: cast_nullable_to_non_nullable
 as bool,pressed: null == pressed ? _self.pressed : pressed // ignore: cast_nullable_to_non_nullable
 as bool,disabled: null == disabled ? _self.disabled : disabled // ignore: cast_nullable_to_non_nullable
+as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
+as bool,invalid: null == invalid ? _self.invalid : invalid // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -160,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled,  bool readOnly,  bool invalid)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PresentationInteraction() when $default != null:
-return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled);case _:
+return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled,_that.readOnly,_that.invalid);case _:
   return orElse();
 
 }
@@ -181,10 +183,10 @@ return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled,  bool readOnly,  bool invalid)  $default,) {final _that = this;
 switch (_that) {
 case _PresentationInteraction():
-return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled);case _:
+return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled,_that.readOnly,_that.invalid);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +203,10 @@ return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.d
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool selected,  bool hovered,  bool focused,  bool pressed,  bool disabled,  bool readOnly,  bool invalid)?  $default,) {final _that = this;
 switch (_that) {
 case _PresentationInteraction() when $default != null:
-return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled);case _:
+return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.disabled,_that.readOnly,_that.invalid);case _:
   return null;
 
 }
@@ -216,7 +218,7 @@ return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.d
 
 
 class _PresentationInteraction extends PresentationInteraction {
-  const _PresentationInteraction({this.selected = false, this.hovered = false, this.focused = false, this.pressed = false, this.disabled = false}): super._();
+  const _PresentationInteraction({this.selected = false, this.hovered = false, this.focused = false, this.pressed = false, this.disabled = false, this.readOnly = false, this.invalid = false}): super._();
 
 
 @override@JsonKey() final  bool selected;
@@ -224,6 +226,8 @@ class _PresentationInteraction extends PresentationInteraction {
 @override@JsonKey() final  bool focused;
 @override@JsonKey() final  bool pressed;
 @override@JsonKey() final  bool disabled;
+@override@JsonKey() final  bool readOnly;
+@override@JsonKey() final  bool invalid;
 
 /// Create a copy of PresentationInteraction
 /// with the given fields replaced by the non null parameter values.
@@ -235,18 +239,18 @@ _$PresentationInteractionCopyWith<_PresentationInteraction> get copyWith => __$P
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationInteraction&&(identical(other.selected, selected) || other.selected == selected)&&(identical(other.hovered, hovered) || other.hovered == hovered)&&(identical(other.focused, focused) || other.focused == focused)&&(identical(other.pressed, pressed) || other.pressed == pressed)&&(identical(other.disabled, disabled) || other.disabled == disabled));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PresentationInteraction&&(identical(other.selected, selected) || other.selected == selected)&&(identical(other.hovered, hovered) || other.hovered == hovered)&&(identical(other.focused, focused) || other.focused == focused)&&(identical(other.pressed, pressed) || other.pressed == pressed)&&(identical(other.disabled, disabled) || other.disabled == disabled)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.invalid, invalid) || other.invalid == invalid));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,selected,hovered,focused,pressed,disabled);
+    return Object.hash(runtimeType,selected,hovered,focused,pressed,disabled,readOnly,invalid);
 }
 
 @override
 String toString() {
-    return 'PresentationInteraction(selected: $selected, hovered: $hovered, focused: $focused, pressed: $pressed, disabled: $disabled)';
+    return 'PresentationInteraction(selected: $selected, hovered: $hovered, focused: $focused, pressed: $pressed, disabled: $disabled, readOnly: $readOnly, invalid: $invalid)';
 }
 
 
@@ -257,7 +261,7 @@ abstract mixin class _$PresentationInteractionCopyWith<$Res> implements $Present
   factory _$PresentationInteractionCopyWith(_PresentationInteraction value, $Res Function(_PresentationInteraction) _then) = __$PresentationInteractionCopyWithImpl;
 @override @useResult
 $Res call({
- bool selected, bool hovered, bool focused, bool pressed, bool disabled
+ bool selected, bool hovered, bool focused, bool pressed, bool disabled, bool readOnly, bool invalid
 });
 
 
@@ -274,13 +278,15 @@ class __$PresentationInteractionCopyWithImpl<$Res>
 
 /// Create a copy of PresentationInteraction
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,Object? readOnly = null,Object? invalid = null,}) {
   return _then(_PresentationInteraction(
 selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable
 as bool,hovered: null == hovered ? _self.hovered : hovered // ignore: cast_nullable_to_non_nullable
 as bool,focused: null == focused ? _self.focused : focused // ignore: cast_nullable_to_non_nullable
 as bool,pressed: null == pressed ? _self.pressed : pressed // ignore: cast_nullable_to_non_nullable
 as bool,disabled: null == disabled ? _self.disabled : disabled // ignore: cast_nullable_to_non_nullable
+as bool,readOnly: null == readOnly ? _self.readOnly : readOnly // ignore: cast_nullable_to_non_nullable
+as bool,invalid: null == invalid ? _self.invalid : invalid // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

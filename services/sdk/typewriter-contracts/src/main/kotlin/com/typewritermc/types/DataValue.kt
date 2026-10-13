@@ -73,7 +73,11 @@ sealed interface DataValue {
     @SerialName("duration")
     data class Duration(
         val value: kotlin.time.Duration,
-    ) : DataValue
+    ) : DataValue {
+        init {
+            require(value.isPortableDuration()) { "Duration values require finite, exactly representable whole milliseconds." }
+        }
+    }
 
     @Serializable
     @SerialName("enum")

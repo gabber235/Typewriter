@@ -539,9 +539,11 @@ CheckedEditorCatalog authoringFixtureCatalog({
                       prefix: null,
                       semanticLabel: null,
                     ),
-                    multiline: false,
-                    placeholder: null,
-                    inputFormatters: const [],
+                    appearance: null,
+                    content: null,
+                    entry: null,
+                    mappings: null,
+                    options: skir.TextEditingOptions.defaultInstance,
                   )
                 : skir.PresentationElement.wrapText(
                     (skir.TextContent.mutable()

@@ -1006,6 +1006,13 @@ private fun TypeTemplate.presentationTemplate(
         type = this,
         fieldResolver = { parent, name -> parent.unwrapNullable().field(name, definitions) },
         nestedResolver = { parent, slot -> parent.presentationNested(slot, definitions) },
+        expressionChecker = { body, bindings, expected, present ->
+            com.typewritermc.presentation.checkPresentationExpression(body, bindings, expected, present, catalog::resolve)
+        },
+        payloadResolver = { parent ->
+            val scalar = (parent.unwrapNullable().representation(definitions)?.first as? RepresentationTemplate.Scalar)?.kind
+            if (scalar == null) parent.unwrapNullable() else TypeTemplate.Scalar(scalar)
+        },
         descriptorSelector = { actual, descriptors ->
             val bounds = definitions.parameterBounds()
             selectMostSpecificDescriptors(

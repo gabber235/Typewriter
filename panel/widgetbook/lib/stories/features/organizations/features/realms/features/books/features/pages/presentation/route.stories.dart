@@ -93,10 +93,12 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
       element: widget.timeline
           ? skir.PresentationElement.createPageTimeline(
               control: _fixture.control,
+              appearance: null,
             )
           : skir.PresentationElement.createPageGraph(
               control: _fixture.control,
               direction: skir.PageGraphDirection.leftToRight,
+              appearance: null,
             ),
       header: null,
     );

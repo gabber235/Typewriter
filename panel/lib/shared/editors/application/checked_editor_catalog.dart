@@ -1,5 +1,6 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
+import "package:typewriter_panel/typewriter_panel.dart";
 
 final class AppliedEditorField {
   const AppliedEditorField({required this.template, required this.type});
@@ -221,7 +222,9 @@ final class CheckedEditorCatalog {
       .where(
         (material) =>
             material.provider == id &&
-            _presentationTargetMatches(material.target, actual),
+            _presentationTargetMatches(material.target, actual) &&
+            (actual is skir.TypeSelection_pendingWrapper ||
+                presentationExpressionProblems(material, actual).isEmpty),
       )
       .firstOrNull;
 
@@ -232,7 +235,9 @@ final class CheckedEditorCatalog {
     final candidates = <skir.ValuePath, List<_FieldPresentationCandidate>>{};
     for (final material in snapshot.presentationMaterials) {
       if (material.role != role ||
-          !_presentationTargetMatches(material.target, actual)) {
+          !_presentationTargetMatches(material.target, actual) ||
+          (actual is! skir.TypeSelection_pendingWrapper &&
+              presentationExpressionProblems(material, actual).isNotEmpty)) {
         continue;
       }
       final descriptor = snapshot.presentations
@@ -948,7 +953,9 @@ final class CheckedEditorCatalog {
               candidate.provider == descriptor.id && candidate.role == role,
         )
         .firstOrNull;
-    if (material == null) {
+    if (material == null ||
+        (actual is! skir.TypeSelection_pendingWrapper &&
+            presentationExpressionProblems(material, actual).isNotEmpty)) {
       return UnavailableEditorPresentation(
         role: role,
         presentation: descriptor.id,
@@ -1442,25 +1449,63 @@ final class _ExplicitFieldPresentation {
 Iterable<_ExplicitFieldPresentation> _explicitFieldSelections(
   skir.PresentationNode root,
 ) sync* {
-  final pending = <skir.PresentationNode>[root];
-  while (pending.isNotEmpty) {
-    final node = pending.removeLast();
-    final element = node.element;
-    if (element case skir.PresentationElement_defaultPresentationWrapper(
-      :final value,
-    )) {
-      final id = value.presentationId;
-      if (id != null &&
-          value.binding.bindingId.value == "configured_value" &&
-          value.binding.path.segments.isNotEmpty) {
-        yield _ExplicitFieldPresentation(
-          path: value.binding.path,
-          presentation: id,
-        );
-      }
+  final configured = skir.ExpressionBindingId(value: "configured_value");
+  final origin = AuthoredBindingRoot.local(configured);
+  for (final use in root.authoredBindingUses({
+    configured: AuthoredBindingAddress(root: origin, path: const []),
+  })) {
+    if (use.selectedPresentation == null ||
+        use.address.root != origin ||
+        use.address.path.isEmpty ||
+        use.address.path.any((step) => step is! ExactAuthoredPathStep)) {
+      continue;
     }
-    pending.addAll(_nestedPresentationNodes(node));
+    yield _ExplicitFieldPresentation(
+      path: skir.ValuePath(
+        segments: [
+          for (final step in use.address.path)
+            (step as ExactAuthoredPathStep).segment,
+        ],
+      ),
+      presentation: use.selectedPresentation!,
+    );
   }
+}
+
+extension PresentationNodeStructure on skir.PresentationNode {
+  Iterable<skir.PresentationNode> get nestedPresentationNodes =>
+      _nestedPresentationNodes(this);
+
+  skir.BoundControl? get boundControl => switch (element) {
+    skir.PresentationElement_textInputWrapper(:final value) => value.control,
+    skir.PresentationElement_numericInputWrapper(:final value) => value.control,
+    skir.PresentationElement_defaultPresentationWrapper(:final value) =>
+      value.control,
+    skir.PresentationElement_toggleInputWrapper(:final value) => value.control,
+    skir.PresentationElement_durationInputWrapper(:final value) =>
+      value.control,
+    skir.PresentationElement_bytesInputWrapper(:final value) => value.control,
+    skir.PresentationElement_enumInputWrapper(:final value) => value.control,
+    skir.PresentationElement_selectInputWrapper(:final value) => value.control,
+    skir.PresentationElement_sliderInputWrapper(:final value) => value.control,
+    skir.PresentationElement_dateTimeInputWrapper(:final value) =>
+      value.control,
+    skir.PresentationElement_colorInputWrapper(:final value) => value.control,
+    skir.PresentationElement_namedInputWrapper(:final value) => value.control,
+    skir.PresentationElement_listInputWrapper(:final value) => value.control,
+    skir.PresentationElement_setInputWrapper(:final value) => value.control,
+    skir.PresentationElement_mapInputWrapper(:final value) => value.control,
+    skir.PresentationElement_recordInputWrapper(:final value) => value.control,
+    skir.PresentationElement_polymorphicInputWrapper(:final value) =>
+      value.control,
+    skir.PresentationElement_searchInputWrapper(:final value) => value.control,
+    skir.PresentationElement_nullableInputWrapper(:final value) =>
+      value.control,
+    skir.PresentationElement_linkInputWrapper(:final value) => value.control,
+    skir.PresentationElement_pageGraphWrapper(:final value) => value.control,
+    skir.PresentationElement_pageTimelineWrapper(:final value) => value.control,
+    _ => null,
+  };
 }
 
 Iterable<skir.PresentationNode> _nestedPresentationNodes(
@@ -1473,9 +1518,59 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
     yield value;
   }
   final element = node.element;
+  final inputContent = switch (element) {
+    skir.PresentationElement_textInputWrapper(:final value) => value.content,
+    skir.PresentationElement_numericInputWrapper(:final value) => value.content,
+    skir.PresentationElement_durationInputWrapper(:final value) =>
+      value.content,
+    skir.PresentationElement_dateTimeInputWrapper(:final value) =>
+      value.content,
+    skir.PresentationElement_colorInputWrapper(:final value) => value.content,
+    skir.PresentationElement_bytesInputWrapper(:final value) => value.content,
+    skir.PresentationElement_enumInputWrapper(:final value) => value.content,
+    skir.PresentationElement_selectInputWrapper(:final value) => value.content,
+    skir.PresentationElement_searchInputWrapper(:final value) => value.content,
+    skir.PresentationElement_linkInputWrapper(:final value) =>
+      value.inputContent,
+    skir.PresentationElement_polymorphicInputWrapper(:final value) =>
+      value.inputContent,
+    _ => null,
+  };
+  if (inputContent?.leading case skir.InputAdornment_contentWrapper(
+    :final value,
+  )) {
+    yield value;
+  }
+  if (inputContent?.suffix case final child?) yield child;
+  final collectionContent = switch (element) {
+    skir.PresentationElement_listInputWrapper(:final value) => value.content,
+    skir.PresentationElement_setInputWrapper(:final value) => value.content,
+    skir.PresentationElement_mapInputWrapper(:final value) => value.content,
+    skir.PresentationElement_recordInputWrapper(:final value) => value.content,
+    skir.PresentationElement_linkInputWrapper(:final value) => value.content,
+    skir.PresentationElement_polymorphicInputWrapper(:final value) =>
+      value.content,
+    _ => null,
+  };
+  if (collectionContent != null) {
+    for (final child in [
+      collectionContent.empty,
+      collectionContent.addIcon,
+      collectionContent.removeIcon,
+      collectionContent.reorderIcon,
+      collectionContent.chooseIcon,
+      collectionContent.unlinkIcon,
+    ]) {
+      if (child != null) yield child;
+    }
+  }
   switch (element) {
     case skir.PresentationElement_childrenWrapper(:final value):
       yield* _childrenNodes(value);
+    case skir.PresentationElement_appearanceDefaultsWrapper(:final value):
+      yield value.child;
+    case skir.PresentationElement_defaultPresentationWrapper(:final value):
+      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_sectionWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_paddingWrapper(:final value):
@@ -1483,6 +1578,7 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
     case skir.PresentationElement_tabsWrapper(:final value):
       for (final tab in value.tabs) {
         yield tab.child;
+        if (tab.icon case final child?) yield child;
       }
     case skir.PresentationElement_typedFieldWrapper(:final value):
       if (value.presentation case final child?) yield child;
@@ -1496,24 +1592,45 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
     case skir.PresentationElement_textInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
     case skir.PresentationElement_numericInputWrapper(:final value):
-      yield* _boundControlNodes(value);
+      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_toggleInputWrapper(:final value):
-      yield* _boundControlNodes(value);
+      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_selectInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
+      for (final option in value.options) {
+        if (option.content case final child?) yield child;
+      }
+      for (final option
+          in value.optionsConfig?.optionOverrides ??
+              const <skir.ChoiceOptionAppearance>[]) {
+        if (option.content case final child?) yield child;
+      }
     case skir.PresentationElement_sliderInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
     case skir.PresentationElement_dateTimeInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
     case skir.PresentationElement_durationInputWrapper(:final value):
-      yield* _boundControlNodes(value);
+      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_colorInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
     case skir.PresentationElement_bytesInputWrapper(:final value):
-      yield* _boundControlNodes(value);
+      yield* _boundControlNodes(value.control);
+    case skir.PresentationElement_enumInputWrapper(:final value):
+      yield* _boundControlNodes(value.control);
+      for (final option
+          in value.options?.optionOverrides ??
+              const <skir.ChoiceOptionAppearance>[]) {
+        if (option.content case final child?) yield child;
+      }
     case skir.PresentationElement_namedInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.payloadPresentation case final child?) yield child;
+    case skir.PresentationElement_buttonWrapper(:final value):
+      if (value.icon case final child?) yield child;
+    case skir.PresentationElement_menuWrapper(:final value):
+      for (final item in value.items) {
+        if (item.icon case final child?) yield child;
+      }
     case skir.PresentationElement_tooltipWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_listInputWrapper(:final value):
@@ -1537,6 +1654,8 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
     case skir.PresentationElement_searchInputWrapper(:final value):
       yield* _boundControlNodes(value.control);
       if (value.summary case final child?) yield child;
+      if (value.empty case final child?) yield child;
+      if (value.loading case final child?) yield child;
       yield* _searchProviderNodes(value.provider);
     case skir.PresentationElement_collectionLookupWrapper(:final value):
       yield value.found;

@@ -473,6 +473,21 @@ _emptyPageGraphFixture() {
     definition: definition,
     arguments: const [],
   );
+  final elementsDefinition = skir.TypeDefinitionId(
+    typeId: skir.TypeId.createQualified(
+      namespace: "test",
+      name: "PageElements",
+    ),
+    revision: 1,
+  );
+  final elementsType = skir.TypeTemplate.createNamed(
+    definition: elementsDefinition,
+    arguments: const [],
+  );
+  final elementsOwner = skir.FieldOwner(
+    definition: definition,
+    name: "elements",
+  );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
       generation: generation,
@@ -483,8 +498,37 @@ _emptyPageGraphFixture() {
             id: definition,
             parameters: const [],
             representation: skir.RepresentationTemplate.createRecord(
-              fields: const [],
+              fields: [
+                skir.FieldDeclaration(
+                  owner: elementsOwner,
+                  type: elementsType,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+              ],
               abstract_: false,
+            ),
+            parents: const [],
+          ),
+          status: skir.DeclarationStatus.ready,
+          effectiveFields: [
+            skir.EffectiveFieldTemplate(
+              key: "elements",
+              owner: elementsOwner,
+              type: elementsType,
+              rules: const [],
+            ),
+          ],
+          ancestorTemplates: const [],
+        ),
+        skir.PublishedType(
+          display: null,
+          definition: skir.TypeDefinition(
+            id: elementsDefinition,
+            parameters: const [],
+            representation: skir.RepresentationTemplate.createSequence(
+              item: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+              kind: skir.CollectionKind.list,
             ),
             parents: const [],
           ),
@@ -535,6 +579,7 @@ _emptyPageGraphFixture() {
                           semanticLabel: null,
                         ),
                         direction: skir.PageGraphDirection.leftToRight,
+                        appearance: null,
                       ),
                       header: null,
                     ),
@@ -680,16 +725,18 @@ _numericFixture({
             nodeId: fieldName,
             properties: skir.PresentationProperties.defaultInstance,
             element: skir.PresentationElement.wrapNumericInput(
-              skir.BoundControl(
-                binding: skir.BindingRef(
-                  bindingId: configuredValueBindingId,
-                  path: path,
-                ),
-                label: null,
-                description: null,
-                prefix: null,
-                semanticLabel: null,
-              ),
+              (skir.NumericControl.mutable()
+                    ..control = skir.BoundControl(
+                      binding: skir.BindingRef(
+                        bindingId: configuredValueBindingId,
+                        path: path,
+                      ),
+                      label: null,
+                      description: null,
+                      prefix: null,
+                      semanticLabel: null,
+                    ))
+                  .toFrozen(),
             ),
             header: null,
           ),
@@ -823,9 +870,11 @@ _fixture({
         prefix: null,
         semanticLabel: null,
       ),
-      multiline: false,
-      placeholder: null,
-      inputFormatters: const [],
+      appearance: null,
+      content: null,
+      entry: null,
+      mappings: null,
+      options: skir.TextEditingOptions.defaultInstance,
     ),
     header: null,
   );

@@ -31,8 +31,27 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 val PortableExpressionFixtureTest by testSuite {
+    test("local candidates use the shared evaluator without authored reads") {
+        var reads = 0
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { reads++; Availability.Available(DataValue.StringValue("stored")) })
+        val candidate = ExpressionBindingId("candidate")
+        val expression = ExpressionNode.Call(OperationId("typewriter.text.trim"), listOf(ExpressionNode.Read(candidate, ValuePath())))
+        with(FixtureReads) {
+            evaluator.evaluateScoped(expression, ExpressionBindings(emptyMap()), mapOf(candidate to DataValue.StringValue("  local  ")), EvaluationBudget(20, 20))
+        } shouldBe Availability.Available(DataValue.StringValue("local"))
+        reads shouldBe 0
+    }
+    test("handled candidates retain runtime operation failures") {
+        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Local candidates must not read authored storage") })
+        val candidate = ExpressionBindingId("candidate")
+        val expression = ExpressionNode.Call(OperationId("typewriter.number.divide"), listOf(ExpressionNode.Read(candidate, ValuePath()), ExpressionNode.Literal(DataValue.Integer(java.math.BigInteger.ZERO))))
+        val result = with(FixtureReads) { evaluator.evaluateScoped(expression, ExpressionBindings(emptyMap()), mapOf(candidate to DataValue.Integer(java.math.BigInteger.ONE)), EvaluationBudget(20, 20)) }
+        (result is Availability.Failed) shouldBe true
+    }
     val fixture = Json.parseToJsonElement(Files.readString(fixturePath())).jsonObject
     fixture["version"]!!.jsonPrimitive.content shouldBe "1"
     fixture["cases"]!!.jsonArray.forEach { element ->
@@ -60,7 +79,7 @@ val PortableExpressionFixtureTest by testSuite {
                     ),
                 )
             val result = with(FixtureReads) { evaluator.evaluate(case["expression"]!!.expression(), bindings, EvaluationBudget(100, 100)) }
-            val expected = case["expected"]!!.jsonObject
+            val expected = case["expectedByHost"]?.jsonObject?.get("kotlin")?.jsonObject ?: case["expected"]!!.jsonObject
             observed shouldBe expected["evaluatedReads"]!!.jsonArray.map { it.jsonPrimitive.content }
             when {
                 "available" in expected -> {
@@ -108,6 +127,10 @@ private fun JsonObject.value(): DataValue =
         "decimal" in this -> {
             DataValue.Decimal(getValue("decimal").jsonPrimitive.content)
         }
+
+        "duration" in this -> DataValue.Duration(getValue("duration").jsonPrimitive.content.toLong().milliseconds)
+        "timestamp" in this -> DataValue.Timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
+        "float" in this -> DataValue.Float(getValue("float").jsonPrimitive.content.toDouble())
 
         "string" in this -> {
             DataValue.StringValue(getValue("string").jsonPrimitive.content)
@@ -186,6 +209,9 @@ private fun JsonElement.expression(): ExpressionNode {
             "integer" in value ||
             "decimal" in value ||
             "string" in value ||
+            "duration" in value ||
+            "timestamp" in value ||
+            "float" in value ||
             "named" in value ||
             "record" in value ||
             "list" in value ||

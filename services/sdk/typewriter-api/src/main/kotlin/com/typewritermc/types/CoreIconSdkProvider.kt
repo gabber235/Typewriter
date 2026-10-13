@@ -1,5 +1,7 @@
 package com.typewritermc.types
 
+import com.typewritermc.presentation.TextLines
+
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
@@ -69,15 +71,15 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                 provider(sources.merge(remote, suggestions).distinct())
             }
         }
-        remainingFields { exclude(value) }
+        remainingFields()
     }
 
     override fun IconSvgPresentationScope.present() {
         source {
             label("SVG source")
-            textInput(multiline = true)
+            textInput { lines(TextLines.Multiple()) }
         }
-        remainingFields { exclude(source) }
+        remainingFields()
     }
 }
 

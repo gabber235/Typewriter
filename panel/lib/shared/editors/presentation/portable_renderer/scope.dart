@@ -12,6 +12,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
     required skir.EvaluationBudget budget,
     required PortableOperationResults operations,
+    List<PortableAppearanceLayer> appearanceLayers = const [],
+    Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases =
+        const {},
+    AuthoredPresentationIndex? authoredIndex,
     bool readOnly = false,
     bool enabled = true,
     Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -35,6 +39,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     bindings: Map.unmodifiable(bindings),
     budget: budget,
     operations: operations,
+    appearanceLayers: List.unmodifiable(appearanceLayers),
+    authoredAliases: Map.unmodifiable(authoredAliases),
+    authoredIndex: authoredIndex,
     readOnly: readOnly,
     enabled: enabled,
     watchSearch: watchSearch,
@@ -56,6 +63,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
     required skir.EvaluationBudget budget,
     required PortableOperationResults operations,
+    required List<PortableAppearanceLayer> appearanceLayers,
+    required Map<skir.ExpressionBindingId, AuthoredBindingAddress>
+    authoredAliases,
+    required AuthoredPresentationIndex? authoredIndex,
     required bool readOnly,
     required bool enabled,
     required Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -77,6 +88,41 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     projectedWriters,
   }) = _PortablePresentationScope;
   const PortablePresentationScope._();
+
+  PortablePresentationScope withAuthoredLayout(skir.PresentationNode layout) {
+    final aliases = {
+      for (final entry in bindings.entries)
+        entry.key: entry.value.location == null
+            ? authoredAliases[entry.key] ??
+                  AuthoredBindingAddress.binding(entry.key, entry.value)
+            : AuthoredBindingAddress.binding(entry.key, entry.value),
+    };
+    return copyWith(
+      authoredAliases: Map.unmodifiable(aliases),
+      authoredIndex: AuthoredPresentationIndex.build(
+        layout,
+        aliases,
+        sources: {
+          for (final source
+              in material?.dependencies.collections ??
+                  const <skir.PresentationCollectionDefinition>[])
+            source.sourceId: source,
+        },
+      ),
+    );
+  }
+
+  PortablePresentationScope withAppearance(skir.InputAppearance appearance) =>
+      copyWith(
+        appearanceLayers: List.unmodifiable([
+          ...appearanceLayers,
+          PortableAppearanceLayer(
+            appearance: appearance,
+            bindings: bindings,
+            budget: budget,
+          ),
+        ]),
+      );
 
   List<PortableDiagnosticObservation> get diagnosticObservations => [
     for (final entry in bindings.entries)
@@ -114,6 +160,20 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   skir.BindingRef? sourceReference(skir.BindingRef reference) {
     final document = host?.document;
     if (document == null) return null;
+    final authored = authoredAliases.resolve(reference);
+    if (authored?.root case AuthoredLocalRoot(:final binding)
+        when document.bindings.containsKey(binding) &&
+            authored!.path.every((step) => step is ExactAuthoredPathStep)) {
+      return skir.BindingRef(
+        bindingId: binding,
+        path: skir.ValuePath(
+          segments: [
+            for (final step in authored.path)
+              (step as ExactAuthoredPathStep).segment,
+          ],
+        ),
+      );
+    }
     if (document.bindings.containsKey(reference.bindingId)) {
       return reference;
     }
@@ -138,6 +198,16 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         segments: targetSegments.skip(base.path.segments.length),
       ),
     );
+  }
+
+  Object? nativeSourceIdentity(skir.BindingRef reference) {
+    final current = host;
+    if (current is BoundPresentationHost) {
+      final source = sourceReference(reference) ?? reference;
+      return current.bindingOwner(source.bindingId)?.portableSourceLifetime ??
+          current;
+    }
+    return current;
   }
 
   PortableDiagnosticTarget diagnosticTarget(skir.BindingRef reference) {
@@ -221,6 +291,74 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     );
   }
 
+  skir.EditorAction sourceAction(skir.EditorAction action) {
+    if (action is! skir.EditorAction_localWrapper) return action;
+    final local = action.value;
+    return skir.EditorAction.wrapLocal(switch (local) {
+      skir.LocalEditorAction_setValueWrapper(:final value) =>
+        skir.LocalEditorAction.wrapSetValue(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_insertListItemWrapper(:final value) =>
+        skir.LocalEditorAction.wrapInsertListItem(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_appendListItemWrapper(:final value) =>
+        skir.LocalEditorAction.wrapAppendListItem(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_removeListItemWrapper(:final value) =>
+        skir.LocalEditorAction.wrapRemoveListItem(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_duplicateListItemWrapper(:final value) =>
+        skir.LocalEditorAction.wrapDuplicateListItem(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_moveListItemWrapper(:final value) =>
+        skir.LocalEditorAction.wrapMoveListItem(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_insertMapRowWrapper(:final value) =>
+        skir.LocalEditorAction.wrapInsertMapRow(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_updateMapRowWrapper(:final value) =>
+        skir.LocalEditorAction.wrapUpdateMapRow(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_removeMapRowWrapper(:final value) =>
+        skir.LocalEditorAction.wrapRemoveMapRow(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      skir.LocalEditorAction_chooseFormWrapper(:final value) =>
+        skir.LocalEditorAction.wrapChooseForm(
+          (value.toMutable()
+                ..target = sourceReference(value.target) ?? value.target)
+              .toFrozen(),
+        ),
+      _ => local,
+    });
+  }
+
   bool get canExecuteAction => enabled && !readOnly && host != null;
 
   PortablePresentationScope withReadOnly(bool value) =>
@@ -262,6 +400,18 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         ),
       },
       projectedWriters: {...projectedWriters, configured: writeConfigured},
+      authoredAliases: {
+        ...authoredAliases,
+        configured:
+            authoredAliases.resolve(payload.reference) ??
+            AuthoredBindingAddress.binding(
+              configured,
+              PortableExpressionBinding(
+                value: payload.value,
+                location: payload.location,
+              ),
+            ),
+      },
     );
   }
 
@@ -293,9 +443,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           );
     final originalWriter = projectedWriters[reference.bindingId];
     final nextWriters = {...projectedWriters}..remove(id);
-    if (originalWriter != null) {
-      nextWriters[id] = (nestedReference, replacement) => originalWriter(
-        skir.BindingRef(
+    if (originalWriter != null || source.location == null) {
+      nextWriters[id] = (nestedReference, replacement) {
+        final original = skir.BindingRef(
           bindingId: reference.bindingId,
           path: skir.ValuePath(
             segments: [
@@ -303,9 +453,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
               ...nestedReference.path.segments,
             ],
           ),
-        ),
-        replacement,
-      );
+        );
+        return originalWriter == null
+            ? apply(original, replacement)
+            : originalWriter(original, replacement);
+      };
     }
     return copyWith(
       bindings: {
@@ -322,16 +474,34 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         ),
       },
       projectedWriters: nextWriters,
+      authoredAliases: {
+        ...authoredAliases,
+        id:
+            authoredAliases.resolve(reference) ??
+            AuthoredBindingAddress.binding(
+              id,
+              PortableExpressionBinding(value: value, location: location),
+            ),
+      },
     );
   }
 
   PortablePresentationScope withValues(
-    Map<skir.ExpressionBindingId, skir.DataValue> values,
-  ) => copyWith(
+    Map<skir.ExpressionBindingId, skir.DataValue> values, {
+    String? authoredOrigin,
+  }) => copyWith(
     bindings: {
       ...bindings,
       for (final entry in values.entries)
         entry.key: PortableExpressionBinding(value: entry.value),
+    },
+    authoredAliases: {
+      ...authoredAliases,
+      for (final entry in values.entries)
+        entry.key: AuthoredBindingAddress(
+          root: AuthoredBindingRoot.local(entry.key, origin: authoredOrigin),
+          path: const [],
+        ),
     },
   );
 
@@ -344,7 +514,17 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   ) => copyWith(activePresentations: {...activePresentations, presentation});
 
   PortablePresentationScope withMaterial(skir.PresentationMaterial value) =>
-      copyWith(material: value);
+      copyWith(material: value).withAuthoredLayout(value.layout);
+}
+
+extension _PortableBackendSourceLifetime on Listenable {
+  Object get portableSourceLifetime => switch (this) {
+    ValueEditing(:final workspace, :final groupId) => (workspace, groupId),
+    MultiEditOwner(:final owners) => EqualUnmodifiableListView([
+      for (final owner in owners) owner.portableSourceLifetime,
+    ]),
+    _ => this,
+  };
 }
 
 extension _PortableNamedIdentity on skir.DataValue? {

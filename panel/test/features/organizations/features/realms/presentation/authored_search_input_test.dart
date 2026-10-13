@@ -7,6 +7,100 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  testWidgets(
+    "configured search typography popup side and empty guidance reach the existing query surface",
+    (tester) async {
+      skir.ExpressionNode text(String value) => skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue(value),
+      );
+      final control =
+          (_pendingControl().toMutable()
+                ..provider = skir.SearchProvider.createStaticValues(
+                  values: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.createListValue(items: const []),
+                  ),
+                  result:
+                      (_pendingControl().provider
+                              as skir.SearchProvider_staticValuesWrapper)
+                          .value
+                          .result,
+                  selectors: const [],
+                )
+                ..appearance =
+                    (skir.InputAppearance.mutable()
+                          ..density = skir.ControlDensity.compact
+                          ..valueStyle =
+                              (skir.InputTextStyle.mutable()..weight = 500)
+                                  .toFrozen())
+                        .toFrozen()
+                ..content =
+                    (skir.InputContent.mutable()
+                          ..placeholder = text("Find reward")
+                          ..leading = skir.InputAdornment.none)
+                        .toFrozen()
+                ..popup =
+                    (skir.PopupAppearance.mutable()
+                          ..maximumWidth = skir.ExpressionNode.wrapLiteral(
+                            skir.DataValue.wrapFloat(480),
+                          )
+                          ..maximumExtent = skir.ExpressionNode.wrapLiteral(
+                            skir.DataValue.wrapFloat(200),
+                          )
+                          ..padding = skir.PresentationInsets.wrapAll(6))
+                        .toFrozen()
+                ..popupSide = skir.PopupSide.above
+                ..emptyText = text("No matching rewards"))
+              .toFrozen();
+      final target = skir.ExpressionBindingId(value: "target");
+      final scope = PortablePresentationScope(
+        operations: testPortableOperations(),
+        bindings: {
+          target: PortableExpressionBinding(
+            value: skir.DataValue.wrapStringValue(""),
+          ),
+        },
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+        host: _TestHost(
+          catalog: CheckedEditorCatalog(_emptyCatalog("configured.search")),
+          initial: skir.DataValue.wrapStringValue(""),
+          onWrite: (_) {},
+        ),
+      );
+      await tester.pumpTestApp(
+        child: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            child: SizedBox(
+              width: 360,
+              child: PortableSearchInput(control: control, scope: scope),
+            ),
+          ),
+        ),
+      );
+      final portal = tester.widget<AnchoredOverlayPortal>(
+        find.byType(AnchoredOverlayPortal),
+      );
+      expect(portal.config.preferredSide, AnchoredOverlaySide.top);
+      expect(portal.config.maxHeight, 200);
+      await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
+      await tester.pumpAndSettle();
+      final query = tester.widget<QueryBar>(find.byType(QueryBar));
+      expect(query.inputDecoration.hintText, "Find reward");
+      expect(query.inputDecoration.prefixIcon, isNull);
+      expect(
+        query.style?.fontVariations?.any(
+          (variation) => variation.axis == "wght" && variation.value == 500,
+        ),
+        isTrue,
+      );
+      await tester.enterText(find.byType(EditableText), "NoMatches");
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      expect(find.text("No matching rewards"), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets("renders static results and selects with the keyboard", (
     tester,
   ) async {
@@ -113,6 +207,14 @@ void main() {
       placeholder: null,
       customValue: null,
       initialQuery: null,
+      appearance: null,
+      content: null,
+      popup: null,
+      popupSide: null,
+      emptyText: null,
+      loadingText: null,
+      empty: null,
+      loading: null,
     );
     final scope = PortablePresentationScope(
       operations: testPortableOperations(),
@@ -323,6 +425,14 @@ void main() {
       placeholder: null,
       customValue: null,
       initialQuery: null,
+      appearance: null,
+      content: null,
+      popup: null,
+      popupSide: null,
+      emptyText: null,
+      loadingText: null,
+      empty: null,
+      loading: null,
     );
     skir.DataValue? written;
     final client = MockClient((request) async {
@@ -515,6 +625,14 @@ skir.SearchControl _pendingControl() {
     placeholder: null,
     customValue: null,
     initialQuery: null,
+    appearance: null,
+    content: null,
+    popup: null,
+    popupSide: null,
+    emptyText: null,
+    loadingText: null,
+    empty: null,
+    loading: null,
   );
 }
 

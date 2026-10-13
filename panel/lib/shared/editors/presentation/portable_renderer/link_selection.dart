@@ -65,7 +65,37 @@ Future<void> _chooseLink({
         ),
       );
     },
-    searchHint: "Search linked resources",
+    searchHint:
+        _entryPlaceholder(control.inputContent, scope) ??
+        "Search linked resources",
+    queryDecoration: _controlStyle(
+      context,
+      scope,
+      control.inputAppearance,
+    ).decoration,
+    useDefaultQueryIcon:
+        control.inputContent?.leading != skir.InputAdornment.none,
+    queryStyle: _controlStyle(
+      context,
+      scope,
+      control.inputAppearance,
+    ).valueStyle,
+    queryAlignment: _controlStyle(
+      context,
+      scope,
+      control.inputAppearance,
+    ).alignment,
+    surfaceStyle: SearchSurfaceStyle(
+      constraints: _popupConstraints(scope, control.popup),
+      shape: _popupShape(context, scope, control.popup),
+      fill: control.popup?.fill == null
+          ? null
+          : PresentationColorEnvironment.of(context)
+                .resolve(control.popup!.fill!, scope),
+      padding: control.popup?.padding == null
+          ? null
+          : _presentationInsets(control.popup!.padding),
+    ),
     rowRenderers: {
       _authoredLinkChoiceResultType.rowRendererId:
           _buildAuthoredLinkChoiceResult,

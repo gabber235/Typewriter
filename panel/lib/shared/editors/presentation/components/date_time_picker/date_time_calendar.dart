@@ -12,9 +12,11 @@ class DateTimeCalendar extends StatefulWidget {
     required this.enabled,
     required this.onChanged,
     this.autofocus = false,
+    this.selectableDate,
     super.key,
   });
 
+  final bool Function(DateTime)? selectableDate;
   final DateTime value;
   final bool enabled;
   final ValueChanged<DateTime> onChanged;
@@ -132,7 +134,9 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
       _moveMonth(HardwareKeyboard.instance.isShiftPressed ? 12 : 1);
     } else if (key == LogicalKeyboardKey.enter ||
         key == LogicalKeyboardKey.space) {
-      if (widget.enabled) widget.onChanged(_focusedDate);
+      if (widget.enabled && (widget.selectableDate?.call(_focusedDate) ?? true)) {
+        widget.onChanged(_focusedDate);
+      }
     } else {
       return KeyEventResult.ignored;
     }
@@ -262,7 +266,14 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
                                           .add(Duration(days: week * 7 + day))
                                           .month ==
                                       _visibleMonth.month,
-                                  enabled: widget.enabled,
+                                  enabled:
+                                      widget.enabled &&
+                                      (widget.selectableDate?.call(
+                                            gridStart.add(
+                                              Duration(days: week * 7 + day),
+                                            ),
+                                          ) ??
+                                          true),
                                   onPressed: _focusAndSelect,
                                 ),
                               ),
@@ -281,6 +292,6 @@ class _DateTimeCalendarState extends State<DateTimeCalendar> {
 
   void _focusAndSelect(DateTime date) {
     _focus(date);
-    widget.onChanged(date);
+    if (widget.selectableDate?.call(date) ?? true) widget.onChanged(date);
   }
 }

@@ -122,7 +122,8 @@ skir.PresentationNode _servicePortablePresentation(
       "service.name",
       _serviceNameBinding,
       label: "Name",
-      inputFormatters: _serviceNameInputFormats,
+      mappings: _serviceNameMappings,
+      characterFilters: _serviceNameFilters,
     ),
     _inspectorCard("service.connection", "CONNECTION", color, [
       _inspectorConnectionStatus("service.state", _serviceStateBinding),
@@ -139,10 +140,44 @@ skir.PresentationNode _servicePortablePresentation(
   _portableCommit("service.save", _serviceNameBinding),
 ], spacing: 16);
 
-final _serviceNameInputFormats = [
-  skir.TextInputFormat.lowercase,
-  skir.TextInputFormat.createReplace(pattern: r"[\s\-]+", replacement: "_"),
-  skir.TextInputFormat.wrapAllow("[a-z0-9_]"),
+final _serviceNameCandidate = skir.ExpressionBindingId(
+  value: "presentation.service_name_completion",
+);
+final _serviceNameMappings =
+    (skir.ValueMappings.mutable()
+          ..completion = skir.ExpressionMapping(
+            inputBinding: _serviceNameCandidate,
+            body: skir.ExpressionNode.createCall(
+              operation: skir.OperationId(value: "typewriter.regex.replace"),
+              arguments: [
+                skir.ExpressionNode.createCall(
+                  operation: skir.OperationId(
+                    value: "typewriter.regex.replace",
+                  ),
+                  arguments: [
+                    skir.ExpressionNode.createCall(
+                      operation: skir.OperationId(
+                        value: "typewriter.text.lower",
+                      ),
+                      arguments: [
+                        skir.ExpressionNode.createRead(
+                          binding: _serviceNameCandidate,
+                          path: editorRootPath,
+                        ),
+                      ],
+                    ),
+                    _portableLiteral(r"[\s\-]+"),
+                    _portableLiteral("_"),
+                  ],
+                ),
+                _portableLiteral("[^a-z0-9_]"),
+                _portableLiteral(""),
+              ],
+            ),
+          ))
+        .toFrozen();
+final _serviceNameFilters = [
+  skir.CharacterFilter.wrapAllow(r"[A-Za-z0-9_\s\-]"),
 ];
 
 skir.PresentationNode _serviceIdentityPortablePresentation() =>
@@ -151,7 +186,8 @@ skir.PresentationNode _serviceIdentityPortablePresentation() =>
         "serviceIdentity.name",
         _serviceNameBinding,
         label: "Name",
-        inputFormatters: _serviceNameInputFormats,
+        mappings: _serviceNameMappings,
+        characterFilters: _serviceNameFilters,
       ),
       _portableCommit("serviceIdentity.save", _serviceNameBinding),
     ]);
@@ -160,7 +196,8 @@ skir.PresentationNode _portableTextInput(
   String id,
   skir.ExpressionBindingId bindingId, {
   required String label,
-  List<skir.TextInputFormat> inputFormatters = const [],
+  skir.ValueMappings? mappings,
+  List<skir.CharacterFilter> characterFilters = const [],
 }) => skir.PresentationNode(
   nodeId: id,
   properties: skir.PresentationProperties.defaultInstance,
@@ -172,9 +209,15 @@ skir.PresentationNode _portableTextInput(
       prefix: null,
       semanticLabel: _portableLiteral(label),
     ),
-    multiline: false,
-    placeholder: null,
-    inputFormatters: inputFormatters,
+    appearance: null,
+    content: null,
+    mappings: mappings,
+    entry: null,
+    options:
+        (skir.TextEditingOptions.mutable()
+              ..lines = skir.TextLines.single
+              ..characterFilters = characterFilters)
+            .toFrozen(),
   ),
   header: null,
 );

@@ -208,6 +208,7 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
   }
 
   Widget _renderImage(
+    BuildContext context,
     skir.ImageContent content,
     PortablePresentationScope childScope,
   ) {
@@ -216,11 +217,36 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       return _diagnostic(message);
     }
     final label = _controlString(content.semanticLabel, childScope);
-    return Image.network(
+    final options = content.options;
+    final image = Image.network(
       (source as _ResolvedValue<String>).value,
       semanticLabel: label,
+      width: _displayDimension(childScope, options?.width, positive: true),
+      height: _displayDimension(childScope, options?.height, positive: true),
+      fit: switch (options?.fit) {
+        final value when value == skir.ImageFit.contain => BoxFit.contain,
+        final value when value == skir.ImageFit.cover => BoxFit.cover,
+        final value when value == skir.ImageFit.fill => BoxFit.fill,
+        final value when value == skir.ImageFit.fitWidth => BoxFit.fitWidth,
+        final value when value == skir.ImageFit.fitHeight => BoxFit.fitHeight,
+        final value when value == skir.ImageFit.none => BoxFit.none,
+        final value when value == skir.ImageFit.scaleDown => BoxFit.scaleDown,
+        null => null,
+        _ => throw const PresentationColorFailure("Image fit is unavailable"),
+      },
+      alignment: options?.alignment == null
+          ? Alignment.center
+          : _presentationAlignment(options!.alignment!),
       errorBuilder: (_, _, _) => _diagnostic("The image could not be loaded"),
     );
+    return options?.radius == null
+        ? image
+        : ClipRRect(
+            borderRadius:
+                _radius(context, options!.radius!, childScope) ??
+                BorderRadius.zero,
+            child: image,
+          );
   }
 
   Widget _renderBadge(
@@ -229,22 +255,50 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope,
   ) {
     final label = _string(childScope, content.label);
-    return switch (label) {
-      _ResolvedValue(:final value) => DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: context.spacing.space2,
-            vertical: 3,
-          ),
-          child: Text(value),
+    if (label case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final options = content.options;
+    final style = _controlStyle(context, childScope, options?.appearance);
+    final icon = _displayIcon(context, childScope, options, style);
+    final border = style.decoration.border;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color:
+            style.decoration.fillColor ??
+            Theme.of(context).colorScheme.secondaryContainer,
+        border:
+            _hasControlAppearance(
+              childScope,
+              options?.appearance,
+              (a) => a.border,
+            )
+            ? Border.fromBorderSide(border?.borderSide ?? BorderSide.none)
+            : null,
+        borderRadius:
+            _hasControlAppearance(
+                  childScope,
+                  options?.appearance,
+                  (a) => a.radius,
+                ) &&
+                border is OutlineInputBorder
+            ? border.borderRadius
+            : BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding:
+            style.padding ??
+            EdgeInsets.symmetric(
+              horizontal: style.dense == true ? 6 : context.spacing.space2,
+              vertical: style.dense == true ? 2 : 3,
+            ),
+        child: _displayLabel(
+          (label as _ResolvedValue<String>).value,
+          icon,
+          style.valueStyle,
         ),
       ),
-      _ResolvedFailure(:final message) => _diagnostic(message),
-    };
+    );
   }
 
   Widget _renderChip(
@@ -271,17 +325,54 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     final foreground = Theme.of(context).brightness == Brightness.dark
         ? color
         : hsl.withLightness(hsl.lightness.clamp(0.2, 0.4)).toColor();
+    final options = content.options;
+    final style = _controlStyle(context, childScope, options?.appearance);
+    final border = style.decoration.border;
     return Chip(
       label: Text(
         (label as _ResolvedValue<String>).value,
-        style: DefaultTextStyle.of(context).style.copyWith(color: foreground),
+        style: style.valueStyle.copyWith(
+          color:
+              _hasControlAppearance(
+                childScope,
+                options?.appearance,
+                (a) => a.valueStyle?.color,
+              )
+              ? style.valueStyle.color
+              : foreground,
+        ),
       ),
-      backgroundColor: color.withValues(alpha: 0.18),
-      side: BorderSide(color: color),
+      avatar: _displayIcon(context, childScope, options, style),
+      backgroundColor:
+          style.decoration.fillColor ?? color.withValues(alpha: 0.18),
+      padding: style.padding,
+      visualDensity: style.dense == null
+          ? null
+          : style.dense!
+          ? VisualDensity.compact
+          : VisualDensity.standard,
+      side:
+          _hasControlAppearance(
+            childScope,
+            options?.appearance,
+            (a) => a.border,
+          )
+          ? border?.borderSide ?? BorderSide.none
+          : BorderSide(color: color),
+      shape:
+          _hasControlAppearance(
+                childScope,
+                options?.appearance,
+                (a) => a.radius,
+              ) &&
+              border is OutlineInputBorder
+          ? RoundedRectangleBorder(borderRadius: border.borderRadius)
+          : null,
     );
   }
 
   Widget _renderProgress(
+    BuildContext context,
     skir.ProgressContent content,
     PortablePresentationScope childScope,
   ) {
@@ -294,7 +385,23 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     return Semantics(
       label: label,
       value: value.toString(),
-      child: LinearProgressIndicator(value: (value / maximum).clamp(0, 1)),
+      child: LinearProgressIndicator(
+        value: (value / maximum).clamp(0, 1),
+        color: _color(context, childScope, content.appearance?.color),
+        backgroundColor: _color(
+          context,
+          childScope,
+          content.appearance?.backgroundColor,
+        ),
+        minHeight: _displayDimension(
+          childScope,
+          content.appearance?.minimumHeight,
+          positive: true,
+        ),
+        borderRadius: content.appearance?.radius == null
+            ? null
+            : _radius(context, content.appearance!.radius!, childScope),
+      ),
     );
   }
 
@@ -322,22 +429,70 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
     }
     final label = (labelResult as _ResolvedValue<String>).value;
     final color = _statusColor(context, tone);
+    final options = appearance?.options;
+    final style = _controlStyle(context, childScope, options?.appearance);
+    final icon = _displayIcon(
+      context,
+      childScope,
+      options,
+      style,
+      fallback: Icon(
+        _statusIcon(tone),
+        size:
+            _hasControlAppearance(
+              childScope,
+              options?.appearance,
+              (a) => a.iconSize,
+            )
+            ? style.iconSize
+            : 14,
+        color: style.iconColor ?? color,
+      ),
+    );
+    final text = style.valueStyle.copyWith(
+      color:
+          _hasControlAppearance(
+            childScope,
+            options?.appearance,
+            (a) => a.valueStyle?.color,
+          )
+          ? style.valueStyle.color
+          : color,
+    );
+    final border = style.decoration.border;
     return Semantics(
       label: label,
       child: ExcludeSemantics(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(_statusIcon(tone), size: 14, color: color),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                style: DefaultTextStyle.of(context).style
-                    .copyWith(color: color),
-              ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: style.decoration.fillColor,
+            border:
+                _hasControlAppearance(
+                  childScope,
+                  options?.appearance,
+                  (a) => a.border,
+                )
+                ? Border.fromBorderSide(border?.borderSide ?? BorderSide.none)
+                : null,
+            borderRadius:
+                _hasControlAppearance(
+                      childScope,
+                      options?.appearance,
+                      (a) => a.radius,
+                    ) &&
+                    border is OutlineInputBorder
+                ? border.borderRadius
+                : null,
+          ),
+          child: Padding(
+            padding: style.padding ?? EdgeInsets.zero,
+            child: _displayLabel(
+              label,
+              icon,
+              text,
+              gap: style.dense == true ? 4 : 6,
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -364,11 +519,16 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
       final display = content.timeZone == skir.DateTimeZone.utc
           ? timestamp.toUtc()
           : timestamp.toLocal();
-      return SelectableText(
-        DateFormat(
-          format.value,
-          Localizations.localeOf(context).toLanguageTag(),
-        ).format(display),
+      return _styledTimeFace(
+        context,
+        childScope,
+        content.options,
+        SelectableText(
+          DateFormat(
+            format.value,
+            Localizations.localeOf(context).toLanguageTag(),
+          ).format(display),
+        ),
       );
     } on FormatException catch (error) {
       return _diagnostic("Invalid date and time format: ${error.message}");
@@ -425,7 +585,14 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
             },
             child: Semantics(
               label: description.natural,
-              child: ExcludeSemantics(child: Text(label)),
+              child: ExcludeSemantics(
+                child: _styledTimeFace(
+                  context,
+                  childScope,
+                  content.options,
+                  Text(label),
+                ),
+              ),
             ),
           ),
         );
@@ -434,20 +601,104 @@ extension _PortableContentRendering on PortablePresentationNodeRenderer {
   }
 
   Widget _renderTooltip(
+    BuildContext context,
     skir.TooltipElement tooltip,
     PortablePresentationScope childScope,
   ) {
     final message = _string(childScope, tooltip.message);
-    return switch (message) {
-      _ResolvedValue(:final value) => Tooltip(
-        message: value,
+    if (message case _ResolvedFailure(:final message)) {
+      return _diagnostic(message);
+    }
+    final options = tooltip.appearance;
+    final style = _controlStyle(context, childScope, options?.appearance);
+    Duration? duration(int? milliseconds) {
+      if (milliseconds == null) return null;
+      if (milliseconds < 0) {
+        throw const PresentationColorFailure(
+          "Tooltip duration must be nonnegative",
+        );
+      }
+      return Duration(milliseconds: milliseconds);
+    }
+
+    final border = style.decoration.border;
+    final theme = Theme.of(context);
+    final native = theme.tooltipTheme;
+    final nativeDecoration = native.decoration is BoxDecoration
+        ? native.decoration! as BoxDecoration
+        : BoxDecoration(
+            color: context.colors.surfaceRaised,
+            borderRadius: context.shapes.mediumBorderRadius,
+          );
+    final hasPaint =
+        _hasControlAppearance(childScope, options?.appearance, (a) => a.fill) ||
+        _hasControlAppearance(
+          childScope,
+          options?.appearance,
+          (a) => a.border,
+        ) ||
+        _hasControlAppearance(childScope, options?.appearance, (a) => a.radius);
+    final decoration = !hasPaint
+        ? null
+        : nativeDecoration.copyWith(
+            color: style.decoration.fillColor,
+            border:
+                _hasControlAppearance(
+                  childScope,
+                  options?.appearance,
+                  (a) => a.border,
+                )
+                ? Border.fromBorderSide(border?.borderSide ?? BorderSide.none)
+                : null,
+            borderRadius:
+                _hasControlAppearance(
+                      childScope,
+                      options?.appearance,
+                      (a) => a.radius,
+                    ) &&
+                    border is OutlineInputBorder
+                ? border.borderRadius
+                : null,
+          );
+    final nativeText =
+        native.textStyle ??
+        theme.textTheme.bodyMedium!.copyWith(
+          color: context.colors.contentPrimary,
+        );
+    final text = _nativeAppearanceTextStyle(
+      childScope,
+      options?.appearance,
+      style,
+    );
+    final tooltipKey = GlobalKey<TooltipState>();
+    return Tooltip(
+      key: tooltipKey,
+      message: (message as _ResolvedValue<String>).value,
+      textStyle: text == null ? null : nativeText.merge(text),
+      padding:
+          style.padding ??
+          (style.dense == true ? const EdgeInsets.all(6) : null),
+      decoration: decoration,
+      waitDuration: duration(options?.waitMilliseconds),
+      showDuration: duration(options?.showMilliseconds),
+      preferBelow: options?.preferBelow,
+      child: Focus(
+        skipTraversal: _hasFocusableContent(tooltip.child),
+        onFocusChange: (focused) {
+          if (!focused) {
+            Tooltip.dismissAllToolTips();
+            return;
+          }
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => tooltipKey.currentState?.ensureTooltipVisible(),
+          );
+        },
         child: PortablePresentationNodeRenderer(
           node: tooltip.child,
           scope: childScope,
         ),
       ),
-      _ResolvedFailure(:final message) => _diagnostic(message),
-    };
+    );
   }
 
   Widget _renderRichText(
@@ -551,4 +802,147 @@ extension _PortableParagraphRendering on TextSpan {
     };
     return paragraph.selectable ? SelectionArea(child: widget) : widget;
   }
+}
+
+bool _hasControlAppearance<T>(
+  PortablePresentationScope scope,
+  skir.InputAppearance? local,
+  T? Function(skir.InputAppearance) select,
+) =>
+    (local != null && select(local) != null) ||
+    scope.appearanceLayers.any((layer) => select(layer.appearance) != null);
+
+double? _displayDimension(
+  PortablePresentationScope scope,
+  skir.ExpressionNode? expression, {
+  bool positive = false,
+}) {
+  if (expression == null) return null;
+  final value = _number(scope, expression);
+  if (value == null || !value.isFinite || (positive ? value <= 0 : value < 0)) {
+    throw const PresentationColorFailure(
+      "Display dimensions must be finite and within their allowed range",
+    );
+  }
+  return value;
+}
+
+Widget? _displayIcon(
+  BuildContext context,
+  PortablePresentationScope scope,
+  skir.DisplayAppearance? options,
+  _PortableControlStyle style, {
+  Widget? fallback,
+}) {
+  final adornment = options?.icon;
+  if (adornment == skir.InputAdornment.none) return null;
+  final content = switch (adornment) {
+    skir.InputAdornment_contentWrapper(:final value) =>
+      PortablePresentationNodeRenderer(node: value, scope: scope),
+    _ => fallback,
+  };
+  return content == null
+      ? null
+      : IconTheme.merge(
+          data: IconThemeData(color: style.iconColor, size: style.iconSize),
+          child: content,
+        );
+}
+
+Widget _displayLabel(
+  String label,
+  Widget? icon,
+  TextStyle style, {
+  double gap = 6,
+}) => icon == null
+    ? Text(label, style: style)
+    : Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          icon,
+          SizedBox(width: gap),
+          Flexible(child: Text(label, style: style)),
+        ],
+      );
+
+TextStyle? _nativeAppearanceTextStyle(
+  PortablePresentationScope scope,
+  skir.InputAppearance? appearance,
+  _PortableControlStyle resolved,
+) {
+  if (!_hasControlAppearance(scope, appearance, (a) => a.valueStyle)) {
+    return null;
+  }
+  return _sparsePresentationTextStyle(
+    color: _hasControlAppearance(scope, appearance, (a) => a.valueStyle?.color)
+        ? resolved.valueStyle.color
+        : null,
+    fontSize:
+        _hasControlAppearance(scope, appearance, (a) => a.valueStyle?.sizing)
+        ? resolved.valueStyle.fontSize
+        : null,
+    fontVariations:
+        _hasControlAppearance(scope, appearance, (a) => a.valueStyle?.weight)
+        ? resolved.valueStyle.fontVariations
+        : null,
+  );
+}
+
+bool _hasFocusableContent(skir.PresentationNode node) {
+  if (node.boundControl != null ||
+      node.header != null ||
+      node.element is skir.PresentationElement_buttonWrapper ||
+      node.element is skir.PresentationElement_iconButtonWrapper ||
+      node.element is skir.PresentationElement_menuWrapper ||
+      node.element is skir.PresentationElement_tabsWrapper) {
+    return true;
+  }
+  return node.nestedPresentationNodes.any(_hasFocusableContent);
+}
+
+Widget _styledTimeFace(
+  BuildContext context,
+  PortablePresentationScope scope,
+  skir.DisplayAppearance? options,
+  Widget child,
+) {
+  if (options == null && scope.appearanceLayers.isEmpty) return child;
+  final style = _controlStyle(context, scope, options?.appearance);
+  final text = _nativeAppearanceTextStyle(scope, options?.appearance, style);
+  var content = text == null
+      ? child
+      : DefaultTextStyle.merge(style: text, child: child);
+  final icon = _displayIcon(context, scope, options, style);
+  if (icon != null) {
+    content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        icon,
+        SizedBox(width: style.dense == true ? 4 : 6),
+        Flexible(child: content),
+      ],
+    );
+  }
+  final border = style.decoration.border;
+  return DecoratedBox(
+    decoration: BoxDecoration(
+      color: style.decoration.fillColor,
+      border: _hasControlAppearance(scope, options?.appearance, (a) => a.border)
+          ? Border.fromBorderSide(border?.borderSide ?? BorderSide.none)
+          : null,
+      borderRadius:
+          _hasControlAppearance(scope, options?.appearance, (a) => a.radius) &&
+              border is OutlineInputBorder
+          ? border.borderRadius
+          : null,
+    ),
+    child: Padding(
+      padding:
+          style.padding ??
+          (style.dense == null
+              ? EdgeInsets.zero
+              : EdgeInsets.symmetric(vertical: style.dense! ? 2 : 6)),
+      child: content,
+    ),
+  );
 }

@@ -82,8 +82,10 @@ class PortableLocationTarget extends HookWidget {
   const PortableLocationTarget({
     required this.location,
     required this.child,
+    this.onFocusChange,
     super.key,
   });
+  final ValueChanged<bool>? onFocusChange;
   final skir.ValueLocation? location;
   final Widget child;
   @override
@@ -91,8 +93,11 @@ class PortableLocationTarget extends HookWidget {
     final controller = PortableLocationRevealScope.maybeOf(context);
     final identity = useMemoized(Object.new);
     final focus = useMemoized(
-      () =>
-          FocusScopeNode(debugLabel: "Authored location", skipTraversal: true),
+      () => FocusNode(
+        debugLabel: "Authored location",
+        skipTraversal: true,
+        canRequestFocus: false,
+      ),
     );
     useEffect(() => focus.dispose, [focus]);
     useEffect(() {
@@ -113,6 +118,11 @@ class PortableLocationTarget extends HookWidget {
       });
       return () => controller._targets.remove(identity);
     }, [controller, location]);
-    return FocusScope(node: focus, child: child);
+    return Focus(
+      focusNode: focus,
+      canRequestFocus: false,
+      onFocusChange: onFocusChange,
+      child: child,
+    );
   }
 }

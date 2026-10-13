@@ -32,12 +32,14 @@ typedef TimelineCommit = Future<void> Function(
 class Timeline extends HookConsumerWidget {
   const Timeline({
     required this.data,
+    this.style,
     this.onElementsCommited,
     this.resolveTargets,
     super.key,
   });
 
   final TimelineData data;
+  final TimelineStyle? style;
   final TimelineCommit? onElementsCommited;
   final List<TimelineIdentifier> Function(TimelineIdentifier? focusedId)?
   resolveTargets;
@@ -63,8 +65,8 @@ class Timeline extends HookConsumerWidget {
         return HookBuilder(
           builder: (context) {
             final style = useMemoized(
-              () => TimelineStyle.fallback(Theme.of(context)),
-              [Theme.of(context)],
+              () => this.style ?? TimelineStyle.fallback(Theme.of(context)),
+              [this.style, Theme.of(context)],
             );
             final headerWidth = useMemoized(
               () => controller.headerWidth

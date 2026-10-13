@@ -34,20 +34,33 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       ),
       _ => (EdgeSide.right, EdgeSide.left),
     };
+    final appearance = element.appearance;
+    final cellSize = appearance?.cellSize == null
+        ? 50.0
+        : _number(childScope, appearance!.cellSize);
+    if (cellSize == null || !cellSize.isFinite || cellSize <= 0) {
+      return _diagnostic("Graph cell size must be finite and positive");
+    }
+    final edgeColor =
+        _color(context, childScope, appearance?.edgeColor) ??
+        Theme.of(context).colorScheme.outline;
+    final cardPadding = appearance?.cardPadding == null
+        ? null
+        : _presentationInsets(appearance!.cardPadding);
     final edges = [
       for (final edge in projection.edges)
         GraphEdge(
           id: edge.id,
           source: GraphIdentifier(edge.source.value),
           target: GraphIdentifier(edge.target.value),
-          color: Theme.of(context).colorScheme.outline,
+          color: edgeColor,
           sourceSide: sides.$1,
           targetSide: sides.$2,
         ),
     ];
     return Graph(
       data: GraphData(
-        cellSize: 50,
+        cellSize: cellSize,
         elements: [
           for (final entry in projection.entries)
             GraphElement(
@@ -56,7 +69,8 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
               y: entry.graph?.y ?? projection.entries.indexOf(entry) * 2,
               width: entry.graph?.width ?? 4,
               height: entry.graph?.height ?? 1,
-              builder: (_) => _pageResourceCard(entry, childScope),
+              builder: (_) =>
+                  _pageResourceCard(entry, childScope, padding: cardPadding),
             ),
         ],
         edges: edges,
@@ -129,6 +143,9 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     }
     return Timeline(
       data: TimelineData(tracks: tracks),
+      style: element.appearance == null
+          ? null
+          : _pageTimelineStyle(context, childScope, element.appearance!),
       onElementsCommited: childScope.enabled && !childScope.readOnly
           ? (changes) async {
               _reportPageWrite(
@@ -149,8 +166,9 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
 
   Widget _pageResourceCard(
     PortablePageEntryProjection entry,
-    PortablePresentationScope childScope,
-  ) {
+    PortablePresentationScope childScope, {
+    EdgeInsetsGeometry? padding,
+  }) {
     final content = _resourcePresentation(
       entry.resource,
       skir.PresentationRole.graphNode,
@@ -166,7 +184,11 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
             : () => childScope.openResource!(entry.resource),
         child: Row(
           children: [
-            Expanded(child: content),
+            Expanded(
+              child: padding == null
+                  ? content
+                  : Padding(padding: padding, child: content),
+            ),
             PopupMenuButton<_PageResourceAction>(
               enabled: editable,
               onSelected: (action) {
@@ -246,6 +268,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
             ),
           },
           budget: parent.budget,
+          appearanceLayers: parent.appearanceLayers,
           readOnly: parent.readOnly,
           enabled: parent.enabled,
           operations: parent.operations,
@@ -320,4 +343,65 @@ TimelineElement? _timelineElement(
         ),
       ),
   };
+}
+
+TimelineStyle _pageTimelineStyle(
+  BuildContext context,
+  PortablePresentationScope scope,
+  skir.PageTimelineAppearance appearance,
+) {
+  final base = TimelineStyle.fallback(Theme.of(context));
+  double dimension(double? value, double fallback, {bool positive = false}) {
+    if (value == null) return fallback;
+    if (!value.isFinite || (positive ? value <= 0 : value < 0)) {
+      throw const PresentationColorFailure(
+        "Timeline dimensions must be finite and within their allowed range",
+      );
+    }
+    return value;
+  }
+
+  Color color(skir.PresentationColor? value, Color fallback) =>
+      _color(context, scope, value) ?? fallback;
+  final palette = base.palette;
+  return TimelineStyle(
+    rulerHeight: dimension(
+      appearance.rulerHeight,
+      base.rulerHeight,
+      positive: true,
+    ),
+    trackPadding: dimension(appearance.trackPadding, base.trackPadding),
+    laneHeight: dimension(
+      appearance.laneHeight,
+      base.laneHeight,
+      positive: true,
+    ),
+    laneGap: dimension(appearance.laneGap, base.laneGap),
+    headerPadding: dimension(appearance.headerPadding, base.headerPadding),
+    minHeaderWidth: base.minHeaderWidth,
+    maxHeaderWidth: base.maxHeaderWidth,
+    minPixelsPerFrame: base.minPixelsPerFrame,
+    maxPixelsPerFrame: base.maxPixelsPerFrame,
+    gridMinorMinSpacing: base.gridMinorMinSpacing,
+    gridMajorMinSpacing: base.gridMajorMinSpacing,
+    gridTickSteps: base.gridTickSteps,
+    trailingFrames: base.trailingFrames,
+    minSegmentWidth: base.minSegmentWidth,
+    keyframeWidth: base.keyframeWidth,
+    keyframeSize: base.keyframeSize,
+    edgeHandleWidth: base.edgeHandleWidth,
+    palette: TimelinePalette(
+      headerBackground: color(appearance.headerColor, palette.headerBackground),
+      rulerBackground: color(appearance.rulerColor, palette.rulerBackground),
+      trackBackground: color(appearance.trackColor, palette.trackBackground),
+      trackAltBackground: color(
+        appearance.alternateTrackColor,
+        palette.trackAltBackground,
+      ),
+      gridMinor: color(appearance.gridMinorColor, palette.gridMinor),
+      gridMajor: color(appearance.gridMajorColor, palette.gridMajor),
+      headerDivider: palette.headerDivider,
+      textMuted: color(appearance.textMutedColor, palette.textMuted),
+    ),
+  );
 }

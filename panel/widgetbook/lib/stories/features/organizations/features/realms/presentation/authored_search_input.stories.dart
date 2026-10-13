@@ -98,6 +98,38 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
     ),
     customValue: null,
     initialQuery: null,
+    appearance:
+        (skir.InputAppearance.mutable()
+              ..density = skir.ControlDensity.compact
+              ..valueStyle = (skir.InputTextStyle.mutable()..weight = 500)
+                  .toFrozen())
+            .toFrozen(),
+    content:
+        (skir.InputContent.mutable()
+              ..placeholder = skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Find a reward"),
+              )
+              ..leading = skir.InputAdornment.none)
+            .toFrozen(),
+    popup:
+        (skir.PopupAppearance.mutable()
+              ..maximumWidth = skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapFloat(480),
+              )
+              ..maximumExtent = skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapFloat(320),
+              )
+              ..padding = skir.PresentationInsets.wrapAll(8))
+            .toFrozen(),
+    popupSide: skir.PopupSide.below,
+    emptyText: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapStringValue("No matching rewards"),
+    ),
+    loadingText: skir.ExpressionNode.wrapLiteral(
+      skir.DataValue.wrapStringValue("Finding rewards"),
+    ),
+    empty: null,
+    loading: null,
   );
 
   skir.DataValue _value = skir.DataValue.unfilled;

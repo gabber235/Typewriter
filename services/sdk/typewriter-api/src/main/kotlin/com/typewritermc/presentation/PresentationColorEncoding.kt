@@ -81,4 +81,6 @@ private fun PresentationInteractionState.wire(): WireState =
         PresentationInteractionState.Focused -> WireState.FOCUSED
         PresentationInteractionState.Pressed -> WireState.PRESSED
         PresentationInteractionState.Disabled -> WireState.DISABLED
+        PresentationInteractionState.ReadOnly -> WireState.READ_ONLY
+        PresentationInteractionState.Invalid -> WireState.INVALID
     }

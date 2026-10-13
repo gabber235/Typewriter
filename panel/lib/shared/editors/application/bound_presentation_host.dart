@@ -98,6 +98,9 @@ final class BoundPresentationHost extends ChangeNotifier
   @override
   PortablePresentationDocument get document => _document;
 
+  /// Returns the existing backend source lifetime behind a binding.
+  Listenable? bindingOwner(skir.ExpressionBindingId id) => _bindings[id]?.owner;
+
   @override
   EditControl? commitControl(
     skir.BindingRef reference, {

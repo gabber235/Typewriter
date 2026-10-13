@@ -5,7 +5,26 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.presentation.AppliedPresentation
+import com.typewritermc.presentation.ControlDensity
+import com.typewritermc.presentation.NumericInputScope
+import com.typewritermc.presentation.PresentationColor
+import com.typewritermc.presentation.TextStyle
+import com.typewritermc.presentation.literalColor
+import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
+
+private fun NumericInputScope<Int>.coordinateInput(
+    axis: String,
+    color: PresentationColor,
+) {
+    prefix {
+        text(literal(axis), style = TextStyle(color = color))
+    }
+    placeholder("00")
+    step(1)
+    density(ControlDensity.Compact)
+    selectAllOnFocus(true)
+}
 
 object PlacementSdkProvider :
     GraphPlacementConfiguration,
@@ -43,28 +62,33 @@ object PlacementSdkProvider :
     }
 
     override fun GraphPlacementPresentationScope.present() {
-        x {
-            label("X")
-            numericInput()
+        row {
+            x {
+                semanticLabel(literal("X coordinate"))
+                numericInput {
+                    coordinateInput("X", literalColor(Color.parseRgb(Color.Hex.RED)))
+                }
+            }
+            y {
+                semanticLabel(literal("Y coordinate"))
+                numericInput {
+                    coordinateInput("Y", literalColor(Color.parseRgb(Color.Hex.GREEN)))
+                }
+            }
         }
-        y {
-            label("Y")
-            numericInput()
+        row {
+            width {
+                numericInput {
+                    coordinateInput("W", literalColor(Color.parseRgb(Color.Hex.ORANGE)))
+                }
+            }
+            height {
+                numericInput {
+                    coordinateInput("H", literalColor(Color.parseRgb(Color.Hex.MEDIUM_PURPLE)))
+                }
+            }
         }
-        width {
-            label("Width")
-            numericInput()
-        }
-        height {
-            label("Height")
-            numericInput()
-        }
-        remainingFields {
-            exclude(x)
-            exclude(y)
-            exclude(width)
-            exclude(height)
-        }
+        remainingFields()
     }
 
     override fun TimelineEntryPlacementPresentationScope.present() {
@@ -72,7 +96,7 @@ object PlacementSdkProvider :
             label("Track")
             numericInput()
         }
-        remainingFields { exclude(trackIndex) }
+        remainingFields()
     }
 
     override fun TimelineSegmentPlacementPresentationScope.present() {
@@ -84,10 +108,7 @@ object PlacementSdkProvider :
             label("End frame")
             numericInput()
         }
-        remainingFields {
-            exclude(startFrame)
-            exclude(endFrame)
-        }
+        remainingFields()
     }
 
     override fun TimelineKeyframePlacementPresentationScope.present() {
@@ -95,7 +116,7 @@ object PlacementSdkProvider :
             label("Frame")
             numericInput()
         }
-        remainingFields { exclude(frame) }
+        remainingFields()
     }
 }
 

@@ -103,3 +103,80 @@ HSVColor hsvWithPreservedHue(Color color, double preservedHue) {
   final hsv = HSVColor.fromColor(color);
   return hsv.saturation > 0.0001 ? hsv : hsv.withHue(preservedHue);
 }
+
+extension ColorEditingRepresentation on Color {
+  String toEditorColorText({
+    required ColorFieldFormat format,
+    required bool includeAlpha,
+  }) {
+    if (format == ColorFieldFormat.hex) {
+      return formatHex(includeAlpha: includeAlpha);
+    }
+    final hsl = HSLColor.fromColor(this);
+    final parts = format == ColorFieldFormat.rgb
+        ? [redByte.toString(), greenByte.toString(), blueByte.toString()]
+        : [
+            hsl.hue.toString(),
+            (hsl.saturation * 100).toString(),
+            (hsl.lightness * 100).toString(),
+          ];
+    if (includeAlpha) parts.add((alphaByte * 100 / 255).toString());
+    return parts.join(", ");
+  }
+}
+
+Color parseEditorColorText(
+  String text, {
+  required ColorFieldFormat format,
+  required bool includeAlpha,
+}) {
+  if (format == ColorFieldFormat.hex) {
+    return parseColorHex(text, includeAlpha: includeAlpha);
+  }
+  final parts = text
+      .split(",")
+      .map((part) => double.tryParse(part.trim()))
+      .toList();
+  if (parts.length != (includeAlpha ? 4 : 3) ||
+      parts.any((part) => part == null || !part.isFinite)) {
+    throw const FormatException("Enter comma separated color channels");
+  }
+  final numbers = parts.cast<double>();
+  final alpha = includeAlpha ? numbers.last : 100.0;
+  if (alpha < 0 || alpha > 100) {
+    throw const FormatException("Alpha must be from 0 to 100");
+  }
+  if (format == ColorFieldFormat.rgb) {
+    if (numbers
+        .take(3)
+        .any(
+          (value) => value < 0 || value > 255 || value != value.roundToDouble(),
+        )) {
+      throw const FormatException(
+        "RGB channels must be integers from 0 to 255",
+      );
+    }
+    return Color.fromARGB(
+      (alpha * 255 / 100).round(),
+      numbers[0].toInt(),
+      numbers[1].toInt(),
+      numbers[2].toInt(),
+    );
+  }
+  if (numbers[0] < 0 ||
+      numbers[0] > 360 ||
+      numbers[1] < 0 ||
+      numbers[1] > 100 ||
+      numbers[2] < 0 ||
+      numbers[2] > 100) {
+    throw const FormatException(
+      "Enter hue from 0 to 360 and percentages from 0 to 100",
+    );
+  }
+  return HSLColor.fromAHSL(
+    alpha / 100,
+    numbers[0],
+    numbers[1] / 100,
+    numbers[2] / 100,
+  ).toColor();
+}

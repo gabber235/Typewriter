@@ -8,28 +8,27 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.types.TypeTemplate
 import kotlin.time.Duration
 
-interface SearchInputScope<Value, Row> {
+interface SearchInputScope<Value, Row> :
+    TextEntryAppearanceScope,
+    InputContentScope,
+    PopupAppearanceScope {
     val query: Expr<String, Handled>
-
     val sources: SearchSources
-
     fun selectors(configure: SearchSelectorsScope.() -> Unit)
-
     fun result(configure: SearchResultScope<Value, Row>.() -> Unit)
-
     fun summary(body: Layout.() -> Unit)
-
+    fun initialQuery(value: String)
     fun initialQuery(value: Expr<String, Handled>)
-
-    fun placeholder(value: Expr<String, Handled>)
-
     fun customValue(value: Expr<Value, Handled>)
-
-    fun maximumExtent(value: Expr<Double, Handled>)
-
     fun selectionMode(value: SearchSelectionMode)
-
     fun provider(source: SearchProviderSpec<Row>)
+    fun popupSide(value: PopupSide)
+    fun emptyText(value: String)
+    fun emptyText(value: Expr<String, Handled>)
+    fun loadingText(value: String)
+    fun loadingText(value: Expr<String, Handled>)
+    fun empty(body: Layout.() -> Unit)
+    fun loading(body: Layout.() -> Unit)
 }
 
 interface SearchSources {

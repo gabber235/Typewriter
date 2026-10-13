@@ -29,7 +29,8 @@ bool admitsPortableScalarValue(skir.ScalarKind expected, skir.DataValue value) {
     return value is skir.DataValue_timestampWrapper;
   }
   if (expected == skir.ScalarKind.duration) {
-    return value is skir.DataValue_durationWrapper;
+    return value is skir.DataValue_durationWrapper &&
+        value.value.value.isPortable;
   }
   if (expected case skir.ScalarKind_integerWrapper(value: final integer)) {
     return value is skir.DataValue_integerWrapper &&
@@ -225,4 +226,81 @@ skir.DataValue? _decimalValue(String source) {
   final sign = matched.group(1)!;
   final canonical = "$sign$whole${fraction == null ? "" : ".$fraction"}";
   return skir.DataValue.wrapDecimal(canonical);
+}
+
+/// Compares integer and decimal values without narrowing their precision.
+int? comparePortableNumericValues(skir.DataValue left, skir.DataValue right) {
+  String? exact(skir.DataValue value) => switch (value) {
+    skir.DataValue_integerWrapper(:final value) ||
+    skir.DataValue_decimalWrapper(:final value) => value,
+    _ => null,
+  };
+  final a = exact(left);
+  final b = exact(right);
+  if (a != null && b != null) {
+    final scale = [
+      for (final text in [a, b])
+        if (text.contains(".")) text.split(".").last.length else 0,
+    ].reduce((a, b) => a > b ? a : b);
+    BigInt coefficient(String text) {
+      final parts = text.split(".");
+      return BigInt.parse(parts[0] + (parts.length == 1 ? "" : parts[1])) *
+          BigInt.from(10)
+              .pow(scale - (parts.length == 1 ? 0 : parts[1].length));
+    }
+
+    return coefficient(a).compareTo(coefficient(b));
+  }
+  double? numeric(skir.DataValue value) => switch (value) {
+    skir.DataValue_floatWrapper(:final value) => value,
+    skir.DataValue_integerWrapper(:final value) ||
+    skir.DataValue_decimalWrapper(:final value) => double.tryParse(value),
+    _ => null,
+  };
+  final x = numeric(left);
+  final y = numeric(right);
+  return x == null || y == null || !x.isFinite || !y.isFinite
+      ? null
+      : x.compareTo(y);
+}
+
+/// Produces an exact step and admits it through the original scalar width.
+skir.DataValue? stepPortableNumericValue({
+  required skir.DataValue current,
+  required skir.DataValue step,
+  required skir.TypeUse? expected,
+  required int direction,
+}) {
+  if (direction != 1 && direction != -1) return null;
+  final result =
+      PortableExpressionEvaluator(
+        const {},
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 0),
+      ).evaluate(
+        skir.ExpressionNode.createCall(
+          operation: skir.OperationId(
+            value: direction > 0
+                ? "typewriter.number.add"
+                : "typewriter.number.subtract",
+          ),
+          arguments: [
+            skir.ExpressionNode.wrapLiteral(current),
+            skir.ExpressionNode.wrapLiteral(step),
+          ],
+        ),
+      );
+  if (result is! PortableExpressionAvailable) return null;
+  final text = switch (result.value) {
+    skir.DataValue_integerWrapper(:final value) ||
+    skir.DataValue_decimalWrapper(:final value) => value,
+    skir.DataValue_floatWrapper(:final value) => value.toString(),
+    _ => null,
+  };
+  return text == null
+      ? null
+      : admitPortableNumericInput(
+          current: current,
+          expected: expected,
+          text: text,
+        );
 }

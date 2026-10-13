@@ -4,6 +4,13 @@ sealed class _Resolved<T> {
   const _Resolved();
 }
 
+TextStyle _sparsePresentationTextStyle({
+  Color? color,
+  double? fontSize,
+  List<FontVariation>? fontVariations,
+}) =>
+    TextStyle(color: color, fontSize: fontSize, fontVariations: fontVariations);
+
 final class _ResolvedValue<T> extends _Resolved<T> {
   const _ResolvedValue(this.value);
 

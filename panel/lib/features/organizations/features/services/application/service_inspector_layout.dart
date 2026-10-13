@@ -175,6 +175,7 @@ skir.PresentationNode _inspectorConnectionStatus(
     fallback: skir.StatusAppearance(
       tone: skir.StatusTone.unknownStatus,
       label: null,
+      options: null,
     ),
   ),
 );
@@ -185,7 +186,11 @@ skir.StatusCase _inspectorStatusCase(
   skir.StatusTone tone,
 ) => skir.StatusCase(
   match: skir.DataValue.wrapStringValue(value),
-  appearance: skir.StatusAppearance(tone: tone, label: _portableLiteral(label)),
+  appearance: skir.StatusAppearance(
+    tone: tone,
+    label: _portableLiteral(label),
+    options: null,
+  ),
 );
 
 skir.PresentationNode _inspectorRuntimeStatus(
@@ -215,6 +220,7 @@ skir.PresentationNode _inspectorRuntimeStatus(
     fallback: skir.StatusAppearance(
       tone: skir.StatusTone.unknownStatus,
       label: null,
+      options: null,
     ),
   ),
 );
@@ -244,6 +250,7 @@ skir.PresentationNode _inspectorHostStatus(
     fallback: skir.StatusAppearance(
       tone: skir.StatusTone.unknownStatus,
       label: null,
+      options: null,
     ),
   ),
 );
@@ -262,6 +269,7 @@ skir.PresentationElement _inspectorRelativeTime(
       value: _portableRead(binding),
       style: skir.RelativeTimeStyle.natural,
       timeZone: skir.DateTimeZone.local,
+      options: null,
     ),
   ),
 );
@@ -271,6 +279,7 @@ skir.PresentationElement _inspectorDateTime(skir.ExpressionBindingId binding) =>
       value: _portableRead(binding),
       format: _portableLiteral("yyyy/MM/dd HH:mm:ss"),
       timeZone: skir.DateTimeZone.local,
+      options: null,
     );
 
 skir.PresentationNode _inspectorMessage(

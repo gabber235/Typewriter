@@ -95,14 +95,21 @@ final class PortableSearchInput extends HookWidget {
       );
     }, [picker]);
     useEffect(() => controller.dispose, [controller]);
-    final placeholder = control.placeholder == null
-        ? "Search"
-        : switch (scope.evaluate(control.placeholder!)) {
-                PortableExpressionAvailable(:final value) =>
-                  value.authoredString,
-                _ => null,
-              } ??
-              "Search";
+    final style = _controlStyle(context, scope, control.appearance);
+    final inputContent = control.content;
+    final popup = control.popup;
+    final constraints = _popupConstraints(scope, popup);
+    final shape = _popupShape(context, scope, popup);
+    final placeholder =
+        _entryPlaceholder(inputContent, scope) ??
+        (control.placeholder == null
+            ? "Search"
+            : switch (scope.evaluate(control.placeholder!)) {
+                    PortableExpressionAvailable(:final value) =>
+                      value.authoredString,
+                    _ => null,
+                  } ??
+                  "Search");
     final maximum = switch (scope.evaluate(control.maximumExtent)) {
       PortableExpressionAvailable(
         value: skir.DataValue_integerWrapper(:final value),
@@ -121,34 +128,65 @@ final class PortableSearchInput extends HookWidget {
     final editable = scope.enabled && !scope.readOnly;
     final content = _controlFrame(
       control.control,
-      scope,
-      _withControlPrefix(
-        control.control,
-        scope,
-        TapRegion(
+      control.appearance == null
+          ? scope
+          : scope.withAppearance(control.appearance!),
+      _entryComposition(
+        leading: _entryLeading(
+          context,
+          control.control,
+          inputContent,
+          scope,
+          style,
+          Icons.search,
+        ),
+        trailing: _entrySuffix(inputContent, scope),
+        child: TapRegion(
           groupId: tapRegionGroup,
           onTapOutside: (_) => closeSearch(restoreFocus: false),
           child: AnchoredOverlayPortal(
             visible: editing.value,
             config: AnchoredOverlayConfig(
-              preferredSide: AnchoredOverlaySide.bottom,
+              preferredSide: control.popupSide == skir.PopupSide.above
+                  ? AnchoredOverlaySide.top
+                  : AnchoredOverlaySide.bottom,
               spacing: 6,
-              maxHeight: (maximum ?? 320).clamp(80, 800),
+              maxHeight: constraints?.maxHeight.isFinite == true
+                  ? constraints!.maxHeight
+                  : (maximum ?? 320).clamp(80, 800),
             ),
             overlayBuilder: (context, anchorSize) => TapRegion(
               groupId: tapRegionGroup,
               child: Material(
                 elevation: 8,
-                borderRadius: context.shapes.mediumBorderRadius,
+                shape: shape,
+                borderRadius: shape == null
+                    ? context.shapes.mediumBorderRadius
+                    : null,
+                color: popup?.fill == null
+                    ? null
+                    : PresentationColorEnvironment.of(context)
+                          .resolve(popup!.fill!, scope),
                 clipBehavior: Clip.antiAlias,
-                child: SizedBox(
-                  width: max(anchorSize.width, 420),
-                  child: SearchRoot.borrowed(
-                    controller: controller,
-                    child: _PortableSearchSurface(
-                      placeholder: placeholder,
-                      picker: picker,
-                      scope: scope,
+                child: ConstrainedBox(
+                  constraints: constraints ?? const BoxConstraints(),
+                  child: Padding(
+                    padding: popup?.padding == null
+                        ? EdgeInsets.zero
+                        : _presentationInsets(popup!.padding),
+                    child: SizedBox(
+                      width: (constraints ?? const BoxConstraints())
+                          .constrainWidth(max(anchorSize.width, 420)),
+                      child: SearchRoot.borrowed(
+                        controller: controller,
+                        child: _PortableSearchSurface(
+                          placeholder: placeholder,
+                          picker: picker,
+                          scope: scope,
+                          control: control,
+                          style: style,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -167,16 +205,15 @@ final class PortableSearchInput extends HookWidget {
                 child: InputDecorator(
                   isEmpty: false,
                   isFocused: editing.value || summaryFocus.hasFocus,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    enabled: editable,
-                    suffixIcon: const Icon(Icons.search),
-                  ),
+                  decoration: style.decoration.copyWith(enabled: editable),
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: context.spacing.space2,
                     ),
-                    child: IgnorePointer(child: _summary(placeholder)),
+                    child: DefaultTextStyle.merge(
+                      style: style.valueStyle,
+                      child: IgnorePointer(child: _summary(placeholder)),
+                    ),
                   ),
                 ),
               ),
@@ -243,8 +280,12 @@ final class _PortableSearchSurface extends StatelessWidget {
     required this.placeholder,
     required this.picker,
     required this.scope,
+    required this.control,
+    required this.style,
   });
 
+  final skir.SearchControl control;
+  final _PortableControlStyle style;
   final String placeholder;
   final PortableSearchBinding picker;
   final PortablePresentationScope scope;
@@ -273,6 +314,43 @@ final class _PortableSearchSurface extends StatelessWidget {
           Flexible(
             child: SearchModalBody(
               searchHint: placeholder,
+              queryStyle: style.valueStyle,
+              queryAlignment: style.alignment,
+              queryDecoration: style.decoration,
+              useDefaultQueryIcon:
+                  control.content?.leading != skir.InputAdornment.none,
+              empty: control.empty == null
+                  ? (control.emptyText == null
+                        ? null
+                        : Center(
+                            child: Text(
+                              _operationText(
+                                scope,
+                                control.emptyText,
+                                "No results",
+                              ),
+                            ),
+                          ))
+                  : PortablePresentationNodeRenderer(
+                      node: control.empty!,
+                      scope: scope,
+                    ),
+              loading: control.loading == null
+                  ? (control.loadingText == null
+                        ? null
+                        : Center(
+                            child: Text(
+                              _operationText(
+                                scope,
+                                control.loadingText,
+                                "Loading",
+                              ),
+                            ),
+                          ))
+                  : PortablePresentationNodeRenderer(
+                      node: control.loading!,
+                      scope: scope,
+                    ),
               rowRenderers: {
                 portableSearchResultType.rowRendererId: (row) {
                   final payload = row.result.payload;
