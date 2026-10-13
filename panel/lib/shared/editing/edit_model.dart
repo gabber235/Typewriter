@@ -46,8 +46,7 @@ abstract class EditReplay<S, E> with _$EditReplay<S, E> {
     required S observation,
     required E edit,
     @Default([]) List<EditorDiagnostic> diagnostics,
-    Object? expected,
-    Object? actual,
+    EditConflictEvidence? conflict,
     Object? missing,
     Object? cause,
   }) = _EditReplay<S, E>;
@@ -82,10 +81,8 @@ sealed class EditSettlement<S> with _$EditSettlement<S> {
   const factory EditSettlement.confirmed(S observation) = EditConfirmed<S>;
   const factory EditSettlement.accepted() = EditAccepted<S>;
   const factory EditSettlement.conflict({
+    required EditConflictEvidence evidence,
     S? observation,
-    @Default([]) List<EditorDiagnostic> diagnostics,
-    Object? expected,
-    Object? actual,
   }) = EditConflict<S>;
   const factory EditSettlement.rejected({
     @Default([]) List<EditorDiagnostic> diagnostics,
@@ -109,8 +106,7 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
       EditGroupCommittedAwaitingRefresh<S>;
   const factory EditGroupPhase.conflict(
     String message,
-    Object? expected,
-    Object? actual,
+    EditConflictEvidence? evidence,
   ) = EditGroupConflict<S>;
   const factory EditGroupPhase.rejected(String message, Object? cause) =
       EditGroupRejected<S>;
@@ -118,8 +114,7 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
   const factory EditGroupPhase.uncertain(Object cause) = EditGroupUncertain<S>;
   const factory EditGroupPhase.repeatedContention(
     int attempts,
-    Object? expected,
-    Object? observed,
+    EditConflictEvidence? evidence,
   ) = EditGroupRepeatedContention<S>;
   const factory EditGroupPhase.resourceMissing(Object resource, S proposal) =
       EditGroupResourceMissing<S>;
@@ -229,4 +224,24 @@ final class EditPreparationFailure implements Exception {
   final List<EditorDiagnostic> diagnostics;
   @override
   String toString() => message;
+}
+
+/// Domain evidence retained by the workspace without interpreting its protocol.
+abstract interface class EditConflictEvidence {
+  List<EditorDiagnostic> get diagnostics;
+}
+
+/// Captures one unsent group against its preceding journal state for review.
+@freezed
+abstract class EditGroupReview<S, E> with _$EditGroupReview<S, E> {
+  const factory EditGroupReview({
+    required S saved,
+    required S original,
+    required S beforeGroup,
+    required S proposal,
+    required Set<int> operations,
+    required List<E> edits,
+    @Default([]) List<EditConflictEvidence> conflicts,
+    @Default([]) List<EditorDiagnostic> diagnostics,
+  }) = _EditGroupReview<S, E>;
 }

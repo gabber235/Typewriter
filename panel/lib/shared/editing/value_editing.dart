@@ -212,12 +212,14 @@ final class ValueEditing
               attempts: phase.attempts,
               retryLimit: 3,
               paths: editedPaths,
-              expectedVersion: switch (phase.expected) {
-                final int value => value,
+              expectedVersion: switch (phase.evidence) {
+                final ValueConflictEvidence evidence =>
+                  evidence.expectedVersion,
                 _ => null,
               },
-              observedVersion: switch (phase.observed) {
-                final int value => value,
+              observedVersion: switch (phase.evidence) {
+                final ValueConflictEvidence evidence =>
+                  evidence.observedVersion,
                 _ => null,
               },
             )

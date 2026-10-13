@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.request,_that.findings);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -286,6 +286,555 @@ as List<skir.InitializationDiagnostic>,
 }
 
 /// @nodoc
+mixin _$AuthoringCompositionFailure {
+
+ List<skir.ExpectationConflict> get conflicts;
+/// Create a copy of AuthoringCompositionFailure
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthoringCompositionFailureCopyWith<AuthoringCompositionFailure> get copyWith => _$AuthoringCompositionFailureCopyWithImpl<AuthoringCompositionFailure>(this as AuthoringCompositionFailure, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as AuthoringCompositionFailure;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringCompositionFailure&&const DeepCollectionEquality().equals(other.conflicts, _this.conflicts));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as AuthoringCompositionFailure;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.conflicts));
+}
+
+@override
+String toString() {
+  final _this = this as AuthoringCompositionFailure;
+  return 'AuthoringCompositionFailure(conflicts: ${_this.conflicts})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthoringCompositionFailureCopyWith<$Res>  {
+  factory $AuthoringCompositionFailureCopyWith(AuthoringCompositionFailure value, $Res Function(AuthoringCompositionFailure) _then) = _$AuthoringCompositionFailureCopyWithImpl;
+@useResult
+$Res call({
+ List<skir.ExpectationConflict> conflicts
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthoringCompositionFailureCopyWithImpl<$Res>
+    implements $AuthoringCompositionFailureCopyWith<$Res> {
+  _$AuthoringCompositionFailureCopyWithImpl(this._self, this._then);
+
+  final AuthoringCompositionFailure _self;
+  final $Res Function(AuthoringCompositionFailure) _then;
+
+/// Create a copy of AuthoringCompositionFailure
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? conflicts = null,}) {
+  return _then(AuthoringCompositionFailure(
+null == conflicts ? _self.conflicts : conflicts // ignore: cast_nullable_to_non_nullable
+as List<skir.ExpectationConflict>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [AuthoringCompositionFailure].
+extension AuthoringCompositionFailurePatterns on AuthoringCompositionFailure {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoringCompositionFailure value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoringCompositionFailure value)  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoringCompositionFailure value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<skir.ExpectationConflict> conflicts)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure() when $default != null:
+return $default(_that.conflicts);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<skir.ExpectationConflict> conflicts)  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure():
+return $default(_that.conflicts);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<skir.ExpectationConflict> conflicts)?  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringCompositionFailure() when $default != null:
+return $default(_that.conflicts);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _AuthoringCompositionFailure implements AuthoringCompositionFailure {
+  const _AuthoringCompositionFailure( List<skir.ExpectationConflict> conflicts): _conflicts = conflicts;
+
+
+ final  List<skir.ExpectationConflict> _conflicts;
+@override List<skir.ExpectationConflict> get conflicts {
+  if (_conflicts is EqualUnmodifiableListView) return _conflicts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_conflicts);
+}
+
+
+/// Create a copy of AuthoringCompositionFailure
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoringCompositionFailureCopyWith<_AuthoringCompositionFailure> get copyWith => __$AuthoringCompositionFailureCopyWithImpl<_AuthoringCompositionFailure>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringCompositionFailure&&const DeepCollectionEquality().equals(other.conflicts, _conflicts));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_conflicts));
+}
+
+@override
+String toString() {
+    return 'AuthoringCompositionFailure(conflicts: $conflicts)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoringCompositionFailureCopyWith<$Res> implements $AuthoringCompositionFailureCopyWith<$Res> {
+  factory _$AuthoringCompositionFailureCopyWith(_AuthoringCompositionFailure value, $Res Function(_AuthoringCompositionFailure) _then) = __$AuthoringCompositionFailureCopyWithImpl;
+@override @useResult
+$Res call({
+ List<skir.ExpectationConflict> conflicts
+});
+
+
+
+
+}
+/// @nodoc
+class __$AuthoringCompositionFailureCopyWithImpl<$Res>
+    implements _$AuthoringCompositionFailureCopyWith<$Res> {
+  __$AuthoringCompositionFailureCopyWithImpl(this._self, this._then);
+
+  final _AuthoringCompositionFailure _self;
+  final $Res Function(_AuthoringCompositionFailure) _then;
+
+/// Create a copy of AuthoringCompositionFailure
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? conflicts = null,}) {
+  return _then(_AuthoringCompositionFailure(
+null == conflicts ? _self._conflicts : conflicts // ignore: cast_nullable_to_non_nullable
+as List<skir.ExpectationConflict>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$AuthoringConflictEvidence {
+
+ List<skir.ExpectationConflict> get facts; List<EditorDiagnostic> get diagnostics;
+/// Create a copy of AuthoringConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthoringConflictEvidenceCopyWith<AuthoringConflictEvidence> get copyWith => _$AuthoringConflictEvidenceCopyWithImpl<AuthoringConflictEvidence>(this as AuthoringConflictEvidence, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as AuthoringConflictEvidence;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringConflictEvidence&&const DeepCollectionEquality().equals(other.facts, _this.facts)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as AuthoringConflictEvidence;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.facts),const DeepCollectionEquality().hash(_this.diagnostics));
+}
+
+@override
+String toString() {
+  final _this = this as AuthoringConflictEvidence;
+  return 'AuthoringConflictEvidence(facts: ${_this.facts}, diagnostics: ${_this.diagnostics})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthoringConflictEvidenceCopyWith<$Res>  {
+  factory $AuthoringConflictEvidenceCopyWith(AuthoringConflictEvidence value, $Res Function(AuthoringConflictEvidence) _then) = _$AuthoringConflictEvidenceCopyWithImpl;
+@useResult
+$Res call({
+ List<skir.ExpectationConflict> facts, List<EditorDiagnostic> diagnostics
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthoringConflictEvidenceCopyWithImpl<$Res>
+    implements $AuthoringConflictEvidenceCopyWith<$Res> {
+  _$AuthoringConflictEvidenceCopyWithImpl(this._self, this._then);
+
+  final AuthoringConflictEvidence _self;
+  final $Res Function(AuthoringConflictEvidence) _then;
+
+/// Create a copy of AuthoringConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? facts = null,Object? diagnostics = null,}) {
+  return _then(AuthoringConflictEvidence(
+facts: null == facts ? _self.facts : facts // ignore: cast_nullable_to_non_nullable
+as List<skir.ExpectationConflict>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [AuthoringConflictEvidence].
+extension AuthoringConflictEvidencePatterns on AuthoringConflictEvidence {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoringConflictEvidence value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoringConflictEvidence value)  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoringConflictEvidence value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<skir.ExpectationConflict> facts,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence() when $default != null:
+return $default(_that.facts,_that.diagnostics);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<skir.ExpectationConflict> facts,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence():
+return $default(_that.facts,_that.diagnostics);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<skir.ExpectationConflict> facts,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringConflictEvidence() when $default != null:
+return $default(_that.facts,_that.diagnostics);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _AuthoringConflictEvidence implements AuthoringConflictEvidence {
+  const _AuthoringConflictEvidence({required  List<skir.ExpectationConflict> facts,  List<EditorDiagnostic> diagnostics = const []}): _facts = facts,_diagnostics = diagnostics;
+
+
+ final  List<skir.ExpectationConflict> _facts;
+@override List<skir.ExpectationConflict> get facts {
+  if (_facts is EqualUnmodifiableListView) return _facts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_facts);
+}
+
+ final  List<EditorDiagnostic> _diagnostics;
+@override@JsonKey() List<EditorDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+
+/// Create a copy of AuthoringConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoringConflictEvidenceCopyWith<_AuthoringConflictEvidence> get copyWith => __$AuthoringConflictEvidenceCopyWithImpl<_AuthoringConflictEvidence>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringConflictEvidence&&const DeepCollectionEquality().equals(other.facts, _facts)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_facts),const DeepCollectionEquality().hash(_diagnostics));
+}
+
+@override
+String toString() {
+    return 'AuthoringConflictEvidence(facts: $facts, diagnostics: $diagnostics)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoringConflictEvidenceCopyWith<$Res> implements $AuthoringConflictEvidenceCopyWith<$Res> {
+  factory _$AuthoringConflictEvidenceCopyWith(_AuthoringConflictEvidence value, $Res Function(_AuthoringConflictEvidence) _then) = __$AuthoringConflictEvidenceCopyWithImpl;
+@override @useResult
+$Res call({
+ List<skir.ExpectationConflict> facts, List<EditorDiagnostic> diagnostics
+});
+
+
+
+
+}
+/// @nodoc
+class __$AuthoringConflictEvidenceCopyWithImpl<$Res>
+    implements _$AuthoringConflictEvidenceCopyWith<$Res> {
+  __$AuthoringConflictEvidenceCopyWithImpl(this._self, this._then);
+
+  final _AuthoringConflictEvidence _self;
+  final $Res Function(_AuthoringConflictEvidence) _then;
+
+/// Create a copy of AuthoringConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? facts = null,Object? diagnostics = null,}) {
+  return _then(_AuthoringConflictEvidence(
+facts: null == facts ? _self._facts : facts // ignore: cast_nullable_to_non_nullable
+as List<skir.ExpectationConflict>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$AuthoringDocument {
 
  CheckedEditorCatalog get catalog; Map<skir.ResourceId, skir.AuthoringResource> get entries; List<skir.LinkProjection> get links; int get revision; List<skir.InitializationDiagnostic> get initializationFindings;
@@ -378,7 +927,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -441,7 +990,7 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.ini
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -669,7 +1218,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -732,7 +1281,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -844,6 +1393,708 @@ as skir.RecordId,
 }
 
 
+}
+
+/// @nodoc
+mixin _$AuthoringFacts {
+
+ Map<skir.ResourceId, skir.AuthoringRecord> get resources; List<skir.LinkProjection> get links;
+/// Create a copy of AuthoringFacts
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthoringFactsCopyWith<AuthoringFacts> get copyWith => _$AuthoringFactsCopyWithImpl<AuthoringFacts>(this as AuthoringFacts, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as AuthoringFacts;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringFacts&&const DeepCollectionEquality().equals(other.resources, _this.resources)&&const DeepCollectionEquality().equals(other.links, _this.links));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as AuthoringFacts;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.resources),const DeepCollectionEquality().hash(_this.links));
+}
+
+@override
+String toString() {
+  final _this = this as AuthoringFacts;
+  return 'AuthoringFacts(resources: ${_this.resources}, links: ${_this.links})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthoringFactsCopyWith<$Res>  {
+  factory $AuthoringFactsCopyWith(AuthoringFacts value, $Res Function(AuthoringFacts) _then) = _$AuthoringFactsCopyWithImpl;
+@useResult
+$Res call({
+ Map<skir.ResourceId, skir.AuthoringRecord> resources, List<skir.LinkProjection> links
+});
+
+
+
+
+}
+/// @nodoc
+class _$AuthoringFactsCopyWithImpl<$Res>
+    implements $AuthoringFactsCopyWith<$Res> {
+  _$AuthoringFactsCopyWithImpl(this._self, this._then);
+
+  final AuthoringFacts _self;
+  final $Res Function(AuthoringFacts) _then;
+
+/// Create a copy of AuthoringFacts
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? resources = null,Object? links = null,}) {
+  return _then(AuthoringFacts(
+resources: null == resources ? _self.resources : resources // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.AuthoringRecord>,links: null == links ? _self.links : links // ignore: cast_nullable_to_non_nullable
+as List<skir.LinkProjection>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [AuthoringFacts].
+extension AuthoringFactsPatterns on AuthoringFacts {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoringFacts value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AuthoringFacts() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoringFacts value)  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringFacts():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoringFacts value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringFacts() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<skir.ResourceId, skir.AuthoringRecord> resources,  List<skir.LinkProjection> links)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AuthoringFacts() when $default != null:
+return $default(_that.resources,_that.links);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<skir.ResourceId, skir.AuthoringRecord> resources,  List<skir.LinkProjection> links)  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringFacts():
+return $default(_that.resources,_that.links);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<skir.ResourceId, skir.AuthoringRecord> resources,  List<skir.LinkProjection> links)?  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringFacts() when $default != null:
+return $default(_that.resources,_that.links);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _AuthoringFacts extends AuthoringFacts {
+  const _AuthoringFacts({required  Map<skir.ResourceId, skir.AuthoringRecord> resources, required  List<skir.LinkProjection> links}): _resources = resources,_links = links,super._();
+
+
+ final  Map<skir.ResourceId, skir.AuthoringRecord> _resources;
+@override Map<skir.ResourceId, skir.AuthoringRecord> get resources {
+  if (_resources is EqualUnmodifiableMapView) return _resources;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_resources);
+}
+
+ final  List<skir.LinkProjection> _links;
+@override List<skir.LinkProjection> get links {
+  if (_links is EqualUnmodifiableListView) return _links;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_links);
+}
+
+
+/// Create a copy of AuthoringFacts
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoringFactsCopyWith<_AuthoringFacts> get copyWith => __$AuthoringFactsCopyWithImpl<_AuthoringFacts>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringFacts&&const DeepCollectionEquality().equals(other.resources, _resources)&&const DeepCollectionEquality().equals(other.links, _links));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_resources),const DeepCollectionEquality().hash(_links));
+}
+
+@override
+String toString() {
+    return 'AuthoringFacts(resources: $resources, links: $links)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoringFactsCopyWith<$Res> implements $AuthoringFactsCopyWith<$Res> {
+  factory _$AuthoringFactsCopyWith(_AuthoringFacts value, $Res Function(_AuthoringFacts) _then) = __$AuthoringFactsCopyWithImpl;
+@override @useResult
+$Res call({
+ Map<skir.ResourceId, skir.AuthoringRecord> resources, List<skir.LinkProjection> links
+});
+
+
+
+
+}
+/// @nodoc
+class __$AuthoringFactsCopyWithImpl<$Res>
+    implements _$AuthoringFactsCopyWith<$Res> {
+  __$AuthoringFactsCopyWithImpl(this._self, this._then);
+
+  final _AuthoringFacts _self;
+  final $Res Function(_AuthoringFacts) _then;
+
+/// Create a copy of AuthoringFacts
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? resources = null,Object? links = null,}) {
+  return _then(_AuthoringFacts(
+resources: null == resources ? _self._resources : resources // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, skir.AuthoringRecord>,links: null == links ? _self._links : links // ignore: cast_nullable_to_non_nullable
+as List<skir.LinkProjection>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$AuthoringConflictReview {
+
+ EditGroupId get group; Set<int> get operations; List<RealmPreparedEdit> get edits; AuthoringDocument get saved; AuthoringDocument get original; AuthoringDocument get beforeGroup; AuthoringDocument get proposal; List<skir.EditExpectation> get reviewedFacts; AuthoringConflictEvidence get evidence; List<EditorDiagnostic> get diagnostics;
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AuthoringConflictReviewCopyWith<AuthoringConflictReview> get copyWith => _$AuthoringConflictReviewCopyWithImpl<AuthoringConflictReview>(this as AuthoringConflictReview, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as AuthoringConflictReview;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringConflictReview&&(identical(other.group, _this.group) || other.group == _this.group)&&const DeepCollectionEquality().equals(other.operations, _this.operations)&&const DeepCollectionEquality().equals(other.edits, _this.edits)&&(identical(other.saved, _this.saved) || other.saved == _this.saved)&&(identical(other.original, _this.original) || other.original == _this.original)&&(identical(other.beforeGroup, _this.beforeGroup) || other.beforeGroup == _this.beforeGroup)&&(identical(other.proposal, _this.proposal) || other.proposal == _this.proposal)&&const DeepCollectionEquality().equals(other.reviewedFacts, _this.reviewedFacts)&&(identical(other.evidence, _this.evidence) || other.evidence == _this.evidence)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as AuthoringConflictReview;
+  return Object.hash(runtimeType,_this.group,const DeepCollectionEquality().hash(_this.operations),const DeepCollectionEquality().hash(_this.edits),_this.saved,_this.original,_this.beforeGroup,_this.proposal,const DeepCollectionEquality().hash(_this.reviewedFacts),_this.evidence,const DeepCollectionEquality().hash(_this.diagnostics));
+}
+
+@override
+String toString() {
+  final _this = this as AuthoringConflictReview;
+  return 'AuthoringConflictReview(group: ${_this.group}, operations: ${_this.operations}, edits: ${_this.edits}, saved: ${_this.saved}, original: ${_this.original}, beforeGroup: ${_this.beforeGroup}, proposal: ${_this.proposal}, reviewedFacts: ${_this.reviewedFacts}, evidence: ${_this.evidence}, diagnostics: ${_this.diagnostics})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $AuthoringConflictReviewCopyWith<$Res>  {
+  factory $AuthoringConflictReviewCopyWith(AuthoringConflictReview value, $Res Function(AuthoringConflictReview) _then) = _$AuthoringConflictReviewCopyWithImpl;
+@useResult
+$Res call({
+ EditGroupId group, Set<int> operations, List<RealmPreparedEdit> edits, AuthoringDocument saved, AuthoringDocument original, AuthoringDocument beforeGroup, AuthoringDocument proposal, List<skir.EditExpectation> reviewedFacts, AuthoringConflictEvidence evidence, List<EditorDiagnostic> diagnostics
+});
+
+
+$EditGroupIdCopyWith<$Res> get group;$AuthoringDocumentCopyWith<$Res> get saved;$AuthoringDocumentCopyWith<$Res> get original;$AuthoringDocumentCopyWith<$Res> get beforeGroup;$AuthoringDocumentCopyWith<$Res> get proposal;$AuthoringConflictEvidenceCopyWith<$Res> get evidence;
+
+}
+/// @nodoc
+class _$AuthoringConflictReviewCopyWithImpl<$Res>
+    implements $AuthoringConflictReviewCopyWith<$Res> {
+  _$AuthoringConflictReviewCopyWithImpl(this._self, this._then);
+
+  final AuthoringConflictReview _self;
+  final $Res Function(AuthoringConflictReview) _then;
+
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? group = null,Object? operations = null,Object? edits = null,Object? saved = null,Object? original = null,Object? beforeGroup = null,Object? proposal = null,Object? reviewedFacts = null,Object? evidence = null,Object? diagnostics = null,}) {
+  return _then(AuthoringConflictReview(
+group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as EditGroupId,operations: null == operations ? _self.operations : operations // ignore: cast_nullable_to_non_nullable
+as Set<int>,edits: null == edits ? _self.edits : edits // ignore: cast_nullable_to_non_nullable
+as List<RealmPreparedEdit>,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,original: null == original ? _self.original : original // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,beforeGroup: null == beforeGroup ? _self.beforeGroup : beforeGroup // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,proposal: null == proposal ? _self.proposal : proposal // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,reviewedFacts: null == reviewedFacts ? _self.reviewedFacts : reviewedFacts // ignore: cast_nullable_to_non_nullable
+as List<skir.EditExpectation>,evidence: null == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
+as AuthoringConflictEvidence,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$EditGroupIdCopyWith<$Res> get group {
+
+  return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
+    return _then(_self.copyWith(group: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get saved {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.saved, (value) {
+    return _then(_self.copyWith(saved: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get original {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.original, (value) {
+    return _then(_self.copyWith(original: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get beforeGroup {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.beforeGroup, (value) {
+    return _then(_self.copyWith(beforeGroup: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get proposal {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.proposal, (value) {
+    return _then(_self.copyWith(proposal: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringConflictEvidenceCopyWith<$Res> get evidence {
+
+  return $AuthoringConflictEvidenceCopyWith<$Res>(_self.evidence, (value) {
+    return _then(_self.copyWith(evidence: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [AuthoringConflictReview].
+extension AuthoringConflictReviewPatterns on AuthoringConflictReview {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _AuthoringConflictReview value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictReview() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _AuthoringConflictReview value)  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictReview():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _AuthoringConflictReview value)?  $default,){
+final _that = this;
+switch (_that) {
+case _AuthoringConflictReview() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EditGroupId group,  Set<int> operations,  List<RealmPreparedEdit> edits,  AuthoringDocument saved,  AuthoringDocument original,  AuthoringDocument beforeGroup,  AuthoringDocument proposal,  List<skir.EditExpectation> reviewedFacts,  AuthoringConflictEvidence evidence,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _AuthoringConflictReview() when $default != null:
+return $default(_that.group,_that.operations,_that.edits,_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.reviewedFacts,_that.evidence,_that.diagnostics);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EditGroupId group,  Set<int> operations,  List<RealmPreparedEdit> edits,  AuthoringDocument saved,  AuthoringDocument original,  AuthoringDocument beforeGroup,  AuthoringDocument proposal,  List<skir.EditExpectation> reviewedFacts,  AuthoringConflictEvidence evidence,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringConflictReview():
+return $default(_that.group,_that.operations,_that.edits,_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.reviewedFacts,_that.evidence,_that.diagnostics);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EditGroupId group,  Set<int> operations,  List<RealmPreparedEdit> edits,  AuthoringDocument saved,  AuthoringDocument original,  AuthoringDocument beforeGroup,  AuthoringDocument proposal,  List<skir.EditExpectation> reviewedFacts,  AuthoringConflictEvidence evidence,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
+switch (_that) {
+case _AuthoringConflictReview() when $default != null:
+return $default(_that.group,_that.operations,_that.edits,_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.reviewedFacts,_that.evidence,_that.diagnostics);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _AuthoringConflictReview extends AuthoringConflictReview {
+  const _AuthoringConflictReview({required this.group, required  Set<int> operations, required  List<RealmPreparedEdit> edits, required this.saved, required this.original, required this.beforeGroup, required this.proposal, required  List<skir.EditExpectation> reviewedFacts, required this.evidence,  List<EditorDiagnostic> diagnostics = const []}): _operations = operations,_edits = edits,_reviewedFacts = reviewedFacts,_diagnostics = diagnostics,super._();
+
+
+@override final  EditGroupId group;
+ final  Set<int> _operations;
+@override Set<int> get operations {
+  if (_operations is EqualUnmodifiableSetView) return _operations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_operations);
+}
+
+ final  List<RealmPreparedEdit> _edits;
+@override List<RealmPreparedEdit> get edits {
+  if (_edits is EqualUnmodifiableListView) return _edits;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_edits);
+}
+
+@override final  AuthoringDocument saved;
+@override final  AuthoringDocument original;
+@override final  AuthoringDocument beforeGroup;
+@override final  AuthoringDocument proposal;
+ final  List<skir.EditExpectation> _reviewedFacts;
+@override List<skir.EditExpectation> get reviewedFacts {
+  if (_reviewedFacts is EqualUnmodifiableListView) return _reviewedFacts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_reviewedFacts);
+}
+
+@override final  AuthoringConflictEvidence evidence;
+ final  List<EditorDiagnostic> _diagnostics;
+@override@JsonKey() List<EditorDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoringConflictReviewCopyWith<_AuthoringConflictReview> get copyWith => __$AuthoringConflictReviewCopyWithImpl<_AuthoringConflictReview>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringConflictReview&&(identical(other.group, group) || other.group == group)&&const DeepCollectionEquality().equals(other.operations, _operations)&&const DeepCollectionEquality().equals(other.edits, _edits)&&(identical(other.saved, saved) || other.saved == saved)&&(identical(other.original, original) || other.original == original)&&(identical(other.beforeGroup, beforeGroup) || other.beforeGroup == beforeGroup)&&(identical(other.proposal, proposal) || other.proposal == proposal)&&const DeepCollectionEquality().equals(other.reviewedFacts, _reviewedFacts)&&(identical(other.evidence, evidence) || other.evidence == evidence)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,group,const DeepCollectionEquality().hash(_operations),const DeepCollectionEquality().hash(_edits),saved,original,beforeGroup,proposal,const DeepCollectionEquality().hash(_reviewedFacts),evidence,const DeepCollectionEquality().hash(_diagnostics));
+}
+
+@override
+String toString() {
+    return 'AuthoringConflictReview(group: $group, operations: $operations, edits: $edits, saved: $saved, original: $original, beforeGroup: $beforeGroup, proposal: $proposal, reviewedFacts: $reviewedFacts, evidence: $evidence, diagnostics: $diagnostics)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoringConflictReviewCopyWith<$Res> implements $AuthoringConflictReviewCopyWith<$Res> {
+  factory _$AuthoringConflictReviewCopyWith(_AuthoringConflictReview value, $Res Function(_AuthoringConflictReview) _then) = __$AuthoringConflictReviewCopyWithImpl;
+@override @useResult
+$Res call({
+ EditGroupId group, Set<int> operations, List<RealmPreparedEdit> edits, AuthoringDocument saved, AuthoringDocument original, AuthoringDocument beforeGroup, AuthoringDocument proposal, List<skir.EditExpectation> reviewedFacts, AuthoringConflictEvidence evidence, List<EditorDiagnostic> diagnostics
+});
+
+
+@override $EditGroupIdCopyWith<$Res> get group;@override $AuthoringDocumentCopyWith<$Res> get saved;@override $AuthoringDocumentCopyWith<$Res> get original;@override $AuthoringDocumentCopyWith<$Res> get beforeGroup;@override $AuthoringDocumentCopyWith<$Res> get proposal;@override $AuthoringConflictEvidenceCopyWith<$Res> get evidence;
+
+}
+/// @nodoc
+class __$AuthoringConflictReviewCopyWithImpl<$Res>
+    implements _$AuthoringConflictReviewCopyWith<$Res> {
+  __$AuthoringConflictReviewCopyWithImpl(this._self, this._then);
+
+  final _AuthoringConflictReview _self;
+  final $Res Function(_AuthoringConflictReview) _then;
+
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? group = null,Object? operations = null,Object? edits = null,Object? saved = null,Object? original = null,Object? beforeGroup = null,Object? proposal = null,Object? reviewedFacts = null,Object? evidence = null,Object? diagnostics = null,}) {
+  return _then(_AuthoringConflictReview(
+group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
+as EditGroupId,operations: null == operations ? _self._operations : operations // ignore: cast_nullable_to_non_nullable
+as Set<int>,edits: null == edits ? _self._edits : edits // ignore: cast_nullable_to_non_nullable
+as List<RealmPreparedEdit>,saved: null == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,original: null == original ? _self.original : original // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,beforeGroup: null == beforeGroup ? _self.beforeGroup : beforeGroup // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,proposal: null == proposal ? _self.proposal : proposal // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,reviewedFacts: null == reviewedFacts ? _self._reviewedFacts : reviewedFacts // ignore: cast_nullable_to_non_nullable
+as List<skir.EditExpectation>,evidence: null == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
+as AuthoringConflictEvidence,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+
+/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$EditGroupIdCopyWith<$Res> get group {
+
+  return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
+    return _then(_self.copyWith(group: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get saved {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.saved, (value) {
+    return _then(_self.copyWith(saved: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get original {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.original, (value) {
+    return _then(_self.copyWith(original: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get beforeGroup {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.beforeGroup, (value) {
+    return _then(_self.copyWith(beforeGroup: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get proposal {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.proposal, (value) {
+    return _then(_self.copyWith(proposal: value));
+  });
+}/// Create a copy of AuthoringConflictReview
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringConflictEvidenceCopyWith<$Res> get evidence {
+
+  return $AuthoringConflictEvidenceCopyWith<$Res>(_self.evidence, (value) {
+    return _then(_self.copyWith(evidence: value));
+  });
+}
 }
 
 // dart format on

@@ -7,6 +7,140 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  testWidgets(
+    "conflict preserves the focused field and exposes group recovery",
+    (tester) async {
+      final fixture = _fixture(
+        fieldName: "name",
+        initial: skir.DataValue.wrapStringValue("Saved"),
+      );
+      final authoring = _editing(fixture.draft);
+      await tester.pumpTestApp(
+        child: Scaffold(
+          body: SingleChildScrollView(
+            child: AuthoredResourceInspection(
+              commitPolicy: EditorCommitPolicy.applyResource,
+              resource: fixture.resource,
+              workspace: authoring.workspace,
+              commands: fixtureAuthoringCommands(authoring.transport),
+            ),
+          ),
+        ),
+      );
+      final input = find.byType(TextFormField);
+      await tester.tap(input);
+      await tester.enterText(input, "Local");
+      await tester.pump();
+      final element = tester.element(input);
+      final field = tester.widget<TextFormField>(input);
+      final focus = tester
+          .widget<EditableText>(find.byType(EditableText))
+          .focusNode;
+      final controller = field.controller!;
+      final remote =
+          AuthoringEdit.fromDocument(
+            authoring.transport.observation.requireValue,
+          )..set(
+            authoredFieldLocation(fixture.resource, ["name"]),
+            skir.DataValue.wrapStringValue("Remote"),
+          );
+      authoring.transport.publish(AsyncData(remote.toDocument()));
+      authoring.workspace.acceptConfirmed(remote.toDocument());
+      await tester.pump();
+      expect(tester.element(input), same(element));
+      expect(tester.widget<TextFormField>(input).controller, same(controller));
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).readOnly,
+        isTrue,
+      );
+      expect(focus.hasFocus, isTrue);
+      expect(find.text("Review changes"), findsOneWidget);
+      Focus.of(tester.element(find.text("Review changes"))).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.byType(AuthoringConflictComparison), findsOneWidget);
+      expect(find.text("Local"), findsWidgets);
+      expect(find.text("Remote"), findsWidgets);
+      Focus.of(tester.element(find.text("Keep mine"))).requestFocus();
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.element(input), same(element));
+      expect(
+        tester.widget<EditableText>(find.byType(EditableText)).readOnly,
+        isFalse,
+      );
+      expect(controller.text, "Local");
+      expect(authoring.transport.requests, isEmpty);
+    },
+  );
+
+  testWidgets("comparison rejects a stale action without losing its proposal", (
+    tester,
+  ) async {
+    final fixture = _fixture(
+      fieldName: "name",
+      initial: skir.DataValue.wrapStringValue("Saved"),
+    );
+    final authoring = _editing(fixture.draft);
+    authoring.binding.edit(
+      label: "Rename",
+      apply: (edit) => edit.set(
+        authoredFieldLocation(fixture.resource, ["name"]),
+        skir.DataValue.wrapStringValue("Local"),
+      ),
+    );
+    final remote =
+        AuthoringEdit.fromDocument(authoring.transport.observation.requireValue)
+          ..set(
+            authoredFieldLocation(fixture.resource, ["name"]),
+            skir.DataValue.wrapStringValue("Remote"),
+          );
+    authoring.transport.publish(AsyncData(remote.toDocument()));
+    final review = await authoring.workspace.reviewConflict(
+      authoring.binding.editingGroup,
+    );
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: SizedBox(
+          width: 420,
+          child: AuthoringConflictComparison(
+            review: review,
+            onKeepMine: () => authoring.workspace.resolveConflict(
+              review,
+              AuthoringConflictChoice.keepMine,
+            ),
+            onUseSaved: () => authoring.workspace.resolveConflict(
+              review,
+              AuthoringConflictChoice.useSaved,
+            ),
+          ),
+        ),
+      ),
+    );
+    final newer = AuthoringEdit.fromDocument(remote.toDocument())
+      ..set(
+        authoredFieldLocation(fixture.resource, ["name"]),
+        skir.DataValue.wrapStringValue("Changed again"),
+      );
+    authoring.workspace.acceptConfirmed(newer.toDocument());
+    await tester.tap(find.text("Keep mine"));
+    await tester.pump();
+    expect(
+      find.text("These changes changed again. Review the current values"),
+      findsOneWidget,
+    );
+    expect(
+      authoring.workspace.document
+          .resource(fixture.resource)!
+          .authoredField("name"),
+      skir.DataValue.wrapStringValue("Local"),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final kind in ["named", "expected named Unfilled", "ordinary"]) {
     testWidgets("direct $kind text preserves identity through edit and clear", (
       tester,

@@ -7,16 +7,66 @@ final class RealmEditingReview extends HookWidget {
   const RealmEditingReview({
     required this.workspace,
     required this.id,
+    this.onResolved,
     super.key,
   });
   final RealmEditing workspace;
   final EditGroupId id;
+  final VoidCallback? onResolved;
   @override
   Widget build(BuildContext context) {
     useListenable(workspace);
     final group = workspace.state.groups[id];
+    final phase = group?.phase;
+    final refresh = useState(0);
+    final needsReview =
+        phase is EditGroupConflict ||
+        phase is EditGroupResourceMissing ||
+        phase is EditGroupRepeatedContention;
+    final pending = useMemoized(
+      () => needsReview ? workspace.reviewConflict(id) : null,
+      [workspace, id, needsReview, refresh.value],
+    );
+    final reviewed = useFuture(pending);
+    if (needsReview) {
+      final review = reviewed.data;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (reviewed.connectionState != ConnectionState.done)
+            const Text("Loading current saved values"),
+          if (reviewed.error != null)
+            const Text(
+              "Current saved values are unavailable. Your edits are retained.",
+            ),
+          if (review != null)
+            AuthoringConflictComparison(
+              key: ValueKey(review),
+              review: review,
+              enabled:
+                  reviewed.connectionState == ConnectionState.done &&
+                  reviewed.error == null,
+              onKeepMine: review.canKeepMine
+                  ? () => workspace.resolveConflict(
+                      review,
+                      AuthoringConflictChoice.keepMine,
+                    )
+                  : null,
+              onUseSaved: () => workspace.resolveConflict(
+                review,
+                AuthoringConflictChoice.useSaved,
+              ),
+              onResolved: onResolved,
+            ),
+          TextButton(
+            onPressed: () => refresh.value++,
+            child: const Text("Refresh review"),
+          ),
+        ],
+      );
+    }
     if (group == null) return const Text("Changes are settled");
-    final phase = group.phase;
     final proposed = phase is EditGroupResourceMissing<AuthoringDocument>
         ? phase.proposal
         : workspace.document;

@@ -44,6 +44,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   bool get hasPendingWork => isPreparing || _operations.isNotEmpty;
   int get revision => _revision;
   bool get closed => _closed;
+  bool get applying => _saving != null;
 
   EditGroupId createGroup({
     required String label,
@@ -252,7 +253,6 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
             group.phase = EditGroupPhase.conflict(
               admission.message ?? "Inconsistent observation",
               null,
-              null,
             );
           }
         }
@@ -318,8 +318,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
           EditReplayKind.conflict => EditGroupPhase.conflict(
             replay.diagnostics.firstOrNull?.message ??
                 "Values changed before applying this edit",
-            replay.expected,
-            replay.actual,
+            replay.conflict,
           ),
           EditReplayKind.invalid => EditGroupPhase.rejected(
             replay.diagnostics.firstOrNull?.message ??
@@ -549,12 +548,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
             group.phase = EditGroupPhase.committedAwaitingRefresh(error);
           }
         }
-      case EditConflict(
-        :final observation,
-        :final diagnostics,
-        :final expected,
-        :final actual,
-      ):
+      case EditConflict(:final observation, :final evidence):
         group
           ..frozen = {}
           ..phase = const EditGroupPhase.dirty();
@@ -567,8 +561,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
             if (group.attempts > 3) {
               group.phase = EditGroupPhase.repeatedContention(
                 group.attempts,
-                expected,
-                actual,
+                evidence,
               );
             } else {
               final delay = Duration(milliseconds: 50 << (group.attempts - 1));
@@ -588,10 +581,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
             }
           } else {
             group.phase = EditGroupPhase.conflict(
-              diagnostics.firstOrNull?.message ??
-                  "The server rejected the expected revision",
-              expected,
-              actual,
+              evidence.diagnostics.firstOrNull?.message ??
+                  "Saved values changed before this edit was applied",
+              evidence,
             );
           }
         }
@@ -749,6 +741,216 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       ..attempts = 0;
     _rebuild();
     if (canSave(id)) await save(id);
+  }
+
+  /// Captures only unsent work. Refresh externally before taking this snapshot.
+  EditGroupReview<S, E> inspectUnsubmitted(EditGroupId id) {
+    final owner = _groups[id];
+    final selected = _operations
+        .where((operation) => operation.group == id)
+        .toList();
+    if (_closed ||
+        !_state.available ||
+        owner == null ||
+        selected.isEmpty ||
+        owner.frozen.isNotEmpty ||
+        owner.phase.submitted) {
+      throw const EditPreparationFailure("This group cannot be resolved");
+    }
+    var before = confirmed;
+    for (final operation in _operations.takeWhile(
+      (operation) => operation.group != id,
+    )) {
+      final replay = model.replay(before, operation.edit);
+      if (replay.kind == EditReplayKind.applicable ||
+          replay.kind == EditReplayKind.satisfied ||
+          replay.kind == EditReplayKind.conflict) {
+        before = replay.observation;
+      }
+    }
+    var proposal = before;
+    final conflicts = <EditConflictEvidence>[];
+    final diagnostics = <EditorDiagnostic>[];
+    var retainedProposal = false;
+    for (final operation in selected) {
+      final replay = model.replay(proposal, operation.edit);
+      if (replay.conflict case final evidence?) {
+        conflicts.add(evidence);
+      }
+      if (replay.kind == EditReplayKind.applicable ||
+          replay.kind == EditReplayKind.satisfied ||
+          replay.kind == EditReplayKind.conflict) {
+        proposal = replay.observation;
+      } else {
+        diagnostics.addAll(
+          replay.diagnostics.isEmpty
+              ? [
+                  const EditorDiagnostic(
+                    code: EditorDiagnosticCode.invalidValue,
+                    message: "These changes cannot be applied to the current resource",
+                  ),
+                ]
+              : replay.diagnostics,
+        );
+        retainedProposal = true;
+      }
+    }
+    return EditGroupReview(
+      saved: confirmed,
+      original: selected.first.original,
+      beforeGroup: before,
+      proposal: retainedProposal ? selected.last.after : proposal,
+      operations: selected.map((operation) => operation.id).toSet(),
+      edits: selected.map((operation) => operation.edit).toList(),
+      conflicts: conflicts,
+      diagnostics: diagnostics,
+    );
+  }
+
+  /// Replaces one reviewed unsent group atomically, retaining peer journal order.
+  EditStageResult replaceUnsubmitted(
+    EditGroupId id, {
+    required Set<int> expectedOperations,
+    required List<E> expectedEdits,
+    E? replacement,
+  }) {
+    final owner = _groups[id];
+    final selected = _operations
+        .where((operation) => operation.group == id)
+        .toList();
+    if (_closed ||
+        _saving != null ||
+        !_state.available ||
+        owner == null ||
+        selected.isEmpty ||
+        owner.frozen.isNotEmpty ||
+        owner.phase.submitted) {
+      return const EditStageResult.rejected(
+        "Submitted or unavailable work cannot be replaced",
+        null,
+      );
+    }
+    if (!const SetEquality<int>().equals(
+          selected.map((operation) => operation.id).toSet(),
+          expectedOperations,
+        ) ||
+        !const DeepCollectionEquality().equals(
+          selected.map((operation) => operation.edit).toList(),
+          expectedEdits,
+        )) {
+      return const EditStageResult.rejected(
+        "The local changes changed again",
+        null,
+      );
+    }
+    try {
+      final candidate = <_EditOperation<S, E>>[];
+      var working = confirmed;
+      var inserted = false;
+      for (final operation in _operations) {
+        if (operation.group == id) {
+          if (inserted) continue;
+          inserted = true;
+          if (replacement == null) continue;
+          final replay = model.replay(working, replacement);
+          if (replay.kind != EditReplayKind.applicable &&
+              replay.kind != EditReplayKind.satisfied) {
+            return EditStageResult.rejected(
+              replay.diagnostics.firstOrNull?.message ??
+                  "The reviewed proposal cannot be applied",
+              replay.cause,
+            );
+          }
+          final diagnostics = model.validateCommit(replay.observation);
+          if (diagnostics.isNotEmpty) {
+            return EditStageResult.rejected(diagnostics.first.message, null);
+          }
+          if (replay.kind == EditReplayKind.applicable) {
+            candidate.add(
+              _EditOperation(
+                operation.id,
+                id,
+                replay.edit,
+                working,
+                replay.observation,
+              ),
+            );
+          }
+          working = replay.observation;
+          continue;
+        }
+        final replay = model.replay(working, operation.edit);
+        final copy = _EditOperation<S, E>.copy(operation);
+        if (replay.kind == EditReplayKind.applicable ||
+            replay.kind == EditReplayKind.satisfied ||
+            replay.kind == EditReplayKind.conflict) {
+          copy
+            ..before = working
+            ..after = replay.observation;
+          working = replay.observation;
+        }
+        candidate.add(copy);
+      }
+      final dependencies = <EditGroupId, Set<EditGroupId>>{};
+      final predecessors = <_EditOperation<S, E>>[];
+      for (final operation in candidate) {
+        dependencies
+            .putIfAbsent(operation.group, () => {})
+            .addAll(_dependencies(operation, predecessors));
+        predecessors.add(operation);
+      }
+      bool cyclic(
+        EditGroupId group,
+        Set<EditGroupId> visiting,
+        Set<EditGroupId> visited,
+      ) {
+        if (visiting.contains(group)) return true;
+        if (!visited.add(group)) return false;
+        visiting.add(group);
+        for (final dependency in dependencies[group] ?? const <EditGroupId>{}) {
+          if (cyclic(dependency, visiting, visited)) return true;
+        }
+        visiting.remove(group);
+        return false;
+      }
+
+      if (dependencies.keys.any((group) => cyclic(group, {}, {}))) {
+        return const EditStageResult.rejected(
+          "This resolution would create a dependency cycle",
+          null,
+        );
+      }
+      final hold = holdStage();
+      try {
+        _tasks.remove(id)?.cancel();
+        _requested.remove(id);
+        for (final interaction
+            in _interactions.values
+                .where((value) => value.group == id)
+                .toList()) {
+          interaction.close();
+        }
+        _operations
+          ..clear()
+          ..addAll(candidate);
+        owner
+          ..phase = const EditGroupPhase.dirty()
+          ..attempts = 0;
+        _rebuild();
+        if (replacement != null &&
+            owner.policy == EditorCommitPolicy.autosaveChanges) {
+          _schedule(id);
+        }
+      } finally {
+        hold.release();
+      }
+      return EditStageResult.staged(id);
+    } on Object catch (error) {
+      return EditStageResult.rejected(
+        "The reviewed changes could not be replaced",
+        error,
+      );
+    }
   }
 
   bool canDiscard(EditGroupId id) =>
@@ -1028,7 +1230,6 @@ final class _WorkspaceApplyRequest<S, E> implements EditApplyRequest {
         workspace.edits(group).isNotEmpty) {
       workspace._groups[group]!.phase = const EditGroupPhase.conflict(
         "The authoritative resource changed while preparing this apply",
-        null,
         null,
       );
       throw const EditPreparationFailure(

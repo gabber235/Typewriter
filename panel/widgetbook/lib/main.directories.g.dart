@@ -54,6 +54,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_search_input.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_search_input_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_conflict.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_conflict_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_findings_panel.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_findings_panel_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_inbox.stories.dart'
@@ -623,6 +625,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories
                                     .pageTimelineWorkspaceUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'AuthoringConflictComparison',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Complete group comparison',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_conflict_stories
+                                    .authoringConflictComparisonUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'AuthoringConflictNotice',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Retained conflict',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_conflict_stories
+                                    .authoringConflictNoticeUseCase,
                           ),
                         ],
                       ),

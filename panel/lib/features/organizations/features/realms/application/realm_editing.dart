@@ -81,6 +81,60 @@ final class RealmEditing implements Listenable {
     label: label,
     apply: (branch) => branch.applyPrepared(edit),
   );
+
+  /// Refreshes saved facts before capturing a synchronous journal review.
+  Future<AuthoringConflictReview> reviewConflict(EditGroupId id) async {
+    workspace.inspectUnsubmitted(id);
+    if (workspace.applying) {
+      throw const EditPreparationFailure("Wait for the current save to finish");
+    }
+    final observation = await workspace.persistence.refresh();
+    if (workspace.applying) {
+      throw const EditPreparationFailure("Wait for the current save to finish");
+    }
+    workspace.acceptConfirmed(observation);
+    return const RealmEditModel().review(id, workspace.inspectUnsubmitted(id));
+  }
+
+  EditStageResult resolveConflict(
+    AuthoringConflictReview reviewed,
+    AuthoringConflictChoice choice,
+  ) {
+    try {
+      if (workspace.applying) {
+        return const EditStageResult.rejected(
+          "Wait for the current save to finish",
+          null,
+        );
+      }
+      final current = workspace.inspectUnsubmitted(reviewed.group);
+      if (!reviewed.matches(current)) {
+        return const EditStageResult.rejected(
+          "These changes changed again. Review the current values",
+          null,
+        );
+      }
+      final replacement = switch (choice) {
+        AuthoringConflictChoice.useSaved => null,
+        AuthoringConflictChoice.keepMine =>
+          const RealmEditModel().resolveReviewed(reviewed, current.beforeGroup),
+      };
+      return workspace.replaceUnsubmitted(
+        reviewed.group,
+        expectedOperations: reviewed.operations,
+        expectedEdits: reviewed.edits,
+        replacement: replacement,
+      );
+    } on Object catch (error) {
+      return EditStageResult.rejected(
+        error is EditPreparationFailure
+            ? error.message
+            : "These changes cannot be applied to the current saved values",
+        error,
+      );
+    }
+  }
+
   void acceptConfirmed(AuthoringDocument observation) =>
       workspace.acceptConfirmed(observation);
   void acceptFailure(Object error) => workspace.acceptFailure(error);

@@ -16,6 +16,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     this.reload,
     this.onStatus,
     this.enabled = true,
+    this.readOnly = false,
     this.fillAvailableSpace = false,
     super.key,
   });
@@ -42,6 +43,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
   final Future<void> Function()? reload;
   final ValueChanged<String>? onStatus;
   final bool enabled;
+  final bool readOnly;
   final bool fillAvailableSpace;
 
   @override
@@ -72,7 +74,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
               budget: budget,
               capabilities: capabilities,
               available: enabled,
-              readOnly: edit == null,
+              readOnly: readOnly || edit == null,
               prepareValue: prepareValue,
             )
           : null,
@@ -95,7 +97,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
       source: observation,
       capabilities: capabilities,
       available: enabled,
-      readOnly: edit == null,
+      readOnly: readOnly || edit == null,
       prepareValue: prepareValue,
     );
     final scope = ref.watch(selectedAuthoringScopeProvider);

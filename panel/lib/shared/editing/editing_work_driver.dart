@@ -61,6 +61,10 @@ final class EditingWorkDriver<S, E> extends ChangeNotifier
     final diagnostics = switch (phase) {
       EditGroupRejected(cause: EditPreparationFailure(:final diagnostics)) =>
         diagnostics,
+      EditGroupConflict(:final evidence) ||
+      EditGroupRepeatedContention(
+        :final evidence,
+      ) => evidence?.diagnostics ?? const [],
       _ => const <EditorDiagnostic>[],
     };
     if (diagnostics.isEmpty &&
@@ -88,16 +92,23 @@ final class EditingWorkDriver<S, E> extends ChangeNotifier
       ],
       if (phase case EditGroupRepeatedContention(
         :final attempts,
-        :final expected,
-        :final observed,
+        :final evidence,
       )) ...[
         const WorkFact(label: "Contention", value: "versionMismatch"),
         WorkFact(label: "Attempts", value: "$attempts total"),
         const WorkFact(label: "Retries", value: "3"),
-        if (expected is int)
-          WorkFact(label: "Expected version", value: "$expected"),
-        if (observed is int)
-          WorkFact(label: "Observed version", value: "$observed"),
+        if (evidence is ValueConflictEvidence &&
+            evidence.expectedVersion != null)
+          WorkFact(
+            label: "Expected version",
+            value: "${evidence.expectedVersion}",
+          ),
+        if (evidence is ValueConflictEvidence &&
+            evidence.observedVersion != null)
+          WorkFact(
+            label: "Observed version",
+            value: "${evidence.observedVersion}",
+          ),
       ],
     ];
   }

@@ -72,11 +72,27 @@ final class _AuthoredResourceInspectionState
     final configuration = _binding.document
         .resource(widget.resource)
         ?.configuration;
-    final editor = _editor(widget.role, enabled: !_binding.blocked);
+    final needsReview =
+        _binding.phase is EditGroupConflict<AuthoringDocument> ||
+        _binding.phase is EditGroupResourceMissing<AuthoringDocument> ||
+        _binding.phase is EditGroupRepeatedContention<AuthoringDocument>;
+    final editor = _editor(
+      widget.role,
+      enabled:
+          widget.workspace.state.available &&
+          _binding.document.entry(widget.resource) != null,
+      readOnly: !_binding.control.canEdit,
+    );
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: context.spacing.space2,
       children: [
+        if (needsReview)
+          AuthoringConflictNotice(
+            workspace: widget.workspace,
+            group: _binding.editingGroup,
+          ),
         if (configuration != null)
           AuthoredTypeArgumentEditor(
             selection: configuration,
@@ -149,6 +165,7 @@ final class _AuthoredResourceInspectionState
   AuthoredResourceEditor _editor(
     skir.PresentationRole role, {
     required bool enabled,
+    required bool readOnly,
   }) => AuthoredResourceEditor(
     key: ValueKey(role),
     resource: widget.resource,
@@ -165,6 +182,7 @@ final class _AuthoredResourceInspectionState
     openResource: widget.openResource,
     prepareValue: widget.commands.prepareValue,
     enabled: enabled,
+    readOnly: readOnly,
   );
 
   Future<void> _invokeCommand(

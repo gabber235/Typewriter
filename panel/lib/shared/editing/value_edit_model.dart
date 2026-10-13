@@ -134,8 +134,9 @@ final class ValueEditModel implements EditModel<ValueEditDocument, ValueEdit> {
               paths: result.dirtyPaths,
             )
           : edit,
-      expected: conflict?.base,
-      actual: conflict?.remote,
+      conflict: result.conflicts.isEmpty
+          ? null
+          : ValueConflictEvidence(paths: result.conflicts),
       diagnostics: [
         ...result.diagnostics,
         if (conflict != null)
@@ -212,4 +213,26 @@ extension EditingPathOverlap on skir.ValuePath {
     }
     return true;
   }
+}
+
+/// Keeps value reconciliation and its existing boundary response together.
+@freezed
+abstract class ValueConflictEvidence
+    with _$ValueConflictEvidence
+    implements EditConflictEvidence {
+  const factory ValueConflictEvidence({
+    @Default({}) Map<skir.ValuePath, EditorPathConflict> paths,
+    TypedMutationResult? response,
+    @Default([]) List<EditorDiagnostic> diagnostics,
+  }) = _ValueConflictEvidence;
+  const ValueConflictEvidence._();
+
+  int? get expectedVersion => switch (response) {
+    MutationConflict(:final expectedRevision) => expectedRevision,
+    _ => null,
+  };
+  int? get observedVersion => switch (response) {
+    MutationConflict(:final actualRevision) => actualRevision,
+    _ => null,
+  };
 }

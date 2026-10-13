@@ -8,6 +8,669 @@ import "../../../../../support/publication.dart";
 
 void main() {
   test(
+    "review observation failure preserves the journal and sends no request",
+    () async {
+      final transport = _Transport(_document())
+        ..refreshFailure = StateError("Offline");
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form.edit(
+        label: "Name",
+        apply: (edit) => edit.set(_name, _text("Local")),
+      );
+      await expectLater(
+        editing.reviewConflict(form.editingGroup),
+        throwsStateError,
+      );
+      expect(_read(editing.document, _name), _text("Local"));
+      expect(transport.requests, isEmpty);
+      expect(editing.state.groups, hasLength(1));
+    },
+  );
+
+  test("replacement cannot discard a submitted or uncertain prefix", () async {
+    final transport = _Transport(_document());
+    final editing = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: transport.current,
+    );
+    addTearDown(editing.dispose);
+    final form = editing.attach(
+      _resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(form.detach);
+    form.edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")));
+    final review = editing.workspace.inspectUnsubmitted(form.editingGroup);
+    final saving = form.save();
+    await Future<void>.delayed(Duration.zero);
+    expect(
+      editing.workspace.replaceUnsubmitted(
+        form.editingGroup,
+        expectedOperations: review.operations,
+        expectedEdits: review.edits,
+      ),
+      isA<EditStageRejected>(),
+    );
+    transport.reply.completeError(StateError("Reply lost"));
+    await saving;
+    expect(
+      editing.workspace.replaceUnsubmitted(
+        form.editingGroup,
+        expectedOperations: review.operations,
+        expectedEdits: review.edits,
+      ),
+      isA<EditStageRejected>(),
+    );
+    expect(form.phase, isA<EditGroupUncertain>());
+    expect(transport.requests, hasLength(1));
+  });
+
+  test(
+    "a removed stable collection item cannot be forced by Keep mine",
+    () async {
+      final itemsAt = authoredFieldLocation(_resource, ["items"]);
+      final stable = skir.ItemId(value: "stable");
+      final other = skir.ItemId(value: "other");
+      final initial = AuthoringEdit.fromDocument(_document())
+        ..set(
+          itemsAt,
+          skir.DataValue.createListValue(
+            items: [
+              skir.ListItem(id: stable, value: _text("Initial")),
+              skir.ListItem(id: other, value: _text("Other")),
+            ],
+          ),
+        );
+      final transport = _Transport(initial.toDocument());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form
+          .edit(
+            label: "Move item",
+            apply: (edit) => edit.move(itemsAt, stable, other),
+          )
+          .requireAccepted();
+      final removed = AuthoringEdit.fromDocument(transport.current)
+        ..set(
+          itemsAt,
+          skir.DataValue.createListValue(
+            items: [skir.ListItem(id: other, value: _text("Other"))],
+          ),
+        );
+      transport.current = removed.toDocument();
+      final review = await editing.reviewConflict(form.editingGroup);
+      expect(review.canKeepMine, isFalse);
+      expect(
+        editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
+        isA<EditStageRejected>(),
+      );
+      expect(transport.requests, isEmpty);
+      editing
+          .resolveConflict(review, AuthoringConflictChoice.useSaved)
+          .requireAccepted();
+      expect(editing.state.groups, isEmpty);
+    },
+  );
+
+  test("removed resources retain the complete group proposal", () async {
+    final transport = _Transport(_document());
+    final editing = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: transport.current,
+    );
+    addTearDown(editing.dispose);
+    final form = editing.attach(
+      _resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(form.detach);
+    form
+        .edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+        .requireAccepted();
+    form
+        .edit(
+          label: "Position",
+          apply: (edit) => edit.set(_position, _text("Local position")),
+        )
+        .requireAccepted();
+    transport.current = transport.current.copyWith(entries: {});
+    final review = await editing.reviewConflict(form.editingGroup);
+    expect(review.canKeepMine, isFalse);
+    expect(_read(review.proposal, _name), _text("Local"));
+    expect(_read(review.proposal, _position), _text("Local position"));
+    expect(
+      review.comparisonFacts.whereType<skir.EditExpectation_valueWrapper>(),
+      hasLength(2),
+    );
+    expect(
+      review.evidence.facts.where(
+        (fact) => fact.expected is skir.EditExpectation_valueWrapper,
+      ),
+      hasLength(2),
+    );
+    editing
+        .resolveConflict(review, AuthoringConflictChoice.useSaved)
+        .requireAccepted();
+    expect(editing.state.groups, isEmpty);
+    expect(transport.requests, isEmpty);
+  });
+
+  test(
+    "invalid replacement publishes nothing and preserves peer proposals",
+    () {
+      final transport = _Transport(_document());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form
+          .edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+          .requireAccepted();
+      final peer = editing.edit(
+        label: "Peer",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) => edit.set(_position, _text("Peer")),
+      ) as EditStaged;
+      final reviewed = editing.workspace.inspectUnsubmitted(form.editingGroup);
+      final stale = AuthoringEdit.fromDocument(_document(name: "Obsolete"))
+        ..set(_name, _text("Replacement"));
+      var notifications = 0;
+      editing.addListener(() => notifications++);
+      expect(
+        editing.workspace.replaceUnsubmitted(
+          form.editingGroup,
+          expectedOperations: reviewed.operations,
+          expectedEdits: reviewed.edits,
+          replacement: stale.capture(),
+        ),
+        isA<EditStageRejected>(),
+      );
+      expect(notifications, 0);
+      expect(
+        editing.workspace.inspectUnsubmitted(form.editingGroup).edits,
+        reviewed.edits,
+      );
+      expect(_read(editing.document, _name), _text("Local"));
+      expect(_read(editing.document, _position), _text("Peer"));
+      final deletion = AuthoringEdit.fromDocument(reviewed.beforeGroup)
+        ..delete(_resource);
+      editing.workspace
+          .replaceUnsubmitted(
+            form.editingGroup,
+            expectedOperations: reviewed.operations,
+            expectedEdits: reviewed.edits,
+            replacement: deletion.capture(),
+          )
+          .requireAccepted();
+      final peerReview = editing.workspace.inspectUnsubmitted(peer.group);
+      expect(_read(peerReview.proposal, _position), _text("Peer"));
+      expect(peerReview.diagnostics, isNotEmpty);
+      expect(transport.requests, isEmpty);
+    },
+  );
+
+  test("replacement rejects a new group dependency cycle atomically", () {
+    final transport = _Transport(_document());
+    final editing = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: transport.current,
+    );
+    addTearDown(editing.dispose);
+    final peer = editing.edit(
+      label: "Peer starts",
+      policy: EditorCommitPolicy.applyResource,
+      apply: (edit) => edit.set(_name, _text("Peer first")),
+    ) as EditStaged;
+    final selected = editing.edit(
+      label: "Position",
+      policy: EditorCommitPolicy.applyResource,
+      apply: (edit) => edit.set(_position, _text("Local")),
+    ) as EditStaged;
+    editing
+        .edit(
+          group: peer.group,
+          label: "Peer depends on position",
+          apply: (edit) {
+            edit
+              ..applyPrepared(
+                skir.PreparedEdit(
+                  catalog: editing.document.generation,
+                  expectations: [
+                    skir.EditExpectation.createValue(
+                      at: _position,
+                      expected: _text("Local"),
+                    ),
+                  ],
+                  intents: const [],
+                ),
+              )
+              ..set(_name, _text("Peer final"));
+          },
+        )
+        .requireAccepted();
+    final reviewed = editing.workspace.inspectUnsubmitted(selected.group);
+    final replacement = AuthoringEdit.fromDocument(reviewed.beforeGroup)
+      ..applyPrepared(
+        skir.PreparedEdit(
+          catalog: reviewed.beforeGroup.generation,
+          expectations: [
+            skir.EditExpectation.createValue(
+              at: _name,
+              expected: _text("Peer first"),
+            ),
+          ],
+          intents: const [],
+        ),
+      )
+      ..set(_position, _text("Replacement"));
+    var notifications = 0;
+    editing.addListener(() => notifications++);
+    final result = editing.workspace.replaceUnsubmitted(
+      selected.group,
+      expectedOperations: reviewed.operations,
+      expectedEdits: reviewed.edits,
+      replacement: replacement.capture(),
+    );
+    expect(result, isA<EditStageRejected>());
+    expect((result as EditStageRejected).message, contains("dependency cycle"));
+    expect(notifications, 0);
+    expect(
+      editing.workspace.inspectUnsubmitted(selected.group).edits,
+      reviewed.edits,
+    );
+    expect(_read(editing.document, _position), _text("Local"));
+    expect(_read(editing.document, _name), _text("Peer final"));
+    expect(editing.state.groups, hasLength(2));
+    expect(transport.requests, isEmpty);
+  });
+
+  test("checked import keeps all six witnesses at its original baseline", () {
+    final saved = _document();
+    final nameChange = AuthoringEdit.fromDocument(saved)
+      ..set(_name, _text("First"));
+    final preceding = nameChange.toDocument();
+    final facts = [
+      skir.EditExpectation.createValue(at: _name, expected: _text("First")),
+      skir.EditExpectation.createResource(
+        id: _resource,
+        expected: preceding.resource(_resource),
+      ),
+      skir.EditExpectation.createResourceExists(id: _resource, expected: true),
+      skir.EditExpectation.createConfiguration(
+        at: skir.ValueLocation(resource: _resource, path: editorRootPath),
+        expected: preceding.resource(_resource)!.configuration,
+      ),
+      skir.EditExpectation.wrapResourceIds(preceding.entries.keys.toList()),
+      skir.EditExpectation.createLinks(
+        resource: _resource,
+        contract: skir.RelationId(value: "relation"),
+        direction: skir.TraversalDirection.both,
+        expected: const [],
+      ),
+    ];
+    final combined = AuthoringEdit.fromDocument(saved)
+      ..applyPrepared(nameChange.prepare())
+      ..applyPrepared(
+        skir.PreparedEdit(
+          catalog: saved.generation,
+          expectations: facts,
+          intents: [
+            skir.EditIntent.createSetValue(at: _position, value: _text("2")),
+          ],
+        ),
+      );
+    expect(saved.facts.conflicts(combined.prepare().expectations), isEmpty);
+    expect(
+      combined
+          .prepare()
+          .expectations
+          .whereType<skir.EditExpectation_resourceWrapper>()
+          .single
+          .value
+          .expected,
+      saved.resource(_resource),
+    );
+    expect(
+      combined
+          .prepare()
+          .expectations
+          .whereType<skir.EditExpectation_valueWrapper>()
+          .firstWhere((fact) => fact.value.at == _name)
+          .value
+          .expected,
+      _text("Original"),
+    );
+  });
+
+  test("checked import rejects stale reads and rolls back invalid intent", () {
+    final saved = _document();
+    final branch = AuthoringEdit.fromDocument(saved);
+    expect(
+      () => branch.applyPrepared(
+        skir.PreparedEdit(
+          catalog: saved.generation,
+          expectations: [
+            skir.EditExpectation.createValue(
+              at: _name,
+              expected: _text("Wrong"),
+            ),
+          ],
+          intents: [
+            skir.EditIntent.createSetValue(at: _name, value: _text("Local")),
+          ],
+        ),
+      ),
+      throwsA(isA<AuthoringCompositionFailure>()),
+    );
+    expect(branch.intents, isEmpty);
+    expect(
+      () => branch.applyPrepared(
+        skir.PreparedEdit(
+          catalog: saved.generation,
+          expectations: [
+            skir.EditExpectation.createValue(
+              at: _name,
+              expected: _text("Original"),
+            ),
+          ],
+          intents: [
+            skir.EditIntent.createSetValue(at: _name, value: _text("Local")),
+            skir.EditIntent.createSetValue(
+              at: authoredFieldLocation(skir.ResourceId(value: "absent"), [
+                "name",
+              ]),
+              value: _text("Bad"),
+            ),
+          ],
+        ),
+      ),
+      throwsStateError,
+    );
+    expect(branch.intents, isEmpty);
+    expect(branch.toDocument().hasSameAuthoredContent(saved), isTrue);
+  });
+
+  test(
+    "create then edit compiles absence rather than locally created values",
+    () async {
+      final transport = _Transport(_document());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final created = skir.ResourceId(value: "new-resource");
+      final at = authoredFieldLocation(created, ["name"]);
+      final first = editing.edit(
+        label: "Create",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) => edit.create(
+          created,
+          skir.AuthoringRecord(
+            configuration: skir.TypeSelection.unknown,
+            fields: [skir.FieldValue(name: "name", value: _text("Initial"))],
+          ),
+        ),
+      ) as EditStaged;
+      editing.edit(
+        label: "Rename created",
+        group: first.group,
+        apply: (edit) => edit.set(at, _text("Final")),
+      );
+      final saving = editing.save(first.group);
+      await Future<void>.delayed(Duration.zero);
+      final request = transport.requests.single;
+      expect(
+        request.expectations
+            .whereType<skir.EditExpectation_resourceExistsWrapper>()
+            .firstWhere((fact) => fact.value.id == created)
+            .value
+            .expected,
+        isFalse,
+      );
+      expect(
+        request.expectations
+            .whereType<skir.EditExpectation_valueWrapper>()
+            .firstWhere((fact) => fact.value.at == at)
+            .value
+            .expected,
+        isNull,
+      );
+      expect(transport.current.facts.conflicts(request.expectations), isEmpty);
+      transport
+        ..current = editing.document
+        ..reply.complete(
+          skir.CommitPreparedEditResponse.wrapResult(
+            skir.CommitResult.committed,
+          ),
+        );
+      await saving;
+      expect(editing.state.groups, isEmpty);
+    },
+  );
+
+  test(
+    "Keep mine rewrites the whole group against reviewed saved facts",
+    () async {
+      final transport = _Transport(_document());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form
+        ..edit(label: "Name", apply: (edit) => edit.set(_name, _text("Local")))
+        ..edit(
+          label: "Position",
+          apply: (edit) => edit.set(_position, _text("Local position")),
+        );
+      transport.current = _document(name: "Remote");
+      final review = await editing.reviewConflict(form.editingGroup);
+      expect(review.evidence.facts, hasLength(1));
+      expect(
+        editing.resolveConflict(review, AuthoringConflictChoice.keepMine),
+        isA<EditStaged>(),
+      );
+      expect(form.blocked, isFalse);
+      expect(editing.state.groups[form.editingGroup]!.operationCount, 1);
+      expect(_read(editing.document, _position), _text("Local position"));
+      expect(transport.requests, isEmpty);
+      final saving = form.save();
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        transport.current.facts.conflicts(
+          transport.requests.single.expectations,
+        ),
+        isEmpty,
+      );
+      transport
+        ..current = editing.document
+        ..reply.complete(
+          skir.CommitPreparedEditResponse.wrapResult(
+            skir.CommitResult.committed,
+          ),
+        );
+      await saving;
+      expect(editing.state.groups, isEmpty);
+    },
+  );
+
+  test(
+    "Use saved removes the selected group and retains independent work",
+    () async {
+      final transport = _Transport(_document());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form.edit(
+        label: "Name",
+        apply: (edit) => edit.set(_name, _text("Local")),
+      );
+      final peer = editing.edit(
+        label: "Position",
+        policy: EditorCommitPolicy.applyResource,
+        apply: (edit) => edit.set(_position, _text("Peer")),
+      ) as EditStaged;
+      transport.current = _document(name: "Remote");
+      final review = await editing.reviewConflict(form.editingGroup);
+      editing
+          .resolveConflict(review, AuthoringConflictChoice.useSaved)
+          .requireAccepted();
+      expect(_read(editing.document, _name), _text("Remote"));
+      expect(_read(editing.document, _position), _text("Peer"));
+      expect(editing.state.groups.keys, [peer.group]);
+      expect(transport.requests, isEmpty);
+    },
+  );
+
+  test(
+    "changed saved facts and changed proposals invalidate a review",
+    () async {
+      final transport = _Transport(_document());
+      final editing = RealmEditing(
+        persistence: transport.persistence,
+        submissions: _workSession(),
+        initial: transport.current,
+      );
+      addTearDown(editing.dispose);
+      final form = editing.attach(
+        _resource,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      addTearDown(form.detach);
+      form.edit(
+        label: "Name",
+        apply: (edit) => edit.set(_name, _text("Local")),
+      );
+      transport.current = _document(name: "Remote");
+      final review = await editing.reviewConflict(form.editingGroup);
+      editing.acceptConfirmed(_document(name: "Changed again"));
+      for (final choice in AuthoringConflictChoice.values) {
+        expect(
+          editing.resolveConflict(review, choice),
+          isA<EditStageRejected>(),
+        );
+      }
+      expect(_read(editing.document, _name), _text("Local"));
+      final snapshot = editing.workspace.inspectUnsubmitted(form.editingGroup);
+      final updated = AuthoringEdit.fromDocument(snapshot.beforeGroup)
+        ..set(_name, _text("New local"));
+      editing.workspace
+          .replaceUnsubmitted(
+            form.editingGroup,
+            expectedOperations: snapshot.operations,
+            expectedEdits: snapshot.edits,
+            replacement: updated.capture(),
+          )
+          .requireAccepted();
+      expect(
+        editing.resolveConflict(review, AuthoringConflictChoice.useSaved),
+        isA<EditStageRejected>(),
+      );
+      expect(_read(editing.document, _name), _text("New local"));
+    },
+  );
+
+  test("server settlement retains every exact conflict pair", () {
+    final facts = [
+      for (final at in [_name, _position])
+        skir.ExpectationConflict(
+          expected: skir.EditExpectation.createValue(
+            at: at,
+            expected: _text("Before"),
+          ),
+          actual: skir.EditExpectation.createValue(
+            at: at,
+            expected: _text("Saved"),
+          ),
+        ),
+    ];
+    final settlement =
+        skir.CommitPreparedEditResponse.wrapResult(
+              skir.CommitResult.wrapConflict(facts),
+            ).editSettlement
+            as EditConflict<AuthoringDocument>;
+    expect((settlement.evidence as AuthoringConflictEvidence).facts, facts);
+  });
+
+  test("one save keeps the saved expectation across rapid renames", () async {
+    final transport = _Transport(_document(name: ""));
+    final editing = RealmEditing(
+      persistence: transport.persistence,
+      submissions: _workSession(),
+      initial: transport.current,
+    );
+    addTearDown(editing.dispose);
+    final form = editing.attach(
+      _resource,
+      policy: EditorCommitPolicy.applyResource,
+    );
+    addTearDown(form.detach);
+    for (final name in ["Q", "Qu", "Quest"]) {
+      form.edit(label: "Rename", apply: (edit) => edit.set(_name, _text(name)));
+    }
+    final saving = form.save();
+    await Future<void>.delayed(Duration.zero);
+    final request = transport.requests.single;
+    final fact = request.expectations
+        .whereType<skir.EditExpectation_valueWrapper>()
+        .single;
+    expect(fact.value.expected, _text(""));
+    expect(_read(editing.document, _name), _text("Quest"));
+    transport
+      ..current = _document(name: "Quest")
+      ..reply.complete(
+        skir.CommitPreparedEditResponse.wrapResult(skir.CommitResult.committed),
+      );
+    await saving;
+    expect(editing.state.groups, isEmpty);
+  });
+
+  test(
     "publication journal observation survives view release while sending",
     () async {
       final work = ScopedWorkSession();

@@ -2,22 +2,39 @@ part of "realm_edit_model.dart";
 
 /// A private operation branch. Only the workspace can publish its changes.
 final class AuthoringEdit implements PortableAuthoringEdit {
-  AuthoringEdit({
-    required this.generation,
+  factory AuthoringEdit({
+    required skir.CatalogGeneration generation,
     required Iterable<skir.AuthoringResource> resources,
     required Iterable<skir.LinkProjection> links,
-    this.catalog,
-  }) : _resources = {
-         for (final resource in resources) resource.id: resource.content,
-       },
-       _definitions = {
-         for (final resource in resources) resource.id: resource.definition,
-       },
+    CheckedEditorCatalog? catalog,
+  }) {
+    final entries = resources.toList(growable: false);
+    final records = {for (final entry in entries) entry.id: entry.content};
+    final definitions = {
+      for (final entry in entries) entry.id: entry.definition,
+    };
+    final projections = links.toList(growable: false);
+    return AuthoringEdit._(
+      generation: generation,
+      catalog: catalog,
+      records: records,
+      definitions: definitions,
+      links: projections,
+      baseline: AuthoringFacts.capture(resources: records, links: projections),
+    );
+  }
+
+  AuthoringEdit._({
+    required this.generation,
+    required this.catalog,
+    required Map<skir.ResourceId, skir.AuthoringRecord> records,
+    required Map<skir.ResourceId, skir.ResourceDefinitionId> definitions,
+    required Iterable<skir.LinkProjection> links,
+    required AuthoringFacts baseline,
+  }) : _resources = Map.of(records),
+       _definitions = Map.of(definitions),
        _links = List.of(links),
-       _baselineResources = {
-         for (final resource in resources) resource.id: resource.content,
-       },
-       _baselineLinks = List.of(links);
+       _baselineFacts = baseline;
   factory AuthoringEdit.fromDocument(AuthoringDocument document) =>
       AuthoringEdit(
           generation: document.generation,
@@ -43,8 +60,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   final Map<skir.ResourceId, skir.AuthoringRecord> _resources;
   final Map<skir.ResourceId, skir.ResourceDefinitionId> _definitions;
   final List<skir.LinkProjection> _links;
-  final Map<skir.ResourceId, skir.AuthoringRecord> _baselineResources;
-  final List<skir.LinkProjection> _baselineLinks;
+  final AuthoringFacts _baselineFacts;
   final Map<Object, skir.EditExpectation> _observed = {};
   final List<skir.EditIntent> _intents = [];
   final List<skir.InitializationDiagnostic> _initializationFindings = [];
@@ -91,25 +107,14 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   }
 
   AuthoringEdit fork() {
-    final branch = AuthoringEdit(
+    final branch = AuthoringEdit._(
       generation: generation,
-      resources: [
-        for (final entry in _resources.entries)
-          skir.AuthoringResource(
-            id: entry.key,
-            definition: _definitions[entry.key]!,
-            content: entry.value,
-          ),
-      ],
-      links: _links,
       catalog: catalog,
+      records: _resources,
+      definitions: _definitions,
+      links: _links,
+      baseline: _baselineFacts,
     );
-    branch._baselineResources
-      ..clear()
-      ..addAll(_baselineResources);
-    branch._baselineLinks
-      ..clear()
-      ..addAll(_baselineLinks);
     branch._observed.addAll(_observed);
     branch._intents.addAll(_intents);
     branch._initializationFindings.addAll(_initializationFindings);
@@ -213,15 +218,25 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     if (prepared.catalog != generation) {
       throw StateError("The editor catalog changed");
     }
+    final conflicts = currentFacts.conflicts(prepared.expectations);
+    if (conflicts.isNotEmpty) {
+      throw AuthoringCompositionFailure(conflicts);
+    }
+    final branch = fork();
     for (final expected in prepared.expectations) {
-      _observed[_factKey(expected)] = expected;
+      branch._observe(expected);
     }
     for (final intent in prepared.intents) {
-      if (_replay(intent) case final message?) {
+      if (branch._replay(intent) case final message?) {
         throw StateError(message);
       }
     }
+    branch.requireValid();
+    _adopt(branch);
   }
+
+  AuthoringFacts get currentFacts =>
+      AuthoringFacts.capture(resources: _resources, links: _links);
 
   @override
   skir.AuthoringRecord? resource(skir.ResourceId id) => _resources[id];
@@ -1405,83 +1420,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   }
 
   void _observe(skir.EditExpectation expected) {
-    _observed.putIfAbsent(_factKey(expected), () => _actual(expected));
-  }
-
-  skir.EditExpectation _actual(
-    skir.EditExpectation expected, {
-    bool original = true,
-  }) {
-    final resources = original ? _baselineResources : _resources;
-    final links = original ? _baselineLinks : _links;
-    skir.DataValue? value(skir.ValueLocation at) {
-      final record = resources[at.resource];
-      if (record == null) return null;
-      if (at.path.segments.isEmpty) {
-        return skir.DataValue.createRecord(fields: record.fields);
-      }
-      return switch (record.readAt(at.path)) {
-        PortablePathValue(:final value) => value,
-        _ => null,
-      };
-    }
-
-    return switch (expected) {
-      skir.EditExpectation_valueWrapper(value: final expected) =>
-        skir.EditExpectation.createValue(
-          at: expected.at,
-          expected: value(expected.at),
-        ),
-      skir.EditExpectation_resourceWrapper(:final value) =>
-        skir.EditExpectation.createResource(
-          id: value.id,
-          expected: resources[value.id],
-        ),
-      skir.EditExpectation_resourceExistsWrapper(:final value) =>
-        skir.EditExpectation.createResourceExists(
-          id: value.id,
-          expected: resources.containsKey(value.id),
-        ),
-      skir.EditExpectation_configurationWrapper(value: final config) =>
-        skir.EditExpectation.createConfiguration(
-          at: config.at,
-          expected: config.at.path.segments.isEmpty
-              ? resources[config.at.resource]?.configuration
-              : switch (value(config.at)) {
-                  skir.DataValue_namedWrapper(:final value) =>
-                    skir.TypeSelection.wrapComplete(value.actualType),
-                  _ => null,
-                },
-        ),
-      skir.EditExpectation_resourceIdsWrapper() =>
-        skir.EditExpectation.wrapResourceIds(
-          resources.keys.toList()..sort((a, b) => a.value.compareTo(b.value)),
-        ),
-      skir.EditExpectation_linksWrapper(:final value) =>
-        skir.EditExpectation.createLinks(
-          resource: value.resource,
-          contract: value.contract,
-          direction: value.direction,
-          expected: links
-              .where(
-                (link) =>
-                    link.contract == value.contract &&
-                    switch (value.direction) {
-                      skir.TraversalDirection.forward =>
-                        link.first == value.resource,
-                      skir.TraversalDirection.reverse =>
-                        link.second == value.resource,
-                      skir.TraversalDirection.both =>
-                        link.first == value.resource ||
-                            link.second == value.resource,
-                      _ => false,
-                    },
-              )
-              .toSet()
-              .toList(),
-        ),
-      _ => throw StateError("Unknown edit expectation"),
-    };
+    _observed.putIfAbsent(
+      _factKey(expected),
+      () => _baselineFacts.observe(expected),
+    );
   }
 
   PortablePathResult<skir.AuthoringRecord> _materializeParents(

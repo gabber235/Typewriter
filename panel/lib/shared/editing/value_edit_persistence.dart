@@ -65,15 +65,10 @@ extension ValueMutationSettlement on TypedMutationResult {
     return switch (this) {
       MutationSuccess(:final revision, :final value) =>
         EditSettlement.confirmed(observed(revision, value)),
-      MutationConflict(
-        :final expectedRevision,
-        :final actualRevision,
-        :final actualValue,
-      ) =>
+      MutationConflict(:final actualRevision, :final actualValue) =>
         EditSettlement.conflict(
           observation: observed(actualRevision, actualValue),
-          expected: expectedRevision,
-          actual: actualRevision,
+          evidence: ValueConflictEvidence(response: this),
         ),
       MutationInvalid(:final diagnostics) ||
       MutationUnavailable(

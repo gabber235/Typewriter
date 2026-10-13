@@ -71,6 +71,51 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
         owner.commit(edit(catalog.generation)) shouldBe CommitResult.Committed
         views.close()
     }
+    test("ordered field edits use one original saved expectation") {
+        val catalog = TestCatalogLease()
+        val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
+        val views = InMemoryAuthoringViewStore(catalog, storage.seed)
+        try {
+            val request =
+                edit(catalog.generation).copy(
+                    intents =
+                        listOf("Q", "Qu", "Story").map {
+                            EditIntent.SetValue(title, DataValue.StringValue(it))
+                        },
+                )
+            RealmAuthoringOwner(storage, views).commit(request) shouldBe CommitResult.Committed
+            storage.writes shouldBe 1
+            views.capture().use { saved ->
+                saved.root.resources
+                    .getValue(id)
+                    .fields["name"] shouldBe DataValue.StringValue("Story")
+            }
+        } finally {
+            views.close()
+        }
+    }
+
+    test("an intermediate local expectation conflicts without a write") {
+        val catalog = TestCatalogLease()
+        val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))
+        val views = InMemoryAuthoringViewStore(catalog, storage.seed)
+        try {
+            val request =
+                edit(catalog.generation, expected = "Qu").copy(
+                    intents =
+                        listOf("Q", "Qu", "Story").map {
+                            EditIntent.SetValue(title, DataValue.StringValue(it))
+                        },
+                )
+            val result = RealmAuthoringOwner(storage, views).commit(request) as CommitResult.Conflict
+            result.values shouldHaveSize 1
+            result.values.single().actual shouldBe EditExpectation.Value(title, DataValue.StringValue("Quest"))
+            storage.writes shouldBe 0
+        } finally {
+            views.close()
+        }
+    }
+
     test("unfinished authoring content persists but publication rejects it") {
         val catalog = TestCatalogLease()
         val storage = MemoryAuthoringStorage(AuthoringSeed(mapOf(id to initial)))

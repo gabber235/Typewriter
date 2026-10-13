@@ -28,12 +28,9 @@ final class RealmEditPersistence
   PreparedCommit<EditSettlement<AuthoringDocument>> prepare(
     EditCapture<AuthoringDocument, RealmPreparedEdit> capture,
   ) {
-    final branch = AuthoringEdit.fromDocument(capture.baseline);
-    for (final edit in capture.edits) {
-      branch.applyPrepared(edit.request);
-    }
-    final prepared = request(branch.prepare());
-    return prepared.mapResponse((response) => response.editSettlement);
+    final compiled = const RealmEditModel().compose(capture);
+    return request(compiled.request)
+        .mapResponse((response) => response.editSettlement);
   }
 }
 
@@ -47,14 +44,15 @@ extension RealmResponseSettlement on skir.CommitPreparedEditResponse {
       value: skir.CommitResult_conflictWrapper(:final value),
     ) =>
       EditSettlement.conflict(
-        expected: value.firstOrNull?.expected,
-        actual: value.firstOrNull?.actual,
-        diagnostics: [
-          EditorDiagnostic(
-            code: EditorDiagnosticCode.mutationConflict,
-            message: rejectionMessage,
-          ),
-        ],
+        evidence: AuthoringConflictEvidence(
+          facts: value.toList(),
+          diagnostics: [
+            EditorDiagnostic(
+              code: EditorDiagnosticCode.mutationConflict,
+              message: rejectionMessage,
+            ),
+          ],
+        ),
       ),
     skir.CommitPreparedEditResponse_resultWrapper(
       value: skir.CommitResult_catalogChangedWrapper(),

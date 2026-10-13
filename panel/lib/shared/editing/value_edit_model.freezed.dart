@@ -103,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return $default(_that.metadata,_that.value,_that.identity,_that.exists);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -384,7 +384,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -447,7 +447,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -582,6 +582,312 @@ $ValueEditDocumentCopyWith<$Res> get baseline {
 
   return $ValueEditDocumentCopyWith<$Res>(_self.baseline, (value) {
     return _then(_self.copyWith(baseline: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$ValueConflictEvidence {
+
+ Map<skir.ValuePath, EditorPathConflict> get paths; TypedMutationResult? get response; List<EditorDiagnostic> get diagnostics;
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ValueConflictEvidenceCopyWith<ValueConflictEvidence> get copyWith => _$ValueConflictEvidenceCopyWithImpl<ValueConflictEvidence>(this as ValueConflictEvidence, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ValueConflictEvidence;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ValueConflictEvidence&&const DeepCollectionEquality().equals(other.paths, _this.paths)&&(identical(other.response, _this.response) || other.response == _this.response)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as ValueConflictEvidence;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.paths),_this.response,const DeepCollectionEquality().hash(_this.diagnostics));
+}
+
+@override
+String toString() {
+  final _this = this as ValueConflictEvidence;
+  return 'ValueConflictEvidence(paths: ${_this.paths}, response: ${_this.response}, diagnostics: ${_this.diagnostics})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ValueConflictEvidenceCopyWith<$Res>  {
+  factory $ValueConflictEvidenceCopyWith(ValueConflictEvidence value, $Res Function(ValueConflictEvidence) _then) = _$ValueConflictEvidenceCopyWithImpl;
+@useResult
+$Res call({
+ Map<skir.ValuePath, EditorPathConflict> paths, TypedMutationResult? response, List<EditorDiagnostic> diagnostics
+});
+
+
+$TypedMutationResultCopyWith<$Res>? get response;
+
+}
+/// @nodoc
+class _$ValueConflictEvidenceCopyWithImpl<$Res>
+    implements $ValueConflictEvidenceCopyWith<$Res> {
+  _$ValueConflictEvidenceCopyWithImpl(this._self, this._then);
+
+  final ValueConflictEvidence _self;
+  final $Res Function(ValueConflictEvidence) _then;
+
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? paths = null,Object? response = freezed,Object? diagnostics = null,}) {
+  return _then(ValueConflictEvidence(
+paths: null == paths ? _self.paths : paths // ignore: cast_nullable_to_non_nullable
+as Map<skir.ValuePath, EditorPathConflict>,response: freezed == response ? _self.response : response // ignore: cast_nullable_to_non_nullable
+as TypedMutationResult?,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedMutationResultCopyWith<$Res>? get response {
+    if (_self.response == null) {
+    return null;
+  }
+
+  return $TypedMutationResultCopyWith<$Res>(_self.response!, (value) {
+    return _then(_self.copyWith(response: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [ValueConflictEvidence].
+extension ValueConflictEvidencePatterns on ValueConflictEvidence {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ValueConflictEvidence value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ValueConflictEvidence() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ValueConflictEvidence value)  $default,){
+final _that = this;
+switch (_that) {
+case _ValueConflictEvidence():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ValueConflictEvidence value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ValueConflictEvidence() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<skir.ValuePath, EditorPathConflict> paths,  TypedMutationResult? response,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ValueConflictEvidence() when $default != null:
+return $default(_that.paths,_that.response,_that.diagnostics);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<skir.ValuePath, EditorPathConflict> paths,  TypedMutationResult? response,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
+switch (_that) {
+case _ValueConflictEvidence():
+return $default(_that.paths,_that.response,_that.diagnostics);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<skir.ValuePath, EditorPathConflict> paths,  TypedMutationResult? response,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
+switch (_that) {
+case _ValueConflictEvidence() when $default != null:
+return $default(_that.paths,_that.response,_that.diagnostics);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ValueConflictEvidence extends ValueConflictEvidence {
+  const _ValueConflictEvidence({ Map<skir.ValuePath, EditorPathConflict> paths = const {}, this.response,  List<EditorDiagnostic> diagnostics = const []}): _paths = paths,_diagnostics = diagnostics,super._();
+
+
+ final  Map<skir.ValuePath, EditorPathConflict> _paths;
+@override@JsonKey() Map<skir.ValuePath, EditorPathConflict> get paths {
+  if (_paths is EqualUnmodifiableMapView) return _paths;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_paths);
+}
+
+@override final  TypedMutationResult? response;
+ final  List<EditorDiagnostic> _diagnostics;
+@override@JsonKey() List<EditorDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ValueConflictEvidenceCopyWith<_ValueConflictEvidence> get copyWith => __$ValueConflictEvidenceCopyWithImpl<_ValueConflictEvidence>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ValueConflictEvidence&&const DeepCollectionEquality().equals(other.paths, _paths)&&(identical(other.response, response) || other.response == response)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_paths),response,const DeepCollectionEquality().hash(_diagnostics));
+}
+
+@override
+String toString() {
+    return 'ValueConflictEvidence(paths: $paths, response: $response, diagnostics: $diagnostics)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ValueConflictEvidenceCopyWith<$Res> implements $ValueConflictEvidenceCopyWith<$Res> {
+  factory _$ValueConflictEvidenceCopyWith(_ValueConflictEvidence value, $Res Function(_ValueConflictEvidence) _then) = __$ValueConflictEvidenceCopyWithImpl;
+@override @useResult
+$Res call({
+ Map<skir.ValuePath, EditorPathConflict> paths, TypedMutationResult? response, List<EditorDiagnostic> diagnostics
+});
+
+
+@override $TypedMutationResultCopyWith<$Res>? get response;
+
+}
+/// @nodoc
+class __$ValueConflictEvidenceCopyWithImpl<$Res>
+    implements _$ValueConflictEvidenceCopyWith<$Res> {
+  __$ValueConflictEvidenceCopyWithImpl(this._self, this._then);
+
+  final _ValueConflictEvidence _self;
+  final $Res Function(_ValueConflictEvidence) _then;
+
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? paths = null,Object? response = freezed,Object? diagnostics = null,}) {
+  return _then(_ValueConflictEvidence(
+paths: null == paths ? _self._paths : paths // ignore: cast_nullable_to_non_nullable
+as Map<skir.ValuePath, EditorPathConflict>,response: freezed == response ? _self.response : response // ignore: cast_nullable_to_non_nullable
+as TypedMutationResult?,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+
+/// Create a copy of ValueConflictEvidence
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TypedMutationResultCopyWith<$Res>? get response {
+    if (_self.response == null) {
+    return null;
+  }
+
+  return $TypedMutationResultCopyWith<$Res>(_self.response!, (value) {
+    return _then(_self.copyWith(response: value));
   });
 }
 }

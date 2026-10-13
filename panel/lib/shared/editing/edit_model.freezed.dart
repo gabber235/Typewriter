@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EditReplay<S,E> {
 
- EditReplayKind get kind; S get observation; E get edit; List<EditorDiagnostic> get diagnostics; Object? get expected; Object? get actual; Object? get missing; Object? get cause;
+ EditReplayKind get kind; S get observation; E get edit; List<EditorDiagnostic> get diagnostics; EditConflictEvidence? get conflict; Object? get missing; Object? get cause;
 /// Create a copy of EditReplay
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $EditReplayCopyWith<S, E, EditReplay<S, E>> get copyWith => _$EditReplayCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as EditReplay<S, E>;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditReplay<S, E>&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&const DeepCollectionEquality().equals(other.observation, _this.observation)&&const DeepCollectionEquality().equals(other.edit, _this.edit)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&const DeepCollectionEquality().equals(other.expected, _this.expected)&&const DeepCollectionEquality().equals(other.actual, _this.actual)&&const DeepCollectionEquality().equals(other.missing, _this.missing)&&const DeepCollectionEquality().equals(other.cause, _this.cause));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditReplay<S, E>&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&const DeepCollectionEquality().equals(other.observation, _this.observation)&&const DeepCollectionEquality().equals(other.edit, _this.edit)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.conflict, _this.conflict) || other.conflict == _this.conflict)&&const DeepCollectionEquality().equals(other.missing, _this.missing)&&const DeepCollectionEquality().equals(other.cause, _this.cause));
 }
 
 
 @override
 int get hashCode {
   final _this = this as EditReplay<S, E>;
-  return Object.hash(runtimeType,_this.kind,const DeepCollectionEquality().hash(_this.observation),const DeepCollectionEquality().hash(_this.edit),const DeepCollectionEquality().hash(_this.diagnostics),const DeepCollectionEquality().hash(_this.expected),const DeepCollectionEquality().hash(_this.actual),const DeepCollectionEquality().hash(_this.missing),const DeepCollectionEquality().hash(_this.cause));
+  return Object.hash(runtimeType,_this.kind,const DeepCollectionEquality().hash(_this.observation),const DeepCollectionEquality().hash(_this.edit),const DeepCollectionEquality().hash(_this.diagnostics),_this.conflict,const DeepCollectionEquality().hash(_this.missing),const DeepCollectionEquality().hash(_this.cause));
 }
 
 @override
 String toString() {
   final _this = this as EditReplay<S, E>;
-  return 'EditReplay<$S, $E>(kind: ${_this.kind}, observation: ${_this.observation}, edit: ${_this.edit}, diagnostics: ${_this.diagnostics}, expected: ${_this.expected}, actual: ${_this.actual}, missing: ${_this.missing}, cause: ${_this.cause})';
+  return 'EditReplay<$S, $E>(kind: ${_this.kind}, observation: ${_this.observation}, edit: ${_this.edit}, diagnostics: ${_this.diagnostics}, conflict: ${_this.conflict}, missing: ${_this.missing}, cause: ${_this.cause})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $EditReplayCopyWith<S,E,$Res>  {
   factory $EditReplayCopyWith(EditReplay<S, E> value, $Res Function(EditReplay<S, E>) _then) = _$EditReplayCopyWithImpl;
 @useResult
 $Res call({
- EditReplayKind kind, S observation, E edit, List<EditorDiagnostic> diagnostics, Object? expected, Object? actual, Object? missing, Object? cause
+ EditReplayKind kind, S observation, E edit, List<EditorDiagnostic> diagnostics, EditConflictEvidence? conflict, Object? missing, Object? cause
 });
 
 
@@ -68,13 +68,14 @@ class _$EditReplayCopyWithImpl<S,E,$Res>
 
 /// Create a copy of EditReplay
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? expected = freezed,Object? actual = freezed,Object? missing = freezed,Object? cause = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? conflict = freezed,Object? missing = freezed,Object? cause = freezed,}) {
   return _then(EditReplay(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as EditReplayKind,observation: freezed == observation ? _self.observation : observation // ignore: cast_nullable_to_non_nullable
 as S,edit: freezed == edit ? _self.edit : edit // ignore: cast_nullable_to_non_nullable
 as E,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<EditorDiagnostic>,expected: freezed == expected ? _self.expected : expected ,actual: freezed == actual ? _self.actual : actual ,missing: freezed == missing ? _self.missing : missing ,cause: freezed == cause ? _self.cause : cause ,
+as List<EditorDiagnostic>,conflict: freezed == conflict ? _self.conflict : conflict // ignore: cast_nullable_to_non_nullable
+as EditConflictEvidence?,missing: freezed == missing ? _self.missing : missing ,cause: freezed == cause ? _self.cause : cause ,
   ));
 }
 
@@ -104,7 +105,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -159,15 +160,15 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual,  Object? missing,  Object? cause)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  EditConflictEvidence? conflict,  Object? missing,  Object? cause)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditReplay() when $default != null:
-return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.expected,_that.actual,_that.missing,_that.cause);case _:
+return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.conflict,_that.missing,_that.cause);case _:
   return orElse();
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -180,10 +181,10 @@ return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual,  Object? missing,  Object? cause)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  EditConflictEvidence? conflict,  Object? missing,  Object? cause)  $default,) {final _that = this;
 switch (_that) {
 case _EditReplay():
-return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.expected,_that.actual,_that.missing,_that.cause);case _:
+return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.conflict,_that.missing,_that.cause);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual,  Object? missing,  Object? cause)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( EditReplayKind kind,  S observation,  E edit,  List<EditorDiagnostic> diagnostics,  EditConflictEvidence? conflict,  Object? missing,  Object? cause)?  $default,) {final _that = this;
 switch (_that) {
 case _EditReplay() when $default != null:
-return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.expected,_that.actual,_that.missing,_that.cause);case _:
+return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.conflict,_that.missing,_that.cause);case _:
   return null;
 
 }
@@ -215,7 +216,7 @@ return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.
 
 
 class _EditReplay<S,E> implements EditReplay<S, E> {
-  const _EditReplay({required this.kind, required this.observation, required this.edit,  List<EditorDiagnostic> diagnostics = const [], this.expected, this.actual, this.missing, this.cause}): _diagnostics = diagnostics;
+  const _EditReplay({required this.kind, required this.observation, required this.edit,  List<EditorDiagnostic> diagnostics = const [], this.conflict, this.missing, this.cause}): _diagnostics = diagnostics;
 
 
 @override final  EditReplayKind kind;
@@ -228,8 +229,7 @@ class _EditReplay<S,E> implements EditReplay<S, E> {
   return EqualUnmodifiableListView(_diagnostics);
 }
 
-@override final  Object? expected;
-@override final  Object? actual;
+@override final  EditConflictEvidence? conflict;
 @override final  Object? missing;
 @override final  Object? cause;
 
@@ -243,18 +243,18 @@ _$EditReplayCopyWith<S, E, _EditReplay<S, E>> get copyWith => __$EditReplayCopyW
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditReplay<S, E>&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.observation, observation)&&const DeepCollectionEquality().equals(other.edit, edit)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.expected, expected)&&const DeepCollectionEquality().equals(other.actual, actual)&&const DeepCollectionEquality().equals(other.missing, missing)&&const DeepCollectionEquality().equals(other.cause, cause));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditReplay<S, E>&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.observation, observation)&&const DeepCollectionEquality().equals(other.edit, edit)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.conflict, conflict) || other.conflict == conflict)&&const DeepCollectionEquality().equals(other.missing, missing)&&const DeepCollectionEquality().equals(other.cause, cause));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(observation),const DeepCollectionEquality().hash(edit),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(expected),const DeepCollectionEquality().hash(actual),const DeepCollectionEquality().hash(missing),const DeepCollectionEquality().hash(cause));
+    return Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(observation),const DeepCollectionEquality().hash(edit),const DeepCollectionEquality().hash(_diagnostics),conflict,const DeepCollectionEquality().hash(missing),const DeepCollectionEquality().hash(cause));
 }
 
 @override
 String toString() {
-    return 'EditReplay<$S, $E>(kind: $kind, observation: $observation, edit: $edit, diagnostics: $diagnostics, expected: $expected, actual: $actual, missing: $missing, cause: $cause)';
+    return 'EditReplay<$S, $E>(kind: $kind, observation: $observation, edit: $edit, diagnostics: $diagnostics, conflict: $conflict, missing: $missing, cause: $cause)';
 }
 
 
@@ -265,7 +265,7 @@ abstract mixin class _$EditReplayCopyWith<S,E,$Res> implements $EditReplayCopyWi
   factory _$EditReplayCopyWith(_EditReplay<S, E> value, $Res Function(_EditReplay<S, E>) _then) = __$EditReplayCopyWithImpl;
 @override @useResult
 $Res call({
- EditReplayKind kind, S observation, E edit, List<EditorDiagnostic> diagnostics, Object? expected, Object? actual, Object? missing, Object? cause
+ EditReplayKind kind, S observation, E edit, List<EditorDiagnostic> diagnostics, EditConflictEvidence? conflict, Object? missing, Object? cause
 });
 
 
@@ -282,13 +282,14 @@ class __$EditReplayCopyWithImpl<S,E,$Res>
 
 /// Create a copy of EditReplay
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? expected = freezed,Object? actual = freezed,Object? missing = freezed,Object? cause = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? conflict = freezed,Object? missing = freezed,Object? cause = freezed,}) {
   return _then(_EditReplay<S, E>(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as EditReplayKind,observation: freezed == observation ? _self.observation : observation // ignore: cast_nullable_to_non_nullable
 as S,edit: freezed == edit ? _self.edit : edit // ignore: cast_nullable_to_non_nullable
 as E,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<EditorDiagnostic>,expected: freezed == expected ? _self.expected : expected ,actual: freezed == actual ? _self.actual : actual ,missing: freezed == missing ? _self.missing : missing ,cause: freezed == cause ? _self.cause : cause ,
+as List<EditorDiagnostic>,conflict: freezed == conflict ? _self.conflict : conflict // ignore: cast_nullable_to_non_nullable
+as EditConflictEvidence?,missing: freezed == missing ? _self.missing : missing ,cause: freezed == cause ? _self.cause : cause ,
   ));
 }
 
@@ -387,7 +388,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -450,7 +451,7 @@ return $default(_that.kind,_that.observation,_that.message,_that.changed);case _
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -671,7 +672,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -734,7 +735,7 @@ return $default(_that.group,_that.label,_that.baseline,_that.proposed,_that.edit
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -933,7 +934,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -991,18 +992,18 @@ return rejected(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( S observation)?  confirmed,TResult Function()?  accepted,TResult Function( S? observation,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual)?  conflict,TResult Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)?  rejected,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( S observation)?  confirmed,TResult Function()?  accepted,TResult Function( EditConflictEvidence evidence,  S? observation)?  conflict,TResult Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)?  rejected,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case EditConfirmed() when confirmed != null:
 return confirmed(_that.observation);case EditAccepted() when accepted != null:
 return accepted();case EditConflict() when conflict != null:
-return conflict(_that.observation,_that.diagnostics,_that.expected,_that.actual);case EditRejected() when rejected != null:
+return conflict(_that.evidence,_that.observation);case EditRejected() when rejected != null:
 return rejected(_that.diagnostics,_that.cause,_that.contractChanged);case _:
   return orElse();
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1015,12 +1016,12 @@ return rejected(_that.diagnostics,_that.cause,_that.contractChanged);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( S observation)  confirmed,required TResult Function()  accepted,required TResult Function( S? observation,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual)  conflict,required TResult Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)  rejected,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( S observation)  confirmed,required TResult Function()  accepted,required TResult Function( EditConflictEvidence evidence,  S? observation)  conflict,required TResult Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)  rejected,}) {final _that = this;
 switch (_that) {
 case EditConfirmed():
 return confirmed(_that.observation);case EditAccepted():
 return accepted();case EditConflict():
-return conflict(_that.observation,_that.diagnostics,_that.expected,_that.actual);case EditRejected():
+return conflict(_that.evidence,_that.observation);case EditRejected():
 return rejected(_that.diagnostics,_that.cause,_that.contractChanged);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -1035,12 +1036,12 @@ return rejected(_that.diagnostics,_that.cause,_that.contractChanged);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( S observation)?  confirmed,TResult? Function()?  accepted,TResult? Function( S? observation,  List<EditorDiagnostic> diagnostics,  Object? expected,  Object? actual)?  conflict,TResult? Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)?  rejected,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( S observation)?  confirmed,TResult? Function()?  accepted,TResult? Function( EditConflictEvidence evidence,  S? observation)?  conflict,TResult? Function( List<EditorDiagnostic> diagnostics,  Object? cause,  bool contractChanged)?  rejected,}) {final _that = this;
 switch (_that) {
 case EditConfirmed() when confirmed != null:
 return confirmed(_that.observation);case EditAccepted() when accepted != null:
 return accepted();case EditConflict() when conflict != null:
-return conflict(_that.observation,_that.diagnostics,_that.expected,_that.actual);case EditRejected() when rejected != null:
+return conflict(_that.evidence,_that.observation);case EditRejected() when rejected != null:
 return rejected(_that.diagnostics,_that.cause,_that.contractChanged);case _:
   return null;
 
@@ -1153,19 +1154,11 @@ String toString() {
 
 
 class EditConflict<S> implements EditSettlement<S> {
-  const EditConflict({this.observation,  List<EditorDiagnostic> diagnostics = const [], this.expected, this.actual}): _diagnostics = diagnostics;
+  const EditConflict({required this.evidence, this.observation});
 
 
+ final  EditConflictEvidence evidence;
  final  S? observation;
- final  List<EditorDiagnostic> _diagnostics;
-@JsonKey() List<EditorDiagnostic> get diagnostics {
-  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_diagnostics);
-}
-
- final  Object? expected;
- final  Object? actual;
 
 /// Create a copy of EditSettlement
 /// with the given fields replaced by the non null parameter values.
@@ -1177,18 +1170,18 @@ $EditConflictCopyWith<S, EditConflict<S>> get copyWith => _$EditConflictCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditConflict<S>&&const DeepCollectionEquality().equals(other.observation, observation)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&const DeepCollectionEquality().equals(other.expected, expected)&&const DeepCollectionEquality().equals(other.actual, actual));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditConflict<S>&&(identical(other.evidence, evidence) || other.evidence == evidence)&&const DeepCollectionEquality().equals(other.observation, observation));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(observation),const DeepCollectionEquality().hash(_diagnostics),const DeepCollectionEquality().hash(expected),const DeepCollectionEquality().hash(actual));
+    return Object.hash(runtimeType,evidence,const DeepCollectionEquality().hash(observation));
 }
 
 @override
 String toString() {
-    return 'EditSettlement<$S>.conflict(observation: $observation, diagnostics: $diagnostics, expected: $expected, actual: $actual)';
+    return 'EditSettlement<$S>.conflict(evidence: $evidence, observation: $observation)';
 }
 
 
@@ -1199,7 +1192,7 @@ abstract mixin class $EditConflictCopyWith<S,$Res> implements $EditSettlementCop
   factory $EditConflictCopyWith(EditConflict<S> value, $Res Function(EditConflict<S>) _then) = _$EditConflictCopyWithImpl;
 @useResult
 $Res call({
- S? observation, List<EditorDiagnostic> diagnostics, Object? expected, Object? actual
+ EditConflictEvidence evidence, S? observation
 });
 
 
@@ -1216,11 +1209,11 @@ class _$EditConflictCopyWithImpl<S,$Res>
 
 /// Create a copy of EditSettlement
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? observation = freezed,Object? diagnostics = null,Object? expected = freezed,Object? actual = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? evidence = null,Object? observation = freezed,}) {
   return _then(EditConflict<S>(
-observation: freezed == observation ? _self.observation : observation // ignore: cast_nullable_to_non_nullable
-as S?,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<EditorDiagnostic>,expected: freezed == expected ? _self.expected : expected ,actual: freezed == actual ? _self.actual : actual ,
+evidence: null == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
+as EditConflictEvidence,observation: freezed == observation ? _self.observation : observation // ignore: cast_nullable_to_non_nullable
+as S?,
   ));
 }
 
@@ -1393,7 +1386,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1456,7 +1449,7 @@ return $default(_that.value);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1630,7 +1623,7 @@ return resourceMissing(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1700,24 +1693,24 @@ return resourceMissing(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  dirty,TResult Function( Set<EditGroupId> groups)?  awaitingDependency,TResult Function()?  saving,TResult Function( Object? cause)?  committedAwaitingRefresh,TResult Function( String message,  Object? expected,  Object? actual)?  conflict,TResult Function( String message,  Object? cause)?  rejected,TResult Function()?  contractChanged,TResult Function( Object cause)?  uncertain,TResult Function( int attempts,  Object? expected,  Object? observed)?  repeatedContention,TResult Function( Object resource,  S proposal)?  resourceMissing,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  dirty,TResult Function( Set<EditGroupId> groups)?  awaitingDependency,TResult Function()?  saving,TResult Function( Object? cause)?  committedAwaitingRefresh,TResult Function( String message,  EditConflictEvidence? evidence)?  conflict,TResult Function( String message,  Object? cause)?  rejected,TResult Function()?  contractChanged,TResult Function( Object cause)?  uncertain,TResult Function( int attempts,  EditConflictEvidence? evidence)?  repeatedContention,TResult Function( Object resource,  S proposal)?  resourceMissing,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case EditGroupDirty() when dirty != null:
 return dirty();case EditGroupAwaitingDependency() when awaitingDependency != null:
 return awaitingDependency(_that.groups);case EditGroupSaving() when saving != null:
 return saving();case EditGroupCommittedAwaitingRefresh() when committedAwaitingRefresh != null:
 return committedAwaitingRefresh(_that.cause);case EditGroupConflict() when conflict != null:
-return conflict(_that.message,_that.expected,_that.actual);case EditGroupRejected() when rejected != null:
+return conflict(_that.message,_that.evidence);case EditGroupRejected() when rejected != null:
 return rejected(_that.message,_that.cause);case EditGroupContractChanged() when contractChanged != null:
 return contractChanged();case EditGroupUncertain() when uncertain != null:
 return uncertain(_that.cause);case EditGroupRepeatedContention() when repeatedContention != null:
-return repeatedContention(_that.attempts,_that.expected,_that.observed);case EditGroupResourceMissing() when resourceMissing != null:
+return repeatedContention(_that.attempts,_that.evidence);case EditGroupResourceMissing() when resourceMissing != null:
 return resourceMissing(_that.resource,_that.proposal);case _:
   return orElse();
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1730,18 +1723,18 @@ return resourceMissing(_that.resource,_that.proposal);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  dirty,required TResult Function( Set<EditGroupId> groups)  awaitingDependency,required TResult Function()  saving,required TResult Function( Object? cause)  committedAwaitingRefresh,required TResult Function( String message,  Object? expected,  Object? actual)  conflict,required TResult Function( String message,  Object? cause)  rejected,required TResult Function()  contractChanged,required TResult Function( Object cause)  uncertain,required TResult Function( int attempts,  Object? expected,  Object? observed)  repeatedContention,required TResult Function( Object resource,  S proposal)  resourceMissing,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  dirty,required TResult Function( Set<EditGroupId> groups)  awaitingDependency,required TResult Function()  saving,required TResult Function( Object? cause)  committedAwaitingRefresh,required TResult Function( String message,  EditConflictEvidence? evidence)  conflict,required TResult Function( String message,  Object? cause)  rejected,required TResult Function()  contractChanged,required TResult Function( Object cause)  uncertain,required TResult Function( int attempts,  EditConflictEvidence? evidence)  repeatedContention,required TResult Function( Object resource,  S proposal)  resourceMissing,}) {final _that = this;
 switch (_that) {
 case EditGroupDirty():
 return dirty();case EditGroupAwaitingDependency():
 return awaitingDependency(_that.groups);case EditGroupSaving():
 return saving();case EditGroupCommittedAwaitingRefresh():
 return committedAwaitingRefresh(_that.cause);case EditGroupConflict():
-return conflict(_that.message,_that.expected,_that.actual);case EditGroupRejected():
+return conflict(_that.message,_that.evidence);case EditGroupRejected():
 return rejected(_that.message,_that.cause);case EditGroupContractChanged():
 return contractChanged();case EditGroupUncertain():
 return uncertain(_that.cause);case EditGroupRepeatedContention():
-return repeatedContention(_that.attempts,_that.expected,_that.observed);case EditGroupResourceMissing():
+return repeatedContention(_that.attempts,_that.evidence);case EditGroupResourceMissing():
 return resourceMissing(_that.resource,_that.proposal);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -1756,18 +1749,18 @@ return resourceMissing(_that.resource,_that.proposal);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  dirty,TResult? Function( Set<EditGroupId> groups)?  awaitingDependency,TResult? Function()?  saving,TResult? Function( Object? cause)?  committedAwaitingRefresh,TResult? Function( String message,  Object? expected,  Object? actual)?  conflict,TResult? Function( String message,  Object? cause)?  rejected,TResult? Function()?  contractChanged,TResult? Function( Object cause)?  uncertain,TResult? Function( int attempts,  Object? expected,  Object? observed)?  repeatedContention,TResult? Function( Object resource,  S proposal)?  resourceMissing,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  dirty,TResult? Function( Set<EditGroupId> groups)?  awaitingDependency,TResult? Function()?  saving,TResult? Function( Object? cause)?  committedAwaitingRefresh,TResult? Function( String message,  EditConflictEvidence? evidence)?  conflict,TResult? Function( String message,  Object? cause)?  rejected,TResult? Function()?  contractChanged,TResult? Function( Object cause)?  uncertain,TResult? Function( int attempts,  EditConflictEvidence? evidence)?  repeatedContention,TResult? Function( Object resource,  S proposal)?  resourceMissing,}) {final _that = this;
 switch (_that) {
 case EditGroupDirty() when dirty != null:
 return dirty();case EditGroupAwaitingDependency() when awaitingDependency != null:
 return awaitingDependency(_that.groups);case EditGroupSaving() when saving != null:
 return saving();case EditGroupCommittedAwaitingRefresh() when committedAwaitingRefresh != null:
 return committedAwaitingRefresh(_that.cause);case EditGroupConflict() when conflict != null:
-return conflict(_that.message,_that.expected,_that.actual);case EditGroupRejected() when rejected != null:
+return conflict(_that.message,_that.evidence);case EditGroupRejected() when rejected != null:
 return rejected(_that.message,_that.cause);case EditGroupContractChanged() when contractChanged != null:
 return contractChanged();case EditGroupUncertain() when uncertain != null:
 return uncertain(_that.cause);case EditGroupRepeatedContention() when repeatedContention != null:
-return repeatedContention(_that.attempts,_that.expected,_that.observed);case EditGroupResourceMissing() when resourceMissing != null:
+return repeatedContention(_that.attempts,_that.evidence);case EditGroupResourceMissing() when resourceMissing != null:
 return resourceMissing(_that.resource,_that.proposal);case _:
   return null;
 
@@ -1985,12 +1978,11 @@ freezed == cause ? _self.cause : cause ,
 
 
 class EditGroupConflict<S> extends EditGroupPhase<S> {
-  const EditGroupConflict(this.message, this.expected, this.actual): super._();
+  const EditGroupConflict(this.message, this.evidence): super._();
 
 
  final  String message;
- final  Object? expected;
- final  Object? actual;
+ final  EditConflictEvidence? evidence;
 
 /// Create a copy of EditGroupPhase
 /// with the given fields replaced by the non null parameter values.
@@ -2002,18 +1994,18 @@ $EditGroupConflictCopyWith<S, EditGroupConflict<S>> get copyWith => _$EditGroupC
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditGroupConflict<S>&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.expected, expected)&&const DeepCollectionEquality().equals(other.actual, actual));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditGroupConflict<S>&&(identical(other.message, message) || other.message == message)&&(identical(other.evidence, evidence) || other.evidence == evidence));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,message,const DeepCollectionEquality().hash(expected),const DeepCollectionEquality().hash(actual));
+    return Object.hash(runtimeType,message,evidence);
 }
 
 @override
 String toString() {
-    return 'EditGroupPhase<$S>.conflict(message: $message, expected: $expected, actual: $actual)';
+    return 'EditGroupPhase<$S>.conflict(message: $message, evidence: $evidence)';
 }
 
 
@@ -2024,7 +2016,7 @@ abstract mixin class $EditGroupConflictCopyWith<S,$Res> implements $EditGroupPha
   factory $EditGroupConflictCopyWith(EditGroupConflict<S> value, $Res Function(EditGroupConflict<S>) _then) = _$EditGroupConflictCopyWithImpl;
 @useResult
 $Res call({
- String message, Object? expected, Object? actual
+ String message, EditConflictEvidence? evidence
 });
 
 
@@ -2041,10 +2033,11 @@ class _$EditGroupConflictCopyWithImpl<S,$Res>
 
 /// Create a copy of EditGroupPhase
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? expected = freezed,Object? actual = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? message = null,Object? evidence = freezed,}) {
   return _then(EditGroupConflict<S>(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
-as String,freezed == expected ? _self.expected : expected ,freezed == actual ? _self.actual : actual ,
+as String,freezed == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
+as EditConflictEvidence?,
   ));
 }
 
@@ -2223,12 +2216,11 @@ null == cause ? _self.cause : cause ,
 
 
 class EditGroupRepeatedContention<S> extends EditGroupPhase<S> {
-  const EditGroupRepeatedContention(this.attempts, this.expected, this.observed): super._();
+  const EditGroupRepeatedContention(this.attempts, this.evidence): super._();
 
 
  final  int attempts;
- final  Object? expected;
- final  Object? observed;
+ final  EditConflictEvidence? evidence;
 
 /// Create a copy of EditGroupPhase
 /// with the given fields replaced by the non null parameter values.
@@ -2240,18 +2232,18 @@ $EditGroupRepeatedContentionCopyWith<S, EditGroupRepeatedContention<S>> get copy
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditGroupRepeatedContention<S>&&(identical(other.attempts, attempts) || other.attempts == attempts)&&const DeepCollectionEquality().equals(other.expected, expected)&&const DeepCollectionEquality().equals(other.observed, observed));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditGroupRepeatedContention<S>&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.evidence, evidence) || other.evidence == evidence));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,attempts,const DeepCollectionEquality().hash(expected),const DeepCollectionEquality().hash(observed));
+    return Object.hash(runtimeType,attempts,evidence);
 }
 
 @override
 String toString() {
-    return 'EditGroupPhase<$S>.repeatedContention(attempts: $attempts, expected: $expected, observed: $observed)';
+    return 'EditGroupPhase<$S>.repeatedContention(attempts: $attempts, evidence: $evidence)';
 }
 
 
@@ -2262,7 +2254,7 @@ abstract mixin class $EditGroupRepeatedContentionCopyWith<S,$Res> implements $Ed
   factory $EditGroupRepeatedContentionCopyWith(EditGroupRepeatedContention<S> value, $Res Function(EditGroupRepeatedContention<S>) _then) = _$EditGroupRepeatedContentionCopyWithImpl;
 @useResult
 $Res call({
- int attempts, Object? expected, Object? observed
+ int attempts, EditConflictEvidence? evidence
 });
 
 
@@ -2279,10 +2271,11 @@ class _$EditGroupRepeatedContentionCopyWithImpl<S,$Res>
 
 /// Create a copy of EditGroupPhase
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? attempts = null,Object? expected = freezed,Object? observed = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? attempts = null,Object? evidence = freezed,}) {
   return _then(EditGroupRepeatedContention<S>(
 null == attempts ? _self.attempts : attempts // ignore: cast_nullable_to_non_nullable
-as int,freezed == expected ? _self.expected : expected ,freezed == observed ? _self.observed : observed ,
+as int,freezed == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
+as EditConflictEvidence?,
   ));
 }
 
@@ -2471,7 +2464,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2534,7 +2527,7 @@ return $default(_that.id,_that.label,_that.policy,_that.phase,_that.resources,_t
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2774,7 +2767,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2837,7 +2830,7 @@ return $default(_that.confirmed,_that.working,_that.groups,_that.failure,_that.a
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3017,7 +3010,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3083,7 +3076,7 @@ return rejected(_that.message,_that.cause);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A method similar to a `switch` method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3300,6 +3293,315 @@ class _$EditStageRejectedCopyWithImpl<$Res>
   return _then(EditStageRejected(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,freezed == cause ? _self.cause : cause ,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$EditGroupReview<S,E> {
+
+ S get saved; S get original; S get beforeGroup; S get proposal; Set<int> get operations; List<E> get edits; List<EditConflictEvidence> get conflicts; List<EditorDiagnostic> get diagnostics;
+/// Create a copy of EditGroupReview
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$EditGroupReviewCopyWith<S, E, EditGroupReview<S, E>> get copyWith => _$EditGroupReviewCopyWithImpl<S, E, EditGroupReview<S, E>>(this as EditGroupReview<S, E>, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as EditGroupReview<S, E>;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditGroupReview<S, E>&&const DeepCollectionEquality().equals(other.saved, _this.saved)&&const DeepCollectionEquality().equals(other.original, _this.original)&&const DeepCollectionEquality().equals(other.beforeGroup, _this.beforeGroup)&&const DeepCollectionEquality().equals(other.proposal, _this.proposal)&&const DeepCollectionEquality().equals(other.operations, _this.operations)&&const DeepCollectionEquality().equals(other.edits, _this.edits)&&const DeepCollectionEquality().equals(other.conflicts, _this.conflicts)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as EditGroupReview<S, E>;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.saved),const DeepCollectionEquality().hash(_this.original),const DeepCollectionEquality().hash(_this.beforeGroup),const DeepCollectionEquality().hash(_this.proposal),const DeepCollectionEquality().hash(_this.operations),const DeepCollectionEquality().hash(_this.edits),const DeepCollectionEquality().hash(_this.conflicts),const DeepCollectionEquality().hash(_this.diagnostics));
+}
+
+@override
+String toString() {
+  final _this = this as EditGroupReview<S, E>;
+  return 'EditGroupReview<$S, $E>(saved: ${_this.saved}, original: ${_this.original}, beforeGroup: ${_this.beforeGroup}, proposal: ${_this.proposal}, operations: ${_this.operations}, edits: ${_this.edits}, conflicts: ${_this.conflicts}, diagnostics: ${_this.diagnostics})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $EditGroupReviewCopyWith<S,E,$Res>  {
+  factory $EditGroupReviewCopyWith(EditGroupReview<S, E> value, $Res Function(EditGroupReview<S, E>) _then) = _$EditGroupReviewCopyWithImpl;
+@useResult
+$Res call({
+ S saved, S original, S beforeGroup, S proposal, Set<int> operations, List<E> edits, List<EditConflictEvidence> conflicts, List<EditorDiagnostic> diagnostics
+});
+
+
+
+
+}
+/// @nodoc
+class _$EditGroupReviewCopyWithImpl<S,E,$Res>
+    implements $EditGroupReviewCopyWith<S, E, $Res> {
+  _$EditGroupReviewCopyWithImpl(this._self, this._then);
+
+  final EditGroupReview<S, E> _self;
+  final $Res Function(EditGroupReview<S, E>) _then;
+
+/// Create a copy of EditGroupReview
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? saved = freezed,Object? original = freezed,Object? beforeGroup = freezed,Object? proposal = freezed,Object? operations = null,Object? edits = null,Object? conflicts = null,Object? diagnostics = null,}) {
+  return _then(EditGroupReview(
+saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as S,original: freezed == original ? _self.original : original // ignore: cast_nullable_to_non_nullable
+as S,beforeGroup: freezed == beforeGroup ? _self.beforeGroup : beforeGroup // ignore: cast_nullable_to_non_nullable
+as S,proposal: freezed == proposal ? _self.proposal : proposal // ignore: cast_nullable_to_non_nullable
+as S,operations: null == operations ? _self.operations : operations // ignore: cast_nullable_to_non_nullable
+as Set<int>,edits: null == edits ? _self.edits : edits // ignore: cast_nullable_to_non_nullable
+as List<E>,conflicts: null == conflicts ? _self.conflicts : conflicts // ignore: cast_nullable_to_non_nullable
+as List<EditConflictEvidence>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [EditGroupReview].
+extension EditGroupReviewPatterns<S,E> on EditGroupReview<S, E> {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _EditGroupReview<S, E> value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _EditGroupReview() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _EditGroupReview<S, E> value)  $default,){
+final _that = this;
+switch (_that) {
+case _EditGroupReview():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _EditGroupReview<S, E> value)?  $default,){
+final _that = this;
+switch (_that) {
+case _EditGroupReview() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( S saved,  S original,  S beforeGroup,  S proposal,  Set<int> operations,  List<E> edits,  List<EditConflictEvidence> conflicts,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _EditGroupReview() when $default != null:
+return $default(_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.operations,_that.edits,_that.conflicts,_that.diagnostics);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch` method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( S saved,  S original,  S beforeGroup,  S proposal,  Set<int> operations,  List<E> edits,  List<EditConflictEvidence> conflicts,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
+switch (_that) {
+case _EditGroupReview():
+return $default(_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.operations,_that.edits,_that.conflicts,_that.diagnostics);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( S saved,  S original,  S beforeGroup,  S proposal,  Set<int> operations,  List<E> edits,  List<EditConflictEvidence> conflicts,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
+switch (_that) {
+case _EditGroupReview() when $default != null:
+return $default(_that.saved,_that.original,_that.beforeGroup,_that.proposal,_that.operations,_that.edits,_that.conflicts,_that.diagnostics);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _EditGroupReview<S,E> implements EditGroupReview<S, E> {
+  const _EditGroupReview({required this.saved, required this.original, required this.beforeGroup, required this.proposal, required  Set<int> operations, required  List<E> edits,  List<EditConflictEvidence> conflicts = const [],  List<EditorDiagnostic> diagnostics = const []}): _operations = operations,_edits = edits,_conflicts = conflicts,_diagnostics = diagnostics;
+
+
+@override final  S saved;
+@override final  S original;
+@override final  S beforeGroup;
+@override final  S proposal;
+ final  Set<int> _operations;
+@override Set<int> get operations {
+  if (_operations is EqualUnmodifiableSetView) return _operations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_operations);
+}
+
+ final  List<E> _edits;
+@override List<E> get edits {
+  if (_edits is EqualUnmodifiableListView) return _edits;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_edits);
+}
+
+ final  List<EditConflictEvidence> _conflicts;
+@override@JsonKey() List<EditConflictEvidence> get conflicts {
+  if (_conflicts is EqualUnmodifiableListView) return _conflicts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_conflicts);
+}
+
+ final  List<EditorDiagnostic> _diagnostics;
+@override@JsonKey() List<EditorDiagnostic> get diagnostics {
+  if (_diagnostics is EqualUnmodifiableListView) return _diagnostics;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_diagnostics);
+}
+
+
+/// Create a copy of EditGroupReview
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$EditGroupReviewCopyWith<S, E, _EditGroupReview<S, E>> get copyWith => __$EditGroupReviewCopyWithImpl<S, E, _EditGroupReview<S, E>>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditGroupReview<S, E>&&const DeepCollectionEquality().equals(other.saved, saved)&&const DeepCollectionEquality().equals(other.original, original)&&const DeepCollectionEquality().equals(other.beforeGroup, beforeGroup)&&const DeepCollectionEquality().equals(other.proposal, proposal)&&const DeepCollectionEquality().equals(other.operations, _operations)&&const DeepCollectionEquality().equals(other.edits, _edits)&&const DeepCollectionEquality().equals(other.conflicts, _conflicts)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(saved),const DeepCollectionEquality().hash(original),const DeepCollectionEquality().hash(beforeGroup),const DeepCollectionEquality().hash(proposal),const DeepCollectionEquality().hash(_operations),const DeepCollectionEquality().hash(_edits),const DeepCollectionEquality().hash(_conflicts),const DeepCollectionEquality().hash(_diagnostics));
+}
+
+@override
+String toString() {
+    return 'EditGroupReview<$S, $E>(saved: $saved, original: $original, beforeGroup: $beforeGroup, proposal: $proposal, operations: $operations, edits: $edits, conflicts: $conflicts, diagnostics: $diagnostics)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$EditGroupReviewCopyWith<S,E,$Res> implements $EditGroupReviewCopyWith<S, E, $Res> {
+  factory _$EditGroupReviewCopyWith(_EditGroupReview<S, E> value, $Res Function(_EditGroupReview<S, E>) _then) = __$EditGroupReviewCopyWithImpl;
+@override @useResult
+$Res call({
+ S saved, S original, S beforeGroup, S proposal, Set<int> operations, List<E> edits, List<EditConflictEvidence> conflicts, List<EditorDiagnostic> diagnostics
+});
+
+
+
+
+}
+/// @nodoc
+class __$EditGroupReviewCopyWithImpl<S,E,$Res>
+    implements _$EditGroupReviewCopyWith<S, E, $Res> {
+  __$EditGroupReviewCopyWithImpl(this._self, this._then);
+
+  final _EditGroupReview<S, E> _self;
+  final $Res Function(_EditGroupReview<S, E>) _then;
+
+/// Create a copy of EditGroupReview
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? saved = freezed,Object? original = freezed,Object? beforeGroup = freezed,Object? proposal = freezed,Object? operations = null,Object? edits = null,Object? conflicts = null,Object? diagnostics = null,}) {
+  return _then(_EditGroupReview<S, E>(
+saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
+as S,original: freezed == original ? _self.original : original // ignore: cast_nullable_to_non_nullable
+as S,beforeGroup: freezed == beforeGroup ? _self.beforeGroup : beforeGroup // ignore: cast_nullable_to_non_nullable
+as S,proposal: freezed == proposal ? _self.proposal : proposal // ignore: cast_nullable_to_non_nullable
+as S,operations: null == operations ? _self._operations : operations // ignore: cast_nullable_to_non_nullable
+as Set<int>,edits: null == edits ? _self._edits : edits // ignore: cast_nullable_to_non_nullable
+as List<E>,conflicts: null == conflicts ? _self._conflicts : conflicts // ignore: cast_nullable_to_non_nullable
+as List<EditConflictEvidence>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
+as List<EditorDiagnostic>,
   ));
 }
 

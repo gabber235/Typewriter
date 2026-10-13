@@ -5,8 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "realm_edit_model.freezed.dart";
 part "authoring_document.dart";
 part "authoring_edit.dart";
+part "authoring_facts.dart";
+part "authoring_conflict_review.dart";
 
-/// Keeps local initialization findings with immutable prepared server intent.
+/// Retains local intent, its preceding state witnesses, and initialization findings.
 @freezed
 abstract class RealmPreparedEdit with _$RealmPreparedEdit {
   const factory RealmPreparedEdit({
@@ -45,15 +47,7 @@ final class RealmEditModel
         edit: edit,
       );
     }
-    skir.EditExpectation? expected;
-    skir.EditExpectation? actual;
-    for (final fact in edit.request.expectations) {
-      final observed = branch._actual(fact);
-      if (!_sameExpectation(fact, observed)) {
-        expected ??= fact;
-        actual ??= observed;
-      }
-    }
+    final conflicts = onto.facts.conflicts(edit.request.expectations);
     try {
       for (final intent in edit.request.intents) {
         if (branch._replay(intent) case final failure?) {
@@ -70,16 +64,17 @@ final class RealmEditModel
           ) ||
           !const DeepCollectionEquality().equals(onto.links, observation.links);
       return EditReplay(
-        kind: expected != null
+        kind: conflicts.isNotEmpty
             ? EditReplayKind.conflict
             : effect
             ? EditReplayKind.applicable
             : EditReplayKind.satisfied,
         observation: observation,
         edit: edit,
-        expected: expected,
-        actual: actual,
-        diagnostics: expected == null
+        conflict: conflicts.isEmpty
+            ? null
+            : AuthoringConflictEvidence(facts: conflicts),
+        diagnostics: conflicts.isEmpty
             ? []
             : [
                 EditorDiagnostic(
@@ -103,6 +98,9 @@ final class RealmEditModel
         observation: onto,
         edit: edit,
         missing: missing,
+        conflict: conflicts.isEmpty
+            ? null
+            : AuthoringConflictEvidence(facts: conflicts),
         cause: error,
         diagnostics: [
           EditorDiagnostic(
@@ -112,6 +110,23 @@ final class RealmEditModel
         ],
       );
     }
+  }
+
+  RealmPreparedEdit compose(
+    EditCapture<AuthoringDocument, RealmPreparedEdit> capture,
+  ) {
+    final branch = AuthoringEdit.fromDocument(capture.baseline);
+    for (final operation in capture.edits) {
+      branch.applyPrepared(operation.request);
+      branch._initializationFindings.addAll(operation.findings);
+    }
+    final composed = branch.toDocument();
+    if (!composed.hasSameAuthoredContent(capture.proposed)) {
+      throw const EditPreparationFailure(
+        "The prepared transaction differs from the reviewed changes",
+      );
+    }
+    return branch.capture();
   }
 
   @override
@@ -167,15 +182,13 @@ final class _RealmEditRead implements EditRead<AuthoringDocument> {
   const _RealmEditRead(this.expected);
   final skir.EditExpectation expected;
   @override
-  bool matches(AuthoringDocument observation) => _sameExpectation(
-    expected,
-    AuthoringEdit.fromDocument(observation)._actual(expected),
-  );
+  bool matches(AuthoringDocument observation) =>
+      _sameExpectation(expected, observation.facts.observe(expected));
   @override
   bool differs(AuthoringDocument before, AuthoringDocument after) =>
       !_sameExpectation(
-        AuthoringEdit.fromDocument(before)._actual(expected),
-        AuthoringEdit.fromDocument(after)._actual(expected),
+        before.facts.observe(expected),
+        after.facts.observe(expected),
       );
 }
 
@@ -186,4 +199,38 @@ extension RealmEditCapture on AuthoringEdit {
         .skip(_inheritedFindings)
         .toList(growable: false),
   );
+}
+
+extension AuthoringContentComparison on AuthoringDocument {
+  bool hasSameAuthoredContent(AuthoringDocument other) =>
+      generation == other.generation &&
+      const DeepCollectionEquality().equals(entries, other.entries) &&
+      const SetEquality<skir.LinkProjection>().equals(
+        links.toSet(),
+        other.links.toSet(),
+      ) &&
+      const DeepCollectionEquality().equals(
+        initializationFindings,
+        other.initializationFindings,
+      );
+}
+
+@freezed
+abstract class AuthoringCompositionFailure
+    with _$AuthoringCompositionFailure
+    implements Exception {
+  const factory AuthoringCompositionFailure(
+    List<skir.ExpectationConflict> conflicts,
+  ) = _AuthoringCompositionFailure;
+}
+
+/// Preserves every expected and actual fact returned by local or server checks.
+@freezed
+abstract class AuthoringConflictEvidence
+    with _$AuthoringConflictEvidence
+    implements EditConflictEvidence {
+  const factory AuthoringConflictEvidence({
+    required List<skir.ExpectationConflict> facts,
+    @Default([]) List<EditorDiagnostic> diagnostics,
+  }) = _AuthoringConflictEvidence;
 }
