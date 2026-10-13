@@ -41,6 +41,12 @@ void main() {
         ),
       ),
     ),
+    inspectActiveSave: (owner, group) {
+      final value = ValueEditing.fromWorkspace(owner, group);
+      final status = value.saveState(editorRootPath);
+      expect(status.phase, EditorSavePhase.saving);
+      expect(status.diagnostics, isEmpty);
+    },
   );
   _contract<AuthoringDocument, RealmPreparedEdit>(
     "Realm model",
@@ -81,11 +87,14 @@ void _contract<S, E>(
   required E Function(S document, String value) change,
   required String Function(S document) read,
   required S Function(S document) accepted,
+  void Function(EditingWorkspace<S, E> owner, EditGroupId group)?
+  inspectActiveSave,
 }) {
   group(label, () {
     late ScopedWorkSession session;
     late _Boundary<S, E> boundary;
     late EditingWorkspace<S, E> owner;
+    late EditingWorkDriver<S, E> driver;
     late EditGroupId id;
     late EditGroupControl<S, E> control;
     setUp(() {
@@ -97,6 +106,10 @@ void _contract<S, E>(
         submissions: session,
         initial: boundary.current,
       );
+      driver = EditingWorkDriver(
+        id: WorkDriverId(domain: "editing", scope: label),
+        workspace: owner,
+      );
       id = owner.createGroup(
         label: "Edit name",
         policy: EditorCommitPolicy.applyResource,
@@ -106,12 +119,41 @@ void _contract<S, E>(
     });
     tearDown(() {
       control.dispose();
-      owner.dispose();
+      driver.dispose();
       session.dispose();
     });
     void stage(String value) =>
         owner.stage(id, change(owner.document, value)).requireAccepted();
 
+    test("an acknowledged save remains active while refreshing and retains later edits", () async {
+      final reply = boundary.reply = Completer();
+      final observation = boundary.refreshReply = Completer();
+      stage("Draft");
+      final applying = control.apply();
+      await boundary.started.future;
+      reply.complete(const SubmissionConfirmed(EditAccepted()));
+      await boundary.observing.future;
+
+      final entry = driver.snapshot.entries.single;
+      expect(entry.needsAttention, isFalse);
+      expect(entry.saving, isTrue);
+      expect(entry.phase, "Changes were applied. Refreshing saved values");
+      expect(control.state.canApply, isFalse);
+      expect(control.state.hasSubmittedWork, isTrue);
+      inspectActiveSave?.call(owner, id);
+
+      stage("Later");
+      expect(boundary.captures, hasLength(1));
+      observation.complete(accepted(boundary.captures.single.proposed));
+      await applying;
+      expect(read(owner.confirmed), "Draft");
+      expect(read(owner.document), "Later");
+      expect(control.state.canApply, isTrue);
+      await control.apply();
+      expect(read(owner.confirmed), "Later");
+      expect(boundary.captures, hasLength(2));
+      expect(control.state.hasWork, isFalse);
+    });
     test(
       "Apply settles one request and the same owner accepts another edit",
       () async {
@@ -216,13 +258,22 @@ final class _Boundary<S, E> implements EditPersistence<S, E> {
   final key = Object();
   final captures = <EditCapture<S, E>>[];
   final started = Completer<void>();
+  final observing = Completer<void>();
   Completer<SubmissionResult<EditSettlement<S>>>? reply;
+  Completer<S>? refreshReply;
   @override
   Set<Object> reservationsFor(Iterable<E> pendingEdits) => {key};
   @override
   Future<S> observeForCommit(S known) async => current;
   @override
-  Future<S> refresh() async => current;
+  Future<S> refresh() async {
+    if (!observing.isCompleted) observing.complete();
+    final pending = refreshReply;
+    refreshReply = null;
+    if (pending != null) current = await pending.future;
+    return current;
+  }
+
   @override
   PreparedCommit<EditSettlement<S>> prepare(EditCapture<S, E> capture) =>
       PreparedCommit(

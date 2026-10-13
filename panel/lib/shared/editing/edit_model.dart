@@ -133,11 +133,23 @@ sealed class EditGroupPhase<S> with _$EditGroupPhase<S> {
       this is EditGroupSaving<S> ||
       this is EditGroupCommittedAwaitingRefresh<S> ||
       this is EditGroupUncertain<S>;
+
+  /// Applying changes and observing an acknowledged save are normal progress.
+  bool get active => switch (this) {
+    EditGroupSaving() || EditGroupCommittedAwaitingRefresh(cause: null) => true,
+    _ => false,
+  };
+
+  /// Submission locks protect delivery independently of user recovery needs.
+  bool get needsAttention => blocked && !active;
+
   String get message => switch (this) {
     EditGroupDirty() => "Changes await applying",
     EditGroupAwaitingDependency() =>
       "Waiting for related pending changes. Apply or discard that work first",
     EditGroupSaving() => "Applying",
+    EditGroupCommittedAwaitingRefresh(cause: null) =>
+      "Changes were applied. Refreshing saved values",
     EditGroupCommittedAwaitingRefresh() => "Changes were applied. Current values are unavailable; later edits remain local",
     EditGroupConflict(:final message) ||
     EditGroupRejected(:final message) => message,

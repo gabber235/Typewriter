@@ -19,7 +19,7 @@ final class RealmEditingBinding extends ChangeNotifier {
       workspace.state.groups[editingGroup]?.phase;
   String? get status => _message;
   bool get dirty => control.state.hasWork;
-  bool get saving => phase is EditGroupSaving;
+  bool get saving => phase?.active ?? false;
   bool get blocked => !control.canEdit;
   bool get hasSubmittedWork => control.state.hasSubmittedWork;
   List<EditGroup<AuthoringDocument>> get relatedGroups => workspace

@@ -50,14 +50,14 @@ final class EditingWorkDriver<S, E> extends ChangeNotifier
           canDiscard: workspace.canDiscard(group.id),
           canRetry: workspace.canRetry(group.id),
           blocksNavigation: true,
-          saving: group.phase is EditGroupSaving<S>,
-          needsAttention: group.phase.blocked,
+          saving: group.phase.active,
+          needsAttention: group.phase.needsAttention,
         ),
     ],
   );
   List<WorkFact> _details(EditGroup<S> group) {
     final phase = group.phase;
-    if (!phase.blocked) return const [];
+    if (!phase.needsAttention) return const [];
     final diagnostics = switch (phase) {
       EditGroupRejected(cause: EditPreparationFailure(:final diagnostics)) =>
         diagnostics,

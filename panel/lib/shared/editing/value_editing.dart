@@ -184,13 +184,13 @@ final class ValueEditing
         rejected is EditPreparationFailure && rejected.diagnostics.isNotEmpty
         ? rejected.diagnostics
         : [
-            if (phase != null && phase.blocked)
+            if (phase != null && phase.needsAttention)
               _valueDiagnostic(phase.message, path),
           ];
     return EditorSaveState(
       phase: !workspace.document.exists
           ? EditorSavePhase.deletedElsewhere
-          : phase is EditGroupSaving
+          : phase?.active ?? false
           ? EditorSavePhase.saving
           : phase is EditGroupUncertain ||
                 phase is EditGroupCommittedAwaitingRefresh
