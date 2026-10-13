@@ -12,7 +12,7 @@ dependencies:
   auto_route: ^11.0.0
   auto_size_text: ^3.0.0
   collection:
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^2.0.0
   dart_casing: ^3.0.1
   nats_core:
     git:
@@ -24,7 +24,7 @@ dependencies:
       url: https://github.com/gabber235/nats.dart.git
       ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_jetstream
-  dartastic_opentelemetry: 1.1.0-beta.15
+  dartastic_opentelemetry: ^1.1.0-beta.17
   dotted_border: ^3.1.0
   duration: ^4.0.3
   expandable_page_view: ^1.2.0
@@ -43,9 +43,9 @@ dependencies:
   jovial_svg: ^1.1.30
   localstorage: ^6.0.0
   material_color_utilities:
-  oidc: ^4.0.0
-  oidc_core: ^3.0.0
-  oidc_default_store: ^1.1.2
+  oidc: ^5.0.2
+  oidc_core: ^4.0.0
+  oidc_default_store: ^2.0.0
   okcolor: ^1.1.0
   petitparser: ^7.0.2
   pub_semver: ^2.2.0
