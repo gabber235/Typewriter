@@ -43,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import java.nio.file.Path
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
@@ -67,11 +68,9 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                     runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
                 )
             deployment = loaded
-            val generation =
-                CatalogGeneration(
-                    context.directories.deployment.fileName
-                        .toString(),
-                )
+            // The loader can change catalog behavior without changing the deployment artifacts.
+            // Identify this assembled catalog so clients cannot reuse a previous runtime's definitions.
+            val generation = CatalogGeneration(UUID.randomUUID().toString())
             val assembly =
                 loaded.providers.contributions.assemble(
                     CatalogAssemblyContext(
