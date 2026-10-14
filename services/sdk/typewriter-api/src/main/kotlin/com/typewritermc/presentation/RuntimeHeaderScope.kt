@@ -6,14 +6,19 @@ import skirout.editor.v1.binding.BindingRef
 
 internal class RuntimeHeaderScope(
     private val state: PresentationBuildState,
-    private val binding: BindingRef,
 ) : HeaderScope {
+    private var diagnosticBinding: BindingRef? = null
     private var title: skirout.editor.v1.presentation.PresentationHeaderTitle? = null
     private var description: skirout.editor.v1.expression.ExpressionNode? = null
     private var initiallyExpanded: Boolean? = null
     private var headerPadding: skirout.editor.v1.presentation.PresentationInsets? = null
     private var contentPadding: skirout.editor.v1.presentation.PresentationInsets? = null
     private val items = mutableListOf<skirout.editor.v1.presentation.HeaderItem>()
+
+    override fun diagnostics(input: PresentationInput<*, *>) {
+        check(diagnosticBinding == null) { "Presentation header diagnostic scope may be declared once." }
+        diagnosticBinding = input.binding
+    }
 
     override fun title(text: Expr<String, Handled>) {
         check(title == null) { "Presentation header title may be declared once." }
@@ -75,13 +80,13 @@ internal class RuntimeHeaderScope(
     }
 
     fun build(): skirout.editor.v1.presentation.PresentationHeader? =
-        if (title == null && description == null && initiallyExpanded == null && items.isEmpty() && headerPadding == null &&
-            contentPadding == null
+        if (diagnosticBinding == null && title == null && description == null && initiallyExpanded == null &&
+            items.isEmpty() && headerPadding == null && contentPadding == null
         ) {
             null
         } else {
             skirout.editor.v1.presentation.PresentationHeader(
-                binding = binding,
+                binding = diagnosticBinding,
                 title = title,
                 description = description,
                 initiallyExpanded = initiallyExpanded,

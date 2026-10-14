@@ -15,6 +15,7 @@ import com.typewritermc.presentation.CrossAxisAlignment
 import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.GraphNodeScope
 import com.typewritermc.presentation.Layout
+import com.typewritermc.presentation.PresentationInput
 import com.typewritermc.presentation.PresentationInsets
 import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.projectedCollectionSource
@@ -24,12 +25,16 @@ import com.typewritermc.types.ResourceId
 internal fun Layout.inspectorSection(
     id: String,
     title: String,
+    input: PresentationInput<*, *>? = null,
     content: Layout.() -> Unit,
 ) {
     section {
         node(
             id = id,
-            header = { title(literal(title)) },
+            header = {
+                title(literal(title))
+                input?.let { diagnostics(it) }
+            },
             body = content,
         )
     }

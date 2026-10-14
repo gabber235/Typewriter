@@ -341,7 +341,7 @@ internal class RuntimeLayout(
         body: Layout.() -> Unit,
     ) {
         require(id.isNotBlank()) { "Presentation node id must not be blank." }
-        val headerScope = RuntimeHeaderScope(state, base)
+        val headerScope = RuntimeHeaderScope(state)
         headerScope.header()
         val nodeBody = child(body)
         target +=

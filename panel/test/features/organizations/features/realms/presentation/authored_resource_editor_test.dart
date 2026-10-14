@@ -553,6 +553,139 @@ void main() {
     expect(find.text("Title must not be blank"), findsOneWidget);
     expect(find.bySemanticsLabel("Presentation error"), findsNothing);
   });
+
+  for (final showTitleEditor in [true, false]) {
+    testWidgets(
+      "only Title shows its error with editor present: $showTitleEditor",
+      (tester) async {
+        final fixture = _fixture(
+          title: "",
+          requireTitle: true,
+          inspectorLayout: _bookSections(showTitleEditor: showTitleEditor),
+        );
+        await tester.pumpTestApp(
+          child: Scaffold(
+            body: SingleChildScrollView(
+              child: AuthoredResourceEditor(
+                resource: fixture.resource,
+                document: fixture.draft.toDocument(),
+                role: skir.PresentationRole.inspector,
+                budget: skir.EvaluationBudget(
+                  maxSteps: 1000,
+                  maxCollectionItems: 100,
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text("Title must not be blank"), findsOneWidget);
+        expect(
+          find.byType(EditableText),
+          showTitleEditor ? findsOneWidget : findsNothing,
+        );
+        expect(find.bySemanticsLabel("Presentation error"), findsNothing);
+        final marker = find.byType(PortableDiagnosticHeaderMarker);
+        expect(marker, findsOneWidget);
+        expect(
+          find.ancestor(
+            of: marker,
+            matching: find.byWidgetPredicate(
+              (widget) =>
+                  widget is PortablePresentationNodeRenderer &&
+                  widget.node.nodeId == "section.title",
+            ),
+          ),
+          findsWidgets,
+        );
+        final summary = tester
+            .widget<PortableDiagnosticHeaderMarker>(marker)
+            .summary;
+        expect(
+          showTitleEditor ? summary.descendants : summary.direct,
+          hasLength(1),
+        );
+        for (final title in [
+          "Icon",
+          "Color",
+          "Direct Tags",
+          "Effective Tags",
+        ]) {
+          expect(find.text(title), findsOneWidget);
+        }
+      },
+    );
+  }
+}
+
+skir.PresentationNode _bookSections({required bool showTitleEditor}) {
+  skir.BindingRef binding(String field) => skir.BindingRef(
+    bindingId: configuredValueBindingId,
+    path: editorRootPath.field(field),
+  );
+  return skir.PresentationNode(
+    nodeId: "book.sections",
+    properties: skir.PresentationProperties.defaultInstance,
+    header: null,
+    element: skir.PresentationElement.wrapChildren(
+      skir.ChildrenElement.createColumn(
+        layout: skir.AxisChildrenLayout(
+          spacing: 12,
+          mainAxisAlignment: skir.MainAxisAlignment.start,
+          crossAxisAlignment: skir.CrossAxisAlignment.stretch,
+        ),
+        children: [
+          for (final (field, title) in [
+            ("title", "Title"),
+            ("icon", "Icon"),
+            ("color", "Color"),
+            ("tags", "Direct Tags"),
+            (null, "Effective Tags"),
+          ])
+            skir.AxisChild.wrapFixed(
+              skir.PresentationNode(
+                nodeId: "section.${field ?? 'effectiveTags'}",
+                properties: skir.PresentationProperties.defaultInstance,
+                header: skir.PresentationHeader(
+                  binding: field == null ? null : binding(field),
+                  title: skir.PresentationHeaderTitle.wrapText(
+                    skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapStringValue(title),
+                    ),
+                  ),
+                  description: null,
+                  initiallyExpanded: null,
+                  items: const [],
+                  headerPadding: null,
+                  contentPadding: null,
+                ),
+                element: field == "title" && showTitleEditor
+                    ? skir.PresentationElement.createTextInput(
+                        control: skir.BoundControl(
+                          binding: binding("title"),
+                          label: null,
+                          description: null,
+                          prefix: null,
+                          semanticLabel: null,
+                        ),
+                        appearance: null,
+                        content: null,
+                        entry: null,
+                        mappings: null,
+                        options: skir.TextEditingOptions.defaultInstance,
+                      )
+                    : skir.PresentationElement.createSpacer(
+                        width: null,
+                        height: null,
+                      ),
+              ),
+            ),
+        ],
+      ),
+    ),
+  );
 }
 
 Widget _editor(skir.ResourceId resource, RealmEditingBinding binding) =>
@@ -964,6 +1097,7 @@ _fixture({
   String fieldName = "title",
   skir.DataValue? initial,
   skir.NamedTypeUse? namedText,
+  skir.PresentationNode? inspectorLayout,
 }) {
   final generation = skir.CatalogGeneration(value: "catalog:1");
   final fieldType = namedText == null
@@ -988,30 +1122,32 @@ _fixture({
     definition: definition,
     arguments: const [],
   );
-  final layout = skir.PresentationNode(
-    nodeId: "message.title",
-    properties: skir.PresentationProperties.defaultInstance,
-    element: skir.PresentationElement.createTextInput(
-      control: skir.BoundControl(
-        binding: skir.BindingRef(
-          bindingId: configuredValueBindingId,
-          path: skir.ValuePath(
-            segments: [skir.PathSegment.createField(name: fieldName)],
+  final layout =
+      inspectorLayout ??
+      skir.PresentationNode(
+        nodeId: "message.title",
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.createTextInput(
+          control: skir.BoundControl(
+            binding: skir.BindingRef(
+              bindingId: configuredValueBindingId,
+              path: skir.ValuePath(
+                segments: [skir.PathSegment.createField(name: fieldName)],
+              ),
+            ),
+            label: null,
+            description: null,
+            prefix: null,
+            semanticLabel: null,
           ),
+          appearance: null,
+          content: null,
+          entry: null,
+          mappings: null,
+          options: skir.TextEditingOptions.defaultInstance,
         ),
-        label: null,
-        description: null,
-        prefix: null,
-        semanticLabel: null,
-      ),
-      appearance: null,
-      content: null,
-      entry: null,
-      mappings: null,
-      options: skir.TextEditingOptions.defaultInstance,
-    ),
-    header: null,
-  );
+        header: null,
+      );
   final headerLayout = skir.PresentationNode(
     nodeId: "message.header",
     properties: skir.PresentationProperties.defaultInstance,
@@ -1257,7 +1393,15 @@ _fixture({
                       code: "non_blank",
                       message: "Title must not be blank",
                       severity: skir.DiagnosticSeverity.error,
-                      targets: const [],
+                      targets: [
+                        skir.RelativeFieldPattern(
+                          segments: [
+                            skir.FieldPatternSegment.createField(
+                              name: fieldName,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ],

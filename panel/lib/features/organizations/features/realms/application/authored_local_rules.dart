@@ -74,6 +74,10 @@ final class _RuleProjectionBuilder {
     int depth,
   ) {
     if (depth > 512) return;
+    final owner = skir.ValueLocation(
+      resource: resource,
+      path: skir.ValuePath(segments: base),
+    );
     for (final recipe in checkedCatalog.configuration(selection)) {
       for (final match in value.expandPattern(
         segments: recipe.relativePath.segments.toList(growable: false),
@@ -99,7 +103,14 @@ final class _RuleProjectionBuilder {
         );
         (rules[location] ??= []).addAll(recipe.rules);
         for (final rule in recipe.rules) {
-          _evaluate(rule, match.value, location);
+          _evaluate(
+            recipe,
+            rule,
+            match.value,
+            location,
+            ownerValue: value,
+            owner: owner,
+          );
         }
       }
     }
@@ -161,10 +172,13 @@ final class _RuleProjectionBuilder {
   }
 
   void _evaluate(
+    skir.ConfigurationRecipe recipe,
     skir.OwnedRule rule,
     skir.DataValue subject,
-    skir.ValueLocation location,
-  ) {
+    skir.ValueLocation location, {
+    required skir.DataValue ownerValue,
+    required skir.ValueLocation owner,
+  }) {
     final result = PortableExpressionEvaluator.configuredValue(
       value: subject,
       location: location,
@@ -182,9 +196,11 @@ final class _RuleProjectionBuilder {
                 ? rule.diagnostic.message
                 : "${rule.diagnostic.message}: the rule result is not boolean",
             severity: rule.diagnostic.severity,
-            targets: rule.diagnostic.resolveTargets(
-              value: subject,
-              origin: location,
+            targets: recipe.resolveDiagnosticTargets(
+              rule.diagnostic,
+              ownerValue: ownerValue,
+              owner: owner,
+              subject: location,
             ),
           ),
         );
@@ -302,32 +318,42 @@ extension _AuthoredValuePatternExpansion on skir.DataValue {
   }
 }
 
-extension AuthoredDiagnosticTargetResolution on skir.DiagnosticTemplate {
-  List<PortableDiagnosticTarget> resolveTargets({
-    required skir.DataValue value,
-    required skir.ValueLocation origin,
+extension AuthoredDiagnosticTargetResolution on skir.ConfigurationRecipe {
+  /// Resolves owner relative targets for one matched rule occurrence.
+  /// A target equal to [relativePath] denotes only [subject], including when
+  /// that pattern contains collection wildcards. Other patterns expand from
+  /// [owner]. Empty targets fall back to the subject. The panel retains missing
+  /// field and empty collection addresses so unfinished drafts remain visible.
+  List<PortableDiagnosticTarget> resolveDiagnosticTargets(
+    skir.DiagnosticTemplate diagnostic, {
+    required skir.DataValue ownerValue,
+    required skir.ValueLocation owner,
+    required skir.ValueLocation subject,
   }) {
-    if (targets.isEmpty) return [PortableDiagnosticTarget.value(origin)];
+    final subjectTarget = PortableDiagnosticTarget.value(subject);
+    if (diagnostic.targets.isEmpty) return [subjectTarget];
     final resolved = <PortableDiagnosticTarget>{};
-    for (final pattern in targets) {
-      final matches = value.expandPattern(
+    for (final pattern in diagnostic.targets) {
+      if (pattern == relativePath) {
+        resolved.add(subjectTarget);
+        continue;
+      }
+      final matches = ownerValue.expandPattern(
         segments: pattern.segments.toList(growable: false),
-        path: origin.path.segments.toList(growable: false),
+        path: owner.path.segments.toList(growable: false),
         preserveTargets: true,
       );
       for (final match in matches) {
         resolved.add(
           PortableDiagnosticTarget.value(
             skir.ValueLocation(
-              resource: origin.resource,
+              resource: owner.resource,
               path: skir.ValuePath(segments: match.path),
             ),
           ),
         );
       }
     }
-    return resolved.isEmpty
-        ? [PortableDiagnosticTarget.value(origin)]
-        : List.unmodifiable(resolved);
+    return resolved.isEmpty ? [subjectTarget] : List.unmodifiable(resolved);
   }
 }

@@ -32,6 +32,10 @@ struct DiagnosticTemplate(810300004) {
   code: string = 0;
   message: string = 1;
   severity: DiagnosticSeverity = 2;
+  // Patterns are relative to the owning configuration occurrence.
+  // For a portable rule, a target equal to its recipe path denotes the current
+  // matched subject, including when that path contains collection wildcards.
+  // Empty targets fall back to that subject.
   targets: [RelativeFieldPattern] = 3;
 }
 

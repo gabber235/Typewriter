@@ -56,6 +56,7 @@ import java.lang.reflect.Modifier
 import java.util.Collections
 import skirout.editor.v1.expression.ExpressionNode as WireExpressionNode
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
+import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
 val FrameworkCatalogCreationTest by testSuite {
@@ -187,6 +188,11 @@ val FrameworkCatalogCreationTest by testSuite {
             .take(5)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Title", "Icon", "Color", "Direct Tags", "Effective Tags")
+        column.value.children
+            .drop(1)
+            .take(5)
+            .map { it.sectionNode().header?.binding } shouldBe
+            listOf("title", "icon", "color", "tags", null).map(::fieldBinding)
         val iconNode = column.value.children[2].sectionContent()
         val polymorphic = iconNode.element as PresentationElement.PolymorphicInputWrapper
         polymorphic.value.concreteTypes shouldHaveSize 2
@@ -253,6 +259,11 @@ val FrameworkCatalogCreationTest by testSuite {
             .take(5)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Name", "Color", "Direct Parents", "Inheritance", "Placement")
+        tagColumn.value.children
+            .drop(1)
+            .take(5)
+            .map { it.sectionNode().header?.binding } shouldBe
+            listOf("name", "color", "parents", null, "placement").map(::fieldBinding)
         tagColumn.value.children[4]
             .sectionContent()
             .collectionGraphSource() shouldBe TAG_COLLECTION_SOURCE_ID
@@ -282,6 +293,11 @@ val FrameworkCatalogCreationTest by testSuite {
             .take(4)
             .map(AxisChild::sectionTitle) shouldBe
             listOf("Book", "Name", "Chapter", "Priority")
+        pageColumn.value.children
+            .drop(1)
+            .take(4)
+            .map { it.sectionNode().header?.binding } shouldBe
+            listOf("book", "name", "chapter", "priority").map(::fieldBinding)
 
         val bookSummary =
             bookReferenceProvider.build(
@@ -401,6 +417,14 @@ val FrameworkCatalogCreationTest by testSuite {
         exportFrameworkControlFixture(entries, tag.record, tag.record.fields.getValue("placement"))
     }
 }
+
+private fun fieldBinding(name: String?): skirout.editor.v1.binding.BindingRef? =
+    name?.let {
+        skirout.editor.v1.binding.BindingRef(
+            bindingId = WireExpressionBindingId(value = "configured_value"),
+            path = WireValuePath(segments = listOf(WirePathSegment.createField(name = it))),
+        )
+    }
 
 private fun instantiateGeneratedProvider(type: Class<*>): Any =
     type.fields

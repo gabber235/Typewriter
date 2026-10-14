@@ -61,6 +61,53 @@ void main() {
       ],
     );
   });
+
+  test(
+    "an explicit target on another field resolves from the nested owner",
+    () {
+      final fixture = _nestedRuleFixture(
+        targets: [
+          skir.RelativeFieldPattern(
+            segments: [skir.FieldPatternSegment.createField(name: "height")],
+          ),
+        ],
+      );
+      final projection = AuthoredRuleProjection.evaluate(
+        draft: fixture.draft,
+        catalog: fixture.catalog,
+        resource: fixture.resource,
+        budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+      );
+
+      expect(projection.diagnostics.single.targets, [
+        PortableDiagnosticTarget.value(
+          skir.ValueLocation(
+            resource: fixture.resource,
+            path: editorRootPath.field("placement").field("height"),
+          ),
+        ),
+      ]);
+    },
+  );
+
+  test("a rule without explicit targets remains on its matched subject", () {
+    final fixture = _nestedRuleFixture(targets: const []);
+    final projection = AuthoredRuleProjection.evaluate(
+      draft: fixture.draft,
+      catalog: fixture.catalog,
+      resource: fixture.resource,
+      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+    );
+
+    expect(projection.diagnostics.single.targets, [
+      PortableDiagnosticTarget.value(
+        skir.ValueLocation(
+          resource: fixture.resource,
+          path: editorRootPath.field("placement").field("width"),
+        ),
+      ),
+    ]);
+  });
   test(
     "unknown root configuration does not become a partial presentation binding",
     () {
@@ -184,9 +231,14 @@ void main() {
       ],
     );
     expect(
-      diagnostic.resolveTargets(
-        value: skir.DataValue.createRecord(fields: const []),
-        origin: origin,
+      skir.ConfigurationRecipe.defaultInstance.resolveDiagnosticTargets(
+        diagnostic,
+        ownerValue: skir.DataValue.createRecord(fields: const []),
+        owner: origin,
+        subject: skir.ValueLocation(
+          resource: origin.resource,
+          path: origin.path.field("checked"),
+        ),
       ),
       [
         PortableDiagnosticTarget.value(
@@ -254,8 +306,13 @@ void main() {
           ),
       ],
     );
-    final paths = diagnostic
-        .resolveTargets(value: value, origin: origin)
+    final paths = skir.ConfigurationRecipe.defaultInstance
+        .resolveDiagnosticTargets(
+          diagnostic,
+          ownerValue: value,
+          owner: origin,
+          subject: origin,
+        )
         .cast<PortableValueDiagnosticTarget>()
         .map((target) => target.location.path)
         .toList();
@@ -292,9 +349,11 @@ void main() {
       ],
     );
     expect(
-      diagnostic.resolveTargets(
-        value: skir.DataValue.createListValue(items: const []),
-        origin: origin,
+      skir.ConfigurationRecipe.defaultInstance.resolveDiagnosticTargets(
+        diagnostic,
+        ownerValue: skir.DataValue.createListValue(items: const []),
+        owner: origin,
+        subject: origin,
       ),
       [PortableDiagnosticTarget.value(origin)],
     );
@@ -302,7 +361,10 @@ void main() {
 }
 
 ({skir.ResourceId resource, AuthoringEdit draft, CheckedEditorCatalog catalog})
-_nestedRuleFixture({bool collection = false}) {
+_nestedRuleFixture({
+  bool collection = false,
+  List<skir.RelativeFieldPattern>? targets,
+}) {
   final generation = skir.CatalogGeneration(value: "catalog:nested_rules");
   final tag = _definition("Tag");
   final placement = _definition("GraphPlacement");
@@ -326,6 +388,15 @@ _nestedRuleFixture({bool collection = false}) {
     ordinal: 0,
   );
   final ruleId = skir.RuleId(origin: ruleOrigin, localIndex: 0);
+  final subjectPattern = skir.RelativeFieldPattern(
+    segments: collection
+        ? [
+            skir.FieldPatternSegment.createField(name: "placements"),
+            skir.FieldPatternSegment.items,
+            skir.FieldPatternSegment.createField(name: "width"),
+          ]
+        : [skir.FieldPatternSegment.createField(name: "width")],
+  );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
       generation: generation,
@@ -392,15 +463,7 @@ _nestedRuleFixture({bool collection = false}) {
       configuration: [
         skir.ConfigurationRecipe(
           origin: ruleOrigin,
-          relativePath: skir.RelativeFieldPattern(
-            segments: collection
-                ? [
-                    skir.FieldPatternSegment.createField(name: "placements"),
-                    skir.FieldPatternSegment.items,
-                    skir.FieldPatternSegment.createField(name: "width"),
-                  ]
-                : [skir.FieldPatternSegment.createField(name: "width")],
-          ),
+          relativePath: subjectPattern,
           representationCondition: skir.RepresentationKind.integer,
           rules: [
             skir.OwnedRule(
@@ -424,7 +487,7 @@ _nestedRuleFixture({bool collection = false}) {
                 code: "positive",
                 message: "Must be positive",
                 severity: skir.DiagnosticSeverity.error,
-                targets: const [],
+                targets: targets ?? [subjectPattern],
               ),
             ),
           ],
@@ -469,6 +532,10 @@ _nestedRuleFixture({bool collection = false}) {
                             id: skir.ItemId(value: "first"),
                             value: _placementValue(placementUse),
                           ),
+                          skir.ListItem(
+                            id: skir.ItemId(value: "second"),
+                            value: _placementValue(placementUse, width: "1"),
+                          ),
                         ],
                       ),
                     )
@@ -484,14 +551,14 @@ _nestedRuleFixture({bool collection = false}) {
   return (resource: resource, draft: draft, catalog: checked);
 }
 
-skir.DataValue _placementValue(skir.NamedTypeUse use) =>
+skir.DataValue _placementValue(skir.NamedTypeUse use, {String width = "0"}) =>
     skir.DataValue.createNamed(
       actualType: use,
       payload: skir.DataValue.createRecord(
         fields: [
           skir.FieldValue(
             name: "width",
-            value: skir.DataValue.wrapInteger("0"),
+            value: skir.DataValue.wrapInteger(width),
           ),
         ],
       ),

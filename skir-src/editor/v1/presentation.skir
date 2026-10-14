@@ -141,6 +141,8 @@ enum PresentationInsets(810800015) {
 }
 
 struct PresentationHeader(810800016) {
+  // Adds a diagnostic summary for this data subtree, including absent editors.
+  // Contained controls also contribute. Null summarizes contained controls only.
   binding: BindingRef? = 0;
   title: PresentationHeaderTitle? = 1;
   description: ExpressionNode? = 2;

@@ -442,6 +442,55 @@ void main() {
     },
   );
 
+  test("headers combine contained controls with an explicit data summary", () {
+    final group = Object();
+    final titleControl = Object();
+    final recordSummary = Object();
+    final unrelatedSection = Object();
+    final title = PortableDiagnosticTarget.binding(
+      skir.BindingRef(bindingId: _binding, path: editorRootPath.field("name")),
+    );
+    final diagnostic = _diagnostic([title]);
+    final placement = PortableDiagnosticPlacement.route(
+      diagnostics: [diagnostic],
+      outcomes: const [],
+      presentation: PortableDiagnosticPresentation(
+        nodes: {
+          group: const PortableDiagnosticNode(
+            kind: PortableDiagnosticNodeKind.header,
+          ),
+          titleControl: _control(title, parent: group),
+          recordSummary: _header(_title),
+          unrelatedSection: _header(_count),
+        },
+      ),
+    );
+    expect(placement.forAnchor(titleControl).direct, [diagnostic]);
+    expect(placement.forAnchor(group).descendants, [diagnostic]);
+    expect(placement.forAnchor(recordSummary).descendants, [diagnostic]);
+    expect(placement.forAnchor(unrelatedSection).isEmpty, isTrue);
+    expect(placement.general, isEmpty);
+  });
+
+  test("an explicit scope does not exclude errors in contained controls", () {
+    final section = Object();
+    final control = Object();
+    final diagnostic = _diagnostic([_count]);
+    final placement = PortableDiagnosticPlacement.route(
+      diagnostics: [diagnostic],
+      outcomes: const [],
+      presentation: PortableDiagnosticPresentation(
+        nodes: {
+          section: _header(_title),
+          control: _control(_count, parent: section),
+        },
+      ),
+    );
+    expect(placement.forAnchor(control).direct, [diagnostic]);
+    expect(placement.forAnchor(section).descendants, [diagnostic]);
+    expect(placement.general, isEmpty);
+  });
+
   test("a hidden field falls back to its nearest addressed header", () {
     final outer = Object();
     final inner = Object();

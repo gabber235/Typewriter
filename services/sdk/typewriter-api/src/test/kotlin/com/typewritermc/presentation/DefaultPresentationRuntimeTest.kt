@@ -53,6 +53,28 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    test("headers acquire data scopes only when explicitly declared") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("header diagnostics"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+            ) { build ->
+                val field: PresentedField<String, TextControl> = build.value(TextControl::class)
+                build.node("content", header = { title(literal("Content")) }) {
+                    text(literal("Ordinary content"))
+                }
+                build.node("summary", header = { diagnostics(field.input) }) {
+                    text(literal("The editor is absent"))
+                }
+            }
+        val nodes = result.layout.fixedChildren()
+        nodes[0].header?.binding shouldBe null
+        val explicit = requireNotNull(nodes[1].header?.binding)
+        explicit.bindingId.value shouldBe "configured_value"
+        explicit.path.segments shouldBe emptyList()
+    }
+
     for (count in 0..2) {
         test("presentation bodies preserve their content with $count nodes") {
             val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation bodies"), StandardTypes.definitions)

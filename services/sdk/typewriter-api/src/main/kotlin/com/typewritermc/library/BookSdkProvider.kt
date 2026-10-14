@@ -39,10 +39,10 @@ object BookInspectorPresentation : BookPresentation {
                 color = expressions.color.orElse(literal(Color(0xff3f51b5u))),
                 identifier = subject.identifier,
             )
-            inspectorSection("title", "Title") {
+            inspectorSection("title", "Title", input = title.input) {
                 title { textInput() }
             }
-            inspectorSection("icon", "Icon") {
+            inspectorSection("icon", "Icon", input = icon.input) {
                 icon {
                     polymorphicInput {
                         form(
@@ -56,10 +56,10 @@ object BookInspectorPresentation : BookPresentation {
                     }
                 }
             }
-            inspectorSection("color", "Color") {
+            inspectorSection("color", "Color", input = color.input) {
                 color { colorInput { includeAlpha(false) } }
             }
-            inspectorSection("tags", "Direct Tags") {
+            inspectorSection("tags", "Direct Tags", input = tags.input) {
                 tags { collectionInput { items { linkInput(source = tagOptions) } } }
             }
             inspectorSection("effective-tags", "Effective Tags") {

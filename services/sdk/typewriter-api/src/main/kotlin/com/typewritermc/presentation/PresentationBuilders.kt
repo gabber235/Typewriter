@@ -178,6 +178,13 @@ interface RichTextScope {
 }
 
 interface HeaderScope {
+    /**
+     * Includes diagnostics for this input even when its editor is absent.
+     * The header also summarizes its contained controls. Without an explicit
+     * input, only those contained controls contribute to the summary.
+     */
+    fun diagnostics(input: PresentationInput<*, *>)
+
     fun title(text: Expr<String, Handled>)
 
     fun title(body: Layout.() -> Unit)

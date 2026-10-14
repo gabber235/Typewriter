@@ -38,13 +38,13 @@ object TagInspectorPresentation : TagPresentation {
                 color = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
                 identifier = subject.identifier,
             )
-            inspectorSection("name", "Name") {
+            inspectorSection("name", "Name", input = name.input) {
                 name { textInput() }
             }
-            inspectorSection("color", "Color") {
+            inspectorSection("color", "Color", input = color.input) {
                 color { colorInput { includeAlpha(false) } }
             }
-            inspectorSection("parents", "Direct Parents") {
+            inspectorSection("parents", "Direct Parents", input = parents.input) {
                 parents { collectionInput { items { linkInput() } } }
             }
             inspectorSection("inheritance", "Inheritance") {
@@ -58,7 +58,7 @@ object TagInspectorPresentation : TagPresentation {
                     node { tagGraphNode() }
                 }
             }
-            inspectorSection("placement", "Placement") {
+            inspectorSection("placement", "Placement", input = placement.input) {
                 placement(using = PlacementSdkProvider)
             }
             remainingFields {}
@@ -132,16 +132,16 @@ object PageInspectorPresentation : PagePresentation {
                 color = literal(Color(0xff607d8bu)),
                 identifier = subject.identifier,
             )
-            inspectorSection("book", "Book") {
+            inspectorSection("book", "Book", input = book.input) {
                 book { linkInput() }
             }
-            inspectorSection("name", "Name") {
+            inspectorSection("name", "Name", input = name.input) {
                 name { textInput() }
             }
-            inspectorSection("chapter", "Chapter") {
+            inspectorSection("chapter", "Chapter", input = chapter.input) {
                 chapter { textInput() }
             }
-            inspectorSection("priority", "Priority") {
+            inspectorSection("priority", "Priority", input = priority.input) {
                 priority { numericInput() }
             }
             remainingFields {
