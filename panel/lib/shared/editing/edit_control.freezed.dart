@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$EditControlState {
 
- bool get hasWork; bool get canApply; bool get canDiscard; bool get canRetry; bool get hasSubmittedWork; bool get hasLaterEdits; String? get status; List<EditorDiagnostic> get diagnostics;
+ bool get hasWork; bool get showControls; bool get canApply; bool get canDiscard; bool get canRetry; bool get hasSubmittedWork; bool get hasLaterEdits; String? get status; List<EditorDiagnostic> get diagnostics;
 /// Create a copy of EditControlState
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $EditControlStateCopyWith<EditControlState> get copyWith => _$EditControlStateCo
 @override
 bool operator ==(Object other) {
   final _this = this as EditControlState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditControlState&&(identical(other.hasWork, _this.hasWork) || other.hasWork == _this.hasWork)&&(identical(other.canApply, _this.canApply) || other.canApply == _this.canApply)&&(identical(other.canDiscard, _this.canDiscard) || other.canDiscard == _this.canDiscard)&&(identical(other.canRetry, _this.canRetry) || other.canRetry == _this.canRetry)&&(identical(other.hasSubmittedWork, _this.hasSubmittedWork) || other.hasSubmittedWork == _this.hasSubmittedWork)&&(identical(other.hasLaterEdits, _this.hasLaterEdits) || other.hasLaterEdits == _this.hasLaterEdits)&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EditControlState&&(identical(other.hasWork, _this.hasWork) || other.hasWork == _this.hasWork)&&(identical(other.showControls, _this.showControls) || other.showControls == _this.showControls)&&(identical(other.canApply, _this.canApply) || other.canApply == _this.canApply)&&(identical(other.canDiscard, _this.canDiscard) || other.canDiscard == _this.canDiscard)&&(identical(other.canRetry, _this.canRetry) || other.canRetry == _this.canRetry)&&(identical(other.hasSubmittedWork, _this.hasSubmittedWork) || other.hasSubmittedWork == _this.hasSubmittedWork)&&(identical(other.hasLaterEdits, _this.hasLaterEdits) || other.hasLaterEdits == _this.hasLaterEdits)&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
 }
 
 
 @override
 int get hashCode {
   final _this = this as EditControlState;
-  return Object.hash(runtimeType,_this.hasWork,_this.canApply,_this.canDiscard,_this.canRetry,_this.hasSubmittedWork,_this.hasLaterEdits,_this.status,const DeepCollectionEquality().hash(_this.diagnostics));
+  return Object.hash(runtimeType,_this.hasWork,_this.showControls,_this.canApply,_this.canDiscard,_this.canRetry,_this.hasSubmittedWork,_this.hasLaterEdits,_this.status,const DeepCollectionEquality().hash(_this.diagnostics));
 }
 
 @override
 String toString() {
   final _this = this as EditControlState;
-  return 'EditControlState(hasWork: ${_this.hasWork}, canApply: ${_this.canApply}, canDiscard: ${_this.canDiscard}, canRetry: ${_this.canRetry}, hasSubmittedWork: ${_this.hasSubmittedWork}, hasLaterEdits: ${_this.hasLaterEdits}, status: ${_this.status}, diagnostics: ${_this.diagnostics})';
+  return 'EditControlState(hasWork: ${_this.hasWork}, showControls: ${_this.showControls}, canApply: ${_this.canApply}, canDiscard: ${_this.canDiscard}, canRetry: ${_this.canRetry}, hasSubmittedWork: ${_this.hasSubmittedWork}, hasLaterEdits: ${_this.hasLaterEdits}, status: ${_this.status}, diagnostics: ${_this.diagnostics})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $EditControlStateCopyWith<$Res>  {
   factory $EditControlStateCopyWith(EditControlState value, $Res Function(EditControlState) _then) = _$EditControlStateCopyWithImpl;
 @useResult
 $Res call({
- bool hasWork, bool canApply, bool canDiscard, bool canRetry, bool hasSubmittedWork, bool hasLaterEdits, String? status, List<EditorDiagnostic> diagnostics
+ bool hasWork, bool showControls, bool canApply, bool canDiscard, bool canRetry, bool hasSubmittedWork, bool hasLaterEdits, String? status, List<EditorDiagnostic> diagnostics
 });
 
 
@@ -68,9 +68,10 @@ class _$EditControlStateCopyWithImpl<$Res>
 
 /// Create a copy of EditControlState
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? hasWork = null,Object? canApply = null,Object? canDiscard = null,Object? canRetry = null,Object? hasSubmittedWork = null,Object? hasLaterEdits = null,Object? status = freezed,Object? diagnostics = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? hasWork = null,Object? showControls = null,Object? canApply = null,Object? canDiscard = null,Object? canRetry = null,Object? hasSubmittedWork = null,Object? hasLaterEdits = null,Object? status = freezed,Object? diagnostics = null,}) {
   return _then(EditControlState(
 hasWork: null == hasWork ? _self.hasWork : hasWork // ignore: cast_nullable_to_non_nullable
+as bool,showControls: null == showControls ? _self.showControls : showControls // ignore: cast_nullable_to_non_nullable
 as bool,canApply: null == canApply ? _self.canApply : canApply // ignore: cast_nullable_to_non_nullable
 as bool,canDiscard: null == canDiscard ? _self.canDiscard : canDiscard // ignore: cast_nullable_to_non_nullable
 as bool,canRetry: null == canRetry ? _self.canRetry : canRetry // ignore: cast_nullable_to_non_nullable
@@ -163,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool hasWork,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool hasWork,  bool showControls,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EditControlState() when $default != null:
-return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
+return $default(_that.hasWork,_that.showControls,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
   return orElse();
 
 }
@@ -184,10 +185,10 @@ return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool hasWork,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool hasWork,  bool showControls,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)  $default,) {final _that = this;
 switch (_that) {
 case _EditControlState():
-return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
+return $default(_that.hasWork,_that.showControls,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -204,10 +205,10 @@ return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool hasWork,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool hasWork,  bool showControls,  bool canApply,  bool canDiscard,  bool canRetry,  bool hasSubmittedWork,  bool hasLaterEdits,  String? status,  List<EditorDiagnostic> diagnostics)?  $default,) {final _that = this;
 switch (_that) {
 case _EditControlState() when $default != null:
-return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
+return $default(_that.hasWork,_that.showControls,_that.canApply,_that.canDiscard,_that.canRetry,_that.hasSubmittedWork,_that.hasLaterEdits,_that.status,_that.diagnostics);case _:
   return null;
 
 }
@@ -219,10 +220,11 @@ return $default(_that.hasWork,_that.canApply,_that.canDiscard,_that.canRetry,_th
 
 
 class _EditControlState implements EditControlState {
-  const _EditControlState({this.hasWork = false, this.canApply = false, this.canDiscard = false, this.canRetry = false, this.hasSubmittedWork = false, this.hasLaterEdits = false, this.status,  List<EditorDiagnostic> diagnostics = const []}): _diagnostics = diagnostics;
+  const _EditControlState({this.hasWork = false, this.showControls = false, this.canApply = false, this.canDiscard = false, this.canRetry = false, this.hasSubmittedWork = false, this.hasLaterEdits = false, this.status,  List<EditorDiagnostic> diagnostics = const []}): _diagnostics = diagnostics;
 
 
 @override@JsonKey() final  bool hasWork;
+@override@JsonKey() final  bool showControls;
 @override@JsonKey() final  bool canApply;
 @override@JsonKey() final  bool canDiscard;
 @override@JsonKey() final  bool canRetry;
@@ -247,18 +249,18 @@ _$EditControlStateCopyWith<_EditControlState> get copyWith => __$EditControlStat
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditControlState&&(identical(other.hasWork, hasWork) || other.hasWork == hasWork)&&(identical(other.canApply, canApply) || other.canApply == canApply)&&(identical(other.canDiscard, canDiscard) || other.canDiscard == canDiscard)&&(identical(other.canRetry, canRetry) || other.canRetry == canRetry)&&(identical(other.hasSubmittedWork, hasSubmittedWork) || other.hasSubmittedWork == hasSubmittedWork)&&(identical(other.hasLaterEdits, hasLaterEdits) || other.hasLaterEdits == hasLaterEdits)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EditControlState&&(identical(other.hasWork, hasWork) || other.hasWork == hasWork)&&(identical(other.showControls, showControls) || other.showControls == showControls)&&(identical(other.canApply, canApply) || other.canApply == canApply)&&(identical(other.canDiscard, canDiscard) || other.canDiscard == canDiscard)&&(identical(other.canRetry, canRetry) || other.canRetry == canRetry)&&(identical(other.hasSubmittedWork, hasSubmittedWork) || other.hasSubmittedWork == hasSubmittedWork)&&(identical(other.hasLaterEdits, hasLaterEdits) || other.hasLaterEdits == hasLaterEdits)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,hasWork,canApply,canDiscard,canRetry,hasSubmittedWork,hasLaterEdits,status,const DeepCollectionEquality().hash(_diagnostics));
+    return Object.hash(runtimeType,hasWork,showControls,canApply,canDiscard,canRetry,hasSubmittedWork,hasLaterEdits,status,const DeepCollectionEquality().hash(_diagnostics));
 }
 
 @override
 String toString() {
-    return 'EditControlState(hasWork: $hasWork, canApply: $canApply, canDiscard: $canDiscard, canRetry: $canRetry, hasSubmittedWork: $hasSubmittedWork, hasLaterEdits: $hasLaterEdits, status: $status, diagnostics: $diagnostics)';
+    return 'EditControlState(hasWork: $hasWork, showControls: $showControls, canApply: $canApply, canDiscard: $canDiscard, canRetry: $canRetry, hasSubmittedWork: $hasSubmittedWork, hasLaterEdits: $hasLaterEdits, status: $status, diagnostics: $diagnostics)';
 }
 
 
@@ -269,7 +271,7 @@ abstract mixin class _$EditControlStateCopyWith<$Res> implements $EditControlSta
   factory _$EditControlStateCopyWith(_EditControlState value, $Res Function(_EditControlState) _then) = __$EditControlStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool hasWork, bool canApply, bool canDiscard, bool canRetry, bool hasSubmittedWork, bool hasLaterEdits, String? status, List<EditorDiagnostic> diagnostics
+ bool hasWork, bool showControls, bool canApply, bool canDiscard, bool canRetry, bool hasSubmittedWork, bool hasLaterEdits, String? status, List<EditorDiagnostic> diagnostics
 });
 
 
@@ -286,9 +288,10 @@ class __$EditControlStateCopyWithImpl<$Res>
 
 /// Create a copy of EditControlState
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? hasWork = null,Object? canApply = null,Object? canDiscard = null,Object? canRetry = null,Object? hasSubmittedWork = null,Object? hasLaterEdits = null,Object? status = freezed,Object? diagnostics = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? hasWork = null,Object? showControls = null,Object? canApply = null,Object? canDiscard = null,Object? canRetry = null,Object? hasSubmittedWork = null,Object? hasLaterEdits = null,Object? status = freezed,Object? diagnostics = null,}) {
   return _then(_EditControlState(
 hasWork: null == hasWork ? _self.hasWork : hasWork // ignore: cast_nullable_to_non_nullable
+as bool,showControls: null == showControls ? _self.showControls : showControls // ignore: cast_nullable_to_non_nullable
 as bool,canApply: null == canApply ? _self.canApply : canApply // ignore: cast_nullable_to_non_nullable
 as bool,canDiscard: null == canDiscard ? _self.canDiscard : canDiscard // ignore: cast_nullable_to_non_nullable
 as bool,canRetry: null == canRetry ? _self.canRetry : canRetry // ignore: cast_nullable_to_non_nullable

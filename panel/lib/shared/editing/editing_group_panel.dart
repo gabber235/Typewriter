@@ -17,7 +17,9 @@ final class EditingGroupPanel<S, E> extends HookWidget {
     final control = useMemoized(() => workspace.group(id), [workspace, id]);
     useEffect(() => control.dispose, [control]);
     final group = workspace.state.groups[id];
-    if (group == null) return const SizedBox.shrink();
+    if (group == null || !control.state.showControls) {
+      return const SizedBox.shrink();
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,

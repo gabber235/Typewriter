@@ -142,9 +142,7 @@ final class _AuthoredResourceInspectionState
         if (_binding.status case final message?) Text(message),
         ApplyControls(control: _binding.control),
         for (final group in _binding.relatedGroups.where(
-          (group) =>
-              group.policy == EditorCommitPolicy.applyResource ||
-              group.phase.needsAttention,
+          (group) => group.showControls,
         ))
           EditingGroupPanel(
             workspace: widget.workspace.workspace,

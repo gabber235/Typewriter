@@ -8,7 +8,7 @@ final class ApplyControls extends HookWidget {
   Widget build(BuildContext context) {
     useListenable(control);
     final state = control.state;
-    if (!state.hasWork) return const SizedBox.shrink();
+    if (!state.showControls) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,

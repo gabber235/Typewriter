@@ -16,6 +16,7 @@ abstract interface class EditControl implements Listenable {
 abstract class EditControlState with _$EditControlState {
   const factory EditControlState({
     @Default(false) bool hasWork,
+    @Default(false) bool showControls,
     @Default(false) bool canApply,
     @Default(false) bool canDiscard,
     @Default(false) bool canRetry,
@@ -24,6 +25,12 @@ abstract class EditControlState with _$EditControlState {
     String? status,
     @Default([]) List<EditorDiagnostic> diagnostics,
   }) = _EditControlState;
+}
+
+/// One policy for presenting manual save and recovery controls.
+extension EditGroupControls<S> on EditGroup<S> {
+  bool get showControls =>
+      policy == EditorCommitPolicy.applyResource || phase.needsAttention;
 }
 
 /// A disposable view of one group. It owns no draft or persistence state.
@@ -46,6 +53,7 @@ final class EditGroupControl<S, E> extends ChangeNotifier
         : workspace.model.validateCommit(workspace.document);
     return EditControlState(
       hasWork: group != null,
+      showControls: group?.showControls ?? false,
       canApply: !_closed && workspace.canSave(id) && diagnostics.isEmpty,
       canDiscard: !_closed && workspace.canDiscard(id),
       canRetry: !_closed && workspace.canRetry(id),
@@ -107,6 +115,7 @@ final class EditSelectionControl extends ChangeNotifier
         .toList();
     return EditControlState(
       hasWork: pending.isNotEmpty,
+      showControls: pending.any((state) => state.showControls),
       canApply: pending.isNotEmpty && pending.every((state) => state.canApply),
       canDiscard:
           pending.isNotEmpty && pending.every((state) => state.canDiscard),
