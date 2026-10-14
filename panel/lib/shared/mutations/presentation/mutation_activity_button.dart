@@ -67,6 +67,34 @@ class MutationActivityView extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2, color: color),
           )
         : Icon(phase.icon, size: 18);
+    Widget trigger(BuildContext context, VoidCallback show) => ElasticSwitcher(
+      child: phase == MutationActivityPhase.idle
+          ? null
+          : Padding(
+              key: const ValueKey("activity"),
+              padding: context.isMobile
+                  ? EdgeInsets.symmetric(horizontal: context.spacing.space2)
+                  : EdgeInsets.zero,
+              child: Semantics(
+                liveRegion: true,
+                label: label,
+                child: AppBarControl.text(
+                  tooltip: label,
+                  semanticLabel: label,
+                  icon: icon,
+                  label: label,
+                  style: TextButton.styleFrom(
+                    foregroundColor: color,
+                    backgroundColor: color.withValues(alpha: .12),
+                  ),
+                  onPressed: show,
+                ),
+              ),
+            ),
+    );
+    if (context.isMobile) {
+      return trigger(context, () => _showMobileActivity(context));
+    }
     return AnchoredPopup(
       targetAnchor: Alignment.bottomRight,
       popupAnchor: Alignment.topRight,
@@ -80,33 +108,7 @@ class MutationActivityView extends StatelessWidget {
           onClose: close,
         ),
       ),
-      builder: (context, show) => ElasticSwitcher(
-        child: phase == MutationActivityPhase.idle
-            ? null
-            : Padding(
-                key: const ValueKey("activity"),
-                padding: context.isMobile
-                    ? EdgeInsets.symmetric(horizontal: context.spacing.space2)
-                    : EdgeInsets.zero,
-                child: Semantics(
-                  liveRegion: true,
-                  label: label,
-                  child: AppBarControl.text(
-                    tooltip: label,
-                    semanticLabel: label,
-                    icon: icon,
-                    label: label,
-                    style: TextButton.styleFrom(
-                      foregroundColor: color,
-                      backgroundColor: color.withValues(alpha: .12),
-                    ),
-                    onPressed: () => context.isMobile
-                        ? _showMobileActivity(context)
-                        : show(),
-                  ),
-                ),
-              ),
-      ),
+      builder: trigger,
     );
   }
 }

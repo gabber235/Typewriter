@@ -84,7 +84,6 @@ void main() {
             TextField(focusNode: editor, controller: controller),
             AnchoredPopup(
               controller: popup,
-              previewOnHover: true,
               builder: (context, show) =>
                   TextButton(onPressed: show, child: const Text("Inbox")),
               popupBuilder: (context, close) =>
@@ -96,14 +95,17 @@ void main() {
     );
     editor.requestFocus();
     await tester.pump();
-    popup.preview();
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.text("Inbox")));
     await tester.pumpAndSettle();
     expect(editor.hasFocus, isTrue);
     expect(find.byKey(const ValueKey("popup barrier")), findsNothing);
     final field = find.byType(TextField).last;
     final element = tester.element(field);
     await tester.enterText(find.byType(TextField).first, "still editing");
-    popup.openFocused();
+    await tester.tap(find.text("Inbox"));
     await tester.pumpAndSettle();
     expect(tester.element(field), same(element));
     expect(editor.hasFocus, isFalse);
@@ -113,6 +115,99 @@ void main() {
     popup.close();
     await tester.pumpAndSettle();
     expect(editor.hasFocus, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("hover crosses the popup gap and closes after leaving", (
+    tester,
+  ) async {
+    final popup = AnchoredPopupController();
+    addTearDown(popup.dispose);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: Align(
+          alignment: Alignment.topLeft,
+          child: AnchoredPopup(
+            controller: popup,
+            offset: const Offset(0, 16),
+            builder: (context, show) =>
+                TextButton(onPressed: show, child: const Text("Open")),
+            popupBuilder: (context, close) =>
+                const SizedBox(width: 300, height: 200, child: Text("Preview")),
+          ),
+        ),
+      ),
+    );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: const Offset(700, 500));
+    await mouse.moveTo(tester.getCenter(find.text("Open")));
+    await tester.pumpAndSettle();
+    expect(popup.presentation, PopupPresentation.preview);
+    final trigger = tester.getRect(find.byType(TextButton));
+    await mouse.moveTo(Offset(trigger.center.dx, trigger.bottom + 8));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text("Preview"), findsOneWidget);
+    await mouse.moveTo(tester.getCenter(find.text("Preview")));
+    await tester.pump(const Duration(seconds: 1));
+    expect(popup.presentation, PopupPresentation.preview);
+    await mouse.moveTo(const Offset(700, 500));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pumpAndSettle();
+    expect(popup.presentation, PopupPresentation.closed);
+    expect(find.text("Preview"), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("Escape dismisses hover without changing editor focus", (
+    tester,
+  ) async {
+    var editorDismissals = 0;
+    final editor = FocusNode(
+      onKeyEvent: (_, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
+          editorDismissals++;
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+    );
+    addTearDown(editor.dispose);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: Column(
+          children: [
+            TextField(focusNode: editor),
+            AnchoredPopup(
+              builder: (context, show) =>
+                  TextButton(onPressed: show, child: const Text("Open")),
+              popupBuilder: (context, close) => const Text("Preview"),
+            ),
+          ],
+        ),
+      ),
+    );
+    editor.requestFocus();
+    await tester.pump();
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(tester.getCenter(find.text("Open")));
+    await tester.pumpAndSettle();
+    expect(find.text("Preview"), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text("Preview"), findsNothing);
+    expect(editor.hasFocus, isTrue);
+    expect(editorDismissals, 0);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump();
+    expect(editorDismissals, 1);
+    await mouse.moveTo(const Offset(700, 500));
+    await mouse.moveTo(tester.getCenter(find.text("Open")));
+    await tester.pumpAndSettle();
+    expect(find.text("Preview"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -220,13 +315,52 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text("Choose organization"));
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: const Offset(700, 500));
+    await mouse.moveTo(tester.getCenter(find.text("Choose organization")));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey("popup barrier")), findsNothing);
     await tester.tap(find.text("Organization"));
     await tester.pumpAndSettle();
     expect(find.text("Organization"), findsNothing);
 
     expect(find.text("Choose organization"), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets("mobile selector opens a sheet only after activation", (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpTestApp(
+      child: Scaffold(
+        body: SelectorPopupWithSelection<String>(
+          itemsAsync: const AsyncData(["Book"]),
+          selectedAsync: const AsyncData("Book"),
+          buttonBuilder: (_) => const Text("Choose book"),
+          contentBuilder: (items, selected, onSelect) => TextButton(
+            onPressed: () => onSelect(items.single),
+            child: Text(items.single),
+          ),
+        ),
+      ),
+    );
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    addTearDown(mouse.removePointer);
+    await mouse.addPointer(location: const Offset(300, 500));
+    await mouse.moveTo(tester.getCenter(find.text("Choose book")));
+    await tester.pumpAndSettle();
+    expect(find.text("Book"), findsNothing);
+    await tester.tap(find.text("Choose book"));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    await tester.tap(find.text("Book"));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text("Choose book"), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

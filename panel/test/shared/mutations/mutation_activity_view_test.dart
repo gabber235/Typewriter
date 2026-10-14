@@ -126,11 +126,20 @@ void main() {
             ),
           ),
         );
-        if (mobile) {
-          await tester.tap(find.byTooltip("Needs attention"));
-        } else {
-          await tester.tap(find.text("Needs attention"));
-        }
+        final pointer = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+        addTearDown(pointer.removePointer);
+        await pointer.addPointer(location: const Offset(10, 500));
+        await pointer.moveTo(
+          tester.getCenter(find.byTooltip("Needs attention")),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text("Save activity"),
+          mobile ? findsNothing : findsOneWidget,
+        );
+        await tester.tap(find.byTooltip("Needs attention"));
 
         await tester.pumpAndSettle();
         expect(find.text("Save activity"), findsOneWidget);
@@ -144,16 +153,12 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         if (!mobile) {
-          final mouse = await tester.createGesture(
-            kind: PointerDeviceKind.mouse,
-          );
-          await mouse.addPointer(location: Offset.zero);
-          await mouse.moveTo(tester.getCenter(find.byTooltip("Close")));
+          await pointer.moveTo(tester.getCenter(find.byTooltip("Close")));
           await tester.pump(const Duration(seconds: 1));
           await tester.pump();
           expect(tester.takeException(), isNull);
 
-          await mouse.removePointer();
+          await pointer.moveTo(const Offset(10, 500));
           await tester.pumpAndSettle();
         }
 

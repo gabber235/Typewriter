@@ -207,7 +207,6 @@ class RealmInboxButton extends HookConsumerWidget {
     if (mobile) return trigger(popup.openFocused);
     return AnchoredPopup(
       controller: popup,
-      previewOnHover: true,
       targetAnchor: Alignment.bottomRight,
       popupAnchor: Alignment.topRight,
       offset: Offset(0, context.spacing.space2),

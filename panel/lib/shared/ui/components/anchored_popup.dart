@@ -32,7 +32,7 @@ class AnchoredPopupController extends ChangeNotifier {
 
 /// Owns one anchored surface through preview, focused opening, and dismissal.
 ///
-/// Hover preview is optional. It adds no modal barrier or route history and
+/// Hover opens a preview. It adds no modal barrier or route history and
 /// cannot receive keyboard focus. Click or controller activation promotes the
 /// existing content to focused presentation, retaining its scroll and fields.
 /// Dismissal restores valid prior focus. Navigation and scope changes do not.
@@ -41,7 +41,6 @@ class AnchoredPopup extends StatefulWidget {
     required this.builder,
     required this.popupBuilder,
     this.controller,
-    this.previewOnHover = false,
     this.targetAnchor = Alignment.bottomLeft,
     this.popupAnchor = Alignment.topLeft,
     this.maxWidth = 420,
@@ -53,7 +52,6 @@ class AnchoredPopup extends StatefulWidget {
   final Widget Function(BuildContext context, VoidCallback show) builder;
   final Widget Function(BuildContext context, VoidCallback close) popupBuilder;
   final AnchoredPopupController? controller;
-  final bool previewOnHover;
   final Alignment targetAnchor;
   final Alignment popupAnchor;
   final double maxWidth;
@@ -81,6 +79,7 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
     super.initState();
     _controller = widget.controller ?? AnchoredPopupController();
     _controller.addListener(_changed);
+    FocusManager.instance.addEarlyKeyEventHandler(_dismissPreview);
     if (_controller.presentation != PopupPresentation.closed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _changed();
@@ -158,7 +157,21 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
 
   void _enter(PointerEnterEvent event) {
     _hoverExit?.cancel();
-    if (widget.previewOnHover) _controller.preview();
+    _controller.preview();
+  }
+
+  // Preview leaves focus outside this subtree, so its dismissal must run
+  // before the editor handles Escape. Both presentations use the same intent.
+  KeyEventResult _dismissPreview(KeyEvent event) {
+    final popupContext = _entry.context;
+    if (_presentation != PopupPresentation.preview ||
+        popupContext == null ||
+        event is! KeyDownEvent ||
+        event.logicalKey != LogicalKeyboardKey.escape) {
+      return KeyEventResult.ignored;
+    }
+    Actions.invoke(popupContext, const DismissIntent());
+    return KeyEventResult.handled;
   }
 
   void _exit(PointerExitEvent event) {
@@ -173,6 +186,7 @@ class _AnchoredPopupState extends State<AnchoredPopup> {
 
   @override
   void dispose() {
+    FocusManager.instance.removeEarlyKeyEventHandler(_dismissPreview);
     _controller.removeListener(_changed);
     _retire();
     _controller.close(reason: PopupCloseReason.scopeChanged);

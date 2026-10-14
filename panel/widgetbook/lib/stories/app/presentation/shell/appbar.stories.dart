@@ -68,11 +68,29 @@ class AppBarStory extends StatelessWidget {
         child: CustomAppBar(
           navigation: AppBarBreadcrumbs(
             children: [
-              TextButton(onPressed: () {}, child: const Text("Typewriter")),
-              TextButton(
-                onPressed: () {},
-                child: const Text("Bright Purple Swan"),
-              ),
+              for (final label in ["Typewriter", "Bright Purple Swan"])
+                SelectorPopupWithSelection<String>(
+                  itemsAsync: AsyncData([label, "Another workspace"]),
+                  selectedAsync: AsyncData(label),
+                  buttonBuilder: (selected) => Text(selected!),
+                  contentBuilder: (items, selected, onSelect) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const TextField(
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: "Filter choices",
+                        ),
+                      ),
+                      for (final item in items)
+                        ListTile(
+                          title: Text(item),
+                          selected: item == selected,
+                          onTap: () => onSelect(item),
+                        ),
+                    ],
+                  ),
+                ),
             ],
           ),
           primary: AppBarItem.adaptive(

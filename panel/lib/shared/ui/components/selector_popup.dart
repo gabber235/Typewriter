@@ -105,26 +105,33 @@ class _SelectorButton<T> extends StatelessWidget {
   final T? selected;
 
   @override
-  Widget build(BuildContext context) => AnchoredPopup(
-    popupBuilder: (ctx, close) => SelectionOperationsRoot(
-      operations: SelectionOperationsRoot.of(context),
-      child: GlobalModeShortcut(
-        child: GlobalOperationShortcuts(
-          child: contentBuilder(items, selected, (_) => close()),
+  Widget build(BuildContext context) {
+    if (context.isMobile) {
+      return _trigger(context, () => _showMobileMenu(context));
+    }
+    return AnchoredPopup(
+      popupBuilder: (ctx, close) => SelectionOperationsRoot(
+        operations: SelectionOperationsRoot.of(context),
+        child: GlobalModeShortcut(
+          child: GlobalOperationShortcuts(
+            child: contentBuilder(items, selected, (_) => close()),
+          ),
         ),
       ),
+      builder: _trigger,
+    );
+  }
+
+  Widget _trigger(BuildContext context, VoidCallback show) => Material(
+    shape: RoundedRectangleBorder(
+      borderRadius: context.shapes.mediumBorderRadius,
     ),
-    builder: (context, show) => Material(
-      shape: RoundedRectangleBorder(
-        borderRadius: context.shapes.mediumBorderRadius,
-      ),
-      child: InkWell(
-        onTap: () => context.isMobile ? _showMobileMenu(context) : show(),
-        borderRadius: context.shapes.mediumBorderRadius,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-          child: buttonBuilder(selected),
-        ),
+    child: InkWell(
+      onTap: show,
+      borderRadius: context.shapes.mediumBorderRadius,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        child: buttonBuilder(selected),
       ),
     ),
   );
