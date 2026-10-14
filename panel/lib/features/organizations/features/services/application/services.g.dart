@@ -596,6 +596,8 @@ final class HostConnectedFamily extends $Family
 /// The route provider owns no service data. It follows the selected
 /// organization and watches [CanonicalOrganizationServices], returning an empty
 /// projection when no organization is selected.
+/// Ready observations propagate synchronously so a heartbeat does not create
+/// a loading interval. An actual source refresh retains its pending state.
 
 @ProviderFor(canonicalServices)
 final canonicalServicesProvider = CanonicalServicesProvider._();
@@ -605,6 +607,8 @@ final canonicalServicesProvider = CanonicalServicesProvider._();
 /// The route provider owns no service data. It follows the selected
 /// organization and watches [CanonicalOrganizationServices], returning an empty
 /// projection when no organization is selected.
+/// Ready observations propagate synchronously so a heartbeat does not create
+/// a loading interval. An actual source refresh retains its pending state.
 
 final class CanonicalServicesProvider
     extends
@@ -619,6 +623,8 @@ final class CanonicalServicesProvider
   /// The route provider owns no service data. It follows the selected
   /// organization and watches [CanonicalOrganizationServices], returning an empty
   /// projection when no organization is selected.
+  /// Ready observations propagate synchronously so a heartbeat does not create
+  /// a loading interval. An actual source refresh retains its pending state.
   CanonicalServicesProvider._()
     : super(
         from: null,
@@ -645,7 +651,7 @@ final class CanonicalServicesProvider
   }
 }
 
-String _$canonicalServicesHash() => r'9b42c1074ea3fb9fcb1927675dfc6a31ff1ae23e';
+String _$canonicalServicesHash() => r'dc9812ce715f853aa7dd8bee7023de488698a3a8';
 
 /// Overlays active local editor drafts on canonical service identities.
 ///
@@ -808,6 +814,8 @@ final class ProjectedServiceFamily extends $Family
 /// The route projection delegates lifecycle and reconciliation to
 /// [OrganizationTopologyController] and returns an empty topology without an
 /// organization. Each canonical update recomputes this route projection.
+/// Projection updates are synchronous; only an unresolved source can introduce
+/// a loading state for consumers such as the realm interaction gate.
 
 @ProviderFor(organizationTopology)
 final organizationTopologyProvider = OrganizationTopologyProvider._();
@@ -817,6 +825,8 @@ final organizationTopologyProvider = OrganizationTopologyProvider._();
 /// The route projection delegates lifecycle and reconciliation to
 /// [OrganizationTopologyController] and returns an empty topology without an
 /// organization. Each canonical update recomputes this route projection.
+/// Projection updates are synchronous; only an unresolved source can introduce
+/// a loading state for consumers such as the realm interaction gate.
 
 final class OrganizationTopologyProvider
     extends
@@ -833,6 +843,8 @@ final class OrganizationTopologyProvider
   /// The route projection delegates lifecycle and reconciliation to
   /// [OrganizationTopologyController] and returns an empty topology without an
   /// organization. Each canonical update recomputes this route projection.
+  /// Projection updates are synchronous; only an unresolved source can introduce
+  /// a loading state for consumers such as the realm interaction gate.
   OrganizationTopologyProvider._()
     : super(
         from: null,
@@ -860,4 +872,4 @@ final class OrganizationTopologyProvider
 }
 
 String _$organizationTopologyHash() =>
-    r'f6efcc8ca0e589ff6b81bd163be6e293718a5dc2';
+    r'276805ac09e0da70d9c19f715d49c92f24c7c33f';

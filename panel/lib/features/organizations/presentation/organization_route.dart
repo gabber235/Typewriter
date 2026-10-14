@@ -27,7 +27,9 @@ class OrganizationPage extends HookConsumerWidget {
 /// It owns navigation chrome and the suspension barrier around realm content. A
 /// connection retry invalidates topology state, leaving resource repositories and
 /// editor sessions owned by their respective application providers.
-class OrganizationScaffold extends HookConsumerWidget {
+/// Transport and service recovery own automatic refreshes. Returning input
+/// focus does not invalidate runtime readiness.
+class OrganizationScaffold extends ConsumerWidget {
   const OrganizationScaffold({required this.child, super.key});
 
   final Widget child;
@@ -39,20 +41,6 @@ class OrganizationScaffold extends HookConsumerWidget {
     final interaction = ref.watch(realmInteractionProvider);
     final selectedRealm = ref.watch(selectedRealmProvider).value;
     ref.watch(realmTopologyRecoveryProvider);
-
-    useEffect(() {
-      final lifecycle = AppLifecycleListener(
-        onResume: () {
-          if (organizationId == null) return;
-          ref
-              .read(
-                organizationTopologyControllerProvider(organizationId).notifier,
-              )
-              .refresh();
-        },
-      );
-      return lifecycle.dispose;
-    }, [organizationId]);
 
     void retryConnection() {
       if (organizationId == null) return;

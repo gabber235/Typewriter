@@ -150,7 +150,9 @@ void main() {
     await _waitFor(
       () =>
           nats.requests.isNotEmpty &&
-          nats.subscriptionSubjects.contains(_listenSubject),
+          nats.subscriptionSubjects.contains(_listenSubject) &&
+          value.hasValue &&
+          !value.isLoading,
     );
 
     expect(nats.requests.single.subject, _watchSubject);
@@ -491,9 +493,10 @@ void main() {
     await _waitFor(
       () =>
           nats.requests
-              .where((request) => request.subject == _watchSubject)
-              .length ==
-          1,
+                  .where((request) => request.subject == _watchSubject)
+                  .length ==
+              1 &&
+          !container.read(organizationTopologyProvider).isLoading,
     );
 
     connections = {_host().serviceId: true};
@@ -508,6 +511,66 @@ void main() {
 
     expect(nats.subscriptionSubjects, [_listenSubject]);
   });
+
+  test(
+    "service recovery joins a topology snapshot already in progress",
+    () async {
+      var connections = {_host().serviceId: false};
+      final response = skir.WatchOrganizationTopologyResponse.serializer
+          .toBytes(
+            skir.WatchOrganizationTopologyResponse.createList(
+              hosts: [_host()],
+              realms: [_realm()],
+              engines: [],
+            ),
+          );
+      final first = Completer<Uint8List>();
+      var requests = 0;
+      final nats = FakeNatsClient()
+        ..registerHandler(
+          _watchSubject,
+          (_) => ++requests == 1 ? first.future : response,
+        );
+      final container = ProviderContainer.test(
+        overrides: [
+          userIdProvider.overrideWith((ref) async => "user1"),
+          organizationIdProvider.overrideWithValue(_organizationId),
+          natsProvider.overrideWith(() => FakeNats(nats)),
+          serviceConnectionsProvider.overrideWith((ref) => connections),
+        ],
+      );
+      addTearDown(() async {
+        if (!first.isCompleted) first.complete(response);
+        container.dispose();
+        await nats.dispose();
+      });
+      container
+        ..listen(organizationTopologyProvider, (_, _) {})
+        ..listen(realmTopologyRecoveryProvider, (_, _) {});
+      await _waitFor(() => requests == 1);
+
+      connections = {_host().serviceId: true};
+      container.invalidate(serviceConnectionsProvider);
+      await container.pump();
+      await pumpEventQueue();
+      expect(requests, 1);
+      first.complete(response);
+      expect(
+        (await container.read(organizationTopologyProvider.future))
+            .realmInstances,
+        hasLength(1),
+      );
+
+      connections = {_host().serviceId: false};
+      container.invalidate(serviceConnectionsProvider);
+      await container.pump();
+      connections = {_host().serviceId: true};
+      container.invalidate(serviceConnectionsProvider);
+      await _waitFor(() => requests == 2);
+      await container.read(organizationTopologyProvider.future);
+      expect(nats.subscriptionSubjects, [_listenSubject]);
+    },
+  );
 
   test(
     "configuration repeats preserve newer runtime and reject older config",

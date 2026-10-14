@@ -29,6 +29,9 @@ enum RealmConnectionState {
 /// Service heartbeats are independent from topology observations. A recovered
 /// service therefore provides a reliable opportunity to replace any topology
 /// event that core NATS could not deliver while the panel was disconnected.
+/// The first observation belongs to startup, not recovery. Refreshing it would
+/// invalidate the topology snapshot that is already being initialized.
+/// A snapshot already in progress owns reconciliation and is not replaced.
 @riverpod
 void realmTopologyRecovery(Ref ref) {
   final organizationId = ref.watch(organizationIdProvider);
@@ -36,12 +39,19 @@ void realmTopologyRecovery(Ref ref) {
 
   ref.listen(serviceConnectionsProvider, (previous, next) {
     final recovered = next.entries.any(
-      (entry) => entry.value && previous?[entry.key] != true,
+      (entry) => entry.value && previous?[entry.key] == false,
     );
     if (!recovered) return;
-    ref
-        .read(organizationTopologyControllerProvider(organizationId).notifier)
-        .refresh();
+    // Recovery is an effect on the topology owner. Dispatch it after the current
+    // provider derivation pass so dependants cannot rebuild twice in that pass.
+    unawaited(
+      Future<void>.microtask(() {
+        if (!ref.mounted) return;
+        final topology = organizationTopologyControllerProvider(organizationId);
+        if (ref.read(topology).isLoading) return;
+        ref.read(topology.notifier).refresh();
+      }),
+    );
   });
 }
 
@@ -83,11 +93,16 @@ skir.RecordId? realmId(Ref ref) {
 /// Topology is the authority for realm identity, owner host, lifecycle status,
 /// and last update time. A valid route identifier with no matching entry yields
 /// `null`, allowing connection policy to distinguish absence from inactivity.
+/// Ready topology observations are projected without an asynchronous boundary,
+/// while initial resolution and explicit topology refreshes remain pending.
 @riverpod
-Future<TopologyRealm?> selectedRealm(Ref ref) async {
+FutureOr<TopologyRealm?> selectedRealm(Ref ref) {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
-  final topology = await ref.watch(organizationTopologyProvider.future);
+  final topology = ref
+      .watch(organizationTopologyProvider)
+      .unwrapPrevious()
+      .requireValue;
   return topology.realmInstances.firstWhereOrNull(
     (realm) => realm.realmId == id,
   );
@@ -121,18 +136,17 @@ Future<Map<skir.RecordId, bool>> realmsAvailability(Ref ref) async {
 /// inactive or disconnected realms become [offline]. Topology invalidation is
 /// the recovery path, and causes Riverpod to reevaluate this result.
 @riverpod
-Future<RealmConnectionState> realmConnection(Ref ref) async {
+FutureOr<RealmConnectionState> realmConnection(Ref ref) {
   final id = ref.watch(realmIdProvider);
   if (id == null) {
     return RealmConnectionState.notSelected;
   }
 
-  TopologyRealm? realm;
-  try {
-    realm = await ref.watch(selectedRealmProvider.future);
-  } on Object {
+  final selected = ref.watch(selectedRealmProvider).unwrapPrevious();
+  if (selected.hasError) {
     return RealmConnectionState.unavailable;
   }
+  final realm = selected.requireValue;
 
   if (realm == null) {
     return RealmConnectionState.unavailable;

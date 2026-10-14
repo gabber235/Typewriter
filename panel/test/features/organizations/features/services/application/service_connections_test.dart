@@ -4,6 +4,75 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  testWidgets("keeps a host reachable while its heartbeat is updated", (
+    tester,
+  ) async {
+    final organization = skir.recordId("organization:heartbeat");
+    final now = DateTime.now();
+    final service = Service(
+      serviceId: skir.recordId("service:heartbeat"),
+      revision: 1,
+      name: "heartbeat",
+      role: HostServiceRole(version: "1"),
+      createdAt: now,
+      state: ServiceState(status: ServiceStateStatus.online, lastSeen: now),
+    );
+    final host = TopologyHost(
+      hostId: skir.recordId("service_host:heartbeat"),
+      serviceId: service.serviceId,
+      revision: 1,
+      entrypoint: "PAPER",
+      canHostRealm: true,
+      supportedEngines: [],
+      topologyRevision: const TopologyRevision(desired: 1, applied: 1),
+      state: TopologyHostState(
+        status: TopologyHostStatus.active,
+        message: null,
+        updatedAt: now,
+      ),
+    );
+    final source = StreamController<List<Service>>(sync: true);
+    addTearDown(source.close);
+    final states = <bool>[];
+    final container =
+        ProviderContainer.test(
+          overrides: [
+            organizationIdProvider.overrideWithValue(organization),
+            canonicalOrganizationServicesProvider(organization)
+                .overrideWith(() => _Services(source.stream)),
+            organizationTopologyProvider.overrideWith(
+              (ref) async => OrganizationTopology(
+                hosts: [host],
+                realmInstances: [],
+                engineInstances: [],
+              ),
+            ),
+          ],
+        )..listen(
+          hostConnectedProvider(host.hostId),
+          (_, next) => states.add(next),
+        );
+    source.add([service]);
+    await tester.pump();
+    await tester.pump();
+    expect(container.read(hostConnectedProvider(host.hostId)), isTrue);
+    states.clear();
+
+    source.add([
+      service.copyWith(
+        state: service.state!.copyWith(
+          lastSeen: now.add(const Duration(seconds: 30)),
+        ),
+      ),
+    ]);
+    await tester.pump();
+    expect(states, isNot(contains(false)));
+    expect(container.read(hostConnectedProvider(host.hostId)), isTrue);
+
+    container.dispose();
+    await tester.pump();
+  });
+
   testWidgets(
     "expires at the deadline without a new event and refreshes on resume",
     (tester) async {
@@ -83,4 +152,12 @@ void main() {
       });
     },
   );
+}
+
+class _Services extends CanonicalOrganizationServices {
+  _Services(this.values);
+  final Stream<List<Service>> values;
+
+  @override
+  Stream<List<Service>> build(skir.RecordId organizationId) => values;
 }

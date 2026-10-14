@@ -4,6 +4,73 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test(
+    "keeps the workspace available during ordinary topology observations",
+    () async {
+      final organization = skir.recordId("organization:test");
+      final source = StreamController<OrganizationTopology>.broadcast(
+        sync: true,
+      );
+      final states = <RealmConnectionState>[];
+      final container = ProviderContainer.test(
+        overrides: [
+          organizationIdProvider.overrideWithValue(organization),
+          routeParamProvider("realmId").overrideWithValue("test"),
+          organizationTopologyControllerProvider(organization)
+              .overrideWith(() => _Topology(source.stream)),
+          hostConnectedProvider(skir.recordId("service_host:host"))
+              .overrideWithValue(true),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await source.close();
+      });
+      container.listen(realmInteractionProvider, (_, next) {
+        states.add(next.connectionState);
+      }, fireImmediately: true);
+      source.add(
+        OrganizationTopology(
+          hosts: [],
+          realmInstances: [_realm()],
+          engineInstances: [],
+        ),
+      );
+      await container.read(realmConnectionProvider.future);
+      await container.pump();
+      states.clear();
+
+      source.add(
+        OrganizationTopology(
+          hosts: [],
+          realmInstances: [_realm().copyWith(revision: 2)],
+          engineInstances: [],
+        ),
+      );
+      await container.pump();
+
+      expect(container.read(realmInteractionProvider).suspended, isFalse);
+      expect(states, isNot(contains(RealmConnectionState.checking)));
+
+      container.invalidate(
+        organizationTopologyControllerProvider(organization),
+      );
+      expect(
+        container.read(realmInteractionProvider).connectionState,
+        RealmConnectionState.checking,
+      );
+      source.add(
+        OrganizationTopology(
+          hosts: [],
+          realmInstances: [_realm()],
+          engineInstances: [],
+        ),
+      );
+      await container.read(realmConnectionProvider.future);
+      expect(container.read(realmInteractionProvider).suspended, isFalse);
+    },
+  );
+
   test("opens an active topology Realm from its route identifier", () async {
     final realm = _realm();
     final online = Completer<void>();
@@ -202,6 +269,14 @@ void main() {
     expect(states, isNot(contains(RealmConnectionState.checking)));
     expect(states.last, RealmConnectionState.online);
   });
+}
+
+class _Topology extends OrganizationTopologyController {
+  _Topology(this.values);
+  final Stream<OrganizationTopology> values;
+
+  @override
+  Stream<OrganizationTopology> build(skir.RecordId organizationId) => values;
 }
 
 ProviderContainer _containerWithRealm(TopologyRealm? realm) {

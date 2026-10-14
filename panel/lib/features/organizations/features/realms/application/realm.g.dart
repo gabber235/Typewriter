@@ -13,6 +13,9 @@ part of 'realm.dart';
 /// Service heartbeats are independent from topology observations. A recovered
 /// service therefore provides a reliable opportunity to replace any topology
 /// event that core NATS could not deliver while the panel was disconnected.
+/// The first observation belongs to startup, not recovery. Refreshing it would
+/// invalidate the topology snapshot that is already being initialized.
+/// A snapshot already in progress owns reconciliation and is not replaced.
 
 @ProviderFor(realmTopologyRecovery)
 final realmTopologyRecoveryProvider = RealmTopologyRecoveryProvider._();
@@ -22,6 +25,9 @@ final realmTopologyRecoveryProvider = RealmTopologyRecoveryProvider._();
 /// Service heartbeats are independent from topology observations. A recovered
 /// service therefore provides a reliable opportunity to replace any topology
 /// event that core NATS could not deliver while the panel was disconnected.
+/// The first observation belongs to startup, not recovery. Refreshing it would
+/// invalidate the topology snapshot that is already being initialized.
+/// A snapshot already in progress owns reconciliation and is not replaced.
 
 final class RealmTopologyRecoveryProvider
     extends $FunctionalProvider<void, void, void>
@@ -31,6 +37,9 @@ final class RealmTopologyRecoveryProvider
   /// Service heartbeats are independent from topology observations. A recovered
   /// service therefore provides a reliable opportunity to replace any topology
   /// event that core NATS could not deliver while the panel was disconnected.
+  /// The first observation belongs to startup, not recovery. Refreshing it would
+  /// invalidate the topology snapshot that is already being initialized.
+  /// A snapshot already in progress owns reconciliation and is not replaced.
   RealmTopologyRecoveryProvider._()
     : super(
         from: null,
@@ -65,7 +74,7 @@ final class RealmTopologyRecoveryProvider
 }
 
 String _$realmTopologyRecoveryHash() =>
-    r'8f67b392b182c9e355f0d888d88e6122a9e35ade';
+    r'f348cf5a32d4c8b7b89d47326e35f623b48d7a8c';
 
 /// Resolves the route's realm parameter to the typed topology identifier.
 ///
@@ -127,6 +136,8 @@ String _$realmIdHash() => r'8107d153417198d64ff1502ee6bef9393e24bbe4';
 /// Topology is the authority for realm identity, owner host, lifecycle status,
 /// and last update time. A valid route identifier with no matching entry yields
 /// `null`, allowing connection policy to distinguish absence from inactivity.
+/// Ready topology observations are projected without an asynchronous boundary,
+/// while initial resolution and explicit topology refreshes remain pending.
 
 @ProviderFor(selectedRealm)
 final selectedRealmProvider = SelectedRealmProvider._();
@@ -136,6 +147,8 @@ final selectedRealmProvider = SelectedRealmProvider._();
 /// Topology is the authority for realm identity, owner host, lifecycle status,
 /// and last update time. A valid route identifier with no matching entry yields
 /// `null`, allowing connection policy to distinguish absence from inactivity.
+/// Ready topology observations are projected without an asynchronous boundary,
+/// while initial resolution and explicit topology refreshes remain pending.
 
 final class SelectedRealmProvider
     extends
@@ -150,6 +163,8 @@ final class SelectedRealmProvider
   /// Topology is the authority for realm identity, owner host, lifecycle status,
   /// and last update time. A valid route identifier with no matching entry yields
   /// `null`, allowing connection policy to distinguish absence from inactivity.
+  /// Ready topology observations are projected without an asynchronous boundary,
+  /// while initial resolution and explicit topology refreshes remain pending.
   SelectedRealmProvider._()
     : super(
         from: null,
@@ -176,7 +191,7 @@ final class SelectedRealmProvider
   }
 }
 
-String _$selectedRealmHash() => r'55651a7e38c6f2d9ae3e91fc1ecb2aef5bc4d4e8';
+String _$selectedRealmHash() => r'7c6e6a7ab9eb575dc76e3e20133c5ee1159c63e4';
 
 /// Exposes all realms in the current organization topology for selection UI.
 
@@ -325,7 +340,7 @@ final class RealmConnectionProvider
   }
 }
 
-String _$realmConnectionHash() => r'08a930d77f59a7bb80c3648b671d268da9594a4b';
+String _$realmConnectionHash() => r'48c4f00081a8a74185daf6e7c506ef951d2f7ffb';
 
 /// Provides a synchronous interaction policy for widgets during async checks.
 ///

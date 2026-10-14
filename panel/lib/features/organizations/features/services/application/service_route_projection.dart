@@ -7,11 +7,16 @@ Duration? _noRouteRetry(int retryCount, Object error) => null;
 /// The route provider owns no service data. It follows the selected
 /// organization and watches [CanonicalOrganizationServices], returning an empty
 /// projection when no organization is selected.
+/// Ready observations propagate synchronously so a heartbeat does not create
+/// a loading interval. An actual source refresh retains its pending state.
 @Riverpod(retry: _noRouteRetry)
 FutureOr<List<Service>> canonicalServices(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return const [];
-  return ref.watch(canonicalOrganizationServicesProvider(organization).future);
+  final source = canonicalOrganizationServicesProvider(organization);
+  final services = ref.watch(source);
+  if (!services.isLoading && !services.hasError) return services.requireValue;
+  return ref.watch(source.future);
 }
 
 /// Overlays active local editor drafts on canonical service identities.
@@ -65,9 +70,14 @@ AsyncValue<Service?> projectedService(Ref ref, skir.RecordId serviceId) {
 /// The route projection delegates lifecycle and reconciliation to
 /// [OrganizationTopologyController] and returns an empty topology without an
 /// organization. Each canonical update recomputes this route projection.
+/// Projection updates are synchronous; only an unresolved source can introduce
+/// a loading state for consumers such as the realm interaction gate.
 @Riverpod(retry: _noRouteRetry)
 FutureOr<OrganizationTopology> organizationTopology(Ref ref) {
   final organization = ref.watch(organizationIdProvider);
   if (organization == null) return OrganizationTopology.empty;
-  return ref.watch(organizationTopologyControllerProvider(organization).future);
+  final source = organizationTopologyControllerProvider(organization);
+  final topology = ref.watch(source);
+  if (!topology.isLoading && !topology.hasError) return topology.requireValue;
+  return ref.watch(source.future);
 }
