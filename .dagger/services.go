@@ -8,6 +8,7 @@ func (m *Typewriter) servicesGradleContainer(source *dagger.Workspace) *dagger.C
 	return dag.Container().
 		From("eclipse-temurin:21-jdk-noble").
 		WithDirectory("/workspace/services", services).
+		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithMountedCache("/root/.gradle/caches", dag.CacheVolume("services-gradle-caches")).
 		WithMountedCache("/root/.gradle/wrapper", dag.CacheVolume("services-gradle-wrapper"))
 }
