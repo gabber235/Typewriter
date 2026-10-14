@@ -287,10 +287,12 @@ fn page_workspaces_preserve_their_field_binding_and_graph_direction() {
         PresentationElement::PageGraph(Box::new(PageGraphElement {
             control: control.clone(),
             direction: PageGraphDirection::RightToLeft,
+            appearance: None,
             _unrecognized: None,
         })),
         PresentationElement::PageTimeline(Box::new(PageTimelineElement {
             control,
+            appearance: None,
             _unrecognized: None,
         })),
     ];
