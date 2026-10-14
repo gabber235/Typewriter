@@ -19,9 +19,19 @@ internal class RuntimePresentationContent(
         semanticLabel: Expr<String, Handled>?,
         configure: ImageScope.() -> Unit,
     ) {
-        val options = skirout.editor.v1.presentation.ImageOptions.partial().toMutable()
+        val options =
+            skirout.editor.v1.presentation.ImageOptions
+                .partial()
+                .toMutable()
         RuntimeImageScope(options).configure()
-        target += state.node(PresentationElement.createImage(source = expression(source), semanticLabel = semanticLabel?.let(::expression), options = options.toFrozen()))
+        target +=
+            state.node(
+                PresentationElement.createImage(
+                    source = expression(source),
+                    semanticLabel = semanticLabel?.let(::expression),
+                    options = options.toFrozen(),
+                ),
+            )
     }
 
     override fun badge(
@@ -36,7 +46,14 @@ internal class RuntimePresentationContent(
         color: PresentationColor?,
         configure: DisplayAppearanceScope.() -> Unit,
     ) {
-        target += state.node(PresentationElement.createChip(label = expression(label), color = color?.wire(), options = state.displayAppearance(configure)))
+        target +=
+            state.node(
+                PresentationElement.createChip(
+                    label = expression(label),
+                    color = color?.wire(),
+                    options = state.displayAppearance(configure),
+                ),
+            )
     }
 
     override fun <N> progress(
@@ -45,7 +62,10 @@ internal class RuntimePresentationContent(
         label: Expr<String, Handled>?,
         configure: ProgressAppearanceScope.() -> Unit,
     ) {
-        val appearance = skirout.editor.v1.presentation.ProgressAppearance.partial().toMutable()
+        val appearance =
+            skirout.editor.v1.presentation.ProgressAppearance
+                .partial()
+                .toMutable()
         RuntimeProgressAppearanceScope(appearance).configure()
         target +=
             state.node(

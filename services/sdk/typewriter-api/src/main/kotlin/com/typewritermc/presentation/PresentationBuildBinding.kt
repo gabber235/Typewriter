@@ -23,7 +23,12 @@ class CheckedPresentationTemplate internal constructor(
     private val fieldResolver: (TypeTemplate, String) -> TypeTemplate?,
     private val nestedResolver: (TypeTemplate, NestedPresentationSlot) -> PresentationNestedTemplate?,
     private val descriptorSelector: (TypeTemplate, List<PresentationDescriptor>) -> PresentationDescriptor?,
-    private val expressionChecker: (ExpressionNode, Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>, TypeTemplate, Set<com.typewritermc.expression.ExpressionBindingId>) -> List<String>,
+    private val expressionChecker: (
+        ExpressionNode,
+        Map<com.typewritermc.expression.ExpressionBindingId, TypeTemplate>,
+        TypeTemplate,
+        Set<com.typewritermc.expression.ExpressionBindingId>,
+    ) -> List<String>,
     private val payloadResolver: (TypeTemplate) -> TypeTemplate,
 ) {
     internal fun field(name: String): CheckedPresentationTemplate =
@@ -124,7 +129,14 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
                 }
             }
         },
-        expressionChecker = { body, bindings, expected, present -> checkPresentationExpression(body, bindings, expected, present, this::resolve) },
+        expressionChecker = {
+            body,
+            bindings,
+            expected,
+            present,
+            ->
+            checkPresentationExpression(body, bindings, expected, present, this::resolve)
+        },
         payloadResolver = { parent ->
             val checked = resolve(parent)
             (checked.schema.representation as? ResolvedRepresentation.Scalar)?.let { TypeTemplate.Scalar(it.kind) } ?: parent
@@ -452,7 +464,10 @@ internal fun checkPresentationExpression(
     // Free type parameters receive exact checking when material is applied to concrete arguments.
     val result = expected.apply(emptyMap()) as? Resolution.Ready ?: return structural
     val referenced = body.referencedBindingIds()
-    val applied = bindings.filterKeys { it in referenced }.mapValues { (_, template) -> (template.apply(emptyMap()) as? Resolution.Ready)?.value }
+    val applied =
+        bindings.filterKeys { it in referenced }.mapValues { (_, template) ->
+            (template.apply(emptyMap()) as? Resolution.Ready)?.value
+        }
     if (applied.values.any { it == null }) return structural
     return checker.checkExpressionCodes(
         body,
@@ -461,18 +476,49 @@ internal fun checkPresentationExpression(
     )
 }
 
-private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> = buildSet {
-    fun visit(node: ExpressionNode) {
-        when (node) {
-            is ExpressionNode.Literal -> Unit
-            is ExpressionNode.Read -> add(node.binding)
-            is ExpressionNode.Call -> node.arguments.forEach(::visit)
-            is ExpressionNode.And -> { visit(node.left); visit(node.right) }
-            is ExpressionNode.Or -> { visit(node.left); visit(node.right) }
-            is ExpressionNode.Conditional -> { visit(node.test); visit(node.yes); visit(node.no) }
-            is ExpressionNode.OrElse -> { visit(node.input); visit(node.fallback) }
-            is ExpressionNode.Collection -> { visit(node.input); node.arguments.forEach(::visit); node.body?.let(::visit) }
+private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> =
+    buildSet {
+        fun visit(node: ExpressionNode) {
+            when (node) {
+                is ExpressionNode.Literal -> {
+                    Unit
+                }
+
+                is ExpressionNode.Read -> {
+                    add(node.binding)
+                }
+
+                is ExpressionNode.Call -> {
+                    node.arguments.forEach(::visit)
+                }
+
+                is ExpressionNode.And -> {
+                    visit(node.left)
+                    visit(node.right)
+                }
+
+                is ExpressionNode.Or -> {
+                    visit(node.left)
+                    visit(node.right)
+                }
+
+                is ExpressionNode.Conditional -> {
+                    visit(node.test)
+                    visit(node.yes)
+                    visit(node.no)
+                }
+
+                is ExpressionNode.OrElse -> {
+                    visit(node.input)
+                    visit(node.fallback)
+                }
+
+                is ExpressionNode.Collection -> {
+                    visit(node.input)
+                    node.arguments.forEach(::visit)
+                    node.body?.let(::visit)
+                }
+            }
         }
+        visit(this@referencedBindingIds)
     }
-    visit(this@referencedBindingIds)
-}

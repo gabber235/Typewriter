@@ -13,13 +13,23 @@ import java.math.BigDecimal
 class DefaultPortableRuleCompiler(
     private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,
 ) : PortableRuleCompiler {
-    override fun compile(rule: OwnedRule, subject: CheckedType): Resolution<CheckedRule> {
-        val diagnostics = PortableExpressionChecker(subject::resolve, rule.id.origin.owner, operations).checkRule(rule.descriptor.predicate, subject)
+    override fun compile(
+        rule: OwnedRule,
+        subject: CheckedType,
+    ): Resolution<CheckedRule> {
+        val diagnostics =
+            PortableExpressionChecker(
+                subject::resolve,
+                rule.id.origin.owner,
+                operations,
+            ).checkRule(rule.descriptor.predicate, subject)
         return if (diagnostics.isEmpty()) Resolution.Ready(CheckedRule(subject.catalog, rule, subject)) else Resolution.Invalid(diagnostics)
     }
 
     internal fun validateStructure(rule: OwnedRule): List<DeclarationDiagnostic> =
-        PortableExpressionChecker({ error("Structural checking does not resolve types.") }, rule.id.origin.owner, operations).checkRuleStructure(rule.descriptor.predicate)
+        PortableExpressionChecker({
+            error("Structural checking does not resolve types.")
+        }, rule.id.origin.owner, operations).checkRuleStructure(rule.descriptor.predicate)
 }
 
 class DefaultPredicateReasoner : PredicateReasoner {

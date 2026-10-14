@@ -67,10 +67,15 @@ internal class RuntimePresentationData(
     ) {
         val children = mutableListOf<PresentationNode>()
         val scopeBinding = if (typed) null else state.bindingId("scoped.value")
-        val localBinding = if (typed) input.binding else BindingRef(
-            path = WireValuePath(segments = emptyList()),
-            bindingId = requireNotNull(scopeBinding).wire(),
-        )
+        val localBinding =
+            if (typed) {
+                input.binding
+            } else {
+                BindingRef(
+                    path = WireValuePath(segments = emptyList()),
+                    bindingId = requireNotNull(scopeBinding).wire(),
+                )
+            }
         val session = input.rebind?.invoke(localBinding, children) ?: input.session
         state.withTarget(children) {
             session.receiver.body()
@@ -200,9 +205,17 @@ internal class RuntimePresentedField<V, S : Any>(
     override val input: PresentationInput<V, S>
         get() {
             val createScope: (BindingRef, MutableList<PresentationNode>) -> ControlScopeSession<S> = { rebound, children ->
-                val runtime = RuntimeControlBinding(
-                    state, children, name, rebound, checked, nested, null, authorScope,
-                )
+                val runtime =
+                    RuntimeControlBinding(
+                        state,
+                        children,
+                        name,
+                        rebound,
+                        checked,
+                        nested,
+                        null,
+                        authorScope,
+                    )
                 ControlScopeSession(
                     receiver = state.controls.create(scope, runtime),
                     finish = runtime::finishInto,

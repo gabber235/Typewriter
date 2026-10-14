@@ -7,9 +7,9 @@ import com.typewritermc.expression.OperationId
 import com.typewritermc.expression.PortableOperationRegistry
 import com.typewritermc.expression.PortableOperationSemantics
 import com.typewritermc.presentation.ExpressionNode
-import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ScalarKind
+import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
@@ -19,7 +19,10 @@ import com.typewritermc.types.catalog.resolve
 import java.math.BigDecimal
 
 /** A checked portable expression keeps its authored tree and required result contract. */
-data class CheckedExpression(val body: ExpressionNode, val result: com.typewritermc.expression.ExpressionType)
+data class CheckedExpression(
+    val body: ExpressionNode,
+    val result: com.typewritermc.expression.ExpressionType,
+)
 
 /** Checks the same expression language for rules and value mappings under explicit lexical bindings. */
 class PortableExpressionChecker(
@@ -34,10 +37,21 @@ class PortableExpressionChecker(
         affected: TypeDefinitionId,
     ): Resolution<CheckedExpression> {
         val codes = checkExpressionCodes(body, bindings, expectedOutput)
-        return if (codes.isEmpty()) Resolution.Ready(CheckedExpression(body, expectedOutput)) else Resolution.Invalid(codes.map { DeclarationDiagnostic(affected, it) })
+        return if (codes.isEmpty()) {
+            Resolution.Ready(CheckedExpression(body, expectedOutput))
+        } else {
+            Resolution.Invalid(
+                codes.map {
+                    DeclarationDiagnostic(affected, it)
+                },
+            )
+        }
     }
 
-    fun checkExpressionStructure(body: ExpressionNode, bindings: Set<ExpressionBindingId>): List<String> {
+    fun checkExpressionStructure(
+        body: ExpressionNode,
+        bindings: Set<ExpressionBindingId>,
+    ): List<String> {
         val diagnostics = mutableListOf<String>()
         validateSymbols(body, bindings.toMutableSet(), owner, diagnostics)
         return diagnostics.distinct()
@@ -55,19 +69,30 @@ class PortableExpressionChecker(
         val inferred = validate(body, locals, owner, diagnostics)
         val expected = resolveType(expectedOutput.value).toInferredType()
         compatible(inferred, expected, owner, diagnostics)
-        if (!expectedOutput.mayBeMissing && body.mayBeMissing(bindings)) diagnostics += diagnostic(owner, "expression_result_may_be_missing")
+        if (!expectedOutput.mayBeMissing &&
+            body.mayBeMissing(bindings)
+        ) {
+            diagnostics += diagnostic(owner, "expression_result_may_be_missing")
+        }
         if (inferred.kind == InferredKind.Invalid && diagnostics.isEmpty()) diagnostics += "expression_type_inference_failed"
         if (expected.kind == InferredKind.Invalid) diagnostics += "invalid_expression_result_type"
         return diagnostics.distinct()
     }
 
-    internal fun checkRule(body: ExpressionNode, subject: CheckedType): List<DeclarationDiagnostic> {
+    internal fun checkRule(
+        body: ExpressionNode,
+        subject: CheckedType,
+    ): List<DeclarationDiagnostic> {
         val diagnostics = mutableListOf<String>()
         val id = ExpressionBindingId("configured_value")
         validateSymbols(body, mutableSetOf(id), owner, diagnostics)
         val result = validate(body, mutableMapOf(id to InferredType.Value(subject)), owner, diagnostics)
         if (result.kind == InferredKind.Invalid && diagnostics.isEmpty()) diagnostics += diagnostic(owner, "rule_type_inference_failed")
-        if (result.kind != InferredKind.Boolean && result.kind != InferredKind.Invalid) diagnostics += diagnostic(owner, "rule_predicate_must_be_boolean")
+        if (result.kind != InferredKind.Boolean &&
+            result.kind != InferredKind.Invalid
+        ) {
+            diagnostics += diagnostic(owner, "rule_predicate_must_be_boolean")
+        }
         return diagnostics.distinct().map { DeclarationDiagnostic(requireNotNull(owner), it) }
     }
 
@@ -318,7 +343,15 @@ class PortableExpressionChecker(
     ): InferredType {
         if (operation.value in com.typewritermc.expression.SharedOperationSignatures.supportedIds) {
             val uses = arguments.map { it.scalarUse() }
-            if (uses.all { it != null } && com.typewritermc.expression.SharedOperationSignatures.resolveOrNull(operation, uses.map { com.typewritermc.expression.ExpressionType(requireNotNull(it), false) }) == null) {
+            if (uses.all { it != null } &&
+                com.typewritermc.expression.SharedOperationSignatures.resolveOrNull(
+                    operation,
+                    uses.map {
+                        com.typewritermc.expression.ExpressionType(requireNotNull(it), false)
+                    },
+                ) ==
+                null
+            ) {
                 diagnostics += "invalid_expression_operand_type"
             }
         }
@@ -334,13 +367,21 @@ class PortableExpressionChecker(
         if (operation.value in EQUALITY_OPERATIONS && arguments.isNotEmpty()) {
             arguments.drop(1).fold(arguments.first()) { current, next -> compatible(current, next, owner, diagnostics) }
         }
-        if (operation.value == "typewriter.number.round_to" && arguments.size >= 2) compatible(arguments[0], arguments[1], owner, diagnostics)
+        if (operation.value == "typewriter.number.round_to" &&
+            arguments.size >= 2
+        ) {
+            compatible(arguments[0], arguments[1], owner, diagnostics)
+        }
         if (operation.value in NUMERIC_FAMILY_OPERATIONS && arguments.isNotEmpty()) {
             arguments.drop(1).fold(arguments.first()) { current, next -> compatible(current, next, owner, diagnostics) }
         }
-        return if (operation.value in NUMERIC_FAMILY_OPERATIONS || operation.value in setOf("typewriter.number.negate", "typewriter.number.round_to")) {
+        return if (operation.value in NUMERIC_FAMILY_OPERATIONS ||
+            operation.value in setOf("typewriter.number.negate", "typewriter.number.round_to")
+        ) {
             arguments.firstOrNull() ?: InferredType.Invalid
-        } else expressionType(expectation.output)
+        } else {
+            expressionType(expectation.output)
+        }
     }
 
     private fun requireBoolean(
@@ -364,7 +405,9 @@ class PortableExpressionChecker(
         if (second.kind == InferredKind.Any) return first
         val numericLiteralPair = first is InferredType.NumericLiteral || second is InferredType.NumericLiteral
         val sameFamily = first.numericFamily() != null && first.numericFamily() == second.numericFamily()
-        if (first.kind != second.kind || (first.use != null && second.use != null && first.use != second.use && !(numericLiteralPair && sameFamily))) {
+        if (first.kind != second.kind ||
+            (first.use != null && second.use != null && first.use != second.use && !(numericLiteralPair && sameFamily))
+        ) {
             diagnostics += diagnostic(owner, "incompatible_rule_operand_types")
             return InferredType.Invalid
         }
@@ -428,7 +471,9 @@ private sealed interface InferredType {
         override val kind: InferredKind = InferredKind.Integer
     }
 
-    data class NumericLiteral(val scalar: ScalarKind) : InferredType {
+    data class NumericLiteral(
+        val scalar: ScalarKind,
+    ) : InferredType {
         override val kind: InferredKind = InferredKind.Number
         override val use: TypeUse = TypeUse.Scalar(scalar)
     }
@@ -499,8 +544,13 @@ private fun DataValue.expressionType(resolveType: (TypeUse) -> Resolution<Checke
             InferredType.Integer
         }
 
-        is DataValue.Float -> InferredType.NumericLiteral(ScalarKind.Float(com.typewritermc.types.FloatWidth.FLOAT_64))
-        is DataValue.Decimal -> InferredType.NumericLiteral(ScalarKind.Decimal)
+        is DataValue.Float -> {
+            InferredType.NumericLiteral(ScalarKind.Float(com.typewritermc.types.FloatWidth.FLOAT_64))
+        }
+
+        is DataValue.Decimal -> {
+            InferredType.NumericLiteral(ScalarKind.Decimal)
+        }
 
         is DataValue.StringValue -> {
             InferredType.Text
@@ -513,7 +563,10 @@ private fun DataValue.expressionType(resolveType: (TypeUse) -> Resolution<Checke
         is DataValue.Timestamp -> {
             InferredType.Timestamp
         }
-        is DataValue.Duration -> InferredType.Duration
+
+        is DataValue.Duration -> {
+            InferredType.Duration
+        }
 
         is DataValue.ListValue, is DataValue.SetValue, is DataValue.MapValue -> {
             InferredType.Collection(InferredType.Any)
@@ -667,10 +720,17 @@ private val OPERATION_TYPES =
         "typewriter.number.divide" to OperationType(listOf(InferredKind.Number), InferredKind.Number, InferredKind.Number),
         "typewriter.number.remainder" to OperationType(listOf(InferredKind.Number), InferredKind.Number, InferredKind.Number),
         "typewriter.number.negate" to OperationType(listOf(InferredKind.Number), InferredKind.Number),
-        "typewriter.number.round_to" to OperationType(listOf(InferredKind.Number, InferredKind.Number, InferredKind.Text), InferredKind.Number),
-        "typewriter.number.format" to OperationType(listOf(InferredKind.Number, InferredKind.Integer, InferredKind.Text), InferredKind.Text),
-        "typewriter.duration.format" to OperationType(listOf(InferredKind.Duration, InferredKind.Text, InferredKind.Integer), InferredKind.Text),
-        "typewriter.timestamp.format" to OperationType(listOf(InferredKind.Timestamp, InferredKind.Text, InferredKind.Text, InferredKind.Text), InferredKind.Text),
+        "typewriter.number.round_to" to
+            OperationType(listOf(InferredKind.Number, InferredKind.Number, InferredKind.Text), InferredKind.Number),
+        "typewriter.number.format" to
+            OperationType(
+                listOf(InferredKind.Number, InferredKind.Integer, InferredKind.Text),
+                InferredKind.Text,
+            ),
+        "typewriter.duration.format" to
+            OperationType(listOf(InferredKind.Duration, InferredKind.Text, InferredKind.Integer), InferredKind.Text),
+        "typewriter.timestamp.format" to
+            OperationType(listOf(InferredKind.Timestamp, InferredKind.Text, InferredKind.Text, InferredKind.Text), InferredKind.Text),
         "typewriter.text.length" to OperationType(listOf(InferredKind.Text), InferredKind.Integer),
         "typewriter.text.has_line_break" to OperationType(listOf(InferredKind.Text), InferredKind.Boolean),
         "typewriter.text.trim" to OperationType(listOf(InferredKind.Text), InferredKind.Text),
@@ -733,21 +793,58 @@ private val OPERATION_TYPES =
 internal fun untypedPortableOperations(registry: PortableOperationRegistry = PortableOperationRegistry.Standard): Set<OperationId> =
     registry.semantics.map(PortableOperationSemantics::id).toSet() - OPERATION_TYPES.keys.map(::OperationId).toSet()
 
+private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, com.typewritermc.expression.ExpressionType>): Boolean =
+    when (this) {
+        is ExpressionNode.Literal -> {
+            value == DataValue.Unfilled
+        }
 
-private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, com.typewritermc.expression.ExpressionType>): Boolean = when (this) {
-    is ExpressionNode.Literal -> value == DataValue.Unfilled
-    is ExpressionNode.Read -> bindings[binding]?.mayBeMissing ?: true
-    is ExpressionNode.Call -> arguments.any { it.mayBeMissing(bindings) }
-    is ExpressionNode.And -> left.mayBeMissing(bindings) || right.mayBeMissing(bindings)
-    is ExpressionNode.Or -> left.mayBeMissing(bindings) || right.mayBeMissing(bindings)
-    is ExpressionNode.Conditional -> test.mayBeMissing(bindings) || yes.mayBeMissing(bindings) || no.mayBeMissing(bindings)
-    is ExpressionNode.OrElse -> input.mayBeMissing(bindings) && fallback.mayBeMissing(bindings)
-    is ExpressionNode.Collection -> input.mayBeMissing(bindings) || arguments.any { it.mayBeMissing(bindings) } ||
-        (body?.mayBeMissing(bindings + this.bindings.associateWith { com.typewritermc.expression.ExpressionType(TypeUse.Scalar(ScalarKind.Unit), false) }) ?: false)
-}
+        is ExpressionNode.Read -> {
+            bindings[binding]?.mayBeMissing ?: true
+        }
+
+        is ExpressionNode.Call -> {
+            arguments.any { it.mayBeMissing(bindings) }
+        }
+
+        is ExpressionNode.And -> {
+            left.mayBeMissing(bindings) || right.mayBeMissing(bindings)
+        }
+
+        is ExpressionNode.Or -> {
+            left.mayBeMissing(bindings) || right.mayBeMissing(bindings)
+        }
+
+        is ExpressionNode.Conditional -> {
+            test.mayBeMissing(bindings) || yes.mayBeMissing(bindings) || no.mayBeMissing(bindings)
+        }
+
+        is ExpressionNode.OrElse -> {
+            input.mayBeMissing(bindings) && fallback.mayBeMissing(bindings)
+        }
+
+        is ExpressionNode.Collection -> {
+            input.mayBeMissing(bindings) || arguments.any { it.mayBeMissing(bindings) } ||
+                (
+                    body?.mayBeMissing(
+                        bindings +
+                            this.bindings.associateWith {
+                                com.typewritermc.expression.ExpressionType(TypeUse.Scalar(ScalarKind.Unit), false)
+                            },
+                    )
+                        ?: false
+                )
+        }
+    }
 
 private fun InferredType.numericFamily(): String? {
-    val scalar = if (this is InferredType.Value) (checked.schema.representation as? ResolvedRepresentation.Scalar)?.kind else (use as? TypeUse.Scalar)?.kind
+    val scalar =
+        if (this is InferredType.Value) {
+            (checked.schema.representation as? ResolvedRepresentation.Scalar)?.kind
+        } else {
+            (use as? TypeUse.Scalar)
+                ?.kind
+        }
     return when (scalar) {
         is ScalarKind.Integer -> "integer"
         is ScalarKind.Float -> "float"
@@ -791,13 +888,14 @@ private val COLLECTION_OPERATIONS =
         put(OperationId("typewriter.collection.distinct"), CollectionOperationShape(0, 0..0, bodyRequired = false))
     }
 
-private fun InferredType.scalarUse(): TypeUse? = when (this) {
-    is InferredType.Value -> (checked.schema.representation as? ResolvedRepresentation.Scalar)?.kind?.let(TypeUse::Scalar)
-    is InferredType.NumericLiteral -> TypeUse.Scalar(scalar)
-    InferredType.Integer -> TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_64))
-    InferredType.Text -> TypeUse.Scalar(ScalarKind.Text)
-    InferredType.Boolean -> TypeUse.Scalar(ScalarKind.Boolean)
-    InferredType.Duration -> TypeUse.Scalar(ScalarKind.Duration)
-    InferredType.Timestamp -> TypeUse.Scalar(ScalarKind.Timestamp)
-    else -> null
-}
+private fun InferredType.scalarUse(): TypeUse? =
+    when (this) {
+        is InferredType.Value -> (checked.schema.representation as? ResolvedRepresentation.Scalar)?.kind?.let(TypeUse::Scalar)
+        is InferredType.NumericLiteral -> TypeUse.Scalar(scalar)
+        InferredType.Integer -> TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_64))
+        InferredType.Text -> TypeUse.Scalar(ScalarKind.Text)
+        InferredType.Boolean -> TypeUse.Scalar(ScalarKind.Boolean)
+        InferredType.Duration -> TypeUse.Scalar(ScalarKind.Duration)
+        InferredType.Timestamp -> TypeUse.Scalar(ScalarKind.Timestamp)
+        else -> null
+    }

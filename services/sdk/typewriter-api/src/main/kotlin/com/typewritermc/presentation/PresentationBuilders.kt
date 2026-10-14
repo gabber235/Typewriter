@@ -129,20 +129,33 @@ interface PresentationInteractions {
         action: skirout.editor.v1.action.EditorAction,
         configure: ButtonScope.() -> Unit = {},
     )
+
     fun iconButton(
         icon: Expr<String, Handled>,
         semanticLabel: Expr<String, Handled>,
         action: skirout.editor.v1.action.EditorAction,
         configure: IconButtonScope.() -> Unit = {},
     )
-    fun menu(label: Expr<String, Handled>? = null, body: MenuScope.() -> Unit)
-    fun tooltip(message: Expr<String, Handled>, configure: TooltipAppearanceScope.() -> Unit = {}, body: Layout.() -> Unit)
+
+    fun menu(
+        label: Expr<String, Handled>? = null,
+        body: MenuScope.() -> Unit,
+    )
+
+    fun tooltip(
+        message: Expr<String, Handled>,
+        configure: TooltipAppearanceScope.() -> Unit = {},
+        body: Layout.() -> Unit,
+    )
+
     fun commitControls(binding: PresentationInput<*, *>)
 }
 
 interface TabsScope : InputAppearanceScope {
     fun spacing(value: Double)
+
     fun contentSpacing(value: Double)
+
     fun tab(
         id: String,
         label: Expr<String, Handled>,

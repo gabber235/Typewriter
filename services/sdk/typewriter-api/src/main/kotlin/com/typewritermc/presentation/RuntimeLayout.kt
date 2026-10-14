@@ -60,7 +60,10 @@ internal class RuntimeLayout(
     }
 
     override fun divider(configure: DividerAppearanceScope.() -> Unit) {
-        val draft = skirout.editor.v1.presentation.DividerAppearance.partial().toMutable()
+        val draft =
+            skirout.editor.v1.presentation.DividerAppearance
+                .partial()
+                .toMutable()
         RuntimeDividerAppearanceScope(draft).configure()
         target += state.node(PresentationElement.DividerWrapper(draft.toFrozen()))
     }
@@ -113,11 +116,24 @@ internal class RuntimeLayout(
         body: TabsScope.() -> Unit,
     ) {
         val items = mutableListOf<skirout.editor.v1.presentation.TabItem>()
-        val visual = skirout.editor.v1.presentation.InputAppearance.partial().toMutable()
-        val scope = RuntimeTabsScope(RuntimeTextEntryAppearance(visual)) { id, label, icon, body ->
-            require(id.isNotBlank() && items.none { it.tabId == id }) { "Tab identifiers must be nonempty and unique." }
-            items += skirout.editor.v1.presentation.TabItem(tabId = id, label = expression(label), child = child(body), icon = icon?.let { state.iconNode(it, IconOptions()) })
-        }
+        val visual =
+            skirout.editor.v1.presentation.InputAppearance
+                .partial()
+                .toMutable()
+        val scope =
+            RuntimeTabsScope(RuntimeTextEntryAppearance(visual)) { id, label, icon, body ->
+                require(id.isNotBlank() && items.none { it.tabId == id }) { "Tab identifiers must be nonempty and unique." }
+                items +=
+                    skirout.editor.v1.presentation.TabItem(
+                        tabId = id,
+                        label = expression(label),
+                        child = child(body),
+                        icon =
+                            icon?.let {
+                                state.iconNode(it, IconOptions())
+                            },
+                    )
+            }
         scope.body()
         target +=
             state.node(
@@ -256,12 +272,17 @@ internal class RuntimeLayout(
             )
     }
 
-    override fun withInputAppearance(appearance: InputAppearance, body: Layout.() -> Unit) {
-        target += state.node(
-            PresentationElement.AppearanceDefaultsWrapper(
-                skirout.editor.v1.presentation.AppearanceDefaultsElement(appearance = appearance, child = child(body)),
-            ),
-        )
+    override fun withInputAppearance(
+        appearance: InputAppearance,
+        body: Layout.() -> Unit,
+    ) {
+        target +=
+            state.node(
+                PresentationElement.AppearanceDefaultsWrapper(
+                    skirout.editor.v1.presentation
+                        .AppearanceDefaultsElement(appearance = appearance, child = child(body)),
+                ),
+            )
     }
 
     override fun align(

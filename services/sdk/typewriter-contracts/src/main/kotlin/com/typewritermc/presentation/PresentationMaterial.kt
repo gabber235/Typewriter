@@ -61,8 +61,11 @@ private fun PresentationNode.authoredBindingUses(
     buildList {
         val control = element?.boundControl()
         control?.binding?.resolve(bindings)?.let { address ->
-            val selected = (element as? PresentationElement.DefaultPresentationWrapper)
-                ?.value?.presentationId?.let { PresentationId(it.namespace, it.name) }
+            val selected =
+                (element as? PresentationElement.DefaultPresentationWrapper)
+                    ?.value
+                    ?.presentationId
+                    ?.let { PresentationId(it.namespace, it.name) }
             val authoredField = address.takeIf { it.segments.isNotEmpty() } ?: field
             if (authoredField != null) add(AuthoredBindingUse(authoredField, selected))
         }
@@ -198,46 +201,115 @@ private fun skirout.editor.v1.type_catalog.ValuePath.toRelativePattern() =
         },
     )
 
-private fun PresentationNode.decorations(): List<PresentationNode> = buildList {
-    (header?.title as? PresentationHeaderTitle.PresentationWrapper)?.value?.let(::add)
-    element?.boundControl()?.prefix?.let(::add)
-    when (val element = element) {
-        is PresentationElement.TextInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.NumericInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.SelectInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.DateTimeInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.DurationInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.ColorInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.BytesInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.EnumInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.SearchInputWrapper -> addInputContent(element.value.content)
-        is PresentationElement.NamedInputWrapper -> addCollectionContent(element.value.content)
-        is PresentationElement.ListInputWrapper -> addCollectionContent(element.value.content)
-        is PresentationElement.SetInputWrapper -> addCollectionContent(element.value.content)
-        is PresentationElement.MapInputWrapper -> addCollectionContent(element.value.content)
-        is PresentationElement.RecordInputWrapper -> addCollectionContent(element.value.content)
-        is PresentationElement.PolymorphicInputWrapper -> {
-            addInputContent(element.value.inputContent)
-            addCollectionContent(element.value.content)
+private fun PresentationNode.decorations(): List<PresentationNode> =
+    buildList {
+        (header?.title as? PresentationHeaderTitle.PresentationWrapper)?.value?.let(::add)
+        element?.boundControl()?.prefix?.let(::add)
+        when (val element = element) {
+            is PresentationElement.TextInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.NumericInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.SelectInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.DateTimeInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.DurationInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.ColorInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.BytesInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.EnumInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.SearchInputWrapper -> {
+                addInputContent(element.value.content)
+            }
+
+            is PresentationElement.NamedInputWrapper -> {
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.ListInputWrapper -> {
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.SetInputWrapper -> {
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.MapInputWrapper -> {
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.RecordInputWrapper -> {
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.PolymorphicInputWrapper -> {
+                addInputContent(element.value.inputContent)
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.LinkInputWrapper -> {
+                addInputContent(element.value.inputContent)
+                addCollectionContent(element.value.content)
+            }
+
+            is PresentationElement.TabsWrapper -> {
+                element.value.tabs.mapNotNullTo(this) { it.icon }
+            }
+
+            is PresentationElement.ButtonWrapper -> {
+                element.value.icon?.let(::add)
+            }
+
+            is PresentationElement.MenuWrapper -> {
+                element.value.items.mapNotNullTo(this) { it.icon }
+            }
+
+            is PresentationElement.BadgeWrapper -> {
+                addDisplayAppearance(element.value.options)
+            }
+
+            is PresentationElement.ChipWrapper -> {
+                addDisplayAppearance(element.value.options)
+            }
+
+            is PresentationElement.StatusWrapper -> {
+                element.value.cases.forEach { addDisplayAppearance(it.appearance.options) }
+                addDisplayAppearance(element.value.fallback?.options)
+            }
+
+            is PresentationElement.DateTimeWrapper -> {
+                addDisplayAppearance(element.value.options)
+            }
+
+            is PresentationElement.RelativeTimeWrapper -> {
+                addDisplayAppearance(element.value.options)
+            }
+
+            else -> {
+                Unit
+            }
         }
-        is PresentationElement.LinkInputWrapper -> {
-            addInputContent(element.value.inputContent)
-            addCollectionContent(element.value.content)
-        }
-        is PresentationElement.TabsWrapper -> element.value.tabs.mapNotNullTo(this) { it.icon }
-        is PresentationElement.ButtonWrapper -> element.value.icon?.let(::add)
-        is PresentationElement.MenuWrapper -> element.value.items.mapNotNullTo(this) { it.icon }
-        is PresentationElement.BadgeWrapper -> addDisplayAppearance(element.value.options)
-        is PresentationElement.ChipWrapper -> addDisplayAppearance(element.value.options)
-        is PresentationElement.StatusWrapper -> {
-            element.value.cases.forEach { addDisplayAppearance(it.appearance.options) }
-            addDisplayAppearance(element.value.fallback?.options)
-        }
-        is PresentationElement.DateTimeWrapper -> addDisplayAppearance(element.value.options)
-        is PresentationElement.RelativeTimeWrapper -> addDisplayAppearance(element.value.options)
-        else -> Unit
     }
-}
 
 private fun PresentationNode.bodyChildren(): List<PresentationNode> =
     buildList {
@@ -283,18 +355,12 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
                 addAll(element.value.children.nodes())
             }
 
-
-
-
             is PresentationElement.SelectInputWrapper -> {
                 element.value.options.mapNotNullTo(this) { it.content }
-                element.value.optionsConfig?.optionOverrides?.mapNotNullTo(this) { it.content }
+                element.value.optionsConfig
+                    ?.optionOverrides
+                    ?.mapNotNullTo(this) { it.content }
             }
-
-
-
-
-
 
             is PresentationElement.NamedInputWrapper -> {
                 element.value.payloadPresentation?.let(::add)
@@ -314,7 +380,9 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
             }
 
             is PresentationElement.EnumInputWrapper -> {
-                element.value.options?.optionOverrides?.mapNotNullTo(this) { it.content }
+                element.value.options
+                    ?.optionOverrides
+                    ?.mapNotNullTo(this) { it.content }
             }
 
             is PresentationElement.PolymorphicInputWrapper -> {
@@ -335,7 +403,6 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
             is PresentationElement.AppearanceDefaultsWrapper -> {
                 add(element.value.child)
             }
-
 
             is PresentationElement.AlignWrapper -> {
                 add(element.value.child)
@@ -372,7 +439,6 @@ private fun PresentationNode.bodyChildren(): List<PresentationNode> =
             is PresentationElement.SetInputWrapper -> {
                 element.value.itemPresentation?.let(::add)
             }
-
 
             else -> {}
         }

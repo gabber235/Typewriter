@@ -699,16 +699,18 @@ val TypeSystemFoundationTest by testSuite {
                         .PresentationProperties(enabledIf = null, readOnly = false),
                 element =
                     skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                        control = skirout.editor.v1.presentation.BoundControl.partial(
-                            binding = skirout.editor.v1.binding.BindingRef(
-                                path =
-                                    skirout.editor.v1.type_catalog
-                                        .ValuePath(segments = emptyList()),
-                                bindingId =
-                                    skirout.editor.v1.type_catalog
-                                        .ExpressionBindingId(value = "configured_value"),
+                        control =
+                            skirout.editor.v1.presentation.BoundControl.partial(
+                                binding =
+                                    skirout.editor.v1.binding.BindingRef(
+                                        path =
+                                            skirout.editor.v1.type_catalog
+                                                .ValuePath(segments = emptyList()),
+                                        bindingId =
+                                            skirout.editor.v1.type_catalog
+                                                .ExpressionBindingId(value = "configured_value"),
+                                    ),
                             ),
-                        ),
                         presentationId =
                             skirout.editor.v1.type_catalog.PresentationId(
                                 namespace = selected.namespace,
@@ -763,21 +765,23 @@ val TypeSystemFoundationTest by testSuite {
                         .PresentationProperties(enabledIf = null, readOnly = false),
                 element =
                     skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                        control = skirout.editor.v1.presentation.BoundControl.partial(
-                            binding = skirout.editor.v1.binding.BindingRef(
-                                path =
-                                    skirout.editor.v1.type_catalog.ValuePath(
-                                        segments =
-                                            listOf(
-                                                skirout.editor.v1.type_catalog.PathSegment
-                                                    .createField(name = "label"),
+                        control =
+                            skirout.editor.v1.presentation.BoundControl.partial(
+                                binding =
+                                    skirout.editor.v1.binding.BindingRef(
+                                        path =
+                                            skirout.editor.v1.type_catalog.ValuePath(
+                                                segments =
+                                                    listOf(
+                                                        skirout.editor.v1.type_catalog.PathSegment
+                                                            .createField(name = "label"),
+                                                    ),
                                             ),
+                                        bindingId =
+                                            skirout.editor.v1.type_catalog
+                                                .ExpressionBindingId(value = "item"),
                                     ),
-                                bindingId =
-                                    skirout.editor.v1.type_catalog
-                                        .ExpressionBindingId(value = "item"),
                             ),
-                        ),
                         presentationId =
                             skirout.editor.v1.type_catalog.PresentationId(
                                 namespace = itemSelected.namespace,
@@ -832,93 +836,315 @@ val TypeSystemFoundationTest by testSuite {
             )
         repeatedChoice.selected shouldBe itemSelected
 
-        val listItemBinding = skirout.editor.v1.type_catalog.ExpressionBindingId(value = "actual.item.scope")
-        val listItem = itemPresentation.copy(
-            element = skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                control = skirout.editor.v1.presentation.BoundControl.partial(
-                    binding = (itemPresentation.element as skirout.editor.v1.presentation.PresentationElement.DefaultPresentationWrapper)
-                        .value.control.binding.copy(bindingId = listItemBinding),
-                ),
-                presentationId = skirout.editor.v1.type_catalog.PresentationId(namespace = itemSelected.namespace, name = itemSelected.name),
-            ),
-        )
-        val list = layout.copy(
-            element = skirout.editor.v1.presentation.PresentationElement.createListInput(
-                control = skirout.editor.v1.presentation.BoundControl.partial(binding = binding),
-                itemPresentation = listItem,
-                itemBindingId = listItemBinding,
-                indexBindingId = skirout.editor.v1.type_catalog.ExpressionBindingId(value = "actual.item.index"),
-                allowAdd = true,
-                allowRemove = true,
-                allowReorder = true,
-                appearance = null,
-                content = null,
-            ),
-        )
+        val listItemBinding =
+            skirout.editor.v1.type_catalog
+                .ExpressionBindingId(value = "actual.item.scope")
+        val listItem =
+            itemPresentation.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
+                        control =
+                            skirout.editor.v1.presentation.BoundControl.partial(
+                                binding =
+                                    (
+                                        itemPresentation.element as
+                                            skirout.editor.v1.presentation.PresentationElement.DefaultPresentationWrapper
+                                    ).value.control.binding
+                                        .copy(bindingId = listItemBinding),
+                            ),
+                        presentationId =
+                            skirout.editor.v1.type_catalog.PresentationId(
+                                namespace = itemSelected.namespace,
+                                name = itemSelected.name,
+                            ),
+                    ),
+            )
+        val list =
+            layout.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createListInput(
+                        control =
+                            skirout.editor.v1.presentation.BoundControl
+                                .partial(binding = binding),
+                        itemPresentation = listItem,
+                        itemBindingId = listItemBinding,
+                        indexBindingId =
+                            skirout.editor.v1.type_catalog
+                                .ExpressionBindingId(value = "actual.item.index"),
+                        allowAdd = true,
+                        allowRemove = true,
+                        allowReorder = true,
+                        appearance = null,
+                        content = null,
+                    ),
+            )
         val listChoice = material.copy(layout = list).explicitFieldSelections().single()
-        listChoice.field.segments shouldContainExactly listOf(
-            com.typewritermc.configuration.FieldPatternSegment.Field("title"),
-            com.typewritermc.configuration.FieldPatternSegment.Items,
-            com.typewritermc.configuration.FieldPatternSegment.Field("label"),
-        )
+        listChoice.field.segments shouldContainExactly
+            listOf(
+                com.typewritermc.configuration.FieldPatternSegment
+                    .Field("title"),
+                com.typewritermc.configuration.FieldPatternSegment.Items,
+                com.typewritermc.configuration.FieldPatternSegment
+                    .Field("label"),
+            )
 
-        val appearanceWrapped = list.copy(
-            element = skirout.editor.v1.presentation.PresentationElement.createAppearanceDefaults(
-                appearance = skirout.editor.v1.presentation.InputAppearance.partial(),
-                child = list,
-            ),
-        )
+        val appearanceWrapped =
+            list.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createAppearanceDefaults(
+                        appearance =
+                            skirout.editor.v1.presentation.InputAppearance
+                                .partial(),
+                        child = list,
+                    ),
+            )
         material.copy(layout = appearanceWrapped).explicitFieldSelections() shouldContainExactly listOf(listChoice)
 
-        fun decoratedSelection(name: String) = defaultNode.copy(
-            nodeId = "selected.$name",
-            element = skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
-                control = skirout.editor.v1.presentation.BoundControl.partial(
-                    binding = binding.copy(path = skirout.editor.v1.type_catalog.ValuePath(segments = listOf(skirout.editor.v1.type_catalog.PathSegment.createField(name = name)))),
+        fun decoratedSelection(name: String) =
+            defaultNode.copy(
+                nodeId = "selected.$name",
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
+                        control =
+                            skirout.editor.v1.presentation.BoundControl.partial(
+                                binding =
+                                    binding.copy(
+                                        path =
+                                            skirout.editor.v1.type_catalog.ValuePath(
+                                                segments =
+                                                    listOf(
+                                                        skirout.editor.v1.type_catalog.PathSegment
+                                                            .createField(name = name),
+                                                    ),
+                                            ),
+                                    ),
+                            ),
+                        presentationId =
+                            skirout.editor.v1.type_catalog
+                                .PresentationId(namespace = selected.namespace, name = selected.name),
+                    ),
+            )
+        val decoratedControl =
+            skirout.editor.v1.presentation.BoundControl
+                .partial(binding = binding, prefix = decoratedSelection("prefix"))
+        val operations =
+            skirout.editor.v1.presentation.CollectionContent.partial(
+                empty = decoratedSelection("empty"),
+                addIcon = decoratedSelection("addGlyph"),
+            )
+        val families =
+            listOf(
+                skirout.editor.v1.presentation.PresentationElement.createNamedInput(
+                    control = decoratedControl,
+                    payloadPresentation = null,
+                    appearance = null,
+                    content = operations,
                 ),
-                presentationId = skirout.editor.v1.type_catalog.PresentationId(namespace = selected.namespace, name = selected.name),
-            ),
-        )
-        val decoratedControl = skirout.editor.v1.presentation.BoundControl.partial(binding = binding, prefix = decoratedSelection("prefix"))
-        val operations = skirout.editor.v1.presentation.CollectionContent.partial(empty = decoratedSelection("empty"), addIcon = decoratedSelection("addGlyph"))
-        val families = listOf(
-            skirout.editor.v1.presentation.PresentationElement.createNamedInput(control = decoratedControl, payloadPresentation = null, appearance = null, content = operations),
-            skirout.editor.v1.presentation.PresentationElement.createRecordInput(control = decoratedControl, fieldPresentation = null, appearance = null, content = operations),
-            skirout.editor.v1.presentation.PresentationElement.createListInput(control = decoratedControl, itemPresentation = listItem, itemBindingId = listItemBinding, indexBindingId = skirout.editor.v1.type_catalog.ExpressionBindingId(value = "actual.index"), allowAdd = true, allowRemove = true, allowReorder = true, appearance = null, content = operations),
-            skirout.editor.v1.presentation.PresentationElement.createSetInput(control = decoratedControl, itemPresentation = listItem, itemBindingId = listItemBinding, allowAdd = true, allowRemove = true, appearance = null, content = operations),
-            skirout.editor.v1.presentation.PresentationElement.createMapInput(control = decoratedControl, keyPresentation = null, valuePresentation = null, keyBindingId = skirout.editor.v1.type_catalog.ExpressionBindingId(value = "actual.key"), valueBindingId = skirout.editor.v1.type_catalog.ExpressionBindingId(value = "actual.value"), allowAdd = true, allowRemove = true, appearance = null, content = operations),
-        )
+                skirout.editor.v1.presentation.PresentationElement.createRecordInput(
+                    control = decoratedControl,
+                    fieldPresentation = null,
+                    appearance = null,
+                    content = operations,
+                ),
+                skirout.editor.v1.presentation.PresentationElement.createListInput(
+                    control = decoratedControl,
+                    itemPresentation = listItem,
+                    itemBindingId = listItemBinding,
+                    indexBindingId =
+                        skirout.editor.v1.type_catalog
+                            .ExpressionBindingId(value = "actual.index"),
+                    allowAdd = true,
+                    allowRemove = true,
+                    allowReorder = true,
+                    appearance = null,
+                    content = operations,
+                ),
+                skirout.editor.v1.presentation.PresentationElement.createSetInput(
+                    control = decoratedControl,
+                    itemPresentation = listItem,
+                    itemBindingId = listItemBinding,
+                    allowAdd = true,
+                    allowRemove = true,
+                    appearance = null,
+                    content = operations,
+                ),
+                skirout.editor.v1.presentation.PresentationElement.createMapInput(
+                    control = decoratedControl,
+                    keyPresentation = null,
+                    valuePresentation = null,
+                    keyBindingId =
+                        skirout.editor.v1.type_catalog
+                            .ExpressionBindingId(value = "actual.key"),
+                    valueBindingId =
+                        skirout.editor.v1.type_catalog
+                            .ExpressionBindingId(value = "actual.value"),
+                    allowAdd = true,
+                    allowRemove = true,
+                    appearance = null,
+                    content = operations,
+                ),
+            )
         for (family in families) {
-            val decorated = layout.copy(element = family, header = skirout.editor.v1.presentation.PresentationHeader.partial(title = skirout.editor.v1.presentation.PresentationHeaderTitle.PresentationWrapper(decoratedSelection("header"))))
+            val decorated =
+                layout.copy(
+                    element = family,
+                    header =
+                        skirout.editor.v1.presentation.PresentationHeader.partial(
+                            title =
+                                skirout.editor.v1.presentation.PresentationHeaderTitle
+                                    .PresentationWrapper(decoratedSelection("header")),
+                        ),
+                )
             val choices = material.copy(layout = decorated).explicitFieldSelections()
-            choices.take(4).map { it.field.segments } shouldContainExactly listOf("header", "prefix", "empty", "addGlyph").map { listOf(com.typewritermc.configuration.FieldPatternSegment.Field(it)) }
-            if (family is skirout.editor.v1.presentation.PresentationElement.ListInputWrapper || family is skirout.editor.v1.presentation.PresentationElement.SetInputWrapper) choices.last().field shouldBe listChoice.field
+            choices.take(4).map { it.field.segments } shouldContainExactly
+                listOf("header", "prefix", "empty", "addGlyph").map {
+                    listOf(
+                        com.typewritermc.configuration.FieldPatternSegment
+                            .Field(it),
+                    )
+                }
+            if (family is skirout.editor.v1.presentation.PresentationElement.ListInputWrapper ||
+                family is skirout.editor.v1.presentation.PresentationElement.SetInputWrapper
+            ) {
+                choices.last().field shouldBe listChoice.field
+            }
         }
-        val nullable = layout.copy(element = skirout.editor.v1.presentation.PresentationElement.createNullableInput(control = decoratedControl, valuePresentation = null, emptyText = null, clearLabel = null))
-        material.copy(layout = nullable).explicitFieldSelections().single().field.segments shouldContainExactly listOf(com.typewritermc.configuration.FieldPatternSegment.Field("prefix"))
-        val adornment = layout.copy(element = skirout.editor.v1.presentation.PresentationElement.createNumericInput(
-            control = decoratedControl,
-            appearance = null,
-            content = skirout.editor.v1.presentation.InputContent.partial(leading = skirout.editor.v1.presentation.InputAdornment.ContentWrapper(decoratedSelection("leading")), suffix = decoratedSelection("suffix")),
-            mappings = null,
-            entry = null,
-            options = skirout.editor.v1.presentation.NumericInteractionOptions.partial(),
-        ))
-        material.copy(layout = adornment).explicitFieldSelections().map { it.field.segments } shouldContainExactly listOf("prefix", "leading", "suffix").map { listOf(com.typewritermc.configuration.FieldPatternSegment.Field(it)) }
-        val tab = layout.copy(element = skirout.editor.v1.presentation.PresentationElement.createTabs(
-            tabs = listOf(skirout.editor.v1.presentation.TabItem(tabId = "main", label = skirout.editor.v1.expression.ExpressionNode.LiteralWrapper(skirout.editor.v1.type_catalog.DataValue.StringValueWrapper("Main")), child = defaultNode.copy(element = skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(control = decoratedControl.copy(prefix = null), presentationId = null)), icon = decoratedSelection("tabGlyph"))),
-            initiallySelectedTabId = null, appearance = null, spacing = null, contentSpacing = null,
-        ))
-        material.copy(layout = tab).explicitFieldSelections().single().field.segments shouldContainExactly listOf(com.typewritermc.configuration.FieldPatternSegment.Field("tabGlyph"))
-        val display = skirout.editor.v1.presentation.DisplayAppearance.partial(icon = skirout.editor.v1.presentation.InputAdornment.ContentWrapper(decoratedSelection("displayGlyph")))
-        val displays = listOf(
-            skirout.editor.v1.presentation.PresentationElement.BadgeWrapper(skirout.editor.v1.presentation.BadgeContent.partial(options = display)),
-            skirout.editor.v1.presentation.PresentationElement.ChipWrapper(skirout.editor.v1.presentation.ChipContent.partial(options = display)),
-            skirout.editor.v1.presentation.PresentationElement.StatusWrapper(skirout.editor.v1.presentation.StatusContent.partial(cases = listOf(skirout.editor.v1.presentation.StatusCase(match = skirout.editor.v1.type_catalog.DataValue.StringValueWrapper("ready"), appearance = skirout.editor.v1.presentation.StatusAppearance.partial(options = display))))),
-            skirout.editor.v1.presentation.PresentationElement.DateTimeWrapper(skirout.editor.v1.presentation.DateTimeContent.partial(options = display)),
-            skirout.editor.v1.presentation.PresentationElement.RelativeTimeWrapper(skirout.editor.v1.presentation.RelativeTimeContent.partial(options = display)),
-        )
-        for (element in displays) material.copy(layout = layout.copy(element = element)).explicitFieldSelections().single().field.segments shouldContainExactly listOf(com.typewritermc.configuration.FieldPatternSegment.Field("displayGlyph"))
+        val nullable =
+            layout.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createNullableInput(
+                        control = decoratedControl,
+                        valuePresentation = null,
+                        emptyText = null,
+                        clearLabel = null,
+                    ),
+            )
+        material
+            .copy(layout = nullable)
+            .explicitFieldSelections()
+            .single()
+            .field.segments shouldContainExactly
+            listOf(
+                com.typewritermc.configuration.FieldPatternSegment
+                    .Field("prefix"),
+            )
+        val adornment =
+            layout.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createNumericInput(
+                        control = decoratedControl,
+                        appearance = null,
+                        content =
+                            skirout.editor.v1.presentation.InputContent.partial(
+                                leading =
+                                    skirout.editor.v1.presentation.InputAdornment
+                                        .ContentWrapper(decoratedSelection("leading")),
+                                suffix = decoratedSelection("suffix"),
+                            ),
+                        mappings = null,
+                        entry = null,
+                        options =
+                            skirout.editor.v1.presentation.NumericInteractionOptions
+                                .partial(),
+                    ),
+            )
+        material.copy(layout = adornment).explicitFieldSelections().map { it.field.segments } shouldContainExactly
+            listOf("prefix", "leading", "suffix").map {
+                listOf(
+                    com.typewritermc.configuration.FieldPatternSegment
+                        .Field(it),
+                )
+            }
+        val tab =
+            layout.copy(
+                element =
+                    skirout.editor.v1.presentation.PresentationElement.createTabs(
+                        tabs =
+                            listOf(
+                                skirout.editor.v1.presentation.TabItem(
+                                    tabId = "main",
+                                    label =
+                                        skirout.editor.v1.expression.ExpressionNode.LiteralWrapper(
+                                            skirout.editor.v1.type_catalog.DataValue
+                                                .StringValueWrapper("Main"),
+                                        ),
+                                    child =
+                                        defaultNode.copy(
+                                            element =
+                                                skirout.editor.v1.presentation.PresentationElement.createDefaultPresentation(
+                                                    control = decoratedControl.copy(prefix = null),
+                                                    presentationId = null,
+                                                ),
+                                        ),
+                                    icon = decoratedSelection("tabGlyph"),
+                                ),
+                            ),
+                        initiallySelectedTabId = null,
+                        appearance = null,
+                        spacing = null,
+                        contentSpacing = null,
+                    ),
+            )
+        material
+            .copy(layout = tab)
+            .explicitFieldSelections()
+            .single()
+            .field.segments shouldContainExactly
+            listOf(
+                com.typewritermc.configuration.FieldPatternSegment
+                    .Field("tabGlyph"),
+            )
+        val display =
+            skirout.editor.v1.presentation.DisplayAppearance.partial(
+                icon =
+                    skirout.editor.v1.presentation.InputAdornment
+                        .ContentWrapper(decoratedSelection("displayGlyph")),
+            )
+        val displays =
+            listOf(
+                skirout.editor.v1.presentation.PresentationElement.BadgeWrapper(
+                    skirout.editor.v1.presentation.BadgeContent
+                        .partial(options = display),
+                ),
+                skirout.editor.v1.presentation.PresentationElement.ChipWrapper(
+                    skirout.editor.v1.presentation.ChipContent
+                        .partial(options = display),
+                ),
+                skirout.editor.v1.presentation.PresentationElement.StatusWrapper(
+                    skirout.editor.v1.presentation.StatusContent.partial(
+                        cases =
+                            listOf(
+                                skirout.editor.v1.presentation.StatusCase(
+                                    match =
+                                        skirout.editor.v1.type_catalog.DataValue
+                                            .StringValueWrapper("ready"),
+                                    appearance =
+                                        skirout.editor.v1.presentation.StatusAppearance
+                                            .partial(options = display),
+                                ),
+                            ),
+                    ),
+                ),
+                skirout.editor.v1.presentation.PresentationElement.DateTimeWrapper(
+                    skirout.editor.v1.presentation.DateTimeContent
+                        .partial(options = display),
+                ),
+                skirout.editor.v1.presentation.PresentationElement.RelativeTimeWrapper(
+                    skirout.editor.v1.presentation.RelativeTimeContent
+                        .partial(options = display),
+                ),
+            )
+        for (element in displays) {
+            material
+                .copy(layout = layout.copy(element = element))
+                .explicitFieldSelections()
+                .single()
+                .field.segments shouldContainExactly
+                listOf(
+                    com.typewritermc.configuration.FieldPatternSegment
+                        .Field("displayGlyph"),
+                )
+        }
     }
 
     test("float32 admission requires the authored value to equal the native width") {

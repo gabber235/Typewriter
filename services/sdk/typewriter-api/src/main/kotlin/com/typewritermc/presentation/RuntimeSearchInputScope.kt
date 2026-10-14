@@ -79,20 +79,42 @@ internal class RuntimeSearchInputScope<Value, Row>(
         customValue = expression(value)
     }
 
-    override fun initialQuery(value: String) { initialQuery = expression(value) }
-    override fun popupSide(value: PopupSide) {
-        popupSide = when (value) {
-            PopupSide.Automatic -> skirout.editor.v1.presentation.PopupSide.AUTOMATIC
-            PopupSide.Above -> skirout.editor.v1.presentation.PopupSide.ABOVE
-            PopupSide.Below -> skirout.editor.v1.presentation.PopupSide.BELOW
-        }
+    override fun initialQuery(value: String) {
+        initialQuery = expression(value)
     }
-    override fun emptyText(value: String) { emptyText = expression(value) }
-    override fun emptyText(value: Expr<String, Handled>) { emptyText = expression(value) }
-    override fun loadingText(value: String) { loadingText = expression(value) }
-    override fun loadingText(value: Expr<String, Handled>) { loadingText = expression(value) }
-    override fun empty(body: Layout.() -> Unit) { empty = author.presentation(body) }
-    override fun loading(body: Layout.() -> Unit) { loading = author.presentation(body) }
+
+    override fun popupSide(value: PopupSide) {
+        popupSide =
+            when (value) {
+                PopupSide.Automatic -> skirout.editor.v1.presentation.PopupSide.AUTOMATIC
+                PopupSide.Above -> skirout.editor.v1.presentation.PopupSide.ABOVE
+                PopupSide.Below -> skirout.editor.v1.presentation.PopupSide.BELOW
+            }
+    }
+
+    override fun emptyText(value: String) {
+        emptyText = expression(value)
+    }
+
+    override fun emptyText(value: Expr<String, Handled>) {
+        emptyText = expression(value)
+    }
+
+    override fun loadingText(value: String) {
+        loadingText = expression(value)
+    }
+
+    override fun loadingText(value: Expr<String, Handled>) {
+        loadingText = expression(value)
+    }
+
+    override fun empty(body: Layout.() -> Unit) {
+        empty = author.presentation(body)
+    }
+
+    override fun loading(body: Layout.() -> Unit) {
+        loading = author.presentation(body)
+    }
 
     override fun selectionMode(value: SearchSelectionMode) {
         selectionMode = value

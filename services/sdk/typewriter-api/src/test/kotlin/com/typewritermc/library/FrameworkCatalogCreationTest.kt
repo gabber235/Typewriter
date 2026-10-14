@@ -11,11 +11,11 @@ import com.typewritermc.authoring.PreparedValue
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.ContributionKey
-import com.typewritermc.discovery.assemble
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.discovery.assemble
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
@@ -576,7 +576,6 @@ private fun origin(name: String): ProviderOrigin =
         sourcePart = "main",
     )
 
-
 private fun exportFrameworkControlFixture(
     entries: List<com.typewritermc.discovery.GeneratedProviderIndexEntry>,
     tag: com.typewritermc.authoring.AuthoringRecord,
@@ -584,42 +583,131 @@ private fun exportFrameworkControlFixture(
 ) {
     val directory = System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { java.io.File(it) } ?: return
     val runtime = DefaultPresentationRuntime()
+
     fun instance(entry: com.typewritermc.discovery.GeneratedProviderIndexEntry): Any {
         val type = Class.forName(entry.providerClass)
-        return if (entry.kind == GeneratedProviderKind.Presentation) type.getConstructor(PresentationRuntime::class.java).newInstance(runtime) else instantiateGeneratedProvider(type)
+        return if (entry.kind ==
+            GeneratedProviderKind.Presentation
+        ) {
+            type.getConstructor(PresentationRuntime::class.java).newInstance(runtime)
+        } else {
+            instantiateGeneratedProvider(type)
+        }
     }
-    val exportedKinds = setOf(GeneratedProviderKind.Type, GeneratedProviderKind.Presentation, GeneratedProviderKind.Configuration, GeneratedProviderKind.NativeBinding, GeneratedProviderKind.Resource, GeneratedProviderKind.Relation, GeneratedProviderKind.EndpointBindings)
+    val exportedKinds =
+        setOf(
+            GeneratedProviderKind.Type,
+            GeneratedProviderKind.Presentation,
+            GeneratedProviderKind.Configuration,
+            GeneratedProviderKind.NativeBinding,
+            GeneratedProviderKind.Resource,
+            GeneratedProviderKind.Relation,
+            GeneratedProviderKind.EndpointBindings,
+        )
     val providers = entries.filter { it.kind in exportedKinds }.associateWith(::instance)
-    val declarations = providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
-        val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
-        com.typewritermc.discovery.OwnedTypeDeclaration(origin(entry.providerClass.substringAfterLast('.')), provider.definition, provider.display)
-    }
-    val presentations = providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
-        val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
-        val owner = origin(entry.providerClass.substringAfterLast('.'))
-        com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
-    }
-    val contributions = com.typewritermc.discovery.CatalogContributions(
-        declarations = declarations,
-        presentations = presentations,
-        configurations = providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
-            val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
-            com.typewritermc.discovery.OwnedConfiguration(origin(entry.providerClass.substringAfterLast('.')), provider.target, provider)
-        },
-        nativeBindings = providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
-            com.typewritermc.discovery.OwnedNativeBinding(origin(entry.providerClass.substringAfterLast('.')), value as NativeBindingFactory)
-        },
-        resources = providers.filterKeys { it.kind == GeneratedProviderKind.Resource }.values.map { (it as com.typewritermc.discovery.GeneratedResourceProvider).definition },
-        relations = providers.filterKeys { it.kind == GeneratedProviderKind.Relation }.values.map { (it as com.typewritermc.discovery.GeneratedRelationProvider).contract },
-        endpointBindings = providers.filterKeys { it.kind == GeneratedProviderKind.EndpointBindings }.values.flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
-    )
+    val declarations =
+        providers.filterKeys { it.kind == GeneratedProviderKind.Type }.map { (entry, value) ->
+            val provider = value as com.typewritermc.discovery.GeneratedTypeProvider
+            com.typewritermc.discovery.OwnedTypeDeclaration(
+                origin(entry.providerClass.substringAfterLast('.')),
+                provider.definition,
+                provider.display,
+            )
+        }
+    val presentations =
+        providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
+            val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
+            val owner = origin(entry.providerClass.substringAfterLast('.'))
+            com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
+        }
+    val contributions =
+        com.typewritermc.discovery.CatalogContributions(
+            declarations = declarations,
+            presentations = presentations,
+            configurations =
+                providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
+                    val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
+                    com.typewritermc.discovery.OwnedConfiguration(
+                        origin(entry.providerClass.substringAfterLast('.')),
+                        provider.target,
+                        provider,
+                    )
+                },
+            nativeBindings =
+                providers.filterKeys { it.kind == GeneratedProviderKind.NativeBinding }.map { (entry, value) ->
+                    com.typewritermc.discovery.OwnedNativeBinding(
+                        origin(entry.providerClass.substringAfterLast('.')),
+                        value as NativeBindingFactory,
+                    )
+                },
+            resources =
+                providers
+                    .filterKeys {
+                        it.kind == GeneratedProviderKind.Resource
+                    }.values
+                    .map { (it as com.typewritermc.discovery.GeneratedResourceProvider).definition },
+            relations =
+                providers
+                    .filterKeys {
+                        it.kind == GeneratedProviderKind.Relation
+                    }.values
+                    .map { (it as com.typewritermc.discovery.GeneratedRelationProvider).contract },
+            endpointBindings =
+                providers
+                    .filterKeys {
+                        it.kind == GeneratedProviderKind.EndpointBindings
+                    }.values
+                    .flatMap { (it as com.typewritermc.discovery.GeneratedEndpointBindingsProvider).bindings },
+        )
     val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
     assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
-    val wire = com.typewritermc.types.skir.SkirTypeCodec.encode(assembly.snapshot).getOrThrow()
+    val wire =
+        com.typewritermc.types.skir.SkirTypeCodec
+            .encode(assembly.snapshot)
+            .getOrThrow()
     directory.mkdirs()
-    java.io.File(directory, "catalog.bin").writeBytes(skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer.toBytes(wire).toByteArray())
-    java.io.File(directory, "tag.bin").writeBytes(skirout.editor.v1.type_catalog.AuthoringRecord.serializer.toBytes(SkirAuthoringValueCodec.encode(tag).getOrThrow()).toByteArray())
-    java.io.File(directory, "tag-value.bin").writeBytes(skirout.editor.v1.type_catalog.DataValue.serializer.toBytes(SkirDataValueCodec.encode(DataValue.Named(TagDefinition.use, DataValue.Record(tag.fields))).getOrThrow()).toByteArray())
-    java.io.File(directory, "placement.bin").writeBytes(skirout.editor.v1.type_catalog.DataValue.serializer.toBytes(SkirDataValueCodec.encode(placement).getOrThrow()).toByteArray())
-    java.io.File(directory, "manifest.json").writeText("""{"generation":"${wire.generation.value}","materials":${wire.presentationMaterials.size},"types":${wire.types.size},"tagType":"${TagDefinition.id}","placementType":"${GraphPlacementDefinition.id}"}""")
+    java.io
+        .File(
+            directory,
+            "catalog.bin",
+        ).writeBytes(
+            skirout.editor.v1.catalog.EditorCatalogWireSnapshot.serializer
+                .toBytes(wire)
+                .toByteArray(),
+        )
+    java.io
+        .File(
+            directory,
+            "tag.bin",
+        ).writeBytes(
+            skirout.editor.v1.type_catalog.AuthoringRecord.serializer
+                .toBytes(SkirAuthoringValueCodec.encode(tag).getOrThrow())
+                .toByteArray(),
+        )
+    java.io
+        .File(
+            directory,
+            "tag-value.bin",
+        ).writeBytes(
+            skirout.editor.v1.type_catalog.DataValue.serializer
+                .toBytes(
+                    SkirDataValueCodec.encode(DataValue.Named(TagDefinition.use, DataValue.Record(tag.fields))).getOrThrow(),
+                ).toByteArray(),
+        )
+    java.io
+        .File(
+            directory,
+            "placement.bin",
+        ).writeBytes(
+            skirout.editor.v1.type_catalog.DataValue.serializer
+                .toBytes(SkirDataValueCodec.encode(placement).getOrThrow())
+                .toByteArray(),
+        )
+    java.io
+        .File(
+            directory,
+            "manifest.json",
+        ).writeText(
+            """{"generation":"${wire.generation.value}","materials":${wire.presentationMaterials.size},"types":${wire.types.size},"tagType":"${TagDefinition.id}","placementType":"${GraphPlacementDefinition.id}"}""",
+        )
 }

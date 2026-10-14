@@ -1,7 +1,5 @@
 package com.typewritermc.types
 
-import com.typewritermc.presentation.TextLines
-
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
@@ -10,6 +8,7 @@ import com.typewritermc.expression.length
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.ExpressionNode
+import com.typewritermc.presentation.TextLines
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
 import com.typewritermc.presentation.distinct

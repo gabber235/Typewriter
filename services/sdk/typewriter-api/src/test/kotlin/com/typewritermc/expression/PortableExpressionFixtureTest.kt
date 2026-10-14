@@ -37,19 +37,42 @@ import kotlin.time.Instant
 val PortableExpressionFixtureTest by testSuite {
     test("local candidates use the shared evaluator without authored reads") {
         var reads = 0
-        val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { reads++; Availability.Available(DataValue.StringValue("stored")) })
+        val evaluator =
+            DefaultExpressionEvaluator(
+                ExpressionValueReader {
+                    reads++
+                    Availability.Available(DataValue.StringValue("stored"))
+                },
+            )
         val candidate = ExpressionBindingId("candidate")
         val expression = ExpressionNode.Call(OperationId("typewriter.text.trim"), listOf(ExpressionNode.Read(candidate, ValuePath())))
         with(FixtureReads) {
-            evaluator.evaluateScoped(expression, ExpressionBindings(emptyMap()), mapOf(candidate to DataValue.StringValue("  local  ")), EvaluationBudget(20, 20))
+            evaluator.evaluateScoped(
+                expression,
+                ExpressionBindings(emptyMap()),
+                mapOf(candidate to DataValue.StringValue("  local  ")),
+                EvaluationBudget(20, 20),
+            )
         } shouldBe Availability.Available(DataValue.StringValue("local"))
         reads shouldBe 0
     }
     test("handled candidates retain runtime operation failures") {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Local candidates must not read authored storage") })
         val candidate = ExpressionBindingId("candidate")
-        val expression = ExpressionNode.Call(OperationId("typewriter.number.divide"), listOf(ExpressionNode.Read(candidate, ValuePath()), ExpressionNode.Literal(DataValue.Integer(java.math.BigInteger.ZERO))))
-        val result = with(FixtureReads) { evaluator.evaluateScoped(expression, ExpressionBindings(emptyMap()), mapOf(candidate to DataValue.Integer(java.math.BigInteger.ONE)), EvaluationBudget(20, 20)) }
+        val expression =
+            ExpressionNode.Call(
+                OperationId("typewriter.number.divide"),
+                listOf(ExpressionNode.Read(candidate, ValuePath()), ExpressionNode.Literal(DataValue.Integer(java.math.BigInteger.ZERO))),
+            )
+        val result =
+            with(FixtureReads) {
+                evaluator.evaluateScoped(
+                    expression,
+                    ExpressionBindings(emptyMap()),
+                    mapOf(candidate to DataValue.Integer(java.math.BigInteger.ONE)),
+                    EvaluationBudget(20, 20),
+                )
+            }
         (result is Availability.Failed) shouldBe true
     }
     val fixture = Json.parseToJsonElement(Files.readString(fixturePath())).jsonObject
@@ -128,9 +151,22 @@ private fun JsonObject.value(): DataValue =
             DataValue.Decimal(getValue("decimal").jsonPrimitive.content)
         }
 
-        "duration" in this -> DataValue.Duration(getValue("duration").jsonPrimitive.content.toLong().milliseconds)
-        "timestamp" in this -> DataValue.Timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
-        "float" in this -> DataValue.Float(getValue("float").jsonPrimitive.content.toDouble())
+        "duration" in this -> {
+            DataValue.Duration(
+                getValue("duration")
+                    .jsonPrimitive.content
+                    .toLong()
+                    .milliseconds,
+            )
+        }
+
+        "timestamp" in this -> {
+            DataValue.Timestamp(Instant.parse(getValue("timestamp").jsonPrimitive.content))
+        }
+
+        "float" in this -> {
+            DataValue.Float(getValue("float").jsonPrimitive.content.toDouble())
+        }
 
         "string" in this -> {
             DataValue.StringValue(getValue("string").jsonPrimitive.content)

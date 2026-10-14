@@ -1,6 +1,5 @@
 package com.typewritermc.extensions.conformance
 
-import com.typewritermc.presentation.TextLines
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
@@ -26,6 +25,7 @@ import com.typewritermc.library.ChapterPath
 import com.typewritermc.library.Page
 import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.AppliedPresentation
+import com.typewritermc.presentation.TextLines
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
