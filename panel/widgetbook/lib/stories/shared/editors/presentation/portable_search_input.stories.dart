@@ -2,17 +2,67 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
+import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
-@widgetbook.UseCase(name: "Static choices", type: PortableSearchInput)
-Widget authoredSearchInputUseCase(BuildContext context) => const FakeApp(
+@widgetbook.UseCase(name: "Inline choices", type: PortableSearchInput)
+Widget authoredSearchInputUseCase(BuildContext context) =>
+    portableSearchInputStory(
+      width: context.knobs.double.slider(
+        label: "Search width",
+        initialValue: 360,
+        min: 240,
+        max: 700,
+      ),
+      readOnly: context.knobs.boolean(
+        label: "Search read only",
+        initialValue: false,
+      ),
+      customValue: context.knobs.boolean(
+        label: "Allow custom choices",
+        initialValue: false,
+      ),
+    );
+
+Widget portableSearchInputStory({
+  double width = 360,
+  bool readOnly = false,
+  bool customValue = false,
+}) => FakeApp(
   child: Scaffold(
-    body: Center(child: SizedBox(width: 420, child: _SearchInputStory())),
+    body: Center(
+      child: SizedBox(
+        width: width,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SearchInputStory(
+                key: ValueKey((readOnly, customValue)),
+                readOnly: readOnly,
+                customValue: customValue,
+              ),
+              const SizedBox(height: 20),
+              const Text("Description"),
+              const TextField(
+                decoration: InputDecoration(hintText: "Describe this reward"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
   ),
 );
 
 final class _SearchInputStory extends StatefulWidget {
-  const _SearchInputStory();
+  const _SearchInputStory({
+    required this.readOnly,
+    required this.customValue,
+    super.key,
+  });
+  final bool readOnly;
+  final bool customValue;
 
   @override
   State<_SearchInputStory> createState() => _SearchInputStoryState();
@@ -132,15 +182,25 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
     loading: null,
   );
 
-  skir.DataValue _value = skir.DataValue.unfilled;
+  skir.DataValue _value = skir.DataValue.wrapStringValue("Coin reward");
 
   late final _host = BoundPresentationHost(
+    readOnly: widget.readOnly,
     catalog: skir.EditorCatalogWireSnapshot.defaultInstance
         .asTrustedLocalCatalog(),
     root: () => skir.PresentationNode(
       nodeId: "reward.search",
       properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.wrapSearchInput(_control),
+      element: skir.PresentationElement.wrapSearchInput(
+        (_control.toMutable()
+              ..customValue = widget.customValue
+                  ? skir.ExpressionNode.createRead(
+                      binding: _control.queryBindingId,
+                      path: editorRootPath,
+                    )
+                  : null)
+            .toFrozen(),
+      ),
       header: null,
     ),
     bindings: [

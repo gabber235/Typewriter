@@ -1,10 +1,10 @@
 library;
 
 export "search.dart";
+export "search_body.dart";
 export "search_command_info.dart";
 export "search_frame.dart";
 export "search_modal.dart";
-export "search_modal_body.dart";
 export "search_preview.dart";
 export "search_result_card.dart";
 export "search_result_empty_state.dart";

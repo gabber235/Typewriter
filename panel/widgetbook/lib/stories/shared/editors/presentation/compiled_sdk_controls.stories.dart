@@ -29,6 +29,16 @@ Widget compiledTagUseCase(BuildContext context) => compiledTagStory(
   ),
 );
 
+@widgetbook.UseCase(name: "Compiled SDK Book", type: AuthoredResourceEditor)
+Widget compiledBookUseCase(BuildContext context) => compiledBookStory(
+  width: context.knobs.double.slider(
+    label: "Inspector width",
+    initialValue: 400,
+    min: 280,
+    max: 580,
+  ),
+);
+
 Widget compiledPlacementStory({
   bool readOnly = false,
   double width = 580,
@@ -102,17 +112,33 @@ class _CompiledPlacement extends HookWidget {
 }
 
 final compiledTagResource = skir.ResourceId(value: "tag:compiled.controls");
-AuthoringDocument compiledTagDocument() {
-  final root = compiledSdkTagValue.authoredActualType!.definition;
+final compiledBookResource = skir.ResourceId(value: "book:compiled.controls");
+AuthoringDocument compiledTagDocument() => _compiledDocument(
+  compiledTagResource,
+  compiledSdkTagRecord,
+  compiledSdkTagValue,
+);
+AuthoringDocument compiledBookDocument() => _compiledDocument(
+  compiledBookResource,
+  compiledSdkBookRecord,
+  compiledSdkBookValue,
+);
+
+AuthoringDocument _compiledDocument(
+  skir.ResourceId resource,
+  skir.AuthoringRecord record,
+  skir.DataValue value,
+) {
+  final root = value.authoredActualType!.definition;
   final resourceDefinition = compiledSdkControlCatalog.resourceDefinitions
       .singleWhere((definition) => definition.root == root);
   return AuthoringEdit(
     generation: compiledSdkControlCatalog.generation,
     resources: [
       skir.AuthoringResource(
-        id: compiledTagResource,
+        id: resource,
         definition: resourceDefinition.id,
-        content: compiledSdkTagRecord,
+        content: record,
       ),
     ],
     links: const [],
@@ -128,27 +154,54 @@ Widget compiledTagStory({
     child: SizedBox(
       width: width,
       height: 700,
-      child: _CompiledTag(onDocument: onDocument),
+      child: _CompiledInspector(
+        resource: compiledTagResource,
+        document: compiledTagDocument,
+        onDocument: onDocument,
+      ),
     ),
   ),
 );
 
-class _CompiledTag extends StatefulWidget {
-  const _CompiledTag({this.onDocument});
+Widget compiledBookStory({
+  double width = 400,
+  ValueChanged<AuthoringDocument>? onDocument,
+}) => FakeApp(
+  child: Center(
+    child: SizedBox(
+      width: width,
+      height: 760,
+      child: _CompiledInspector(
+        resource: compiledBookResource,
+        document: compiledBookDocument,
+        onDocument: onDocument,
+      ),
+    ),
+  ),
+);
+
+class _CompiledInspector extends StatefulWidget {
+  const _CompiledInspector({
+    required this.resource,
+    required this.document,
+    this.onDocument,
+  });
+  final skir.ResourceId resource;
+  final AuthoringDocument Function() document;
   final ValueChanged<AuthoringDocument>? onDocument;
   @override
-  State<_CompiledTag> createState() => _CompiledTagState();
+  State<_CompiledInspector> createState() => _CompiledInspectorState();
 }
 
-class _CompiledTagState extends State<_CompiledTag> {
+class _CompiledInspectorState extends State<_CompiledInspector> {
   late final _transport = ScriptedAuthoringTransport(
-    AsyncData(compiledTagDocument()),
+    AsyncData(widget.document()),
   );
   final _submissions = ScopedWorkSession();
   late final _workspace = RealmEditing(
     persistence: _transport.persistence,
     submissions: _submissions,
-    initial: compiledTagDocument(),
+    initial: widget.document(),
   );
   @override
   void initState() {
@@ -170,9 +223,9 @@ class _CompiledTagState extends State<_CompiledTag> {
   Widget build(BuildContext context) => Scaffold(
     body: SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(context.spacing.space4),
+        padding: EdgeInsets.all(context.spacing.space3),
         child: AuthoredResourceInspection(
-          resource: compiledTagResource,
+          resource: widget.resource,
           workspace: _workspace,
           commands: fixtureAuthoringCommands(_transport),
           commitPolicy: EditorCommitPolicy.applyResource,

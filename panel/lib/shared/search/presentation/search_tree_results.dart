@@ -12,12 +12,14 @@ class SearchTreeResults extends HookConsumerWidget {
     required this.rowRenderers,
     this.empty,
     this.loading,
+    this.shrinkWrap = false,
     super.key,
   });
 
   final Map<String, SearchResultRowBuilder> rowRenderers;
   final Widget? empty;
   final Widget? loading;
+  final bool shrinkWrap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -52,6 +54,7 @@ class SearchTreeResults extends HookConsumerWidget {
     return ClipPath(
       clipper: VerticalClipper(additionalWidth: 500),
       child: CustomScrollView(
+        shrinkWrap: shrinkWrap,
         clipBehavior: .none,
         slivers: [
           for (final error in snapshot.errorSummaries)

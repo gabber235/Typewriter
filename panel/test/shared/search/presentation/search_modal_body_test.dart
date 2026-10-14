@@ -5,7 +5,7 @@ import "../../../support/test_utils.dart";
 import "../application/core/support/search_core_test_harness.dart";
 
 void main() {
-  group("SearchModalBody", () {
+  group("SearchBody", () {
     testWidgets("renderer map renders a result row", (tester) async {
       final source = FakeSearchSource();
 
@@ -163,7 +163,7 @@ class _TestSearchBody extends StatelessWidget {
         session: testSearchSession(source),
         baseSelectors: const [KeyValueSelectorDefinition(id: "tag", key: "#")],
       ),
-      child: SearchModalBody(searchHint: "Search", rowRenderers: rowRenderers),
+      child: SearchBody(searchHint: "Search", rowRenderers: rowRenderers),
     );
   }
 }

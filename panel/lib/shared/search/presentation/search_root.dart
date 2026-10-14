@@ -1,5 +1,10 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+final _borrowedSearchControllerProvider = Provider<SearchController<dynamic>?>(
+  (ref) => null,
+  dependencies: [],
+);
+
 /// Controller scoped to one search surface.
 ///
 /// The nullable default allows the provider to exist as a dependency anchor;
@@ -8,7 +13,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// ChangeNotifier value.
 final searchProvider = ChangeNotifierProvider<SearchController<dynamic>?>(
   (ref) => null,
-  dependencies: [],
+  dependencies: [_borrowedSearchControllerProvider],
   disposeNotifier: false,
 );
 
@@ -48,8 +53,11 @@ final class _SearchRootState extends State<SearchRoot> {
   Widget build(BuildContext context) {
     return ProviderScope(
       overrides: [
+        _borrowedSearchControllerProvider.overrideWithValue(widget.controller),
         searchProvider.overrideWith(
-          (ref) => widget.controller ?? (_owned ??= widget.create!(ref)),
+          (ref) =>
+              ref.watch(_borrowedSearchControllerProvider) ??
+              (_owned ??= widget.create!(ref)),
         ),
       ],
       child: widget.child,

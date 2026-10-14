@@ -9,6 +9,8 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.TextLines
+import com.typewritermc.presentation.TextOverflow
+import com.typewritermc.presentation.TextParagraph
 import com.typewritermc.presentation.cache
 import com.typewritermc.presentation.debounce
 import com.typewritermc.presentation.distinct
@@ -26,7 +28,7 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
     override fun IconIconifyPresentationScope.present() {
         val current = expressions.value.orElse(literal(""))
         value {
-            label("Iconify identifier")
+            semanticLabel(literal("Icon"))
             searchInput<String> {
                 placeholder(literal("Search icons"))
                 maximumExtent(literal(280.0))
@@ -39,14 +41,18 @@ object CoreIconSdkProvider : IconIconifyPresentation, IconSvgPresentation {
                     presentation {
                         row(spacing = 10.0) {
                             icon(row)
-                            text(row)
+                            flexible {
+                                text(row, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                            }
                         }
                     }
                 }
                 summary {
                     row(spacing = 10.0) {
                         icon(current.orElse(literal("material-symbols:book")))
-                        text(current)
+                        flexible {
+                            text(current, paragraph = TextParagraph(maximumLines = 1, overflow = TextOverflow.Ellipsis))
+                        }
                     }
                 }
                 val remote =

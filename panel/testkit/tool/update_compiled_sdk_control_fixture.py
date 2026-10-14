@@ -19,6 +19,8 @@ for name, wire_type, file_name in [
     ("compiledSdkControlCatalog", "EditorCatalogWireSnapshot", "catalog.bin"),
     ("compiledSdkTagRecord", "AuthoringRecord", "tag.bin"),
     ("compiledSdkTagValue", "DataValue", "tag-value.bin"),
+    ("compiledSdkBookRecord", "AuthoringRecord", "book.bin"),
+    ("compiledSdkBookValue", "DataValue", "book-value.bin"),
     ("compiledSdkPlacementValue", "DataValue", "placement.bin"),
     ("compiledSdkCompositeLayout", "PresentationNode", "composite-layout.bin"),
     ("compiledSdkCompositeValue", "DataValue", "composite-value.bin"),

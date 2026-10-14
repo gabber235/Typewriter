@@ -184,6 +184,43 @@ void main() {
       controller.dispose();
       expect(source.disposeCount, 1);
     });
+
+    testWidgets("borrowed controller replacement preserves the child", (
+      tester,
+    ) async {
+      final first = SearchController(
+        session: testSearchSession(FakeSearchSource()),
+        baseSelectors: const [],
+      );
+      final second = SearchController(
+        session: testSearchSession(FakeSearchSource()),
+        baseSelectors: const [],
+      );
+      final current = ValueNotifier(first);
+      addTearDown(first.dispose);
+      addTearDown(second.dispose);
+      addTearDown(current.dispose);
+      await tester.pumpTestApp(
+        child: ValueListenableBuilder(
+          valueListenable: current,
+          builder: (context, controller, _) => SearchRoot.borrowed(
+            controller: controller,
+            child: const _SearchSelectionText(label: "Current"),
+          ),
+        ),
+      );
+      final element = tester.element(find.byType(_SearchSelectionText));
+      current.value = second;
+      await tester.pump();
+      second.toggleSelected("alpha");
+      await tester.pump();
+      expect(find.text("Current selected: 1"), findsOneWidget);
+      expect(tester.element(find.byType(_SearchSelectionText)), same(element));
+      first.toggleSelected("alpha");
+      first.toggleSelected("alpha");
+      await tester.pump();
+      expect(find.text("Current selected: 1"), findsOneWidget);
+    });
   });
 }
 

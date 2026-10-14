@@ -157,7 +157,7 @@ final exemptions = <Exemption>[
     "lib/shared/mutations/presentation/mutation_activity_button.dart",
     "lib/shared/ui/components/focus_highlight.dart",
     "lib/shared/ui/components/depth_box.dart",
-    "lib/shared/search/presentation/search_modal_body.dart",
+    "lib/shared/search/presentation/search_body.dart",
     "lib/features/organizations/features/realms/presentation/realm_suspension.dart",
     "lib/shared/editors/presentation/protocol/renderers/input/list_input_renderer.dart",
     "lib/shared/editors/presentation/protocol/header_renderer.dart",
@@ -177,7 +177,7 @@ final exemptions = <Exemption>[
     "lib/features/organizations/features/realms/features/tags/presentation/tag_node.dart",
     "lib/features/organizations/features/members/features/join_codes/presentation/preset_chip.dart",
     "lib/shared/ui/components/countdown_badge.dart",
-    "lib/shared/search/presentation/search_modal_body.dart",
+    "lib/shared/search/presentation/search_body.dart",
   ])
     Exemption(
       path,

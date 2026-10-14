@@ -18,6 +18,17 @@ final class PortableSearchInput extends HookWidget {
     useListenable(summaryFocus);
     final tapRegionGroup = useMemoized(Object.new);
     final editing = useState(false);
+    final choosing = useState(false);
+    // A pending selection owns its invocation until completion. Its own host
+    // notification must not dispose the controller awaiting that write.
+    final sessionScope = useRef(scope);
+    if (!choosing.value) sessionScope.value = scope;
+    final searchScope = sessionScope.value;
+    final searchFocus = useFocusNode(
+      debugLabel: "Portable inline search",
+      canRequestFocus: false,
+    );
+    final query = useRef<String?>(null);
     final http = useMemoized(() => client ?? Client(), [client]);
     useEffect(() => client == null ? http.close : null, [http]);
     void closeSearch({bool restoreFocus = true}) {
@@ -25,14 +36,10 @@ final class PortableSearchInput extends HookWidget {
       editing.value = false;
       if (restoreFocus) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted && !editing.value) summaryFocus.requestFocus();
+          if (context.mounted && !editing.value) {
+            summaryFocus.requestFocus();
+          }
         });
-      }
-    }
-
-    void openSearch() {
-      if (!editing.value && scope.enabled && !scope.readOnly) {
-        editing.value = true;
       }
     }
 
@@ -41,22 +48,26 @@ final class PortableSearchInput extends HookWidget {
     if (host == null || catalog == null) {
       throw StateError("Portable search requires a checked presentation host");
     }
+    final history = useMemoized<SearchHistoryStorage>(
+      () => scope.searchHistoryNamespace == null
+          ? _EphemeralSearchHistoryStorage()
+          : PortableLocalSearchHistoryStorage(catalog: catalog),
+      [catalog, scope.searchHistoryNamespace],
+    );
     final picker = useMemoized(
       () {
         final environment = PortableSearchEnvironment(
           catalog: catalog,
-          budget: scope.budget,
-          context: scope.invocation,
+          budget: searchScope.budget,
+          context: searchScope.invocation,
           http: http,
-          historyStorage: scope.searchHistoryNamespace == null
-              ? _EphemeralSearchHistoryStorage()
-              : PortableLocalSearchHistoryStorage(catalog: catalog),
+          historyStorage: history,
           historyNamespace: scope.searchHistoryNamespace ?? "ephemeral",
-          watchRealm: scope.watchSearch,
+          watchRealm: searchScope.watchSearch,
           collectionHost: host is PortableCollectionProjectionHost
               ? host as PortableCollectionProjectionHost
               : null,
-          material: scope.material,
+          material: searchScope.material,
         );
         return const PortableSearchCompiler().bindControl(
           control: control,
@@ -66,14 +77,15 @@ final class PortableSearchInput extends HookWidget {
       },
       [
         http,
+        history,
         control,
-        scope.bindings,
+        searchScope.bindings,
         host,
-        scope.material,
+        searchScope.material,
         catalog,
         scope.searchHistoryNamespace,
-        scope.budget,
-        scope.watchSearch,
+        searchScope.budget,
+        searchScope.watchSearch,
       ],
     );
     useEffect(() => picker.dispose, [picker]);
@@ -88,18 +100,42 @@ final class PortableSearchInput extends HookWidget {
                 } ??
                 "";
       return SearchController<void>(
-        session: picker.session(initialQuery: initialQuery),
+        session: picker.session(initialQuery: query.value ?? initialQuery),
         baseSelectors: const [],
         onCloseRequested: closeSearch,
         onCompleted: (_) => closeSearch(),
       );
     }, [picker]);
-    useEffect(() => controller.dispose, [controller]);
+    useEffect(() {
+      void rememberQuery() {
+        query.value = controller.query;
+        choosing.value = controller.activationRunning;
+      }
+
+      controller.addListener(rememberQuery);
+      return controller.dispose;
+    }, [controller]);
+    void openSearch() {
+      if (!editing.value && scope.enabled && !scope.readOnly) {
+        final initial = control.initialQuery;
+        controller
+          ..updateQuery(
+            initial == null
+                ? ""
+                : switch (scope.evaluate(initial)) {
+                    PortableExpressionAvailable(:final value) =>
+                      value.authoredString ?? "",
+                    _ => "",
+                  },
+          )
+          ..preview(null)
+          ..refresh();
+        editing.value = true;
+      }
+    }
+
     final style = _controlStyle(context, scope, control.appearance);
     final inputContent = control.content;
-    final popup = control.popup;
-    final constraints = _popupConstraints(scope, popup);
-    final shape = _popupShape(context, scope, popup);
     final placeholder =
         _entryPlaceholder(inputContent, scope) ??
         (control.placeholder == null
@@ -126,57 +162,109 @@ final class PortableSearchInput extends HookWidget {
       _ => null,
     };
     final editable = scope.enabled && !scope.readOnly;
+    final leading = _entryLeading(
+      context,
+      control.control,
+      inputContent,
+      scope,
+      style,
+      null,
+    );
+    final suffix = _entrySuffix(inputContent, scope);
+    final summary = _entryComposition(
+      leading: leading,
+      trailing: suffix,
+      child: Semantics(
+        button: true,
+        enabled: editable,
+        label: "Activate search input",
+        child: InkWell(
+          key: const ValueKey("authored_search_summary"),
+          focusNode: summaryFocus,
+          canRequestFocus: editable,
+          onTap: editable ? openSearch : null,
+          borderRadius: context.shapes.mediumBorderRadius,
+          child: InputDecorator(
+            isEmpty: false,
+            isFocused: summaryFocus.hasFocus,
+            decoration: style.decoration.copyWith(
+              enabled: editable,
+              focusedBorder:
+                  (style.decoration.focusedBorder ??
+                          style.decoration.border ??
+                          context.theme.inputDecorationTheme.border ??
+                          OutlineInputBorder(
+                            borderRadius: context.shapes.mediumBorderRadius,
+                          ))
+                      .copyWith(
+                        borderSide: FocusHighlight.focusBorder(
+                          context,
+                          FocusType.focus,
+                        ),
+                      ),
+              suffixIcon: inputContent?.leading == skir.InputAdornment.none
+                  ? null
+                  : Icon(
+                      Icons.search,
+                      size: style.iconSize,
+                      color: style.iconColor,
+                    ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
+              child: DefaultTextStyle.merge(
+                style: style.valueStyle,
+                child: IgnorePointer(child: _summary(placeholder)),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
     final content = _controlFrame(
       control.control,
       control.appearance == null
           ? scope
           : scope.withAppearance(control.appearance!),
-      _entryComposition(
-        leading: _entryLeading(
-          context,
-          control.control,
-          inputContent,
-          scope,
-          style,
-          Icons.search,
-        ),
-        trailing: _entrySuffix(inputContent, scope),
-        child: TapRegion(
-          groupId: tapRegionGroup,
-          onTapOutside: (_) => closeSearch(restoreFocus: false),
-          child: AnchoredOverlayPortal(
-            visible: editing.value,
-            config: AnchoredOverlayConfig(
-              preferredSide: control.popupSide == skir.PopupSide.above
-                  ? AnchoredOverlaySide.top
-                  : AnchoredOverlaySide.bottom,
-              spacing: 6,
-              maxHeight: constraints?.maxHeight.isFinite == true
-                  ? constraints!.maxHeight
-                  : (maximum ?? 320).clamp(80, 800),
-            ),
-            overlayBuilder: (context, anchorSize) => TapRegion(
-              groupId: tapRegionGroup,
-              child: Material(
-                elevation: 8,
-                shape: shape,
-                borderRadius: shape == null
-                    ? context.shapes.mediumBorderRadius
-                    : null,
-                color: popup?.fill == null
-                    ? null
-                    : PresentationColorEnvironment.of(context)
-                          .resolve(popup!.fill!, scope),
-                clipBehavior: Clip.antiAlias,
-                child: ConstrainedBox(
-                  constraints: constraints ?? const BoxConstraints(),
-                  child: Padding(
-                    padding: popup?.padding == null
-                        ? EdgeInsets.zero
-                        : _presentationInsets(popup!.padding),
-                    child: SizedBox(
-                      width: (constraints ?? const BoxConstraints())
-                          .constrainWidth(max(anchorSize.width, 420)),
+      TapRegion(
+        groupId: tapRegionGroup,
+        onTapOutside: (_) => closeSearch(restoreFocus: false),
+        child: Focus(
+          focusNode: searchFocus,
+          canRequestFocus: false,
+          onFocusChange: (focused) {
+            if (!focused && editing.value) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted && !searchFocus.hasFocus) {
+                  closeSearch(restoreFocus: false);
+                }
+              });
+            }
+          },
+          child: ManagedActionSet(
+            shortcuts: [
+              if (editable && !editing.value && summaryFocus.hasPrimaryFocus)
+                ActionShortcut(
+                  id: "activate_search_input",
+                  label: "Search",
+                  description: "Edit the selected value",
+                  activators: [
+                    const SingleActivator(LogicalKeyboardKey.enter),
+                    const SingleActivator(LogicalKeyboardKey.numpadEnter),
+                    const SingleActivator(LogicalKeyboardKey.space),
+                  ],
+                  priority: 100,
+                  onInvoke: (_) => openSearch(),
+                ),
+            ],
+            child: AnimatedSize(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : 300.ms,
+              curve: Curves.easeInOutCubic,
+              alignment: Alignment.topCenter,
+              child: editing.value && editable
+                  ? TextFieldTapRegion(
                       child: SearchRoot.borrowed(
                         controller: controller,
                         child: _PortableSearchSurface(
@@ -185,38 +273,11 @@ final class PortableSearchInput extends HookWidget {
                           scope: scope,
                           control: control,
                           style: style,
+                          maximumExtent: (maximum ?? 320).clamp(80, 800),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            child: Semantics(
-              button: true,
-              enabled: editable,
-              label: "Activate search input",
-              child: InkWell(
-                key: const ValueKey("authored_search_summary"),
-                focusNode: summaryFocus,
-                canRequestFocus: editable,
-                onTap: editable ? openSearch : null,
-                borderRadius: context.shapes.mediumBorderRadius,
-                child: InputDecorator(
-                  isEmpty: false,
-                  isFocused: editing.value || summaryFocus.hasFocus,
-                  decoration: style.decoration.copyWith(enabled: editable),
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: context.spacing.space2,
-                    ),
-                    child: DefaultTextStyle.merge(
-                      style: style.valueStyle,
-                      child: IgnorePointer(child: _summary(placeholder)),
-                    ),
-                  ),
-                ),
-              ),
+                    )
+                  : summary,
             ),
           ),
         ),
@@ -275,23 +336,138 @@ final class _EphemeralSearchHistoryStorage implements SearchHistoryStorage {
   }
 }
 
-final class _PortableSearchSurface extends StatelessWidget {
+final class _PortableSearchSurface extends ConsumerWidget {
   const _PortableSearchSurface({
     required this.placeholder,
     required this.picker,
     required this.scope,
     required this.control,
     required this.style,
+    required this.maximumExtent,
   });
 
   final skir.SearchControl control;
+  final double maximumExtent;
   final _PortableControlStyle style;
   final String placeholder;
   final PortableSearchBinding picker;
   final PortablePresentationScope scope;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(searchProvider)!;
+    final popup = control.popup;
+    final constraints = _popupConstraints(scope, popup);
+    final shape = _popupShape(context, scope, popup);
+    final fill =
+        style.decoration.fillColor ??
+        context.theme.inputDecorationTheme.fillColor ??
+        context.colors.surface;
+    final resultFill = popup?.fill == null
+        ? fill
+        : PresentationColorEnvironment.of(context).resolve(popup!.fill!, scope);
+    final leading = _entryLeading(
+      context,
+      control.control,
+      control.content,
+      scope,
+      style,
+      Icons.search,
+    );
+    final suffix = _entrySuffix(control.content, scope);
+    final outsideLeading = _interactiveAdornment(
+      switch (control.content?.leading) {
+        skir.InputAdornment_contentWrapper(:final value) => value,
+        _ => control.control.prefix,
+      },
+    );
+    final outsideSuffix = _interactiveAdornment(control.content?.suffix);
+    void navigate(int direction) {
+      final results = controller.snapshot.nodes
+          .walk()
+          .whereType<SearchResultNode>()
+          .map((node) => node.result)
+          .toList();
+      if (results.isEmpty) return;
+      final current = results.indexWhere(
+        (r) => r.id == controller.currentPreview?.id,
+      );
+      final next = current < 0
+          ? (direction > 0 ? 0 : results.length - 1)
+          : (current + direction).clamp(0, results.length - 1);
+      controller.preview(results[next]);
+    }
+
+    Widget frame({
+      required Widget queryBar,
+      required Widget searchResults,
+      Widget? actionBar,
+      Widget? preview,
+    }) {
+      final results = LayoutBuilder(
+        builder: (context, available) {
+          final requested = constraints ?? const BoxConstraints();
+          return Align(
+            alignment: AlignmentDirectional.topStart,
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: requested.enforce(
+                BoxConstraints(
+                  maxWidth: available.maxWidth,
+                  maxHeight: maximumExtent,
+                ),
+              ),
+              child: Material(
+                color: resultFill,
+                shape: shape,
+                clipBehavior: Clip.antiAlias,
+                child: Padding(
+                  padding: popup?.padding == null
+                      ? EdgeInsets.zero
+                      : _presentationInsets(popup!.padding),
+                  child: searchResults,
+                ),
+              ),
+            ),
+          );
+        },
+      );
+      final divider = Divider(
+        height: 1,
+        thickness: 1,
+        color: context.theme.colorScheme.outlineVariant,
+      );
+      return Material(
+        color: fill,
+        shape:
+            style.decoration.border ??
+            RoundedRectangleBorder(
+              borderRadius: context.shapes.mediumBorderRadius,
+            ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (control.popupSide == skir.PopupSide.above) ...[
+              results,
+              divider,
+            ],
+            _entryComposition(
+              child: queryBar,
+              leading: outsideLeading ? leading : null,
+              trailing: outsideSuffix ? suffix : null,
+            ),
+            if (control.popupSide != skir.PopupSide.above) ...[
+              divider,
+              results,
+            ],
+            ?preview,
+          ],
+        ),
+      );
+    }
+
     return ValueListenableBuilder(
       valueListenable: picker.feedback,
       builder: (context, feedback, _) => Column(
@@ -312,12 +488,46 @@ final class _PortableSearchSurface extends StatelessWidget {
               ),
             ),
           Flexible(
-            child: SearchModalBody(
+            child: SearchBody(
               searchHint: placeholder,
+              frameBuilder: frame,
+              shrinkWrap: true,
+              surfaceStyle: SearchSurfaceStyle(fill: resultFill),
+              onQueryDismiss: controller.close,
+              selectAllOnFocus: true,
+              textFieldActions: [
+                for (final direction in [-1, 1])
+                  ActionShortcut(
+                    id: direction < 0
+                        ? "previous_search_result"
+                        : "next_search_result",
+                    label: direction < 0 ? "Previous result" : "Next result",
+                    description: "Highlight a result without applying it",
+                    priority: 100,
+                    activators: [
+                      SingleActivator(
+                        direction < 0
+                            ? LogicalKeyboardKey.arrowUp
+                            : LogicalKeyboardKey.arrowDown,
+                      ),
+                    ],
+                    show: false,
+                    onInvoke: (_) => navigate(direction),
+                  ),
+              ],
               queryStyle: style.valueStyle,
               queryAlignment: style.alignment,
-              queryDecoration: style.decoration,
+              queryDecoration: style.decoration.copyWith(
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                isDense: style.dense ?? true,
+                prefixIcon: outsideLeading ? null : leading,
+                suffixIcon: outsideSuffix ? null : suffix,
+              ),
               useDefaultQueryIcon:
+                  !outsideLeading &&
                   control.content?.leading != skir.InputAdornment.none,
               empty: control.empty == null
                   ? (control.emptyText == null
@@ -357,24 +567,67 @@ final class _PortableSearchSurface extends StatelessWidget {
                   if (payload is! PortableSearchPayload) {
                     return MissingSearchResultRendererRow(result: row.result);
                   }
-                  return switch (payload) {
+                  final current = scope.read(control.control.binding);
+                  final selectedValue = switch (payload) {
+                    PortableMappedSearchPayload(:final selectedValue) =>
+                      selectedValue,
+                    PortableCustomSearchPayload(:final selectedValue) =>
+                      selectedValue,
+                  };
+                  final selected =
+                      control.selectionMode == skir.SearchSelectionMode.multiple
+                      ? current?.authoredItems?.any(
+                              (item) => item.value == selectedValue,
+                            ) ??
+                            false
+                      : current == selectedValue;
+                  final result = switch (payload) {
                     PortableMappedSearchPayload(:final mapping) => ListTile(
-                      selected: row.selected,
+                      dense: true,
+                      minTileHeight: 44,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.space3,
+                      ),
+                      selected: selected || row.focused,
+                      selectedTileColor: context.theme.colorScheme.primary
+                          .withValues(alpha: 0.10),
                       title: PortablePresentationNodeRenderer(
                         node: mapping.presentation,
                         scope: picker
                             .resultScope(row.result, scope)
                             .withReadOnly(true),
                       ),
-                      onTap: row.onTap,
+                      onTap: controller.isBusy
+                          ? null
+                          : () => controller.activate(row.result),
                     ),
                     PortableCustomSearchPayload() => ListTile(
-                      selected: row.selected,
-                      title: Text(row.result.title ?? "Use custom value"),
+                      dense: true,
+                      minTileHeight: 44,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: context.spacing.space3,
+                      ),
+                      selected: selected || row.focused,
+                      selectedTileColor: context.theme.colorScheme.primary
+                          .withValues(alpha: 0.10),
+                      title: Text(
+                        row.result.title ?? "Use custom value",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: const Text("Use this custom value"),
-                      onTap: row.onTap,
+                      onTap: controller.isBusy
+                          ? null
+                          : () => controller.activate(row.result),
                     ),
                   };
+                  return _PortableSearchResult(
+                    highlighted: row.focused,
+                    child: Tooltip(
+                      message: row.result.title ?? "",
+                      child: result,
+                    ),
+                  );
                 },
               },
             ),
@@ -382,5 +635,31 @@ final class _PortableSearchSurface extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Keeps keyboard navigation visible while the query retains focus.
+final class _PortableSearchResult extends HookWidget {
+  const _PortableSearchResult({required this.highlighted, required this.child});
+  final bool highlighted;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    useEffect(() {
+      if (highlighted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            unawaited(
+              Scrollable.ensureVisible(
+                context,
+                alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+              ),
+            );
+          }
+        });
+      }
+      return null;
+    }, [highlighted]);
+    return child;
   }
 }

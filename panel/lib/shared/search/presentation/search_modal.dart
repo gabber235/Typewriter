@@ -56,7 +56,7 @@ Future<T?> showSearchModal<T>(
 
 /// Connects modal configuration to a route local [SearchController].
 ///
-/// [SearchModalBody] and its descendants read that controller through
+/// [SearchBody] and its descendants read that controller through
 /// [searchProvider]. The controller owns query, selection, preview, section,
 /// and command state for this modal instance.
 class SearchModal<T> extends HookWidget {
@@ -104,7 +104,7 @@ class SearchModal<T> extends HookWidget {
           onCompleted: (value) => Navigator.of(context).pop(value),
         );
       },
-      child: SearchModalBody(
+      child: SearchBody(
         searchHint: searchHint,
         surfaceStyle: surfaceStyle,
         queryDecoration: queryDecoration,

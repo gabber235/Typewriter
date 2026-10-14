@@ -8,7 +8,7 @@ import "../../../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
-    "configured search typography popup side and empty guidance reach the existing query surface",
+    "configured search typography result placement and empty guidance reach the inline surface",
     (tester) async {
       skir.ExpressionNode text(String value) => skir.ExpressionNode.wrapLiteral(
         skir.DataValue.wrapStringValue(value),
@@ -77,13 +77,16 @@ void main() {
           ),
         ),
       );
-      final portal = tester.widget<AnchoredOverlayPortal>(
-        find.byType(AnchoredOverlayPortal),
-      );
-      expect(portal.config.preferredSide, AnchoredOverlaySide.top);
-      expect(portal.config.maxHeight, 200);
       await tester.tap(find.byKey(const ValueKey("authored_search_summary")));
       await tester.pumpAndSettle();
+      expect(
+        tester.getBottomLeft(find.byType(SearchTreeResults)).dy,
+        lessThanOrEqualTo(tester.getTopLeft(find.byType(QueryBar)).dy),
+      );
+      expect(
+        tester.getSize(find.byType(SearchTreeResults)).height,
+        lessThanOrEqualTo(200),
+      );
       final query = tester.widget<QueryBar>(find.byType(QueryBar));
       expect(query.inputDecoration.hintText, "Find reward");
       expect(query.inputDecoration.prefixIcon, isNull);

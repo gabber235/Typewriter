@@ -52,8 +52,6 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_editor.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_search_input.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_search_input_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_conflict.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_conflict_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_findings_panel.stories.dart'
@@ -84,6 +82,8 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/portabl
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_location_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_search_input.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories;
 import 'package:widgetbook_workspace/stories/shared/graph/presentation/graph.stories.dart'
     as _widgetbook_workspace_stories_shared_graph_presentation_graph_stories;
 import 'package:widgetbook_workspace/stories/shared/graph/presentation/resizable_element.stories.dart'
@@ -597,6 +597,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                         name: 'AuthoredResourceEditor',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
+                            name: 'Compiled SDK Book',
+                            builder:
+                                _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories
+                                    .compiledBookUseCase,
+                          ),
+                          _widgetbook.WidgetbookUseCase(
                             name: 'Compiled SDK Tag',
                             builder:
                                 _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories
@@ -946,9 +952,9 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'PortableSearchInput',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
-                    name: 'Static choices',
+                    name: 'Inline choices',
                     builder:
-                        _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_search_input_stories
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories
                             .authoredSearchInputUseCase,
                   ),
                 ],

@@ -414,7 +414,7 @@ val FrameworkCatalogCreationTest by testSuite {
                     (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
                 }
         placementPrefixes shouldBe listOf("X", "Y", "W", "H")
-        exportFrameworkControlFixture(entries, tag.record, tag.record.fields.getValue("placement"))
+        exportFrameworkControlFixture(entries, tag.record, book.record, tag.record.fields.getValue("placement"))
     }
 }
 
@@ -603,6 +603,7 @@ private fun origin(name: String): ProviderOrigin =
 private fun exportFrameworkControlFixture(
     entries: List<com.typewritermc.discovery.GeneratedProviderIndexEntry>,
     tag: com.typewritermc.authoring.AuthoringRecord,
+    book: com.typewritermc.authoring.AuthoringRecord,
     placement: DataValue,
 ) {
     val directory = System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { java.io.File(it) } ?: return
@@ -690,6 +691,16 @@ private fun exportFrameworkControlFixture(
             .encode(assembly.snapshot)
             .getOrThrow()
     directory.mkdirs()
+    java.io.File(directory, "book.bin").writeBytes(
+        skirout.editor.v1.type_catalog.AuthoringRecord.serializer
+            .toBytes(SkirAuthoringValueCodec.encode(book).getOrThrow())
+            .toByteArray(),
+    )
+    java.io.File(directory, "book-value.bin").writeBytes(
+        skirout.editor.v1.type_catalog.DataValue.serializer
+            .toBytes(SkirDataValueCodec.encode(DataValue.Named(BookDefinition.use, DataValue.Record(book.fields))).getOrThrow())
+            .toByteArray(),
+    )
     java.io
         .File(
             directory,

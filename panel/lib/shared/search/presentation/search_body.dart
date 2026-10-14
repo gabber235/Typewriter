@@ -1,12 +1,22 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Builds the standard search interaction surface inside a [SearchRoot].
+typedef SearchFrameBuilder = Widget Function({
+  required Widget queryBar,
+  required Widget searchResults,
+  Widget? actionBar,
+  Widget? preview,
+});
+
+/// Lays out one search interaction inside a [SearchRoot].
+///
+/// [frameBuilder] places the shared query, results, actions, and preview.
+/// The default uses the modal frame; embedded fields supply their own layout.
 ///
 /// This widget wires the controller to the query bar, tree results, action
 /// shortcuts, action feedback, and preview. It does not create the controller;
 /// an ancestor must provide [searchProvider].
-class SearchModalBody extends HookConsumerWidget {
-  const SearchModalBody({
+class SearchBody extends HookConsumerWidget {
+  const SearchBody({
     required this.searchHint,
     this.rowRenderers = const {},
     this.previewRenderers = const {},
@@ -17,9 +27,19 @@ class SearchModalBody extends HookConsumerWidget {
     this.useDefaultQueryIcon = true,
     this.empty,
     this.loading,
+    this.frameBuilder = SearchFrame.new,
+    this.shrinkWrap = false,
+    this.onQueryDismiss,
+    this.textFieldActions,
+    this.selectAllOnFocus = false,
     super.key,
   });
 
+  final SearchFrameBuilder frameBuilder;
+  final bool shrinkWrap;
+  final VoidCallback? onQueryDismiss;
+  final List<ActionShortcut>? textFieldActions;
+  final bool selectAllOnFocus;
   final SearchSurfaceStyle? surfaceStyle;
   final InputDecoration? queryDecoration;
   final TextStyle? queryStyle;
@@ -37,8 +57,23 @@ class SearchModalBody extends HookConsumerWidget {
       inputDebugLabel: "Search QueryBar",
       surroundingDebugLabel: "Surrounding Search QueryBar",
     );
+    useEffect(() {
+      // Opening search is an explicit focus transfer. Autofocus alone yields
+      // to the previously focused sibling when an inline field is reopened.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) inputFieldController.requestInputFocus();
+      });
+      return null;
+    }, [inputFieldController]);
     final controller = ref.watch(searchProvider)!;
     final currentPreview = controller.currentPreview;
+    void submit() {
+      final result =
+          controller.currentPreview ??
+          controller.selectedResults.firstOrNull ??
+          controller.snapshot.nodes.firstResult;
+      if (result != null) unawaited(controller.activate(result));
+    }
 
     final surface = Actions(
       actions: {
@@ -48,7 +83,7 @@ class SearchModalBody extends HookConsumerWidget {
           ),
       },
       child: SearchShortcuts(
-        child: SearchFrame(
+        child: frameBuilder(
           queryBar: Column(
             children: [
               ClipRRect(
@@ -62,6 +97,26 @@ class SearchModalBody extends HookConsumerWidget {
                     QueryBar(
                       inputFieldController: inputFieldController,
                       query: controller.query,
+                      onDismiss: onQueryDismiss,
+                      onCancel: onQueryDismiss,
+                      textFieldActions: [
+                        ...?textFieldActions,
+                        ActionShortcut(
+                          id: "submit_search_result",
+                          label: "Select result",
+                          description: "Apply the highlighted search result",
+                          activators: [
+                            const SingleActivator(LogicalKeyboardKey.enter),
+                            const SingleActivator(
+                              LogicalKeyboardKey.numpadEnter,
+                            ),
+                          ],
+                          priority: 1500,
+                          show: false,
+                          onInvoke: (_) => submit(),
+                        ),
+                      ],
+                      selectAllOnFocus: selectAllOnFocus,
                       onQueryChanged: controller.updateQuery,
                       selectors: controller.selectors,
                       completeSelector: controller.completeSelector,
@@ -92,18 +147,7 @@ class SearchModalBody extends HookConsumerWidget {
                                       )
                                     : null),
                           ),
-                      onSubmitted: (_) {
-                        var primaryResult = controller.currentPreview;
-                        primaryResult ??=
-                            controller.selectedResults.firstOrNull;
-                        primaryResult ??= controller.snapshot.nodes.firstResult;
-
-                        if (primaryResult == null) {
-                          return;
-                        }
-
-                        controller.activate(primaryResult);
-                      },
+                      onSubmitted: (_) => submit(),
                     ),
                     if (controller.snapshot.status == .loading &&
                         controller.snapshot.nodes.isEmpty)
@@ -124,6 +168,7 @@ class SearchModalBody extends HookConsumerWidget {
             },
             child: SearchTreeResults(
               rowRenderers: rowRenderers,
+              shrinkWrap: shrinkWrap,
               empty: empty,
               loading: loading,
             ),
