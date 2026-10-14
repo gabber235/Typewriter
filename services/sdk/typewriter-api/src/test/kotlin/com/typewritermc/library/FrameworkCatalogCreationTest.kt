@@ -295,7 +295,6 @@ val FrameworkCatalogCreationTest by testSuite {
             bookSummary.layout
                 .adaptiveLeading()
                 .leading
-                .singleFixed()
         (bookLeading.element is PresentationElement.PolymorphicMatchWrapper) shouldBe true
         val summary = bookSummary.layout.adaptiveLeading()
         val authoredBook =
@@ -304,7 +303,7 @@ val FrameworkCatalogCreationTest by testSuite {
                 DataValue.Record(book.record.fields + ("title" to DataValue.StringValue("b"))),
             )
         val configured = WireExpressionBindingId(value = "configured_value")
-        val title = summary.center!!.singleFixed().element as PresentationElement.TextWrapper
+        val title = summary.center!!.element as PresentationElement.TextWrapper
         title.value.value.evaluate(mapOf(configured to authoredBook)) shouldBe DataValue.StringValue("b")
         title.value.value.evaluate(
             mapOf(
@@ -341,7 +340,6 @@ val FrameworkCatalogCreationTest by testSuite {
             tagSummary.layout
                 .adaptiveLeading()
                 .leading
-                .singleFixed()
         val tagIcon = tagLeading.element
         (tagIcon is PresentationElement.IconWrapper) shouldBe true
 
@@ -357,7 +355,6 @@ val FrameworkCatalogCreationTest by testSuite {
             pageSummary.layout
                 .adaptiveLeading()
                 .leading
-                .singleFixed()
                 .element
         (pageIcon is PresentationElement.IconWrapper) shouldBe true
 
@@ -372,22 +369,35 @@ val FrameworkCatalogCreationTest by testSuite {
             )
         val placementRoot = placementMaterial.layout.element as PresentationElement.ChildrenWrapper
         val placementColumn = placementRoot.value as ChildrenElement.ColumnWrapper
-        val placementLabels =
-            placementColumn.value.children.flatMap { child ->
-                val node = (child as AxisChild.FixedWrapper).value
-                when (val element = node.element) {
-                    is PresentationElement.NumericInputWrapper -> listOf(element.value)
-                    is PresentationElement.ChildrenWrapper -> (element.value as ChildrenElement.RowWrapper).value.children.map {
-                        val field = (it as AxisChild.FlexibleWrapper).value.child
-                        (field.element as PresentationElement.NumericInputWrapper).value
+        val placementPrefixes =
+            placementColumn.value.children
+                .flatMap { child ->
+                    val node = (child as AxisChild.FixedWrapper).value
+                    when (val element = node.element) {
+                        is PresentationElement.NumericInputWrapper -> {
+                            listOf(element.value)
+                        }
+
+                        is PresentationElement.ChildrenWrapper -> {
+                            (element.value as ChildrenElement.RowWrapper).value.children.map {
+                                val field = (it as AxisChild.FlexibleWrapper).value.child
+                                (field.element as PresentationElement.NumericInputWrapper).value
+                            }
+                        }
+
+                        else -> {
+                            emptyList()
+                        }
                     }
-                    else -> emptyList()
+                }.map { numeric ->
+                    val prefix =
+                        requireNotNull(numeric.content).leading as
+                            skirout.editor.v1.presentation.InputAdornment.ContentWrapper
+                    val text = prefix.value.element as PresentationElement.TextWrapper
+                    val label = text.value.value as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
+                    (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
                 }
-            }.map { numeric ->
-                val label = numeric.control.label as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
-                (label.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value
-            }
-        placementLabels shouldBe listOf("X", "Y", "Width", "Height")
+        placementPrefixes shouldBe listOf("X", "Y", "W", "H")
         exportFrameworkControlFixture(entries, tag.record, tag.record.fields.getValue("placement"))
     }
 }
@@ -433,7 +443,6 @@ private fun PresentationNode.collectionGraphSource(): String {
     graph.value.children.empty shouldBe null
     val emptyText =
         requireNotNull(graph.value.rootSequence.empty)
-            .singleFixed()
             .element as PresentationElement.TextWrapper
     val emptyLiteral = emptyText.value.value as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
     (emptyLiteral.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value shouldBe "No linked items"
