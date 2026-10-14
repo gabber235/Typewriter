@@ -693,51 +693,27 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                   choices.length <= 3;
           if (segmented) {
             return choiceSurface(
-              SegmentedButton<String>(
-                segments: [
+              SlidingChoiceControl<String>(
+                selected: selected,
+                enabled: enabled,
+                disabled: {
                   for (final choice in choices)
-                    ButtonSegment(
-                      value: choice.id,
-                      label: label(choice.id, choice.label),
-                      enabled: enabled && available(choice.id),
+                    if (!available(choice.id)) choice.id,
+                },
+                padding:
+                    style.padding ??
+                    EdgeInsets.symmetric(
+                      horizontal: context.spacing.space2,
+                      vertical: style.dense == false
+                          ? context.spacing.space2
+                          : context.spacing.space1,
                     ),
-                ],
-                selected: {?selected},
-                emptySelectionAllowed: true,
-                showSelectedIcon: false,
-                onSelectionChanged: enabled
-                    ? (ids) => choose(ids.firstOrNull)
-                    : null,
-                style: ButtonStyle(
-                  visualDensity: style.dense == null
-                      ? null
-                      : style.dense!
-                      ? VisualDensity.compact
-                      : VisualDensity.standard,
-                  side: style.decoration.border == null
-                      ? null
-                      : WidgetStatePropertyAll(
-                          style.decoration.border!.borderSide,
-                        ),
-                  shape: style.decoration.border == null
-                      ? null
-                      : WidgetStatePropertyAll(
-                          RoundedRectangleBorder(
-                            borderRadius:
-                                style.decoration.border is OutlineInputBorder
-                                ? (style.decoration.border!
-                                          as OutlineInputBorder)
-                                      .borderRadius
-                                : BorderRadius.zero,
-                          ),
-                        ),
-                  backgroundColor: style.decoration.fillColor == null
-                      ? null
-                      : WidgetStatePropertyAll(style.decoration.fillColor),
-                  padding: style.padding == null
-                      ? null
-                      : WidgetStatePropertyAll(style.padding),
-                ),
+                backgroundColor: style.decoration.fillColor,
+                children: {
+                  for (final choice in choices)
+                    choice.id: label(choice.id, choice.label),
+                },
+                onSelected: choose,
               ),
             );
           }

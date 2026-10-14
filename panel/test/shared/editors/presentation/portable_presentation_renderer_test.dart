@@ -1270,117 +1270,165 @@ void main() {
     );
   });
 
-  testWidgets("an Unfilled polymorphic control offers its concrete forms", (
-    tester,
-  ) async {
-    final document = _RendererWorkspace(
-      catalog: _polymorphicCatalog,
-      resources: {
-        _resource: skir.AuthoringRecord(
-          configuration: skir.TypeSelection.unknown,
-          fields: [
-            skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
-          ],
-        ),
-      },
-    );
-    skir.ValuePreparationRequest? request;
-    final host = _authoredHost(
-      document,
-      prepareValue: (value) async {
-        request = value;
-        return skir.PreparedValue(
-          content: skir.PreparedContent.wrapRecord(
-            skir.AuthoringRecord(
-              configuration: value.recordSelection,
-              fields: [
-                skir.FieldValue(
-                  name: "value",
-                  value: skir.DataValue.wrapStringValue(""),
-                ),
-              ],
-            ),
+  for (final count in [1, 2, 4]) {
+    testWidgets("an Unfilled type selector adapts to $count concrete forms", (
+      tester,
+    ) async {
+      final additional = [
+        for (final name in ["SVG", "Emoji", "Texture"].take(count - 1))
+          skir.TypeDefinitionId(
+            typeId: skir.TypeId.createQualified(namespace: "test", name: name),
+            revision: 1,
           ),
-          findings: const [],
-        );
-      },
-    );
-    await tester.pumpTestApp(
-      child: Material(
-        child: PortablePresentationNodeRenderer(
-          node:
-              (_polymorphicNode.toMutable()
-                    ..element = skir.PresentationElement.wrapPolymorphicInput(
-                      ((_polymorphicNode.element!
-                                  as skir.PresentationElement_polymorphicInputWrapper)
-                              .value
-                              .toMutable()
-                            ..content =
-                                (skir.CollectionContent.mutable()
-                                      ..operationDensity =
-                                          skir.ControlDensity.comfortable)
-                                    .toFrozen())
-                          .toFrozen(),
-                    ))
-                  .toFrozen(),
-          scope:
-              PortablePresentationScope(
-                operations: testPortableOperations(),
-                bindings: {
-                  _bindingId: PortableExpressionBinding(
-                    value: skir.DataValue.unfilled,
-                    location: skir.ValueLocation(
-                      resource: _resource,
-                      path: skir.ValuePath(
-                        segments: [skir.PathSegment.createField(name: "icon")],
+      ];
+      final catalog = CheckedEditorCatalog(
+        (_polymorphicCatalog.snapshot.toMutable()
+              ..types = [
+                ..._polymorphicCatalog.snapshot.types,
+                for (final id in additional)
+                  (skir.PublishedType.mutable()
+                        ..status = skir.DeclarationStatus.ready
+                        ..definition =
+                            (skir.TypeDefinition.mutable()
+                                  ..id = id
+                                  ..representation =
+                                      skir.RepresentationTemplate.createRecord(
+                                        fields: const [],
+                                        abstract_: false,
+                                      ))
+                                .toFrozen())
+                      .toFrozen(),
+              ])
+            .toFrozen(),
+      );
+      final document = _RendererWorkspace(
+        catalog: catalog,
+        resources: {
+          _resource: skir.AuthoringRecord(
+            configuration: skir.TypeSelection.unknown,
+            fields: [
+              skir.FieldValue(name: "icon", value: skir.DataValue.unfilled),
+            ],
+          ),
+        },
+      );
+      skir.ValuePreparationRequest? request;
+      final host = _authoredHost(
+        document,
+        prepareValue: (value) async {
+          request = value;
+          return skir.PreparedValue(
+            content: skir.PreparedContent.wrapRecord(
+              skir.AuthoringRecord(
+                configuration: value.recordSelection,
+                fields: [
+                  skir.FieldValue(
+                    name: "value",
+                    value: skir.DataValue.wrapStringValue(""),
+                  ),
+                ],
+              ),
+            ),
+            findings: const [],
+          );
+        },
+      );
+      await tester.pumpTestApp(
+        child: Material(
+          child: PortablePresentationNodeRenderer(
+            node:
+                (_polymorphicNode.toMutable()
+                      ..element = skir.PresentationElement.wrapPolymorphicInput(
+                        ((_polymorphicNode.element!
+                                    as skir.PresentationElement_polymorphicInputWrapper)
+                                .value
+                                .toMutable()
+                              ..concreteTypes = [
+                                ...(_polymorphicNode.element!
+                                        as skir.PresentationElement_polymorphicInputWrapper)
+                                    .value
+                                    .concreteTypes,
+                                for (final (index, id) in additional.indexed)
+                                  skir.ConcreteTypePresentation(
+                                    concreteType: skir.TypeUse.createNamed(
+                                      definition: id,
+                                      arguments: const [],
+                                    ),
+                                    label: skir.ExpressionNode.wrapLiteral(
+                                      skir.DataValue.wrapStringValue(
+                                        ["SVG", "Emoji", "Texture"][index],
+                                      ),
+                                    ),
+                                    presentation: null,
+                                  ),
+                              ]
+                              ..content =
+                                  (skir.CollectionContent.mutable()
+                                        ..operationDensity =
+                                            skir.ControlDensity.comfortable)
+                                      .toFrozen())
+                            .toFrozen(),
+                      ))
+                    .toFrozen(),
+            scope:
+                PortablePresentationScope(
+                  operations: testPortableOperations(),
+                  bindings: {
+                    _bindingId: PortableExpressionBinding(
+                      value: skir.DataValue.unfilled,
+                      location: skir.ValueLocation(
+                        resource: _resource,
+                        path: skir.ValuePath(
+                          segments: [
+                            skir.PathSegment.createField(name: "icon"),
+                          ],
+                        ),
                       ),
                     ),
+                  },
+                  budget: skir.EvaluationBudget(
+                    maxSteps: 100,
+                    maxCollectionItems: 100,
                   ),
-                },
-                budget: skir.EvaluationBudget(
-                  maxSteps: 100,
-                  maxCollectionItems: 100,
+                  catalog: catalog,
+                  host: host,
+                ).withAppearance(
+                  (skir.InputAppearance.mutable()
+                        ..density = skir.ControlDensity.compact)
+                      .toFrozen(),
                 ),
-                catalog: _polymorphicCatalog,
-                host: host,
-              ).withAppearance(
-                (skir.InputAppearance.mutable()
-                      ..density = skir.ControlDensity.compact)
-                    .toFrozen(),
-              ),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(find.text("Icon form"), findsOneWidget);
-    expect(find.text("Choose a type"), findsOneWidget);
-    expect(
-      tester
-          .widget<OutlinedButton>(
-            find.widgetWithText(OutlinedButton, "Choose a type"),
-          )
-          .style
-          ?.visualDensity,
-      VisualDensity.standard,
-    );
-    expect(find.byType(DropdownButtonFormField<int>), findsNothing);
-    await tester.tap(find.text("Choose a type"));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text("Iconify").last);
-    await tester.pumpAndSettle();
+      expect(find.text("Icon form"), findsOneWidget);
+      if (count == 2) {
+        expect(
+          find.byType(CupertinoSlidingSegmentedControl<int>),
+          findsOneWidget,
+        );
+        expect(find.text("Choose a type"), findsNothing);
+      } else {
+        expect(find.text("Choose a type"), findsOneWidget);
+        await tester.tap(find.text("Choose a type"));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text("Iconify").last);
+      await tester.pumpAndSettle();
 
-    expect(
-      request?.recordSelection,
-      skir.TypeSelection.wrapComplete(_iconifyType),
-    );
-    expect(
-      document.workspace.document
-          .resource(_resource)!
-          .authoredField("icon")!
-          .authoredActualType,
-      _iconifyType,
-    );
-  });
+      expect(
+        request?.recordSelection,
+        skir.TypeSelection.wrapComplete(_iconifyType),
+      );
+      expect(
+        document.workspace.document
+            .resource(_resource)!
+            .authoredField("icon")!
+            .authoredActualType,
+        _iconifyType,
+      );
+    });
+  }
 
   testWidgets("hierarchy sequences preserve branches spacing and flattening", (
     tester,

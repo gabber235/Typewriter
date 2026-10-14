@@ -27,3 +27,34 @@ Widget adaptiveChoiceControlUseCase(BuildContext context) {
     ),
   );
 }
+
+@widgetbook.UseCase(
+  name: "Styled and disabled choices",
+  type: SlidingChoiceControl,
+)
+Widget slidingChoiceControlUseCase(BuildContext context) {
+  final disabled = context.knobs.boolean(
+    label: "Disable SVG",
+    initialValue: false,
+  );
+  return FakeApp(
+    child: Center(
+      child: SizedBox(
+        width: 360,
+        child: HookBuilder(
+          builder: (context) {
+            final selected = useState("Iconify");
+            return SlidingChoiceControl<String>(
+              selected: selected.value,
+              disabled: disabled ? const {"SVG"} : const {},
+              children: const {"Iconify": Text("Iconify"), "SVG": Text("SVG")},
+              onSelected: (value) {
+                if (value != null) selected.value = value;
+              },
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}

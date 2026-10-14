@@ -551,14 +551,18 @@ void main() {
         tester,
         skir.PresentationElement.wrapSelectInput(input.toFrozen()),
       );
-      final segmented = tester.widget<SegmentedButton<String>>(
-        find.byType(SegmentedButton<String>),
+      final segmented = tester.widget<SlidingChoiceControl<String>>(
+        find.byType(SlidingChoiceControl<String>),
       );
-      expect(segmented.style!.visualDensity, VisualDensity.compact);
-      expect(segmented.style!.side!.resolve({}), BorderSide.none);
-      final shape =
-          segmented.style!.shape!.resolve({})! as RoundedRectangleBorder;
-      expect(shape.borderRadius, isNot(BorderRadius.zero));
+      expect(segmented.padding!.resolve(TextDirection.ltr).vertical, 8);
+      expect(
+        find.byType(CupertinoSlidingSegmentedControl<String>),
+        findsOneWidget,
+      );
+      await tester.tap(find.text("second"));
+      await tester.pumpAndSettle();
+      expect(fixture.value, skir.DataValue.wrapStringValue("second"));
+      expect(tester.takeException(), isNull);
     },
   );
   testWidgets(

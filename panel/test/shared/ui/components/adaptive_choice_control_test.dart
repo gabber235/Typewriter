@@ -5,6 +5,35 @@ import "../../../support/test_utils.dart";
 
 void main() {
   testWidgets(
+    "sliding choices support keyboard selection and skip disabled values",
+    (tester) async {
+      String? selected = "one";
+      await tester.pumpTestApp(
+        child: StatefulBuilder(
+          builder: (context, setState) => SlidingChoiceControl<String>(
+            children: const {
+              "one": Text("One"),
+              "two": Text("Two"),
+              "three": Text("Three"),
+            },
+            selected: selected,
+            disabled: const {"two"},
+            onSelected: (value) => setState(() => selected = value),
+          ),
+        ),
+      );
+      await tester.tap(find.text("Two"));
+      await tester.pumpAndSettle();
+      expect(selected, "one");
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      await tester.pumpAndSettle();
+      expect(selected, "three");
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     "empty choices are disabled and recover without changing the value",
     (tester) async {
       var choices = <String, String>{"one": "One"};

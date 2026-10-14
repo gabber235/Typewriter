@@ -60,32 +60,85 @@ class AdaptiveChoiceControl<T extends Object> extends StatelessWidget {
       enabled: enabled,
       policy: initialization,
       onSelected: onSelected,
-      child: CupertinoSlidingSegmentedControl<T>(
-        groupValue: selected,
-        backgroundColor:
-            Theme.of(context).inputDecorationTheme.fillColor ??
-            context.colors.surfaceContainer,
-        thumbColor: context.colors.selectionContainer,
-        disabledChildren: enabled ? const {} : choices.keys.toSet(),
+      child: SlidingChoiceControl<T>(
+        selected: selected,
+        enabled: enabled,
         children: {
           for (final MapEntry(key: value, value: label) in choices.entries)
-            value: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: context.spacing.space2,
-                vertical: context.spacing.space1,
-              ),
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: value == selected
-                      ? context.colors.onSelectionContainer
-                      : context.colors.contentSecondary,
-                ),
+            value: Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: value == selected
+                    ? context.colors.onSelectionContainer
+                    : context.colors.contentSecondary,
               ),
             ),
         },
-        onValueChanged: onSelected,
+        onSelected: onSelected,
       ),
+    );
+  }
+}
+
+/// A sliding choice surface shared by authored and local controls.
+///
+/// The caller owns selection and child content. Disabled values remain visible
+/// and selected values stay representable when their availability changes.
+class SlidingChoiceControl<T extends Object> extends StatelessWidget {
+  const SlidingChoiceControl({
+    required this.children,
+    required this.selected,
+    required this.onSelected,
+    this.enabled = true,
+    this.disabled = const {},
+    this.padding,
+    this.backgroundColor,
+    super.key,
+  });
+
+  final Map<T, Widget> children;
+  final T? selected;
+  final ValueChanged<T?> onSelected;
+  final bool enabled;
+  final Set<T> disabled;
+  final EdgeInsetsGeometry? padding;
+  final Color? backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = children.containsKey(this.selected) ? this.selected : null;
+    final contentPadding =
+        padding ??
+        EdgeInsets.symmetric(
+          horizontal: context.spacing.space2,
+          vertical: context.spacing.space1,
+        );
+    if (children.length < 2) {
+      final entry = children.entries.firstOrNull;
+      return TextButton(
+        onPressed: entry != null && enabled && !disabled.contains(entry.key)
+            ? () => onSelected(entry.key)
+            : null,
+        child: entry?.value ?? const Text("No options available"),
+      );
+    }
+    return CupertinoSlidingSegmentedControl<T>(
+      groupValue: selected,
+      backgroundColor:
+          backgroundColor ??
+          Theme.of(context).inputDecorationTheme.fillColor ??
+          context.colors.surfaceContainer,
+      thumbColor: context.colors.selectionContainer,
+      disabledChildren: enabled ? disabled : children.keys.toSet(),
+      children: {
+        for (final entry in children.entries)
+          entry.key: Padding(padding: contentPadding, child: entry.value),
+      },
+      onValueChanged: (value) {
+        if (enabled && value != null && !disabled.contains(value)) {
+          onSelected(value);
+        }
+      },
     );
   }
 }

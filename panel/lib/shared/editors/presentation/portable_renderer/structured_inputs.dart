@@ -58,6 +58,22 @@ extension _PortableStructuredInputRendering
             childScope.catalog?.typeUseName(candidate.concreteType) ??
                 "Concrete type",
         };
+    Future<void> choose(skir.ConcreteTypePresentation candidate) async {
+      if (candidate == selected) return;
+      await childScope.executeAction(
+        skir.EditorAction.wrapLocal(
+          skir.LocalEditorAction.createChooseForm(
+            target: control.control.binding,
+            type: candidate.concreteType,
+          ),
+        ),
+      );
+    }
+
+    final enabled =
+        childScope.enabled &&
+        !childScope.readOnly &&
+        childScope.canExecuteAction;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: _collectionSpacing(context, control.appearance),
@@ -84,68 +100,82 @@ extension _PortableStructuredInputRendering
                 null,
               ),
               trailing: _entrySuffix(control.inputContent, childScope),
-              child: OutlinedButton.icon(
-                key: ValueKey("${node.nodeId}.type"),
-                statesController: states,
-                style:
-                    _operationButtonStyle(control.content)
-                        ?.merge(buttonStyle) ??
-                    buttonStyle,
-                icon: _operationGlyph(
-                  control.content?.chooseIcon,
-                  childScope,
-                  const Icon(Icons.category_outlined),
-                ),
-                label: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    selected == null
-                        ? _entryPlaceholder(control.inputContent, childScope) ??
-                              _operationText(
-                                childScope,
-                                control.content?.chooseLabel,
-                                "Choose a type",
-                              )
-                        : choiceLabel(selected),
-                  ),
-                ),
-                onPressed:
-                    childScope.enabled &&
-                        !childScope.readOnly &&
-                        childScope.canExecuteAction
-                    ? () async {
-                        final chosen = await showAuthoredTypeSearch(
-                          context,
-                          searchHint: _operationText(
-                            childScope,
-                            control.searchHint,
-                            "Search value types",
-                          ),
-                          candidates: choices,
-                          id: (candidate) =>
-                              choices.indexOf(candidate).toString(),
-                          label: choiceLabel,
-                          display: (candidate) =>
-                              switch (candidate.concreteType) {
-                                skir.TypeUse_namedWrapper(:final value) =>
-                                  childScope.catalog?.typeDisplay(
-                                    value.definition,
-                                  ),
-                                _ => null,
-                              },
-                        );
-                        if (chosen == null || !context.mounted) return;
-                        await childScope.executeAction(
-                          skir.EditorAction.wrapLocal(
-                            skir.LocalEditorAction.createChooseForm(
-                              target: control.control.binding,
-                              type: chosen.concreteType,
+              child: choices.length >= 2 && choices.length <= 3
+                  ? _controlSurface(
+                      style,
+                      SlidingChoiceControl<int>(
+                        key: ValueKey("${node.nodeId}.type"),
+                        selected: selectedIndex < 0 ? null : selectedIndex,
+                        enabled: enabled,
+                        padding: style.padding,
+                        backgroundColor: style.decoration.fillColor,
+                        children: {
+                          for (final (index, candidate) in choices.indexed)
+                            index: Text(
+                              choiceLabel(candidate),
+                              style: style.valueStyle,
                             ),
-                          ),
-                        );
-                      }
-                    : null,
-              ),
+                        },
+                        onSelected: (index) async {
+                          if (index != null) await choose(choices[index]);
+                        },
+                      ),
+                    )
+                  : OutlinedButton.icon(
+                      key: ValueKey("${node.nodeId}.type"),
+                      statesController: states,
+                      style:
+                          _operationButtonStyle(control.content)
+                              ?.merge(buttonStyle) ??
+                          buttonStyle,
+                      icon: _operationGlyph(
+                        control.content?.chooseIcon,
+                        childScope,
+                        const Icon(Icons.category_outlined),
+                      ),
+                      label: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          selected == null
+                              ? _entryPlaceholder(
+                                      control.inputContent,
+                                      childScope,
+                                    ) ??
+                                    _operationText(
+                                      childScope,
+                                      control.content?.chooseLabel,
+                                      "Choose a type",
+                                    )
+                              : choiceLabel(selected),
+                        ),
+                      ),
+                      onPressed: enabled
+                          ? () async {
+                              final chosen = await showAuthoredTypeSearch(
+                                context,
+                                searchHint: _operationText(
+                                  childScope,
+                                  control.searchHint,
+                                  "Search value types",
+                                ),
+                                candidates: choices,
+                                id: (candidate) =>
+                                    choices.indexOf(candidate).toString(),
+                                label: choiceLabel,
+                                display: (candidate) =>
+                                    switch (candidate.concreteType) {
+                                      skir.TypeUse_namedWrapper(:final value) =>
+                                        childScope.catalog?.typeDisplay(
+                                          value.definition,
+                                        ),
+                                      _ => null,
+                                    },
+                              );
+                              if (chosen == null || !context.mounted) return;
+                              await choose(chosen);
+                            }
+                          : null,
+                    ),
             ),
           ),
         ),

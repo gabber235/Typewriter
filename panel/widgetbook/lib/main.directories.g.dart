@@ -1645,6 +1645,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                 ],
               ),
               _widgetbook.WidgetbookComponent(
+                name: 'SlidingChoiceControl<Object>',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Styled and disabled choices',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_adaptive_choice_control_stories
+                            .slidingChoiceControlUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
                 name: 'SliverAnimatedContent',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
