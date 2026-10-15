@@ -97,8 +97,11 @@ class AppBarStory extends StatelessWidget {
             key: const ValueKey("search"),
             collapseOrder: 0,
             child: AppBarControl.filled(
-              icon: const Icon(Icons.search),
-              label: "Search",
+              contentBuilder: (context, compact) => AppBarControlContent(
+                compact: compact,
+                icon: const Icon(Icons.search),
+                label: "Search",
+              ),
               preferredWidth: 360,
               tooltip: "Search",
               semanticLabel: "Search",
@@ -113,8 +116,11 @@ class AppBarStory extends StatelessWidget {
                 targetAnchor: Alignment.bottomRight,
                 popupAnchor: Alignment.topRight,
                 builder: (context, open) => AppBarControl.text(
-                  icon: const Icon(Icons.inbox_outlined),
-                  label: label,
+                  contentBuilder: (context, compact) => AppBarControlContent(
+                    compact: compact,
+                    icon: const Icon(Icons.inbox_outlined),
+                    label: label,
+                  ),
                   tooltip: "Realm inbox",
                   semanticLabel: "Realm inbox",
                   onPressed: open,

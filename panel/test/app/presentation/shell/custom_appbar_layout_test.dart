@@ -120,8 +120,11 @@ void main() {
                 key: const ValueKey("search"),
                 collapseOrder: 0,
                 child: AppBarControl.text(
-                  icon: const Icon(Icons.search),
-                  label: "Search",
+                  contentBuilder: (context, compact) => AppBarControlContent(
+                    compact: compact,
+                    icon: const Icon(Icons.search),
+                    label: "Search",
+                  ),
                   tooltip: "Search",
                   semanticLabel: "Search",
                   onPressed: () {},
@@ -181,8 +184,11 @@ void main() {
                   key: const ValueKey("search"),
                   collapseOrder: 0,
                   child: AppBarControl.text(
-                    icon: const Icon(Icons.search),
-                    label: "Search",
+                    contentBuilder: (context, compact) => AppBarControlContent(
+                      compact: compact,
+                      icon: const Icon(Icons.search),
+                      label: "Search",
+                    ),
                     tooltip: "Search",
                     semanticLabel: "Search",
                     onPressed: () => invoked.add("search"),
@@ -193,8 +199,12 @@ void main() {
                     key: const ValueKey("inbox"),
                     collapseOrder: 1,
                     child: AppBarControl.text(
-                      icon: const Icon(Icons.inbox_outlined),
-                      label: "Inbox",
+                      contentBuilder: (context, compact) =>
+                          AppBarControlContent(
+                            compact: compact,
+                            icon: const Icon(Icons.inbox_outlined),
+                            label: "Inbox",
+                          ),
                       tooltip: "Inbox",
                       semanticLabel: "Inbox",
                       onPressed: () => invoked.add("inbox"),

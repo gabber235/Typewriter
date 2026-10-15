@@ -6,6 +6,7 @@ export "admonition.dart";
 export "anchored_overlay/anchored_overlay.dart";
 export "anchored_popup.dart";
 export "animated_slivers.dart";
+export "animated_status_content.dart";
 export "animated_table.dart";
 export "blur_reveal.dart";
 export "centered_sliver_main_axis_group.dart";

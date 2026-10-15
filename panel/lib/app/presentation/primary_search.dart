@@ -46,8 +46,19 @@ class PrimarySearchButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.theme.colorScheme;
     return AppBarControl.filled(
-      icon: const Icon(Icons.search_rounded, size: 18),
-      label: "Search",
+      contentBuilder: (context, compact) => AppBarControlContent(
+        compact: compact,
+        icon: const Icon(Icons.search_rounded, size: 18),
+        label: "Search",
+        shortcut: ShortcutDisplay(
+          shortcut: AdaptiveSingleActivator(
+            LogicalKeyboardKey.keyK,
+            control: true,
+          ),
+          size: 10,
+          style: .solid(),
+        ),
+      ),
       tooltip: "Search",
       semanticLabel: "Search",
       preferredWidth: 360,
@@ -57,14 +68,6 @@ class PrimarySearchButton extends ConsumerWidget {
         minimumSize: const Size.fromHeight(40),
         backgroundColor: colors.surfaceContainer,
         foregroundColor: colors.onSurfaceVariant,
-      ),
-      shortcut: ShortcutDisplay(
-        shortcut: AdaptiveSingleActivator(
-          LogicalKeyboardKey.keyK,
-          control: true,
-        ),
-        size: 10,
-        style: .solid(),
       ),
     );
   }

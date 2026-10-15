@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_import, prefer_relative_imports, directives_ordering
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
 // AppGenerator
@@ -22,6 +22,8 @@ import 'package:widgetbook_workspace/stories/app/design_system/foundation_showca
     as _widgetbook_workspace_stories_app_design_system_foundation_showcase_stories;
 import 'package:widgetbook_workspace/stories/app/presentation/shell/appbar.stories.dart'
     as _widgetbook_workspace_stories_app_presentation_shell_appbar_stories;
+import 'package:widgetbook_workspace/stories/app/presentation/shell/appbar_control.stories.dart'
+    as _widgetbook_workspace_stories_app_presentation_shell_appbar_control_stories;
 import 'package:widgetbook_workspace/stories/app/presentation/shortcuts/action_shortcuts.stories.dart'
     as _widgetbook_workspace_stories_app_presentation_shortcuts_action_shortcuts_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/members/features/join_codes/presentation/route.stories.dart'
@@ -88,6 +90,8 @@ import 'package:widgetbook_workspace/stories/shared/graph/presentation/graph.sto
     as _widgetbook_workspace_stories_shared_graph_presentation_graph_stories;
 import 'package:widgetbook_workspace/stories/shared/graph/presentation/resizable_element.stories.dart'
     as _widgetbook_workspace_stories_shared_graph_presentation_resizable_element_stories;
+import 'package:widgetbook_workspace/stories/shared/hooks/deferred_value.stories.dart'
+    as _widgetbook_workspace_stories_shared_hooks_deferred_value_stories;
 import 'package:widgetbook_workspace/stories/shared/inspector/presentation/inspector.stories.dart'
     as _widgetbook_workspace_stories_shared_inspector_presentation_inspector_stories;
 import 'package:widgetbook_workspace/stories/shared/interaction_mode/presentation/mode_display_chip.stories.dart'
@@ -110,6 +114,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/anchored_popup
     as _widgetbook_workspace_stories_shared_ui_components_anchored_popup_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/animated_slivers.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_animated_slivers_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/animated_status_content.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_animated_status_content_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/blur_reveal.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_blur_reveal_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/countdown_badge.stories.dart'
@@ -252,6 +258,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_app_presentation_shell_appbar_stories
                             .appBarControlUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'AppBarControlContent',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Ordinary content',
+                    builder:
+                        _widgetbook_workspace_stories_app_presentation_shell_appbar_control_stories
+                            .appBarControlContentUseCase,
                   ),
                 ],
               ),
@@ -1115,6 +1132,22 @@ final directories = <_widgetbook.WidgetbookNode>[
         ],
       ),
       _widgetbook.WidgetbookFolder(
+        name: 'hooks',
+        children: [
+          _widgetbook.WidgetbookComponent(
+            name: 'CoalesceUpdates',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Timing policies',
+                builder:
+                    _widgetbook_workspace_stories_shared_hooks_deferred_value_stories
+                        .deferredValueUseCase,
+              ),
+            ],
+          ),
+        ],
+      ),
+      _widgetbook.WidgetbookFolder(
         name: 'inspector',
         children: [
           _widgetbook.WidgetbookFolder(
@@ -1302,6 +1335,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_animated_slivers_stories
                             .animatedSliverListUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'AnimatedStatusContent',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Changing status',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_animated_status_content_stories
+                            .animatedStatusContentUseCase,
                   ),
                 ],
               ),

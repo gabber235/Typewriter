@@ -8,6 +8,8 @@ void main() {
     tester,
   ) async {
     final width = ValueNotifier<double>(240);
+    final label = ValueNotifier("Publish saved changes");
+    addTearDown(label.dispose);
     final focus = FocusNode();
     addTearDown(width.dispose);
     addTearDown(focus.dispose);
@@ -15,16 +17,23 @@ void main() {
       child: Scaffold(
         body: Align(
           alignment: Alignment.topRight,
-          child: ValueListenableBuilder(
-            valueListenable: width,
-            builder: (context, value, _) => _MeasureThenAllocate(
-              width: value,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([width, label]),
+            builder: (context, _) => _MeasureThenAllocate(
+              width: width.value,
               child: AnchoredPopup(
                 builder: (context, open) => AppBarControl.text(
                   focusNode: focus,
                   onPressed: open,
-                  icon: const Icon(Icons.inbox_outlined, size: 18),
-                  label: "Publish saved changes",
+                  contentBuilder: (context, compact) => AnimatedStatusContent(
+                    compact: compact,
+                    icon: const Icon(
+                      Icons.inbox_outlined,
+                      key: ValueKey("inbox"),
+                      size: 18,
+                    ),
+                    label: label.value,
+                  ),
                   tooltip: "Realm inbox",
                   semanticLabel: "Realm inbox",
                 ),
@@ -42,6 +51,10 @@ void main() {
     await tester.pump();
     final button = tester.element(find.byType(TextButton));
     final popup = tester.element(find.byType(AnchoredPopup));
+    label.value = "2 issues";
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(focus.hasFocus, isTrue);
     width.value = 48;
     await tester.pumpAndSettle();
     expect(focus.hasFocus, isTrue);
@@ -52,6 +65,8 @@ void main() {
     await tester.enterText(find.byType(TextField), "Retain this filter");
     final field = tester.element(find.byType(TextField));
     for (final extent in [240.0, 48.0, 300.0]) {
+      label.value = "${extent.round()} issues";
+      await tester.pump();
       width.value = extent;
       await tester.pumpAndSettle();
       expect(tester.element(find.byType(AnchoredPopup)), same(popup));

@@ -83,6 +83,7 @@ class RealmInboxButton extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(realmInboxProvider(scope));
+    final displayed = useDeferredValue(state.buttonStatus);
     final popup = ref.watch(realmInboxPopupProvider(scope));
     final mobile = context.isMobile;
     useEffect(() {
@@ -139,71 +140,26 @@ class RealmInboxButton extends HookConsumerWidget {
       popup.addListener(changed);
       return () => popup.removeListener(changed);
     }, [mobile, popup]);
-    final attention =
-        state.issues.isNotEmpty ||
-        state.publication is BlockedRealmPublication ||
-        state.publication is UnavailableRealmPublication ||
-        state.publication is UncertainRealmPublication;
-    final busy =
-        state.publication is CheckingRealmPublication ||
-        state.publication is PublishingRealmPublication ||
-        state.publication is RequestActiveRealmPublication;
-    final ready = state.publication is ReadyRealmPublication;
-    final label = attention && state.issues.isEmpty
-        ? "Needs attention"
-        : attention
-        ? "${state.issues.length} ${state.issues.length == 1 ? "issue" : "issues"}"
-        : busy
-        ? state.publication is CheckingRealmPublication
-              ? "Checking"
-              : "Publishing"
-        : ready
-        ? "Review changes"
-        : null;
-    final color = attention
-        ? context.colors.warning
-        : ready
-        ? context.theme.colorScheme.primary
-        : context.colors.contentSecondary;
     Widget trigger(VoidCallback open) => Semantics(
       liveRegion: true,
       child: AppBarControl.filled(
-        icon: ElasticMessageSwitcher(
-          child: Icon(
-            attention
-                ? Icons.error_outline
-                : busy
-                ? Icons.sync
-                : ready
-                ? Icons.publish
-                : Icons.inbox_outlined,
-            key: ValueKey((attention, busy, ready)),
+        contentBuilder: (context, compact) => AnimatedStatusContent(
+          compact: compact,
+          icon: Icon(
+            displayed.icon,
+            key: ValueKey(displayed.icon),
             size: 18,
-            color: color,
+            color: displayed.iconColor(context),
           ),
+          label: displayed.label,
         ),
-        label: label,
         tooltip: "Realm inbox (Shift + P in Normal mode)",
-        semanticLabel: label == null
-            ? "Realm inbox. Everything is published"
-            : "Realm inbox. $label",
-        style: FilledButton.styleFrom(
-          foregroundColor: label == null
-              ? context.colors.contentSecondary
-              : attention
-              ? context.colors.onWarningContainer
-              : context.colors.onBrandContainer,
-          backgroundColor: label == null
-              ? context.colors.surfaceRaised
-              : attention
-              ? context.colors.warningContainer
-              : context.colors.brandContainer,
-          side: BorderSide(color: color.withValues(alpha: .22)),
-          shape: context.shapes.mediumShape,
-        ),
+        semanticLabel: displayed.semanticLabel,
+        style: displayed.buttonStyle(context),
         onPressed: open,
       ),
     );
+
     if (mobile) return trigger(popup.openFocused);
     return AnchoredPopup(
       controller: popup,

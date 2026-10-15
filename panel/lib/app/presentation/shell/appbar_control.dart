@@ -9,12 +9,10 @@ enum _AppBarControlFamily { text, filled }
 /// reserves a wide presentation for controls such as primary search.
 class AppBarControl extends StatelessWidget {
   const AppBarControl.text({
-    required this.icon,
+    required this.contentBuilder,
     required this.onPressed,
     required this.tooltip,
     required this.semanticLabel,
-    this.label,
-    this.shortcut,
     this.focusNode,
     this.style,
     this.preferredWidth,
@@ -22,24 +20,20 @@ class AppBarControl extends StatelessWidget {
   }) : _family = _AppBarControlFamily.text;
 
   const AppBarControl.filled({
-    required this.icon,
+    required this.contentBuilder,
     required this.onPressed,
     required this.tooltip,
     required this.semanticLabel,
-    this.label,
-    this.shortcut,
     this.focusNode,
     this.style,
     this.preferredWidth,
     super.key,
   }) : _family = _AppBarControlFamily.filled;
 
-  final Widget icon;
+  final Widget Function(BuildContext context, bool compact) contentBuilder;
   final VoidCallback onPressed;
   final String tooltip;
   final String semanticLabel;
-  final String? label;
-  final Widget? shortcut;
   final FocusNode? focusNode;
   final ButtonStyle? style;
   final double? preferredWidth;
@@ -55,25 +49,7 @@ class AppBarControl extends StatelessWidget {
           EdgeInsets.symmetric(horizontal: context.spacing.space2),
         ),
       ).merge(style);
-      final content = ExcludeSemantics(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            icon,
-            if (!compact && label != null)
-              Flexible(
-                child: Padding(
-                  padding: EdgeInsets.only(left: context.spacing.space2),
-                  child: Text(label!, overflow: TextOverflow.ellipsis),
-                ),
-              ),
-            if (!compact && shortcut != null) ...[
-              SizedBox(width: context.spacing.space2),
-              shortcut!,
-            ],
-          ],
-        ),
-      );
+      final content = ExcludeSemantics(child: contentBuilder(context, compact));
       void reveal(bool focused) {
         if (!focused) return;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -109,5 +85,40 @@ class AppBarControl extends StatelessWidget {
         ),
       );
     },
+  );
+}
+
+/// Ordinary app bar decorations, with labels and shortcuts hidden when compact.
+class AppBarControlContent extends StatelessWidget {
+  const AppBarControlContent({
+    required this.icon,
+    required this.compact,
+    this.label,
+    this.shortcut,
+    super.key,
+  });
+
+  final Widget icon;
+  final bool compact;
+  final String? label;
+  final Widget? shortcut;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      icon,
+      if (!compact && label != null)
+        Flexible(
+          child: Padding(
+            padding: EdgeInsets.only(left: context.spacing.space2),
+            child: Text(label!, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      if (!compact && shortcut != null) ...[
+        SizedBox(width: context.spacing.space2),
+        shortcut!,
+      ],
+    ],
   );
 }

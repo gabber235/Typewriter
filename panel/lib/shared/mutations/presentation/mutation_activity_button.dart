@@ -81,8 +81,11 @@ class MutationActivityView extends StatelessWidget {
                 child: AppBarControl.text(
                   tooltip: label,
                   semanticLabel: label,
-                  icon: icon,
-                  label: label,
+                  contentBuilder: (context, compact) => AppBarControlContent(
+                    compact: compact,
+                    icon: icon,
+                    label: label,
+                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: color,
                     backgroundColor: color.withValues(alpha: .12),

@@ -115,6 +115,8 @@ void main() {
       expect(failed.localWork.single.needsAttention, isTrue);
       expect(failed.localWork.single.saving, isFalse);
       expect(form.saving, isFalse);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
       expect(find.text("1 issue"), findsOneWidget);
       expect(editing.canSave(form.editingGroup), isFalse);
       expect(editing.canDiscard(form.editingGroup), isFalse);
@@ -131,6 +133,8 @@ void main() {
       expect(boundary.requests, hasLength(1));
       expect(editing.hasPendingWork, isFalse);
       expect(container.read(realmInboxProvider(_scope)).issues, isEmpty);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.pumpAndSettle();
       expect(find.text("1 issue"), findsNothing);
     },
   );
