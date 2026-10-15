@@ -46,6 +46,138 @@ void main() {
         ),
       );
 
+  testWidgets("empty allocated controls stay live without interaction", (
+    tester,
+  ) async {
+    final contentWidth = ValueNotifier(0.0);
+    final policy = ValueNotifier<AppBarItemPolicy>(
+      const AppBarItemPolicy.fixed(),
+    );
+    final routeActive = ValueNotifier(true);
+    final focus = FocusNode();
+    addTearDown(contentWidth.dispose);
+    addTearDown(policy.dispose);
+    addTearDown(routeActive.dispose);
+    addTearDown(focus.dispose);
+    final semantics = tester.ensureSemantics();
+    final extent = Provider((ref) {
+      contentWidth.addListener(ref.invalidateSelf);
+      ref.onDispose(() => contentWidth.removeListener(ref.invalidateSelf));
+      return contentWidth.value;
+    });
+    var taps = 0;
+    final control = Consumer(
+      key: const ValueKey("live control"),
+      builder: (context, ref, _) => Focus(
+        focusNode: focus,
+        child: Semantics(
+          label: "Live activity",
+          button: true,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => taps++,
+            child: SizedBox(width: ref.watch(extent), height: 40),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpTestApp(
+      child: Center(
+        child: AnimatedBuilder(
+          animation: Listenable.merge([policy, routeActive]),
+          builder: (context, _) => TickerMode(
+            enabled: routeActive.value,
+            child: SizedBox(
+              width: 700,
+              height: 48,
+              child: CustomAppBarLayout(
+                navigation: const SizedBox(width: 100),
+                primary: AppBarItem.fixed(
+                  key: const ValueKey("primary"),
+                  child: const SizedBox(width: 200),
+                ),
+                actions: [
+                  AppBarItem(
+                    key: const ValueKey("activity"),
+                    policy: policy.value,
+                    child: control,
+                  ),
+                ],
+                spacing: 8,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final element = tester.element(find.byKey(const ValueKey("live control")));
+    expect(TickerMode.valuesOf(element).enabled, isTrue);
+    expect(AppBarItemVisibility.of(element), isFalse);
+    expect(focus.canRequestFocus, isFalse);
+    expect(find.semantics.byLabel("Live activity"), findsNothing);
+    expect(
+      find.byKey(const ValueKey("live control")).hitTestable(),
+      findsNothing,
+    );
+
+    for (final width in [96.0, 0.0, 120.0]) {
+      contentWidth.value = width;
+      await tester.pumpAndSettle();
+      expect(
+        tester.element(find.byKey(const ValueKey("live control"))),
+        same(element),
+      );
+      expect(
+        tester.getSize(find.byKey(const ValueKey("live control"))).width,
+        width,
+      );
+      expect(TickerMode.valuesOf(element).enabled, isTrue);
+      expect(focus.canRequestFocus, width > 0);
+      expect(AppBarItemVisibility.of(element), width > 0);
+      expect(
+        find.semantics.byLabel("Live activity"),
+        width > 0 ? findsOne : findsNothing,
+      );
+      if (width > 0) {
+        focus.requestFocus();
+        await tester.pump();
+        expect(focus.hasFocus, isTrue);
+        await tester.tap(find.byKey(const ValueKey("live control")));
+      } else {
+        expect(focus.hasFocus, isFalse);
+      }
+    }
+    expect(taps, 2);
+
+    contentWidth.value = 0;
+    await tester.pumpAndSettle();
+    // At this width a compact only item is hidden, even with identical geometry.
+    policy.value = const AppBarItemPolicy.compactOnly(0);
+    await tester.pumpAndSettle();
+    expect(TickerMode.valuesOf(element).enabled, isFalse);
+    expect(focus.canRequestFocus, isFalse);
+    contentWidth.value = 80;
+    await tester.pumpAndSettle();
+    expect(tester.getSize(find.byKey(const ValueKey("live control"))).width, 0);
+    policy.value = const AppBarItemPolicy.fixed();
+    await tester.pumpAndSettle();
+    expect(TickerMode.valuesOf(element).enabled, isTrue);
+    expect(
+      tester.getSize(find.byKey(const ValueKey("live control"))).width,
+      80,
+    );
+
+    routeActive.value = false;
+    await tester.pumpAndSettle();
+    expect(TickerMode.valuesOf(element).enabled, isFalse);
+    routeActive.value = true;
+    await tester.pumpAndSettle();
+    expect(TickerMode.valuesOf(element).enabled, isTrue);
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
   testWidgets("centers the primary control with asymmetric available regions", (
     tester,
   ) async {

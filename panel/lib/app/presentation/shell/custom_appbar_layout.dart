@@ -307,10 +307,7 @@ class RenderCustomAppBarLayout extends RenderBox
     final children = _children;
     for (final child in children) {
       child.layout(
-        AppBarItemConstraints(
-          phase: AppBarAllocationPhase.measuring,
-          maxHeight: _height,
-        ),
+        AppBarItemConstraints.measuring(maxHeight: _height),
         parentUsesSize: true,
       );
     }
@@ -339,20 +336,29 @@ class RenderCustomAppBarLayout extends RenderBox
     for (var index = 0; index < children.length; index++) {
       final child = children[index];
       final allocation = allocations[index];
-      (child.parentData! as _AppBarParentData).allocation = allocation;
-      final visible =
-          allocation is VisibleAppBarAllocation && allocation.width > 0;
+      final data = child.parentData! as _AppBarParentData;
+      final resumed =
+          data.allocation is HiddenAppBarAllocation &&
+          allocation is VisibleAppBarAllocation;
+      data.allocation = allocation;
+      final visible = allocation.width > 0;
       child.layout(
-        AppBarItemConstraints(
-          phase: visible
-              ? AppBarAllocationPhase.visible
-              : AppBarAllocationPhase.hidden,
-          minWidth: visible ? allocation.width : child.size.width,
-          maxWidth: visible ? allocation.width : child.size.width,
+        AppBarItemConstraints.allocated(
+          allocation: allocation,
+          // Empty and hidden children retain natural constraints. Tight zero
+          // width can change an empty AnimatedSwitcher height on each pass.
+          minWidth: visible ? allocation.width : 0,
+          maxWidth: visible ? allocation.width : double.infinity,
           maxHeight: _height,
         ),
         parentUsesSize: true,
       );
+      if (resumed ||
+          (!visible &&
+              allocation is VisibleAppBarAllocation &&
+              child.size.width > 0)) {
+        _scheduleMeasurement();
+      }
     }
     void position(RenderBox child, double x) {
       (child.parentData! as _AppBarParentData).offset = Offset(
@@ -381,6 +387,19 @@ class RenderCustomAppBarLayout extends RenderBox
         max(minimumX, maximumX),
       ),
     );
+  }
+
+  bool _measurementScheduled = false;
+
+  // Resuming a provider can rebuild a child during final allocation, after its
+  // natural width was measured. Read that width again on the following frame.
+  void _scheduleMeasurement() {
+    if (_measurementScheduled) return;
+    _measurementScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measurementScheduled = false;
+      if (attached) markNeedsLayout();
+    });
   }
 
   @override

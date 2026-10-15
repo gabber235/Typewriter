@@ -26,6 +26,98 @@ RealmInboxState _state([int issues = 0]) => RealmInboxState(
 );
 
 void main() {
+  for (final delayed in [false, true]) {
+    testWidgets("inbox is visible when Realm selection is delayed: $delayed", (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1400, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final selected = ValueNotifier<AuthoringScope?>(delayed ? null : _scope);
+      final state = ValueNotifier(_state(1));
+      final work = ScopedWorkSession();
+      addTearDown(selected.dispose);
+      addTearDown(state.dispose);
+      addTearDown(work.dispose);
+      await tester.pumpTestApp(
+        overrides: [
+          selectedAuthoringScopeProvider.overrideWith((ref) {
+            selected.addListener(ref.invalidateSelf);
+            ref.onDispose(() => selected.removeListener(ref.invalidateSelf));
+            return selected.value;
+          }),
+          realmInboxProvider(_scope).overrideWith((ref) {
+            state.addListener(ref.invalidateSelf);
+            ref.onDispose(() => state.removeListener(ref.invalidateSelf));
+            return state.value;
+          }),
+          workingAuthoringDocumentProvider(_scope)
+              .overrideWith((ref) => const AsyncLoading()),
+          localWorkControllerProvider.overrideWithValue(work),
+          realmInteractionProvider.overrideWithValue(
+            const RealmInteractionState(
+              connectionState: RealmConnectionState.online,
+            ),
+          ),
+        ],
+        child: RealmInboxShortcut(
+          child: Focus(
+            autofocus: true,
+            child: Scaffold(
+              body: Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: 1400,
+                  height: 48,
+                  child: CustomAppBarLayout(
+                    navigation: const SizedBox(width: 300, height: 40),
+                    primary: AppBarItem.fixed(
+                      key: const ValueKey("search"),
+                      child: const SizedBox(width: 350, height: 40),
+                    ),
+                    actions: [
+                      AppBarItem.adaptive(
+                        key: const ValueKey("activity"),
+                        collapseOrder: 1,
+                        child: const WorkspaceActivityButton(),
+                      ),
+                    ],
+                    spacing: 8,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.binding.transientCallbackCount, 0);
+      selected.value = _scope;
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final workspace = tester.element(find.byType(WorkspaceActivityButton));
+      expect(
+        ProviderScope.containerOf(workspace)
+            .read(selectedAuthoringScopeProvider),
+        _scope,
+      );
+      expect(find.text("1 issue"), findsOneWidget);
+      final button = find.byType(FilledButton);
+      expect(tester.getSize(button).width, greaterThan(0));
+      expect(AppBarItemVisibility.of(tester.element(button)), isTrue);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(find.byType(RealmInboxView), findsOneWidget);
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.byType(RealmInboxView), findsNothing);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.sendKeyEvent(LogicalKeyboardKey.keyP);
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.shiftLeft);
+      await tester.pumpAndSettle();
+      expect(find.byType(RealmInboxView), findsOneWidget);
+    });
+  }
+
   test("projection preserves attention priority across publication states", () {
     final ready =
         (readyPublicationStatus() as skir.PublicationStatus_readyWrapper).value;

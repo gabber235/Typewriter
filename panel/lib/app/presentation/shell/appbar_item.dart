@@ -98,23 +98,26 @@ class AppBarItemVisibility extends InheritedWidget {
       visible != oldWidget.visible;
 }
 
-enum AppBarAllocationPhase { measuring, visible, hidden }
-
-/// Carries the final interaction decision through the layout boundary.
+/// Carries final allocation without treating measurement as a new decision.
 class AppBarItemConstraints extends BoxConstraints {
-  const AppBarItemConstraints({
-    required this.phase,
+  const AppBarItemConstraints.measuring({super.maxHeight}) : allocation = null;
+
+  const AppBarItemConstraints.allocated({
+    required AppBarItemAllocation this.allocation,
     super.minWidth,
     super.maxWidth,
-    super.minHeight,
     super.maxHeight,
   });
-  final AppBarAllocationPhase phase;
+
+  final AppBarItemAllocation? allocation;
+
   @override
   bool operator ==(Object other) =>
-      other is AppBarItemConstraints && phase == other.phase && super == other;
+      other is AppBarItemConstraints &&
+      allocation == other.allocation &&
+      super == other;
   @override
-  int get hashCode => Object.hash(super.hashCode, phase);
+  int get hashCode => Object.hash(super.hashCode, allocation);
 }
 
 /// Keeps a conditional item's tree mounted while excluding hidden interaction.
@@ -126,24 +129,26 @@ class AppBarItemGate extends StatefulWidget {
 }
 
 class _AppBarItemGateState extends State<AppBarItemGate> {
-  bool _visible = true;
+  AppBarItemAllocation? _allocation;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
-      if (constraints case AppBarItemConstraints(:final phase)) {
-        if (phase != AppBarAllocationPhase.measuring) {
-          _visible = phase == AppBarAllocationPhase.visible;
-        }
+      if (constraints case AppBarItemConstraints(:final allocation?)) {
+        _allocation = allocation;
       }
+      // Before the first final fit, measurement remains live.
+      final active = _allocation is! HiddenAppBarAllocation;
+      final visible = _allocation == null || _allocation!.width > 0;
       return AppBarItemVisibility(
-        visible: _visible,
+        visible: visible,
         child: ExcludeFocus(
-          excluding: !_visible,
+          excluding: !visible,
           child: ExcludeSemantics(
-            excluding: !_visible,
+            excluding: !visible,
             child: IgnorePointer(
-              ignoring: !_visible,
-              child: TickerMode(enabled: _visible, child: widget.child),
+              ignoring: !visible,
+              child: TickerMode(enabled: active, child: widget.child),
             ),
           ),
         ),
