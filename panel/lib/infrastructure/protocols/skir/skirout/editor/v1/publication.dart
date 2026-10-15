@@ -921,187 +921,6 @@ final class ScriptContextDescriptor_mutable
   ).._u = this._u;
 }
 
-// struct NativeBindingRequirement
-
-sealed class NativeBindingRequirement_orMutable {
-  _lib_editor_v1_type_catalog.NamedTypeUse_orMutable get actual;
-  _lib_editor_v1_type_catalog.NativeBindingId_orMutable get provider;
-  _core.String get signature;
-
-  NativeBindingRequirement toFrozen();
-}
-
-/// Deeply immutable.
-final class NativeBindingRequirement
-    implements NativeBindingRequirement_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.NamedTypeUse actual;
-  @_core.override
-  final _lib_editor_v1_type_catalog.NativeBindingId provider;
-  @_core.override
-  final _core.String signature;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory NativeBindingRequirement({
-    required _lib_editor_v1_type_catalog.NamedTypeUse_orMutable actual,
-    required _lib_editor_v1_type_catalog.NativeBindingId_orMutable provider,
-    required _core.String signature,
-  }) => NativeBindingRequirement._(
-    actual.toFrozen(),
-    provider.toFrozen(),
-    signature,
-  );
-
-  NativeBindingRequirement._(this.actual, this.provider, this.signature);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = NativeBindingRequirement._(
-    _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
-    _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
-    "",
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static NativeBindingRequirement_mutable mutable() =>
-      NativeBindingRequirement_mutable._(
-        _lib_editor_v1_type_catalog.NamedTypeUse.defaultInstance,
-        _lib_editor_v1_type_catalog.NativeBindingId.defaultInstance,
-        "",
-      );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  NativeBindingRequirement toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  NativeBindingRequirement_mutable toMutable() =>
-      NativeBindingRequirement_mutable._(
-        this.actual,
-        this.provider,
-        this.signature,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! NativeBindingRequirement) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.actual,
-    this.provider,
-    this.signature,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `NativeBindingRequirement` instances.
-  static _skir.StructSerializer<
-    NativeBindingRequirement,
-    NativeBindingRequirement_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "actual",
-        "actual",
-        0,
-        _lib_editor_v1_type_catalog.NamedTypeUse.serializer,
-        "",
-        (it) => it.actual,
-        (it, v) => it.actual = v,
-      );
-      _serializerBuilder.addField(
-        "provider",
-        "provider",
-        1,
-        _lib_editor_v1_type_catalog.NativeBindingId.serializer,
-        "",
-        (it) => it.provider,
-        (it, v) => it.provider = v,
-      );
-      _serializerBuilder.addField(
-        "signature",
-        "signature",
-        2,
-        _skir.Serializers.string,
-        "",
-        (it) => it.signature,
-        (it, v) => it.signature = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:NativeBindingRequirement",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (NativeBindingRequirement_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [NativeBindingRequirement].
-final class NativeBindingRequirement_mutable
-    implements NativeBindingRequirement_orMutable {
-  _lib_editor_v1_type_catalog.NamedTypeUse_orMutable actual;
-  _lib_editor_v1_type_catalog.NativeBindingId_orMutable provider;
-  _core.String signature;
-  _skir.internal__UnrecognizedFields? _u;
-
-  NativeBindingRequirement_mutable._(
-    this.actual,
-    this.provider,
-    this.signature,
-  );
-
-  /// If the value of [actual] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
-  _lib_editor_v1_type_catalog.NamedTypeUse_mutable get mutableActual {
-    final value = this.actual;
-    if (value is _lib_editor_v1_type_catalog.NamedTypeUse_mutable) {
-      return value;
-    } else {
-      return this.actual = (value as _lib_editor_v1_type_catalog.NamedTypeUse)
-          .toMutable();
-    }
-  }
-
-  /// If the value of [provider] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [provider] and returns it.
-  _lib_editor_v1_type_catalog.NativeBindingId_mutable get mutableProvider {
-    final value = this.provider;
-    if (value is _lib_editor_v1_type_catalog.NativeBindingId_mutable) {
-      return value;
-    } else {
-      return this.provider =
-          (value as _lib_editor_v1_type_catalog.NativeBindingId).toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  NativeBindingRequirement toFrozen() => NativeBindingRequirement(
-    actual: this.actual,
-    provider: this.provider,
-    signature: this.signature,
-  ).._u = this._u;
-}
-
 // struct EngineImplementationInputs
 
 sealed class EngineImplementationInputs_orMutable {
@@ -1635,398 +1454,6 @@ final class PublicationAttempt_mutable implements PublicationAttempt_orMutable {
     catalog: this.catalog,
     engineInputs: this.engineInputs,
     state: this.state,
-  ).._u = this._u;
-}
-
-// struct CheckCoverage
-
-sealed class CheckCoverage_orMutable {
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-  get required_;
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-  get completed;
-
-  CheckCoverage toFrozen();
-}
-
-/// Deeply immutable.
-final class CheckCoverage implements CheckCoverage_orMutable {
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.CheckInstanceId> required_;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_checking.CheckInstanceId> completed;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CheckCoverage({
-    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-    required_,
-    required _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-    completed,
-  }) => CheckCoverage._(
-    _skir.internal__frozenMappedCopy(required_, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(completed, (it) => it.toFrozen()),
-  );
-
-  CheckCoverage._(this.required_, this.completed);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CheckCoverage._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CheckCoverage_mutable mutable() => CheckCoverage_mutable._(
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CheckCoverage toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CheckCoverage_mutable toMutable() =>
-      CheckCoverage_mutable._(this.required_, this.completed);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CheckCoverage) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.required_, this.completed];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CheckCoverage` instances.
-  static _skir.StructSerializer<CheckCoverage, CheckCoverage_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "required",
-        "required_",
-        0,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.CheckInstanceId.serializer,
-        ),
-        "",
-        (it) => it.required_,
-        (it, v) => it.required_ = v,
-      );
-      _serializerBuilder.addField(
-        "completed",
-        "completed",
-        1,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_checking.CheckInstanceId.serializer,
-        ),
-        "",
-        (it) => it.completed,
-        (it, v) => it.completed = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:CheckCoverage",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CheckCoverage_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CheckCoverage].
-final class CheckCoverage_mutable implements CheckCoverage_orMutable {
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> required_;
-  _core.Iterable<_lib_editor_v1_checking.CheckInstanceId_orMutable> completed;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CheckCoverage_mutable._(this.required_, this.completed);
-
-  /// If the value of [required_] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [required_] and returns it.
-  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-  get mutableRequired {
-    final value = this.required_;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_checking.CheckInstanceId_orMutable
-        >) {
-      return value;
-    } else {
-      return this.required_ = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [completed] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [completed] and returns it.
-  _core.List<_lib_editor_v1_checking.CheckInstanceId_orMutable>
-  get mutableCompleted {
-    final value = this.completed;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_checking.CheckInstanceId_orMutable
-        >) {
-      return value;
-    } else {
-      return this.completed = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CheckCoverage toFrozen() =>
-      CheckCoverage(required_: this.required_, completed: this.completed)
-        .._u = this._u;
-}
-
-// struct AcceptedAuthoring
-
-sealed class AcceptedAuthoring_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
-  CheckCoverage_orMutable get requiredCoverage;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> get evidence;
-  _core.Iterable<NativeBindingRequirement_orMutable> get bindingRequirements;
-
-  AcceptedAuthoring toFrozen();
-}
-
-/// Deeply immutable.
-final class AcceptedAuthoring implements AcceptedAuthoring_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
-  @_core.override
-  final CheckCoverage requiredCoverage;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> evidence;
-  @_core.override
-  final _core.Iterable<NativeBindingRequirement> bindingRequirements;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory AcceptedAuthoring({
-    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
-    required CheckCoverage_orMutable requiredCoverage,
-    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
-    evidence,
-    required _core.Iterable<NativeBindingRequirement_orMutable>
-    bindingRequirements,
-  }) => AcceptedAuthoring._(
-    catalog.toFrozen(),
-    requiredCoverage.toFrozen(),
-    _skir.internal__frozenCopy(evidence),
-    _skir.internal__frozenMappedCopy(
-      bindingRequirements,
-      (it) => it.toFrozen(),
-    ),
-  );
-
-  AcceptedAuthoring._(
-    this.catalog,
-    this.requiredCoverage,
-    this.evidence,
-    this.bindingRequirements,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = AcceptedAuthoring._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    CheckCoverage.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static AcceptedAuthoring_mutable mutable() => AcceptedAuthoring_mutable._(
-    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    CheckCoverage.defaultInstance,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  AcceptedAuthoring toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  AcceptedAuthoring_mutable toMutable() => AcceptedAuthoring_mutable._(
-    this.catalog,
-    this.requiredCoverage,
-    this.evidence,
-    this.bindingRequirements,
-  );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! AcceptedAuthoring) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.catalog,
-    this.requiredCoverage,
-    this.evidence,
-    this.bindingRequirements,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `AcceptedAuthoring` instances.
-  static _skir.StructSerializer<AcceptedAuthoring, AcceptedAuthoring_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "catalog",
-        "catalog",
-        0,
-        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
-        "",
-        (it) => it.catalog,
-        (it, v) => it.catalog = v,
-      );
-      _serializerBuilder.addField(
-        "required_coverage",
-        "requiredCoverage",
-        1,
-        CheckCoverage.serializer,
-        "",
-        (it) => it.requiredCoverage,
-        (it, v) => it.requiredCoverage = v,
-      );
-      _serializerBuilder.addField(
-        "evidence",
-        "evidence",
-        2,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_authoring_facts.EditExpectation.serializer,
-        ),
-        "",
-        (it) => it.evidence,
-        (it, v) => it.evidence = v,
-      );
-      _serializerBuilder.addField(
-        "binding_requirements",
-        "bindingRequirements",
-        3,
-        _skir.Serializers.iterable(NativeBindingRequirement.serializer),
-        "",
-        (it) => it.bindingRequirements,
-        (it, v) => it.bindingRequirements = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/publication.skir:AcceptedAuthoring",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (AcceptedAuthoring_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [AcceptedAuthoring].
-final class AcceptedAuthoring_mutable implements AcceptedAuthoring_orMutable {
-  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
-  CheckCoverage_orMutable requiredCoverage;
-  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> evidence;
-  _core.Iterable<NativeBindingRequirement_orMutable> bindingRequirements;
-  _skir.internal__UnrecognizedFields? _u;
-
-  AcceptedAuthoring_mutable._(
-    this.catalog,
-    this.requiredCoverage,
-    this.evidence,
-    this.bindingRequirements,
-  );
-
-  /// If the value of [catalog] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
-  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
-    final value = this.catalog;
-    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
-      return value;
-    } else {
-      return this.catalog =
-          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
-    }
-  }
-
-  /// If the value of [requiredCoverage] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [requiredCoverage] and returns it.
-  CheckCoverage_mutable get mutableRequiredCoverage {
-    final value = this.requiredCoverage;
-    if (value is CheckCoverage_mutable) {
-      return value;
-    } else {
-      return this.requiredCoverage = (value as CheckCoverage).toMutable();
-    }
-  }
-
-  /// If the value of [evidence] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [evidence] and returns it.
-  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
-  get mutableEvidence {
-    final value = this.evidence;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_authoring_facts.EditExpectation
-        >) {
-      return value;
-    } else {
-      return this.evidence = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [bindingRequirements] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [bindingRequirements] and returns it.
-  _core.List<NativeBindingRequirement_orMutable>
-  get mutableBindingRequirements {
-    final value = this.bindingRequirements;
-    if (value
-        is _skir.internal__MutableList<NativeBindingRequirement_orMutable>) {
-      return value;
-    } else {
-      return this.bindingRequirements = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  AcceptedAuthoring toFrozen() => AcceptedAuthoring(
-    catalog: this.catalog,
-    requiredCoverage: this.requiredCoverage,
-    evidence: this.evidence,
-    bindingRequirements: this.bindingRequirements,
   ).._u = this._u;
 }
 
@@ -2904,6 +2331,158 @@ final class PublicationBaseline_selectedWrapper
   PublicationBaseline_kind get kind => PublicationBaseline_kind.selectedWrapper;
 }
 
+// struct DiagnosticEvidence
+
+sealed class DiagnosticEvidence_orMutable {
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  get expectations;
+
+  DiagnosticEvidence toFrozen();
+}
+
+/// Deeply immutable.
+final class DiagnosticEvidence implements DiagnosticEvidence_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+  expectations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory DiagnosticEvidence({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation>
+    expectations,
+  }) => DiagnosticEvidence._(
+    catalog.toFrozen(),
+    _skir.internal__frozenCopy(expectations),
+  );
+
+  DiagnosticEvidence._(this.catalog, this.expectations);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = DiagnosticEvidence._(
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static DiagnosticEvidence_mutable mutable() => DiagnosticEvidence_mutable._(
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  DiagnosticEvidence toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  DiagnosticEvidence_mutable toMutable() =>
+      DiagnosticEvidence_mutable._(this.catalog, this.expectations);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! DiagnosticEvidence) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.catalog, this.expectations];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `DiagnosticEvidence` instances.
+  static _skir.StructSerializer<DiagnosticEvidence, DiagnosticEvidence_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "catalog",
+        "catalog",
+        0,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "",
+        (it) => it.catalog,
+        (it, v) => it.catalog = v,
+      );
+      _serializerBuilder.addField(
+        "expectations",
+        "expectations",
+        1,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_authoring_facts.EditExpectation.serializer,
+        ),
+        "",
+        (it) => it.expectations,
+        (it, v) => it.expectations = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/publication.skir:DiagnosticEvidence",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (DiagnosticEvidence_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [DiagnosticEvidence].
+final class DiagnosticEvidence_mutable implements DiagnosticEvidence_orMutable {
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
+  _core.Iterable<_lib_editor_v1_authoring_facts.EditExpectation> expectations;
+  _skir.internal__UnrecognizedFields? _u;
+
+  DiagnosticEvidence_mutable._(this.catalog, this.expectations);
+
+  /// If the value of [catalog] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
+    final value = this.catalog;
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
+      return value;
+    } else {
+      return this.catalog =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+    }
+  }
+
+  /// If the value of [expectations] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
+  _core.List<_lib_editor_v1_authoring_facts.EditExpectation>
+  get mutableExpectations {
+    final value = this.expectations;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_authoring_facts.EditExpectation
+        >) {
+      return value;
+    } else {
+      return this.expectations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  DiagnosticEvidence toFrozen() =>
+      DiagnosticEvidence(catalog: this.catalog, expectations: this.expectations)
+        .._u = this._u;
+}
+
 // struct PublicationDiagnosticDetails
 
 sealed class PublicationDiagnosticDetails_orMutable {
@@ -2914,6 +2493,7 @@ sealed class PublicationDiagnosticDetails_orMutable {
   _lib_editor_v1_type_catalog.ValueLocation_orMutable? get primary;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
   get related;
+  DiagnosticEvidence_orMutable? get evidence;
 
   PublicationDiagnosticDetails toFrozen();
 }
@@ -2933,6 +2513,8 @@ final class PublicationDiagnosticDetails
   final _lib_editor_v1_type_catalog.ValueLocation? primary;
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation> related;
+  @_core.override
+  final DiagnosticEvidence? evidence;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PublicationDiagnosticDetails({
@@ -2943,6 +2525,7 @@ final class PublicationDiagnosticDetails
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
     related,
+    required DiagnosticEvidence_orMutable? evidence,
   }) => PublicationDiagnosticDetails._(
     id.toFrozen(),
     origin.toFrozen(),
@@ -2950,6 +2533,7 @@ final class PublicationDiagnosticDetails
     message,
     (primary != null) ? primary.toFrozen() : null,
     _skir.internal__frozenMappedCopy(related, (it) => it.toFrozen()),
+    (evidence != null) ? evidence.toFrozen() : null,
   );
 
   PublicationDiagnosticDetails._(
@@ -2959,6 +2543,7 @@ final class PublicationDiagnosticDetails
     this.message,
     this.primary,
     this.related,
+    this.evidence,
   );
 
   /// Default instance with all fields set to their default values.
@@ -2969,6 +2554,7 @@ final class PublicationDiagnosticDetails
     "",
     null,
     _skir.KeyedIterable.empty,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -2981,6 +2567,7 @@ final class PublicationDiagnosticDetails
         "",
         null,
         _skir.KeyedIterable.empty,
+        null,
       );
 
   /// Returns this instance (no operation).
@@ -2997,6 +2584,7 @@ final class PublicationDiagnosticDetails
         this.message,
         this.primary,
         this.related,
+        this.evidence,
       );
 
   @_core.override
@@ -3019,6 +2607,7 @@ final class PublicationDiagnosticDetails
     this.message,
     this.primary,
     this.related,
+    this.evidence,
   ];
 
   @_core.override
@@ -3089,6 +2678,15 @@ final class PublicationDiagnosticDetails
         (it) => it.related,
         (it, v) => it.related = v,
       );
+      _serializerBuilder.addField(
+        "evidence",
+        "evidence",
+        6,
+        _skir.Serializers.optional(DiagnosticEvidence.serializer),
+        "",
+        (it) => it.evidence,
+        (it, v) => it.evidence = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3114,6 +2712,7 @@ final class PublicationDiagnosticDetails_mutable
   _core.String message;
   _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary;
   _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable> related;
+  DiagnosticEvidence_orMutable? evidence;
   _skir.internal__UnrecognizedFields? _u;
 
   PublicationDiagnosticDetails_mutable._(
@@ -3123,6 +2722,7 @@ final class PublicationDiagnosticDetails_mutable
     this.message,
     this.primary,
     this.related,
+    this.evidence,
   );
 
   /// If the value of [id] is already mutable, returns it as is.
@@ -3173,6 +2773,7 @@ final class PublicationDiagnosticDetails_mutable
     message: this.message,
     primary: this.primary,
     related: this.related,
+    evidence: this.evidence,
   ).._u = this._u;
 }
 
@@ -3207,6 +2808,7 @@ sealed class PublicationNotice {
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
     related,
+    required DiagnosticEvidence_orMutable? evidence,
   }) => PublicationNotice.wrapInformation(
     PublicationDiagnosticDetails(
       id: id,
@@ -3215,6 +2817,7 @@ sealed class PublicationNotice {
       message: message,
       primary: primary,
       related: related,
+      evidence: evidence,
     ),
   );
 
@@ -3231,6 +2834,7 @@ sealed class PublicationNotice {
     required _lib_editor_v1_type_catalog.ValueLocation_orMutable? primary,
     required _core.Iterable<_lib_editor_v1_type_catalog.ValueLocation_orMutable>
     related,
+    required DiagnosticEvidence_orMutable? evidence,
   }) => PublicationNotice.wrapWarning(
     PublicationDiagnosticDetails(
       id: id,
@@ -3239,6 +2843,7 @@ sealed class PublicationNotice {
       message: message,
       primary: primary,
       related: related,
+      evidence: evidence,
     ),
   );
 

@@ -63,7 +63,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   final AuthoringFacts _baselineFacts;
   final Map<Object, skir.EditExpectation> _observed = {};
   final List<skir.EditIntent> _intents = [];
-  final List<skir.InitializationDiagnostic> _initializationFindings = [];
+  final List<LocatedInitializationFinding> _initializationFindings = [];
   int _inheritedFindings = 0;
   final Map<skir.ValueLocation, _MaterializationOperation>
   _materializationOperations = {};
@@ -80,8 +80,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   List<skir.EditExpectation> get expectations =>
       List.unmodifiable(_observed.values);
 
-  @override
-  List<skir.InitializationDiagnostic> get initializationFindings =>
+  List<LocatedInitializationFinding> get initializationFindings =>
       List.unmodifiable(_initializationFindings);
 
   @override
@@ -160,7 +159,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     },
     links: List.unmodifiable(_links),
     revision: revision,
-    initializationFindings: List.unmodifiable(_initializationFindings),
+    initializationFindings: initializationFindings,
   );
   @override
   PortablePathResult<skir.AuthoringRecord> set(
@@ -340,10 +339,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         );
       }
       working._initializationFindings.addAll(
-        _locatedInitializationFindings(
-          plan.containing.path,
-          containing.findings,
-        ),
+        _locatedInitializationFindings(plan.containing, containing, generation),
       );
       var parent = containing.recordContent.fields
           .where((field) => field.name == plan.field)
@@ -364,7 +360,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           );
         }
         working._initializationFindings.addAll(
-          _locatedInitializationFindings(plan.location.path, child.findings),
+          _locatedInitializationFindings(plan.location, child, generation),
         );
         final actual = switch (child.recordContent.configuration) {
           skir.TypeSelection_completeWrapper(:final value) => value,
@@ -535,13 +531,17 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     if (result case PortablePathValue()) {
       branch._initializationFindings.addAll(
         _locatedInitializationFindings(
-          skir.ValuePath(
-            segments: [
-              ...location.path.segments,
-              skir.PathSegment.createItem(id: item),
-            ],
+          skir.ValueLocation(
+            resource: location.resource,
+            path: skir.ValuePath(
+              segments: [
+                ...location.path.segments,
+                skir.PathSegment.createItem(id: item),
+              ],
+            ),
           ),
-          prepared.findings,
+          prepared,
+          generation,
         ),
       );
       _adopt(branch);
@@ -642,7 +642,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     );
     if (result case PortablePathValue()) {
       branch._initializationFindings.addAll(
-        _locatedInitializationFindings(location.path, prepared.findings),
+        _locatedInitializationFindings(location, prepared, generation),
       );
       _adopt(branch);
     }
@@ -673,10 +673,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   }) {
     create(id, prepared.recordContent, definition: definition);
     _initializationFindings.addAll(
-      _locatedInitializationFindings(
-        skir.ValuePath(segments: const []),
-        prepared.findings,
-      ),
+      _locatedInitializationFindings(_root(id), prepared, generation),
     );
   }
 
@@ -1741,23 +1738,40 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   }
 }
 
-Iterable<skir.InitializationDiagnostic> _locatedInitializationFindings(
-  skir.ValuePath base,
-  Iterable<skir.InitializationDiagnostic> findings,
+Iterable<LocatedInitializationFinding> _locatedInitializationFindings(
+  skir.ValueLocation base,
+  skir.PreparedValue prepared,
+  skir.CatalogGeneration generation,
 ) sync* {
-  for (final finding in findings) {
-    final relative = finding.relativePath;
-    final segments = [
-      ...base.segments,
-      if (relative != null) ...relative.segments,
-    ];
-    yield skir.InitializationDiagnostic(
-      field: finding.field,
-      code: finding.code,
-      message: finding.message,
-      relativePath: segments.isEmpty
-          ? null
-          : skir.ValuePath(segments: segments),
+  final record = prepared.recordContent;
+  final payload = skir.DataValue.createRecord(fields: record.fields);
+  final expected = switch (record.configuration) {
+    skir.TypeSelection_completeWrapper(:final value)
+        when base.path.segments.isNotEmpty =>
+      skir.DataValue.createNamed(actualType: value, payload: payload),
+    _ => payload,
+  };
+  final evidence = skir.DiagnosticEvidence(
+    catalog: generation,
+    expectations: [
+      skir.EditExpectation.createValue(at: base, expected: expected),
+      if (base.path.segments.isEmpty)
+        skir.EditExpectation.createConfiguration(
+          at: base,
+          expected: record.configuration,
+        ),
+    ],
+  );
+  for (final finding in prepared.findings) {
+    yield LocatedInitializationFinding(
+      location: skir.ValueLocation(
+        resource: base.resource,
+        path: skir.ValuePath(
+          segments: [...base.path.segments, ...?finding.relativePath?.segments],
+        ),
+      ),
+      diagnostic: finding,
+      evidence: evidence,
     );
   }
 }
@@ -1811,7 +1825,7 @@ final class _EditState {
   final List<skir.LinkProjection> links;
   final Map<Object, skir.EditExpectation> observed;
   final List<skir.EditIntent> intents;
-  final List<skir.InitializationDiagnostic> initializationFindings;
+  final List<LocatedInitializationFinding> initializationFindings;
 
   bool matches(AuthoringEdit draft) =>
       _mapsEqual(resources, draft._resources) &&

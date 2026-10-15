@@ -103,6 +103,6 @@ sealed interface CompilationResult {
     data class Blocked(
         override val root: CompilationRoot,
         val inputFingerprint: ContentDigest,
-        val diagnostics: List<CompileDiagnostic>,
+        val diagnostics: List<com.typewritermc.checking.Diagnostic>,
     ) : CompilationResult
 }

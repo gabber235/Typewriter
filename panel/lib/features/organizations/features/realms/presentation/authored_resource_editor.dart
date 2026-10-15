@@ -50,6 +50,12 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     useListenable(edit);
     final observation = edit?.document ?? document;
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    final projected = scope == null
+        ? null
+        : ref.watch(resourceIssuesProvider(scope));
+    final issues =
+        projected?.value ?? ResourceIssues.evaluate(document: observation);
     final workScope = ref.watch(localWorkScopeProvider);
     final record = observation.resource(resource);
     final catalog = observation.catalog;
@@ -76,6 +82,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
               available: enabled,
               readOnly: readOnly || edit == null,
               prepareValue: prepareValue,
+              issues: issues,
             )
           : null,
       [
@@ -95,12 +102,12 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     useEffect(() => host?.dispose, [host]);
     host?.update(
       source: observation,
+      issues: issues,
       capabilities: capabilities,
       available: enabled,
       readOnly: readOnly || edit == null,
       prepareValue: prepareValue,
     );
-    final scope = ref.watch(selectedAuthoringScopeProvider);
     if (record == null) {
       return _diagnostic(context, "The authored resource is absent");
     }

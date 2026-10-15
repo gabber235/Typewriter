@@ -142,18 +142,38 @@ void main() {
         document.bindings[presentationSubjectIdentifierBindingId]!.value,
         skir.DataValue.wrapStringValue(fixture.resource.value),
       );
-      expect(document.diagnostics.single.targets, [
-        PortableDiagnosticTarget.value(
-          skir.ValueLocation(
-            resource: fixture.resource,
-            path: editorRootPath.field("placement").field("width"),
+      expect(
+        document.diagnostics
+            .where((finding) => finding.code == "pending_type")
+            .single
+            .targets,
+        [
+          PortableDiagnosticTarget.value(
+            skir.ValueLocation(
+              resource: fixture.resource,
+              path: editorRootPath,
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
+      expect(
+        document.diagnostics
+            .where((finding) => finding.code == "positive")
+            .single
+            .targets,
+        [
+          PortableDiagnosticTarget.value(
+            skir.ValueLocation(
+              resource: fixture.resource,
+              path: editorRootPath.field("placement").field("width"),
+            ),
+          ),
+        ],
+      );
     },
   );
 
-  test("resource projections retain addressed rules while initialization findings stay general", () {
+  test("resource projections retain located initialization findings alongside rules", () {
     final fixture = _nestedRuleFixture();
     final observation = AuthoringDocument(
       catalog: fixture.catalog,
@@ -166,11 +186,26 @@ void main() {
       },
       links: const [],
       initializationFindings: [
-        skir.InitializationDiagnostic(
-          field: null,
-          code: "initialization_pending",
-          message: "A default could not be prepared",
-          relativePath: editorRootPath.field("otherResourceField"),
+        LocatedInitializationFinding(
+          location: skir.ValueLocation(
+            resource: fixture.resource,
+            path: editorRootPath.field("otherResourceField"),
+          ),
+          evidence: skir.DiagnosticEvidence(
+            catalog: fixture.draft.generation,
+            expectations: [
+              skir.EditExpectation.createResource(
+                id: fixture.resource,
+                expected: fixture.draft.resource(fixture.resource),
+              ),
+            ],
+          ),
+          diagnostic: skir.InitializationDiagnostic(
+            field: null,
+            code: "initialization_pending",
+            message: "A default could not be prepared",
+            relativePath: editorRootPath.field("otherResourceField"),
+          ),
         ),
       ],
     );
@@ -192,14 +227,18 @@ void main() {
       ),
     );
     expect(document.diagnostics, hasLength(2));
-    expect(projected!.diagnostics, [document.diagnostics.first]);
+    expect(projected!.diagnostics, document.diagnostics);
     final initialization = document.diagnostics.last;
     expect(initialization.code, "initialization_pending");
-    expect(
-      initialization.message,
-      "otherResourceField: A default could not be prepared",
-    );
-    expect(initialization.targets, isEmpty);
+    expect(initialization.message, "A default could not be prepared");
+    expect(initialization.targets, [
+      PortableDiagnosticTarget.value(
+        skir.ValueLocation(
+          resource: fixture.resource,
+          path: editorRootPath.field("otherResourceField"),
+        ),
+      ),
+    ]);
     expect(initialization.severity, skir.DiagnosticSeverity.warning);
     expect(document.diagnostics.first.targets, [
       PortableDiagnosticTarget.value(

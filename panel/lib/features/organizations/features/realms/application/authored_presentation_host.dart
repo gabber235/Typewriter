@@ -20,6 +20,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     this.readOnly = false,
     this.prepareValue,
     this.edit,
+    this.issues,
   });
 
   final skir.ResourceId resource;
@@ -36,6 +37,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
   prepareValue;
   final RealmEditingBinding? edit;
+  ResourceIssues? issues;
   var _disposed = false;
 
   /// Updates view metadata without replacing an active operation's host.
@@ -44,10 +46,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortablePresentationCapabilities capabilities,
     required bool available,
     required bool readOnly,
+    ResourceIssues? issues,
     Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
     prepareValue,
   }) {
     _source = source;
+    this.issues = issues;
     this.capabilities = capabilities;
     this.available = available;
     this.readOnly = readOnly;
@@ -119,30 +123,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
       },
       budget: budget,
-      diagnostics: [
-        ..._diagnosticsFor(observation, resource),
-        for (final finding in observation.initializationFindings)
-          PortablePresentationDiagnostic(
-            code: finding.code,
-            message: formatPortableInitializationDiagnostic(finding),
-            severity: skir.DiagnosticSeverity.warning,
-          ),
-      ],
+      diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
+          .currentFor(resource)
+          .map((issue) => issue.diagnostic)
+          .toList(),
       role: role,
       material: material,
       activePresentations: {material.provider},
     );
   }
-
-  List<PortablePresentationDiagnostic> _diagnosticsFor(
-    AuthoringDocument observation,
-    skir.ResourceId resource,
-  ) => AuthoredRuleProjection.evaluate(
-    draft: observation,
-    catalog: observation.catalog,
-    resource: resource,
-    budget: budget,
-  ).diagnostics;
 
   @override
   skir.DataValue? read(
@@ -469,7 +458,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
       configuration: record.configuration,
       label: _resourceLabel(record) ?? resource.value,
       value: _resourceRow(record),
-      diagnostics: _diagnosticsFor(observation, resource),
+      diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
+          .currentFor(resource)
+          .map((issue) => issue.diagnostic)
+          .toList(),
     );
   }
 

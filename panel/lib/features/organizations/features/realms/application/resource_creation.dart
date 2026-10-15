@@ -191,14 +191,6 @@ final class ResourceCreationSession {
           definition: effectiveRequest.definition,
           content: prepared.recordContent,
         );
-        if (prepared.findings.isNotEmpty && context.mounted) {
-          showErrorSnackBar(
-            context,
-            prepared.findings
-                .map(formatPortableInitializationDiagnostic)
-                .join("\n"),
-          );
-        }
       },
     );
     outcome.requireAccepted();

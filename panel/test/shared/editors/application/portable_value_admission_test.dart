@@ -4,6 +4,63 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test(
+    "inspection locates unfinished fields without admitting missing fields",
+    () {
+      final page = _definition("Page");
+      final named = skir.NamedTypeUse(definition: page, arguments: const []);
+      final checked = _catalog([
+        _published(
+          page,
+          effectiveFields: [
+            for (final name in ["name", "title"])
+              skir.EffectiveFieldTemplate(
+                key: name,
+                owner: skir.FieldOwner(definition: page, name: name),
+                type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+                rules: const [],
+              ),
+          ],
+        ),
+      ]);
+      skir.DataValue value(List<skir.FieldValue> fields) =>
+          skir.DataValue.createNamed(
+            actualType: named,
+            payload: skir.DataValue.createRecord(fields: fields),
+          );
+      final unfinished = value([
+        for (final name in ["name", "title"])
+          skir.FieldValue(name: name, value: skir.DataValue.unfilled),
+      ]);
+      final result = checked.inspectPortableValue(
+        skir.TypeUse.wrapNamed(named),
+        unfinished,
+      );
+      expect(result.structuralProblems, isEmpty);
+      expect(result.unfinished, [
+        for (final name in ["name", "title"])
+          skir.ValuePath(segments: [skir.PathSegment.createField(name: name)]),
+      ]);
+      expect(
+        checked.admitsPortableValue(skir.TypeUse.wrapNamed(named), unfinished),
+        isTrue,
+      );
+      final missing = checked.inspectPortableValue(
+        skir.TypeUse.wrapNamed(named),
+        value([]),
+      );
+      expect(missing.structuralProblems.map((p) => p.code), [
+        "missing_field",
+        "missing_field",
+      ]);
+      expect(missing.unfinished, isEmpty);
+      expect(
+        checked.admitsPortableValue(skir.TypeUse.wrapNamed(named), value([])),
+        isFalse,
+      );
+    },
+  );
+
   test("named scalar payload keeps its checked identity", () {
     final chapter = _definition("ChapterPath");
     final page = _definition("Page");

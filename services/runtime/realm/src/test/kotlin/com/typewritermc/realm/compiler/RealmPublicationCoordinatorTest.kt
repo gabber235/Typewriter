@@ -6,8 +6,6 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompileDiagnostic
-import com.typewritermc.engine.CompileDiagnosticSeverity
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PageCompileResult
@@ -44,6 +42,57 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 val RealmPublicationCoordinatorTest by testSuite {
+    test("checking preserves runtime invalidation even when authoring witnesses still match") {
+        val fixture = PublicationFixture()
+        try {
+            val location = com.typewritermc.authoring.ValueLocation(ResourceId("page"), com.typewritermc.authoring.ValuePath())
+            val current =
+                fixture.views.read { view ->
+                    com.typewritermc.realm.checking.FindingSet(
+                        com.typewritermc.realm.checking.CheckTicket(
+                            com.typewritermc.realm.checking.CheckInstanceId(
+                                com.typewritermc.configuration.RuleId(com.typewritermc.configuration.RuleOrigin(PUBLICATION_PAGE, 0), 0),
+                                location,
+                            ),
+                            "external_input",
+                            com.typewritermc.authoring.CheckExecutionId("execution"),
+                            view.catalog.generation,
+                        ),
+                        listOf(
+                            com.typewritermc.authoring.EditExpectation
+                                .Resource(location.resource, view.resources.getValue(location.resource)),
+                        ),
+                        com.typewritermc.checking.CheckOutcome.Finished,
+                        listOf(compilationDiagnostic("external_check", "An external input requires attention.", location = location)),
+                        com.typewritermc.checking.FindingStatus.Current,
+                    )
+                }
+            val invalidated =
+                current.copy(
+                    ticket =
+                        current.ticket.copy(
+                            instance =
+                                current.ticket.instance.copy(
+                                    rule =
+                                        current.ticket.instance.rule
+                                            .copy(localIndex = 1),
+                                ),
+                        ),
+                    status = com.typewritermc.checking.FindingStatus.Outdated,
+                )
+            fixture.findings = listOf(current, invalidated)
+            var observed: PublicationStatus.Checking? = null
+            fixture.onEvaluate = { observed = fixture.publisher.views.value.status as PublicationStatus.Checking }
+            fixture.publisher.refresh()
+            observed!!.findings.map { it.status } shouldBe
+                listOf(
+                    com.typewritermc.checking.FindingStatus.Current,
+                    com.typewritermc.checking.FindingStatus.Outdated,
+                )
+        } finally {
+            fixture.close()
+        }
+    }
     test("preparing and unchanged content create no attempt or blob write") {
         val fixture = PublicationFixture()
         fixture.publisher.refresh()
@@ -215,9 +264,9 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.views.capture().use { capture ->
             val expected =
                 with(capture.root) {
-                    PageCompiler(emptySet(), fixture.bindings.associateBy(NativeBindingRequirement::actual)).compile(ResourceId("page"))
+                    PageCompiler(emptySet(), testAssessment(capture.root, fixture.bindings).resources).compile(ResourceId("page"))
                 }.shouldBeInstanceOf<PageCompileResult.Success>()
-            val inputs = CompilationInputs(capture.root, fixture.bindings)
+            val inputs = CompilationInputs(capture.root, testAssessment(capture.root, fixture.bindings).resources)
             val artifact = with(inputs) { pageCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact
             artifact.formatRevision shouldBe 2
             artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
@@ -247,6 +296,8 @@ internal class PublicationFixture(
     var engineInputs = testEngineInputs()
     var blobRequests = 0
     var captureFailure = false
+    var findings = emptyList<com.typewritermc.realm.checking.FindingSet>()
+    var onEvaluate: (() -> Unit)? = null
     private val blobs = InMemoryBlobEndpoint()
     val publisher =
         RealmPublicationCoordinator(
@@ -258,10 +309,10 @@ internal class PublicationFixture(
 
                 override fun <T> withCurrent(block: (AuthoringView) -> T): T = views.read(block)
 
-                override suspend fun evaluate(capture: AuthoringLease) =
-                    AuthoringAssessment.Accepted(
-                        AcceptedAuthoring(capture.root.catalog.generation, CheckCoverage(emptySet(), emptySet()), emptyList(), bindings),
-                    )
+                override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
+                    onEvaluate?.invoke()
+                    return testAssessment(capture.root, bindings)
+                }
             },
             attempts,
             RegisteredCompiledArtifactStore(
@@ -277,6 +328,7 @@ internal class PublicationFixture(
             },
             CompiledArtifactProducerRegistry(producers),
             attempts,
+            findings = { findings },
         )
 
     fun ready() =
@@ -300,7 +352,7 @@ internal class PublicationFixture(
             )
         try {
             return store.capture().use { capture ->
-                with(CompilationInputs(capture.root, bindings)) {
+                with(CompilationInputs(capture.root, testAssessment(capture.root, bindings).resources)) {
                     pageCompilation().compile().single()
                 }.shouldBeInstanceOf<CompilationResult.Success>().artifact
             }
@@ -369,10 +421,10 @@ private fun blockedProducer() =
                     roots.single(),
                     ContentDigest("a".repeat(64)),
                     listOf(
-                        CompileDiagnostic(
+                        compilationDiagnostic(
                             "broken_link",
                             "The target is missing",
-                            CompileDiagnosticSeverity.ERROR,
+                            com.typewritermc.checking.DiagnosticSeverity.Error,
                             ResourceId("broken"),
                             ResourceId("target"),
                         ),

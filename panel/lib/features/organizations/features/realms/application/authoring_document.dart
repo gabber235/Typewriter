@@ -13,7 +13,7 @@ abstract class AuthoringDocument
     required Map<skir.ResourceId, skir.AuthoringResource> entries,
     required List<skir.LinkProjection> links,
     @Default(0) int revision,
-    @Default([]) List<skir.InitializationDiagnostic> initializationFindings,
+    @Default([]) List<LocatedInitializationFinding> initializationFindings,
   }) = _AuthoringDocument;
 
   const AuthoringDocument._();
@@ -61,4 +61,16 @@ abstract class AuthoringScope with _$AuthoringScope {
     required skir.RecordId organizationId,
     required skir.RecordId realmId,
   }) = _AuthoringScope;
+}
+
+/// A preparation finding witnessed by the value returned for its target.
+/// Later edits invalidate this evidence instead of moving the finding forward.
+@freezed
+abstract class LocatedInitializationFinding
+    with _$LocatedInitializationFinding {
+  const factory LocatedInitializationFinding({
+    required skir.ValueLocation location,
+    required skir.InitializationDiagnostic diagnostic,
+    required skir.DiagnosticEvidence evidence,
+  }) = _LocatedInitializationFinding;
 }

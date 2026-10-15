@@ -17,21 +17,24 @@ void main() {
       resource: owner,
       path: editorRootPath.field("title"),
     );
-    final issue = RealmInboxIssue.localFinding(
-      PortablePresentationDiagnostic(
-        code: "related",
-        message: "Names must agree",
-        severity: skir.DiagnosticSeverity.error,
-        targets: [
-          PortableDiagnosticTarget.binding(
-            skir.BindingRef(
-              bindingId: skir.ExpressionBindingId(value: "external"),
-              path: editorRootPath,
+    final issue = RealmInboxIssue.finding(
+      ResourceIssue(
+        current: true,
+        diagnostic: PortablePresentationDiagnostic(
+          code: "related",
+          message: "Names must agree",
+          severity: skir.DiagnosticSeverity.error,
+          targets: [
+            PortableDiagnosticTarget.binding(
+              skir.BindingRef(
+                bindingId: skir.ExpressionBindingId(value: "external"),
+                path: editorRootPath,
+              ),
             ),
-          ),
-          PortableDiagnosticTarget.value(primary),
-          PortableDiagnosticTarget.value(related),
-        ],
+            PortableDiagnosticTarget.value(primary),
+            PortableDiagnosticTarget.value(related),
+          ],
+        ),
       ),
     );
     expect(issue.primary, primary);

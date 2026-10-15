@@ -797,177 +797,6 @@ class ScriptContextDescriptor private constructor(
     }
 }
 
-sealed interface NativeBindingRequirement_OrMutable {
-    val actual: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable;
-    val provider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable;
-    val signature: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.publication.NativeBindingRequirement;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class NativeBindingRequirement private constructor(
-    override val actual: skirout.editor.v1.type_catalog.NamedTypeUse,
-    override val provider: skirout.editor.v1.type_catalog.NativeBindingId,
-    override val signature: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.NativeBindingRequirement>? =
-        null,
-): skirout.editor.v1.publication.NativeBindingRequirement_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        actual: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable,
-        provider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable,
-        signature: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.NativeBindingRequirement>? =
-            null,
-    ): this(
-        actual.toFrozen(),
-        provider.toFrozen(),
-        signature,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        actual = this.actual,
-        provider = this.provider,
-        signature = this.signature,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        actual: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
-            this.actual,
-        provider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
-            this.provider,
-        signature: kotlin.String =
-            this.signature,
-    ) = skirout.editor.v1.publication.NativeBindingRequirement(
-        actual.toFrozen(),
-        provider.toFrozen(),
-        signature,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.NativeBindingRequirement && this.actual == other.actual && this.provider == other.provider && this.signature == other.signature);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.actual, this.provider, this.signature).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.NativeBindingRequirementSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [NativeBindingRequirement]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var actual: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
-            skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
-        override var provider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
-            skirout.editor.v1.type_catalog.NativeBindingId.partial(),
-        override var signature: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.NativeBindingRequirement>? =
-            null,
-    ): skirout.editor.v1.publication.NativeBindingRequirement_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.NativeBindingRequirement(
-            actual = this.actual,
-            provider = this.provider,
-            signature = this.signature,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [actual] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
-         */
-        val mutableActual: skirout.editor.v1.type_catalog.NamedTypeUse.Mutable get() {
-            var value = this.actual;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.NamedTypeUse -> {
-                    value = value.toMutable();
-                    this.actual = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.NamedTypeUse.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [provider] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [provider] and returns it.
-         */
-        val mutableProvider: skirout.editor.v1.type_catalog.NativeBindingId.Mutable get() {
-            var value = this.provider;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.NativeBindingId -> {
-                    value = value.toMutable();
-                    this.provider = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.NativeBindingId.Mutable -> value;
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.NativeBindingRequirement(
-                skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
-                skirout.editor.v1.type_catalog.NativeBindingId.partial(),
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [NativeBindingRequirement].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            actual: skirout.editor.v1.type_catalog.NamedTypeUse_OrMutable =
-                skirout.editor.v1.type_catalog.NamedTypeUse.partial(),
-            provider: skirout.editor.v1.type_catalog.NativeBindingId_OrMutable =
-                skirout.editor.v1.type_catalog.NativeBindingId.partial(),
-            signature: kotlin.String =
-                "",
-        ) = skirout.editor.v1.publication.NativeBindingRequirement(
-            actual = actual,
-            provider = provider,
-            signature = signature,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [NativeBindingRequirement] instances. */
-        val serializer get() = _SerializerRegistry.NativeBindingRequirementSerializer;
-
-        /** Describes the [NativeBindingRequirement] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.NativeBindingRequirementSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface EngineImplementationInputs_OrMutable {
     val signatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable>;
     val token: skirout.editor.v1.type_catalog.InputToken_OrMutable;
@@ -1455,380 +1284,6 @@ class PublicationAttempt private constructor(
 
         /** Describes the [PublicationAttempt] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.PublicationAttemptSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface CheckCoverage_OrMutable {
-    val required: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId_OrMutable>;
-    val completed: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.CheckCoverage;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class CheckCoverage private constructor(
-    override val required: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId>,
-    override val completed: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.CheckCoverage>? =
-        null,
-): skirout.editor.v1.publication.CheckCoverage_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        required: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable>,
-        completed: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.CheckCoverage>? =
-            null,
-    ): this(
-        build.skir.internal.toFrozenList(required, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(completed, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        required = this.required,
-        completed = this.completed,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        required: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-            this.required,
-        completed: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-            this.completed,
-    ) = skirout.editor.v1.publication.CheckCoverage(
-        build.skir.internal.toFrozenList(required, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(completed, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.CheckCoverage && this.required == other.required && this.completed == other.completed);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.required, this.completed).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.CheckCoverageSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [CheckCoverage]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var required: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-        override var completed: kotlin.collections.List<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.CheckCoverage>? =
-            null,
-    ): skirout.editor.v1.publication.CheckCoverage_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.CheckCoverage(
-            required = this.required,
-            completed = this.completed,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [required] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [required] and returns it.
-         */
-        val mutableRequired: kotlin.collections.MutableList<skirout.editor.v1.checking.CheckInstanceId_OrMutable> get() {
-            var value = this.required;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.required = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [completed] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [completed] and returns it.
-         */
-        val mutableCompleted: kotlin.collections.MutableList<skirout.editor.v1.checking.CheckInstanceId_OrMutable> get() {
-            var value = this.completed;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.completed = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.CheckCoverage(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [CheckCoverage].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            required: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-            completed: kotlin.collections.Iterable<skirout.editor.v1.checking.CheckInstanceId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.CheckInstanceId>(),
-        ) = skirout.editor.v1.publication.CheckCoverage(
-            required = required,
-            completed = completed,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [CheckCoverage] instances. */
-        val serializer get() = _SerializerRegistry.CheckCoverageSerializer;
-
-        /** Describes the [CheckCoverage] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.CheckCoverageSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface AcceptedAuthoring_OrMutable {
-    val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
-    val requiredCoverage: skirout.editor.v1.publication.CheckCoverage_OrMutable;
-    val evidence: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation>;
-    val bindingRequirements: kotlin.collections.List<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.AcceptedAuthoring;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class AcceptedAuthoring private constructor(
-    override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
-    override val requiredCoverage: skirout.editor.v1.publication.CheckCoverage,
-    override val evidence: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation>,
-    override val bindingRequirements: kotlin.collections.List<skirout.editor.v1.publication.NativeBindingRequirement>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.AcceptedAuthoring>? =
-        null,
-): skirout.editor.v1.publication.AcceptedAuthoring_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
-        requiredCoverage: skirout.editor.v1.publication.CheckCoverage_OrMutable,
-        evidence: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation>,
-        bindingRequirements: kotlin.collections.Iterable<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.AcceptedAuthoring>? =
-            null,
-    ): this(
-        catalog.toFrozen(),
-        requiredCoverage.toFrozen(),
-        build.skir.internal.toFrozenList(evidence),
-        build.skir.internal.toFrozenList(bindingRequirements, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        catalog = this.catalog,
-        requiredCoverage = this.requiredCoverage,
-        evidence = this.evidence,
-        bindingRequirements = this.bindingRequirements,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            this.catalog,
-        requiredCoverage: skirout.editor.v1.publication.CheckCoverage_OrMutable =
-            this.requiredCoverage,
-        evidence: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation> =
-            this.evidence,
-        bindingRequirements: kotlin.collections.Iterable<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable> =
-            this.bindingRequirements,
-    ) = skirout.editor.v1.publication.AcceptedAuthoring(
-        catalog.toFrozen(),
-        requiredCoverage.toFrozen(),
-        build.skir.internal.toFrozenList(evidence),
-        build.skir.internal.toFrozenList(bindingRequirements, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.AcceptedAuthoring && this.catalog == other.catalog && this.requiredCoverage == other.requiredCoverage && this.evidence == other.evidence && this.bindingRequirements == other.bindingRequirements);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.catalog, this.requiredCoverage, this.evidence, this.bindingRequirements).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.AcceptedAuthoringSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [AcceptedAuthoring]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-        override var requiredCoverage: skirout.editor.v1.publication.CheckCoverage_OrMutable =
-            skirout.editor.v1.publication.CheckCoverage.partial(),
-        override var evidence: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
-        override var bindingRequirements: kotlin.collections.List<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.NativeBindingRequirement>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.AcceptedAuthoring>? =
-            null,
-    ): skirout.editor.v1.publication.AcceptedAuthoring_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.AcceptedAuthoring(
-            catalog = this.catalog,
-            requiredCoverage = this.requiredCoverage,
-            evidence = this.evidence,
-            bindingRequirements = this.bindingRequirements,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [catalog] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
-         */
-        val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
-            var value = this.catalog;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
-                    value = value.toMutable();
-                    this.catalog = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [requiredCoverage] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [requiredCoverage] and returns it.
-         */
-        val mutableRequiredCoverage: skirout.editor.v1.publication.CheckCoverage.Mutable get() {
-            var value = this.requiredCoverage;
-            return when (value) {
-                is skirout.editor.v1.publication.CheckCoverage -> {
-                    value = value.toMutable();
-                    this.requiredCoverage = value;
-                    return value;
-                }
-                is skirout.editor.v1.publication.CheckCoverage.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [evidence] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [evidence] and returns it.
-         */
-        val mutableEvidence: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.EditExpectation> get() {
-            var value = this.evidence;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.evidence = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [bindingRequirements] is already mutable, returns it as is.
-         * Otherwise, makes a mutable copy, assigns it back to [bindingRequirements] and returns it.
-         */
-        val mutableBindingRequirements: kotlin.collections.MutableList<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable> get() {
-            var value = this.bindingRequirements;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.bindingRequirements = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.AcceptedAuthoring(
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-                skirout.editor.v1.publication.CheckCoverage.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.NativeBindingRequirement>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [AcceptedAuthoring].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
-                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
-            requiredCoverage: skirout.editor.v1.publication.CheckCoverage_OrMutable =
-                skirout.editor.v1.publication.CheckCoverage.partial(),
-            evidence: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
-            bindingRequirements: kotlin.collections.Iterable<skirout.editor.v1.publication.NativeBindingRequirement_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.NativeBindingRequirement>(),
-        ) = skirout.editor.v1.publication.AcceptedAuthoring(
-            catalog = catalog,
-            requiredCoverage = requiredCoverage,
-            evidence = evidence,
-            bindingRequirements = bindingRequirements,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [AcceptedAuthoring] instances. */
-        val serializer get() = _SerializerRegistry.AcceptedAuthoringSerializer;
-
-        /** Describes the [AcceptedAuthoring] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.AcceptedAuthoringSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2638,6 +2093,162 @@ sealed class PublicationBaseline private constructor() {
     }
 }
 
+sealed interface DiagnosticEvidence_OrMutable {
+    val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
+    val expectations: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation>;
+
+    fun toFrozen(): skirout.editor.v1.publication.DiagnosticEvidence;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class DiagnosticEvidence private constructor(
+    override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
+    override val expectations: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.DiagnosticEvidence>? =
+        null,
+): skirout.editor.v1.publication.DiagnosticEvidence_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        expectations: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.DiagnosticEvidence>? =
+            null,
+    ): this(
+        catalog.toFrozen(),
+        build.skir.internal.toFrozenList(expectations),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        catalog = this.catalog,
+        expectations = this.expectations,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            this.catalog,
+        expectations: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation> =
+            this.expectations,
+    ) = skirout.editor.v1.publication.DiagnosticEvidence(
+        catalog.toFrozen(),
+        build.skir.internal.toFrozenList(expectations),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.publication.DiagnosticEvidence && this.catalog == other.catalog && this.expectations == other.expectations);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.catalog, this.expectations).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.DiagnosticEvidenceSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [DiagnosticEvidence]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+        override var expectations: kotlin.collections.List<skirout.editor.v1.authoring_facts.EditExpectation> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.DiagnosticEvidence>? =
+            null,
+    ): skirout.editor.v1.publication.DiagnosticEvidence_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.publication.DiagnosticEvidence(
+            catalog = this.catalog,
+            expectations = this.expectations,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [catalog] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
+         */
+        val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
+            var value = this.catalog;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
+                    value = value.toMutable();
+                    this.catalog = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [expectations] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [expectations] and returns it.
+         */
+        val mutableExpectations: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.EditExpectation> get() {
+            var value = this.expectations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.expectations = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.publication.DiagnosticEvidence(
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [DiagnosticEvidence].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+            expectations: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.EditExpectation> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.EditExpectation>(),
+        ) = skirout.editor.v1.publication.DiagnosticEvidence(
+            catalog = catalog,
+            expectations = expectations,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [DiagnosticEvidence] instances. */
+        val serializer get() = _SerializerRegistry.DiagnosticEvidenceSerializer;
+
+        /** Describes the [DiagnosticEvidence] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.DiagnosticEvidenceSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface PublicationDiagnosticDetails_OrMutable {
     val id: skirout.editor.v1.type_catalog.DiagnosticId_OrMutable;
     val origin: skirout.editor.v1.type_catalog.RuleOrigin_OrMutable;
@@ -2645,6 +2256,7 @@ sealed interface PublicationDiagnosticDetails_OrMutable {
     val message: kotlin.String;
     val primary: skirout.editor.v1.type_catalog.ValueLocation_OrMutable?;
     val related: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>;
+    val evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.publication.PublicationDiagnosticDetails;
 }
@@ -2658,6 +2270,7 @@ class PublicationDiagnosticDetails private constructor(
     override val message: kotlin.String,
     override val primary: skirout.editor.v1.type_catalog.ValueLocation?,
     override val related: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation>,
+    override val evidence: skirout.editor.v1.publication.DiagnosticEvidence?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationDiagnosticDetails>? =
         null,
 ): skirout.editor.v1.publication.PublicationDiagnosticDetails_OrMutable {
@@ -2670,6 +2283,7 @@ class PublicationDiagnosticDetails private constructor(
         message: kotlin.String,
         primary: skirout.editor.v1.type_catalog.ValueLocation_OrMutable?,
         related: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
+        evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationDiagnosticDetails>? =
             null,
     ): this(
@@ -2679,6 +2293,7 @@ class PublicationDiagnosticDetails private constructor(
         message,
         if (primary != null) primary.toFrozen() else null,
         build.skir.internal.toFrozenList(related, { it.toFrozen() }),
+        if (evidence != null) evidence.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -2693,6 +2308,7 @@ class PublicationDiagnosticDetails private constructor(
         message = this.message,
         primary = this.primary,
         related = this.related,
+        evidence = this.evidence,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2711,6 +2327,8 @@ class PublicationDiagnosticDetails private constructor(
             this.primary,
         related: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
             this.related,
+        evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable? =
+            this.evidence,
     ) = skirout.editor.v1.publication.PublicationDiagnosticDetails(
         id.toFrozen(),
         origin.toFrozen(),
@@ -2718,6 +2336,7 @@ class PublicationDiagnosticDetails private constructor(
         message,
         if (primary != null) primary.toFrozen() else null,
         build.skir.internal.toFrozenList(related, { it.toFrozen() }),
+        if (evidence != null) evidence.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -2725,11 +2344,11 @@ class PublicationDiagnosticDetails private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.PublicationDiagnosticDetails && this.id == other.id && this.origin == other.origin && this.code == other.code && this.message == other.message && this.primary == other.primary && this.related == other.related);
+        return this === other || (other is skirout.editor.v1.publication.PublicationDiagnosticDetails && this.id == other.id && this.origin == other.origin && this.code == other.code && this.message == other.message && this.primary == other.primary && this.related == other.related && this.evidence == other.evidence);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.origin, this.code, this.message, this.primary, this.related).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.origin, this.code, this.message, this.primary, this.related, this.evidence).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2755,6 +2374,8 @@ class PublicationDiagnosticDetails private constructor(
             null,
         override var related: kotlin.collections.List<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValueLocation>(),
+        override var evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.PublicationDiagnosticDetails>? =
             null,
     ): skirout.editor.v1.publication.PublicationDiagnosticDetails_OrMutable {
@@ -2766,6 +2387,7 @@ class PublicationDiagnosticDetails private constructor(
             message = this.message,
             primary = this.primary,
             related = this.related,
+            evidence = this.evidence,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2827,6 +2449,7 @@ class PublicationDiagnosticDetails private constructor(
                 "",
                 null,
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValueLocation>(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2852,6 +2475,8 @@ class PublicationDiagnosticDetails private constructor(
                 null,
             related: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValueLocation>(),
+            evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable? =
+                null,
         ) = skirout.editor.v1.publication.PublicationDiagnosticDetails(
             id = id,
             origin = origin,
@@ -2859,6 +2484,7 @@ class PublicationDiagnosticDetails private constructor(
             message = message,
             primary = primary,
             related = related,
+            evidence = evidence,
             _unrecognizedFields = null,
         );
 
@@ -2959,6 +2585,7 @@ sealed class PublicationNotice private constructor() {
             message: kotlin.String,
             primary: skirout.editor.v1.type_catalog.ValueLocation_OrMutable?,
             related: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
+            evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable?,
         ) = InformationWrapper(
             skirout.editor.v1.publication.PublicationDiagnosticDetails(
                 id = id,
@@ -2967,6 +2594,7 @@ sealed class PublicationNotice private constructor() {
                 message = message,
                 primary = primary,
                 related = related,
+                evidence = evidence,
             )
         );
 
@@ -2981,6 +2609,7 @@ sealed class PublicationNotice private constructor() {
             message: kotlin.String,
             primary: skirout.editor.v1.type_catalog.ValueLocation_OrMutable?,
             related: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValueLocation_OrMutable>,
+            evidence: skirout.editor.v1.publication.DiagnosticEvidence_OrMutable?,
         ) = WarningWrapper(
             skirout.editor.v1.publication.PublicationDiagnosticDetails(
                 id = id,
@@ -2989,6 +2618,7 @@ sealed class PublicationNotice private constructor() {
                 message = message,
                 primary = primary,
                 related = related,
+                evidence = evidence,
             )
         );
 
@@ -6746,29 +6376,17 @@ val QueryPublicationView: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
-    val AcceptedAuthoringSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:AcceptedAuthoring",
+    val DiagnosticEvidenceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/publication.skir:DiagnosticEvidence",
         doc = "",
-        defaultInstance = skirout.editor.v1.publication.AcceptedAuthoring.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.AcceptedAuthoring.Mutable() },
+        defaultInstance = skirout.editor.v1.publication.DiagnosticEvidence.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.DiagnosticEvidence.Mutable() },
         toFrozenFn = { it.toFrozen() },
         getUnrecognizedFields = { it._unrecognizedFields },
         setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
     );
 
-    val AcceptedAuthoringSerializer = build.skir.internal.makeSerializer(AcceptedAuthoringSerializerImpl);
-
-    val CheckCoverageSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:CheckCoverage",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.CheckCoverage.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.CheckCoverage.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val CheckCoverageSerializer = build.skir.internal.makeSerializer(CheckCoverageSerializerImpl);
+    val DiagnosticEvidenceSerializer = build.skir.internal.makeSerializer(DiagnosticEvidenceSerializerImpl);
 
     val EngineImplementationInputsSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:EngineImplementationInputs",
@@ -6781,18 +6399,6 @@ private object _SerializerRegistry {
     );
 
     val EngineImplementationInputsSerializer = build.skir.internal.makeSerializer(EngineImplementationInputsSerializerImpl);
-
-    val NativeBindingRequirementSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:NativeBindingRequirement",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.NativeBindingRequirement.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.NativeBindingRequirement.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val NativeBindingRequirementSerializer = build.skir.internal.makeSerializer(NativeBindingRequirementSerializerImpl);
 
     val OwnedPortableTypesSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:OwnedPortableTypes",
@@ -7261,7 +6867,7 @@ private object _SerializerRegistry {
     val WatchPublicationRequestSerializer = build.skir.internal.makeSerializer(WatchPublicationRequestSerializerImpl);
 
     init {
-        AcceptedAuthoringSerializerImpl.addField(
+        DiagnosticEvidenceSerializerImpl.addField(
             "catalog",
             "catalog",
             0,
@@ -7270,62 +6876,18 @@ private object _SerializerRegistry {
             { it.catalog },
             { mut, v -> mut.catalog = v },
         );
-        AcceptedAuthoringSerializerImpl.addField(
-            "required_coverage",
-            "requiredCoverage",
+        DiagnosticEvidenceSerializerImpl.addField(
+            "expectations",
+            "expectations",
             1,
-            _SerializerRegistry.CheckCoverageSerializer,
-            "",
-            { it.requiredCoverage },
-            { mut, v -> mut.requiredCoverage = v },
-        );
-        AcceptedAuthoringSerializerImpl.addField(
-            "evidence",
-            "evidence",
-            2,
             build.skir.Serializers.list(
                 skirout.editor.v1.authoring_facts.EditExpectation.serializer,
             ),
             "",
-            { it.evidence },
-            { mut, v -> mut.evidence = v },
+            { it.expectations },
+            { mut, v -> mut.expectations = v },
         );
-        AcceptedAuthoringSerializerImpl.addField(
-            "binding_requirements",
-            "bindingRequirements",
-            3,
-            build.skir.Serializers.list(
-                _SerializerRegistry.NativeBindingRequirementSerializer,
-            ),
-            "",
-            { it.bindingRequirements },
-            { mut, v -> mut.bindingRequirements = v },
-        );
-        AcceptedAuthoringSerializerImpl.finalizeStruct();
-
-        CheckCoverageSerializerImpl.addField(
-            "required",
-            "required",
-            0,
-            build.skir.Serializers.list(
-                skirout.editor.v1.checking.CheckInstanceId.serializer,
-            ),
-            "",
-            { it.required },
-            { mut, v -> mut.required = v },
-        );
-        CheckCoverageSerializerImpl.addField(
-            "completed",
-            "completed",
-            1,
-            build.skir.Serializers.list(
-                skirout.editor.v1.checking.CheckInstanceId.serializer,
-            ),
-            "",
-            { it.completed },
-            { mut, v -> mut.completed = v },
-        );
-        CheckCoverageSerializerImpl.finalizeStruct();
+        DiagnosticEvidenceSerializerImpl.finalizeStruct();
 
         EngineImplementationInputsSerializerImpl.addField(
             "signatures",
@@ -7348,35 +6910,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.token = v },
         );
         EngineImplementationInputsSerializerImpl.finalizeStruct();
-
-        NativeBindingRequirementSerializerImpl.addField(
-            "actual",
-            "actual",
-            0,
-            skirout.editor.v1.type_catalog.NamedTypeUse.serializer,
-            "",
-            { it.actual },
-            { mut, v -> mut.actual = v },
-        );
-        NativeBindingRequirementSerializerImpl.addField(
-            "provider",
-            "provider",
-            1,
-            skirout.editor.v1.type_catalog.NativeBindingId.serializer,
-            "",
-            { it.provider },
-            { mut, v -> mut.provider = v },
-        );
-        NativeBindingRequirementSerializerImpl.addField(
-            "signature",
-            "signature",
-            2,
-            build.skir.Serializers.string,
-            "",
-            { it.signature },
-            { mut, v -> mut.signature = v },
-        );
-        NativeBindingRequirementSerializerImpl.finalizeStruct();
 
         OwnedPortableTypesSerializerImpl.addField(
             "owner",
@@ -7631,6 +7164,17 @@ private object _SerializerRegistry {
             "",
             { it.related },
             { mut, v -> mut.related = v },
+        );
+        PublicationDiagnosticDetailsSerializerImpl.addField(
+            "evidence",
+            "evidence",
+            6,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.DiagnosticEvidenceSerializer,
+            ),
+            "",
+            { it.evidence },
+            { mut, v -> mut.evidence = v },
         );
         PublicationDiagnosticDetailsSerializerImpl.finalizeStruct();
 

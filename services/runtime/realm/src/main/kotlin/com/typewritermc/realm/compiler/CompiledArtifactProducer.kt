@@ -7,7 +7,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 /** Pins every producer to one retained publication view and the native requirements accepted for that view. */
 internal data class CompilationInputs(
     val view: AuthoringView,
-    val bindingRequirements: List<NativeBindingRequirement>,
+    val resources: Map<com.typewritermc.types.ResourceId, ResourceReadiness>,
 )
 
 internal interface CompiledArtifactProducer {

@@ -15,11 +15,14 @@ RealmInboxState _state([int issues = 0]) => RealmInboxState(
   publication: const RealmPublicationView.checking(),
   issues: [
     for (var i = 0; i < issues; i++)
-      RealmInboxIssue.localFinding(
-        PortablePresentationDiagnostic(
-          code: "issue$i",
-          message: "Problem $i",
-          severity: skir.DiagnosticSeverity.error,
+      RealmInboxIssue.finding(
+        ResourceIssue(
+          current: true,
+          diagnostic: PortablePresentationDiagnostic(
+            code: "issue$i",
+            message: "Problem $i",
+            severity: skir.DiagnosticSeverity.error,
+          ),
         ),
       ),
   ],

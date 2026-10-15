@@ -69,17 +69,17 @@ data class AuthoringView internal constructor(
 ) {
     internal val readContext = ReadContext(catalog.generation)
     internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
-    internal val values by lazy {
-        com.typewritermc.realm.repository.CapturedAuthoringValues(
+    internal val projection by lazy {
+        com.typewritermc.realm.repository.ResourceValueMapper.project(
+            links.values,
             resources,
-            com.typewritermc.realm.repository.ResourceValueMapper
-                .project(
-                    links.values,
-                    resources,
-                    catalog.relations,
-                    catalog.checked,
-                ).projections,
+            catalog.relations,
+            catalog.checked,
         )
+    }
+    internal val values by lazy {
+        com.typewritermc.realm.repository
+            .CapturedAuthoringValues(resources, projection.projections)
     }
 }
 

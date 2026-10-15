@@ -56,4 +56,66 @@ val PublicationRoutesTest by testSuite {
             }
         }
     }
+    test("publication findings retain exact locations and captured evidence on the wire") {
+        val resource = com.typewritermc.types.ResourceId("page")
+        val location =
+            com.typewritermc.authoring.ValueLocation(
+                resource,
+                com.typewritermc.authoring.ValuePath(
+                    listOf(
+                        com.typewritermc.authoring.PathSegment
+                            .Field("name"),
+                    ),
+                ),
+            )
+        val finding =
+            com.typewritermc.realm.compiler.compilationDiagnostic(
+                "unfinished_value",
+                "A required value is unfinished.",
+                location = location,
+            )
+        val captured =
+            com.typewritermc.realm.compiler.DiagnosticEvidence(
+                com.typewritermc.checking.CatalogGeneration("catalog"),
+                listOf(
+                    com.typewritermc.authoring.EditExpectation
+                        .Value(location, com.typewritermc.types.DataValue.Unfilled),
+                ),
+            )
+        val status =
+            com.typewritermc.realm.compiler.PublicationStatus.Blocked(
+                com.typewritermc.realm.compiler.PublicationBaseline.Initial,
+                com.typewritermc.realm.compiler.PublicationBlockers
+                    .from(listOf(finding)),
+                emptyList(),
+                emptyList(),
+                emptyList(),
+            )
+        val review =
+            com.typewritermc.realm.compiler.PublicationView(
+                com.typewritermc.realm.compiler
+                    .PublicationViewId("review"),
+                status,
+                mapOf(finding.id to captured),
+            )
+        val details =
+            review
+                .toWire()
+                .status
+                .shouldBeInstanceOf<skirout.editor.v1.publication.PublicationStatus.BlockedWrapper>()
+                .value.blockers.first.details
+        details.primary!!
+            .path.segments.size shouldBe 1
+        details.evidence!!.catalog.value shouldBe "catalog"
+        details.evidence!!.expectations.size shouldBe 1
+        val noEvidence =
+            review
+                .copy(
+                    evidence = emptyMap(),
+                ).toWire()
+                .status
+                .shouldBeInstanceOf<skirout.editor.v1.publication.PublicationStatus.BlockedWrapper>()
+                .value.blockers.first.details
+        noEvidence.evidence shouldBe null
+    }
 }

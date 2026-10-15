@@ -193,51 +193,6 @@ impl ScriptContextDescriptor {
 }
 
 // ==============================================================================
-// struct NativeBindingRequirement
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct NativeBindingRequirement {
-    pub actual: crate::skirout::base::editor::v1::type_catalog::NamedTypeUse,
-    pub provider: crate::skirout::base::editor::v1::type_catalog::NativeBindingId,
-    pub signature: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NativeBindingRequirement>>,
-}
-
-impl NativeBindingRequirement {
-    pub fn default_ref() -> &'static NativeBindingRequirement {
-        static D: std::sync::LazyLock<NativeBindingRequirement> =
-            std::sync::LazyLock::new(NativeBindingRequirement::default);
-        &D
-    }
-}
-
-impl NativeBindingRequirement {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NativeBindingRequirement>
-    {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<NativeBindingRequirement>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "NativeBindingRequirement",
-                "",
-                |x: &NativeBindingRequirement| &x._unrecognized,
-                |x: &mut NativeBindingRequirement, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<NativeBindingRequirement> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            NativeBindingRequirement::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct EngineImplementationInputs
 // ==============================================================================
 
@@ -375,90 +330,6 @@ impl PublicationAttempt {
     pub fn serializer() -> crate::skir_client::Serializer<PublicationAttempt> {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(PublicationAttempt::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct CheckCoverage
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CheckCoverage {
-    pub required: Vec<crate::skirout::base::editor::v1::checking::CheckInstanceId>,
-    pub completed: Vec<crate::skirout::base::editor::v1::checking::CheckInstanceId>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CheckCoverage>>,
-}
-
-impl CheckCoverage {
-    pub fn default_ref() -> &'static CheckCoverage {
-        static D: std::sync::LazyLock<CheckCoverage> =
-            std::sync::LazyLock::new(CheckCoverage::default);
-        &D
-    }
-}
-
-impl CheckCoverage {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CheckCoverage> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CheckCoverage>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "CheckCoverage",
-                "",
-                |x: &CheckCoverage| &x._unrecognized,
-                |x: &mut CheckCoverage, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CheckCoverage> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CheckCoverage::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct AcceptedAuthoring
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct AcceptedAuthoring {
-    pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
-    pub required_coverage: CheckCoverage,
-    pub evidence: Vec<crate::skirout::base::editor::v1::authoring_facts::EditExpectation>,
-    pub binding_requirements: Vec<NativeBindingRequirement>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AcceptedAuthoring>>,
-}
-
-impl AcceptedAuthoring {
-    pub fn default_ref() -> &'static AcceptedAuthoring {
-        static D: std::sync::LazyLock<AcceptedAuthoring> =
-            std::sync::LazyLock::new(AcceptedAuthoring::default);
-        &D
-    }
-}
-
-impl AcceptedAuthoring {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AcceptedAuthoring> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<AcceptedAuthoring>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/publication.skir",
-                "AcceptedAuthoring",
-                "",
-                |x: &AcceptedAuthoring| &x._unrecognized,
-                |x: &mut AcceptedAuthoring, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<AcceptedAuthoring> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(AcceptedAuthoring::_adapter())
     }
 }
 
@@ -730,6 +601,47 @@ impl PublicationBaseline {
 }
 
 // ==============================================================================
+// struct DiagnosticEvidence
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DiagnosticEvidence {
+    pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
+    pub expectations: Vec<crate::skirout::base::editor::v1::authoring_facts::EditExpectation>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DiagnosticEvidence>>,
+}
+
+impl DiagnosticEvidence {
+    pub fn default_ref() -> &'static DiagnosticEvidence {
+        static D: std::sync::LazyLock<DiagnosticEvidence> =
+            std::sync::LazyLock::new(DiagnosticEvidence::default);
+        &D
+    }
+}
+
+impl DiagnosticEvidence {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DiagnosticEvidence> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DiagnosticEvidence>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/publication.skir",
+                "DiagnosticEvidence",
+                "",
+                |x: &DiagnosticEvidence| &x._unrecognized,
+                |x: &mut DiagnosticEvidence, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DiagnosticEvidence> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DiagnosticEvidence::_adapter())
+    }
+}
+
+// ==============================================================================
 // struct PublicationDiagnosticDetails
 // ==============================================================================
 
@@ -741,6 +653,7 @@ pub struct PublicationDiagnosticDetails {
     pub message: String,
     pub primary: Option<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
     pub related: Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
+    pub evidence: Option<DiagnosticEvidence>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublicationDiagnosticDetails>>,
 }
@@ -2077,35 +1990,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<NativeBindingRequirement> =
-                NativeBindingRequirement::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "actual",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::NamedTypeUse::serializer(),
-                "",
-                |x: &NativeBindingRequirement| &x.actual,
-                |x: &mut NativeBindingRequirement, v| x.actual = v,
-            );
-            (*a).add_field(
-                "provider",
-                1,
-                crate::skirout::base::editor::v1::type_catalog::NativeBindingId::serializer(),
-                "",
-                |x: &NativeBindingRequirement| &x.provider,
-                |x: &mut NativeBindingRequirement, v| x.provider = v,
-            );
-            (*a).add_field(
-                "signature",
-                2,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &NativeBindingRequirement| &x.signature,
-                |x: &mut NativeBindingRequirement, v| x.signature = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<EngineImplementationInputs> =
                 EngineImplementationInputs::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2192,77 +2076,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PublicationAttempt| &x.state,
                 |x: &mut PublicationAttempt, v| x.state = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CheckCoverage> =
-                CheckCoverage::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "required",
-                0,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::checking::CheckInstanceId::serializer(),
-                ),
-                "",
-                |x: &CheckCoverage| &x.required,
-                |x: &mut CheckCoverage, v| x.required = v,
-            );
-            (*a).add_field(
-                "completed",
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::checking::CheckInstanceId::serializer(),
-                ),
-                "",
-                |x: &CheckCoverage| &x.completed,
-                |x: &mut CheckCoverage, v| x.completed = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<AcceptedAuthoring> =
-                AcceptedAuthoring::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "catalog",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
-                "",
-                |x: &AcceptedAuthoring| &x.catalog,
-                |x: &mut AcceptedAuthoring, v| x.catalog = v,
-            );
-            (*a).add_field(
-                "required_coverage",
-                1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    CheckCoverage::_adapter(),
-                ),
-                "",
-                |x: &AcceptedAuthoring| &x.required_coverage,
-                |x: &mut AcceptedAuthoring, v| x.required_coverage = v,
-            );
-            (*a).add_field(
-                "evidence",
-                2,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::authoring_facts::EditExpectation::serializer(
-                    ),
-                ),
-                "",
-                |x: &AcceptedAuthoring| &x.evidence,
-                |x: &mut AcceptedAuthoring, v| x.evidence = v,
-            );
-            (*a).add_field(
-                "binding_requirements",
-                3,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        NativeBindingRequirement::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &AcceptedAuthoring| &x.binding_requirements,
-                |x: &mut AcceptedAuthoring, v| x.binding_requirements = v,
             );
             (*a).finalize();
         }
@@ -2418,6 +2231,30 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DiagnosticEvidence> =
+                DiagnosticEvidence::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "catalog",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |x: &DiagnosticEvidence| &x.catalog,
+                |x: &mut DiagnosticEvidence, v| x.catalog = v,
+            );
+            (*a).add_field(
+                "expectations",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::authoring_facts::EditExpectation::serializer(
+                    ),
+                ),
+                "",
+                |x: &DiagnosticEvidence| &x.expectations,
+                |x: &mut DiagnosticEvidence, v| x.expectations = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<PublicationDiagnosticDetails> =
                 PublicationDiagnosticDetails::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2471,6 +2308,18 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PublicationDiagnosticDetails| &x.related,
                 |x: &mut PublicationDiagnosticDetails, v| x.related = v,
+            );
+            (*a).add_field(
+                "evidence",
+                6,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        DiagnosticEvidence::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PublicationDiagnosticDetails| &x.evidence,
+                |x: &mut PublicationDiagnosticDetails, v| x.evidence = v,
             );
             (*a).finalize();
         }

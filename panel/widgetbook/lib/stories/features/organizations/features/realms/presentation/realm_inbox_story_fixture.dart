@@ -57,6 +57,7 @@ class RealmInboxStoryFixture extends ChangeNotifier {
   );
   skir.PublicationDiagnosticDetails get problem =>
       skir.PublicationDiagnosticDetails(
+        evidence: null,
         id: skir.DiagnosticId(value: "missing_target"),
         origin: skir.RuleOrigin.defaultInstance,
         code: "missing_target",
@@ -102,6 +103,7 @@ class RealmInboxStoryFixture extends ChangeNotifier {
           for (var index = 0; index < 20; index++)
             skir.PublicationNotice.wrapWarning(
               skir.PublicationDiagnosticDetails(
+                evidence: null,
                 id: skir.DiagnosticId(value: "notice_$index"),
                 origin: problem.origin,
                 code: "dialogue_review",
@@ -191,25 +193,41 @@ class RealmInboxStoryFixture extends ChangeNotifier {
       publication: publication,
       issues: [
         if (scenario == RealmInboxScenario.blocked)
-          RealmInboxIssue.blocker(problem),
+          RealmInboxIssue.finding(
+            problem.asResourceIssue(
+              skir.DiagnosticSeverity.error,
+              null,
+              blocksPublication: true,
+            ),
+          ),
         if (scenario == RealmInboxScenario.warnings)
-          RealmInboxIssue.notice(notices.single),
+          RealmInboxIssue.finding(
+            (notices.single as skir.PublicationNotice_warningWrapper).value
+                .asResourceIssue(skir.DiagnosticSeverity.warning, null),
+          ),
         if (scenario == RealmInboxScenario.largeReview)
-          for (final notice in notices) RealmInboxIssue.notice(notice),
+          for (final notice in notices)
+            RealmInboxIssue.finding(
+              (notice as skir.PublicationNotice_warningWrapper).value
+                  .asResourceIssue(skir.DiagnosticSeverity.warning, null),
+            ),
         if (scenario == RealmInboxScenario.localDraft)
-          RealmInboxIssue.localFinding(
-            PortablePresentationDiagnostic(
-              code: "required",
-              message: "The draft dialogue needs a speaker",
-              severity: skir.DiagnosticSeverity.error,
-              targets: [
-                PortableDiagnosticTarget.value(
-                  skir.ValueLocation(
-                    resource: root.resource,
-                    path: skir.ValuePath(segments: const []),
+          RealmInboxIssue.finding(
+            ResourceIssue(
+              current: true,
+              diagnostic: PortablePresentationDiagnostic(
+                code: "required",
+                message: "The draft dialogue needs a speaker",
+                severity: skir.DiagnosticSeverity.error,
+                targets: [
+                  PortableDiagnosticTarget.value(
+                    skir.ValueLocation(
+                      resource: root.resource,
+                      path: skir.ValuePath(segments: const []),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
       ],

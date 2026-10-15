@@ -183,33 +183,46 @@ internal class RealmPublicationCoordinator(
                     if (releasing == null) update(PublicationStatus.Checking(baseline, capturedFindings(captured.root)))
                 }
                 val assessment = acceptance.evaluate(captured)
-                val bindings =
-                    when (assessment) {
-                        is AuthoringAssessment.Accepted -> assessment.proof.bindingRequirements
-                        is AuthoringAssessment.Blocked -> assessment.availableBindings
-                    }
-                val compilationInputs = CompilationInputs(captured.root, bindings)
+                val compilationInputs = CompilationInputs(captured.root, assessment.resources)
                 val compiled = with(compilationInputs) { compilation.compile() }
                 val successful = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Success>().map { it.artifact }
                 val failed = compiled.filterIsInstance<com.typewritermc.engine.CompilationResult.Blocked>()
+                val evidence = assessment.evidence.toMutableMap()
+                val projectionLocations =
+                    captured.root.projection.problems
+                        .mapTo(linkedSetOf()) { it.location }
+                failed.flatMap { it.diagnostics }.forEach { finding ->
+                    if (finding.id !in evidence && finding.primary in projectionLocations) {
+                        val dependencies = (listOfNotNull(finding.primary) + finding.related).map { it.resource }.distinct()
+                        evidence[finding.id] =
+                            DiagnosticEvidence(
+                                captured.root.catalog.generation,
+                                dependencies.map { id ->
+                                    com.typewritermc.authoring.EditExpectation
+                                        .Resource(id, captured.root.resources[id])
+                                },
+                            )
+                    }
+                }
                 val blockers =
                     buildList {
-                        if (assessment is AuthoringAssessment.Blocked) addAll(assessment.blockers.all)
+                        addAll(assessment.findings.filter { it.severity == DiagnosticSeverity.Error }.map(::PublicationBlocker))
                         failed.flatMap { it.diagnostics }.forEach { finding ->
-                            if (finding.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR) {
-                                add(PublicationBlocker(finding.toPublicationDiagnostic()))
+                            if (finding.severity == DiagnosticSeverity.Error) {
+                                add(PublicationBlocker(finding))
                             }
                         }
                     }.distinctBy { it.diagnostic.id }
                 val notices =
-                    when (assessment) {
-                        is AuthoringAssessment.Accepted -> assessment.notices
-                        is AuthoringAssessment.Blocked -> assessment.notices
-                    } +
-                        failed
-                            .flatMap { it.diagnostics }
-                            .filter { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.WARNING }
-                            .map { PublicationNotice.Warning(it.toPublicationDiagnostic()) }
+                    (assessment.findings + failed.flatMap { it.diagnostics })
+                        .distinctBy { it.id }
+                        .mapNotNull { finding ->
+                            when (finding.severity) {
+                                DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
+                                DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
+                                DiagnosticSeverity.Error -> null
+                            }
+                        }
                 val status =
                     if (blockers.isNotEmpty()) {
                         PublicationStatus.Blocked(
@@ -240,7 +253,7 @@ internal class RealmPublicationCoordinator(
                             }
                         }
                     }
-                val next = Prepared(captured, inputs, baseline, successful, status, revision)
+                val next = Prepared(captured, inputs, baseline, successful, status, revision, evidence)
                 acceptance.withCurrent { current ->
                     synchronized(lock) {
                         if (!closed && current === captured.root && engine.compatible(inputs) && invalidationRevision == revision) {
@@ -378,7 +391,9 @@ internal class RealmPublicationCoordinator(
 
     private fun capturedFindings(root: com.typewritermc.realm.authoring.AuthoringView) =
         findings().map { set ->
-            val current = set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
+            val current =
+                set.status == com.typewritermc.checking.FindingStatus.Current &&
+                    set.ticket.catalog == root.catalog.generation && root.values.conflicts(set.expectations).isEmpty()
             set.copy(
                 status = if (current) com.typewritermc.checking.FindingStatus.Current else com.typewritermc.checking.FindingStatus.Outdated,
             )
@@ -387,7 +402,7 @@ internal class RealmPublicationCoordinator(
     private fun updateForPrepared(next: Prepared) {
         val active = releasing
         if (active == null) {
-            update(next.status)
+            update(next.status, next.evidence)
             return
         }
         val status = active.candidate.status as PublicationStatus.Ready
@@ -418,11 +433,14 @@ internal class RealmPublicationCoordinator(
                         },
                 )
             }
-        update(PublicationStatus.Publishing(active.id, active.phase, status.changes, later))
+        update(PublicationStatus.Publishing(active.id, active.phase, status.changes, later), next.evidence)
     }
 
-    private fun update(status: PublicationStatus) {
-        mutableView.value = PublicationView(nextViewId(), status)
+    private fun update(
+        status: PublicationStatus,
+        evidence: Map<DiagnosticId, DiagnosticEvidence> = emptyMap(),
+    ) {
+        mutableView.value = PublicationView(nextViewId(), status, evidence)
     }
 
     private suspend fun notifyTransition(
@@ -448,6 +466,7 @@ internal class RealmPublicationCoordinator(
         val artifacts: List<com.typewritermc.engine.CompiledArtifact>,
         val status: PublicationStatus,
         val revision: Long,
+        val evidence: Map<DiagnosticId, DiagnosticEvidence>,
     )
 
     private data class Release(
@@ -466,20 +485,6 @@ private fun nextViewId() =
             .randomUUID()
             .toString(),
     )
-
-private fun com.typewritermc.engine.CompileDiagnostic.toPublicationDiagnostic(): Diagnostic {
-    val primary = source?.let { com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath()) }
-    val related = target?.let { listOf(com.typewritermc.authoring.ValueLocation(it, com.typewritermc.authoring.ValuePath())) }.orEmpty()
-    return Diagnostic(
-        DiagnosticId("publication:compiler:${source?.value}:${target?.value}:$code"),
-        RuleOrigin(PUBLICATION_TYPE, 0),
-        code,
-        message,
-        if (severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR) DiagnosticSeverity.Error else DiagnosticSeverity.Warning,
-        primary,
-        related,
-    )
-}
 
 internal class SurrealPublicationAttemptStore(
     private val database: Surreal,

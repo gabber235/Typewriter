@@ -13,7 +13,7 @@ part "authoring_conflict_review.dart";
 abstract class RealmPreparedEdit with _$RealmPreparedEdit {
   const factory RealmPreparedEdit({
     required skir.PreparedEdit request,
-    @Default([]) List<skir.InitializationDiagnostic> findings,
+    @Default([]) List<LocatedInitializationFinding> findings,
   }) = _RealmPreparedEdit;
 }
 

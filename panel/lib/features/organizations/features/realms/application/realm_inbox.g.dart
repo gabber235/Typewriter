@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'realm_inbox.dart';
 
@@ -6,7 +6,7 @@ part of 'realm_inbox.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Projects saved issues from publication and local activity from its owners.
 
@@ -71,7 +71,7 @@ final class RealmInboxProvider
   }
 }
 
-String _$realmInboxHash() => r'3943aa5eefe413f2530aec4bc99d03926b19fb43';
+String _$realmInboxHash() => r'49b5acdf58a34762d513bc15d540d1d1d91ecaeb';
 
 /// Projects saved issues from publication and local activity from its owners.
 

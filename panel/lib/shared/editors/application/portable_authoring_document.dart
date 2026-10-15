@@ -28,8 +28,6 @@ abstract interface class PortableAuthoringView {
 
   List<skir.LinkProjection> get links;
 
-  List<skir.InitializationDiagnostic> get initializationFindings;
-
   skir.AuthoringRecord? resource(skir.ResourceId id);
 
   PortablePathResult<skir.DataValue> read(skir.ValueLocation location);

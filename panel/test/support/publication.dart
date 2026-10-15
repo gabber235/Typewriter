@@ -25,6 +25,7 @@ skir.PublicationDiagnosticDetails publicationProblem({
   String message = "A required Page value is missing",
   String resource = "page",
 }) => skir.PublicationDiagnosticDetails(
+  evidence: null,
   id: skir.DiagnosticId(value: id),
   origin: skir.RuleOrigin.defaultInstance,
   code: "required",

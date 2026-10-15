@@ -40,7 +40,7 @@ void main() {
       expect(inbox.issues.single.message, "Text must not be blank");
       expect(
         inbox.issues.single.provenance,
-        "Saved content. Blocks publication",
+        "Saved content. Blocks publication. Changed locally or awaiting evaluation",
       );
     },
   );
@@ -129,7 +129,8 @@ void main() {
         expect(
           inbox.issues.every(
             (issue) =>
-                issue.provenance == "Previous saved state. Checking again",
+                issue.provenance ==
+                "Saved content. Previous state, checking again",
           ),
           isTrue,
         );
@@ -171,7 +172,10 @@ void main() {
         );
         expect(inbox.issues, hasLength(2));
         expect(
-          inbox.issues.every((issue) => issue is RealmInboxNotice),
+          inbox.issues.every(
+            (issue) =>
+                issue is RealmInboxFinding && !issue.finding.blocksPublication,
+          ),
           isTrue,
         );
         expect(inbox.issues.map((issue) => issue.severity), [
@@ -202,8 +206,18 @@ void main() {
     );
     final inbox = await _inbox(status: status, saved: diagnostic);
     expect(inbox.issues, hasLength(2));
-    expect(inbox.issues.whereType<RealmInboxBlocker>(), hasLength(1));
-    expect(inbox.issues.whereType<RealmInboxSavedFinding>(), isEmpty);
+    expect(
+      inbox.issues.whereType<RealmInboxFinding>().where(
+        (issue) => issue.finding.blocksPublication,
+      ),
+      hasLength(1),
+    );
+    expect(
+      inbox.issues.whereType<RealmInboxFinding>().where(
+        (issue) => issue.finding.outdated,
+      ),
+      isEmpty,
+    );
   });
 
   test("request and connection transitions project their retained review", () {
@@ -214,12 +228,16 @@ void main() {
       RealmPublicationView.requestActive(display: status),
       RealmPublicationView.uncertain("No reply", display: status),
     ]) {
-      expect(view.savedIssues.single, isA<RealmInboxBlocker>());
-      expect(view.savedIssues.single.primary, _title);
+      expect(view.projectSavedIssues(null).single.blocksPublication, isTrue);
+      expect(view.projectSavedIssues(null).single.primary, _title);
     }
-    expect(const RealmPublicationView.checking().savedIssues, isEmpty);
     expect(
-      const RealmPublicationView.unavailable("Offline").savedIssues,
+      const RealmPublicationView.checking().projectSavedIssues(null),
+      isEmpty,
+    );
+    expect(
+      const RealmPublicationView.unavailable("Offline")
+          .projectSavedIssues(null),
       isEmpty,
     );
   });
@@ -651,6 +669,7 @@ skir.Diagnostic _diagnostic(
 
 skir.PublicationDiagnosticDetails _details(skir.Diagnostic diagnostic) =>
     skir.PublicationDiagnosticDetails(
+      evidence: null,
       id: diagnostic.id,
       origin: diagnostic.origin,
       code: diagnostic.code,
@@ -763,6 +782,8 @@ _navigation({
     ),
   );
   addTearDown(router.dispose);
+  final publication = TestPublicationRepository(_scope);
+  addTearDown(publication.close);
   final container = ProviderContainer.test(
     overrides: [
       ...authoringFixtureOverrides(
@@ -774,6 +795,10 @@ _navigation({
         workingAuthoringDocumentProvider(_scope).overrideWith(
           (ref) => loading ? const AsyncLoading() : AsyncData(document!),
         ),
+      realmPublicationRepositoryProvider(
+        _scope.organizationId,
+        _scope.realmId,
+      ).overrideWithValue(publication),
       appRouterProvider.overrideWithValue(router),
       if (registry != null)
         authoringResourceNavigationRegistryProvider.overrideWithValue(registry),

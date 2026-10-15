@@ -1,5 +1,6 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.authoring.skir.SkirAuthoringOperationCodec
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.realm.checking.toWire
 import com.typewritermc.realm.compiler.PublicationState
@@ -110,12 +111,14 @@ private fun com.typewritermc.realm.compiler.PublicationView.wireId() =
     skirout.editor.v1.publication
         .PublicationViewId(value = id.value)
 
-internal fun com.typewritermc.realm.compiler.PublicationView.toWire() = WirePublicationView(id = wireId(), status = status.toWire())
+internal fun com.typewritermc.realm.compiler.PublicationView.toWire() = WirePublicationView(id = wireId(), status = status.toWire(evidence))
 
-private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(): WirePublicationStatus =
+private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(
+    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence>,
+): WirePublicationStatus =
     when (this) {
         is com.typewritermc.realm.compiler.PublicationStatus.Empty -> {
-            WirePublicationStatus.createEmpty(notices = notices.map { it.toWire() })
+            WirePublicationStatus.createEmpty(notices = notices.map { it.toWire(evidence) })
         }
 
         is com.typewritermc.realm.compiler.PublicationStatus.Current -> {
@@ -123,7 +126,7 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(): WirePubl
                 selected =
                     skirout.editor.v1.type_catalog
                         .PublicationId(value = selected.value),
-                notices = notices.map { it.toWire() },
+                notices = notices.map { it.toWire(evidence) },
             )
         }
 
@@ -136,7 +139,7 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(): WirePubl
                 changes = changes.toWire(),
                 notices =
                     notices.map {
-                        it.toWire()
+                        it.toWire(evidence)
                     },
             )
         }
@@ -144,10 +147,10 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(): WirePubl
         is com.typewritermc.realm.compiler.PublicationStatus.Blocked -> {
             WirePublicationStatus.createBlocked(
                 baseline = baseline.toWire(),
-                blockers = blockers.toWire(),
+                blockers = blockers.toWire(evidence),
                 notices =
                     notices.map {
-                        it.toWire()
+                        it.toWire(evidence)
                     },
                 confirmedChanges = confirmedChanges.map { it.toWire() },
                 pendingRoots = pendingRoots.map { it.toWire() },
@@ -182,8 +185,8 @@ private fun com.typewritermc.realm.compiler.PublicationStatus.toWire(): WirePubl
                             },
                         confirmedChanges = next.confirmedChanges.map { it.toWire() },
                         pendingRoots = next.pendingRoots.map { it.toWire() },
-                        blockers = next.blockers.map { WirePublicationBlocker(details = it.diagnostic.details()) },
-                        notices = next.notices.map { it.toWire() },
+                        blockers = next.blockers.map { it.toWire(evidence) },
+                        notices = next.notices.map { it.toWire(evidence) },
                     ),
             )
         }
@@ -255,30 +258,40 @@ private fun com.typewritermc.engine.CompilationRoot.toWire() =
 private fun com.typewritermc.realm.compiler.PublicationDelta.toWire() =
     skirout.editor.v1.publication.PublicationDelta(
         first = first.toWire(),
-        additional =
-            additional.map {
-                it.toWire()
-            },
+        additional = additional.map { it.toWire() },
     )
 
-private fun com.typewritermc.realm.compiler.PublicationBlockers.toWire() =
-    WirePublicationBlockers(
-        first = first.toWire(),
-        additional =
-            additional.map {
-                it.toWire()
-            },
-    )
+private fun com.typewritermc.realm.compiler.PublicationBlockers.toWire(
+    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence> = emptyMap(),
+) = WirePublicationBlockers(
+    first = first.toWire(evidence),
+    additional = additional.map { it.toWire(evidence) },
+)
 
-private fun com.typewritermc.realm.compiler.PublicationBlocker.toWire() = WirePublicationBlocker(details = diagnostic.details())
+private fun com.typewritermc.realm.compiler.PublicationBlocker.toWire(
+    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence> = emptyMap(),
+) = WirePublicationBlocker(details = diagnostic.details(evidence[diagnostic.id]))
 
-private fun com.typewritermc.realm.compiler.PublicationNotice.toWire(): WirePublicationNotice =
+private fun com.typewritermc.realm.compiler.PublicationNotice.toWire(
+    evidence: Map<com.typewritermc.authoring.DiagnosticId, com.typewritermc.realm.compiler.DiagnosticEvidence>,
+): WirePublicationNotice =
     when (this) {
-        is com.typewritermc.realm.compiler.PublicationNotice.Information -> WirePublicationNotice.InformationWrapper(diagnostic.details())
-        is com.typewritermc.realm.compiler.PublicationNotice.Warning -> WirePublicationNotice.WarningWrapper(diagnostic.details())
+        is com.typewritermc.realm.compiler.PublicationNotice.Information -> {
+            WirePublicationNotice.InformationWrapper(
+                diagnostic.details(evidence[diagnostic.id]),
+            )
+        }
+
+        is com.typewritermc.realm.compiler.PublicationNotice.Warning -> {
+            WirePublicationNotice.WarningWrapper(
+                diagnostic.details(evidence[diagnostic.id]),
+            )
+        }
     }
 
-private fun com.typewritermc.checking.Diagnostic.details(): PublicationDiagnosticDetails {
+private fun com.typewritermc.checking.Diagnostic.details(
+    evidence: com.typewritermc.realm.compiler.DiagnosticEvidence?,
+): PublicationDiagnosticDetails {
     val encoded = SkirTypeCodec.encode(this).getOrThrow()
     return PublicationDiagnosticDetails(
         id = encoded.id,
@@ -287,6 +300,15 @@ private fun com.typewritermc.checking.Diagnostic.details(): PublicationDiagnosti
         message = encoded.message,
         primary = encoded.primary,
         related = encoded.related,
+        evidence =
+            evidence?.let { captured ->
+                skirout.editor.v1.publication.DiagnosticEvidence(
+                    catalog =
+                        skirout.editor.v1.type_catalog
+                            .CatalogGeneration(value = captured.catalog.value),
+                    expectations = captured.expectations.map { SkirAuthoringOperationCodec.encode(it).getOrThrow() },
+                )
+            },
     )
 }
 

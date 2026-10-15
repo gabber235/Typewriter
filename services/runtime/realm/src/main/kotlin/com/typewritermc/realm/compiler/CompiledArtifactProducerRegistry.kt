@@ -45,7 +45,7 @@ internal class CompiledArtifactProducerRegistry(
                         }
                     }
                     results.filterIsInstance<CompilationResult.Blocked>().forEach { result ->
-                        require(result.diagnostics.any { it.severity == com.typewritermc.engine.CompileDiagnosticSeverity.ERROR }) {
+                        require(result.diagnostics.any { it.severity == com.typewritermc.checking.DiagnosticSeverity.Error }) {
                             "A blocked root must contain a blocking diagnostic."
                         }
                     }

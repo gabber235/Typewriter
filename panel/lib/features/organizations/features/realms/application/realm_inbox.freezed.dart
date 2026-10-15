@@ -56,14 +56,11 @@ extension RealmInboxIssuePatterns on RealmInboxIssue {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RealmInboxBlocker value)?  blocker,TResult Function( RealmInboxNotice value)?  notice,TResult Function( RealmInboxSavedFinding value)?  savedFinding,TResult Function( RealmInboxLocalFinding value)?  localFinding,TResult Function( RealmInboxWorkIssue value)?  work,TResult Function( RealmInboxSubmissionIssue value)?  submission,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( RealmInboxFinding value)?  finding,TResult Function( RealmInboxWorkIssue value)?  work,TResult Function( RealmInboxSubmissionIssue value)?  submission,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case RealmInboxBlocker() when blocker != null:
-return blocker(_that);case RealmInboxNotice() when notice != null:
-return notice(_that);case RealmInboxSavedFinding() when savedFinding != null:
-return savedFinding(_that);case RealmInboxLocalFinding() when localFinding != null:
-return localFinding(_that);case RealmInboxWorkIssue() when work != null:
+case RealmInboxFinding() when finding != null:
+return finding(_that);case RealmInboxWorkIssue() when work != null:
 return work(_that);case RealmInboxSubmissionIssue() when submission != null:
 return submission(_that);case _:
   return orElse();
@@ -83,14 +80,11 @@ return submission(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RealmInboxBlocker value)  blocker,required TResult Function( RealmInboxNotice value)  notice,required TResult Function( RealmInboxSavedFinding value)  savedFinding,required TResult Function( RealmInboxLocalFinding value)  localFinding,required TResult Function( RealmInboxWorkIssue value)  work,required TResult Function( RealmInboxSubmissionIssue value)  submission,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( RealmInboxFinding value)  finding,required TResult Function( RealmInboxWorkIssue value)  work,required TResult Function( RealmInboxSubmissionIssue value)  submission,}){
 final _that = this;
 switch (_that) {
-case RealmInboxBlocker():
-return blocker(_that);case RealmInboxNotice():
-return notice(_that);case RealmInboxSavedFinding():
-return savedFinding(_that);case RealmInboxLocalFinding():
-return localFinding(_that);case RealmInboxWorkIssue():
+case RealmInboxFinding():
+return finding(_that);case RealmInboxWorkIssue():
 return work(_that);case RealmInboxSubmissionIssue():
 return submission(_that);}
 }
@@ -106,14 +100,11 @@ return submission(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RealmInboxBlocker value)?  blocker,TResult? Function( RealmInboxNotice value)?  notice,TResult? Function( RealmInboxSavedFinding value)?  savedFinding,TResult? Function( RealmInboxLocalFinding value)?  localFinding,TResult? Function( RealmInboxWorkIssue value)?  work,TResult? Function( RealmInboxSubmissionIssue value)?  submission,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( RealmInboxFinding value)?  finding,TResult? Function( RealmInboxWorkIssue value)?  work,TResult? Function( RealmInboxSubmissionIssue value)?  submission,}){
 final _that = this;
 switch (_that) {
-case RealmInboxBlocker() when blocker != null:
-return blocker(_that);case RealmInboxNotice() when notice != null:
-return notice(_that);case RealmInboxSavedFinding() when savedFinding != null:
-return savedFinding(_that);case RealmInboxLocalFinding() when localFinding != null:
-return localFinding(_that);case RealmInboxWorkIssue() when work != null:
+case RealmInboxFinding() when finding != null:
+return finding(_that);case RealmInboxWorkIssue() when work != null:
 return work(_that);case RealmInboxSubmissionIssue() when submission != null:
 return submission(_that);case _:
   return null;
@@ -132,13 +123,10 @@ return submission(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult Function( skir.PublicationNotice notice)?  notice,TResult Function( AuthoredFindingView finding)?  savedFinding,TResult Function( PortablePresentationDiagnostic diagnostic)?  localFinding,TResult Function( WorkEntryState entry)?  work,TResult Function( LocalWorkSubmissionState submission)?  submission,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( ResourceIssue finding)?  finding,TResult Function( WorkEntryState entry)?  work,TResult Function( LocalWorkSubmissionState submission)?  submission,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case RealmInboxBlocker() when blocker != null:
-return blocker(_that.details);case RealmInboxNotice() when notice != null:
-return notice(_that.notice);case RealmInboxSavedFinding() when savedFinding != null:
-return savedFinding(_that.finding);case RealmInboxLocalFinding() when localFinding != null:
-return localFinding(_that.diagnostic);case RealmInboxWorkIssue() when work != null:
+case RealmInboxFinding() when finding != null:
+return finding(_that.finding);case RealmInboxWorkIssue() when work != null:
 return work(_that.entry);case RealmInboxSubmissionIssue() when submission != null:
 return submission(_that.submission);case _:
   return orElse();
@@ -158,13 +146,10 @@ return submission(_that.submission);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.PublicationDiagnosticDetails details)  blocker,required TResult Function( skir.PublicationNotice notice)  notice,required TResult Function( AuthoredFindingView finding)  savedFinding,required TResult Function( PortablePresentationDiagnostic diagnostic)  localFinding,required TResult Function( WorkEntryState entry)  work,required TResult Function( LocalWorkSubmissionState submission)  submission,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( ResourceIssue finding)  finding,required TResult Function( WorkEntryState entry)  work,required TResult Function( LocalWorkSubmissionState submission)  submission,}) {final _that = this;
 switch (_that) {
-case RealmInboxBlocker():
-return blocker(_that.details);case RealmInboxNotice():
-return notice(_that.notice);case RealmInboxSavedFinding():
-return savedFinding(_that.finding);case RealmInboxLocalFinding():
-return localFinding(_that.diagnostic);case RealmInboxWorkIssue():
+case RealmInboxFinding():
+return finding(_that.finding);case RealmInboxWorkIssue():
 return work(_that.entry);case RealmInboxSubmissionIssue():
 return submission(_that.submission);}
 }
@@ -180,13 +165,10 @@ return submission(_that.submission);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.PublicationDiagnosticDetails details)?  blocker,TResult? Function( skir.PublicationNotice notice)?  notice,TResult? Function( AuthoredFindingView finding)?  savedFinding,TResult? Function( PortablePresentationDiagnostic diagnostic)?  localFinding,TResult? Function( WorkEntryState entry)?  work,TResult? Function( LocalWorkSubmissionState submission)?  submission,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( ResourceIssue finding)?  finding,TResult? Function( WorkEntryState entry)?  work,TResult? Function( LocalWorkSubmissionState submission)?  submission,}) {final _that = this;
 switch (_that) {
-case RealmInboxBlocker() when blocker != null:
-return blocker(_that.details);case RealmInboxNotice() when notice != null:
-return notice(_that.notice);case RealmInboxSavedFinding() when savedFinding != null:
-return savedFinding(_that.finding);case RealmInboxLocalFinding() when localFinding != null:
-return localFinding(_that.diagnostic);case RealmInboxWorkIssue() when work != null:
+case RealmInboxFinding() when finding != null:
+return finding(_that.finding);case RealmInboxWorkIssue() when work != null:
 return work(_that.entry);case RealmInboxSubmissionIssue() when submission != null:
 return submission(_that.submission);case _:
   return null;
@@ -199,159 +181,23 @@ return submission(_that.submission);case _:
 /// @nodoc
 
 
-class RealmInboxBlocker extends RealmInboxIssue {
-  const RealmInboxBlocker(this.details): super._();
+class RealmInboxFinding extends RealmInboxIssue {
+  const RealmInboxFinding(this.finding): super._();
 
 
- final  skir.PublicationDiagnosticDetails details;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmInboxBlockerCopyWith<RealmInboxBlocker> get copyWith => _$RealmInboxBlockerCopyWithImpl<RealmInboxBlocker>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmInboxBlocker&&(identical(other.details, details) || other.details == details));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,details);
-}
-
-@override
-String toString() {
-    return 'RealmInboxIssue.blocker(details: $details)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmInboxBlockerCopyWith<$Res> implements $RealmInboxIssueCopyWith<$Res> {
-  factory $RealmInboxBlockerCopyWith(RealmInboxBlocker value, $Res Function(RealmInboxBlocker) _then) = _$RealmInboxBlockerCopyWithImpl;
-@useResult
-$Res call({
- skir.PublicationDiagnosticDetails details
-});
-
-
-
-
-}
-/// @nodoc
-class _$RealmInboxBlockerCopyWithImpl<$Res>
-    implements $RealmInboxBlockerCopyWith<$Res> {
-  _$RealmInboxBlockerCopyWithImpl(this._self, this._then);
-
-  final RealmInboxBlocker _self;
-  final $Res Function(RealmInboxBlocker) _then;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? details = null,}) {
-  return _then(RealmInboxBlocker(
-null == details ? _self.details : details // ignore: cast_nullable_to_non_nullable
-as skir.PublicationDiagnosticDetails,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class RealmInboxNotice extends RealmInboxIssue {
-  const RealmInboxNotice(this.notice): super._();
-
-
- final  skir.PublicationNotice notice;
+ final  ResourceIssue finding;
 
 /// Create a copy of RealmInboxIssue
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-$RealmInboxNoticeCopyWith<RealmInboxNotice> get copyWith => _$RealmInboxNoticeCopyWithImpl<RealmInboxNotice>(this, _$identity);
+$RealmInboxFindingCopyWith<RealmInboxFinding> get copyWith => _$RealmInboxFindingCopyWithImpl<RealmInboxFinding>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmInboxNotice&&(identical(other.notice, notice) || other.notice == notice));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,notice);
-}
-
-@override
-String toString() {
-    return 'RealmInboxIssue.notice(notice: $notice)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmInboxNoticeCopyWith<$Res> implements $RealmInboxIssueCopyWith<$Res> {
-  factory $RealmInboxNoticeCopyWith(RealmInboxNotice value, $Res Function(RealmInboxNotice) _then) = _$RealmInboxNoticeCopyWithImpl;
-@useResult
-$Res call({
- skir.PublicationNotice notice
-});
-
-
-
-
-}
-/// @nodoc
-class _$RealmInboxNoticeCopyWithImpl<$Res>
-    implements $RealmInboxNoticeCopyWith<$Res> {
-  _$RealmInboxNoticeCopyWithImpl(this._self, this._then);
-
-  final RealmInboxNotice _self;
-  final $Res Function(RealmInboxNotice) _then;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? notice = null,}) {
-  return _then(RealmInboxNotice(
-null == notice ? _self.notice : notice // ignore: cast_nullable_to_non_nullable
-as skir.PublicationNotice,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class RealmInboxSavedFinding extends RealmInboxIssue {
-  const RealmInboxSavedFinding(this.finding): super._();
-
-
- final  AuthoredFindingView finding;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmInboxSavedFindingCopyWith<RealmInboxSavedFinding> get copyWith => _$RealmInboxSavedFindingCopyWithImpl<RealmInboxSavedFinding>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmInboxSavedFinding&&(identical(other.finding, finding) || other.finding == finding));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmInboxFinding&&(identical(other.finding, finding) || other.finding == finding));
 }
 
 
@@ -362,106 +208,38 @@ int get hashCode {
 
 @override
 String toString() {
-    return 'RealmInboxIssue.savedFinding(finding: $finding)';
+    return 'RealmInboxIssue.finding(finding: $finding)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class $RealmInboxSavedFindingCopyWith<$Res> implements $RealmInboxIssueCopyWith<$Res> {
-  factory $RealmInboxSavedFindingCopyWith(RealmInboxSavedFinding value, $Res Function(RealmInboxSavedFinding) _then) = _$RealmInboxSavedFindingCopyWithImpl;
+abstract mixin class $RealmInboxFindingCopyWith<$Res> implements $RealmInboxIssueCopyWith<$Res> {
+  factory $RealmInboxFindingCopyWith(RealmInboxFinding value, $Res Function(RealmInboxFinding) _then) = _$RealmInboxFindingCopyWithImpl;
 @useResult
 $Res call({
- AuthoredFindingView finding
+ ResourceIssue finding
 });
 
 
-
+$ResourceIssueCopyWith<$Res> get finding;
 
 }
 /// @nodoc
-class _$RealmInboxSavedFindingCopyWithImpl<$Res>
-    implements $RealmInboxSavedFindingCopyWith<$Res> {
-  _$RealmInboxSavedFindingCopyWithImpl(this._self, this._then);
+class _$RealmInboxFindingCopyWithImpl<$Res>
+    implements $RealmInboxFindingCopyWith<$Res> {
+  _$RealmInboxFindingCopyWithImpl(this._self, this._then);
 
-  final RealmInboxSavedFinding _self;
-  final $Res Function(RealmInboxSavedFinding) _then;
+  final RealmInboxFinding _self;
+  final $Res Function(RealmInboxFinding) _then;
 
 /// Create a copy of RealmInboxIssue
 /// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? finding = null,}) {
-  return _then(RealmInboxSavedFinding(
+  return _then(RealmInboxFinding(
 null == finding ? _self.finding : finding // ignore: cast_nullable_to_non_nullable
-as AuthoredFindingView,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class RealmInboxLocalFinding extends RealmInboxIssue {
-  const RealmInboxLocalFinding(this.diagnostic): super._();
-
-
- final  PortablePresentationDiagnostic diagnostic;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$RealmInboxLocalFindingCopyWith<RealmInboxLocalFinding> get copyWith => _$RealmInboxLocalFindingCopyWithImpl<RealmInboxLocalFinding>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is RealmInboxLocalFinding&&(identical(other.diagnostic, diagnostic) || other.diagnostic == diagnostic));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,diagnostic);
-}
-
-@override
-String toString() {
-    return 'RealmInboxIssue.localFinding(diagnostic: $diagnostic)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $RealmInboxLocalFindingCopyWith<$Res> implements $RealmInboxIssueCopyWith<$Res> {
-  factory $RealmInboxLocalFindingCopyWith(RealmInboxLocalFinding value, $Res Function(RealmInboxLocalFinding) _then) = _$RealmInboxLocalFindingCopyWithImpl;
-@useResult
-$Res call({
- PortablePresentationDiagnostic diagnostic
-});
-
-
-$PortablePresentationDiagnosticCopyWith<$Res> get diagnostic;
-
-}
-/// @nodoc
-class _$RealmInboxLocalFindingCopyWithImpl<$Res>
-    implements $RealmInboxLocalFindingCopyWith<$Res> {
-  _$RealmInboxLocalFindingCopyWithImpl(this._self, this._then);
-
-  final RealmInboxLocalFinding _self;
-  final $Res Function(RealmInboxLocalFinding) _then;
-
-/// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? diagnostic = null,}) {
-  return _then(RealmInboxLocalFinding(
-null == diagnostic ? _self.diagnostic : diagnostic // ignore: cast_nullable_to_non_nullable
-as PortablePresentationDiagnostic,
+as ResourceIssue,
   ));
 }
 
@@ -469,10 +247,10 @@ as PortablePresentationDiagnostic,
 /// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$PortablePresentationDiagnosticCopyWith<$Res> get diagnostic {
+$ResourceIssueCopyWith<$Res> get finding {
 
-  return $PortablePresentationDiagnosticCopyWith<$Res>(_self.diagnostic, (value) {
-    return _then(_self.copyWith(diagnostic: value));
+  return $ResourceIssueCopyWith<$Res>(_self.finding, (value) {
+    return _then(_self.copyWith(finding: value));
   });
 }
 }

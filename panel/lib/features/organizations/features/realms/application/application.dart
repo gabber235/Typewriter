@@ -14,7 +14,6 @@
 library;
 
 export "authored_capability_transport.dart";
-export "authored_findings.dart";
 export "authored_local_rules.dart";
 export "authored_presentation_host.dart";
 export "authored_resource_commands.dart";
@@ -41,3 +40,4 @@ export "realm_inbox.dart";
 export "realm_publication.dart";
 export "realm_publication_view.dart";
 export "resource_creation.dart";
+export "resource_issues.dart";

@@ -121,31 +121,6 @@ data class CompiledBlobPointer(
     }
 }
 
-/** Classifies whether a compilation diagnostic blocks publication. */
-@Serializable
-enum class CompileDiagnosticSeverity {
-    /** A compiler condition that prevents the affected output from being published. */
-    ERROR,
-
-    /** A compiler condition that is reported without blocking publication. */
-    WARNING,
-}
-
-/**
- * Records a stable compiler finding for authoring or deployment consumers.
- *
- * [source] and [target] are optional because some findings describe the compilation as a whole. The code is the
- * machine readable category; [message] is diagnostic context rather than a recovery instruction.
- */
-@Serializable
-data class CompileDiagnostic(
-    val code: String,
-    val message: String,
-    val severity: CompileDiagnosticSeverity,
-    val source: ResourceId? = null,
-    val target: ResourceId? = null,
-)
-
 /**
  * Returns a reusable page shard or diagnostics that block publication of that page.
  *
@@ -166,6 +141,6 @@ sealed interface PageCompileResult {
     @SerialName("blocked")
     data class Blocked(
         val inputFingerprint: ContentDigest,
-        val diagnostics: List<CompileDiagnostic>,
+        val diagnostics: List<com.typewritermc.checking.Diagnostic>,
     ) : PageCompileResult
 }

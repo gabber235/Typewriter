@@ -102,4 +102,5 @@ sealed interface PublicationStatus {
 data class PublicationView(
     val id: PublicationViewId,
     val status: PublicationStatus,
+    internal val evidence: Map<com.typewritermc.authoring.DiagnosticId, DiagnosticEvidence> = emptyMap(),
 )

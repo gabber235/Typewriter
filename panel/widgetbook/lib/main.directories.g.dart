@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_import, prefer_relative_imports, directives_ordering
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 // **************************************************************************
 // AppGenerator
@@ -56,12 +56,12 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_resource_editor_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_conflict.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_conflict_stories;
-import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authoring_findings_panel.stories.dart'
-    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_findings_panel_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_inbox.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_inbox_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/realm_selector.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_issue_badge.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_icon.stories.dart'
@@ -679,17 +679,6 @@ final directories = <_widgetbook.WidgetbookNode>[
                         ],
                       ),
                       _widgetbook.WidgetbookComponent(
-                        name: 'AuthoringFindingsPanel',
-                        useCases: [
-                          _widgetbook.WidgetbookUseCase(
-                            name: 'Current and outdated',
-                            builder:
-                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authoring_findings_panel_stories
-                                    .authoringFindingsPanelUseCase,
-                          ),
-                        ],
-                      ),
-                      _widgetbook.WidgetbookComponent(
                         name: 'RealmInboxButton',
                         useCases: [
                           _widgetbook.WidgetbookUseCase(
@@ -741,6 +730,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories
                                     .realmSelectorUseCase,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceIssueBadge',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Current issue count',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories
+                                    .resourceIssueBadgeStory,
                           ),
                         ],
                       ),

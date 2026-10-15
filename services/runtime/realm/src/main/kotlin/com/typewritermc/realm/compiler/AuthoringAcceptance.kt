@@ -20,7 +20,6 @@ import com.typewritermc.realm.authoring.AuthoringLease
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
-import com.typewritermc.realm.checking.CheckInstanceId
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.DataValue
@@ -34,13 +33,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import java.util.concurrent.CancellationException
-
-data class CheckCoverage(
-    val required: Set<CheckInstanceId>,
-    val completed: Set<CheckInstanceId>,
-) {
-    val complete: Boolean get() = required == completed
-}
 
 data class NativeBindingRequirement(
     val actual: TypeUse.Named,
@@ -80,18 +72,6 @@ class StagedEngineImplementationSource(
             if (captured != inputs) return@withLock false
             publish()
         }
-}
-
-@ConsistentCopyVisibility
-data class AcceptedAuthoring internal constructor(
-    val catalog: CatalogGeneration,
-    val coverage: CheckCoverage,
-    val evidence: List<EditExpectation>,
-    val bindingRequirements: List<NativeBindingRequirement>,
-) {
-    init {
-        require(coverage.complete) { "Accepted authoring requires complete check coverage." }
-    }
 }
 
 /** Classifies diagnostics once at the saved candidate evaluation boundary. */
@@ -141,27 +121,40 @@ data class PublicationBlockers(
     }
 }
 
-sealed interface AuthoringAssessment {
-    data class Accepted(
-        val proof: AcceptedAuthoring,
-        val notices: List<PublicationNotice> = emptyList(),
-    ) : AuthoringAssessment
+internal sealed interface ResourceReadiness {
+    data class Ready(
+        val value: com.typewritermc.authoring.CompleteValue,
+        val binding: NativeBindingRequirement,
+    ) : ResourceReadiness
 
     data class Blocked(
-        val blockers: PublicationBlockers,
-        val notices: List<PublicationNotice>,
-        val coverage: CheckCoverage,
-        val evidence: List<EditExpectation>,
-        val availableBindings: List<NativeBindingRequirement>,
-    ) : AuthoringAssessment
+        val findings: List<Diagnostic>,
+    ) : ResourceReadiness {
+        init {
+            require(findings.isNotEmpty())
+        }
+    }
 }
+
+/** Authoring facts required for a saved finding to describe a working value. */
+data class DiagnosticEvidence(
+    val catalog: CatalogGeneration,
+    val expectations: List<EditExpectation>,
+)
+
+internal data class CapturedAssessment(
+    val resources: Map<ResourceId, ResourceReadiness>,
+    val checks: com.typewritermc.realm.checking.CapturedCheckReport,
+    val findings: List<Diagnostic>,
+    val evidence: Map<DiagnosticId, DiagnosticEvidence>,
+)
 
 internal interface PublicationAcceptance {
     fun capture(): AuthoringLease
 
     fun <T> withCurrent(block: (AuthoringView) -> T): T
 
-    suspend fun evaluate(capture: AuthoringLease): AuthoringAssessment
+    suspend fun evaluate(capture: AuthoringLease): CapturedAssessment
 }
 
 internal class AuthoringAcceptance(
@@ -172,50 +165,61 @@ internal class AuthoringAcceptance(
 
     override fun <T> withCurrent(block: (AuthoringView) -> T): T = snapshots.read(block)
 
-    override suspend fun evaluate(capture: AuthoringLease): AuthoringAssessment {
+    override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
         val snapshot = capture
         return run {
             val target = CheckAdmissionTarget.CapturedAcceptance(snapshot.root)
             val report = checks.evaluateCapture(target)
-            val required = report.required
-            val completed =
-                report.results
-                    .filter { result -> result.outcome !is CheckOutcome.Incomplete }
-                    .mapTo(linkedSetOf()) { result -> result.ticket.instance }
+            val evidence = linkedMapOf<DiagnosticId, DiagnosticEvidence>()
             val findings =
                 report.results
                     .flatMap { result ->
-                        when (val outcome = result.outcome) {
-                            CheckOutcome.Finished -> {
-                                result.findings
-                            }
+                        val emitted =
+                            when (val outcome = result.outcome) {
+                                CheckOutcome.Finished -> {
+                                    result.findings
+                                }
 
-                            is CheckOutcome.NeedsInput -> {
-                                result.findings +
-                                    outcome.locations.ifEmpty { listOf(result.ticket.instance.location) }.map { location ->
-                                        diagnostic(
-                                            "check_needs_input",
-                                            "A required check input is unavailable.",
-                                            location,
-                                        )
-                                    }
-                            }
+                                is CheckOutcome.NeedsInput -> {
+                                    result.findings +
+                                        outcome.locations.ifEmpty { listOf(result.ticket.instance.location) }.map { location ->
+                                            diagnostic("check_needs_input", "A required check input is unavailable.", location)
+                                        }
+                                }
 
-                            is CheckOutcome.Failed -> {
-                                result.findings + outcome.diagnostics
-                            }
+                                is CheckOutcome.Failed -> {
+                                    result.findings + outcome.diagnostics
+                                }
 
-                            is CheckOutcome.Incomplete -> {
-                                result.findings + diagnostic("check_incomplete", outcome.reason, result.ticket.instance.location)
+                                is CheckOutcome.Incomplete -> {
+                                    result.findings +
+                                        diagnostic("check_incomplete", outcome.reason, result.ticket.instance.location)
+                                }
                             }
+                        emitted.forEach { finding ->
+                            evidence[finding.id] =
+                                DiagnosticEvidence(
+                                    snapshot.root.catalog.generation,
+                                    (evidence[finding.id]?.expectations.orEmpty() + result.expectations).distinct(),
+                                )
                         }
+                        emitted
                     }.toMutableList()
-            val requirements = mutableListOf<NativeBindingRequirement>()
+            val resources = linkedMapOf<ResourceId, ResourceReadiness>()
             snapshot.root.resources.forEach { (id, record) ->
+                val firstFinding = findings.size
+
+                fun blocked() {
+                    val own = findings.drop(firstFinding)
+                    resources[id] = ResourceReadiness.Blocked(own)
+                    val witness = DiagnosticEvidence(snapshot.root.catalog.generation, listOf(EditExpectation.Resource(id, record)))
+                    own.forEach { evidence[it.id] = witness }
+                }
                 val actual = (record.configuration as? TypeSelection.Complete)?.use
                 if (actual == null) {
                     findings +=
                         diagnostic("pending_type", "Resource ${id.value} has incomplete type arguments.", ValueLocation(id, ValuePath()))
+                    blocked()
                     return@forEach
                 }
                 val resolved =
@@ -225,6 +229,7 @@ internal class AuthoringAcceptance(
                 if (checked == null) {
                     findings +=
                         diagnostic("unresolved_type", "Resource ${id.value} uses an unavailable type.", ValueLocation(id, ValuePath()))
+                    blocked()
                     return@forEach
                 }
                 val value = DataValue.Named(actual, DataValue.Record(record.fields))
@@ -250,13 +255,21 @@ internal class AuthoringAcceptance(
                     }
 
                     is CompletenessResult.Complete -> {
+                        if (findings.size > firstFinding) {
+                            blocked()
+                            return@forEach
+                        }
                         try {
                             val binding =
                                 snapshot.root.catalog.nativeBindings
                                     .bind(checked)
                             require(!binding.opaque) { "Engine resources require a concrete native binding." }
                             requireNotNull(binding.decode(complete.value)) { "Native construction returned null." }
-                            requirements += NativeBindingRequirement(actual, binding.provider, binding.signature)
+                            resources[id] =
+                                ResourceReadiness.Ready(
+                                    complete.value,
+                                    NativeBindingRequirement(actual, binding.provider, binding.signature),
+                                )
                         } catch (cancelled: CancellationException) {
                             throw cancelled
                         } catch (fatal: VirtualMachineError) {
@@ -267,41 +280,12 @@ internal class AuthoringAcceptance(
                         }
                     }
                 }
+                if (findings.size > firstFinding) blocked()
             }
-            val coverage = CheckCoverage(required, completed)
-            if (!coverage.complete) {
+            if (!report.complete) {
                 findings += diagnostic("check_coverage_incomplete", "Required captured checks did not complete.", null)
             }
-            val distinct = findings.distinctBy { it.id }
-            val blockers = distinct.filter { it.severity == DiagnosticSeverity.Error }
-            val notices =
-                distinct.mapNotNull { finding ->
-                    when (finding.severity) {
-                        DiagnosticSeverity.Info -> PublicationNotice.Information(finding)
-                        DiagnosticSeverity.Warning -> PublicationNotice.Warning(finding)
-                        DiagnosticSeverity.Error -> null
-                    }
-                }
-            val evidence = report.results.flatMap { it.expectations }.distinct()
-            if (blockers.isNotEmpty()) {
-                AuthoringAssessment.Blocked(
-                    PublicationBlockers.from(blockers),
-                    notices,
-                    coverage,
-                    evidence,
-                    requirements.distinct(),
-                )
-            } else {
-                AuthoringAssessment.Accepted(
-                    AcceptedAuthoring(
-                        catalog = snapshot.root.catalog.generation,
-                        coverage = coverage,
-                        evidence = evidence,
-                        bindingRequirements = requirements.distinct(),
-                    ),
-                    notices,
-                )
-            }
+            CapturedAssessment(resources, report, findings.distinctBy { it.id }, evidence)
         }
     }
 }

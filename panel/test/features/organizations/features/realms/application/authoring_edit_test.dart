@@ -393,7 +393,7 @@ void main() {
       expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
       expect(fixture.draft.intents, [isA<skir.EditIntent_insertWrapper>()]);
       expect(
-        fixture.draft.initializationFindings.single.relativePath,
+        fixture.draft.initializationFindings.single.location.path,
         skir.ValuePath(
           segments: [
             skir.PathSegment.createField(name: "records"),
@@ -1235,7 +1235,7 @@ void main() {
     expect(invocation, 2);
     expect(fixture.draft.intents, hasLength(2));
     expect(
-      fixture.draft.initializationFindings.last.relativePath,
+      fixture.draft.initializationFindings.last.location.path,
       skir.ValuePath(
         segments: [
           skir.PathSegment.createField(name: "style"),
@@ -1244,10 +1244,15 @@ void main() {
       ),
     );
     expect(
-      formatPortableInitializationDiagnostic(
-        fixture.draft.initializationFindings.last,
+      fixture.draft.initializationFindings.last.diagnostic.message,
+      "The default could not be captured",
+    );
+    expect(
+      fixture.draft.initializationFindings.last.evidence.appliesTo(
+        fixture.draft.toDocument(),
       ),
-      "style.repetitions: The default could not be captured",
+      isFalse,
+      reason: "The explicit leaf write supersedes the value that preparation assessed",
     );
   });
 

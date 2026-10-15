@@ -94,7 +94,7 @@ void main() {
         fixture.request.definition,
       );
       expect(
-        workspace!.document.initializationFindings.single.code,
+        workspace!.document.initializationFindings.single.diagnostic.code,
         "dependent_unfilled",
       );
       expect(transport.requests, isEmpty);
@@ -112,7 +112,10 @@ void main() {
         [skir.ArgumentSelection.unfilled],
       );
       expect(transport.observation.requireValue.entry(created!.id), isNull);
-      expect(find.text("The generic argument is unfinished"), findsOneWidget);
+      expect(
+        workspace!.document.initializationFindings.single.location.resource,
+        fixture.request.id,
+      );
     },
   );
 }

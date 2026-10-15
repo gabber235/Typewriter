@@ -35,7 +35,7 @@ internal class PageCompiledArtifactProducer : CompiledArtifactProducer {
                 .filter { relation ->
                     RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID) in relation.families
                 }.mapTo(linkedSetOf(), RelationContract::id)
-        val compiler = PageCompiler(ownership, inputs.bindingRequirements.associateBy(NativeBindingRequirement::actual))
+        val compiler = PageCompiler(ownership, inputs.resources)
         return roots.sortedBy { root -> root.resource.value }.map { root ->
             when (val result = with(inputs.view) { compiler.compile(root.resource) }) {
                 is PageCompileResult.Blocked -> {

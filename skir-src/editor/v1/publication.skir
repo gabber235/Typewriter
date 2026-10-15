@@ -1,7 +1,7 @@
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { EditExpectation } from "editor/v1/authoring_facts.skir";
-import { CheckInstanceId, FindingSet } from "editor/v1/checking.skir";
+import { FindingSet } from "editor/v1/checking.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CatalogGeneration,
@@ -10,8 +10,6 @@ import {
   RuleOrigin,
   ValueLocation,
   InputToken,
-  NamedTypeUse,
-  NativeBindingId,
   PublicationId,
   RuntimeMemberId,
   ScriptCapabilityId,
@@ -49,18 +47,12 @@ struct ScriptContextDescriptor(811600004) {
   capabilities: [ScriptCapabilityId] = 2;
 }
 
-struct NativeBindingRequirement(811600005) {
-  actual: NamedTypeUse = 0;
-  provider: NativeBindingId = 1;
-  signature: string = 2;
-}
-
-struct EngineImplementationInputs(811600006) {
+struct EngineImplementationInputs(811600005) {
   signatures: [RuntimeMemberSignature] = 0;
   token: InputToken = 1;
 }
 
-enum PublicationState(811600007) {
+enum PublicationState(811600006) {
   checking = 1;
   compiling = 2;
   activating = 3;
@@ -69,26 +61,14 @@ enum PublicationState(811600007) {
   interrupted = 6;
 }
 
-struct PublicationAttempt(811600008) {
+struct PublicationAttempt(811600007) {
   id: PublicationId = 0;
   catalog: CatalogGeneration = 1;
   engine_inputs: EngineImplementationInputs = 2;
   state: PublicationState = 3;
 }
 
-struct CheckCoverage(811600009) {
-  required: [CheckInstanceId] = 0;
-  completed: [CheckInstanceId] = 1;
-}
-
-struct AcceptedAuthoring(811600010) {
-  catalog: CatalogGeneration = 0;
-  required_coverage: CheckCoverage = 1;
-  evidence: [EditExpectation] = 2;
-  binding_requirements: [NativeBindingRequirement] = 3;
-}
-
-enum PublicationResult(811600011) {
+enum PublicationResult(811600008) {
   publishing = 1;
   activated: struct {
     publication: PublicationId = 0;
@@ -100,61 +80,67 @@ enum PublicationResult(811600011) {
 }
 
 
-struct PublicationReport(811600012) {
+struct PublicationReport(811600009) {
   id: PublicationId = 0;
   state: PublicationState = 1;
   findings: [Diagnostic] = 2;
 }
 
 
-struct PublicationCandidateId(811600013) { value: string = 0; }
-struct PublicationViewId(811600014) { value: string = 0; }
+struct PublicationCandidateId(811600010) { value: string = 0; }
+struct PublicationViewId(811600011) { value: string = 0; }
 
-enum PublicationBaseline(811600015) {
+enum PublicationBaseline(811600012) {
   initial = 1;
   selected: PublicationId = 2;
 }
 
-struct PublicationDiagnosticDetails(811600016) {
+struct DiagnosticEvidence(811600013) {
+  catalog: CatalogGeneration = 0;
+  expectations: [EditExpectation] = 1;
+}
+
+struct PublicationDiagnosticDetails(811600014) {
   id: DiagnosticId = 0;
   origin: RuleOrigin = 1;
   code: string = 2;
   message: string = 3;
   primary: ValueLocation? = 4;
   related: [ValueLocation] = 5;
+  evidence: DiagnosticEvidence? = 6;
 }
 
 // Severity is determined by the variant, not another independent field.
-enum PublicationNotice(811600017) {
+enum PublicationNotice(811600015) {
   information: PublicationDiagnosticDetails = 1;
   warning: PublicationDiagnosticDetails = 2;
 }
-struct PublicationBlocker(811600018) {
+struct PublicationBlocker(811600016) {
   details: PublicationDiagnosticDetails = 0;
 }
 
-enum PublicationChange(811600019) {
+enum PublicationChange(811600017) {
   root_added: CompilationRoot = 1;
   root_updated: CompilationRoot = 2;
   root_removed: CompilationRoot = 3;
   requirements_changed = 4;
 }
-struct PublicationDelta(811600020) {
+struct PublicationDelta(811600018) {
   first: PublicationChange = 0;
   additional: [PublicationChange] = 1;
 }
-struct PublicationBlockers(811600021) {
+struct PublicationBlockers(811600019) {
   first: PublicationBlocker = 0;
   additional: [PublicationBlocker] = 1;
 }
 
-enum PublicationActivationPhase(811600022) {
+enum PublicationActivationPhase(811600020) {
   storing = 1;
   activating = 2;
 }
 
 // Later saved work can be reviewed during activation without authorizing it.
-struct PublicationPendingReview(811600023) {
+struct PublicationPendingReview(811600021) {
   findings: [FindingSet] = 0;
   confirmed_changes: [PublicationChange] = 1;
   pending_roots: [CompilationRoot] = 2;
@@ -162,13 +148,13 @@ struct PublicationPendingReview(811600023) {
   notices: [PublicationNotice] = 4;
 }
 
-enum PublicationFailure(811600024) {
+enum PublicationFailure(811600022) {
   evaluation_interrupted: string = 1;
   implementation_unavailable: string = 2;
   publication_interrupted: PublicationId = 3;
 }
 
-enum PublicationStatus(811600025) {
+enum PublicationStatus(811600023) {
   empty: struct { notices: [PublicationNotice] = 0; } = 1;
   current: struct {
     selected: PublicationId = 0;
@@ -203,18 +189,18 @@ enum PublicationStatus(811600025) {
     findings: [FindingSet] = 2;
   } = 7;
 }
-struct PublicationView(811600026) {
+struct PublicationView(811600024) {
   id: PublicationViewId = 0;
   status: PublicationStatus = 1;
 }
-struct PublicationViewChanged(811600027) {
+struct PublicationViewChanged(811600025) {
   current: PublicationViewId = 0;
 }
-struct PublicationViewChunk(811600028) {
+struct PublicationViewChunk(811600026) {
   view: PublicationViewId = 0;
   transfer: BoundedTransferChunk = 1;
 }
-struct PublicationTransferUnavailable(811600029) {
+struct PublicationTransferUnavailable(811600027) {
   view: PublicationViewId = 0;
   encoded_size: int64 = 1;
   max_encoded_size: int64 = 2;

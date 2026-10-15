@@ -3,8 +3,6 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.engine.CompilationProjectionId
 import com.typewritermc.engine.CompilationResult
 import com.typewritermc.engine.CompilationRoot
-import com.typewritermc.engine.CompileDiagnostic
-import com.typewritermc.engine.CompileDiagnosticSeverity
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.realm.authoring.AuthoringSeed
@@ -20,7 +18,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
     test("one blocked producer retains a partial ready batch and every producer receives the retained inputs") {
         val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
         views.capture().use { capture ->
-            val inputs = CompilationInputs(capture.root, emptyList())
+            val inputs = CompilationInputs(capture.root, emptyMap())
             val received = mutableListOf<CompilationInputs>()
             val ready =
                 producer("fixture.ready", "application/ready") { incoming ->
@@ -34,7 +32,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                         CompilationResult.Blocked(
                             CompilationRoot(CompilationProjectionId("fixture.blocked"), ResourceId("root")),
                             ContentDigest("a".repeat(64)),
-                            listOf(CompileDiagnostic("blocked", "Blocked", CompileDiagnosticSeverity.ERROR)),
+                            listOf(compilationDiagnostic("blocked", "Blocked")),
                         ),
                     )
                 }
@@ -75,7 +73,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                 }
             listOf(wrongMedia, wrongProjection).forEach { producer ->
                 shouldThrow<IllegalArgumentException> {
-                    val inputs = CompilationInputs(capture.root, emptyList())
+                    val inputs = CompilationInputs(capture.root, emptyMap())
                     with(inputs) { CompiledArtifactProducerRegistry(listOf(producer)).compile() }
                 }
             }
@@ -96,7 +94,7 @@ val CompiledArtifactProducerRegistryTest by testSuite {
                 }
 
             shouldThrow<IllegalArgumentException> {
-                val inputs = CompilationInputs(capture.root, emptyList())
+                val inputs = CompilationInputs(capture.root, emptyMap())
                 with(inputs) { CompiledArtifactProducerRegistry(listOf(first, second)).compile() }
             }
         }

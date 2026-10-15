@@ -196,6 +196,9 @@ class RealmInboxContent extends ConsumerWidget {
         if (resource.definition == coreBookResourceDefinition) {
           return Book.fromAuthoring(resource).title;
         }
+        if (resource.definition == corePageResourceDefinition) {
+          return Page.fromAuthoring(resource).name.displayLabel("Unnamed page");
+        }
         if (resource.definition == coreTagResourceDefinition) {
           return Tag.fromAuthoring(resource).name;
         }
@@ -679,7 +682,7 @@ class RealmInboxView extends StatelessWidget {
           if (issue.primary case final location?) ...[
             SizedBox(height: context.spacing.space1),
             Text(
-              resourceLabel(location.resource),
+              "${resourceLabel(location.resource)} > ${location.path.issueLabel}",
               style: context.theme.textTheme.bodySmall?.copyWith(
                 color: context.colors.contentSecondary,
               ),
