@@ -45,3 +45,13 @@ abstract class OpenAuthoringResourceEffect
     required AuthoringResourceIdentifier resource,
   }) = _OpenAuthoringResourceEffect;
 }
+
+@freezed
+abstract class RevealCreatedAuthoringResourceEffect
+    with _$RevealCreatedAuthoringResourceEffect
+    implements SearchHostEffect {
+  const factory RevealCreatedAuthoringResourceEffect({
+    required AuthoringResourceIdentifier resource,
+    required ResourceCreationNavigationIntent intent,
+  }) = _RevealCreatedAuthoringResourceEffect;
+}

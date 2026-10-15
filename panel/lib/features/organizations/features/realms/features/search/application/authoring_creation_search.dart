@@ -136,6 +136,7 @@ SearchCommand createAuthoringResourceCommand({
   presentation: const SearchCommandPresentation(label: "Create"),
   matcher: const SearchResultMatcher(authoringCreationSearchResultType),
   execute: (execution, option, target) async {
+    final intent = ref.read(resourceCreationProvider(scope)).beginNavigation();
     final created = await execution.prompts.show(
       (context) => ref
           .read(resourceCreationProvider(scope))
@@ -150,12 +151,7 @@ SearchCommand createAuthoringResourceCommand({
     if (created == null) return const SearchCommandResult.cancelled();
     return SearchCommandResult.completed(
       hostEffects: [
-        OpenAuthoringResourceEffect(
-          resource: AuthoringResourceIdentifier.inScope(
-            created.scope,
-            created.id,
-          ),
-        ),
+        RevealCreatedAuthoringResourceEffect(resource: created, intent: intent),
       ],
     );
   },

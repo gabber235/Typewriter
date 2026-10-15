@@ -1,10 +1,9 @@
 part of "route.dart";
 
-Future<Page?> createPage({
+Future<void> createPage({
   required BuildContext context,
   required WidgetRef ref,
   String chapter = "",
-  bool navigate = true,
 }) async {
   final bookId = ref.read(bookIdProvider);
   if (bookId == null) throw ApiException.badRequest("No book selected");
@@ -51,13 +50,13 @@ Future<Page?> createPage({
     throw ApiException.badRequest("Page creation fields are unavailable");
   }
   final item = skir.ItemId(value: "panel:${uuid.v4()}");
-  final created = await ref
+  await ref
       .read(
         resourceCreationProvider(
           AuthoringScope(organizationId: organizationId, realmId: realmId),
         ),
       )
-      .create(
+      .createAndReveal(
         context: context,
         request: ResourceCreationRequest(
           definition: template.definition,
@@ -78,20 +77,6 @@ Future<Page?> createPage({
           ],
         ),
       );
-  if (created == null) return null;
-  final page = Page.fromAuthoring(
-    skir.AuthoringResource(
-      id: created.id,
-      definition: created.definition,
-      content: created.content,
-    ),
-  );
-  if (navigate && context.mounted) {
-    unawaited(
-      ref.read(appRouterProvider).push(RouteRoute(pageId: page.pageId.id)),
-    );
-  }
-  return page;
 }
 
 bool _isDirectPagesCollection(skir.RelativeFieldPattern pattern) {

@@ -6,18 +6,31 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class PortableLocationRevealController {
   final Map<Object, _LocationTarget> _targets = {};
   skir.ValueLocation? _pending;
+  skir.PresentationRole? _pendingPresentation;
+  bool Function()? _pendingIsCurrent;
   bool _scheduled = false;
   bool _closed = false;
 
-  void request(skir.ValueLocation location) {
+  void request(
+    skir.ValueLocation location, {
+    skir.PresentationRole? presentation,
+    bool Function()? isCurrent,
+  }) {
     if (_closed) return;
     _pending = location;
+    _pendingPresentation = presentation;
+    _pendingIsCurrent = isCurrent;
     _schedule();
   }
 
-  void _register(Object id, skir.ValueLocation location, VoidCallback reveal) {
+  void _register(
+    Object id,
+    skir.ValueLocation location,
+    VoidCallback reveal,
+    skir.PresentationRole? presentation,
+  ) {
     if (_closed) return;
-    _targets[id] = _LocationTarget(location, reveal);
+    _targets[id] = _LocationTarget(location, reveal, presentation);
     _schedule();
   }
 
@@ -29,11 +42,18 @@ class PortableLocationRevealController {
       if (_closed) return;
       final pending = _pending;
       if (pending == null) return;
+      if (!(_pendingIsCurrent?.call() ?? true)) {
+        _pending = null;
+        _pendingIsCurrent = null;
+        return;
+      }
       final candidates =
           _targets.values
               .where(
                 (target) =>
                     target.location.resource == pending.resource &&
+                    (_pendingPresentation == null ||
+                        target.presentation == _pendingPresentation) &&
                     pending.path.isAtOrBelow(target.location.path),
               )
               .toList()
@@ -44,6 +64,8 @@ class PortableLocationRevealController {
             );
       if (candidates.isEmpty) return;
       _pending = null;
+      _pendingPresentation = null;
+      _pendingIsCurrent = null;
       candidates.first.reveal();
     });
   }
@@ -51,12 +73,15 @@ class PortableLocationRevealController {
   void dispose() {
     _closed = true;
     _pending = null;
+    _pendingPresentation = null;
+    _pendingIsCurrent = null;
     _targets.clear();
   }
 }
 
 final class _LocationTarget {
-  const _LocationTarget(this.location, this.reveal);
+  const _LocationTarget(this.location, this.reveal, this.presentation);
+  final skir.PresentationRole? presentation;
   final skir.ValueLocation location;
   final VoidCallback reveal;
 }
@@ -65,16 +90,17 @@ class PortableLocationRevealScope extends InheritedWidget {
   const PortableLocationRevealScope({
     required this.controller,
     required super.child,
+    this.presentation,
     super.key,
   });
   final PortableLocationRevealController controller;
-  static PortableLocationRevealController? maybeOf(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<PortableLocationRevealScope>()
-          ?.controller;
+  final skir.PresentationRole? presentation;
+  static PortableLocationRevealScope? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<PortableLocationRevealScope>();
   @override
   bool updateShouldNotify(PortableLocationRevealScope oldWidget) =>
-      controller != oldWidget.controller;
+      controller != oldWidget.controller ||
+      presentation != oldWidget.presentation;
 }
 
 /// Registers the actual control subtree for scrolling and keyboard focus.
@@ -90,7 +116,8 @@ class PortableLocationTarget extends HookWidget {
   final Widget child;
   @override
   Widget build(BuildContext context) {
-    final controller = PortableLocationRevealScope.maybeOf(context);
+    final scope = PortableLocationRevealScope.maybeOf(context);
+    final controller = scope?.controller;
     final identity = useMemoized(Object.new);
     final focus = useMemoized(
       () => FocusNode(
@@ -115,9 +142,9 @@ class PortableLocationTarget extends HookWidget {
         );
         final target = focus.traversalDescendants.firstOrNull;
         if (target != null) target.requestFocus();
-      });
+      }, scope?.presentation);
       return () => controller._targets.remove(identity);
-    }, [controller, location]);
+    }, [controller, location, scope?.presentation]);
     return Focus(
       focusNode: focus,
       canRequestFocus: false,

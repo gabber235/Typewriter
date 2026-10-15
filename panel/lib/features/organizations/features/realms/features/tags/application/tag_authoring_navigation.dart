@@ -12,7 +12,11 @@ final class TagAuthoringNavigationAdapter
   }
 
   @override
-  Future<void> reveal(Ref ref, AuthoringResourceIdentifier resource) => ref
+  Future<void> reveal(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) => ref
       .read(appRouterProvider)
       .navigate(
         OrganizationRoute(
@@ -24,5 +28,6 @@ final class TagAuthoringNavigationAdapter
             ),
           ],
         ),
+        isCurrent: isCurrent,
       );
 }

@@ -69,16 +69,6 @@ final class ResourceCreationRequest {
 }
 
 @freezed
-abstract class CreatedAuthoringResource with _$CreatedAuthoringResource {
-  const factory CreatedAuthoringResource({
-    required AuthoringScope scope,
-    required skir.ResourceId id,
-    required skir.ResourceDefinitionId definition,
-    required skir.AuthoringRecord content,
-  }) = _CreatedAuthoringResource;
-}
-
-@freezed
 abstract class ResourceCreationTemplate with _$ResourceCreationTemplate {
   const factory ResourceCreationTemplate({
     required skir.ResourceDefinitionId definition,
@@ -135,14 +125,15 @@ final class ResourceCreationSession {
   final Ref ref;
   final AuthoringScope scope;
 
-  Future<CreatedAuthoringResource?> create({
+  Future<AuthoringResourceIdentifier?> create({
     required BuildContext context,
     required ResourceCreationRequest request,
   }) async {
+    if (!context.mounted) return null;
     final workspace = ref.read(realmEditingProvider(scope));
     final checked = workspace.document.catalog;
     final commands = ref.read(authoredResourceCommandsProvider(scope));
-    CreatedAuthoringResource? created;
+    AuthoringResourceIdentifier? created;
     final outcome = await workspace.prepare(
       label: "Create resource",
       apply: (edit) async {
@@ -178,22 +169,23 @@ final class ResourceCreationSession {
           ),
         );
         final prepared = await commands.prepareValue(initialization);
-        if (!context.mounted) {
-          throw StateError("The creation view closed during preparation");
-        }
+        if (!context.mounted) return;
         edit.createPreparedResource(
           request: effectiveRequest,
           prepared: prepared,
         );
-        created = CreatedAuthoringResource(
-          scope: scope,
-          id: effectiveRequest.id,
-          definition: effectiveRequest.definition,
-          content: prepared.recordContent,
+        created = AuthoringResourceIdentifier.inScope(
+          scope,
+          effectiveRequest.id,
         );
       },
     );
-    outcome.requireAccepted();
+    if (created == null && !context.mounted) return null;
+    if (outcome case EditStageRejected(:final message, :final cause)) {
+      if (cause is Exception) throw cause;
+      if (cause is Error) throw cause;
+      throw StateError(message);
+    }
     return created;
   }
 }

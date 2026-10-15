@@ -42,20 +42,14 @@ class LibraryPage extends HookConsumerWidget {
       if (current == null || current == skir.TypeSelection.unknown) {
         throw StateError("Book creation is unavailable");
       }
-      final created = await ref
+      await ref
           .read(resourceCreationProvider(scope!))
-          .create(
+          .createAndReveal(
             context: context,
             request: ResourceCreationRequest(
               definition: definitionId,
               configuration: current,
             ),
-          );
-      if (created == null) return;
-      ref
-          .read(selectionProvider.notifier)
-          .select(
-            AuthoringResourceIdentifier.inScope(created.scope, created.id),
           );
     }
 

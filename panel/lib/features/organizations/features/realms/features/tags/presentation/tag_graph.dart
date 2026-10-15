@@ -76,22 +76,13 @@ class TagGraph extends HookConsumerWidget {
             onCreateTag: template == null || scope == null
                 ? null
                 : () async {
-                    final created = await ref
+                    await ref
                         .read(resourceCreationProvider(scope))
-                        .create(
+                        .createAndReveal(
                           context: context,
                           request: ResourceCreationRequest(
                             definition: template.definition,
                             configuration: template.configuration,
-                          ),
-                        );
-                    if (created == null) return;
-                    ref
-                        .read(selectionProvider.notifier)
-                        .select(
-                          AuthoringResourceIdentifier.inScope(
-                            created.scope,
-                            created.id,
                           ),
                         );
                   },

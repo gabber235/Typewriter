@@ -78,12 +78,17 @@ class AppRouter extends RootStackRouter {
   final _WorkSessionLossGuard _workSessionLossGuard;
   final WorkSessionLossPopConfirmation? confirmWorkSessionPop;
 
+  /// Changes when a new route command supersedes pending navigation work.
+  int get navigationRevision => _navigationRevision;
+  int _navigationRevision = 0;
+
   @override
   List<AutoRouteGuard> get guards => [_workSessionLossGuard];
 
   @override
   Future<bool> maybePop<T extends Object?>([T? result]) async {
     if (hasPagelessTopRoute) return super.maybePop(result);
+    _navigationRevision++;
     final observation = _WorkRouteObservation.capture(this);
     final destination = _scopeAfterPop();
     if (destination != null) {
@@ -159,9 +164,12 @@ class AppRouter extends RootStackRouter {
   Future<dynamic> navigate(
     PageRouteInfo route, {
     OnNavigationFailure? onFailure,
-  }) => _admitNavigation([
-    matcher.matchByRoute(route),
-  ], () => super.navigate(route, onFailure: onFailure));
+    bool Function()? isCurrent,
+  }) => _admitNavigation(
+    [matcher.matchByRoute(route)],
+    () => super.navigate(route, onFailure: onFailure),
+    isCurrent: isCurrent,
+  );
 
   @override
   Future<void> navigateAll(
@@ -230,8 +238,9 @@ class AppRouter extends RootStackRouter {
 
   Future<R?> _admitNavigation<R>(
     List<RouteMatch?> candidates,
-    Future<R?> Function() navigate,
-  ) async {
+    Future<R?> Function() navigate, {
+    bool Function()? isCurrent,
+  }) async {
     if (candidates.isEmpty || candidates.any((route) => route == null)) {
       return navigate();
     }
@@ -241,6 +250,7 @@ class AppRouter extends RootStackRouter {
         inherited.covers(matches, workSessionLoss.currentScope)) {
       return navigate();
     }
+    _navigationRevision++;
     final observation = _WorkRouteObservation.capture(this);
     final source = workSessionLoss.currentScope;
     final destination = _workDestinationScope(matches, source);
@@ -255,7 +265,11 @@ class AppRouter extends RootStackRouter {
       forced: _scopeLossIsForced(access, source),
       confirm: () => _workSessionLossGuard.confirm(resolver),
     );
-    if (!allowed || !observation.matches(this)) return null;
+    if (!allowed ||
+        !observation.matches(this) ||
+        !(isCurrent?.call() ?? true)) {
+      return null;
+    }
     final admission = _WorkNavigationAdmission(source, matches);
     try {
       return await runZoned(

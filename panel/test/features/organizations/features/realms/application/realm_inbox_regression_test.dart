@@ -831,7 +831,9 @@ final class _RecordingRouter extends AppRouter {
   Future<dynamic> navigate(
     PageRouteInfo route, {
     OnNavigationFailure? onFailure,
+    bool Function()? isCurrent,
   }) async {
+    if (!(isCurrent?.call() ?? true)) return;
     destinations.add(route);
     await pendingNavigation?.future;
   }

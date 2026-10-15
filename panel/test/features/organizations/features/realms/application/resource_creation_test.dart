@@ -18,7 +18,7 @@ void main() {
       final transport = ScriptedAuthoringTransport(AsyncData(document));
       addTearDown(transport.dispose);
       skir.ValuePreparationRequest? preparedRequest;
-      CreatedAuthoringResource? created;
+      AuthoringResourceIdentifier? created;
       RealmEditing? workspace;
       var ambientOrganization = fixture.organization;
       var ambientRealm = fixture.realm;
@@ -80,7 +80,7 @@ void main() {
       await tester.pump();
       preparation.complete(fixture.prepared);
       await tester.pump();
-      expect(created?.id, fixture.request.id);
+      expect(created?.resourceId, fixture.request.id);
       expect(
         created?.scope,
         AuthoringScope(
@@ -88,7 +88,6 @@ void main() {
           realmId: fixture.realm,
         ),
       );
-      expect(created?.content.configuration, fixture.pending);
       expect(
         workspace!.document.entry(fixture.request.id)?.definition,
         fixture.request.definition,
@@ -111,11 +110,80 @@ void main() {
             .arguments,
         [skir.ArgumentSelection.unfilled],
       );
-      expect(transport.observation.requireValue.entry(created!.id), isNull);
+      expect(
+        transport.observation.requireValue.entry(created!.resourceId),
+        isNull,
+      );
       expect(
         workspace!.document.initializationFindings.single.location.resource,
         fixture.request.id,
       );
+    },
+  );
+  testWidgets(
+    "closing the creation view during preparation cancels before staging",
+    (tester) async {
+      final fixture = _fixture();
+      final document = AuthoringDocument.fromState(
+        fixture.snapshot,
+        catalog: fixture.catalog,
+      );
+      final transport = ScriptedAuthoringTransport(AsyncData(document));
+      addTearDown(transport.dispose);
+      final preparation = Completer<skir.PreparedValue>();
+      final completed = Completer<AuthoringResourceIdentifier?>();
+      final visible = ValueNotifier(true);
+      addTearDown(visible.dispose);
+      RealmEditing? workspace;
+      final commands = AuthoredResourceCommands(
+        previewTypeArguments: ({required resource, required requested}) async =>
+            throw UnimplementedError(),
+        prepareTypeArguments: (_) async => throw UnimplementedError(),
+        prepareValue: (_) => preparation.future,
+        invokeCommand: ({required capabilityId, required payload}) async =>
+            throw UnimplementedError(),
+        watchSearch: (_) => const Stream.empty(),
+        search: (_) async => throw UnimplementedError(),
+        reload: () async {},
+      );
+      await tester.pumpTestApp(
+        overrides: authoringFixtureOverrides(
+          document: document,
+          transport: transport,
+          commands: commands,
+        ),
+        child: ValueListenableBuilder<bool>(
+          valueListenable: visible,
+          builder: (_, shown, _) => shown
+              ? Consumer(
+                  builder: (context, ref, _) => FilledButton(
+                    onPressed: () async {
+                      final scope = AuthoringScope(
+                        organizationId: fixture.organization,
+                        realmId: fixture.realm,
+                      );
+                      workspace = ref.read(realmEditingProvider(scope));
+                      completed.complete(
+                        await ref
+                            .read(resourceCreationProvider(scope))
+                            .create(context: context, request: fixture.request),
+                      );
+                    },
+                    child: const Text("Create"),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      );
+      await tester.tap(find.text("Create"));
+      await tester.pump();
+      visible.value = false;
+      await tester.pump();
+      preparation.complete(fixture.prepared);
+      await tester.pump();
+      expect(await completed.future, isNull);
+      expect(workspace!.document.resource(fixture.request.id), isNull);
+      expect(workspace!.hasPendingWork, isFalse);
     },
   );
 }

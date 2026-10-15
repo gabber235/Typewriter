@@ -12,7 +12,11 @@ final class BookAuthoringNavigationAdapter
       .navigate(resource._bookRoute(bookId: resource.resourceId));
 
   @override
-  Future<void> reveal(Ref ref, AuthoringResourceIdentifier resource) => ref
+  Future<void> reveal(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) => ref
       .read(appRouterProvider)
       .navigate(
         OrganizationRoute(
@@ -24,6 +28,7 @@ final class BookAuthoringNavigationAdapter
             ),
           ],
         ),
+        isCurrent: isCurrent,
       );
 }
 
@@ -32,19 +37,30 @@ final class PageAuthoringNavigationAdapter
   const PageAuthoringNavigationAdapter();
 
   @override
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) {
+  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) =>
+      _navigate(ref, resource);
+
+  Future<void> _navigate(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) {
     final bookId = resource._ownerPath(ref).firstOrNull;
     if (bookId == null) throw StateError("The Page has no Book owner");
     return ref
         .read(appRouterProvider)
         .navigate(
           resource._bookRoute(bookId: bookId, pageId: resource.resourceId),
+          isCurrent: isCurrent,
         );
   }
 
   @override
-  Future<void> reveal(Ref ref, AuthoringResourceIdentifier resource) =>
-      open(ref, resource);
+  Future<void> reveal(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) => _navigate(ref, resource, isCurrent: isCurrent);
 }
 
 final class PageElementAuthoringNavigationAdapter
@@ -59,7 +75,11 @@ final class PageElementAuthoringNavigationAdapter
   }
 
   @override
-  Future<void> reveal(Ref ref, AuthoringResourceIdentifier resource) {
+  Future<void> reveal(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) {
     final owners = resource._ownerPath(ref);
     final pageId = owners.firstOrNull;
     final bookId = owners.skip(1).firstOrNull;
@@ -68,7 +88,10 @@ final class PageElementAuthoringNavigationAdapter
     }
     return ref
         .read(appRouterProvider)
-        .navigate(resource._bookRoute(bookId: bookId, pageId: pageId));
+        .navigate(
+          resource._bookRoute(bookId: bookId, pageId: pageId),
+          isCurrent: isCurrent,
+        );
   }
 }
 

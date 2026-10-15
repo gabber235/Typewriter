@@ -141,6 +141,9 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
         .read(appRouterProvider)
         .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
   }),
+  SearchHostEffectExecutor<RevealCreatedAuthoringResourceEffect>(
+    (effect) => effect.intent.reveal(effect.resource),
+  ),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
     final registry = ref.read(authoringResourceNavigationRegistryProvider);
     final resource = effect.resource;

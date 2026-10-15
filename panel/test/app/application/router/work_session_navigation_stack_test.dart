@@ -208,6 +208,57 @@ void main() {
   );
 
   testWidgets(
+    "creation reveal permits its own route and selects the inspector",
+    (tester) async {
+      final fixture = _Fixture();
+      final scope = AuthoringScope(
+        organizationId: skir.recordId("organization:two"),
+        realmId: skir.recordId("service:realm"),
+      );
+      final book = Book(
+        bookId: skir.ResourceId(value: "book"),
+        title: "New book",
+        icon: "mdi:book",
+        color: Colors.blue,
+        tagIds: const [],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          ...authoringFixtureOverrides(scope: scope, books: [book]),
+          appRouterProvider.overrideWithValue(fixture.router),
+        ],
+      );
+      final selection = container.listen(selectionProvider, (_, _) {});
+      final reveal = container.listen(
+        realmLocationRevealProvider(scope),
+        (_, _) {},
+      );
+      final intentProvider = Provider(ResourceCreationNavigationIntent.new);
+      await fixture.mount(tester);
+      await fixture.router.navigate(
+        BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
+      );
+      await tester.pumpAndSettle();
+      final intent = container.read(intentProvider);
+      await intent.reveal(
+        AuthoringResourceIdentifier.inScope(scope, book.bookId),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        fixture.router.currentPath,
+        "/organization/two/realm/realm/library",
+      );
+      expect(container.read(selectionProvider), [
+        AuthoringResourceIdentifier.inScope(scope, book.bookId),
+      ]);
+      selection.close();
+      reveal.close();
+      container.dispose();
+      await fixture.close(tester);
+    },
+  );
+
+  testWidgets(
     "organization entry retains Services while its first snapshot is pending",
     (tester) async {
       final lifecycle = _MutableLifecycle();
@@ -367,6 +418,30 @@ void main() {
       expect(fixture.ids, before);
       expect(find.text("Book"), findsOneWidget);
       expect(fixture.confirmations, 1);
+      await fixture.close(tester);
+    },
+  );
+
+  testWidgets(
+    "superseded creation intent cannot commit after route admission",
+    (tester) async {
+      final fixture = _Fixture();
+      await fixture.mount(tester);
+      fixture.pending = Completer<bool>();
+      var current = true;
+      final before = fixture.ids;
+      final navigation = fixture.router.navigate(
+        OrganizationRoute(organizationId: "one"),
+        isCurrent: () => current,
+      );
+      await tester.pump();
+      expect(fixture.confirmations, 1);
+      current = false;
+      fixture.pending!.complete(true);
+      await navigation;
+      await tester.pumpAndSettle();
+      expect(fixture.ids, before);
+      expect(find.text("Organization one"), findsNothing);
       await fixture.close(tester);
     },
   );

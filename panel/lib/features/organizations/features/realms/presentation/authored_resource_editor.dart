@@ -111,7 +111,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
     if (record == null) {
       return _diagnostic(context, "The authored resource is absent");
     }
-    final rendered = switch (selected) {
+    final presentation = switch (selected) {
       SelectedEditorPresentation() => _renderSelected(
         host!,
         capabilities,
@@ -131,15 +131,16 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
         "Presentation ${presentation.namespace}:${presentation.name} is unavailable",
       ),
     };
-    if (scope == null) return rendered;
+    if (scope == null) return presentation;
     return PortableLocationRevealScope(
+      presentation: role,
       controller: ref.watch(realmLocationRevealProvider(scope)),
       child: PortableLocationTarget(
         location: skir.ValueLocation(
           resource: resource,
           path: skir.ValuePath(segments: const []),
         ),
-        child: rendered,
+        child: presentation,
       ),
     );
   }
