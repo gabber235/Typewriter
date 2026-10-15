@@ -795,6 +795,7 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
 package $packageName
 
 import com.typewritermc.authoring.append
+import com.typewritermc.authoring.constructorDefaults
 import com.typewritermc.authoring.exactEditablePath
 import com.typewritermc.authoring.read
 import com.typewritermc.authoring.requireOpaqueCompatibility
@@ -864,7 +865,7 @@ interface ${name}Configuration$sourceArguments$sourceWhere {
     fun ${name}ConfigurationScope$appliedTypeArguments.configure()
 }
 
-interface ${name}ConfigurationScope$sourceArguments : com.typewritermc.configuration.TypeConfigurationScope, $rootConfigurationScope$sourceWhere {
+interface ${name}ConfigurationScope$sourceArguments : $rootConfigurationScope$sourceWhere {
 $configurationFields
 }
 
@@ -882,8 +883,6 @@ class ${name}ConfigurationScopeImpl$sourceArguments(
             $rootExpressionFactory,
         )
     )$sourceClassWhere {
-    override fun initialization(preference: com.typewritermc.configuration.InitializationPreference) =
-        collection.initialization(preference)
 $configurationImplementation
 }
 
@@ -1176,7 +1175,7 @@ $constructor,
             if (declaration.classKind == ClassKind.CLASS && fields.any(OwnedFieldDeclaration::hasConstructorDefault) &&
                 declaration.annotation(TYPEWRITER_STRING_ANNOTATION) == null
             ) {
-                nativeConstructionPlanSource(declaration, definition, fields, properties)
+                nativeConstructionPlanSource(declaration, definition, fields)
             } else {
                 ""
             }
@@ -1185,11 +1184,10 @@ $constructor,
                 ""
             } else {
                 "override val constructionPlan: com.typewritermc.authoring.NativeConstructionPlan = " +
-                    "${name}NativeConstructionPlan"
+                    constructionPlan
             }
         return """
-$constructionPlan
-
+@Suppress("UNCHECKED_CAST")
 object ${name}NativeBindingFactory : com.typewritermc.types.NativeBindingFactory {
     override val definition: com.typewritermc.types.TypeDefinitionId = ${definition.id.kotlinCode()}
     override val provider: com.typewritermc.authoring.NativeBindingId = $provider
@@ -1211,102 +1209,39 @@ object ${name}NativeBindingFactory : com.typewritermc.types.NativeBindingFactory
         declaration: KSClassDeclaration,
         definition: TypeDefinition,
         fields: List<OwnedFieldDeclaration>,
-        properties: Map<String, KSPropertyDeclaration>,
     ): String {
         val name = declaration.generatedTypeName()
-        val defaulted = fields.filter(OwnedFieldDeclaration::hasConstructorDefault)
-        val required = fields.filterNot(OwnedFieldDeclaration::hasConstructorDefault)
-        val ownerCode = { field: OwnedFieldDeclaration ->
-            "com.typewritermc.types.FieldOwner(${field.owner.kotlinCode()}, ${field.name.kotlinLiteral()})"
-        }
-        val missingOwners = required.joinToString { ownerCode(it) }
-        val requiredConstructor =
-            required.joinToString(",\n") { field ->
-                val property = properties.getValue(field.sourceName)
-                val nativeType = property.type.resolve().nativeType(declaration)
-                val use = field.template.generatedNativeAppliedCode(definition.id)
-                "                ${field.sourceName} = arguments.resolver.bind($use).decode(requiredInputs.required.getValue(${ownerCode(
-                    field,
-                )})) as $nativeType"
-            }
-        val captured =
-            defaulted.joinToString(",\n") { field ->
-                val use = field.template.generatedNativeAppliedCode(definition.id)
-                "                ${ownerCode(field)} to arguments.resolver.bind($use).encodeGeneratedDefault(sampled.${field.sourceName})"
-            }
         val constructorType = declaration.nativeAppliedType()
-        val constructorInvocation =
-            if (required.isEmpty()) {
-                "$constructorType()"
-            } else {
-                """$constructorType(
-$requiredConstructor,
+        val ordered =
+            declaration.primaryConstructor?.parameters.orEmpty().mapNotNull { parameter ->
+                fields.singleOrNull { it.sourceName == parameter.name?.asString() }
+            }
+        val descriptors =
+            ordered.joinToString(",\n") { field ->
+                val use = field.template.generatedNativeAppliedCode(definition.id)
+                """            com.typewritermc.authoring.GeneratedConstructorField<$constructorType>(
+                owner = com.typewritermc.types.FieldOwner(${field.owner.kotlinCode()}, ${field.name.kotlinLiteral()}),
+                sourceName = ${field.sourceName.kotlinLiteral()},
+                hasDefault = ${field.hasConstructorDefault},
+                type = { arguments -> $use },
+                read = { value -> value.${field.sourceName} },
             )"""
             }
-        return """
-object ${name}NativeConstructionPlan : com.typewritermc.authoring.NativeConstructionPlan {
-    override val defaultedFields: kotlin.collections.Set<com.typewritermc.types.FieldOwner> =
-        setOf(${defaulted.joinToString { ownerCode(it) }})
-
-    override fun sample(
-        arguments: com.typewritermc.authoring.AppliedNativeArguments,
-        requiredInputs: com.typewritermc.authoring.SamplingInputs,
-    ): com.typewritermc.authoring.CaptureResult {
-        arguments.requireOpaqueCompatibility(setOf(${declaration.typeParameters.mapIndexedNotNull {
-            index,
-            parameter,
-            ->
-            index.takeUnless {
-                parameter.bounds.map { it.resolve() }.any { bound ->
-                    bound.declaration.qualifiedName?.asString() != "kotlin.Any"
-                }
-            }
-        }.joinToString()}))
-        val missing = listOf<com.typewritermc.types.FieldOwner>($missingOwners).filterNot(requiredInputs.required::containsKey)
-        if (missing.isNotEmpty()) {
-            return com.typewritermc.authoring.CaptureResult.Unavailable(
-                listOf(
-                    com.typewritermc.authoring.InitializationDiagnostic(
-                        field = missing.first(),
-                        code = "missing_sampling_input",
-                        message = "A required constructor input is unavailable for default sampling.",
-                    ),
-                ),
-            )
-        }
-        return try {
-            val sampled = $constructorInvocation
-            com.typewritermc.authoring.CaptureResult.Captured(
-                mapOf(
-$captured,
-                ),
-            )
-        } catch (failure: kotlinx.coroutines.CancellationException) {
-            throw failure
-        } catch (failure: com.typewritermc.types.NativeBindingException) {
-            com.typewritermc.authoring.CaptureResult.Unavailable(
-                listOf(
-                    com.typewritermc.authoring.InitializationDiagnostic(
-                        field = null,
-                        code = failure.code,
-                        message = failure.message ?: failure.code,
-                    ),
-                ),
-            )
-        } catch (failure: kotlin.Exception) {
-            com.typewritermc.authoring.CaptureResult.Unavailable(
-                listOf(
-                    com.typewritermc.authoring.InitializationDiagnostic(
-                        field = null,
-                        code = "native_default_capture_failed",
-                        message = failure.message ?: "Native default capture failed.",
-                    ),
-                ),
-            )
-        }
-    }
-}
-""".trimStart()
+        val opaqueArguments =
+            declaration.typeParameters
+                .mapIndexedNotNull { index, parameter ->
+                    index.takeUnless {
+                        parameter.bounds.map { it.resolve() }.any { bound ->
+                            bound.declaration.qualifiedName?.asString() != "kotlin.Any"
+                        }
+                    }
+                }.joinToString()
+        return """($name::class as kotlin.reflect.KClass<$constructorType>).constructorDefaults(
+        fields = listOf(
+$descriptors,
+        ),
+        allowedOpaqueArguments = setOf($opaqueArguments),
+    )"""
     }
 
     private fun generateAdapters(declaration: KSClassDeclaration) {

@@ -12,12 +12,7 @@ import com.typewritermc.types.TypeTemplate
 data class CollectedConfiguration(
     val recipes: List<ConfigurationRecipe>,
     val checks: List<CheckRecipe>,
-    val initialization: InitializationPreference? = null,
 )
-
-interface TypeConfigurationScope {
-    fun initialization(preference: InitializationPreference)
-}
 
 data class NestedConfigurationScope(
     val representation: RepresentationKind,
@@ -28,8 +23,6 @@ data class NestedConfigurationScope(
 )
 
 interface ConfigurationCollectionScope {
-    fun initialization(preference: InitializationPreference)
-
     fun <S : Any> field(
         path: RelativeFieldPattern,
         representation: RepresentationKind,

@@ -913,139 +913,6 @@ impl PresentationMaterial {
 }
 
 // ==============================================================================
-// enum InitializationMode
-// ==============================================================================
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum InitializationMode {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<InitializationMode>>),
-    Startup,
-    Creation,
-}
-
-impl Default for InitializationMode {
-    fn default() -> Self {
-        InitializationMode::Unknown(None)
-    }
-}
-
-impl InitializationMode {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<InitializationMode> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::EnumAdapter<InitializationMode>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::EnumAdapter::new(
-                |x: &InitializationMode| match x {
-                    InitializationMode::Unknown(_) => 0,
-                    InitializationMode::Startup => 1,
-                    InitializationMode::Creation => 2,
-                },
-                |u| InitializationMode::Unknown(Some(u)),
-                |x: &InitializationMode| match x {
-                    InitializationMode::Unknown(Some(u)) => Some(u.as_ref()),
-                    _ => None,
-                },
-                "editor/v1/catalog.skir",
-                "InitializationMode",
-                "",
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<InitializationMode> {
-        initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(InitializationMode::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct CapturedDefault
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CapturedDefault {
-    pub field: crate::skirout::base::editor::v1::type_catalog::FieldOwner,
-    pub value: crate::skirout::base::editor::v1::type_catalog::DataValue,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CapturedDefault>>,
-}
-
-impl CapturedDefault {
-    pub fn default_ref() -> &'static CapturedDefault {
-        static D: std::sync::LazyLock<CapturedDefault> =
-            std::sync::LazyLock::new(CapturedDefault::default);
-        &D
-    }
-}
-
-impl CapturedDefault {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CapturedDefault> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CapturedDefault>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "CapturedDefault",
-                "",
-                |x: &CapturedDefault| &x._unrecognized,
-                |x: &mut CapturedDefault, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<CapturedDefault> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CapturedDefault::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct InitializationDescriptor
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct InitializationDescriptor {
-    pub definition: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
-    pub mode: InitializationMode,
-    pub captured: Vec<CapturedDefault>,
-    pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::InitializationDiagnostic>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InitializationDescriptor>>,
-}
-
-impl InitializationDescriptor {
-    pub fn default_ref() -> &'static InitializationDescriptor {
-        static D: std::sync::LazyLock<InitializationDescriptor> =
-            std::sync::LazyLock::new(InitializationDescriptor::default);
-        &D
-    }
-}
-
-impl InitializationDescriptor {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InitializationDescriptor>
-    {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<InitializationDescriptor>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/catalog.skir",
-                "InitializationDescriptor",
-                "",
-                |x: &InitializationDescriptor| &x._unrecognized,
-                |x: &mut InitializationDescriptor, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<InitializationDescriptor> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            InitializationDescriptor::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct RoleFallback
 // ==============================================================================
 
@@ -1100,7 +967,6 @@ pub struct EditorCatalogWireSnapshot {
     pub presentation_materials: Vec<PresentationMaterial>,
     pub configuration: Vec<ConfigurationRecipe>,
     pub diagnostics: Vec<crate::skirout::base::editor::v1::diagnostic::DeclarationDiagnostic>,
-    pub initialization: Vec<InitializationDescriptor>,
     pub endpoint_bindings: Vec<EndpointBindingTemplate>,
     pub capabilities: Vec<crate::skirout::base::editor::v1::capability::CapabilityDefinition>,
     pub recommendations: Vec<TypeRecommendation>,
@@ -1455,11 +1321,9 @@ impl PreparationTarget {
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ValuePreparationRequest {
-    pub id: crate::skirout::base::editor::v1::type_catalog::InitializationRequestId,
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub target: PreparationTarget,
     pub supplied_value: Option<crate::skirout::base::editor::v1::type_catalog::DataValue>,
-    pub intent_hash: String,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ValuePreparationRequest>>,
 }
@@ -2417,70 +2281,6 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::EnumAdapter<InitializationMode> =
-                InitializationMode::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("startup", 1, 1, "", InitializationMode::Startup);
-            (*a).add_constant_variant("creation", 2, 2, "", InitializationMode::Creation);
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CapturedDefault> =
-                CapturedDefault::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "field",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::FieldOwner::serializer(),
-                "",
-                |x: &CapturedDefault| &x.field,
-                |x: &mut CapturedDefault, v| x.field = v,
-            );
-            (*a).add_field(
-                "value",
-                1,
-                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
-                "",
-                |x: &CapturedDefault| &x.value,
-                |x: &mut CapturedDefault, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<InitializationDescriptor> =
-                InitializationDescriptor::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "definition",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
-                "",
-                |x: &InitializationDescriptor| &x.definition,
-                |x: &mut InitializationDescriptor, v| x.definition = v,
-            );
-            (*a).add_field(
-                "mode",
-                1,
-                crate::skir_client::internal::enum_serializer_from_static(
-                    InitializationMode::_adapter(),
-                ),
-                "",
-                |x: &InitializationDescriptor| &x.mode,
-                |x: &mut InitializationDescriptor, v| x.mode = v,
-            );
-            (*a).add_field(
-                "captured",
-                2,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        CapturedDefault::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &InitializationDescriptor| &x.captured,
-                |x: &mut InitializationDescriptor, v| x.captured = v,
-            );
-            (*a).add_field("diagnostics", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::InitializationDiagnostic::serializer()), "", |x: &InitializationDescriptor| &x.diagnostics, |x: &mut InitializationDescriptor, v| x.diagnostics = v);
-            (*a).finalize();
-        }
-        unsafe {
             let a: *mut crate::skir_client::internal::StructAdapter<RoleFallback> =
                 RoleFallback::_adapter() as *const _ as *mut _;
             (*a).add_field(
@@ -2602,20 +2402,8 @@ fn initialize_module_serializers() {
                 |x: &mut EditorCatalogWireSnapshot, v| x.diagnostics = v,
             );
             (*a).add_field(
-                "initialization",
-                8,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        InitializationDescriptor::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &EditorCatalogWireSnapshot| &x.initialization,
-                |x: &mut EditorCatalogWireSnapshot, v| x.initialization = v,
-            );
-            (*a).add_field(
                 "endpoint_bindings",
-                9,
+                8,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::struct_serializer_from_static(
                         EndpointBindingTemplate::_adapter(),
@@ -2627,7 +2415,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "capabilities",
-                10,
+                9,
                 crate::skir_client::Serializer::array(
                     crate::skirout::base::editor::v1::capability::CapabilityDefinition::serializer(
                     ),
@@ -2638,7 +2426,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "recommendations",
-                11,
+                10,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::struct_serializer_from_static(
                         TypeRecommendation::_adapter(),
@@ -2650,7 +2438,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "role_fallbacks",
-                12,
+                11,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::struct_serializer_from_static(
                         RoleFallback::_adapter(),
@@ -2853,17 +2641,8 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<ValuePreparationRequest> =
                 ValuePreparationRequest::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "id",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::InitializationRequestId::serializer(
-                ),
-                "",
-                |x: &ValuePreparationRequest| &x.id,
-                |x: &mut ValuePreparationRequest, v| x.id = v,
-            );
-            (*a).add_field(
                 "catalog",
-                1,
+                0,
                 crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
                 "",
                 |x: &ValuePreparationRequest| &x.catalog,
@@ -2871,7 +2650,7 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "target",
-                2,
+                1,
                 crate::skir_client::internal::enum_serializer_from_static(
                     PreparationTarget::_adapter(),
                 ),
@@ -2881,21 +2660,13 @@ fn initialize_module_serializers() {
             );
             (*a).add_field(
                 "supplied_value",
-                3,
+                2,
                 crate::skir_client::Serializer::optional(
                     crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
                 ),
                 "",
                 |x: &ValuePreparationRequest| &x.supplied_value,
                 |x: &mut ValuePreparationRequest, v| x.supplied_value = v,
-            );
-            (*a).add_field(
-                "intent_hash",
-                4,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ValuePreparationRequest| &x.intent_hash,
-                |x: &mut ValuePreparationRequest, v| x.intent_hash = v,
             );
             (*a).finalize();
         }

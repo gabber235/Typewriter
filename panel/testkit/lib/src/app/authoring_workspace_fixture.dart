@@ -581,7 +581,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
       presentationMaterials: materials,
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: bindings,
       capabilities: const [],
       recommendations: const [],

@@ -431,10 +431,6 @@ fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
     assert_eq!(decoded, prepared);
 
     let initialization = catalog::ValuePreparationRequest {
-        id: wasmcloud_utils::skir::base::editor::v1::type_catalog::InitializationRequestId {
-            value: "initialization:one".to_owned(),
-            _unrecognized: None,
-        },
         catalog: prepared.catalog.clone(),
         target: catalog::PreparationTarget::Record(Box::new(TypeSelection::Complete(Box::new(
             named(declared(RESOURCE_ID), vec![]),
@@ -447,7 +443,6 @@ fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
             }]),
             _unrecognized: None,
         }))),
-        intent_hash: "intent:create".to_owned(),
         _unrecognized: None,
     };
     let initialization_bytes =

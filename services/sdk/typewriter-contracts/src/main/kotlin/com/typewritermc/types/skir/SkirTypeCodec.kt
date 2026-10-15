@@ -2,7 +2,6 @@ package com.typewritermc.types.skir
 
 import com.typewritermc.authoring.AuthoringNavigationHandler
 import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.ValuePath
@@ -66,8 +65,6 @@ import skirout.editor.v1.catalog.EffectiveFieldTemplate as SkirEffectiveFieldTem
 import skirout.editor.v1.catalog.EndpointCardinality as SkirEndpointCardinality
 import skirout.editor.v1.catalog.EndpointDefinition as SkirEndpointDefinition
 import skirout.editor.v1.catalog.EndpointSlot as SkirEndpointSlot
-import skirout.editor.v1.catalog.InitializationDescriptor as SkirInitializationDescriptor
-import skirout.editor.v1.catalog.InitializationMode as SkirInitializationMode
 import skirout.editor.v1.catalog.OwnedRule as SkirOwnedRule
 import skirout.editor.v1.catalog.PresentationDescriptor as SkirPresentationDescriptor
 import skirout.editor.v1.catalog.PresentationMaterial as SkirPresentationMaterial
@@ -530,7 +527,6 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
             },
         configuration = snapshot.configuration.mapIndexed { index, value -> at("configuration $index") { encode(value) } },
         diagnostics = snapshot.diagnostics.mapIndexed { index, value -> at("diagnostic $index") { encode(value) } },
-        initialization = snapshot.initialization.mapIndexed { index, value -> at("initialization $index") { encode(value) } },
         endpointBindings = snapshot.endpointBindings.mapIndexed { index, value -> at("endpoint binding $index") { encode(value) } },
         capabilities = snapshot.capabilities.mapIndexed { index, value -> at("capability $index") { encode(value) } },
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
@@ -857,30 +853,6 @@ private fun ConversionScope.encode(diagnostic: Diagnostic) =
         severity = encode(diagnostic.severity),
         primary = diagnostic.primary?.let(::encodeValueLocation),
         related = diagnostic.related.map(::encodeValueLocation),
-    )
-
-private fun ConversionScope.encode(initialization: InitializationDescriptor) =
-    SkirInitializationDescriptor(
-        definition = encodeDefinitionId(initialization.definition),
-        mode =
-            when (initialization.mode) {
-                com.typewritermc.authoring.InitializationMode.Startup -> SkirInitializationMode.STARTUP
-                com.typewritermc.authoring.InitializationMode.Creation -> SkirInitializationMode.CREATION
-            },
-        captured =
-            initialization.captured.map {
-                skirout.editor.v1.catalog
-                    .CapturedDefault(field = encode(it.field), value = encodeDataValue(it.value))
-            },
-        diagnostics =
-            initialization.diagnostics.map {
-                SkirInitializationDiagnostic(
-                    field = it.field?.let(::encode),
-                    code = it.code,
-                    message = it.message,
-                    relativePath = it.relativePath?.let(::encodeValuePath),
-                )
-            },
     )
 
 private fun ConversionScope.encode(pattern: RelativeFieldPattern) =

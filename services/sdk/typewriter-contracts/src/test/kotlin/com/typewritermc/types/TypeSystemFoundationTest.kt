@@ -585,7 +585,6 @@ val TypeSystemFoundationTest by testSuite {
                 presentationMaterials = emptyList(),
                 configuration = emptyList(),
                 diagnostics = emptyList(),
-                initialization = emptyList(),
                 endpointBindings =
                     listOf(
                         EndpointBindingTemplate(

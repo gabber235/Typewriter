@@ -1,7 +1,6 @@
 package com.typewritermc.realm.catalog
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.capability.RealmCapabilityProvider
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -120,7 +119,6 @@ class RealmCatalogStore : AutoCloseable {
         override val relations: List<RelationContract> get() = assembly.snapshot.relations
         override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.snapshot.endpointBindings
         override val resources: List<AuthoringResourceDefinition> get() = assembly.snapshot.resourceDefinitions
-        override val initialization: List<InitializationDescriptor> get() = assembly.snapshot.initialization
         override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
         override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
         override val capabilities: List<RealmCapabilityProvider>

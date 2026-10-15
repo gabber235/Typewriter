@@ -99,7 +99,6 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             DefaultInitializationRuntime(
                                 catalog.checked,
                                 catalog.nativeBindings,
-                                catalog.initialization,
                             ).prepare(request)
                         },
                     engine =

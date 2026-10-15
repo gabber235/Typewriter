@@ -2,9 +2,7 @@ package com.typewritermc.library
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.authoring.GraphPlacementDefinition
-import com.typewritermc.authoring.InitializationCatalogPlanner
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedValue
@@ -92,15 +90,14 @@ val FrameworkCatalogCreationTest by testSuite {
                 IconIconifyDefinition.use,
                 DataValue.Record(mapOf("value" to DataValue.StringValue("material-symbols:book"))),
             )
-        val initialization = InitializationCatalogPlanner(catalog, bindings).plan(definitions, emptyMap())
-        val initializer = DefaultInitializationRuntime(catalog, bindings, initialization.descriptors)
+        val initializer = DefaultInitializationRuntime(catalog, bindings)
 
-        val book = initializer.prepareNow(request(generation, BookDefinition.use, "book"))
+        val book = initializer.prepareNow(request(generation, BookDefinition.use))
         val icon = book.record.fields.getValue("icon") as DataValue.Named
         icon.actualType shouldBe IconIconifyDefinition.use
         book.findings shouldBe emptyList()
 
-        val tag = initializer.prepareNow(request(generation, TagDefinition.use, "tag"))
+        val tag = initializer.prepareNow(request(generation, TagDefinition.use))
         tag.findings shouldBe emptyList()
         tag.record.fields.getValue("name") shouldBe DataValue.StringValue("")
         (tag.record.fields.getValue("color") is DataValue.Named) shouldBe true
@@ -605,13 +602,10 @@ private fun generatedProviderEntries(): List<com.typewritermc.discovery.Generate
 private fun request(
     generation: CatalogGeneration,
     use: TypeUse.Named,
-    id: String,
 ) = InitializationRequest(
-    id = InitializationRequestId(id),
     catalog = generation,
     target = PreparationTarget.Record(TypeSelection.Complete(use)),
     supplied = DataValue.Record(emptyMap()),
-    intentHash = "framework creation",
 )
 
 private val PreparedValue.record

@@ -297,7 +297,7 @@ skir.EditorCatalogWireSnapshot _catalog({skir.CatalogGeneration? generation}) =>
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

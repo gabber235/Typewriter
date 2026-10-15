@@ -336,7 +336,7 @@ _fixture({bool unfilled = false}) {
       ],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

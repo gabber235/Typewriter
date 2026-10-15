@@ -258,7 +258,6 @@ _CreationFixture _fixture() {
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],
@@ -291,7 +290,7 @@ _CreationFixture _fixture() {
     pending: pending,
     request: ResourceCreationRequest(
       id: skir.ResourceId(value: "resource:created"),
-      initializationId: skir.InitializationRequestId(value: "create:test"),
+
       definition: resourceDefinition,
       configuration: pending,
     ),

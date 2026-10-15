@@ -594,7 +594,7 @@ _nestedMaterialFixture() {
       ],
       configuration: original.configuration,
       diagnostics: original.diagnostics,
-      initialization: original.initialization,
+
       endpointBindings: original.endpointBindings,
       capabilities: original.capabilities,
       recommendations: original.recommendations,
@@ -720,7 +720,7 @@ _fixture({
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

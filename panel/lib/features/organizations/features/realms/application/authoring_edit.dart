@@ -65,8 +65,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
   final List<skir.EditIntent> _intents = [];
   final List<LocatedInitializationFinding> _initializationFindings = [];
   int _inheritedFindings = 0;
-  final Map<skir.ValueLocation, _MaterializationOperation>
-  _materializationOperations = {};
 
   List<skir.EditIntent> get intents => List.unmodifiable(_intents);
 
@@ -105,23 +103,20 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     return true;
   }
 
-  AuthoringEdit fork() {
-    final branch = AuthoringEdit._(
-      generation: generation,
-      catalog: catalog,
-      records: _resources,
-      definitions: _definitions,
-      links: _links,
-      baseline: _baselineFacts,
-    );
-    branch._observed.addAll(_observed);
-    branch._intents.addAll(_intents);
-    branch._initializationFindings.addAll(_initializationFindings);
-    branch._inheritedFindings = _inheritedFindings;
-    branch._materializationOperations.addAll(_materializationOperations);
-    branch._failure = _failure;
-    return branch;
-  }
+  AuthoringEdit fork() =>
+      AuthoringEdit._(
+          generation: generation,
+          catalog: catalog,
+          records: _resources,
+          definitions: _definitions,
+          links: _links,
+          baseline: _baselineFacts,
+        )
+        .._observed.addAll(_observed)
+        .._intents.addAll(_intents)
+        .._initializationFindings.addAll(_initializationFindings)
+        .._inheritedFindings = _inheritedFindings
+        .._failure = _failure;
 
   Future<PortablePathResult<skir.AuthoringRecord>> setWithInitialization(
     skir.ValueLocation location,
@@ -322,8 +317,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
         result.message == "The parent field needs prepared initialization") {
       final plan = working._parentInitialization(location);
       if (plan == null) return result;
-      _materializationOperations[plan.location] =
-          working._materializationOperations[plan.location]!;
       working
         .._observePath(plan.containing)
         .._observe(_value(at: plan.containing));
@@ -390,7 +383,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       }
       final staged = working._set(plan.location, parent);
       if (staged case PortablePathUnavailable()) return staged;
-      working._materializationOperations.remove(plan.location);
       result = working._set(location, value);
     }
     if (result case PortablePathValue()) {
@@ -444,9 +436,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     _initializationFindings
       ..clear()
       ..addAll(source._initializationFindings);
-    _materializationOperations
-      ..clear()
-      ..addAll(source._materializationOperations);
   }
 
   PortablePathResult<skir.AuthoringRecord> _setPayload(
@@ -551,7 +540,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
 
   @override
   skir.DataValue defaultValue(skir.TypeUse? type) =>
-      _defaultForType(type, const {});
+      _AuthoringDefaults(catalog).forType(type);
 
   PortablePathResult<skir.AuthoringRecord> _remove(
     skir.ValueLocation location,
@@ -993,6 +982,88 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     );
   }
 
+  /// Resolves incoming creation links against this branch before defaults run.
+  /// Canonical connect intents still own relation mutation after preparation.
+  List<skir.FieldValue> creationInputs(ResourceCreationRequest request) {
+    final checked = catalog;
+    if (checked == null) throw StateError("The editor catalog is unavailable");
+    final fields = <String, skir.DataValue>{};
+    for (final field in request.supplied) {
+      if (fields.containsKey(field.name)) {
+        throw StateError("A creation input was supplied more than once");
+      }
+      fields[field.name] = field.value;
+    }
+    for (final connection in request.connections) {
+      final source = _resources[connection.source];
+      if (source == null) throw StateError("The creation parent is absent");
+      _observe(_exists(resource: connection.source));
+      final relation = checked.snapshot.relations
+          .where(
+            (candidate) =>
+                candidate.first.id == connection.endpoint ||
+                candidate.second.id == connection.endpoint,
+          )
+          .singleOrNull;
+      if (relation == null) {
+        throw StateError("The creation relation is unavailable");
+      }
+      final opposite = relation.first.id == connection.endpoint
+          ? relation.second.id
+          : relation.first.id;
+      final counterpart = switch (checked.resolveScalarCounterpart(
+        configuration: request.configuration,
+        resource: request.id,
+        endpoint: opposite,
+      )) {
+        ResolvedResourceCounterpart(:final location) => location,
+        ResourceCounterpartChoiceRequired(:final message) => throw StateError(
+          message,
+        ),
+        InvalidResourceCounterpart(:final message) => throw StateError(message),
+      };
+      final sourceBindings = checked.endpointBindings(source.configuration);
+      if (!sourceBindings.any(
+        (binding) => binding.template.endpoint == connection.endpoint,
+      )) {
+        throw StateError("The parent does not support the creation relation");
+      }
+      _observeRelationPath(
+        skir.ValueLocation(resource: connection.source, path: connection.path),
+      );
+      final actual = _concreteNamed(
+        checked.valueTypeAt(request.configuration, counterpart.path),
+      );
+      if (actual == null) {
+        throw StateError("The creation link type is unavailable");
+      }
+      final linked = skir.DataValue.createNamed(
+        actualType: actual,
+        payload: skir.DataValue.createLink(
+          endpoint: opposite,
+          target: skir.LinkTarget(
+            resource: connection.source,
+            opposite: connection.path,
+          ),
+        ),
+      );
+      final name =
+          (counterpart.path.segments.single as skir.PathSegment_fieldWrapper)
+              .value
+              .name;
+      if (fields.containsKey(name) && fields[name] != linked) {
+        throw StateError(
+          "The supplied creation input conflicts with its connection",
+        );
+      }
+      fields[name] = linked;
+    }
+    return [
+      for (final field in fields.entries)
+        skir.FieldValue(name: field.key, value: field.value),
+    ];
+  }
+
   skir.ValueLocation? _automaticScalarCounterpart(
     skir.ResourceId resource,
     skir.EndpointId endpoint,
@@ -1000,20 +1071,15 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     final record = _resources[resource];
     final checked = catalog;
     if (record == null || checked == null) return null;
-    final owners = checked.nominalDefinitions(record.configuration);
-    final candidates = <skir.ValueLocation>{};
-    for (final binding in checked.endpointBindings(record.configuration)) {
-      if (binding.template.endpoint != endpoint ||
-          binding.template.containsCollection ||
-          !owners.contains(binding.template.valueOwner)) {
-        continue;
-      }
-      final path = _directFieldPath(binding.template.relativePath);
-      if (path != null) {
-        candidates.add(skir.ValueLocation(resource: resource, path: path));
-      }
-    }
-    return candidates.length == 1 ? candidates.single : null;
+    return switch (checked.resolveScalarCounterpart(
+      configuration: record.configuration,
+      resource: resource,
+      endpoint: endpoint,
+    )) {
+      ResolvedResourceCounterpart(:final location) => location,
+      ResourceCounterpartChoiceRequired() ||
+      InvalidResourceCounterpart() => null,
+    };
   }
 
   skir.ValueLocation? _stageNewCounterpart({
@@ -1430,119 +1496,81 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     if (checked == null || target.path.segments.length < 2) {
       return PortablePathValue(_resources[target.resource]!);
     }
-    while (true) {
-      final record = _resources[target.resource]!;
-      var selection = record.configuration;
-      var currentPath = <skir.PathSegment>[];
-      var changed = false;
-      for (final segment in target.path.segments.take(
-        target.path.segments.length - 1,
-      )) {
-        if (segment case skir.PathSegment_fieldWrapper(:final value)) {
-          final field = checked
-              .fields(selection)
-              .where((candidate) => candidate.template.key == value.name)
-              .firstOrNull;
-          if (field == null || field.type == null) {
-            return const PortablePathUnavailable(
-              "The parent field type is unavailable",
-            );
-          }
-          currentPath = [...currentPath, segment];
-          final location = skir.ValueLocation(
-            resource: target.resource,
-            path: skir.ValuePath(segments: currentPath),
+    final record = _resources[target.resource]!;
+    var selection = record.configuration;
+    var currentPath = <skir.PathSegment>[];
+    for (final segment in target.path.segments.take(
+      target.path.segments.length - 1,
+    )) {
+      if (segment case skir.PathSegment_fieldWrapper(:final value)) {
+        final field = checked
+            .fields(selection)
+            .where((candidate) => candidate.template.key == value.name)
+            .firstOrNull;
+        if (field == null || field.type == null) {
+          return const PortablePathUnavailable(
+            "The parent field type is unavailable",
           );
-          final child = record.readAt(location.path);
-          final childValue = switch (child) {
-            PortablePathValue(:final value) => value,
-            PortablePathUnavailable() => skir.DataValue.unfilled,
-          };
-          if (childValue == skir.DataValue.unfilled ||
-              childValue == skir.DataValue.null_) {
-            final expected = _concreteNamed(field.type);
-            if (expected == null) {
-              return const PortablePathUnavailable(
-                "The parent field is not a concrete record",
-              );
-            }
-            final parent = _materializeParent(
-              selection,
-              field.template.owner,
-              expected,
-            );
-            if (parent == null) {
-              return const PortablePathUnavailable(
-                "The parent field needs prepared initialization",
-              );
-            }
-            _observePath(location);
-            _observe(_value(at: location));
-            final updated = record.replaceAt(location.path, parent);
-            if (updated case PortablePathValue(value: final stagedRecord)) {
-              _resources[target.resource] = stagedRecord;
-              _intents.add(
-                skir.EditIntent.createSetValue(at: location, value: parent),
-              );
-              changed = true;
-              break;
-            }
-            return updated;
-          }
-          selection = switch (childValue) {
-            skir.DataValue_namedWrapper(:final value) =>
-              skir.TypeSelection.wrapComplete(value.actualType),
-            _ => skir.TypeSelection.unknown,
-          };
-        } else {
-          currentPath = [...currentPath, segment];
-          final child = record.readAt(skir.ValuePath(segments: currentPath));
-          if (child case PortablePathUnavailable()) {
-            return const PortablePathUnavailable(
-              "The collection item is absent",
-            );
-          }
-          final childValue = (child as PortablePathValue<skir.DataValue>).value;
-          selection = switch (childValue) {
-            skir.DataValue_namedWrapper(:final value) =>
-              skir.TypeSelection.wrapComplete(value.actualType),
-            _ => skir.TypeSelection.unknown,
-          };
         }
+        currentPath = [...currentPath, segment];
+        final location = skir.ValueLocation(
+          resource: target.resource,
+          path: skir.ValuePath(segments: currentPath),
+        );
+        final child = record.readAt(location.path);
+        final childValue = switch (child) {
+          PortablePathValue(:final value) => value,
+          PortablePathUnavailable() => skir.DataValue.unfilled,
+        };
+        if (childValue == skir.DataValue.unfilled ||
+            childValue == skir.DataValue.null_) {
+          final expected = _concreteNamed(field.type);
+          if (expected == null) {
+            return const PortablePathUnavailable(
+              "The parent field is not a concrete record",
+            );
+          }
+          return const PortablePathUnavailable(
+            "The parent field needs prepared initialization",
+          );
+        }
+        selection = switch (childValue) {
+          skir.DataValue_namedWrapper(:final value) =>
+            skir.TypeSelection.wrapComplete(value.actualType),
+          _ => skir.TypeSelection.unknown,
+        };
+      } else {
+        currentPath = [...currentPath, segment];
+        final child = record.readAt(skir.ValuePath(segments: currentPath));
+        if (child case PortablePathUnavailable()) {
+          if (_isMapRow(record, currentPath)) continue;
+          return const PortablePathUnavailable("The collection item is absent");
+        }
+        final childValue = (child as PortablePathValue<skir.DataValue>).value;
+        selection = switch (childValue) {
+          skir.DataValue_namedWrapper(:final value) =>
+            skir.TypeSelection.wrapComplete(value.actualType),
+          _ => skir.TypeSelection.unknown,
+        };
       }
-      if (!changed) return PortablePathValue(record);
     }
+    return PortablePathValue(record);
   }
 
-  skir.DataValue? _materializeParent(
-    skir.TypeSelection containing,
-    skir.FieldOwner owner,
-    skir.NamedTypeUse expected,
-  ) {
-    final checked = catalog!;
-    final containingDefinition = checked.selected(containing)?.definition.id;
-    final containingDescriptor = containingDefinition == null
-        ? null
-        : checked.initialization(containingDefinition);
-    if (containingDescriptor?.mode == skir.InitializationMode.creation) {
-      return null;
+  bool _isMapRow(skir.AuthoringRecord record, List<skir.PathSegment> path) {
+    if (path.lastOrNull is skir.PathSegment_itemWrapper) {
+      final parent = record.readAt(
+        skir.ValuePath(segments: path.take(path.length - 1)),
+      );
+      if (parent case PortablePathValue(value: final value)) {
+        final payload = value.authoredPayload;
+        if (payload case skir.DataValue_mapValueWrapper(value: final map)) {
+          final item = (path.last as skir.PathSegment_itemWrapper).value.id;
+          return map.rows.any((row) => row.id == item);
+        }
+      }
     }
-    final captured = containingDescriptor?.captured
-        .where((candidate) => candidate.field == owner)
-        .firstOrNull
-        ?.value;
-    if (captured case skir.DataValue_namedWrapper(:final value)
-        when checked.isReadableAs(
-          skir.TypeUse.wrapNamed(value.actualType),
-          skir.TypeUse.wrapNamed(expected),
-        )) {
-      return captured;
-    }
-    final descriptor = checked.initialization(expected.definition);
-    if (descriptor?.mode == skir.InitializationMode.creation) {
-      return null;
-    }
-    return _defaultForNamed(expected, <skir.NamedTypeUse>{});
+    return false;
   }
 
   _ParentInitialization? _parentInitialization(skir.ValueLocation target) {
@@ -1570,10 +1598,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           PortablePathValue(:final value) => value,
           PortablePathUnavailable() => skir.DataValue.unfilled,
         };
-        if ((childValue == skir.DataValue.unfilled ||
-                childValue == skir.DataValue.null_) &&
-            _materializeParent(selection, field.template.owner, expected) ==
-                null) {
+        if (childValue == skir.DataValue.unfilled ||
+            childValue == skir.DataValue.null_) {
           final location = skir.ValueLocation(
             resource: target.resource,
             path: skir.ValuePath(segments: currentPath),
@@ -1581,24 +1607,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
           final supplied = fields
               .where((candidate) => candidate.name != value.name)
               .toList(growable: false);
-          final fingerprint = _initializationFingerprint(
-            location,
-            selection,
-            supplied,
-          );
-          final existing = _materializationOperations[location];
-          final operation = existing?.fingerprint == fingerprint
-              ? existing!
-              : _MaterializationOperation(
-                  id: const Uuid().v4(),
-                  fingerprint: fingerprint,
-                );
-          _materializationOperations[location] = operation;
-          final containingIdentity = _initializationIntentHash(
-            operation,
-            "containing",
-          );
-          final childIdentity = _initializationIntentHash(operation, "child");
           final containingLocation = skir.ValueLocation(
             resource: target.resource,
             path: skir.ValuePath(
@@ -1611,24 +1619,16 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             field: value.name,
             expected: expected,
             request: skir.ValuePreparationRequest(
-              id: skir.InitializationRequestId(
-                value: "panel:materialize:${operation.id}:containing",
-              ),
               catalog: generation,
               target: skir.PreparationTarget.wrapRecord(selection),
               suppliedValue: skir.DataValue.createRecord(fields: supplied),
-              intentHash: containingIdentity,
             ),
             childRequest: skir.ValuePreparationRequest(
-              id: skir.InitializationRequestId(
-                value: "panel:materialize:${operation.id}:child",
-              ),
               catalog: generation,
               target: skir.PreparationTarget.wrapRecord(
                 skir.TypeSelection.wrapComplete(expected),
               ),
               suppliedValue: skir.DataValue.createRecord(fields: const []),
-              intentHash: childIdentity,
             ),
           );
         }
@@ -1641,7 +1641,10 @@ final class AuthoringEdit implements PortableAuthoringEdit {
             childValue.authoredRecord?.fields.toList(growable: false) ??
             const [];
       } else {
-        if (child is! PortablePathValue<skir.DataValue>) return null;
+        if (child is! PortablePathValue<skir.DataValue>) {
+          if (_isMapRow(root, currentPath)) continue;
+          return null;
+        }
         final childValue = child.value;
         selection = switch (childValue) {
           skir.DataValue_namedWrapper(:final value) =>
@@ -1655,39 +1658,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     }
     return null;
   }
-
-  String _initializationFingerprint(
-    skir.ValueLocation location,
-    skir.TypeSelection selection,
-    List<skir.FieldValue> supplied,
-  ) {
-    final bytes = <int>[
-      ...skir.CatalogGeneration.serializer.toBytes(generation),
-      ...skir.ValueLocation.serializer.toBytes(location),
-      ...skir.TypeSelection.serializer.toBytes(selection),
-      for (final field in [
-        ...supplied,
-      ]..sort((a, b) => a.name.compareTo(b.name)))
-        ...skir.FieldValue.serializer.toBytes(field),
-    ];
-    return sha256.convert(bytes).toString();
-  }
-
-  String _initializationIntentHash(
-    _MaterializationOperation operation,
-    String step,
-  ) => sha256
-      .convert(utf8.encode("${operation.id}:${operation.fingerprint}:$step"))
-      .toString();
-
-  skir.DataValue _defaultForNamed(
-    skir.NamedTypeUse actual,
-    Set<skir.NamedTypeUse> visiting,
-  ) => _AuthoringDefaults(catalog)._defaultForNamed(actual, visiting);
-  skir.DataValue _defaultForType(
-    skir.TypeUse? type,
-    Set<skir.NamedTypeUse> visiting,
-  ) => _AuthoringDefaults(catalog)._defaultForType(type, visiting);
 
   PortablePathResult<skir.AuthoringRecord> _updateCollection(
     skir.ValueLocation location,
@@ -1730,7 +1700,7 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       location.path,
       value: skir.DataValue.createRecord(fields: record.fields),
     );
-    final initialized = _defaultForType(expected, const {});
+    final initialized = defaultValue(expected);
     return initialized.authoredItems != null ||
             initialized.authoredPayload is skir.DataValue_mapValueWrapper
         ? initialized
@@ -1792,16 +1762,6 @@ final class _ParentInitialization {
   final skir.NamedTypeUse expected;
   final skir.ValuePreparationRequest request;
   final skir.ValuePreparationRequest childRequest;
-}
-
-final class _MaterializationOperation {
-  const _MaterializationOperation({
-    required this.id,
-    required this.fingerprint,
-  });
-
-  final String id;
-  final String fingerprint;
 }
 
 final class _EditState {
@@ -1999,6 +1959,56 @@ skir.NamedTypeUse? _concreteNamed(skir.TypeUse? type) => switch (type) {
   _ => null,
 };
 
+extension ResourceCounterpartCatalog on CheckedEditorCatalog {
+  ResourceCounterpartResolution resolveScalarCounterpart({
+    required skir.TypeSelection configuration,
+    required skir.ResourceId resource,
+    required skir.EndpointId endpoint,
+  }) {
+    if (selected(configuration)?.status != skir.DeclarationStatus.ready) {
+      return const ResourceCounterpartResolution.invalid(
+        "The counterpart resource type is unavailable",
+      );
+    }
+    if (!snapshot.relations.any(
+      (relation) =>
+          relation.first.id == endpoint || relation.second.id == endpoint,
+    )) {
+      return const ResourceCounterpartResolution.invalid(
+        "The counterpart relation endpoint is unavailable",
+      );
+    }
+    final bindings = endpointBindings(configuration)
+        .where((binding) => binding.template.endpoint == endpoint)
+        .toList();
+    if (bindings.isEmpty) {
+      return const ResourceCounterpartResolution.invalid(
+        "The resource has no binding for the counterpart endpoint",
+      );
+    }
+    final owners = nominalDefinitions(configuration);
+    final candidates = <skir.ValueLocation>{};
+    for (final binding in bindings) {
+      if (binding.template.containsCollection ||
+          !owners.contains(binding.template.valueOwner)) {
+        continue;
+      }
+      final path = _directFieldPath(binding.template.relativePath);
+      if (path != null && path.segments.length == 1) {
+        candidates.add(skir.ValueLocation(resource: resource, path: path));
+      }
+    }
+    if (candidates.length == 1) {
+      return ResourceCounterpartResolution.resolved(candidates.single);
+    }
+    return ResourceCounterpartResolution.choiceRequired(
+      candidates.isEmpty
+          ? "The counterpart is nested or belongs to a collection. Choose its location explicitly"
+          : "More than one counterpart location is available. Choose one explicitly",
+    );
+  }
+}
+
 skir.ValuePath? _directFieldPath(skir.RelativeFieldPattern pattern) {
   final segments = <skir.PathSegment>[];
   for (final segment in pattern.segments) {
@@ -2066,17 +2076,11 @@ skir.TypeDefinitionId? _configurationRoot(skir.TypeSelection selection) =>
 final class _AuthoringDefaults {
   const _AuthoringDefaults(this.catalog);
   final CheckedEditorCatalog? catalog;
-  skir.DataValue _defaultForNamed(
-    skir.NamedTypeUse actual,
-    Set<skir.NamedTypeUse> visiting,
-  ) {
-    if (visiting.contains(actual)) return skir.DataValue.unfilled;
+  skir.DataValue _defaultForNamed(skir.NamedTypeUse actual) {
     final checked = catalog;
     if (checked == null) return skir.DataValue.unfilled;
     final published = checked.published(actual.definition);
     if (published == null) return skir.DataValue.unfilled;
-    final selection = skir.TypeSelection.wrapComplete(actual);
-    final descriptor = checked.initialization(actual.definition);
     final payload = switch (published.definition.representation) {
       skir.RepresentationTemplate_scalarWrapper(:final value) => _scalarDefault(
         value.kind,
@@ -2092,55 +2096,17 @@ final class _AuthoringDefaults {
             ? skir.DataValue.unfilled
             : skir.DataValue.wrapEnumCase(value.cases.first.key),
       skir.RepresentationTemplate_linkWrapper() => skir.DataValue.unfilled,
-      skir.RepresentationTemplate_recordWrapper(:final value) =>
-        value.abstract_
-            ? skir.DataValue.unfilled
-            : skir.DataValue.createRecord(
-                fields: [
-                  for (final field in checked.fields(selection))
-                    skir.FieldValue(
-                      name: field.template.key,
-                      value: _fieldDefault(
-                        field,
-                        descriptor: descriptor,
-                        visiting: {...visiting, actual},
-                      ),
-                    ),
-                ],
-              ),
+      skir.RepresentationTemplate_recordWrapper() => skir.DataValue.unfilled,
       skir.RepresentationTemplate_unknown() => skir.DataValue.unfilled,
     };
     if (payload == skir.DataValue.unfilled) return payload;
     return skir.DataValue.createNamed(actualType: actual, payload: payload);
   }
 
-  skir.DataValue _fieldDefault(
-    AppliedEditorField field, {
-    required skir.InitializationDescriptor? descriptor,
-    required Set<skir.NamedTypeUse> visiting,
-  }) {
-    final checked = catalog;
-    final captured = descriptor?.captured
-        .where((candidate) => candidate.field == field.template.owner)
-        .firstOrNull
-        ?.value;
-    if (captured != null) return captured;
-    if (checked!.hasConstructorDefault(field.template.owner)) {
-      return skir.DataValue.unfilled;
-    }
-    return _defaultForType(field.type, visiting);
-  }
-
-  skir.DataValue _defaultForType(
-    skir.TypeUse? type,
-    Set<skir.NamedTypeUse> visiting,
-  ) => switch (type) {
+  skir.DataValue forType(skir.TypeUse? type) => switch (type) {
     skir.TypeUse_nullableWrapper() => skir.DataValue.null_,
     skir.TypeUse_scalarWrapper(:final value) => _scalarDefault(value),
-    skir.TypeUse_namedWrapper(:final value) => _defaultForNamed(
-      value,
-      visiting,
-    ),
+    skir.TypeUse_namedWrapper(:final value) => _defaultForNamed(value),
     _ => skir.DataValue.unfilled,
   };
 

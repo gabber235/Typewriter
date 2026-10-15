@@ -3,7 +3,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedValue
@@ -35,7 +34,7 @@ val PreparationCoordinatorTestSuite by testSuite {
                             prepared(value.toString())
                         },
                 )
-            val request = request("shared")
+            val request = request()
             val callers = List(12) { async { coordinator.prepare(request) } }
             release.complete(Unit)
             val results = callers.awaitAll()
@@ -44,7 +43,7 @@ val PreparationCoordinatorTestSuite by testSuite {
             assertEquals(prepared("13"), coordinator.prepare(request))
         }
     }
-    test("changed supplied values are evaluated without a request registry") {
+    test("changed supplied values are independently evaluated") {
         runTest {
             val coordinator =
                 PreparationCoordinator(
@@ -56,8 +55,8 @@ val PreparationCoordinatorTestSuite by testSuite {
                             prepared(seed.value)
                         },
                 )
-            assertEquals(prepared("first"), coordinator.prepare(request("shared", "first")))
-            assertEquals(prepared("second"), coordinator.prepare(request("shared", "second")))
+            assertEquals(prepared("first"), coordinator.prepare(request("first")))
+            assertEquals(prepared("second"), coordinator.prepare(request("second")))
         }
     }
     test("an old request is rejected after catalog replacement") {
@@ -68,7 +67,7 @@ val PreparationCoordinatorTestSuite by testSuite {
                     catalog = { TestCatalogLease(generation) },
                     evaluator = PreparationEvaluator { _, _ -> prepared("captured") },
                 )
-            val request = request("completed")
+            val request = request()
             assertEquals(prepared("captured"), coordinator.prepare(request))
             generation = CatalogGeneration("next")
             assertEquals(generation, assertFailsWith<PreparationCatalogChanged> { coordinator.prepare(request) }.actual)
@@ -76,19 +75,15 @@ val PreparationCoordinatorTestSuite by testSuite {
     }
 }
 
-private fun request(
-    id: String,
-    supplied: String = "seed",
-) = InitializationRequest(
-    id = InitializationRequestId(id),
-    catalog = CATALOG,
-    target =
-        PreparationTarget.Record(
-            TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
-        ),
-    supplied = DataValue.Record(mapOf("seed" to DataValue.StringValue(supplied))),
-    intentHash = "client supplied hash",
-)
+private fun request(supplied: String = "seed") =
+    InitializationRequest(
+        catalog = CATALOG,
+        target =
+            PreparationTarget.Record(
+                TypeSelection.Pending(CREATION_TYPE, listOf(ArgumentSelection.Unfilled)),
+            ),
+        supplied = DataValue.Record(mapOf("seed" to DataValue.StringValue(supplied))),
+    )
 
 private fun prepared(value: String) =
     PreparedValue(

@@ -2,7 +2,6 @@ package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkOccurrence
 import com.typewritermc.authoring.LinkOccurrenceId
@@ -52,7 +51,6 @@ interface AuthoringCatalogLease : AutoCloseable {
     val relations: List<RelationContract>
     val endpointBindings: List<EndpointBindingTemplate>
     val resources: List<AuthoringResourceDefinition>
-    val initialization: List<InitializationDescriptor>
         get() = emptyList()
     val configuration: List<ConfigurationRecipe>
         get() = emptyList()

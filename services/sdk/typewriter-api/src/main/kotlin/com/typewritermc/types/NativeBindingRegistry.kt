@@ -5,7 +5,6 @@ import com.typewritermc.authoring.CompleteValue
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
-import com.typewritermc.authoring.SamplingInputs
 import com.typewritermc.authoring.complete
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -41,7 +40,7 @@ interface NativeBindingRegistry {
 
     fun sampleDefaults(
         actual: CheckedType,
-        requiredInputs: SamplingInputs,
+        supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult
 }
 
@@ -146,7 +145,7 @@ class FactoryNativeBindingRegistry(
 
     override fun sampleDefaults(
         actual: CheckedType,
-        requiredInputs: SamplingInputs,
+        supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult {
         requireCurrentCatalog(actual)
         val use = actual.use as? TypeUse.Named ?: return CaptureResult.Captured(emptyMap())
@@ -156,7 +155,7 @@ class FactoryNativeBindingRegistry(
             "Expected one native binding factory for ${use.definition}, found ${candidates.size}."
         }
         val plan = candidates.single().constructionPlan ?: return CaptureResult.Captured(emptyMap())
-        return plan.sample(appliedArguments(use), requiredInputs)
+        return plan.sample(appliedArguments(use), supplied)
     }
 
     private fun requireCurrentCatalog(actual: CheckedType) {

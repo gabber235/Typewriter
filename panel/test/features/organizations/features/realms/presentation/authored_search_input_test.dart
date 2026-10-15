@@ -351,7 +351,7 @@ void main() {
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -662,7 +662,7 @@ skir.EditorCatalogWireSnapshot _emptyCatalog(String generation) =>
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

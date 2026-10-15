@@ -51,6 +51,60 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
 
 class AuthoringMutationPlannerTest {
+    fun counterpartClassificationPreservesBroaderServerCapabilities() {
+        val resource = ResourceId("counterpart")
+        assertEquals(
+            CounterpartBinding.Scalar(location(resource, "second")),
+            ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, record(), CATALOG),
+        )
+        assertEquals(
+            CounterpartBinding.Collection(location(resource, "children")),
+            ResourceValueMapper.counterpartBinding(PARENT_FIRST, resource, record(), CATALOG),
+        )
+        assertEquals(
+            CounterpartBinding.Scalar(ValueLocation(resource, ValuePath(listOf(PathSegment.Field("wrapper"), PathSegment.Field("inner"))))),
+            ResourceValueMapper.counterpartBinding(NESTED_FIRST, resource, record(), CATALOG),
+        )
+        assertEquals(
+            CounterpartBinding.Missing,
+            ResourceValueMapper.counterpartBinding(EndpointId("absent"), resource, record(), CATALOG),
+        )
+
+        val node = DEFINITIONS.single { it.id == NODE }
+        val shape = node.representation as RepresentationTemplate.Record
+        val ambiguous =
+            node.copy(
+                representation =
+                    shape.copy(
+                        fields =
+                            shape.fields + field("secondAlternative", PAIR_SECOND_TYPE.definition),
+                    ),
+            )
+        val catalog = DefaultCheckedCatalog(GENERATION, DEFINITIONS.map { if (it.id == NODE) ambiguous else it })
+        val target = record().copy(fields = record().fields + ("secondAlternative" to DataValue.Unfilled))
+        assertEquals(
+            CounterpartBinding.ExplicitChoice,
+            ResourceValueMapper.counterpartBinding(PAIR_SECOND, resource, target, catalog),
+        )
+    }
+
+    fun unknownConnectEndpointIsRejectedBeforeInferringACounterpart() {
+        val source = ResourceId("source")
+        val target = ResourceId("target")
+        val result =
+            assertIs<MutationPlanningResult.Rejected>(
+                planner(pairContract()).plan(
+                    mapOf(source to record(), target to record()),
+                    edit(
+                        EditIntent.ConnectRelation(
+                            ConnectIntent(occurrence(EndpointId("absent"), location(source, "first"), target, null), target, null),
+                        ),
+                    ),
+                ),
+            )
+        assertEquals(listOf("unknown_endpoint"), result.problems.map { it.code })
+    }
+
     fun insertMaterializesTheCheckedUnfilledSequenceShape() {
         listOf(CollectionKind.List, CollectionKind.Set).forEach { kind ->
             val rootType = id("insert_${kind.name.lowercase()}_root")
@@ -1589,6 +1643,12 @@ private val NESTED_BINDINGS =
     )
 
 val AuthoringMutationPlannerTestSuite by testSuite {
+    test("counterpartClassificationPreservesBroaderServerCapabilities") {
+        AuthoringMutationPlannerTest().counterpartClassificationPreservesBroaderServerCapabilities()
+    }
+    test("unknownConnectEndpointIsRejectedBeforeInferringACounterpart") {
+        AuthoringMutationPlannerTest().unknownConnectEndpointIsRejectedBeforeInferringACounterpart()
+    }
     test("insertMaterializesTheCheckedUnfilledSequenceShape") {
         AuthoringMutationPlannerTest().insertMaterializesTheCheckedUnfilledSequenceShape()
     }

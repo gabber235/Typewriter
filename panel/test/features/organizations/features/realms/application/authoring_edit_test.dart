@@ -122,7 +122,7 @@ void main() {
       ..createPreparedResource(
         request: ResourceCreationRequest(
           id: created,
-          initializationId: skir.InitializationRequestId(value: "create:1"),
+
           definition: skir.ResourceDefinitionId(value: "test.resource"),
           configuration: record.configuration,
         ),
@@ -138,6 +138,178 @@ void main() {
     expect(fixture.draft.intents, isEmpty);
   });
 
+  test("creation prepares its typed reciprocal input without staging it", () {
+    final fixture = _pageCreationFixture();
+    final request = ResourceCreationRequest(
+      id: fixture.page,
+      definition: fixture.pageResource,
+      configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
+      connections: [
+        ResourceCreationConnection.collection(
+          source: fixture.book,
+          endpoint: fixture.bookEndpoint,
+          containing: _fieldPath("pages"),
+          item: skir.ItemId(value: "new:page"),
+        ),
+      ],
+    );
+    final inputs = fixture.draft.creationInputs(request);
+    expect(inputs, hasLength(1));
+    expect(inputs.single.name, "book");
+    expect(inputs.single.value, isA<skir.DataValue_namedWrapper>());
+    expect(inputs.single.value.authoredLink?.target.resource, fixture.book);
+    expect(
+      inputs.single.value.authoredLink?.target.opposite,
+      skir.ValuePath(
+        segments: [
+          skir.PathSegment.createField(name: "pages"),
+          skir.PathSegment.createItem(id: skir.ItemId(value: "new:page")),
+        ],
+      ),
+    );
+    expect(fixture.draft.resource(fixture.page), isNull);
+    expect(fixture.draft.intents, isEmpty);
+    expect(fixture.draft.expectations, isNotEmpty);
+    final staged = fixture.draft.fork()
+      ..createPreparedResource(
+        request: request,
+        prepared: skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(
+            skir.AuthoringRecord(
+              configuration: request.configuration,
+              fields: [
+                ...fixture.pageRecord.fields.where(
+                  (field) => field.name != "book",
+                ),
+                ...inputs,
+              ],
+            ),
+          ),
+          findings: [
+            skir.InitializationDiagnostic(
+              field: null,
+              code: "detail",
+              message: "Preparation detail",
+              relativePath: _fieldPath("name"),
+            ),
+          ],
+        ),
+      );
+    expect(
+      staged.initializationFindings.single.evidence.appliesTo(
+        staged.toDocument(),
+      ),
+      isTrue,
+    );
+  });
+
+  test(
+    "a conflicting supplied reciprocal link is rejected before preparation",
+    () {
+      final fixture = _pageCreationFixture();
+      final request = ResourceCreationRequest(
+        id: fixture.page,
+        definition: fixture.pageResource,
+        configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
+        supplied: [
+          skir.FieldValue(name: "book", value: skir.DataValue.unfilled),
+        ],
+        connections: [
+          ResourceCreationConnection.collection(
+            source: fixture.book,
+            endpoint: fixture.bookEndpoint,
+            containing: _fieldPath("pages"),
+            item: skir.ItemId(value: "new:page"),
+          ),
+        ],
+      );
+      expect(() => fixture.draft.creationInputs(request), throwsStateError);
+      expect(fixture.draft.resource(fixture.page), isNull);
+      expect(fixture.draft.intents, isEmpty);
+    },
+  );
+
+  test("counterpart resolution distinguishes direct, ambiguous, collection and invalid", () {
+    final fixture = _pageCreationFixture();
+    final checked = fixture.draft.catalog!;
+    final pageConfiguration = skir.TypeSelection.wrapComplete(
+      fixture.sequenceUse,
+    );
+    final pageEndpoint = skir.EndpointId(value: "page.book");
+    expect(
+      checked.resolveScalarCounterpart(
+        configuration: pageConfiguration,
+        resource: fixture.page,
+        endpoint: pageEndpoint,
+      ),
+      ResourceCounterpartResolution.resolved(
+        skir.ValueLocation(resource: fixture.page, path: _fieldPath("book")),
+      ),
+    );
+    final ambiguous = _pageCreationFixture(ambiguous: true);
+    expect(
+      ambiguous.draft.catalog!.resolveScalarCounterpart(
+        configuration: pageConfiguration,
+        resource: ambiguous.page,
+        endpoint: pageEndpoint,
+      ),
+      isA<ResourceCounterpartChoiceRequired>(),
+    );
+    expect(
+      checked.resolveScalarCounterpart(
+        configuration: fixture.draft.resource(fixture.book)!.configuration,
+        resource: fixture.book,
+        endpoint: fixture.bookEndpoint,
+      ),
+      isA<ResourceCounterpartChoiceRequired>(),
+    );
+    expect(
+      checked.resolveScalarCounterpart(
+        configuration: pageConfiguration,
+        resource: fixture.page,
+        endpoint: skir.EndpointId(value: "unknown"),
+      ),
+      isA<InvalidResourceCounterpart>(),
+    );
+    expect(
+      checked.resolveScalarCounterpart(
+        configuration: pageConfiguration,
+        resource: fixture.page,
+        endpoint: fixture.bookEndpoint,
+      ),
+      isA<InvalidResourceCounterpart>(),
+    );
+  });
+
+  test("ambiguous creation requires a choice before emitting any intent", () {
+    final fixture = _pageCreationFixture(ambiguous: true);
+    final request = ResourceCreationRequest(
+      id: fixture.page,
+      definition: fixture.pageResource,
+      configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
+      connections: [
+        ResourceCreationConnection.collection(
+          source: fixture.book,
+          endpoint: fixture.bookEndpoint,
+          containing: _fieldPath("pages"),
+          item: skir.ItemId(value: "new:page"),
+        ),
+      ],
+    );
+    expect(
+      () => fixture.draft.creationInputs(request),
+      throwsA(
+        isA<StateError>().having(
+          (error) => error.message,
+          "actionable choice",
+          contains("Choose one explicitly"),
+        ),
+      ),
+    );
+    expect(fixture.draft.intents, isEmpty);
+    expect(fixture.draft.resource(fixture.page), isNull);
+  });
+
   test("page creation inserts its book slot before connecting", () {
     final fixture = _pageCreationFixture();
     final item = skir.ItemId(value: "page:item");
@@ -145,7 +317,7 @@ void main() {
       ..createPreparedResource(
         request: ResourceCreationRequest(
           id: fixture.page,
-          initializationId: skir.InitializationRequestId(value: "create:page"),
+
           definition: fixture.pageResource,
           configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
           connections: [
@@ -228,7 +400,7 @@ void main() {
       ..createPreparedResource(
         request: ResourceCreationRequest(
           id: fixture.page,
-          initializationId: skir.InitializationRequestId(value: "create:page"),
+
           definition: fixture.pageResource,
           configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
           connections: [
@@ -349,11 +521,9 @@ void main() {
       final item = skir.ItemId(value: "item:record");
       final selection = skir.TypeSelection.wrapComplete(fixture.itemType);
       final request = skir.ValuePreparationRequest(
-        id: skir.InitializationRequestId(value: "prepare:item"),
         catalog: fixture.draft.generation,
         target: skir.PreparationTarget.wrapRecord(selection),
         suppliedValue: skir.DataValue.createRecord(fields: const []),
-        intentHash: "item:record",
       );
       final prepared = skir.PreparedValue(
         content: skir.PreparedContent.wrapRecord(
@@ -769,12 +939,13 @@ void main() {
     expect(branch.links.single.secondLocation, fixture.alternateOpposite.path);
   });
 
-  test("nested write materializes the captured containing field default", () {
-    final fixture = _parentFixture(capturedStyle: true);
+  test("nested write prepares the containing field default", () async {
+    final fixture = _parentFixture();
 
-    final result = fixture.draft.set(
+    final result = await fixture.draft.setWithInitialization(
       fixture.repetitions,
       skir.DataValue.wrapInteger("3"),
+      (request) async => _preparedContainingStyle(request, bold: true),
     );
 
     expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
@@ -804,24 +975,21 @@ void main() {
     );
   });
 
-  test("nullable nested parent materializes before the child write", () {
-    final fixture = _parentFixture(capturedStyle: true, nullableStyle: true);
+  test("nullable nested parent prepares before the child write", () async {
+    final fixture = _parentFixture(nullableStyle: true);
 
-    final result = fixture.draft.set(
+    final result = await fixture.draft.setWithInitialization(
       fixture.repetitions,
       skir.DataValue.wrapInteger("3"),
+      (request) async => _preparedContainingStyle(request, bold: true),
     );
 
     expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
     expect(fixture.draft.intents, hasLength(2));
   });
 
-  test("dynamic parent uses the containing field prepared default", () async {
-    final fixture = _parentFixture(
-      capturedStyle: false,
-      dynamicStyle: true,
-      nullableStyle: true,
-    );
+  test("nested parent uses the containing field prepared default", () async {
+    final fixture = _parentFixture(nullableStyle: true);
     final styleUse = skir.NamedTypeUse(
       definition: _definition("Style"),
       arguments: const [],
@@ -905,55 +1073,44 @@ void main() {
     expect(fixture.draft.intents, hasLength(2));
   });
 
-  test(
-    "dynamic containing type prepares its field before a startup child",
-    () async {
-      final fixture = _parentFixture(
-        capturedStyle: false,
-        dynamicContaining: true,
-        nullableStyle: true,
-      );
-      final requests = <skir.ValuePreparationRequest>[];
+  test("containing type prepares its field before child fallback", () async {
+    final fixture = _parentFixture(nullableStyle: true);
+    final requests = <skir.ValuePreparationRequest>[];
 
-      final result = await fixture.draft.setWithInitialization(
-        fixture.repetitions,
-        skir.DataValue.wrapInteger("3"),
-        (request) async {
-          requests.add(request);
-          return _preparedContainingStyle(request, bold: true);
-        },
-      );
+    final result = await fixture.draft.setWithInitialization(
+      fixture.repetitions,
+      skir.DataValue.wrapInteger("3"),
+      (request) async {
+        requests.add(request);
+        return _preparedContainingStyle(request, bold: true);
+      },
+    );
 
-      expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
-      expect(requests, hasLength(1));
-      expect(
-        (requests.single.recordSelection as skir.TypeSelection_completeWrapper)
-            .value
-            .definition,
-        _definition("Action"),
-      );
-      final style =
-          fixture.draft
-                  .resource(fixture.repetitions.resource)!
-                  .authoredField("style")!
-              as skir.DataValue_namedWrapper;
-      final fields =
-          (style.value.payload as skir.DataValue_recordWrapper).value.fields;
-      expect(
-        fields.singleWhere((field) => field.name == "bold").value,
-        skir.DataValue.wrapBoolean(true),
-      );
-    },
-  );
+    expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
+    expect(requests, hasLength(1));
+    expect(
+      (requests.single.recordSelection as skir.TypeSelection_completeWrapper)
+          .value
+          .definition,
+      _definition("Action"),
+    );
+    final style =
+        fixture.draft
+                .resource(fixture.repetitions.resource)!
+                .authoredField("style")!
+            as skir.DataValue_namedWrapper;
+    final fields =
+        (style.value.payload as skir.DataValue_recordWrapper).value.fields;
+    expect(
+      fields.singleWhere((field) => field.name == "bold").value,
+      skir.DataValue.wrapBoolean(true),
+    );
+  });
 
   test(
     "prepared containing defaults retain original sibling evidence",
     () async {
-      final fixture = _parentFixture(
-        capturedStyle: false,
-        dynamicContaining: true,
-        nullableStyle: true,
-      );
+      final fixture = _parentFixture(nullableStyle: true);
       final root = skir.ValueLocation(
         resource: fixture.repetitions.resource,
         path: skir.ValuePath(segments: const []),
@@ -980,98 +1137,78 @@ void main() {
     },
   );
 
-  test(
-    "prepared parent request keeps one operation identity across retry",
-    () async {
-      final fixture = _parentFixture(
-        capturedStyle: false,
-        dynamicContaining: true,
-        nullableStyle: true,
-      );
-      final requests = <skir.ValuePreparationRequest>[];
+  test("failed preparation can be explicitly evaluated again", () async {
+    final fixture = _parentFixture(nullableStyle: true);
+    final requests = <skir.ValuePreparationRequest>[];
 
-      Future<skir.PreparedValue> fail(
-        skir.ValuePreparationRequest request,
-      ) async {
-        requests.add(request);
-        throw StateError("temporary failure");
-      }
+    Future<skir.PreparedValue> fail(
+      skir.ValuePreparationRequest request,
+    ) async {
+      requests.add(request);
+      throw StateError("temporary failure");
+    }
 
-      await expectLater(
-        fixture.draft.setWithInitialization(
-          fixture.repetitions,
-          skir.DataValue.wrapInteger("3"),
-          fail,
-        ),
-        throwsStateError,
-      );
-      final result = await fixture.draft.setWithInitialization(
+    await expectLater(
+      fixture.draft.setWithInitialization(
         fixture.repetitions,
         skir.DataValue.wrapInteger("3"),
-        (request) async {
-          requests.add(request);
-          return _preparedContainingStyle(request, bold: true);
-        },
-      );
-
-      expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
-      expect(requests, hasLength(2));
-      expect(requests[1].id, requests[0].id);
-      expect(requests[1].intentHash, requests[0].intentHash);
-    },
-  );
-
-  test(
-    "a later deliberate initialization uses a fresh operation identity",
-    () async {
-      final fixture = _parentFixture(
-        capturedStyle: false,
-        dynamicContaining: true,
-        nullableStyle: true,
-      );
-      final requests = <skir.ValuePreparationRequest>[];
-      Future<skir.PreparedValue> prepare(
-        skir.ValuePreparationRequest request,
-      ) async {
+        fail,
+      ),
+      throwsStateError,
+    );
+    final result = await fixture.draft.setWithInitialization(
+      fixture.repetitions,
+      skir.DataValue.wrapInteger("3"),
+      (request) async {
         requests.add(request);
         return _preparedContainingStyle(request, bold: true);
-      }
+      },
+    );
 
-      await fixture.draft.setWithInitialization(
-        fixture.repetitions,
-        skir.DataValue.wrapInteger("3"),
-        prepare,
-      );
-      final style = skir.ValueLocation(
-        resource: fixture.repetitions.resource,
-        path: skir.ValuePath(
-          segments: [skir.PathSegment.createField(name: "style")],
-        ),
-      );
-      expect(
-        fixture.draft.set(style, skir.DataValue.null_),
-        isA<PortablePathValue<skir.AuthoringRecord>>(),
-      );
-      await fixture.draft.setWithInitialization(
-        fixture.repetitions,
-        skir.DataValue.wrapInteger("4"),
-        prepare,
-      );
+    expect(result, isA<PortablePathValue<skir.AuthoringRecord>>());
+    expect(requests, hasLength(2));
+    expect(requests[1].recordSelection, requests[0].recordSelection);
+  });
 
-      expect(requests, hasLength(2));
-      expect(requests[1].id, isNot(requests[0].id));
-    },
-  );
+  test("a later deliberate initialization evaluates again", () async {
+    final fixture = _parentFixture(nullableStyle: true);
+    final requests = <skir.ValuePreparationRequest>[];
+    Future<skir.PreparedValue> prepare(
+      skir.ValuePreparationRequest request,
+    ) async {
+      requests.add(request);
+      return _preparedContainingStyle(request, bold: true);
+    }
+
+    await fixture.draft.setWithInitialization(
+      fixture.repetitions,
+      skir.DataValue.wrapInteger("3"),
+      prepare,
+    );
+    final style = skir.ValueLocation(
+      resource: fixture.repetitions.resource,
+      path: skir.ValuePath(
+        segments: [skir.PathSegment.createField(name: "style")],
+      ),
+    );
+    expect(
+      fixture.draft.set(style, skir.DataValue.null_),
+      isA<PortablePathValue<skir.AuthoringRecord>>(),
+    );
+    await fixture.draft.setWithInitialization(
+      fixture.repetitions,
+      skir.DataValue.wrapInteger("4"),
+      prepare,
+    );
+
+    expect(requests, hasLength(2));
+    expect(requests[1].recordSelection, requests[0].recordSelection);
+  });
 
   test(
     "prepared parent work is discarded when the final path is absent",
     () async {
-      final fixture = _parentFixture(
-        capturedStyle: false,
-        dynamicContaining: true,
-        nullableStyle: true,
-        includeItems: true,
-      );
+      final fixture = _parentFixture(nullableStyle: true, includeItems: true);
       final style = skir.ValueLocation(
         resource: fixture.repetitions.resource,
         path: skir.ValuePath(
@@ -1107,11 +1244,7 @@ void main() {
   );
 
   test("concurrent draft change prevents prepared parent adoption", () async {
-    final fixture = _parentFixture(
-      capturedStyle: false,
-      dynamicContaining: true,
-      nullableStyle: true,
-    );
+    final fixture = _parentFixture(nullableStyle: true);
     final response = Completer<skir.PreparedValue>();
     late skir.ValuePreparationRequest preparationRequest;
     final pending = fixture.draft.setWithInitialization(
@@ -1144,12 +1277,7 @@ void main() {
   });
 
   test("field scoped capture findings preserve an unfinished parent", () async {
-    final fixture = _parentFixture(
-      capturedStyle: false,
-      dynamicContaining: true,
-      dynamicStyle: true,
-      nullableStyle: true,
-    );
+    final fixture = _parentFixture(nullableStyle: true);
     var invocation = 0;
     final result = await fixture.draft.setWithInitialization(
       fixture.repetitions,
@@ -1257,7 +1385,7 @@ void main() {
   });
 
   test("failed collection child write rolls back parent materialization", () {
-    final fixture = _parentFixture(capturedStyle: false, includeItems: true);
+    final fixture = _parentFixture(includeItems: true);
     final style = skir.ValueLocation(
       resource: fixture.repetitions.resource,
       path: skir.ValuePath(
@@ -1290,69 +1418,41 @@ void main() {
     );
   });
 
-  test("uncaptured constructor defaults remain unfilled", () {
-    final fixture = _parentFixture(capturedStyle: false);
-
-    fixture.draft.set(fixture.bold, skir.DataValue.wrapBoolean(true));
-
-    final parent =
-        (fixture.draft.intents.first as skir.EditIntent_setValueWrapper)
-                .value
-                .value
-            as skir.DataValue_namedWrapper;
-    final payload = parent.value.payload as skir.DataValue_recordWrapper;
+  test("local defaults never synthesize a concrete record", () {
+    final fixture = _parentFixture();
     expect(
-      payload.value.fields
-          .singleWhere((field) => field.name == "repetitions")
-          .value,
+      fixture.draft.defaultValue(
+        skir.TypeUse.wrapNamed(
+          skir.NamedTypeUse(
+            definition: _definition("Style"),
+            arguments: const [],
+          ),
+        ),
+      ),
       skir.DataValue.unfilled,
     );
   });
 
-  test("inherited captured defaults use their declaration owner", () {
-    final fixture = _parentFixture(capturedStyle: false, inheritedBold: true);
-
-    fixture.draft.set(fixture.repetitions, skir.DataValue.wrapInteger("3"));
-
-    final parent =
-        (fixture.draft.intents.first as skir.EditIntent_setValueWrapper)
-                .value
-                .value
-            as skir.DataValue_namedWrapper;
-    final payload = parent.value.payload as skir.DataValue_recordWrapper;
+  test("ordinary scalar defaults remain local", () {
+    final fixture = _parentFixture();
     expect(
-      payload.value.fields.singleWhere((field) => field.name == "bold").value,
-      skir.DataValue.wrapBoolean(true),
+      fixture.draft.defaultValue(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.bytes),
+      ),
+      skir.DataValue.wrapBytes(skir.ByteString.empty),
     );
-  });
-
-  test("ordinary scalar defaults match Realm initialization", () {
-    final fixture = _parentFixture(capturedStyle: false);
-
-    fixture.draft.set(fixture.bold, skir.DataValue.wrapBoolean(true));
-
-    final parent =
-        (fixture.draft.intents.first as skir.EditIntent_setValueWrapper)
-                .value
-                .value
-            as skir.DataValue_namedWrapper;
-    final payload = parent.value.payload as skir.DataValue_recordWrapper;
-    skir.DataValue field(String name) =>
-        payload.value.fields.singleWhere((field) => field.name == name).value;
-
-    expect(field("bytes"), isA<skir.DataValue_bytesWrapper>());
     expect(
-      (field("bytes") as skir.DataValue_bytesWrapper).value,
-      skir.ByteString.empty,
+      fixture.draft.defaultValue(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
+      ),
+      skir.DataValue.createDuration(value: skir.Duration(milliseconds: 0)),
     );
-    expect(field("duration"), isA<skir.DataValue_durationWrapper>());
     expect(
-      (field(
-        "duration",
-      ) as skir.DataValue_durationWrapper).value.value.milliseconds,
-      0,
+      fixture.draft.defaultValue(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
+      ),
+      skir.DataValue.unfilled,
     );
-    expect(field("timestamp"), skir.DataValue.unfilled);
   });
 }
 
@@ -1363,9 +1463,6 @@ void main() {
   skir.AuthoringState snapshot,
 })
 _parentFixture({
-  required bool capturedStyle,
-  bool dynamicContaining = false,
-  bool dynamicStyle = false,
   bool inheritedBold = false,
   bool nullableStyle = false,
   bool includeItems = false,
@@ -1375,7 +1472,6 @@ _parentFixture({
   final style = _definition("Style");
   final baseStyle = _definition("BaseStyle");
   final rootUse = skir.NamedTypeUse(definition: root, arguments: const []);
-  final styleUse = skir.NamedTypeUse(definition: style, arguments: const []);
   final styleOwner = skir.FieldOwner(definition: root, name: "style");
   final boldOwner = skir.FieldOwner(
     definition: inheritedBold ? baseStyle : style,
@@ -1396,15 +1492,6 @@ _parentFixture({
   final declaredStyleTemplate = nullableStyle
       ? skir.TypeTemplate.createNullable(value: styleTemplate)
       : styleTemplate;
-  final styleValue = skir.DataValue.createNamed(
-    actualType: styleUse,
-    payload: skir.DataValue.createRecord(
-      fields: [
-        skir.FieldValue(name: "bold", value: skir.DataValue.wrapBoolean(true)),
-        skir.FieldValue(name: "repetitions", value: skir.DataValue.unfilled),
-      ],
-    ),
-  );
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
     generation: skir.CatalogGeneration(value: generation),
     types: [
@@ -1611,33 +1698,6 @@ _parentFixture({
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: [
-      skir.InitializationDescriptor(
-        definition: root,
-        mode: dynamicContaining
-            ? skir.InitializationMode.creation
-            : skir.InitializationMode.startup,
-        captured: capturedStyle
-            ? [skir.CapturedDefault(field: styleOwner, value: styleValue)]
-            : const [],
-        diagnostics: const [],
-      ),
-      skir.InitializationDescriptor(
-        definition: style,
-        mode: dynamicStyle
-            ? skir.InitializationMode.creation
-            : skir.InitializationMode.startup,
-        captured: inheritedBold
-            ? [
-                skir.CapturedDefault(
-                  field: boldOwner,
-                  value: skir.DataValue.wrapBoolean(true),
-                ),
-              ]
-            : const [],
-        diagnostics: const [],
-      ),
-    ],
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],
@@ -1737,7 +1797,7 @@ skir.TypeDefinitionId _definition(String name) => skir.TypeDefinitionId(
   skir.NamedTypeUse sequenceUse,
   skir.AuthoringRecord pageRecord,
 })
-_pageCreationFixture() {
+_pageCreationFixture({bool ambiguous = false}) {
   final book = _definition("Book");
   final page = _definition("Page");
   final sequence = _definition("SequencePage");
@@ -1832,11 +1892,14 @@ _pageCreationFixture() {
       published(
         sequence,
         skir.RepresentationTemplate.createRecord(
-          fields: const [],
+          fields: [
+            if (ambiguous) field(sequence, "otherBook", named(pageLink)),
+          ],
           abstract_: false,
         ),
         parents: [pageParent],
         fields: [
+          if (ambiguous) effective(sequence, "otherBook", named(pageLink)),
           effective(page, "book", named(pageLink)),
           effective(
             page,
@@ -1903,7 +1966,6 @@ _pageCreationFixture() {
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
     endpointBindings: [
       skir.EndpointBindingTemplate(
         endpoint: bookEndpoint,
@@ -1938,6 +2000,17 @@ _pageCreationFixture() {
         target: named(book),
         containsCollection: false,
       ),
+      if (ambiguous)
+        skir.EndpointBindingTemplate(
+          endpoint: pageEndpoint,
+          containingResource: template(sequence),
+          valueOwner: sequence,
+          relativePath: skir.RelativeFieldPattern(
+            segments: [skir.FieldPatternSegment.createField(name: "otherBook")],
+          ),
+          target: named(book),
+          containsCollection: false,
+        ),
     ],
     capabilities: const [],
     recommendations: const [],
@@ -2139,7 +2212,6 @@ _relationFixture({
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -2326,7 +2398,6 @@ _collectionRepairFixture() {
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],

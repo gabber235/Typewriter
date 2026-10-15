@@ -1967,7 +1967,7 @@ _linkCollectionFixture({
           : const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: [
         skir.EndpointBindingTemplate(
           endpoint: sourceEndpoint,
@@ -2533,7 +2533,7 @@ CheckedEditorCatalog _collectionCatalog() {
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -2713,7 +2713,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     ],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],

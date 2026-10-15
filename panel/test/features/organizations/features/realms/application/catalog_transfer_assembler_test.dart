@@ -207,7 +207,7 @@ skir.EditorCatalogWireSnapshot _snapshot(String generation) =>
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -228,7 +228,7 @@ skir.EditorCatalogWireSnapshot _largeSnapshot() {
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],

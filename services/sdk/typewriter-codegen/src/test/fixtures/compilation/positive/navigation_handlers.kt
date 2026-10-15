@@ -64,7 +64,6 @@ fun main() {
             presentationMaterials = emptyList(),
             configuration = emptyList(),
             diagnostics = emptyList(),
-            initialization = emptyList(),
         ).toWire()
     val decoded =
         EditorCatalogWireSnapshot.serializer.fromJsonCode(

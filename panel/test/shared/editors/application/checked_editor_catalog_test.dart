@@ -210,7 +210,7 @@ void main() {
           presentationMaterials: const [],
           configuration: const [],
           diagnostics: const [],
-          initialization: const [],
+
           endpointBindings: const [],
           capabilities: const [],
           recommendations: const [],
@@ -350,7 +350,7 @@ void main() {
         presentationMaterials: const [],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],
@@ -452,7 +452,7 @@ void main() {
         ],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],
@@ -602,7 +602,7 @@ void main() {
         ],
         configuration: original.configuration,
         diagnostics: original.diagnostics,
-        initialization: original.initialization,
+
         endpointBindings: original.endpointBindings,
         capabilities: original.capabilities,
         recommendations: original.recommendations,
@@ -772,7 +772,7 @@ _patternCatalog({required bool repeated}) {
     ],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],
@@ -829,7 +829,7 @@ _dependentCatalog() {
         presentationMaterials: const [],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],
@@ -965,7 +965,7 @@ _catalog() {
     ],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: [
       skir.EndpointBindingTemplate(
         endpoint: skir.EndpointId(value: "test.endpoint"),

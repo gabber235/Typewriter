@@ -246,7 +246,7 @@ abstract interface class PortableCollectionMutationHost {
     required PortableInvocationContext context,
   });
 
-  PortablePresentationWriteResult addMapRow(
+  Future<PortablePresentationWriteResult> addMapRow(
     skir.BindingRef reference, {
     required PortableInvocationContext context,
   });

@@ -6,7 +6,6 @@ import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.InitializationRequest
-import com.typewritermc.authoring.InitializationRequestId
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.PreparationTarget
@@ -43,7 +42,6 @@ import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRe
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
 import skirout.editor.v1.type_catalog.DataValue as SkirDataValue
-import skirout.editor.v1.type_catalog.InitializationRequestId as SkirInitializationRequestId
 import skirout.editor.v1.type_catalog.ItemId as SkirItemId
 import skirout.editor.v1.type_catalog.ListItem as SkirListItem
 import skirout.editor.v1.type_catalog.NamedTypeUse as SkirNamedTypeUse
@@ -448,7 +446,6 @@ private fun OperationConversionScope.encodeCommitResult(value: CommitResult): Sk
 
 private fun OperationConversionScope.encodeInitializationRequest(value: InitializationRequest): SkirInitializationRequest =
     SkirInitializationRequest(
-        id = SkirInitializationRequestId(value = value.id.value),
         catalog = SkirCatalogGeneration(value = value.catalog.value),
         target =
             when (val target = value.target) {
@@ -463,12 +460,10 @@ private fun OperationConversionScope.encodeInitializationRequest(value: Initiali
                 }
             },
         suppliedValue = value.supplied?.let { convert(SkirDataValueCodec.encode(it)) },
-        intentHash = value.intentHash,
     )
 
 private fun OperationConversionScope.decodeInitializationRequest(value: SkirInitializationRequest): InitializationRequest =
     InitializationRequest(
-        id = InitializationRequestId(requireText(value.id.value, "Initialization request identity")),
         catalog = CatalogGeneration(requireText(value.catalog.value, "Catalog generation")),
         target =
             when (val target = value.target) {
@@ -485,7 +480,6 @@ private fun OperationConversionScope.decodeInitializationRequest(value: SkirInit
                 }
             },
         supplied = value.suppliedValue?.let { convert(SkirDataValueCodec.decode(it)) },
-        intentHash = value.intentHash,
     )
 
 private fun OperationConversionScope.encodePreparedValue(value: PreparedValue): SkirPreparedValue =

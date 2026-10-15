@@ -3271,465 +3271,6 @@ final class PresentationMaterial_mutable
   ).._u = this._u;
 }
 
-// enum InitializationMode
-
-/// To switch on the variants:
-///   ```
-///   switch (e) {
-///     case InitializationMode_unknown(): { ... }
-///     case InitializationMode.startup: { ... }
-///     case InitializationMode.creation: { ... }
-///   }
-///   ```
-///
-/// Deeply immutable.
-sealed class InitializationMode {
-  /// Constant indicating an unknown `InitializationMode`.
-  /// Default value for fields of type `InitializationMode`.
-  static const InitializationMode unknown =
-      InitializationMode_unknown._instance;
-
-  static const startup = _InitializationMode_consts.startupConst;
-  static const creation = _InitializationMode_consts.creationConst;
-
-  /// Returns the kind of variant held by this InitializationMode.
-  InitializationMode_kind get kind;
-
-  /// Serializer for `InitializationMode` instances.
-  static _skir.EnumSerializer<InitializationMode> get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(
-        1,
-        "startup",
-        "startup",
-        "",
-        startup,
-      );
-      _serializerBuilder.addConstantVariant(
-        2,
-        "creation",
-        "creation",
-        "",
-        creation,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
-      .create(
-        recordId: "editor/v1/catalog.skir:InitializationMode",
-        doc: "",
-        unknownInstance: InitializationMode_unknown._instance,
-        enumInstance: InitializationMode.unknown,
-        getOrdinal: (it) => it.kind._ordinal,
-        wrapUnrecognized: InitializationMode_unknown._unrecognized,
-        getUnrecognized: (it) => it._u,
-      );
-}
-
-/// The kind of variant held by a `InitializationMode`.
-enum InitializationMode_kind {
-  unknown(0),
-  startupConst(1),
-  creationConst(2);
-
-  final _core.int _ordinal;
-
-  const InitializationMode_kind(this._ordinal);
-}
-
-final class InitializationMode_unknown implements InitializationMode {
-  static const _instance = InitializationMode_unknown._();
-
-  final _skir.internal__UnrecognizedVariant? _u;
-
-  const InitializationMode_unknown._() : _u = null;
-  InitializationMode_unknown._unrecognized(this._u);
-
-  @_core.override
-  InitializationMode_kind get kind => InitializationMode_kind.unknown;
-  @_core.override
-  _core.bool operator ==(other) => other is InitializationMode_unknown;
-  @_core.override
-  _core.int get hashCode => 8118964;
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, InitializationMode.serializer);
-}
-
-enum _InitializationMode_consts implements InitializationMode {
-  startupConst(InitializationMode_kind.startupConst),
-  creationConst(InitializationMode_kind.creationConst);
-
-  @_core.override
-  final InitializationMode_kind kind;
-
-  const _InitializationMode_consts(this.kind);
-
-  @_core.override
-  _core.String toString() =>
-      _skir.internal__stringify(this, InitializationMode.serializer);
-}
-
-// struct CapturedDefault
-
-sealed class CapturedDefault_orMutable {
-  _lib_editor_v1_type_catalog.FieldOwner_orMutable get field;
-  _lib_editor_v1_type_catalog.DataValue get value;
-
-  CapturedDefault toFrozen();
-}
-
-/// Deeply immutable.
-final class CapturedDefault implements CapturedDefault_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.FieldOwner field;
-  @_core.override
-  final _lib_editor_v1_type_catalog.DataValue value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory CapturedDefault({
-    required _lib_editor_v1_type_catalog.FieldOwner_orMutable field,
-    required _lib_editor_v1_type_catalog.DataValue value,
-  }) => CapturedDefault._(field.toFrozen(), value);
-
-  CapturedDefault._(this.field, this.value);
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = CapturedDefault._(
-    _lib_editor_v1_type_catalog.FieldOwner.defaultInstance,
-    _lib_editor_v1_type_catalog.DataValue.unknown,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static CapturedDefault_mutable mutable() => CapturedDefault_mutable._(
-    _lib_editor_v1_type_catalog.FieldOwner.defaultInstance,
-    _lib_editor_v1_type_catalog.DataValue.unknown,
-  );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  CapturedDefault toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  CapturedDefault_mutable toMutable() =>
-      CapturedDefault_mutable._(this.field, this.value);
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! CapturedDefault) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [this.field, this.value];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `CapturedDefault` instances.
-  static _skir.StructSerializer<CapturedDefault, CapturedDefault_mutable>
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "field",
-        "field",
-        0,
-        _lib_editor_v1_type_catalog.FieldOwner.serializer,
-        "",
-        (it) => it.field,
-        (it, v) => it.field = v,
-      );
-      _serializerBuilder.addField(
-        "value",
-        "value",
-        1,
-        _lib_editor_v1_type_catalog.DataValue.serializer,
-        "",
-        (it) => it.value,
-        (it, v) => it.value = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:CapturedDefault",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (CapturedDefault_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [CapturedDefault].
-final class CapturedDefault_mutable implements CapturedDefault_orMutable {
-  _lib_editor_v1_type_catalog.FieldOwner_orMutable field;
-  _lib_editor_v1_type_catalog.DataValue value;
-  _skir.internal__UnrecognizedFields? _u;
-
-  CapturedDefault_mutable._(this.field, this.value);
-
-  /// If the value of [field] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [field] and returns it.
-  _lib_editor_v1_type_catalog.FieldOwner_mutable get mutableField {
-    final value = this.field;
-    if (value is _lib_editor_v1_type_catalog.FieldOwner_mutable) {
-      return value;
-    } else {
-      return this.field = (value as _lib_editor_v1_type_catalog.FieldOwner)
-          .toMutable();
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  CapturedDefault toFrozen() =>
-      CapturedDefault(field: this.field, value: this.value).._u = this._u;
-}
-
-// struct InitializationDescriptor
-
-sealed class InitializationDescriptor_orMutable {
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get definition;
-  InitializationMode get mode;
-  _core.Iterable<CapturedDefault_orMutable> get captured;
-  _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
-  get diagnostics;
-
-  InitializationDescriptor toFrozen();
-}
-
-/// Deeply immutable.
-final class InitializationDescriptor
-    implements InitializationDescriptor_orMutable {
-  @_core.override
-  final _lib_editor_v1_type_catalog.TypeDefinitionId definition;
-  @_core.override
-  final InitializationMode mode;
-  @_core.override
-  final _core.Iterable<CapturedDefault> captured;
-  @_core.override
-  final _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic>
-  diagnostics;
-  _skir.internal__UnrecognizedFields? _u;
-
-  factory InitializationDescriptor({
-    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable definition,
-    required InitializationMode mode,
-    required _core.Iterable<CapturedDefault_orMutable> captured,
-    required _core.Iterable<
-      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-    >
-    diagnostics,
-  }) => InitializationDescriptor._(
-    definition.toFrozen(),
-    mode,
-    _skir.internal__frozenMappedCopy(captured, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
-  );
-
-  InitializationDescriptor._(
-    this.definition,
-    this.mode,
-    this.captured,
-    this.diagnostics,
-  );
-
-  /// Default instance with all fields set to their default values.
-  static final defaultInstance = InitializationDescriptor._(
-    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-    InitializationMode.unknown,
-    _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
-  );
-
-  /// Returns a new mutable instance.
-  /// Fields are initialized to their default values.
-  static InitializationDescriptor_mutable mutable() =>
-      InitializationDescriptor_mutable._(
-        _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-        InitializationMode.unknown,
-        _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
-      );
-
-  /// Returns this instance (no operation).
-  @_core.Deprecated("This instance is already frozen.")
-  @_core.override
-  InitializationDescriptor toFrozen() => this;
-
-  /// Returns a mutable shallow copy of this instance.
-  InitializationDescriptor_mutable toMutable() =>
-      InitializationDescriptor_mutable._(
-        this.definition,
-        this.mode,
-        this.captured,
-        this.diagnostics,
-      );
-
-  @_core.override
-  _core.bool operator ==(other) {
-    if (_core.identical(this, other)) return true;
-    if (other is! InitializationDescriptor) return false;
-    return _skir.internal__listEquality.equals(
-      _equality_proxy,
-      other._equality_proxy,
-    );
-  }
-
-  @_core.override
-  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
-
-  _core.List get _equality_proxy => [
-    this.definition,
-    this.mode,
-    this.captured,
-    this.diagnostics,
-  ];
-
-  @_core.override
-  _core.String toString() => _skir.internal__stringify(this, serializer);
-
-  /// Serializer for `InitializationDescriptor` instances.
-  static _skir.StructSerializer<
-    InitializationDescriptor,
-    InitializationDescriptor_mutable
-  >
-  get serializer {
-    if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addField(
-        "definition",
-        "definition",
-        0,
-        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
-        "",
-        (it) => it.definition,
-        (it, v) => it.definition = v,
-      );
-      _serializerBuilder.addField(
-        "mode",
-        "mode",
-        1,
-        InitializationMode.serializer,
-        "",
-        (it) => it.mode,
-        (it, v) => it.mode = v,
-      );
-      _serializerBuilder.addField(
-        "captured",
-        "captured",
-        2,
-        _skir.Serializers.iterable(CapturedDefault.serializer),
-        "",
-        (it) => it.captured,
-        (it, v) => it.captured = v,
-      );
-      _serializerBuilder.addField(
-        "diagnostics",
-        "diagnostics",
-        3,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_diagnostic.InitializationDiagnostic.serializer,
-        ),
-        "",
-        (it) => it.diagnostics,
-        (it, v) => it.diagnostics = v,
-      );
-      _serializerBuilder.finalize();
-    }
-    return _serializerBuilder.serializer;
-  }
-
-  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
-    recordId: "editor/v1/catalog.skir:InitializationDescriptor",
-    doc: "",
-    defaultInstance: defaultInstance,
-    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
-    toFrozen: (InitializationDescriptor_mutable it) => it.toFrozen(),
-    getUnrecognizedFields: (it) => it._u,
-    setUnrecognizedFields: (it, u) => it._u = u,
-  );
-}
-
-/// Mutable version of [InitializationDescriptor].
-final class InitializationDescriptor_mutable
-    implements InitializationDescriptor_orMutable {
-  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable definition;
-  InitializationMode mode;
-  _core.Iterable<CapturedDefault_orMutable> captured;
-  _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
-  diagnostics;
-  _skir.internal__UnrecognizedFields? _u;
-
-  InitializationDescriptor_mutable._(
-    this.definition,
-    this.mode,
-    this.captured,
-    this.diagnostics,
-  );
-
-  /// If the value of [definition] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
-  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableDefinition {
-    final value = this.definition;
-    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
-      return value;
-    } else {
-      return this.definition =
-          (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
-    }
-  }
-
-  /// If the value of [captured] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [captured] and returns it.
-  _core.List<CapturedDefault_orMutable> get mutableCaptured {
-    final value = this.captured;
-    if (value is _skir.internal__MutableList<CapturedDefault_orMutable>) {
-      return value;
-    } else {
-      return this.captured = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// If the value of [diagnostics] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
-  _core.List<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
-  get mutableDiagnostics {
-    final value = this.diagnostics;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-        >) {
-      return value;
-    } else {
-      return this.diagnostics = _skir.internal__MutableList([...value]);
-    }
-  }
-
-  /// Returns a deeply immutable copy of this instance.
-  @_core.override
-  InitializationDescriptor toFrozen() => InitializationDescriptor(
-    definition: this.definition,
-    mode: this.mode,
-    captured: this.captured,
-    diagnostics: this.diagnostics,
-  ).._u = this._u;
-}
-
 // struct RoleFallback
 
 sealed class RoleFallback_orMutable {
@@ -3869,7 +3410,6 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   _core.Iterable<ConfigurationRecipe_orMutable> get configuration;
   _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic_orMutable>
   get diagnostics;
-  _core.Iterable<InitializationDescriptor_orMutable> get initialization;
   _core.Iterable<EndpointBindingTemplate_orMutable> get endpointBindings;
   _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition>
   get capabilities;
@@ -3900,8 +3440,6 @@ final class EditorCatalogWireSnapshot
   final _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic>
   diagnostics;
   @_core.override
-  final _core.Iterable<InitializationDescriptor> initialization;
-  @_core.override
   final _core.Iterable<EndpointBindingTemplate> endpointBindings;
   @_core.override
   final _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition>
@@ -3926,7 +3464,6 @@ final class EditorCatalogWireSnapshot
       _lib_editor_v1_diagnostic.DeclarationDiagnostic_orMutable
     >
     diagnostics,
-    required _core.Iterable<InitializationDescriptor_orMutable> initialization,
     required _core.Iterable<EndpointBindingTemplate_orMutable> endpointBindings,
     required _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition>
     capabilities,
@@ -3947,7 +3484,6 @@ final class EditorCatalogWireSnapshot
     ),
     _skir.internal__frozenMappedCopy(configuration, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(diagnostics, (it) => it.toFrozen()),
-    _skir.internal__frozenMappedCopy(initialization, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(endpointBindings, (it) => it.toFrozen()),
     _skir.internal__frozenCopy(capabilities),
     _skir.internal__frozenMappedCopy(recommendations, (it) => it.toFrozen()),
@@ -3963,7 +3499,6 @@ final class EditorCatalogWireSnapshot
     this.presentationMaterials,
     this.configuration,
     this.diagnostics,
-    this.initialization,
     this.endpointBindings,
     this.capabilities,
     this.recommendations,
@@ -3973,7 +3508,6 @@ final class EditorCatalogWireSnapshot
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditorCatalogWireSnapshot._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -4003,7 +3537,6 @@ final class EditorCatalogWireSnapshot
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
-        _skir.KeyedIterable.empty,
       );
 
   /// Returns this instance (no operation).
@@ -4022,7 +3555,6 @@ final class EditorCatalogWireSnapshot
         this.presentationMaterials,
         this.configuration,
         this.diagnostics,
-        this.initialization,
         this.endpointBindings,
         this.capabilities,
         this.recommendations,
@@ -4051,7 +3583,6 @@ final class EditorCatalogWireSnapshot
     this.presentationMaterials,
     this.configuration,
     this.diagnostics,
-    this.initialization,
     this.endpointBindings,
     this.capabilities,
     this.recommendations,
@@ -4143,18 +3674,9 @@ final class EditorCatalogWireSnapshot
         (it, v) => it.diagnostics = v,
       );
       _serializerBuilder.addField(
-        "initialization",
-        "initialization",
-        8,
-        _skir.Serializers.iterable(InitializationDescriptor.serializer),
-        "",
-        (it) => it.initialization,
-        (it, v) => it.initialization = v,
-      );
-      _serializerBuilder.addField(
         "endpoint_bindings",
         "endpointBindings",
-        9,
+        8,
         _skir.Serializers.iterable(EndpointBindingTemplate.serializer),
         "",
         (it) => it.endpointBindings,
@@ -4163,7 +3685,7 @@ final class EditorCatalogWireSnapshot
       _serializerBuilder.addField(
         "capabilities",
         "capabilities",
-        10,
+        9,
         _skir.Serializers.iterable(
           _lib_editor_v1_capability.CapabilityDefinition.serializer,
         ),
@@ -4174,7 +3696,7 @@ final class EditorCatalogWireSnapshot
       _serializerBuilder.addField(
         "recommendations",
         "recommendations",
-        11,
+        10,
         _skir.Serializers.iterable(TypeRecommendation.serializer),
         "",
         (it) => it.recommendations,
@@ -4183,7 +3705,7 @@ final class EditorCatalogWireSnapshot
       _serializerBuilder.addField(
         "role_fallbacks",
         "roleFallbacks",
-        12,
+        11,
         _skir.Serializers.iterable(RoleFallback.serializer),
         "",
         (it) => it.roleFallbacks,
@@ -4217,7 +3739,6 @@ final class EditorCatalogWireSnapshot_mutable
   _core.Iterable<ConfigurationRecipe_orMutable> configuration;
   _core.Iterable<_lib_editor_v1_diagnostic.DeclarationDiagnostic_orMutable>
   diagnostics;
-  _core.Iterable<InitializationDescriptor_orMutable> initialization;
   _core.Iterable<EndpointBindingTemplate_orMutable> endpointBindings;
   _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilities;
   _core.Iterable<TypeRecommendation_orMutable> recommendations;
@@ -4233,7 +3754,6 @@ final class EditorCatalogWireSnapshot_mutable
     this.presentationMaterials,
     this.configuration,
     this.diagnostics,
-    this.initialization,
     this.endpointBindings,
     this.capabilities,
     this.recommendations,
@@ -4338,18 +3858,6 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
-  /// If the value of [initialization] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [initialization] and returns it.
-  _core.List<InitializationDescriptor_orMutable> get mutableInitialization {
-    final value = this.initialization;
-    if (value
-        is _skir.internal__MutableList<InitializationDescriptor_orMutable>) {
-      return value;
-    } else {
-      return this.initialization = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// If the value of [endpointBindings] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [endpointBindings] and returns it.
   _core.List<EndpointBindingTemplate_orMutable> get mutableEndpointBindings {
@@ -4410,7 +3918,6 @@ final class EditorCatalogWireSnapshot_mutable
     presentationMaterials: this.presentationMaterials,
     configuration: this.configuration,
     diagnostics: this.diagnostics,
-    initialization: this.initialization,
     endpointBindings: this.endpointBindings,
     capabilities: this.capabilities,
     recommendations: this.recommendations,
@@ -5453,11 +4960,9 @@ final class PreparationTarget_recordWrapper extends _PreparationTarget_wrapper {
 // struct ValuePreparationRequest
 
 sealed class ValuePreparationRequest_orMutable {
-  _lib_editor_v1_type_catalog.InitializationRequestId_orMutable get id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
   PreparationTarget get target;
   _lib_editor_v1_type_catalog.DataValue? get suppliedValue;
-  _core.String get intentHash;
 
   ValuePreparationRequest toFrozen();
 }
@@ -5466,57 +4971,35 @@ sealed class ValuePreparationRequest_orMutable {
 final class ValuePreparationRequest
     implements ValuePreparationRequest_orMutable {
   @_core.override
-  final _lib_editor_v1_type_catalog.InitializationRequestId id;
-  @_core.override
   final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
   @_core.override
   final PreparationTarget target;
   @_core.override
   final _lib_editor_v1_type_catalog.DataValue? suppliedValue;
-  @_core.override
-  final _core.String intentHash;
   _skir.internal__UnrecognizedFields? _u;
 
   factory ValuePreparationRequest({
-    required _lib_editor_v1_type_catalog.InitializationRequestId_orMutable id,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
     required PreparationTarget target,
     required _lib_editor_v1_type_catalog.DataValue? suppliedValue,
-    required _core.String intentHash,
-  }) => ValuePreparationRequest._(
-    id.toFrozen(),
-    catalog.toFrozen(),
-    target,
-    suppliedValue,
-    intentHash,
-  );
+  }) => ValuePreparationRequest._(catalog.toFrozen(), target, suppliedValue);
 
-  ValuePreparationRequest._(
-    this.id,
-    this.catalog,
-    this.target,
-    this.suppliedValue,
-    this.intentHash,
-  );
+  ValuePreparationRequest._(this.catalog, this.target, this.suppliedValue);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = ValuePreparationRequest._(
-    _lib_editor_v1_type_catalog.InitializationRequestId.defaultInstance,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     PreparationTarget.unknown,
     null,
-    "",
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static ValuePreparationRequest_mutable mutable() =>
       ValuePreparationRequest_mutable._(
-        _lib_editor_v1_type_catalog.InitializationRequestId.defaultInstance,
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
         PreparationTarget.unknown,
         null,
-        "",
       );
 
   /// Returns this instance (no operation).
@@ -5527,11 +5010,9 @@ final class ValuePreparationRequest
   /// Returns a mutable shallow copy of this instance.
   ValuePreparationRequest_mutable toMutable() =>
       ValuePreparationRequest_mutable._(
-        this.id,
         this.catalog,
         this.target,
         this.suppliedValue,
-        this.intentHash,
       );
 
   @_core.override
@@ -5548,11 +5029,9 @@ final class ValuePreparationRequest
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
   _core.List get _equality_proxy => [
-    this.id,
     this.catalog,
     this.target,
     this.suppliedValue,
-    this.intentHash,
   ];
 
   @_core.override
@@ -5566,18 +5045,9 @@ final class ValuePreparationRequest
   get serializer {
     if (_serializerBuilder.mustInitialize()) {
       _serializerBuilder.addField(
-        "id",
-        "id",
+        "catalog",
+        "catalog",
         0,
-        _lib_editor_v1_type_catalog.InitializationRequestId.serializer,
-        "",
-        (it) => it.id,
-        (it, v) => it.id = v,
-      );
-      _serializerBuilder.addField(
-        "catalog",
-        "catalog",
-        1,
         _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
         "",
         (it) => it.catalog,
@@ -5586,7 +5056,7 @@ final class ValuePreparationRequest
       _serializerBuilder.addField(
         "target",
         "target",
-        2,
+        1,
         PreparationTarget.serializer,
         "",
         (it) => it.target,
@@ -5595,22 +5065,13 @@ final class ValuePreparationRequest
       _serializerBuilder.addField(
         "supplied_value",
         "suppliedValue",
-        3,
+        2,
         _skir.Serializers.optional(
           _lib_editor_v1_type_catalog.DataValue.serializer,
         ),
         "",
         (it) => it.suppliedValue,
         (it, v) => it.suppliedValue = v,
-      );
-      _serializerBuilder.addField(
-        "intent_hash",
-        "intentHash",
-        4,
-        _skir.Serializers.string,
-        "",
-        (it) => it.intentHash,
-        (it, v) => it.intentHash = v,
       );
       _serializerBuilder.finalize();
     }
@@ -5631,33 +5092,16 @@ final class ValuePreparationRequest
 /// Mutable version of [ValuePreparationRequest].
 final class ValuePreparationRequest_mutable
     implements ValuePreparationRequest_orMutable {
-  _lib_editor_v1_type_catalog.InitializationRequestId_orMutable id;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
   PreparationTarget target;
   _lib_editor_v1_type_catalog.DataValue? suppliedValue;
-  _core.String intentHash;
   _skir.internal__UnrecognizedFields? _u;
 
   ValuePreparationRequest_mutable._(
-    this.id,
     this.catalog,
     this.target,
     this.suppliedValue,
-    this.intentHash,
   );
-
-  /// If the value of [id] is already mutable, returns it as is.
-  /// Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-  _lib_editor_v1_type_catalog.InitializationRequestId_mutable get mutableId {
-    final value = this.id;
-    if (value is _lib_editor_v1_type_catalog.InitializationRequestId_mutable) {
-      return value;
-    } else {
-      return this.id =
-          (value as _lib_editor_v1_type_catalog.InitializationRequestId)
-              .toMutable();
-    }
-  }
 
   /// If the value of [catalog] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
@@ -5674,11 +5118,9 @@ final class ValuePreparationRequest_mutable
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   ValuePreparationRequest toFrozen() => ValuePreparationRequest(
-    id: this.id,
     catalog: this.catalog,
     target: this.target,
     suppliedValue: this.suppliedValue,
-    intentHash: this.intentHash,
   ).._u = this._u;
 }
 

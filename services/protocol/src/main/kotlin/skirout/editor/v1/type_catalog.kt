@@ -8569,115 +8569,6 @@ class RelativeFieldPattern private constructor(
     }
 }
 
-sealed interface InitializationRequestId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.InitializationRequestId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class InitializationRequestId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.InitializationRequestId>? =
-        null,
-): skirout.editor.v1.type_catalog.InitializationRequestId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.InitializationRequestId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.InitializationRequestId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.InitializationRequestId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.InitializationRequestIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [InitializationRequestId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.InitializationRequestId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.InitializationRequestId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.InitializationRequestId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.InitializationRequestId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [InitializationRequestId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.InitializationRequestId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [InitializationRequestId] instances. */
-        val serializer get() = _SerializerRegistry.InitializationRequestIdSerializer;
-
-        /** Describes the [InitializationRequestId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.InitializationRequestIdSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface NativeBindingId_OrMutable {
     val value: kotlin.String;
 
@@ -12966,18 +12857,6 @@ private object _SerializerRegistry {
 
     val FloatWidthSerializer = build.skir.internal.makeSerializer(FloatWidthSerializerImpl);
 
-    val InitializationRequestIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:InitializationRequestId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.InitializationRequestId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.InitializationRequestId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val InitializationRequestIdSerializer = build.skir.internal.makeSerializer(InitializationRequestIdSerializerImpl);
-
     val InputTokenSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:InputToken",
         doc = "",
@@ -14440,17 +14319,6 @@ private object _SerializerRegistry {
             skirout.editor.v1.type_catalog.FloatWidth.SIXTY_FOUR,
         );
         FloatWidthSerializerImpl.finalizeEnum();
-
-        InitializationRequestIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        InitializationRequestIdSerializerImpl.finalizeStruct();
 
         InputTokenSerializerImpl.addField(
             "value",

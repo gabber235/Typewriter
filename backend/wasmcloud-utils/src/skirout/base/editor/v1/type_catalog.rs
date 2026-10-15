@@ -2794,48 +2794,6 @@ impl RelativeFieldPattern {
 }
 
 // ==============================================================================
-// struct InitializationRequestId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct InitializationRequestId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InitializationRequestId>>,
-}
-
-impl InitializationRequestId {
-    pub fn default_ref() -> &'static InitializationRequestId {
-        static D: std::sync::LazyLock<InitializationRequestId> =
-            std::sync::LazyLock::new(InitializationRequestId::default);
-        &D
-    }
-}
-
-impl InitializationRequestId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InitializationRequestId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<InitializationRequestId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "InitializationRequestId",
-                "",
-                |x: &InitializationRequestId| &x._unrecognized,
-                |x: &mut InitializationRequestId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<InitializationRequestId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(
-            InitializationRequestId::_adapter(),
-        )
-    }
-}
-
-// ==============================================================================
 // struct NativeBindingId
 // ==============================================================================
 
@@ -5598,19 +5556,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &RelativeFieldPattern| &x.segments,
                 |x: &mut RelativeFieldPattern, v| x.segments = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<InitializationRequestId> =
-                InitializationRequestId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &InitializationRequestId| &x.value,
-                |x: &mut InitializationRequestId, v| x.value = v,
             );
             (*a).finalize();
         }

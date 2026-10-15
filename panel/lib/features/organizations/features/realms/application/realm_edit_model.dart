@@ -17,6 +17,19 @@ abstract class RealmPreparedEdit with _$RealmPreparedEdit {
   }) = _RealmPreparedEdit;
 }
 
+/// Whether canonical relation metadata identifies one direct scalar counterpart.
+@freezed
+sealed class ResourceCounterpartResolution
+    with _$ResourceCounterpartResolution {
+  const factory ResourceCounterpartResolution.resolved(
+    skir.ValueLocation location,
+  ) = ResolvedResourceCounterpart;
+  const factory ResourceCounterpartResolution.choiceRequired(String message) =
+      ResourceCounterpartChoiceRequired;
+  const factory ResourceCounterpartResolution.invalid(String message) =
+      InvalidResourceCounterpart;
+}
+
 /// Pure authoring semantics. Resource and relation operations keep their facts.
 final class RealmEditModel
     implements EditModel<AuthoringDocument, RealmPreparedEdit> {

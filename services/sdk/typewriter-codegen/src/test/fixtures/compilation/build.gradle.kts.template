@@ -21,6 +21,7 @@ dependencies {
     implementation(files(repository.resolve("services/imprint/model/build/libs/imprint-model-1000.0.0.jar")))
     implementation(libs.kotlin.serialize.core)
     implementation(libs.kotlin.coroutines.core)
+    implementation(libs.kotlin.reflect)
     implementation(libs.skir.client)
 
     ksp(files(repository.resolve("services/sdk/typewriter-codegen/build/libs/typewriter-codegen.jar")))

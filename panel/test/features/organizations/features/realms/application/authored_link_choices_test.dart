@@ -7,6 +7,17 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  test("automatic counterpart resolution leaves nested identity to explicit choice", () {
+    final fixture = _fixture();
+    final result = fixture.catalog.resolveScalarCounterpart(
+      configuration: fixture.draft.resource(fixture.emptyTarget)!.configuration,
+      resource: fixture.emptyTarget,
+      endpoint: skir.EndpointId(value: "test.target"),
+    );
+    expect(result, isA<ResourceCounterpartChoiceRequired>());
+    expect(fixture.draft.intents, isEmpty);
+  });
+
   test("offers existing and new nested counterpart locations", () {
     final fixture = _fixture();
 
@@ -498,7 +509,7 @@ _fixture() {
     presentationMaterials: const [],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: [
       skir.EndpointBindingTemplate(
         endpoint: sourceEndpoint,

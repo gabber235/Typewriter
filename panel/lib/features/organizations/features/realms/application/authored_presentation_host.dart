@@ -313,19 +313,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
       return _reject("The collection item cannot be prepared", target: target);
     }
     final selection = skir.TypeSelection.wrapComplete(named);
-    final identity = sha256
-        .convert(
-          utf8.encode(
-            "${authored.generation.value}\u0000${target.resource.value}\u0000${target.path}\u0000$selection",
-          ),
-        )
-        .toString();
     final request = skir.ValuePreparationRequest(
-      id: skir.InitializationRequestId(value: "panel:item:$identity"),
       catalog: authored.generation,
       target: skir.PreparationTarget.wrapRecord(selection),
       suppliedValue: skir.DataValue.createRecord(fields: const []),
-      intentHash: identity,
     );
     final result = await edit!.prepare(
       label: "Add collection item",
@@ -543,23 +534,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (prepare == null) {
       throw StateError("Creation preparation is unavailable");
     }
-    final generation = authored.generation;
-    final content = [
-      generation.value,
-      source.resource.value,
-      source.path.toString(),
-      target.value,
-      slot.containing.resource.value,
-      slot.containing.path.toString(),
-      slot.selection.toString(),
-    ].join("\u0000");
-    final identity = sha256.convert(utf8.encode(content)).toString();
     final request = skir.ValuePreparationRequest(
-      id: skir.InitializationRequestId(value: "panel:link:$identity"),
-      catalog: generation,
+      catalog: authored.generation,
       target: skir.PreparationTarget.wrapRecord(slot.selection),
       suppliedValue: skir.DataValue.createRecord(fields: const []),
-      intentHash: identity,
     );
     return () => prepare(request);
   }
@@ -1051,10 +1029,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
   }
 
   @override
-  PortablePresentationWriteResult addMapRow(
+  Future<PortablePresentationWriteResult> addMapRow(
     skir.BindingRef reference, {
     required PortableInvocationContext context,
-  }) {
+  }) async {
     final target = location(reference, context: context);
     final payload = read(reference, context: context)?.authoredPayload;
     final rows = switch (payload) {
@@ -1079,21 +1057,92 @@ final class AuthoredPresentationHost extends ChangeNotifier
       ),
       context: context,
     );
-    return _stage("Add map row", (operation) {
-      final current = operation.expect(target);
-      if (current is! PortablePathValue<skir.DataValue> ||
-          current.value.authoredPayload != payload) {
-        throw StateError("The map changed before this edit");
+    final binding = edit;
+    if (!enabled || readOnly || binding == null) {
+      return _reject("This presentation is read only", target: target);
+    }
+    final keyType = branchType(skir.PathSegment.mapKey);
+    final valueType = branchType(skir.PathSegment.mapValue);
+    final observation = authored;
+    Future<(skir.ValuePreparationRequest, skir.PreparedValue)?> prepareBranch(
+      skir.TypeUse? type,
+    ) async {
+      // Nullable entries start at null, matching local shape initialization.
+      if (type is! skir.TypeUse_namedWrapper) return null;
+      final representation = observation.catalog
+          .published(type.value.definition)
+          ?.definition
+          .representation;
+      if (representation is! skir.RepresentationTemplate_recordWrapper ||
+          representation.value.abstract_) {
+        return null;
       }
-      operation.replaceMap(target, [
-        ...rows,
-        skir.MapRow(
-          id: item,
-          key: authored.defaultValue(branchType(skir.PathSegment.mapKey)),
-          value: authored.defaultValue(branchType(skir.PathSegment.mapValue)),
+      final prepare = prepareValue;
+      if (prepare == null) {
+        throw StateError("The map branch cannot be prepared");
+      }
+      final request = skir.ValuePreparationRequest(
+        catalog: observation.generation,
+        target: skir.PreparationTarget.wrapRecord(
+          skir.TypeSelection.wrapComplete(type.value),
         ),
-      ]);
-    }, target: target);
+        suppliedValue: skir.DataValue.createRecord(fields: const []),
+      );
+      final prepared = await prepare(request);
+      if (_disposed || !enabled || readOnly) {
+        throw StateError("The presentation closed during preparation");
+      }
+      return (request, prepared);
+    }
+
+    final result = await binding.prepare(
+      label: "Add map row",
+      from: observation,
+      apply: (operation) async {
+        final current = operation.expect(target);
+        if (current is! PortablePathValue<skir.DataValue> ||
+            current.value.authoredPayload != payload) {
+          throw StateError("The map changed before this edit");
+        }
+        final key = await prepareBranch(keyType);
+        final value = await prepareBranch(valueType);
+        if (_disposed || !enabled || readOnly) {
+          throw StateError("The presentation closed during preparation");
+        }
+        operation.replaceMap(target, [
+          ...rows,
+          skir.MapRow(
+            id: item,
+            key: observation.defaultValue(keyType),
+            value: observation.defaultValue(valueType),
+          ),
+        ]);
+        for (final (branch, prepared) in [
+          (skir.PathSegment.mapKey, key),
+          (skir.PathSegment.mapValue, value),
+        ]) {
+          if (prepared == null) continue;
+          operation.applyPreparedRecord(
+            skir.ValueLocation(
+              resource: target.resource,
+              path: skir.ValuePath(
+                segments: [
+                  ...target.path.segments,
+                  skir.PathSegment.createItem(id: item),
+                  branch,
+                ],
+              ),
+            ),
+            prepared.$1,
+            prepared.$2,
+          );
+        }
+      },
+    );
+    return switch (result) {
+      EditStageRejected(:final message) => _reject(message, target: target),
+      _ => const PortablePresentationWriteApplied(),
+    };
   }
 
   Future<PortablePresentationWriteResult> _executeLocal(
@@ -1376,21 +1425,12 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (target == null || prepare == null || named == null) {
       return _reject("The selected form cannot be prepared", target: target);
     }
-    final operationId = const Uuid().v4();
     final request = skir.ValuePreparationRequest(
-      id: skir.InitializationRequestId(value: "panel:form:$operationId"),
       catalog: authored.generation,
       target: skir.PreparationTarget.wrapRecord(
         skir.TypeSelection.wrapComplete(named),
       ),
       suppliedValue: skir.DataValue.createRecord(fields: const []),
-      intentHash: sha256
-          .convert(
-            utf8.encode(
-              "${authored.generation.value}\u0000${target.resource.value}\u0000${target.path}\u0000$named",
-            ),
-          )
-          .toString(),
     );
     final binding = edit!;
     final result = await binding.prepare(

@@ -44,14 +44,9 @@ final class ResourceCreationRequest {
     this.supplied = const [],
     this.connections = const [],
     skir.ResourceId? id,
-    skir.InitializationRequestId? initializationId,
-  }) : id = id ?? skir.newResourceId(),
-       initializationId =
-           initializationId ??
-           skir.InitializationRequestId(value: "panel:${_uuid.v4()}");
+  }) : id = id ?? skir.newResourceId();
 
   final skir.ResourceId id;
-  final skir.InitializationRequestId initializationId;
   final skir.ResourceDefinitionId definition;
   final skir.TypeSelection configuration;
   final List<skir.FieldValue> supplied;
@@ -60,7 +55,6 @@ final class ResourceCreationRequest {
   ResourceCreationRequest withConfiguration(skir.TypeSelection next) =>
       ResourceCreationRequest(
         id: id,
-        initializationId: initializationId,
         definition: definition,
         configuration: next,
         supplied: supplied,
@@ -131,12 +125,12 @@ final class ResourceCreationSession {
   }) async {
     if (!context.mounted) return null;
     final workspace = ref.read(realmEditingProvider(scope));
-    final checked = workspace.document.catalog;
     final commands = ref.read(authoredResourceCommandsProvider(scope));
     AuthoringResourceIdentifier? created;
     final outcome = await workspace.prepare(
       label: "Create resource",
       apply: (edit) async {
+        final checked = edit.catalog!;
         var effectiveRequest = request;
         if (checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
           final selection = await showCreationConcreteTypePicker(
@@ -155,17 +149,12 @@ final class ResourceCreationSession {
           throw StateError("The selected resource type is unavailable");
         }
         final initialization = skir.ValuePreparationRequest(
-          id: effectiveRequest.initializationId,
           catalog: edit.generation,
           target: skir.PreparationTarget.wrapRecord(
             effectiveRequest.configuration,
           ),
           suppliedValue: skir.DataValue.createRecord(
-            fields: effectiveRequest.supplied,
-          ),
-          intentHash: _initializationHash(
-            effectiveRequest.configuration,
-            effectiveRequest.supplied,
+            fields: edit.creationInputs(effectiveRequest),
           ),
         );
         final prepared = await commands.prepareValue(initialization);
@@ -188,22 +177,4 @@ final class ResourceCreationSession {
     }
     return created;
   }
-}
-
-const _uuid = Uuid();
-
-String _initializationHash(
-  skir.TypeSelection selection,
-  List<skir.FieldValue> fields,
-) {
-  final canonical = StringBuffer(selection);
-  for (final field
-      in fields.toList()..sort((a, b) => a.name.compareTo(b.name))) {
-    canonical
-      ..write("\u0000")
-      ..write(field.name)
-      ..write("\u0000")
-      ..write(field.value);
-  }
-  return sha256.convert(utf8.encode(canonical.toString())).toString();
 }

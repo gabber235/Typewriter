@@ -128,6 +128,6 @@ final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
   resourceDefinitions: const [],
   recommendations: const [],
   roleFallbacks: const [],
-  initialization: const [],
+
   diagnostics: const [],
 ).asTrustedLocalCatalog();

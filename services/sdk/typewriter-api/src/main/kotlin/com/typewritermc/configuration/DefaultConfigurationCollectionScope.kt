@@ -32,14 +32,6 @@ class DefaultConfigurationCollectionScope internal constructor(
     constructor(target: TypeDefinitionId, constants: PortableConstantEncoder? = null) :
         this(target, ConfigurationCollectionState(), RelativeFieldPattern(), constants, skipNull = false)
 
-    override fun initialization(preference: InitializationPreference) {
-        val previous = state.initialization
-        require(previous == null || previous == preference) {
-            "A type configuration cannot declare contradictory initialization preferences."
-        }
-        state.initialization = preference
-    }
-
     override fun <S : Any> field(
         path: RelativeFieldPattern,
         representation: RepresentationKind,
@@ -63,8 +55,7 @@ class DefaultConfigurationCollectionScope internal constructor(
             skipNull,
         )
 
-    override fun collected(): CollectedConfiguration =
-        CollectedConfiguration(state.recipes.toList(), state.checks.toList(), state.initialization)
+    override fun collected(): CollectedConfiguration = CollectedConfiguration(state.recipes.toList(), state.checks.toList())
 }
 
 internal class RuntimeConfigurationBinding(
@@ -219,7 +210,6 @@ internal class RuntimeConfigurationBinding(
 internal class ConfigurationCollectionState(
     val recipes: MutableList<ConfigurationRecipe> = mutableListOf(),
     val checks: MutableList<CheckRecipe> = mutableListOf(),
-    var initialization: InitializationPreference? = null,
     var nextRule: Int = 0,
 )
 

@@ -1,9 +1,19 @@
 package fixture
 
 import com.typewritermc.checking.CatalogGeneration
+import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.InitializationRequest
+import com.typewritermc.authoring.PreparedContent
+import com.typewritermc.authoring.PreparationTarget
+import com.typewritermc.authoring.TypeSelection
+import com.typewritermc.types.DataValue
+import com.typewritermc.types.IntegerWidth
+import com.typewritermc.types.ScalarKind
+import java.math.BigInteger
+import kotlinx.serialization.Transient
+import kotlinx.serialization.SerialName
 import com.typewritermc.authoring.CaptureResult
 import com.typewritermc.authoring.ResourceDefinitionId
-import com.typewritermc.authoring.SamplingInputs
 import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.discovery.CatalogAssemblyContext
 import com.typewritermc.discovery.DeploymentFacts
@@ -96,6 +106,37 @@ sealed interface StoredContract {
 data class StoredValue(
     override val stored: String,
 ) : StoredContract
+
+private var defaultEvaluations = 0
+private var constructorEvaluations = 0
+fun evaluationCounts(): Pair<Int, Int> = defaultEvaluations to constructorEvaluations
+private fun dependentDefault(base: Int): Int { defaultEvaluations += 1; return base * 3 }
+
+@TypewriterType(id = "a0000000000000000000000000000100")
+data class DependentDefaults(
+    @SerialName("seed") val base: Int = 2,
+    val derived: Int = dependentDefault(base),
+    val nullable: String? = "fallback",
+    val guarded: Int = error("guarded must be supplied"),
+) {
+    init { constructorEvaluations += 1 }
+}
+
+@TypewriterType(id = "a0000000000000000000000000000101")
+data class GenericDefaults<T>(val value: T, val duplicate: T = value)
+
+@JvmInline
+@TypewriterType(id = "a0000000000000000000000000000102")
+value class DefaultCount(val value: Int)
+
+@TypewriterType(id = "a0000000000000000000000000000103")
+data class WrappedDefaults(val count: DefaultCount = DefaultCount(3), val doubled: Int = count.value * 2)
+
+@TypewriterType(id = "a0000000000000000000000000000104")
+data class CancelledDefaults(val value: String = throw kotlinx.coroutines.CancellationException("cancel defaults"))
+
+@TypewriterType(id = "a0000000000000000000000000000105")
+data class TransientDefaults(@Transient val hidden: Int = 5, val derived: Int = hidden * 2)
 
 object FixtureResources {
     @TypewriterResourceDefinition("fixture.example", Example::class)
@@ -226,8 +267,69 @@ fun main() {
                     is Resolution.Ready -> resolved.value
                     is Resolution.Invalid -> error(resolved.diagnostics.joinToString())
                 }
-            val capture = assembly.bindings.sampleDefaults(checked, SamplingInputs(emptyMap()))
+            val capture = assembly.bindings.sampleDefaults(checked, emptyMap())
             check((capture as CaptureResult.Unavailable).reasons.single().code == "native_default_capture_failed")
+            val probeLoader = contributions.nativeBindings.single { it.factory.definition == DependentDefaultsDefinition.id }
+                .factory.nativeClass!!.java.classLoader
+            fun counts(): Pair<*, *> = probeLoader.loadClass("fixture.FixtureKt").getMethod("evaluationCounts").invoke(null) as Pair<*, *>
+            val initializer = DefaultInitializationRuntime(assembly.checked, assembly.bindings)
+            fun prepare(type: TypeUse.Named, fields: Map<String, DataValue>) = initializer.prepareNow(
+                InitializationRequest(assembly.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(type)), DataValue.Record(fields)),
+            )
+            fun integer(value: Int) = DataValue.Integer(BigInteger.valueOf(value.toLong()))
+            val supplied = mapOf("seed" to integer(7), "nullable" to DataValue.Null, "guarded" to integer(20))
+            val preparedDefaults = prepare(DependentDefaultsDefinition.use, supplied)
+            val defaults = (preparedDefaults.content as PreparedContent.Record).record.fields
+            check(preparedDefaults.findings.isEmpty())
+            check(defaults["derived"] == integer(21) && defaults["nullable"] == DataValue.Null)
+            check(counts() == (1 to 1))
+            val completeInputs = defaults + ("derived" to DataValue.Unfilled)
+            val explicitUnfinished = prepare(DependentDefaultsDefinition.use, completeInputs)
+            check(explicitUnfinished.findings.isEmpty())
+            check((explicitUnfinished.content as PreparedContent.Record).record.fields == completeInputs)
+            check(counts() == (1 to 1))
+            val blocked = prepare(DependentDefaultsDefinition.use, supplied + ("seed" to DataValue.Unfilled))
+            check(blocked.findings.single().relativePath?.segments == listOf(com.typewritermc.authoring.PathSegment.Field("seed")))
+            check(counts() == (1 to 1))
+            val throwing = prepare(DependentDefaultsDefinition.use, mapOf("derived" to integer(99)))
+            check(throwing.findings.single().message == "guarded must be supplied")
+            check(counts() == (1 to 1))
+            val transient = prepare(TransientDefaultsDefinition.use, emptyMap())
+            check(transient.findings.isEmpty())
+            check((transient.content as PreparedContent.Record).record.fields == mapOf("derived" to integer(10)))
+            val intType = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
+            val generic = prepare(GenericDefaultsDefinition.applied(listOf(intType)), mapOf("value" to integer(9)))
+            check(generic.findings.isEmpty())
+            check((generic.content as PreparedContent.Record).record.fields["duplicate"] == integer(9))
+            val wrapped = prepare(WrappedDefaultsDefinition.use, mapOf("count" to DataValue.Named(DefaultCountDefinition.use, integer(8))))
+            check(wrapped.findings.isEmpty())
+            check((wrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
+            check(runCatching { prepare(CancelledDefaultsDefinition.use, emptyMap()) }.exceptionOrNull() is kotlinx.coroutines.CancellationException)
+            // One generated provider also operates under a freshly assembled catalog and resolver.
+            var replacementCountBindings = 0
+            val replacementContributions = contributions.copy(nativeBindings = contributions.nativeBindings.map { owned ->
+                if (owned.factory.definition != DefaultCountDefinition.id) owned else owned.copy(factory = object : com.typewritermc.types.NativeBindingFactory by owned.factory {
+                    override fun bind(actual: com.typewritermc.types.catalog.CheckedType, arguments: com.typewritermc.authoring.AppliedNativeArguments): com.typewritermc.types.NativeBinding<*> {
+                        replacementCountBindings += 1
+                        return owned.factory.bind(actual, arguments)
+                    }
+                })
+            })
+            val replacement = replacementContributions.assemble(CatalogAssemblyContext(CatalogGeneration("fixture replacement")))
+            replacementCountBindings = 0
+            val replacementWrapped = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
+                InitializationRequest(replacement.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(WrappedDefaultsDefinition.use)),
+                    DataValue.Record(mapOf("count" to DataValue.Named(DefaultCountDefinition.use, integer(8))))),
+            )
+            check(replacementWrapped.findings.isEmpty())
+            check((replacementWrapped.content as PreparedContent.Record).record.fields["doubled"] == integer(16))
+            check(replacementCountBindings == 1)
+            val replacementDefaults = DefaultInitializationRuntime(replacement.checked, replacement.bindings).prepareNow(
+                InitializationRequest(replacement.snapshot.generation, PreparationTarget.Record(TypeSelection.Complete(DependentDefaultsDefinition.use)), DataValue.Record(supplied)),
+            )
+            check(replacementDefaults.findings.isEmpty())
+            check((replacementDefaults.content as PreparedContent.Record).record.fields["derived"] == integer(21))
+            check(counts() == (2 to 2))
             val material = assembly.snapshot.presentationMaterials.single()
             check(material.layout.nodeId.isNotEmpty())
             check(material.dependencies.collections.single().relations.single().relationId == "identity")

@@ -2,7 +2,6 @@ package com.typewritermc.discovery
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.CompletenessResult
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
@@ -76,7 +75,6 @@ data class CatalogAssemblyContext(
     val relations: List<RelationContract> = emptyList(),
     val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
     val resources: List<AuthoringResourceDefinition> = emptyList(),
-    val initialization: List<InitializationDescriptor> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val roleFallbacks: List<RoleFallback> = DEFAULT_ROLE_FALLBACKS,
 )
@@ -139,34 +137,6 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val constants = PortableConstantEncoder { expected, value -> encodeConstant(expected, value, structural, structuralBindings) }
     val collectionResults = configurations.map { collectConfiguration(it, constants) }
     val ruleDiagnostics = configurationRuleDiagnostics(collectionResults, definitionIndex, structural)
-    val collectedPreferences =
-        collectionResults.mapNotNull(ConfigurationCollectionResult::collected).mapNotNull { result ->
-            result.configuration.initialization?.let { result.owned.target to it }
-        }
-    val preferenceDiagnostics =
-        collectedPreferences
-            .groupBy(Pair<TypeDefinitionId, com.typewritermc.configuration.InitializationPreference>::first)
-            .filterValues { preferences -> preferences.map { it.second }.distinct().size > 1 }
-            .keys
-            .map { affected -> DeclarationDiagnostic(affected, "contradictory_initialization_preference") }
-    val preferences =
-        collectedPreferences
-            .groupBy(Pair<TypeDefinitionId, com.typewritermc.configuration.InitializationPreference>::first)
-            .mapNotNull { (target, configured) ->
-                configured
-                    .map { it.second }
-                    .distinct()
-                    .singleOrNull()
-                    ?.let { target to it }
-            }.toMap()
-    val initializationPlan =
-        com.typewritermc.authoring
-            .InitializationCatalogPlanner(structural, structuralBindings)
-            .plan(definitions, preferences)
-    val initializationDiagnostics =
-        initializationPlan.diagnostics.flatMap { (affected, diagnostics) ->
-            diagnostics.map { diagnostic -> DeclarationDiagnostic(affected, diagnostic.code) }
-        }
     val materialCollection =
         collectPresentationMaterials(
             presentations,
@@ -184,7 +154,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         )
     val directFailures =
         collectionResults.mapNotNull(ConfigurationCollectionResult::failure) +
-            duplicateDiagnostics + symbolicDiagnostics + ruleDiagnostics + preferenceDiagnostics + initializationDiagnostics +
+            duplicateDiagnostics + symbolicDiagnostics + ruleDiagnostics +
             materialCollection.failures + presentationDiagnostics + resourceFamilyDiagnostics
     val unavailable = propagateUnavailableDefinitions(directFailures.map(DeclarationDiagnostic::affected).toSet(), definitions)
     val checked = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in unavailable })
@@ -240,10 +210,6 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 },
             configuration = recipes,
             diagnostics = diagnostics,
-            initialization =
-                (context.initialization + initializationPlan.descriptors)
-                    .filter { it.definition !in unavailable }
-                    .distinctBy(com.typewritermc.authoring.InitializationDescriptor::definition),
             endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
             capabilities = context.capabilities.sortedBy { it.id.value },
             recommendations = typeRecommendations(definitionIndex, unavailable),

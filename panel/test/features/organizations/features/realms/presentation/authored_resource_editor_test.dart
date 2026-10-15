@@ -1001,7 +1001,7 @@ _emptyPageGraphFixture() {
       ],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -1183,7 +1183,7 @@ _numericFixture({
         ),
       ],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],
@@ -1540,7 +1540,7 @@ _fixture({
             ]
           : const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

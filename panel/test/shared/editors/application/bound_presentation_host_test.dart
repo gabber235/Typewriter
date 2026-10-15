@@ -539,7 +539,7 @@ CheckedEditorCatalog _checkedCatalog(List<skir.PublishedType> published) =>
         presentationMaterials: const [],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],

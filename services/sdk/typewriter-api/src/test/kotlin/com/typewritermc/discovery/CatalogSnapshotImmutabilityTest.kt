@@ -23,7 +23,6 @@ val CatalogSnapshotImmutabilityTest by testSuite {
                 presentationMaterials = emptyList(),
                 configuration = emptyList(),
                 diagnostics = emptyList(),
-                initialization = emptyList(),
                 roleFallbacks = fallbacks,
             )
 

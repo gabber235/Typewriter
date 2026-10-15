@@ -195,7 +195,7 @@ CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
       presentationMaterials: const [],
       configuration: const [],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

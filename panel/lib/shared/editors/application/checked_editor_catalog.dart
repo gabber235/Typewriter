@@ -321,21 +321,6 @@ final class CheckedEditorCatalog {
   skir.TypeUse? concreteType(skir.TypeTemplate template) =>
       _concreteTemplateType(template);
 
-  bool hasConstructorDefault(skir.FieldOwner owner) {
-    final definition = _types[owner.definition];
-    final representation = definition?.definition.representation;
-    if (representation case skir.RepresentationTemplate_recordWrapper(
-      :final value,
-    )) {
-      return value.fields
-              .where((field) => field.owner == owner)
-              .firstOrNull
-              ?.hasConstructorDefault ??
-          false;
-    }
-    return false;
-  }
-
   skir.PublishedType? selected(skir.TypeSelection selection) {
     final definition = switch (selection) {
       skir.TypeSelection_completeWrapper(:final value) => value.definition,
@@ -561,12 +546,6 @@ final class CheckedEditorCatalog {
 
   List<skir.TypeRecommendation> get recommendations =>
       snapshot.recommendations.toList(growable: false);
-
-  skir.InitializationDescriptor? initialization(
-    skir.TypeDefinitionId definition,
-  ) => snapshot.initialization
-      .where((descriptor) => descriptor.definition == definition)
-      .firstOrNull;
 
   skir.AuthoringResourceDefinition? resourceDefinition(
     skir.TypeSelection selection,

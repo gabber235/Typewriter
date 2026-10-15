@@ -535,7 +535,7 @@ _nestedRuleFixture({
         ),
       ],
       diagnostics: const [],
-      initialization: const [],
+
       endpointBindings: const [],
       capabilities: const [],
       recommendations: const [],

@@ -18,7 +18,6 @@ import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.location
 import com.typewritermc.realm.checking.record
 import com.typewritermc.realm.compiler.AuthoringAcceptance
-import com.typewritermc.realm.compiler.AuthoringAssessment
 import com.typewritermc.realm.schema.MigrationResources
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.DataValue
@@ -134,8 +133,8 @@ val SurrealAuthoringRepositoryTestSuite by testSuite {
                 saved.root.resources
                     .getValue(id)
                     .fields["name"] shouldBe DataValue.Unfilled
-                val blocked = AuthoringAcceptance(views, checks).evaluate(saved).shouldBeInstanceOf<AuthoringAssessment.Blocked>()
-                blocked.blockers.all.any { it.diagnostic.code == "unfinished_value" && it.diagnostic.primary == title } shouldBe true
+                val blocked = AuthoringAcceptance(views, checks).evaluate(saved)
+                blocked.findings.any { it.code == "unfinished_value" && it.primary == title } shouldBe true
             }
         } finally {
             checks.close()

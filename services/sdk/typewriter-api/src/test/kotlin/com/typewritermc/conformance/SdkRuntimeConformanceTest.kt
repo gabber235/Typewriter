@@ -8,7 +8,6 @@ import com.typewritermc.authoring.BoundPath
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.NativeBindingId
 import com.typewritermc.authoring.PortableValue
-import com.typewritermc.authoring.WorklistDefaultModeResolver
 import com.typewritermc.authoring.complete
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
@@ -17,8 +16,6 @@ import com.typewritermc.configuration.ConfigurationCollectionScope
 import com.typewritermc.configuration.ConfigurationProvider
 import com.typewritermc.configuration.DefaultConfigurationCollectionScope
 import com.typewritermc.configuration.FieldPatternSegment
-import com.typewritermc.configuration.InitializationPreference
-import com.typewritermc.configuration.InitializationRequirements
 import com.typewritermc.configuration.Integer
 import com.typewritermc.configuration.NestedConfigurationScope
 import com.typewritermc.configuration.NullableField
@@ -1099,7 +1096,6 @@ val SdkRuntimeConformanceTest by testSuite {
                 ),
             )
         val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(fieldList))
-        val bytes = mutableListOf<Byte>(1, 2)
         val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.EDITOR)
         val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
         val rules =
@@ -1135,20 +1131,6 @@ val SdkRuntimeConformanceTest by testSuite {
             ).assemble(
                 CatalogAssemblyContext(
                     generation = CatalogGeneration("immutable snapshot"),
-                    initialization =
-                        mutableListOf(
-                            com.typewritermc.authoring.InitializationDescriptor(
-                                id,
-                                com.typewritermc.authoring.InitializationMode.Startup,
-                                mutableListOf(
-                                    com.typewritermc.configuration.CapturedDefault(
-                                        FieldOwner(id, "items"),
-                                        DataValue.Bytes(bytes),
-                                    ),
-                                ),
-                                mutableListOf(),
-                            ),
-                        ),
                     endpointBindings =
                         mutableListOf(
                             com.typewritermc.types.EndpointBindingTemplate(
@@ -1172,7 +1154,6 @@ val SdkRuntimeConformanceTest by testSuite {
 
         fieldList += FieldDeclaration(FieldOwner(id, "late"), TypeTemplate.Scalar(ScalarKind.Text))
         argumentList[0] = INT
-        bytes[0] = 9
         fallbackParents += com.typewritermc.types.PresentationRole.CATALOG_OPTION
         endpointPath += FieldPatternSegment.Items
         rules.clear()
@@ -1183,14 +1164,6 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.snapshot.configuration
             .single()
             .rules.size shouldBe 1
-        (
-            assembly.snapshot.initialization
-                .single { it.definition == id }
-                .captured
-                .single()
-                .value as DataValue.Bytes
-        ).value shouldBe
-            listOf<Byte>(1, 2)
         assembly.snapshot.endpointBindings
             .single()
             .relativePath.segments shouldBe
@@ -1275,26 +1248,6 @@ val SdkRuntimeConformanceTest by testSuite {
                 .single { it.definition.id == generic.id }
                 .status as DeclarationStatus.Unavailable
         status.reasons.map { it.code } shouldBe listOf("contradictory_configuration_rules")
-    }
-
-    test("forced creation propagates while explicit startup overrides inferred preference") {
-        val dynamicChild = definitionId("dynamic child")
-        val startupParent = definitionId("startup parent")
-        val forcedChild = definitionId("forced child")
-        val forcedParent = definitionId("forced parent")
-        val result =
-            WorklistDefaultModeResolver().resolveWithDiagnostics(
-                mapOf(
-                    dynamicChild to InitializationRequirements(false, InitializationPreference.Creation, emptySet()),
-                    startupParent to InitializationRequirements(false, InitializationPreference.Startup, setOf(dynamicChild)),
-                    forcedChild to InitializationRequirements(true, null, emptySet()),
-                    forcedParent to InitializationRequirements(false, null, setOf(forcedChild)),
-                ),
-            )
-
-        result.modes.getValue(startupParent) shouldBe com.typewritermc.authoring.InitializationMode.Startup
-        result.modes.getValue(forcedChild) shouldBe com.typewritermc.authoring.InitializationMode.Creation
-        result.modes.getValue(forcedParent) shouldBe com.typewritermc.authoring.InitializationMode.Creation
     }
 }
 

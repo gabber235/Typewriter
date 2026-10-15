@@ -1,6 +1,5 @@
 package com.typewritermc.discovery
 
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -34,7 +33,6 @@ internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
         presentationMaterials = presentationMaterials.immutableListCopy(PresentationMaterial::immutableCopy),
         configuration = configuration.immutableListCopy(ConfigurationRecipe::immutableCopy),
         diagnostics = diagnostics.immutableListCopy(DeclarationDiagnostic::immutableCopy),
-        initialization = initialization.immutableListCopy(InitializationDescriptor::immutableCopy),
         endpointBindings = endpointBindings.immutableListCopy(EndpointBindingTemplate::immutableCopy),
         capabilities = capabilities.immutableListCopy(RealmCapabilityDescriptor::immutableCopy),
         recommendations = recommendations.immutableListCopy(TypeRecommendation::immutableCopy),
@@ -145,12 +143,6 @@ private fun ExpressionNode.immutableCopy(): ExpressionNode =
             )
         }
     }
-
-private fun InitializationDescriptor.immutableCopy(): InitializationDescriptor =
-    copy(
-        captured = captured.immutableListCopy { captured -> captured.copy(value = captured.value.immutableCopy()) },
-        diagnostics = diagnostics.immutableListCopy(),
-    )
 
 private fun EndpointBindingTemplate.immutableCopy(): EndpointBindingTemplate =
     copy(

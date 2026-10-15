@@ -1,7 +1,6 @@
 package com.typewritermc.types.catalog
 
 import com.typewritermc.authoring.AuthoringResourceDefinition
-import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.capability.RealmCapabilityDescriptor
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -49,7 +48,6 @@ data class EditorCatalogSnapshot(
     val presentationMaterials: List<PresentationMaterial>,
     val configuration: List<ConfigurationRecipe>,
     val diagnostics: List<DeclarationDiagnostic>,
-    val initialization: List<InitializationDescriptor>,
     val endpointBindings: List<EndpointBindingTemplate> = emptyList(),
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val recommendations: List<TypeRecommendation> = emptyList(),

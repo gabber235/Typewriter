@@ -16,7 +16,6 @@ import {
   DeclarationOwner,
   EndpointId,
   FieldOwner,
-  InitializationRequestId,
   NamedTypeTemplate,
   NamedTypeUse,
   PresentationId,
@@ -171,29 +170,12 @@ struct PresentationMaterial(810900019) {
   subject: TypeTemplate = 5;
 }
 
-enum InitializationMode(810900020) {
-  startup = 1;
-  creation = 2;
-}
-
-struct CapturedDefault(810900021) {
-  field: FieldOwner = 0;
-  value: DataValue = 1;
-}
-
-struct InitializationDescriptor(810900022) {
-  definition: TypeDefinitionId = 0;
-  mode: InitializationMode = 1;
-  captured: [CapturedDefault] = 2;
-  diagnostics: [InitializationDiagnostic] = 3;
-}
-
-struct RoleFallback(810900023) {
+struct RoleFallback(810900020) {
   role: PresentationRole = 0;
   parents: [PresentationRole] = 1;
 }
 
-struct EditorCatalogWireSnapshot(810900024) {
+struct EditorCatalogWireSnapshot(810900021) {
   generation: CatalogGeneration = 0;
   types: [PublishedType] = 1;
   relations: [RelationContract] = 2;
@@ -202,75 +184,72 @@ struct EditorCatalogWireSnapshot(810900024) {
   presentation_materials: [PresentationMaterial] = 5;
   configuration: [ConfigurationRecipe] = 6;
   diagnostics: [DeclarationDiagnostic] = 7;
-  initialization: [InitializationDescriptor] = 8;
-  endpoint_bindings: [EndpointBindingTemplate] = 9;
-  capabilities: [CapabilityDefinition] = 10;
-  recommendations: [TypeRecommendation] = 11;
-  role_fallbacks: [RoleFallback] = 12;
+  endpoint_bindings: [EndpointBindingTemplate] = 8;
+  capabilities: [CapabilityDefinition] = 9;
+  recommendations: [TypeRecommendation] = 10;
+  role_fallbacks: [RoleFallback] = 11;
 }
 
-struct CatalogTransferChunk(810900025) {
+struct CatalogTransferChunk(810900022) {
   generation: CatalogGeneration = 0;
   transfer: BoundedTransferChunk = 1;
 }
 
-enum CatalogUnavailableReason(810900026) {
+enum CatalogUnavailableReason(810900023) {
   encoded_size_limit = 1;
 }
 
-struct CatalogUnavailable(810900027) {
+struct CatalogUnavailable(810900024) {
   generation: CatalogGeneration = 0;
   reason: CatalogUnavailableReason = 1;
   encoded_size: int64 = 2;
   max_encoded_size: int64 = 3;
 }
 
-struct CatalogFetchRequest(810900028) {
+struct CatalogFetchRequest(810900025) {
   expected_generation: CatalogGeneration? = 0;
   transfer_id: string = 1;
 }
 
-enum CatalogFetchResult(810900029) {
+enum CatalogFetchResult(810900026) {
   chunk: CatalogTransferChunk = 1;
   generation_changed: CatalogGeneration = 2;
   unavailable: CatalogUnavailable = 3;
   internal_error: InternalError = 4;
 }
 
-struct CatalogInvalidated(810900030) {
+struct CatalogInvalidated(810900027) {
   generation: CatalogGeneration = 0;
 }
 
-enum PreparationTarget(810900031) {
+enum PreparationTarget(810900028) {
   value: TypeUse = 1;
   record: TypeSelection = 2;
 }
 
-struct ValuePreparationRequest(810900032) {
-  id: InitializationRequestId = 0;
-  catalog: CatalogGeneration = 1;
-  target: PreparationTarget = 2;
-  supplied_value: DataValue? = 3;
-  intent_hash: string = 4;
+struct ValuePreparationRequest(810900029) {
+  catalog: CatalogGeneration = 0;
+  target: PreparationTarget = 1;
+  supplied_value: DataValue? = 2;
 }
 
-enum PreparedContent(810900033) {
+enum PreparedContent(810900030) {
   value: DataValue = 1;
   record: AuthoringRecord = 2;
 }
 
-struct PreparedValue(810900034) {
+struct PreparedValue(810900031) {
   content: PreparedContent = 0;
   findings: [InitializationDiagnostic] = 1;
 }
 
-enum PrepareValueResult(810900035) {
+enum PrepareValueResult(810900032) {
   prepared: PreparedValue = 1;
   catalog_changed: CatalogGeneration = 2;
   internal_error: InternalError = 3;
 }
 
-struct EndpointBindingTemplate(810900036) {
+struct EndpointBindingTemplate(810900033) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -279,12 +258,12 @@ struct EndpointBindingTemplate(810900036) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900037) {
+struct TypeRecommendation(810900034) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
 }
 
-enum AuthoringNavigationHandler(810900038) {
+enum AuthoringNavigationHandler(810900035) {
   generic = 1;
   book = 2;
   page = 3;

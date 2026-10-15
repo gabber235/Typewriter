@@ -8,7 +8,7 @@ interface NativeConstructionPlan {
 
     fun sample(
         arguments: AppliedNativeArguments,
-        requiredInputs: SamplingInputs,
+        supplied: Map<FieldOwner, CompleteValue>,
     ): CaptureResult
 }
 

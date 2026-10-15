@@ -313,7 +313,7 @@ _PageFixture _pageFixture() {
     presentationMaterials: [for (final item in inspectorPresentations) item.$2],
     configuration: const [],
     diagnostics: const [],
-    initialization: const [],
+
     endpointBindings: const [],
     capabilities: const [],
     recommendations: const [],

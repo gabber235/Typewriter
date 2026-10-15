@@ -284,66 +284,63 @@ enum FieldPatternSegment(810100063) {
 struct RelativeFieldPattern(810100064) {
   segments: [FieldPatternSegment] = 0;
 }
-struct InitializationRequestId(810100065) {
+struct NativeBindingId(810100065) {
   value: string = 0;
 }
-struct NativeBindingId(810100066) {
+struct CheckExecutionId(810100066) {
   value: string = 0;
 }
-struct CheckExecutionId(810100067) {
+struct DiagnosticId(810100067) {
   value: string = 0;
 }
-struct DiagnosticId(810100068) {
+struct SelectionId(810100068) {
   value: string = 0;
 }
-struct SelectionId(810100069) {
+struct PublicationId(810100069) {
   value: string = 0;
 }
-struct PublicationId(810100070) {
+struct CanonicalValueHash(810100070) {
   value: string = 0;
 }
-struct CanonicalValueHash(810100071) {
+struct RuntimeMemberId(810100071) {
   value: string = 0;
 }
-struct RuntimeMemberId(810100072) {
+struct ScriptCapabilityId(810100072) {
   value: string = 0;
 }
-struct ScriptCapabilityId(810100073) {
+struct RelationId(810100073) {
   value: string = 0;
 }
-struct RelationId(810100074) {
+struct RelationFamilyId(810100074) {
   value: string = 0;
 }
-struct RelationFamilyId(810100075) {
-  value: string = 0;
-}
-struct TypeCatalog(810100076) {
+struct TypeCatalog(810100075) {
   definitions: [TypeDefinition] = 0;
 }
 
-struct ScalarResolvedRepresentation(810100077) {
+struct ScalarResolvedRepresentation(810100076) {
   kind: ScalarKind = 0;
 }
-struct RecordResolvedRepresentation(810100078) {
+struct RecordResolvedRepresentation(810100077) {
   fields: [ResolvedField|key] = 0;
   abstract: bool = 1;
 }
-struct SequenceResolvedRepresentation(810100079) {
+struct SequenceResolvedRepresentation(810100078) {
   item: TypeUse = 0;
   kind: CollectionKind = 1;
 }
-struct MappingResolvedRepresentation(810100080) {
+struct MappingResolvedRepresentation(810100079) {
   key: TypeUse = 0;
   value: TypeUse = 1;
 }
-struct EnumerationResolvedRepresentation(810100081) {
+struct EnumerationResolvedRepresentation(810100080) {
   cases: [EnumVariant|key] = 0;
 }
-struct LinkResolvedRepresentation(810100082) {
+struct LinkResolvedRepresentation(810100081) {
   endpoint: EndpointId = 0;
   target: TypeUse = 1;
 }
-enum ResolvedRepresentation(810100083) {
+enum ResolvedRepresentation(810100082) {
   scalar: ScalarResolvedRepresentation = 1;
   record: RecordResolvedRepresentation = 2;
   sequence: SequenceResolvedRepresentation = 3;
@@ -351,53 +348,53 @@ enum ResolvedRepresentation(810100083) {
   enumeration: EnumerationResolvedRepresentation = 5;
   link: LinkResolvedRepresentation = 6;
 }
-struct ResolvedField(810100084) {
+struct ResolvedField(810100083) {
   key: string = 0;
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
   guarantees: [RuleId] = 3;
 }
-struct AppliedSchema(810100085) {
+struct AppliedSchema(810100084) {
   use: TypeUse = 0;
   representation: ResolvedRepresentation = 1;
   fields: [ResolvedField|key] = 2;
   ancestors: [NamedTypeUse] = 3;
 }
-struct CheckedType(810100086) {
+struct CheckedType(810100085) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;
   schema: AppliedSchema = 2;
 }
-struct ArgumentLocation(810100087) {
+struct ArgumentLocation(810100086) {
   index: int32 = 0;
 }
-struct DependentField(810100088) {
+struct DependentField(810100087) {
   owner: FieldOwner = 0;
   type: TypeTemplate = 1;
   missing: [ParameterKey] = 2;
 }
-struct PartialSchema(810100089) {
+struct PartialSchema(810100088) {
   known_fields: [ResolvedField|key] = 0;
   dependent_fields: [DependentField] = 1;
   pending_arguments: [ArgumentLocation] = 2;
 }
 
-struct ContributionSourceId(810100090) {
+struct ContributionSourceId(810100089) {
   value: string = 0;
 }
-struct ProducerId(810100091) {
+struct ProducerId(810100090) {
   value: string = 0;
 }
-struct ContributionName(810100092) {
+struct ContributionName(810100091) {
   value: string = 0;
 }
-struct ContributionKey(810100093) {
+struct ContributionKey(810100092) {
   source: ContributionSourceId = 0;
   source_part: string = 1;
   producer: ProducerId = 2;
   name: ContributionName = 3;
 }
-struct DeclarationOwner(810100094) {
+struct DeclarationOwner(810100093) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }

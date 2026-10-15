@@ -386,7 +386,7 @@ _concreteResourceFixture() {
         presentationMaterials: const [],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],
@@ -468,7 +468,7 @@ _fixture({
         presentationMaterials: const [],
         configuration: const [],
         diagnostics: const [],
-        initialization: const [],
+
         endpointBindings: const [],
         capabilities: const [],
         recommendations: const [],
