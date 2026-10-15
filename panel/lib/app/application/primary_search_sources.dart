@@ -143,18 +143,13 @@ List<SearchHostEffectExecutor<SearchHostEffect>> _buildHostEffectExecutors(
   }),
   SearchHostEffectExecutor<OpenAuthoringResourceEffect>((effect) async {
     final registry = ref.read(authoringResourceNavigationRegistryProvider);
-    if (await registry.open(ref, effect.navigationHandler, effect)) return;
+    final resource = effect.resource;
+    if (await registry.open(ref, resource)) return;
     await ref
         .read(appRouterProvider)
-        .navigate(realmNavigationRoute(effect.organizationId, effect.realmId));
-    ref
-        .read(selectionProvider.notifier)
-        .select(
-          AuthoringResourceIdentifier(
-            organizationId: effect.organizationId,
-            realmId: effect.realmId,
-            resourceId: effect.resourceId,
-          ),
+        .navigate(
+          realmNavigationRoute(resource.organizationId, resource.realmId),
         );
+    ref.read(selectionProvider.notifier).select(resource);
   }),
 ];

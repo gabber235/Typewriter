@@ -129,7 +129,7 @@ final class ResourceDefinitionId_mutable
 sealed class AuthoringResourceDefinition_orMutable {
   ResourceDefinitionId_orMutable get id;
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get root;
-  _core.String get navigationHandler;
+  AuthoringNavigationHandler get navigationHandler;
 
   AuthoringResourceDefinition toFrozen();
 }
@@ -142,13 +142,13 @@ final class AuthoringResourceDefinition
   @_core.override
   final _lib_editor_v1_type_catalog.TypeDefinitionId root;
   @_core.override
-  final _core.String navigationHandler;
+  final AuthoringNavigationHandler navigationHandler;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringResourceDefinition({
     required ResourceDefinitionId_orMutable id,
     required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root,
-    required _core.String navigationHandler,
+    required AuthoringNavigationHandler navigationHandler,
   }) => AuthoringResourceDefinition._(
     id.toFrozen(),
     root.toFrozen(),
@@ -161,7 +161,7 @@ final class AuthoringResourceDefinition
   static final defaultInstance = AuthoringResourceDefinition._(
     ResourceDefinitionId.defaultInstance,
     _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-    "",
+    AuthoringNavigationHandler.unknown,
   );
 
   /// Returns a new mutable instance.
@@ -170,7 +170,7 @@ final class AuthoringResourceDefinition
       AuthoringResourceDefinition_mutable._(
         ResourceDefinitionId.defaultInstance,
         _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
-        "",
+        AuthoringNavigationHandler.unknown,
       );
 
   /// Returns this instance (no operation).
@@ -237,7 +237,7 @@ final class AuthoringResourceDefinition
         "navigation_handler",
         "navigationHandler",
         2,
-        _skir.Serializers.string,
+        AuthoringNavigationHandler.serializer,
         "",
         (it) => it.navigationHandler,
         (it, v) => it.navigationHandler = v,
@@ -263,7 +263,7 @@ final class AuthoringResourceDefinition_mutable
     implements AuthoringResourceDefinition_orMutable {
   ResourceDefinitionId_orMutable id;
   _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable root;
-  _core.String navigationHandler;
+  AuthoringNavigationHandler navigationHandler;
   _skir.internal__UnrecognizedFields? _u;
 
   AuthoringResourceDefinition_mutable._(
@@ -6570,6 +6570,126 @@ final class TypeRecommendation_mutable implements TypeRecommendation_orMutable {
   TypeRecommendation toFrozen() =>
       TypeRecommendation(type: this.type, occurrences: this.occurrences)
         .._u = this._u;
+}
+
+// enum AuthoringNavigationHandler
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case AuthoringNavigationHandler_unknown(): { ... }
+///     case AuthoringNavigationHandler.generic: { ... }
+///     case AuthoringNavigationHandler.book: { ... }
+///     case AuthoringNavigationHandler.page: { ... }
+///     case AuthoringNavigationHandler.pageElement: { ... }
+///     case AuthoringNavigationHandler.tags: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class AuthoringNavigationHandler {
+  /// Constant indicating an unknown `AuthoringNavigationHandler`.
+  /// Default value for fields of type `AuthoringNavigationHandler`.
+  static const AuthoringNavigationHandler unknown =
+      AuthoringNavigationHandler_unknown._instance;
+
+  static const generic = _AuthoringNavigationHandler_consts.genericConst;
+  static const book = _AuthoringNavigationHandler_consts.bookConst;
+  static const page = _AuthoringNavigationHandler_consts.pageConst;
+  static const pageElement =
+      _AuthoringNavigationHandler_consts.pageElementConst;
+  static const tags = _AuthoringNavigationHandler_consts.tagsConst;
+
+  /// Returns the kind of variant held by this AuthoringNavigationHandler.
+  AuthoringNavigationHandler_kind get kind;
+
+  /// Serializer for `AuthoringNavigationHandler` instances.
+  static _skir.EnumSerializer<AuthoringNavigationHandler> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(
+        1,
+        "generic",
+        "generic",
+        "",
+        generic,
+      );
+      _serializerBuilder.addConstantVariant(2, "book", "book", "", book);
+      _serializerBuilder.addConstantVariant(3, "page", "page", "", page);
+      _serializerBuilder.addConstantVariant(
+        4,
+        "page_element",
+        "pageElement",
+        "",
+        pageElement,
+      );
+      _serializerBuilder.addConstantVariant(5, "tags", "tags", "", tags);
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:AuthoringNavigationHandler",
+        doc: "",
+        unknownInstance: AuthoringNavigationHandler_unknown._instance,
+        enumInstance: AuthoringNavigationHandler.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: AuthoringNavigationHandler_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `AuthoringNavigationHandler`.
+enum AuthoringNavigationHandler_kind {
+  unknown(0),
+  genericConst(1),
+  bookConst(2),
+  pageConst(3),
+  pageElementConst(4),
+  tagsConst(5);
+
+  final _core.int _ordinal;
+
+  const AuthoringNavigationHandler_kind(this._ordinal);
+}
+
+final class AuthoringNavigationHandler_unknown
+    implements AuthoringNavigationHandler {
+  static const _instance = AuthoringNavigationHandler_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const AuthoringNavigationHandler_unknown._() : _u = null;
+  AuthoringNavigationHandler_unknown._unrecognized(this._u);
+
+  @_core.override
+  AuthoringNavigationHandler_kind get kind =>
+      AuthoringNavigationHandler_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is AuthoringNavigationHandler_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, AuthoringNavigationHandler.serializer);
+}
+
+enum _AuthoringNavigationHandler_consts implements AuthoringNavigationHandler {
+  genericConst(AuthoringNavigationHandler_kind.genericConst),
+  bookConst(AuthoringNavigationHandler_kind.bookConst),
+  pageConst(AuthoringNavigationHandler_kind.pageConst),
+  pageElementConst(AuthoringNavigationHandler_kind.pageElementConst),
+  tagsConst(AuthoringNavigationHandler_kind.tagsConst);
+
+  @_core.override
+  final AuthoringNavigationHandler_kind kind;
+
+  const _AuthoringNavigationHandler_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, AuthoringNavigationHandler.serializer);
 }
 
 // struct WatchEditorCatalogRequest

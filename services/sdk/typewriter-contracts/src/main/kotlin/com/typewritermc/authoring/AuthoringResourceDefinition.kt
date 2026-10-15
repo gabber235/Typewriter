@@ -17,17 +17,23 @@ value class ResourceDefinitionId(
     }
 }
 
+/** Navigation capabilities understood by the editor. */
+@Serializable
+enum class AuthoringNavigationHandler {
+    GENERIC,
+    BOOK,
+    PAGE,
+    PAGE_ELEMENT,
+    TAGS,
+}
+
 /** Structural type family accepted by one authored resource. */
 @Serializable
 data class AuthoringResourceDefinition(
     val id: ResourceDefinitionId,
     val root: TypeDefinitionId,
-    val navigationHandler: String = "generic",
-) {
-    init {
-        require(navigationHandler.isNotBlank()) { "Resource navigation handlers must not be blank." }
-    }
-}
+    val navigationHandler: AuthoringNavigationHandler = AuthoringNavigationHandler.GENERIC,
+)
 
 fun Collection<AuthoringResourceDefinition>.definitionFor(
     selection: TypeSelection,
@@ -50,5 +56,5 @@ fun Collection<AuthoringResourceDefinition>.definitionFor(
 annotation class TypewriterResourceDefinition(
     val id: String,
     val root: KClass<out Resource>,
-    val navigationHandler: String = "generic",
+    val navigationHandler: AuthoringNavigationHandler = AuthoringNavigationHandler.GENERIC,
 )

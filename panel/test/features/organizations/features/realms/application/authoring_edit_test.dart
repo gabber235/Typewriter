@@ -1886,12 +1886,12 @@ _pageCreationFixture() {
       skir.AuthoringResourceDefinition(
         id: skir.ResourceDefinitionId(value: "typewriter.book"),
         root: book,
-        navigationHandler: "",
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
       ),
       skir.AuthoringResourceDefinition(
         id: pageResource,
         root: page,
-        navigationHandler: "",
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
       ),
     ],
     presentations: const [],

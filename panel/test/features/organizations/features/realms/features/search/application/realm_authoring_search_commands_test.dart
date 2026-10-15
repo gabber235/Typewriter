@@ -15,7 +15,7 @@ void main() {
       resource: resource,
       definition: definition,
       configuration: configuration,
-      navigationHandler: "typewriter.book",
+      navigationHandler: skir.AuthoringNavigationHandler.book,
     );
     final searchResult = SearchResult(
       id: resource.value,
@@ -41,12 +41,14 @@ void main() {
     final effect =
         (result as SearchCommandResultCompleted).hostEffects.single
             as OpenAuthoringResourceEffect;
-    expect(effect.organizationId, _organization);
-    expect(effect.realmId, _realm);
-    expect(effect.resourceId, resource);
-    expect(effect.definition, definition);
-    expect(effect.configuration, configuration);
-    expect(effect.navigationHandler, "typewriter.book");
+    expect(
+      effect.resource,
+      AuthoringResourceIdentifier(
+        organizationId: _organization,
+        realmId: _realm,
+        resourceId: resource,
+      ),
+    );
   });
 }
 
@@ -64,7 +66,7 @@ AuthoringSearchResultPayload _payload({
   required skir.ResourceId resource,
   required skir.ResourceDefinitionId definition,
   required skir.TypeSelection configuration,
-  required String navigationHandler,
+  required skir.AuthoringNavigationHandler navigationHandler,
 }) {
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(

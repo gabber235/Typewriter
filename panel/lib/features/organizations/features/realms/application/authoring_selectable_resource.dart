@@ -66,37 +66,15 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
         commands: commands,
         onOpen: resource.definition == coreTagResourceDefinition
             ? null
-            : _openCapability(ref, document, resource),
+            : _openCapability(ref),
       ),
     );
   }
 
-  VoidCallback? _openCapability(
-    Ref ref,
-    AuthoringDocument document,
-    skir.AuthoringResource resource,
-  ) {
-    final handler = document.catalog.snapshot.resourceDefinitions
-        .where((definition) => definition.id == resource.definition)
-        .map((definition) => definition.navigationHandler)
-        .firstOrNull;
-    if (handler == null) return null;
+  VoidCallback? _openCapability(Ref ref) {
     final registry = ref.read(authoringResourceNavigationRegistryProvider);
-    if (!registry.supports(handler)) return null;
-    return () => unawaited(
-      registry.open(
-        ref,
-        handler,
-        OpenAuthoringResourceEffect(
-          organizationId: organizationId,
-          realmId: realmId,
-          resourceId: resourceId,
-          definition: resource.definition,
-          configuration: resource.content.configuration,
-          navigationHandler: handler,
-        ),
-      ),
-    );
+    if (!registry.canOpen(ref, this)) return null;
+    return () => unawaited(registry.open(ref, this));
   }
 }
 

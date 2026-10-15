@@ -478,7 +478,7 @@ _fixture({
         skir.AuthoringResourceDefinition(
           id: skir.ResourceDefinitionId(value: "test.tag"),
           root: type,
-          navigationHandler: "",
+          navigationHandler: skir.AuthoringNavigationHandler.generic,
         ),
       ],
       presentations: const [],

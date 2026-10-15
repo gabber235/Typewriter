@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'realm_inbox.dart';
 
@@ -6,111 +6,20 @@ part of 'realm_inbox.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-
-@ProviderFor(realmLocationReveal)
-final realmLocationRevealProvider = RealmLocationRevealFamily._();
-
-final class RealmLocationRevealProvider
-    extends
-        $FunctionalProvider<
-          PortableLocationRevealController,
-          PortableLocationRevealController,
-          PortableLocationRevealController
-        >
-    with $Provider<PortableLocationRevealController> {
-  RealmLocationRevealProvider._({
-    required RealmLocationRevealFamily super.from,
-    required AuthoringScope super.argument,
-  }) : super(
-         retry: null,
-         name: r'realmLocationRevealProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
-
-  @override
-  String debugGetCreateSourceHash() => _$realmLocationRevealHash();
-
-  @override
-  String toString() {
-    return r'realmLocationRevealProvider'
-        ''
-        '($argument)';
-  }
-
-  @$internal
-  @override
-  $ProviderElement<PortableLocationRevealController> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  PortableLocationRevealController create(Ref ref) {
-    final argument = this.argument as AuthoringScope;
-    return realmLocationReveal(ref, argument);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PortableLocationRevealController value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PortableLocationRevealController>(
-        value,
-      ),
-    );
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return other is RealmLocationRevealProvider && other.argument == argument;
-  }
-
-  @override
-  int get hashCode {
-    return argument.hashCode;
-  }
-}
-
-String _$realmLocationRevealHash() =>
-    r'12337a2749f89b993e297662a60e96771307aabc';
-
-final class RealmLocationRevealFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          PortableLocationRevealController,
-          AuthoringScope
-        > {
-  RealmLocationRevealFamily._()
-    : super(
-        retry: null,
-        name: r'realmLocationRevealProvider',
-        dependencies: null,
-        $allTransitiveDependencies: null,
-        isAutoDispose: true,
-      );
-
-  RealmLocationRevealProvider call(AuthoringScope scope) =>
-      RealmLocationRevealProvider._(argument: scope, from: this);
-
-  @override
-  String toString() => r'realmLocationRevealProvider';
-}
-
-/// Joins immutable observations from their existing owners without retaining work.
+/// Projects saved issues from publication and local activity from its owners.
 
 @ProviderFor(realmInbox)
 final realmInboxProvider = RealmInboxFamily._();
 
-/// Joins immutable observations from their existing owners without retaining work.
+/// Projects saved issues from publication and local activity from its owners.
 
 final class RealmInboxProvider
     extends
         $FunctionalProvider<RealmInboxState, RealmInboxState, RealmInboxState>
     with $Provider<RealmInboxState> {
-  /// Joins immutable observations from their existing owners without retaining work.
+  /// Projects saved issues from publication and local activity from its owners.
   RealmInboxProvider._({
     required RealmInboxFamily super.from,
     required AuthoringScope super.argument,
@@ -162,9 +71,9 @@ final class RealmInboxProvider
   }
 }
 
-String _$realmInboxHash() => r'cbd7ec46c76fb9246d9e74160580ca8dd5bb28ea';
+String _$realmInboxHash() => r'3943aa5eefe413f2530aec4bc99d03926b19fb43';
 
-/// Joins immutable observations from their existing owners without retaining work.
+/// Projects saved issues from publication and local activity from its owners.
 
 final class RealmInboxFamily extends $Family
     with $FunctionalFamilyOverride<RealmInboxState, AuthoringScope> {
@@ -177,7 +86,7 @@ final class RealmInboxFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Joins immutable observations from their existing owners without retaining work.
+  /// Projects saved issues from publication and local activity from its owners.
 
   RealmInboxProvider call(AuthoringScope scope) =>
       RealmInboxProvider._(argument: scope, from: this);
@@ -186,17 +95,17 @@ final class RealmInboxFamily extends $Family
   String toString() => r'realmInboxProvider';
 }
 
-/// Reuses the resource navigation registry for inbox destinations.
+/// Reveals the editor for the issue location.
 
 @ProviderFor(openRealmInboxLocation)
 final openRealmInboxLocationProvider = OpenRealmInboxLocationFamily._();
 
-/// Reuses the resource navigation registry for inbox destinations.
+/// Reveals the editor for the issue location.
 
 final class OpenRealmInboxLocationProvider
     extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
     with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// Reuses the resource navigation registry for inbox destinations.
+  /// Reveals the editor for the issue location.
   OpenRealmInboxLocationProvider._({
     required OpenRealmInboxLocationFamily super.from,
     required (AuthoringScope, skir.ValueLocation) super.argument,
@@ -242,9 +151,9 @@ final class OpenRealmInboxLocationProvider
 }
 
 String _$openRealmInboxLocationHash() =>
-    r'c934dc60b27f759ba05293f1e3b8528e7f3f30b4';
+    r'548c7c10505604cc1afc5d730d3181c78951a4c3';
 
-/// Reuses the resource navigation registry for inbox destinations.
+/// Reveals the editor for the issue location.
 
 final class OpenRealmInboxLocationFamily extends $Family
     with
@@ -261,7 +170,7 @@ final class OpenRealmInboxLocationFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// Reuses the resource navigation registry for inbox destinations.
+  /// Reveals the editor for the issue location.
 
   OpenRealmInboxLocationProvider call(
     AuthoringScope scope,

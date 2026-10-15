@@ -40,7 +40,7 @@ while IFS=$'\t' read -r name source expected pattern; do
         if (( result != 0 )) || ! rg -q "$pattern" "$results/$name.log"; then
             print "$name failed acceptance"
             failures=$(( failures + 1 ))
-        elif [[ "$name" == "generated_provider_roundtrip" ]]; then
+        elif [[ "$name" == "generated_provider_roundtrip" || "$name" == "navigation_handlers" ]]; then
             set +e
             "$services_root/gradlew" \
                 -p "$workspace" \

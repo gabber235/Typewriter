@@ -16,3 +16,5 @@ presentation_explicit_fallback	positive	accept	BUILD SUCCESSFUL
 universal_resource_endpoint	positive	accept	BUILD SUCCESSFUL
 configuration_unsupported_operation	cases	reject	Unresolved reference 'positive'
 control_unsupported_operation	cases	reject	Unresolved reference 'textInput'
+navigation_handlers	positive	accept	BUILD SUCCESSFUL
+navigation_handler_string	cases	reject	Resource definitions require a supported navigation handler

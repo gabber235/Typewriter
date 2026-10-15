@@ -61,7 +61,7 @@ impl ResourceDefinitionId {
 pub struct AuthoringResourceDefinition {
     pub id: ResourceDefinitionId,
     pub root: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
-    pub navigation_handler: String,
+    pub navigation_handler: AuthoringNavigationHandler,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringResourceDefinition>>,
 }
@@ -1719,6 +1719,61 @@ impl TypeRecommendation {
 }
 
 // ==============================================================================
+// enum AuthoringNavigationHandler
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum AuthoringNavigationHandler {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringNavigationHandler>>),
+    Generic,
+    Book,
+    Page,
+    PageElement,
+    Tags,
+}
+
+impl Default for AuthoringNavigationHandler {
+    fn default() -> Self {
+        AuthoringNavigationHandler::Unknown(None)
+    }
+}
+
+impl AuthoringNavigationHandler {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &AuthoringNavigationHandler| match x {
+                    AuthoringNavigationHandler::Unknown(_) => 0,
+                    AuthoringNavigationHandler::Generic => 1,
+                    AuthoringNavigationHandler::Book => 2,
+                    AuthoringNavigationHandler::Page => 3,
+                    AuthoringNavigationHandler::PageElement => 4,
+                    AuthoringNavigationHandler::Tags => 5,
+                },
+                |u| AuthoringNavigationHandler::Unknown(Some(u)),
+                |x: &AuthoringNavigationHandler| match x {
+                    AuthoringNavigationHandler::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/catalog.skir",
+                "AuthoringNavigationHandler",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringNavigationHandler> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            AuthoringNavigationHandler::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct WatchEditorCatalogRequest
 // ==============================================================================
 
@@ -1803,7 +1858,9 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "navigation_handler",
                 2,
-                crate::skir_client::Serializer::string(),
+                crate::skir_client::internal::enum_serializer_from_static(
+                    AuthoringNavigationHandler::_adapter(),
+                ),
                 "",
                 |x: &AuthoringResourceDefinition| &x.navigation_handler,
                 |x: &mut AuthoringResourceDefinition, v| x.navigation_handler = v,
@@ -3002,6 +3059,22 @@ fn initialize_module_serializers() {
                 |x: &TypeRecommendation| &x.occurrences,
                 |x: &mut TypeRecommendation, v| x.occurrences = v,
             );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<AuthoringNavigationHandler> =
+                AuthoringNavigationHandler::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("generic", 1, 1, "", AuthoringNavigationHandler::Generic);
+            (*a).add_constant_variant("book", 2, 2, "", AuthoringNavigationHandler::Book);
+            (*a).add_constant_variant("page", 3, 3, "", AuthoringNavigationHandler::Page);
+            (*a).add_constant_variant(
+                "page_element",
+                4,
+                4,
+                "",
+                AuthoringNavigationHandler::PageElement,
+            );
+            (*a).add_constant_variant("tags", 5, 5, "", AuthoringNavigationHandler::Tags);
             (*a).finalize();
         }
         unsafe {

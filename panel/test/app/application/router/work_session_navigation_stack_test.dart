@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 LocalWorkScope _scope(String organization) => LocalWorkScope(
   userId: "user",
@@ -144,6 +145,68 @@ final class _MountedAppRouter extends AppRouter {
 }
 
 void main() {
+  testWidgets(
+    "a Book issue returns from the Book route to the nested Library",
+    (tester) async {
+      final fixture = _Fixture();
+      final scope = AuthoringScope(
+        organizationId: skir.recordId("organization:two"),
+        realmId: skir.recordId("service:realm"),
+      );
+      final book = Book(
+        bookId: skir.ResourceId(value: "book"),
+        title: " ",
+        icon: "mdi:book",
+        color: Colors.blue,
+        tagIds: const [],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          ...authoringFixtureOverrides(scope: scope, books: [book]),
+          appRouterProvider.overrideWithValue(fixture.router),
+        ],
+      );
+      final selection = container.listen(selectionProvider, (_, _) {});
+      final reveal = container.listen(
+        realmLocationRevealProvider(scope),
+        (_, _) {},
+      );
+      await fixture.mount(tester);
+      await fixture.router.navigate(
+        BookRoute(organizationId: "two", realmId: "realm", bookId: "book"),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text("Book"), findsOneWidget);
+      expect(
+        await container.read(
+          openRealmInboxLocationProvider(
+            scope,
+            skir.ValueLocation(
+              resource: book.bookId,
+              path: editorRootPath.field("title"),
+            ),
+          ).future,
+        ),
+        isTrue,
+      );
+      await tester.pumpAndSettle();
+      expect(
+        fixture.router.currentPath,
+        "/organization/two/realm/realm/library",
+      );
+      expect(find.text("Library"), findsOneWidget);
+      expect(find.text("Book"), findsNothing);
+      expect(container.read(selectionProvider), [
+        AuthoringResourceIdentifier.inScope(scope, book.bookId),
+      ]);
+      selection.close();
+      reveal.close();
+      container.dispose();
+      await fixture.close(tester);
+      await tester.pump(Duration.zero);
+    },
+  );
+
   testWidgets(
     "organization entry retains Services while its first snapshot is pending",
     (tester) async {

@@ -5,16 +5,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "realm_inbox.freezed.dart";
 part "realm_inbox.g.dart";
 
-@riverpod
-PortableLocationRevealController realmLocationReveal(
-  Ref ref,
-  AuthoringScope scope,
-) {
-  final controller = PortableLocationRevealController();
-  ref.onDispose(controller.dispose);
-  return controller;
-}
-
 /// Provenance determines meaning. A local problem never blocks a saved release.
 @freezed
 sealed class RealmInboxIssue with _$RealmInboxIssue {
@@ -146,7 +136,56 @@ bool realmOwnsReservation(AuthoringScope scope, Object resource) =>
       _ => false,
     };
 
-/// Joins immutable observations from their existing owners without retaining work.
+extension RealmInboxPublicationIssues on RealmPublicationView {
+  /// Projects saved issues from one publication observation.
+  Iterable<RealmInboxIssue> get savedIssues sync* {
+    final status = review;
+    final findings = switch (status) {
+      skir.PublicationStatus_checkingWrapper(:final value) => value.findings,
+      skir.PublicationStatus_unavailableWrapper(:final value) => value.findings,
+      _ => const <skir.FindingSet>[],
+    };
+    for (final set in findings) {
+      for (final diagnostic in [
+        ...set.findings,
+        if (set.outcome case skir.CheckOutcome_failedWrapper(:final value))
+          ...value,
+      ]) {
+        yield RealmInboxIssue.savedFinding(
+          AuthoredFindingView(source: set, diagnostic: diagnostic),
+        );
+      }
+    }
+    final notices = switch (status) {
+      skir.PublicationStatus_emptyWrapper(:final value) => value.notices,
+      skir.PublicationStatus_currentWrapper(:final value) => value.notices,
+      skir.PublicationStatus_readyWrapper(:final value) => value.notices,
+      skir.PublicationStatus_blockedWrapper(:final value) => value.notices,
+      skir.PublicationStatus_publishingWrapper(:final value) =>
+        value.next.notices,
+      _ => const <skir.PublicationNotice>[],
+    };
+    for (final notice in notices) {
+      if (notice is! skir.PublicationNotice_unknown) {
+        yield RealmInboxIssue.notice(notice);
+      }
+    }
+    final blockers = switch (status) {
+      skir.PublicationStatus_blockedWrapper(:final value) => [
+        value.blockers.first,
+        ...value.blockers.additional,
+      ],
+      skir.PublicationStatus_publishingWrapper(:final value) =>
+        value.next.blockers,
+      _ => const <skir.PublicationBlocker>[],
+    };
+    for (final blocker in blockers) {
+      yield RealmInboxIssue.blocker(blocker.details);
+    }
+  }
+}
+
+/// Projects saved issues from publication and local activity from its owners.
 @riverpod
 RealmInboxState realmInbox(Ref ref, AuthoringScope scope) {
   final publication =
@@ -156,9 +195,6 @@ RealmInboxState realmInbox(Ref ref, AuthoringScope scope) {
       const RealmPublicationView.checking();
   final editing = ref.watch(realmEditingStateProvider(scope));
   final work = ref.watch(localWorkProvider);
-  final authoring = ref.watch(
-    authoringSessionProvider(scope.organizationId, scope.realmId),
-  );
   final local = work.entries.values
       .where(
         (entry) =>
@@ -175,47 +211,10 @@ RealmInboxState realmInbox(Ref ref, AuthoringScope scope) {
       .toList();
   final issues = <Object, RealmInboxIssue>{};
   void add(RealmInboxIssue issue) => issues[issue.identity] = issue;
-  for (final set in authoring.findings) {
-    for (final diagnostic in [
-      ...set.findings,
-      if (set.outcome case skir.CheckOutcome_failedWrapper(:final value))
-        ...value,
-    ]) {
-      add(
-        RealmInboxIssue.savedFinding(
-          AuthoredFindingView(source: set, diagnostic: diagnostic),
-        ),
-      );
-    }
+  for (final issue in publication.savedIssues) {
+    add(issue);
   }
   final review = publication.review;
-  final notices = switch (review) {
-    skir.PublicationStatus_emptyWrapper(:final value) => value.notices,
-    skir.PublicationStatus_currentWrapper(:final value) => value.notices,
-    skir.PublicationStatus_readyWrapper(:final value) => value.notices,
-    skir.PublicationStatus_blockedWrapper(:final value) => value.notices,
-    skir.PublicationStatus_publishingWrapper(:final value) =>
-      value.next.notices,
-    _ => const <skir.PublicationNotice>[],
-  };
-  for (final notice in notices) {
-    if (notice is! skir.PublicationNotice_unknown) {
-      add(RealmInboxIssue.notice(notice));
-    }
-  }
-  if (review case skir.PublicationStatus_blockedWrapper(:final value)) {
-    for (final blocker in [
-      value.blockers.first,
-      ...value.blockers.additional,
-    ]) {
-      add(RealmInboxIssue.blocker(blocker.details));
-    }
-  }
-  if (review case skir.PublicationStatus_publishingWrapper(:final value)) {
-    for (final blocker in value.next.blockers) {
-      add(RealmInboxIssue.blocker(blocker.details));
-    }
-  }
   if (editing.working case final document?) {
     final changed = {
       for (final group in editing.groups.values)
@@ -279,33 +278,21 @@ RealmInboxState realmInbox(Ref ref, AuthoringScope scope) {
   );
 }
 
-/// Reuses the resource navigation registry for inbox destinations.
+/// Reveals the editor for the issue location.
 @riverpod
 Future<bool> openRealmInboxLocation(
   Ref ref,
   AuthoringScope scope,
   skir.ValueLocation location,
 ) async {
-  final document = ref.read(workingAuthoringDocumentProvider(scope)).value;
-  final resource = document?.entry(location.resource);
-  if (resource == null || document == null) return false;
-  final definition = document.catalog.snapshot.resourceDefinitions
-      .where((item) => item.id == resource.definition)
-      .firstOrNull;
-  final handler = definition?.navigationHandler;
-  return ref
-      .read(authoringResourceNavigationRegistryProvider)
-      .open(
-        ref,
-        handler,
-        OpenAuthoringResourceEffect(
-          organizationId: scope.organizationId,
-          realmId: scope.realmId,
-          resourceId: resource.id,
-          definition: resource.definition,
-          configuration: resource.content.configuration,
-          navigationHandler: handler,
-          location: location,
-        ),
-      );
+  // The inbox closes before navigation completes, so the operation owns its
+  // lifetime until resource selection and the field reveal have been requested.
+  final retention = ref.keepAlive();
+  try {
+    return await ref
+        .read(authoringResourceNavigationRegistryProvider)
+        .reveal(ref, scope, location);
+  } finally {
+    retention.close();
+  }
 }

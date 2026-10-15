@@ -183,12 +183,12 @@ CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
         skir.AuthoringResourceDefinition(
           id: skir.ResourceDefinitionId(value: "test.book"),
           root: book,
-          navigationHandler: "",
+          navigationHandler: skir.AuthoringNavigationHandler.generic,
         ),
         skir.AuthoringResourceDefinition(
           id: skir.ResourceDefinitionId(value: "test.entry"),
           root: entry,
-          navigationHandler: "",
+          navigationHandler: skir.AuthoringNavigationHandler.generic,
         ),
       ],
       presentations: const [],

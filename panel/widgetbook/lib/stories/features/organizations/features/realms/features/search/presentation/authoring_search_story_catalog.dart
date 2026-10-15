@@ -71,7 +71,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
           skir.AuthoringResourceDefinition(
             id: skir.ResourceDefinitionId(value: "widgetbook.${entry.key}"),
             root: entry.value,
-            navigationHandler: entry.key,
+            navigationHandler: skir.AuthoringNavigationHandler.generic,
           ),
       ],
       presentations: descriptors,

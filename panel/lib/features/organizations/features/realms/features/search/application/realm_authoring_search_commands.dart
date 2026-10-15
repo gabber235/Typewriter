@@ -16,15 +16,11 @@ List<SearchCommand> openAuthoringCommands(
     id: openAuthoringResourceCommandId,
     type: authoringResourceSearchResultType,
     effect: (value) => OpenAuthoringResourceEffect(
-      organizationId: organizationId,
-      realmId: realmId,
-      resourceId: value.id,
-      definition: value.definition,
-      configuration: value.configuration,
-      navigationHandler: value.catalog.snapshot.resourceDefinitions
-          .where((definition) => definition.id == value.definition)
-          .map((definition) => definition.navigationHandler)
-          .firstOrNull,
+      resource: AuthoringResourceIdentifier(
+        organizationId: organizationId,
+        realmId: realmId,
+        resourceId: value.id,
+      ),
     ),
   ),
 ];
@@ -46,12 +42,6 @@ abstract class OpenAuthoringResourceEffect
     with _$OpenAuthoringResourceEffect
     implements SearchHostEffect {
   const factory OpenAuthoringResourceEffect({
-    required skir.RecordId organizationId,
-    required skir.RecordId realmId,
-    required skir.ResourceId resourceId,
-    required skir.ResourceDefinitionId definition,
-    required skir.TypeSelection configuration,
-    required String? navigationHandler,
-    skir.ValueLocation? location,
+    required AuthoringResourceIdentifier resource,
   }) = _OpenAuthoringResourceEffect;
 }

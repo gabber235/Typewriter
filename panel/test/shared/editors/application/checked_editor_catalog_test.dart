@@ -922,7 +922,7 @@ _catalog() {
       skir.AuthoringResourceDefinition(
         id: skir.ResourceDefinitionId(value: "test.base"),
         root: base,
-        navigationHandler: "generic",
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
       ),
     ],
     presentations: [

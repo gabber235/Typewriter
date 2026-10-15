@@ -41,7 +41,7 @@ struct ResourceDefinitionId(810900001) {
 struct AuthoringResourceDefinition(810900002) {
   id: ResourceDefinitionId = 0;
   root: TypeDefinitionId = 1;
-  navigation_handler: string = 2;
+  navigation_handler: AuthoringNavigationHandler = 2;
 }
 
 enum RelationDeletePolicy(810900003) {
@@ -282,6 +282,14 @@ struct EndpointBindingTemplate(810900036) {
 struct TypeRecommendation(810900037) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
+}
+
+enum AuthoringNavigationHandler(810900038) {
+  generic = 1;
+  book = 2;
+  page = 3;
+  page_element = 4;
+  tags = 5;
 }
 
 method FetchEditorCatalog(

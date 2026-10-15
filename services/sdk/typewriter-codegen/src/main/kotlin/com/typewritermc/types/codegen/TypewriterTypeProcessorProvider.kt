@@ -162,7 +162,18 @@ private class TypewriterTypeProcessor(
     ) {
         val annotation = property.annotation(RESOURCE_DEFINITION_ANNOTATION) ?: return
         val id = annotation.argument("id") as? String
-        val navigation = annotation.argument("navigationHandler") as? String ?: "generic"
+        val navigationName =
+            (annotation.argument("navigationHandler") as? KSClassDeclaration)
+                ?.takeIf { it.classKind == ClassKind.ENUM_ENTRY }
+                ?.simpleName
+                ?.asString()
+        val navigation =
+            com.typewritermc.authoring.AuthoringNavigationHandler.entries
+                .singleOrNull { it.name == navigationName }
+        if (navigation == null) {
+            logger.error("Resource definitions require a supported navigation handler.", property)
+            return
+        }
         if (id.isNullOrBlank()) {
             logger.error("Resource definitions require a stable id.", property)
             return
@@ -184,7 +195,7 @@ object $objectName : com.typewritermc.discovery.GeneratedResourceProvider {
         com.typewritermc.authoring.AuthoringResourceDefinition(
             id = com.typewritermc.authoring.ResourceDefinitionId(${id.kotlinLiteral()}),
             root = ${root.typeDefinitionIdentity().kotlinCode()},
-            navigationHandler = ${navigation.kotlinLiteral()},
+            navigationHandler = com.typewritermc.authoring.AuthoringNavigationHandler.${navigation.name},
         )
 }
 """.trimStart()

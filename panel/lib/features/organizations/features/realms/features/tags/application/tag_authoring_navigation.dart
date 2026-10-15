@@ -5,31 +5,24 @@ final class TagAuthoringNavigationAdapter
   const TagAuthoringNavigationAdapter();
 
   @override
-  bool supports(String handler) => handler == "typewriter.tags";
+  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) async {
+    await reveal(ref, resource);
+    if (!ref.mounted) return;
+    ref.read(selectionProvider.notifier).select(resource);
+  }
 
   @override
-  Future<void> open(Ref ref, OpenAuthoringResourceEffect effect) async {
-    await ref
-        .read(appRouterProvider)
-        .navigate(
-          OrganizationRoute(
-            organizationId: effect.organizationId.id,
-            children: [
-              RealmRoute(
-                realmId: effect.realmId.id,
-                children: [const TagsRoute()],
-              ),
-            ],
-          ),
-        );
-    ref
-        .read(selectionProvider.notifier)
-        .select(
-          AuthoringResourceIdentifier(
-            organizationId: effect.organizationId,
-            realmId: effect.realmId,
-            resourceId: effect.resourceId,
-          ),
-        );
-  }
+  Future<void> reveal(Ref ref, AuthoringResourceIdentifier resource) => ref
+      .read(appRouterProvider)
+      .navigate(
+        OrganizationRoute(
+          organizationId: resource.organizationId.id,
+          children: [
+            RealmRoute(
+              realmId: resource.realmId.id,
+              children: [const TagsRoute()],
+            ),
+          ],
+        ),
+      );
 }

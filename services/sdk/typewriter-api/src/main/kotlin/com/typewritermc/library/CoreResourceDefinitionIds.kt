@@ -1,5 +1,6 @@
 package com.typewritermc.library
 
+import com.typewritermc.authoring.AuthoringNavigationHandler
 import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.authoring.TypewriterResourceDefinition
 import com.typewritermc.elements.Cue
@@ -13,18 +14,18 @@ private const val CUE_ID = "typewriter.cue"
 
 /** Stable ids of the resources supplied by the core library. */
 object CoreResourceDefinitionIds {
-    @TypewriterResourceDefinition(BOOK_ID, Book::class, "typewriter.book")
+    @TypewriterResourceDefinition(BOOK_ID, Book::class, AuthoringNavigationHandler.BOOK)
     val BOOK = ResourceDefinitionId(BOOK_ID)
 
-    @TypewriterResourceDefinition(TAG_ID, Tag::class, "typewriter.tags")
+    @TypewriterResourceDefinition(TAG_ID, Tag::class, AuthoringNavigationHandler.TAGS)
     val TAG = ResourceDefinitionId(TAG_ID)
 
-    @TypewriterResourceDefinition(PAGE_ID, Page::class, "typewriter.page")
+    @TypewriterResourceDefinition(PAGE_ID, Page::class, AuthoringNavigationHandler.PAGE)
     val PAGE = ResourceDefinitionId(PAGE_ID)
 
-    @TypewriterResourceDefinition(ELEMENT_ID, Element::class, "typewriter.page-element")
+    @TypewriterResourceDefinition(ELEMENT_ID, Element::class, AuthoringNavigationHandler.PAGE_ELEMENT)
     val ELEMENT = ResourceDefinitionId(ELEMENT_ID)
 
-    @TypewriterResourceDefinition(CUE_ID, Cue::class, "typewriter.page-element")
+    @TypewriterResourceDefinition(CUE_ID, Cue::class, AuthoringNavigationHandler.PAGE_ELEMENT)
     val CUE = ResourceDefinitionId(CUE_ID)
 }

@@ -180,7 +180,7 @@ _CreationFixture _fixture() {
       skir.AuthoringResourceDefinition(
         id: resourceDefinition,
         root: definition,
-        navigationHandler: "",
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
       ),
     ],
     presentations: const [],

@@ -132,7 +132,7 @@ class ResourceDefinitionId private constructor(
 sealed interface AuthoringResourceDefinition_OrMutable {
     val id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable;
     val root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
-    val navigationHandler: kotlin.String;
+    val navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler;
 
     fun toFrozen(): skirout.editor.v1.catalog.AuthoringResourceDefinition;
 }
@@ -142,7 +142,7 @@ sealed interface AuthoringResourceDefinition_OrMutable {
 class AuthoringResourceDefinition private constructor(
     override val id: skirout.editor.v1.catalog.ResourceDefinitionId,
     override val root: skirout.editor.v1.type_catalog.TypeDefinitionId,
-    override val navigationHandler: kotlin.String,
+    override val navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
         null,
 ): skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable {
@@ -151,7 +151,7 @@ class AuthoringResourceDefinition private constructor(
             _MustNameArguments,
         id: skirout.editor.v1.catalog.ResourceDefinitionId_OrMutable,
         root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable,
-        navigationHandler: kotlin.String,
+        navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
             null,
     ): this(
@@ -179,7 +179,7 @@ class AuthoringResourceDefinition private constructor(
             this.id,
         root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             this.root,
-        navigationHandler: kotlin.String =
+        navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
             this.navigationHandler,
     ) = skirout.editor.v1.catalog.AuthoringResourceDefinition(
         id.toFrozen(),
@@ -214,8 +214,8 @@ class AuthoringResourceDefinition private constructor(
             skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
         override var root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
             skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-        override var navigationHandler: kotlin.String =
-            "",
+        override var navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.AuthoringResourceDefinition>? =
             null,
     ): skirout.editor.v1.catalog.AuthoringResourceDefinition_OrMutable {
@@ -265,7 +265,7 @@ class AuthoringResourceDefinition private constructor(
             skirout.editor.v1.catalog.AuthoringResourceDefinition(
                 skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
                 skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-                "",
+                skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -283,8 +283,8 @@ class AuthoringResourceDefinition private constructor(
                 skirout.editor.v1.catalog.ResourceDefinitionId.partial(),
             root: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable =
                 skirout.editor.v1.type_catalog.TypeDefinitionId.partial(),
-            navigationHandler: kotlin.String =
-                "",
+            navigationHandler: skirout.editor.v1.catalog.AuthoringNavigationHandler =
+                skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
         ) = skirout.editor.v1.catalog.AuthoringResourceDefinition(
             id = id,
             root = root,
@@ -5951,6 +5951,119 @@ class TypeRecommendation private constructor(
     }
 }
 
+/** Deeply immutable. */
+sealed class AuthoringNavigationHandler private constructor() {
+    /** The kind of variant held by a `AuthoringNavigationHandler`. */
+    enum class Kind {
+        UNKNOWN,
+        GENERIC_CONST,
+        BOOK_CONST,
+        PAGE_CONST,
+        PAGE_ELEMENT_CONST,
+        TAGS_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.AuthoringNavigationHandler>?,
+    ) : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object GENERIC : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = Kind.GENERIC_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.GENERIC_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.GENERIC_CONST.ordinal;
+        }
+    }
+
+    object BOOK : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = Kind.BOOK_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.BOOK_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.BOOK_CONST.ordinal;
+        }
+    }
+
+    object PAGE : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = Kind.PAGE_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.PAGE_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PAGE_CONST.ordinal;
+        }
+    }
+
+    object PAGE_ELEMENT : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = Kind.PAGE_ELEMENT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.PAGE_ELEMENT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.PAGE_ELEMENT_CONST.ordinal;
+        }
+    }
+
+    object TAGS : skirout.editor.v1.catalog.AuthoringNavigationHandler() {
+        override val kind get() = Kind.TAGS_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.AuthoringNavigationHandler && other.kind == Kind.TAGS_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.TAGS_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.AuthoringNavigationHandler>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.AuthoringNavigationHandlerSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [AuthoringNavigationHandler].
+         * Default value for fields of type [AuthoringNavigationHandler].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [AuthoringNavigationHandler] instances. */
+        val serializer get() = _SerializerRegistry.AuthoringNavigationHandlerSerializer;
+
+        /** Describes the [AuthoringNavigationHandler] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.AuthoringNavigationHandlerSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface WatchEditorCatalogRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.WatchEditorCatalogRequest;
 }
@@ -6071,6 +6184,19 @@ val PrepareValue: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
+    val AuthoringNavigationHandlerSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.AuthoringNavigationHandler, skirout.editor.v1.catalog.AuthoringNavigationHandler.Unknown>(
+            recordId = "editor/v1/catalog.skir:AuthoringNavigationHandler",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.values().size,
+            unknownInstance = skirout.editor.v1.catalog.AuthoringNavigationHandler.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.AuthoringNavigationHandler.Unknown(skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val AuthoringNavigationHandlerSerializer = build.skir.internal.makeSerializer(AuthoringNavigationHandlerSerializerImpl);
+
     val AuthoringResourceDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:AuthoringResourceDefinition",
         doc = "",
@@ -6541,6 +6667,43 @@ private object _SerializerRegistry {
     val WatchEditorCatalogRequestSerializer = build.skir.internal.makeSerializer(WatchEditorCatalogRequestSerializerImpl);
 
     init {
+        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
+            1,
+            "generic",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.GENERIC_CONST.ordinal,
+            "",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.GENERIC,
+        );
+        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
+            2,
+            "book",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.BOOK_CONST.ordinal,
+            "",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.BOOK,
+        );
+        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
+            3,
+            "page",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.PAGE_CONST.ordinal,
+            "",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.PAGE,
+        );
+        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
+            4,
+            "page_element",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.PAGE_ELEMENT_CONST.ordinal,
+            "",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.PAGE_ELEMENT,
+        );
+        AuthoringNavigationHandlerSerializerImpl.addConstantVariant(
+            5,
+            "tags",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.Kind.TAGS_CONST.ordinal,
+            "",
+            skirout.editor.v1.catalog.AuthoringNavigationHandler.TAGS,
+        );
+        AuthoringNavigationHandlerSerializerImpl.finalizeEnum();
+
         AuthoringResourceDefinitionSerializerImpl.addField(
             "id",
             "id",
@@ -6563,7 +6726,7 @@ private object _SerializerRegistry {
             "navigation_handler",
             "navigationHandler",
             2,
-            build.skir.Serializers.string,
+            _SerializerRegistry.AuthoringNavigationHandlerSerializer,
             "",
             { it.navigationHandler },
             { mut, v -> mut.navigationHandler = v },

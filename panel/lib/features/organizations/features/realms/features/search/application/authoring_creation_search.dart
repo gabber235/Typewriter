@@ -148,23 +148,13 @@ SearchCommand createAuthoringResourceCommand({
           ),
     );
     if (created == null) return const SearchCommandResult.cancelled();
-    final catalog = ref
-        .read(workingAuthoringDocumentProvider(created.scope))
-        .value
-        ?.catalog;
-    final navigationHandler = catalog?.snapshot.resourceDefinitions
-        .where((definition) => definition.id == created.definition)
-        .map((definition) => definition.navigationHandler)
-        .firstOrNull;
     return SearchCommandResult.completed(
       hostEffects: [
         OpenAuthoringResourceEffect(
-          organizationId: created.scope.organizationId,
-          realmId: created.scope.realmId,
-          resourceId: created.id,
-          definition: created.definition,
-          configuration: created.content.configuration,
-          navigationHandler: navigationHandler,
+          resource: AuthoringResourceIdentifier.inScope(
+            created.scope,
+            created.id,
+          ),
         ),
       ],
     );

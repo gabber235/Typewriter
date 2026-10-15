@@ -566,11 +566,15 @@ CheckedEditorCatalog authoringFixtureCatalog({
       types: types,
       relations: relations,
       resourceDefinitions: [
-        for (final kind in ["tag", "book", "page"])
+        for (final (kind, handler) in [
+          ("tag", skir.AuthoringNavigationHandler.tags),
+          ("book", skir.AuthoringNavigationHandler.book),
+          ("page", skir.AuthoringNavigationHandler.page),
+        ])
           skir.AuthoringResourceDefinition(
             id: skir.ResourceDefinitionId(value: "typewriter.$kind"),
             root: _definition(kind),
-            navigationHandler: "typewriter.$kind",
+            navigationHandler: handler,
           ),
       ],
       presentations: descriptors,

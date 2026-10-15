@@ -1,5 +1,6 @@
 package com.typewritermc.types.skir
 
+import com.typewritermc.authoring.AuthoringNavigationHandler
 import com.typewritermc.authoring.AuthoringResourceDefinition
 import com.typewritermc.authoring.InitializationDescriptor
 import com.typewritermc.authoring.PathSegment
@@ -57,6 +58,7 @@ import skirout.editor.v1.capability.CapabilityDefinition as SkirCapabilityDefini
 import skirout.editor.v1.capability.CommandCapabilityDefinition as SkirCommandCapabilityDefinition
 import skirout.editor.v1.capability.ComputationCapabilityDefinition as SkirComputationCapabilityDefinition
 import skirout.editor.v1.capability.SearchCapabilityDefinition as SkirSearchCapabilityDefinition
+import skirout.editor.v1.catalog.AuthoringNavigationHandler as SkirAuthoringNavigationHandler
 import skirout.editor.v1.catalog.AuthoringResourceDefinition as SkirAuthoringResourceDefinition
 import skirout.editor.v1.catalog.ConfigurationRecipe as SkirConfigurationRecipe
 import skirout.editor.v1.catalog.DeclarationStatus as SkirDeclarationStatus
@@ -670,7 +672,14 @@ private fun ConversionScope.encode(resource: AuthoringResourceDefinition) =
             skirout.editor.v1.catalog
                 .ResourceDefinitionId(value = resource.id.value),
         root = encodeDefinitionId(resource.root),
-        navigationHandler = resource.navigationHandler,
+        navigationHandler =
+            when (resource.navigationHandler) {
+                AuthoringNavigationHandler.GENERIC -> SkirAuthoringNavigationHandler.GENERIC
+                AuthoringNavigationHandler.BOOK -> SkirAuthoringNavigationHandler.BOOK
+                AuthoringNavigationHandler.PAGE -> SkirAuthoringNavigationHandler.PAGE
+                AuthoringNavigationHandler.PAGE_ELEMENT -> SkirAuthoringNavigationHandler.PAGE_ELEMENT
+                AuthoringNavigationHandler.TAGS -> SkirAuthoringNavigationHandler.TAGS
+            },
     )
 
 private fun ConversionScope.encode(presentation: PresentationDescriptor) =

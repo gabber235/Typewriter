@@ -306,7 +306,7 @@ _PageFixture _pageFixture() {
       skir.AuthoringResourceDefinition(
         id: skir.ResourceDefinitionId(value: "typewriter.cue"),
         root: cueType,
-        navigationHandler: "story.cue",
+        navigationHandler: skir.AuthoringNavigationHandler.generic,
       ),
     ],
     presentations: [for (final item in inspectorPresentations) item.$1],
