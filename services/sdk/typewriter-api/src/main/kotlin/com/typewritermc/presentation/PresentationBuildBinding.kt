@@ -200,6 +200,7 @@ interface Layout :
 
     fun section(
         border: PresentationBorder? = null,
+        header: HeaderScope.() -> Unit = {},
         body: Layout.() -> Unit,
     )
 
@@ -281,10 +282,32 @@ data class PresentationInsets(
     val bottom: Double,
 )
 
-data class PresentationBorder(
-    val width: Double,
-    val color: PresentationColor,
-)
+sealed interface PresentationBorder {
+    data class All(
+        val width: Double,
+        val color: PresentationColor,
+    ) : PresentationBorder {
+        init {
+            require(width.isFinite() && width >= 0) { "Border width must be finite and nonnegative." }
+        }
+    }
+
+    data class Sides(
+        val top: Side? = null,
+        val start: Side? = null,
+        val end: Side? = null,
+        val bottom: Side? = null,
+    ) : PresentationBorder
+
+    data class Side(
+        val width: Double,
+        val color: PresentationColor,
+    ) {
+        init {
+            require(width.isFinite() && width >= 0) { "Border width must be finite and nonnegative." }
+        }
+    }
+}
 
 data class ContainerStyle(
     val background: PresentationColor? = null,

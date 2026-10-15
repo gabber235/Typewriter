@@ -444,7 +444,7 @@ private fun AxisChild.sectionTitle(): String {
 }
 
 private fun AxisChild.sectionContent(): PresentationNode {
-    val section = node().element as PresentationElement.SectionWrapper
+    val section = node().visibleSection().element as PresentationElement.SectionWrapper
     val column =
         section.value.child
             .singleFixed()
@@ -455,21 +455,55 @@ private fun AxisChild.sectionContent(): PresentationNode {
 }
 
 private fun AxisChild.sectionNode(): PresentationNode {
-    val section = node().element as PresentationElement.SectionWrapper
+    val section = node().visibleSection().element as PresentationElement.SectionWrapper
     return section.value.child.singleFixed()
 }
+
+private fun PresentationNode.visibleSection(): PresentationNode =
+    when (val element = element) {
+        is PresentationElement.ConditionalWrapper -> element.value.whenTrue.singleFixed()
+        else -> this
+    }
 
 private fun PresentationNode.collectionGraphSource(): String {
     val graph = element as PresentationElement.CollectionGraphWrapper
     graph.value.relationId shouldBe "parents"
-    (graph.value.rootSequence.layout is skirout.editor.v1.presentation.SequenceLayout.HierarchyWrapper) shouldBe true
-    (graph.value.children.layout is skirout.editor.v1.presentation.SequenceLayout.HierarchyWrapper) shouldBe true
+    val roots = graph.value.rootSequence.layout as skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper
+    val rootColumn = roots.value as skirout.editor.v1.presentation.ChildrenLayout.ColumnWrapper
+    rootColumn.value.spacing shouldBe 12.0
+    rootColumn.value.crossAxisAlignment shouldBe skirout.editor.v1.presentation.CrossAxisAlignment.STRETCH
+    val hierarchy = (graph.value.children.layout as skirout.editor.v1.presentation.SequenceLayout.HierarchyWrapper).value
+    hierarchy.crossAxisAlignment shouldBe skirout.editor.v1.presentation.CrossAxisAlignment.STRETCH
+    hierarchy.itemAnchor shouldBe skirout.editor.v1.presentation.ConnectorAnchor.CENTER
+    val trunk = hierarchy.trunkConnector.stroke.color as skirout.editor.v1.presentation.PresentationColor.ValueWrapper
+    val branch = hierarchy.branchConnector.stroke.color as skirout.editor.v1.presentation.PresentationColor.ValueWrapper
+    (trunk != hierarchy.unaryConnector.stroke.color) shouldBe true
+    (trunk != branch) shouldBe true
     graph.value.children.empty shouldBe null
-    val emptyText =
-        requireNotNull(graph.value.rootSequence.empty)
-            .element as PresentationElement.TextWrapper
-    val emptyLiteral = emptyText.value.value as skirout.editor.v1.expression.ExpressionNode.LiteralWrapper
-    (emptyLiteral.value as skirout.editor.v1.type_catalog.DataValue.StringValueWrapper).value shouldBe "No linked items"
+    graph.value.rootSequence.empty shouldBe null
+    val branchConditional =
+        graph.value.node
+            .singleFixed()
+            .singleFixed()
+            .element as PresentationElement.ConditionalWrapper
+    val branchSection =
+        branchConditional.value.whenTrue
+            .singleFixed()
+            .singleFixed()
+    branchSection.header?.initiallyExpanded shouldBe false
+    (branchSection.header?.title is PresentationHeaderTitle.PresentationWrapper) shouldBe true
+    val branchBorder = (branchSection.element as PresentationElement.SectionWrapper).value.border
+    val border = branchBorder as skirout.editor.v1.presentation.PresentationBorder.SidesWrapper
+    border.value.start?.width shouldBe 4.0
+    border.value.top shouldBe null
+    border.value.end shouldBe null
+    border.value.bottom shouldBe null
+    val title = (branchSection.header!!.title as PresentationHeaderTitle.PresentationWrapper).value
+    val card = (title.singleFixed().element as PresentationElement.ContainerWrapper).value
+    val tint = card.backgroundColor as skirout.editor.v1.presentation.PresentationColor.AlphaWrapper
+    tint.value.alpha shouldBe 46.0 / 255.0
+    val cardBorder = card.border as skirout.editor.v1.presentation.PresentationBorder.AllWrapper
+    cardBorder.value.width shouldBe 1.0
     return graph.value.sourceId
 }
 

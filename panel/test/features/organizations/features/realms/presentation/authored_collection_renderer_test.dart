@@ -123,6 +123,240 @@ void main() {
     },
   );
 
+  testWidgets(
+    "shared inheritance paths keep independent disclosure after reorder",
+    (tester) async {
+      final fixture = _fixture(
+        graph: {
+          "tag:one": ["Shared"],
+          "tag:two": ["Shared"],
+          "Shared": ["Leaf1", "Leaf2"],
+          "Leaf1": [],
+          "Leaf2": [],
+        },
+      );
+      final node = _graphNode(disclosure: true);
+      final ownerBinding = skir.ExpressionBindingId(value: "invocation.owner");
+      PortablePresentationScope scope(
+        List<String> roots, {
+        String ownerPath = "first",
+        String content = "initial",
+      }) {
+        final base = fixture.scope.withValues({_rootsBinding: _keys(roots)});
+        return base.copyWith(
+          bindings: {
+            ...base.bindings,
+            ownerBinding: PortableExpressionBinding(
+              value: skir.DataValue.wrapStringValue(content),
+              location: skir.ValueLocation(
+                resource: skir.ResourceId(value: "tag:one"),
+                path: skir.ValuePath(
+                  segments: [skir.PathSegment.createField(name: ownerPath)],
+                ),
+              ),
+            ),
+          },
+        );
+      }
+
+      await _pump(tester, node, scope(["tag:one", "tag:two"]));
+      await tester.tap(find.text("Alpha"));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text("Beta"));
+      await tester.pumpAndSettle();
+      expect(find.text("Shared"), findsNWidgets(2));
+      await tester.tap(find.text("Shared").first);
+      await tester.pumpAndSettle();
+      expect(find.text("Leaf1"), findsOneWidget);
+      expect(find.text("Leaf2"), findsOneWidget);
+
+      await _pump(tester, node, scope(["tag:two", "tag:one"]));
+      await tester.pumpAndSettle();
+      expect(find.text("Shared"), findsNWidgets(2));
+      expect(find.text("Leaf1"), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text("Leaf1")).dy,
+        greaterThan(tester.getTopLeft(find.text("Alpha")).dy),
+      );
+      await tester.tap(find.text("Shared").first);
+      await tester.pumpAndSettle();
+      expect(find.text("Leaf1"), findsNWidgets(2));
+      await _pump(
+        tester,
+        node,
+        scope(["tag:two", "tag:one"], content: "edited"),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text("Leaf1"), findsNWidgets(2));
+      await _pump(
+        tester,
+        node,
+        scope(["tag:two", "tag:one"], ownerPath: "second"),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text("Shared"), findsNothing);
+    },
+  );
+
+  testWidgets(
+    "graph deduplicates siblings and roots but preserves shared paths",
+    (tester) async {
+      final fixture = _fixture(
+        graph: {
+          "tag:one": ["Shared", "Shared"],
+          "tag:two": ["Shared"],
+          "Shared": ["tag:one"],
+        },
+      );
+      await _pump(
+        tester,
+        _graphNode(),
+        fixture.scope.withValues({
+          _rootsBinding: _keys(["tag:one", "tag:two", "tag:one"]),
+        }),
+      );
+      expect(find.text("Alpha"), findsNWidgets(2));
+      expect(find.text("Beta"), findsOneWidget);
+      expect(find.text("Shared"), findsNWidgets(2));
+      await tester.pump();
+      expect(find.text("Shared"), findsNWidgets(2));
+    },
+  );
+
+  testWidgets(
+    "graph bounds occurrences visibly and keeps depth and reverse traversal",
+    (tester) async {
+      final fixture = _fixture(
+        graph: {
+          "tag:one": ["tag:two"],
+          "tag:two": ["Shared"],
+          "Shared": [],
+        },
+      );
+      await _pump(tester, _graphNode(maximumDepth: 1), fixture.scope);
+      expect(find.text("Alpha"), findsOneWidget);
+      expect(find.text("Beta"), findsOneWidget);
+      expect(find.text("Shared"), findsNothing);
+
+      await _pump(
+        tester,
+        _graphNode(direction: skir.CollectionGraphDirection.reverse),
+        fixture.scope.withValues({
+          _rootsBinding: _keys(["Shared"]),
+        }),
+      );
+      expect(find.text("Alpha"), findsOneWidget);
+      expect(find.text("Beta"), findsOneWidget);
+      expect(find.text("Shared"), findsOneWidget);
+
+      await _pump(
+        tester,
+        _graphNode(),
+        fixture.scope.copyWith(
+          budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 2),
+        ),
+      );
+      expect(find.text("Alpha"), findsOneWidget);
+      expect(find.text("Beta"), findsOneWidget);
+      expect(find.text("Shared"), findsNothing);
+      expect(
+        find.text("The collection graph occurrence limit was reached"),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    "hierarchy resolves trunk in owner scope and branches in item scopes",
+    (tester) async {
+      final fixture = _fixture(
+        graph: {
+          "tag:one": ["tag:two", "Shared"],
+          "tag:two": [],
+          "Shared": [],
+        },
+      );
+      final color = skir.PresentationColor.wrapValue(
+        skir.ExpressionNode.createConditional(
+          test: skir.ExpressionNode.createCall(
+            operation: skir.OperationId(value: "typewriter.value.eq"),
+            arguments: [
+              _read(_rowBinding, "name"),
+              skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapStringValue("Alpha"),
+              ),
+            ],
+          ),
+          yes: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4294901760"),
+          ),
+          no: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4278190335"),
+          ),
+        ),
+      );
+      final connector = skir.ConnectorStyle(
+        stroke: skir.ConnectorStroke(color: color, width: _number(2)),
+        cornerRadius: _number(8),
+        startMarker: null,
+        endMarker: null,
+      );
+      await _pump(
+        tester,
+        _graphNode(
+          childrenLayout: skir.SequenceLayout.createHierarchy(
+            unaryConnector: connector,
+            trunkConnector: connector,
+            branchConnector: connector,
+            itemSpacing: _number(24),
+            indentation: _number(16),
+            leadingSpacing: _number(16),
+            itemAnchor: skir.ConnectorAnchor.center,
+            flattenSingleItem: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapBoolean(true),
+            ),
+            crossAxisAlignment: skir.CrossAxisAlignment.stretch,
+          ),
+        ),
+        fixture.scope,
+      );
+      await tester.pumpAndSettle();
+      final surface = find.byWidgetPredicate(
+        (widget) => widget.runtimeType.toString() == "_HierarchyRenderSurface",
+      );
+      expect(surface, findsOneWidget);
+      final strokes =
+          (tester.renderObject(surface) as dynamic).debugStrokes as List;
+      expect(strokes, hasLength(3));
+      expect((strokes.first as dynamic).color, const Color(0xffff0000));
+      expect((strokes[1] as dynamic).color, const Color(0xff0000ff));
+      expect((strokes[2] as dynamic).color, const Color(0xff0000ff));
+    },
+  );
+
+  testWidgets("graph rejects wrongly typed roots and ambiguous keys", (
+    tester,
+  ) async {
+    final fixture = _fixture();
+    await _pump(
+      tester,
+      _graphNode(),
+      fixture.scope.withValues({
+        _rootsBinding: skir.DataValue.wrapInteger("1"),
+      }),
+    );
+    expect(
+      find.text("A collection graph root has the wrong key type"),
+      findsOneWidget,
+    );
+    final duplicate = _fixture(projected: true, duplicateKey: true);
+    await _pump(tester, _graphNode(), duplicate.scope);
+    expect(
+      find.text("The collection graph contains an ambiguous key"),
+      findsOneWidget,
+    );
+  });
+
   testWidgets("projected collection uses its authored custom key", (
     tester,
   ) async {
@@ -404,6 +638,7 @@ _fixture({
   bool cycle = false,
   bool projected = false,
   bool duplicateKey = false,
+  Map<String, List<String>>? graph,
 }) {
   final type = _definition("Tag");
   final list = _definition("List");
@@ -496,16 +731,31 @@ _fixture({
   final two = skir.ResourceId(value: "tag:two");
   final snapshot = skir.AuthoringState(
     generation: generation,
-    resources: [
-      _resource(one, type, listOfText, "Alpha", [two]),
-      _resource(
-        two,
-        type,
-        listOfText,
-        duplicateKey ? "Alpha" : "Beta",
-        cycle ? [one] : const [],
-      ),
-    ],
+    resources: graph == null
+        ? [
+            _resource(one, type, listOfText, "Alpha", [two]),
+            _resource(
+              two,
+              type,
+              listOfText,
+              duplicateKey ? "Alpha" : "Beta",
+              cycle ? [one] : const [],
+            ),
+          ]
+        : [
+            for (final entry in graph.entries)
+              _resource(
+                skir.ResourceId(value: entry.key),
+                type,
+                listOfText,
+                switch (entry.key) {
+                  "tag:one" => "Alpha",
+                  "tag:two" => "Beta",
+                  _ => entry.key,
+                },
+                [for (final key in entry.value) skir.ResourceId(value: key)],
+              ),
+          ],
     links: const [],
     findings: const [],
   );
@@ -614,6 +864,83 @@ _fixture({
     ),
   );
 }
+
+skir.PresentationNode _graphNode({
+  bool disclosure = false,
+  int maximumDepth = 8,
+  skir.CollectionGraphDirection direction =
+      skir.CollectionGraphDirection.forward,
+  skir.SequenceLayout? childrenLayout,
+}) {
+  final childSlot = _slotNode("child.slot", "graph.child");
+  return skir.PresentationNode(
+    nodeId: "graph",
+    properties: skir.PresentationProperties.defaultInstance,
+    element: skir.PresentationElement.createCollectionGraph(
+      sourceId: "tags",
+      roots: skir.ExpressionNode.createRead(
+        binding: _rootsBinding,
+        path: skir.ValuePath(segments: const []),
+      ),
+      rootSequence: _sequence(_slotNode("root.slot", "graph.root")),
+      relationId: "next",
+      direction: direction,
+      maximumDepth: maximumDepth,
+      node: skir.PresentationNode(
+        nodeId: "graph.node",
+        properties: skir.PresentationProperties.defaultInstance,
+        element: skir.PresentationElement.wrapChildren(
+          skir.ChildrenElement.createColumn(
+            children: [
+              if (!disclosure)
+                skir.AxisChild.wrapFixed(
+                  _textNode("graph.name", _read(_rowBinding, "name")),
+                ),
+              skir.AxisChild.wrapFixed(childSlot),
+            ],
+            layout: skir.AxisChildrenLayout(
+              spacing: 0,
+              mainAxisAlignment: skir.MainAxisAlignment.start,
+              crossAxisAlignment: skir.CrossAxisAlignment.start,
+            ),
+          ),
+        ),
+        header: disclosure
+            ? skir.PresentationHeader(
+                binding: null,
+                title: skir.PresentationHeaderTitle.wrapText(
+                  _read(_rowBinding, "name"),
+                ),
+                description: null,
+                initiallyExpanded: false,
+                items: const [],
+                headerPadding: null,
+                contentPadding: null,
+              )
+            : null,
+      ),
+      childrenBindingId: _childrenBinding,
+      childBindingId: _childBinding,
+      children: skir.SequencePresentation(
+        item: childSlot,
+        empty: null,
+        separator: null,
+        layout: childrenLayout ?? _sequence(childSlot).layout,
+      ),
+    ),
+    header: null,
+  );
+}
+
+skir.DataValue _keys(List<String> values) => skir.DataValue.createListValue(
+  items: [
+    for (final (index, value) in values.indexed)
+      skir.ListItem(
+        id: skir.ItemId(value: "root:$index"),
+        value: skir.DataValue.wrapStringValue(value),
+      ),
+  ],
+);
 
 skir.AuthoringResource _resource(
   skir.ResourceId id,
@@ -758,3 +1085,6 @@ final _nestedLookupBinding = skir.ExpressionBindingId(
 final _rootsBinding = skir.ExpressionBindingId(value: "graph.roots");
 final _childrenBinding = skir.ExpressionBindingId(value: "graph.children");
 final _childBinding = skir.ExpressionBindingId(value: "graph.child");
+
+skir.ExpressionNode _number(double value) =>
+    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));

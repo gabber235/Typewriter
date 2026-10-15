@@ -1,7 +1,6 @@
 package com.typewritermc.library
 
 import com.typewritermc.authoring.PlacementSdkProvider
-import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
@@ -48,17 +47,7 @@ object TagInspectorPresentation : TagPresentation {
             inspectorSection("parents", "Direct Parents", input = parents.input) {
                 parents { collectionInput { items { linkInput() } } }
             }
-            inspectorSection("inheritance", "Inheritance") {
-                collectionGraph(tagOptions) {
-                    roots(
-                        expressions.parents
-                            .map { target }
-                            .orElse(emptyListExpression()),
-                    )
-                    relation("parents")
-                    node { tagGraphNode() }
-                }
-            }
+            tagInheritanceSection("inheritance", "Inheritance", tagOptions, expressions.parents.map { target })
             inspectorSection("placement", "Placement", input = placement.input) {
                 placement(using = PlacementSdkProvider)
             }
@@ -114,7 +103,7 @@ private fun TagPresentationScope.tagGraphSurface(body: Layout.() -> Unit) {
         ContainerStyle(
             background = background,
             foreground = foreground,
-            border = PresentationBorder(width = 2.0, color = outline),
+            border = PresentationBorder.All(width = 2.0, color = outline),
             radius = PresentationRadius.Large,
             transitionMilliseconds = 100,
         ),

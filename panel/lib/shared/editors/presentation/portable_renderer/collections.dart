@@ -112,16 +112,14 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
     final adjacency = element.direction == skir.CollectionGraphDirection.reverse
         ? reverse
         : forward;
-    final rootRows = <_AuthoredCollectionRow>[];
-    final seen = <String>{};
+    final rootKeys = <String>[];
     for (final root in _collectionKeyValues(roots)) {
       if (collection.rows.firstOrNull case final first?
           when !_sameCollectionKeyType(first.key, root)) {
         return _diagnostic("A collection graph root has the wrong key type");
       }
       final canonical = canonicalAuthoredValue(root);
-      final row = rowsByKey[canonical];
-      if (row != null && seen.add(canonical)) rootRows.add(row);
+      rootKeys.add(canonical);
     }
     final rootSlot = _slotId(element.rootSequence.item);
     final childSlot = _slotId(element.children.item);
@@ -130,14 +128,46 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
     }
     final maximumDepth = element.maximumDepth ?? collection.rows.length;
 
-    Widget renderNode(_AuthoredCollectionRow row, int depth) {
-      final children = <_AuthoredCollectionRow>[];
-      if (depth < maximumDepth) {
-        for (final key in adjacency[row.canonicalKey] ?? const <String>[]) {
-          final child = rowsByKey[key];
-          if (child != null && seen.add(key)) children.add(child);
-        }
-      }
+    final projection = _projectCollectionGraph(
+      roots: rootKeys,
+      adjacency: adjacency,
+      availableKeys: rowsByKey.keys.toSet(),
+      maximumDepth: maximumDepth,
+      maximumOccurrences: childScope.budget.maxCollectionItems,
+    );
+    final graphIdentity = (
+      childScope.material?.provider,
+      childScope.resource,
+      element.sourceId,
+      node.nodeId,
+    );
+
+    // Follow invocation ownership without resetting disclosure on value edits.
+    final invocationIdentity = <skir.ExpressionBindingId, Object>{
+      for (final id in {
+        ...childScope.bindings.keys,
+        ...childScope.authoredAliases.keys,
+      })
+        if (childScope.bindings[id]?.location != null ||
+            childScope.authoredAliases[id] != null)
+          id: (
+            childScope.bindings[id]?.location,
+            childScope.authoredAliases[id],
+          ),
+    };
+    final rootsByKey = {
+      for (final occurrence in projection.roots)
+        occurrence.canonicalKey: occurrence,
+    };
+
+    Widget renderNode(_CollectionGraphOccurrence occurrence) {
+      final row = rowsByKey[occurrence.canonicalKey]!;
+      final occurrencesByKey = {
+        for (final child in occurrence.children) child.canonicalKey: child,
+      };
+      final children = [
+        for (final key in occurrencesByKey.keys) rowsByKey[key]!,
+      ];
       final childValues = skir.DataValue.createListValue(
         items: [
           for (final child in children)
@@ -168,22 +198,41 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
           childSlot: (_) => _renderCollectionSequence(
             element.children,
             children,
-            (child) => renderNode(child, depth + 1),
+            (child) => renderNode(occurrencesByKey[child.canonicalKey]!),
             element.childBindingId,
             childSlot,
             nodeScope,
+            itemKey: (child) => _CollectionGraphOccurrenceKey(
+              graph: graphIdentity,
+              invocation: invocationIdentity,
+              path: [...occurrence.path, child.canonicalKey],
+            ),
           ),
         }),
       );
     }
 
-    return _renderCollectionSequence(
+    final rendered = _renderCollectionSequence(
       element.rootSequence,
-      rootRows,
-      (row) => renderNode(row, 0),
+      [for (final root in projection.roots) rowsByKey[root.canonicalKey]!],
+      (row) => renderNode(rootsByKey[row.canonicalKey]!),
       collection.definition!.rowBindingId,
       rootSlot,
       childScope,
+      itemKey: (row) => _CollectionGraphOccurrenceKey(
+        graph: graphIdentity,
+        invocation: invocationIdentity,
+        path: [row.canonicalKey],
+      ),
+    );
+    if (!projection.truncated) return rendered;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        rendered,
+        _diagnostic("The collection graph occurrence limit was reached"),
+      ],
     );
   }
 
@@ -193,8 +242,9 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
     Widget Function(_AuthoredCollectionRow row) content,
     skir.ExpressionBindingId itemBinding,
     String slot,
-    PortablePresentationScope fallbackScope,
-  ) {
+    PortablePresentationScope fallbackScope, {
+    required Object Function(_AuthoredCollectionRow row) itemKey,
+  }) {
     if (rows.isEmpty) {
       final empty = sequence.empty;
       return empty == null
@@ -224,14 +274,18 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
           )
           .withSlotBuilders({slot: (_) => content(row)});
       children.add(
-        PortablePresentationNodeRenderer(node: sequence.item, scope: scope),
+        PortablePresentationNodeRenderer(
+          key: ValueKey(itemKey(row)),
+          node: sequence.item,
+          scope: scope,
+        ),
       );
       itemScopes.add(scope);
     }
     return _renderSequence(
       children,
       sequence.layout,
-      rows.first.scope,
+      fallbackScope,
       itemScopes: itemScopes,
     );
   }

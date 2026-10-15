@@ -675,6 +675,43 @@ interface LookupScope<Row> {
 
 enum class CollectionDirection { Forward, Reverse }
 
+enum class ConnectorAnchor { Start, Center }
+
+/** Arranges graph occurrences without changing their traversal or content. */
+interface SequenceLayoutScope {
+    fun column(
+        spacing: Double = 0.0,
+        cross: CrossAxisAlignment = CrossAxisAlignment.Start,
+    )
+
+    fun hierarchy(
+        unaryConnector: ConnectorStyle,
+        trunkConnector: ConnectorStyle,
+        branchConnector: ConnectorStyle,
+        itemSpacing: Double = 24.0,
+        indentation: Double = 16.0,
+        leadingSpacing: Double = 16.0,
+        itemAnchor: ConnectorAnchor = ConnectorAnchor.Center,
+        flattenSingleItem: Boolean = true,
+        cross: CrossAxisAlignment = CrossAxisAlignment.Stretch,
+    )
+}
+
+interface GraphRootSequenceScope<Row> : SequenceLayoutScope {
+    /** The root occurrence for per item styling; shared trunk styling uses the sequence owner scope. */
+    val item: Expr<Row, MayBeMissing>
+
+    fun empty(body: Layout.() -> Unit)
+}
+
+interface GraphChildrenSequenceScope<Row> : SequenceLayoutScope {
+    /** The owner of this child sequence, used for shared trunk styling. */
+    val parent: Expr<Row, MayBeMissing>
+
+    /** The individual child occurrence, used for unary and branch styling. */
+    val item: Expr<Row, MayBeMissing>
+}
+
 interface GraphNodeScope<Row> : Layout {
     val row: Expr<Row, MayBeMissing>
 
@@ -684,13 +721,19 @@ interface GraphNodeScope<Row> : Layout {
 }
 
 interface GraphScope<Row, Key> {
+    /** Configures independent roots. Unspecified sequences use a plain column. */
+    fun rootSequence(body: GraphRootSequenceScope<Row>.() -> Unit)
+
+    /** Configures each node's descendants independently of its root layout. */
+    fun childrenSequence(body: GraphChildrenSequenceScope<Row>.() -> Unit)
+
     fun root(binding: PresentationInput<Key, *>)
 
     fun roots(binding: PresentationInput<List<Key>, *>)
 
-    fun root(value: Expr<Key, Handled>)
+    fun root(value: Expr<Key, MayBeMissing>)
 
-    fun roots(value: Expr<List<Key>, Handled>)
+    fun roots(value: Expr<List<Key>, MayBeMissing>)
 
     fun relation(
         id: String,

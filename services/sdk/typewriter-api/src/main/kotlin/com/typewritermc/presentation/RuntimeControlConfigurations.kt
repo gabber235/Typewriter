@@ -102,7 +102,6 @@ internal class RuntimeTextEntryAppearance(
     }
 
     override fun border(value: PresentationBorder) {
-        require(value.width.isFinite() && value.width >= 0) { "Border width must be finite and nonnegative." }
         target.border = WireBorderOverride.ValueWrapper(value.wire())
     }
 

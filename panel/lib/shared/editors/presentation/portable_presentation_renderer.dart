@@ -7,6 +7,7 @@ part "portable_renderer/actions.dart";
 part "portable_renderer/appearance.dart";
 part "portable_renderer/collection_inputs.dart";
 part "portable_renderer/collections.dart";
+part "portable_renderer/collection_graph_projection.dart";
 part "portable_renderer/content.dart";
 part "portable_renderer/control_frame.dart";
 part "portable_renderer/control_appearance.dart";

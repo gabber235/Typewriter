@@ -4,8 +4,7 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
-import com.typewritermc.expression.literal
-import com.typewritermc.types.Color
+import com.typewritermc.expression.MayBeMissing
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
@@ -34,7 +33,7 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     val scope =
         object : SequenceScope<ItemScope>, Layout by itemLayout {
             override val item =
-                Expr<ItemScope, com.typewritermc.expression.MayBeMissing>(
+                Expr<ItemScope, MayBeMissing>(
                     ExpressionNode.Read(binding, ValuePath()),
                 )
 
@@ -71,7 +70,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionLookup(
     val scope =
         object : LookupScope<Row> {
             override val row =
-                Expr<Row, com.typewritermc.expression.MayBeMissing>(
+                Expr<Row, MayBeMissing>(
                     ExpressionNode.Read(source.rowBinding, ValuePath()),
                 )
 
@@ -117,8 +116,56 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
     var graphDirection = CollectionDirection.Forward
     var graphMaximumDepth: Int? = null
     var node: PresentationNode? = null
+    var rootSequence: skirout.editor.v1.presentation.SequencePresentation? = null
+    var childSequence: skirout.editor.v1.presentation.SequencePresentation? = null
+    val rootItem = state.node(PresentationElement.createSlot(slotId = rootSlot))
+    val childItem = state.node(PresentationElement.createSlot(slotId = childSlot))
     val scope =
         object : GraphScope<Row, Key> {
+            override fun rootSequence(body: GraphRootSequenceScope<Row>.() -> Unit) {
+                check(rootSequence == null) { "Collection graph root layout may be declared once." }
+                val layout = RuntimeSequenceLayoutScope()
+                var empty: PresentationNode? = null
+                val sequenceScope =
+                    object : GraphRootSequenceScope<Row>, SequenceLayoutScope by layout {
+                        override val item =
+                            Expr<Row, MayBeMissing>(ExpressionNode.Read(source.rowBinding, ValuePath()))
+
+                        override fun empty(body: Layout.() -> Unit) {
+                            check(empty == null) { "Collection graph empty content may be declared once." }
+                            empty = state.presentation(body)
+                        }
+                    }
+                sequenceScope.body()
+                rootSequence =
+                    skirout.editor.v1.presentation.SequencePresentation(
+                        item = rootItem,
+                        empty = empty,
+                        separator = null,
+                        layout = layout.build(),
+                    )
+            }
+
+            override fun childrenSequence(body: GraphChildrenSequenceScope<Row>.() -> Unit) {
+                check(childSequence == null) { "Collection graph child layout may be declared once." }
+                val layout = RuntimeSequenceLayoutScope()
+                val sequenceScope =
+                    object : GraphChildrenSequenceScope<Row>, SequenceLayoutScope by layout {
+                        override val parent =
+                            Expr<Row, MayBeMissing>(ExpressionNode.Read(source.rowBinding, ValuePath()))
+                        override val item =
+                            Expr<Row, MayBeMissing>(ExpressionNode.Read(childBinding, ValuePath()))
+                    }
+                sequenceScope.body()
+                childSequence =
+                    skirout.editor.v1.presentation.SequencePresentation(
+                        item = childItem,
+                        empty = null,
+                        separator = null,
+                        layout = layout.build(),
+                    )
+            }
+
             override fun root(binding: PresentationInput<Key, *>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots =
@@ -137,12 +184,12 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                     )
             }
 
-            override fun root(value: Expr<Key, Handled>) {
+            override fun root(value: Expr<Key, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots = value.node
             }
 
-            override fun roots(value: Expr<List<Key>, Handled>) {
+            override fun roots(value: Expr<List<Key>, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots = value.node
             }
@@ -167,16 +214,16 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 val nodeScope =
                     object : GraphNodeScope<Row>, Layout by layout {
                         override val row =
-                            Expr<Row, com.typewritermc.expression.MayBeMissing>(
+                            Expr<Row, MayBeMissing>(
                                 ExpressionNode.Read(source.rowBinding, ValuePath()),
                             )
                         override val children =
-                            Expr<List<Row>, com.typewritermc.expression.MayBeMissing>(
+                            Expr<List<Row>, MayBeMissing>(
                                 ExpressionNode.Read(childrenBinding, ValuePath()),
                             )
 
                         override fun descendants() {
-                            layout.slot(childSlot)
+                            state.currentTarget += state.node(PresentationElement.createSlot(slotId = childSlot))
                         }
                     }
                 state.withTarget(nodes) { nodeScope.body() }
@@ -184,18 +231,12 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
             }
         }
     scope.configure()
-    val rootSequence =
-        hierarchySequence(
-            item = state.node(PresentationElement.createSlot(slotId = rootSlot)),
-            empty = state.presentation { text(literal("No linked items")) },
-        )
-    val children = hierarchySequence(state.node(PresentationElement.createSlot(slotId = childSlot)))
     target +=
         state.node(
             PresentationElement.createCollectionGraph(
                 sourceId = source.id,
                 roots = SkirTypeCodec.encode(requireNotNull(roots) { "Collection graph roots are required." }).getOrThrow(),
-                rootSequence = rootSequence,
+                rootSequence = rootSequence ?: sequence(rootItem),
                 relationId = requireNotNull(relation) { "Collection graph relation is required." },
                 direction =
                     when (graphDirection) {
@@ -206,7 +247,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 node = requireNotNull(node) { "Collection graph node content is required." },
                 childrenBindingId = childrenBinding.wire(),
                 childBindingId = childBinding.wire(),
-                children = children,
+                children = childSequence ?: sequence(childItem),
             ),
         )
 }
@@ -230,51 +271,67 @@ private fun RuntimePresentationData.sequence(
             ),
     )
 
-private fun RuntimePresentationData.hierarchySequence(
-    item: PresentationNode,
-    empty: PresentationNode? = null,
-): skirout.editor.v1.presentation.SequencePresentation {
-    val neutral = literal(Color(0xff9e9e9eu))
+private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
+    private var layout: skirout.editor.v1.presentation.SequenceLayout? = null
 
-    fun connector(
-        cornerRadius: Double,
-        marker: ConnectorEndpointMarker?,
-    ) = ConnectorStyle(
-        color = neutral.asPresentationColor(),
-        width = literal(2.0),
-        cornerRadius = literal(cornerRadius),
-        startMarker = marker,
-    ).wire()
-
-    return skirout.editor.v1.presentation.SequencePresentation(
-        item = item,
-        empty = empty,
-        separator = null,
-        layout =
-            skirout.editor.v1.presentation.SequenceLayout.createHierarchy(
-                unaryConnector =
-                    connector(
-                        cornerRadius = 0.0,
-                        marker = ConnectorEndpointMarker.Arrow(literal(8.0)),
-                    ),
-                trunkConnector =
-                    connector(
-                        cornerRadius = 8.0,
-                        marker = ConnectorEndpointMarker.Arrow(literal(10.0)),
-                    ),
-                branchConnector =
-                    connector(
-                        cornerRadius = 8.0,
-                        marker = ConnectorEndpointMarker.Circle(literal(6.0)),
-                    ),
-                itemSpacing = expression(24.0),
-                indentation = expression(16.0),
-                leadingSpacing = expression(16.0),
-                itemAnchor = skirout.editor.v1.presentation.ConnectorAnchor.CENTER,
-                flattenSingleItem = expression(true),
-                crossAxisAlignment = WireCrossAxisAlignment.STRETCH,
+    override fun column(
+        spacing: Double,
+        cross: CrossAxisAlignment,
+    ) {
+        require(spacing.isFinite() && spacing >= 0) { "Sequence spacing must be finite and nonnegative." }
+        set(
+            skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
+                skirout.editor.v1.presentation.ChildrenLayout.createColumn(
+                    spacing = spacing,
+                    mainAxisAlignment = WireMainAxisAlignment.START,
+                    crossAxisAlignment = cross.wire(),
+                ),
             ),
-    )
+        )
+    }
+
+    override fun hierarchy(
+        unaryConnector: ConnectorStyle,
+        trunkConnector: ConnectorStyle,
+        branchConnector: ConnectorStyle,
+        itemSpacing: Double,
+        indentation: Double,
+        leadingSpacing: Double,
+        itemAnchor: ConnectorAnchor,
+        flattenSingleItem: Boolean,
+        cross: CrossAxisAlignment,
+    ) {
+        require(listOf(itemSpacing, indentation, leadingSpacing).all { it.isFinite() && it >= 0 }) {
+            "Hierarchy spacing must be finite and nonnegative."
+        }
+        set(
+            skirout.editor.v1.presentation.SequenceLayout.createHierarchy(
+                unaryConnector = unaryConnector.wire(),
+                trunkConnector = trunkConnector.wire(),
+                branchConnector = branchConnector.wire(),
+                itemSpacing = expression(itemSpacing),
+                indentation = expression(indentation),
+                leadingSpacing = expression(leadingSpacing),
+                itemAnchor =
+                    when (itemAnchor) {
+                        ConnectorAnchor.Start -> skirout.editor.v1.presentation.ConnectorAnchor.START
+                        ConnectorAnchor.Center -> skirout.editor.v1.presentation.ConnectorAnchor.CENTER
+                    },
+                flattenSingleItem = expression(flattenSingleItem),
+                crossAxisAlignment = cross.wire(),
+            ),
+        )
+    }
+
+    private fun set(value: skirout.editor.v1.presentation.SequenceLayout) {
+        check(layout == null) { "A sequence layout may be declared once." }
+        layout = value
+    }
+
+    fun build(): skirout.editor.v1.presentation.SequenceLayout {
+        if (layout == null) column()
+        return requireNotNull(layout)
+    }
 }
 
 internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): PresentationCollectionDefinition =

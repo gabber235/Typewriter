@@ -110,10 +110,25 @@ internal fun CrossAxisAlignment.wire(): WireCrossAxisAlignment =
     }
 
 internal fun PresentationBorder.wire(): skirout.editor.v1.presentation.PresentationBorder =
-    skirout.editor.v1.presentation.PresentationBorder.createAll(
-        color = color.wire(),
-        width = width,
-    )
+    when (this) {
+        is PresentationBorder.All -> {
+            skirout.editor.v1.presentation.PresentationBorder
+                .createAll(color = color.wire(), width = width)
+        }
+
+        is PresentationBorder.Sides -> {
+            skirout.editor.v1.presentation.PresentationBorder.createSides(
+                top = top?.wire(),
+                start = start?.wire(),
+                end = end?.wire(),
+                bottom = bottom?.wire(),
+            )
+        }
+    }
+
+private fun PresentationBorder.Side.wire() =
+    skirout.editor.v1.presentation
+        .PresentationBorderSide(color = color.wire(), width = width)
 
 internal fun PresentationRadius.wire(): skirout.editor.v1.presentation.PresentationRadius =
     when (this) {

@@ -1,6 +1,5 @@
 package com.typewritermc.library
 
-import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
@@ -63,17 +62,7 @@ object BookInspectorPresentation : BookPresentation {
             inspectorSection("tags", "Direct Tags", input = tags.input) {
                 tags { collectionInput { items { linkInput(source = tagOptions) } } }
             }
-            inspectorSection("effective-tags", "Effective Tags") {
-                collectionGraph(tagOptions) {
-                    roots(
-                        expressions.tags
-                            .map { target }
-                            .orElse(emptyListExpression()),
-                    )
-                    relation("parents")
-                    node { tagGraphNode() }
-                }
-            }
+            tagInheritanceSection("effective-tags", "Effective Tags", tagOptions, expressions.tags.map { target })
             remainingFields {
                 exclude(pages)
             }

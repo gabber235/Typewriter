@@ -1079,7 +1079,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                     wrap(2.0, 3.0) { divider() }
                     grid(2, 4.0, 5.0) { divider() }
                     stack { divider() }
-                    section(PresentationBorder(1.0, literalColor(com.typewritermc.types.Color(0xff3366ccu)))) { divider() }
+                    section(PresentationBorder.All(1.0, literalColor(com.typewritermc.types.Color(0xff3366ccu)))) { divider() }
                     padding(PresentationInsets(1.0, 2.0, 3.0, 4.0)) { divider() }
                     container(
                         ContainerStyle(
@@ -1650,6 +1650,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         graph.value.sourceId shouldBe "rows"
         graph.value.maximumDepth shouldBe 4
         graph.value.direction shouldBe skirout.editor.v1.presentation.CollectionGraphDirection.REVERSE
+        (graph.value.rootSequence.layout is skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper) shouldBe true
+        (graph.value.children.layout is skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper) shouldBe true
+        graph.value.rootSequence.empty shouldBe null
         root.dependencies.collections
             .single()
             .relations

@@ -228,6 +228,7 @@ internal class RuntimeLayout(
 
     override fun section(
         border: PresentationBorder?,
+        header: HeaderScope.() -> Unit,
         body: Layout.() -> Unit,
     ) {
         target +=
@@ -236,6 +237,7 @@ internal class RuntimeLayout(
                     child = child(body),
                     border = border?.wire(),
                 ),
+                header = RuntimeHeaderScope(state).apply(header).build(),
             )
     }
 

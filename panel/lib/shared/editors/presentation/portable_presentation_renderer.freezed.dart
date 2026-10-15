@@ -13,6 +13,841 @@ part of 'portable_presentation_renderer.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$CollectionGraphOccurrence {
+
+ String get canonicalKey; List<String> get path; List<_CollectionGraphOccurrence> get children;
+/// Create a copy of _CollectionGraphOccurrence
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionGraphOccurrenceCopyWith<_CollectionGraphOccurrence> get copyWith => __$CollectionGraphOccurrenceCopyWithImpl<_CollectionGraphOccurrence>(this as _CollectionGraphOccurrence, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _CollectionGraphOccurrence;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionGraphOccurrence&&(identical(other.canonicalKey, _this.canonicalKey) || other.canonicalKey == _this.canonicalKey)&&const DeepCollectionEquality().equals(other.path, _this.path)&&const DeepCollectionEquality().equals(other.children, _this.children));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _CollectionGraphOccurrence;
+  return Object.hash(runtimeType,_this.canonicalKey,const DeepCollectionEquality().hash(_this.path),const DeepCollectionEquality().hash(_this.children));
+}
+
+@override
+String toString() {
+  final _this = this as _CollectionGraphOccurrence;
+  return '_CollectionGraphOccurrence(canonicalKey: ${_this.canonicalKey}, path: ${_this.path}, children: ${_this.children})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionGraphOccurrenceCopyWith<$Res>  {
+  factory _$CollectionGraphOccurrenceCopyWith(_CollectionGraphOccurrence value, $Res Function(_CollectionGraphOccurrence) _then) = __$CollectionGraphOccurrenceCopyWithImpl;
+@useResult
+$Res call({
+ String canonicalKey, List<String> path, List<_CollectionGraphOccurrence> children
+});
+
+
+
+
+}
+/// @nodoc
+class __$CollectionGraphOccurrenceCopyWithImpl<$Res>
+    implements _$CollectionGraphOccurrenceCopyWith<$Res> {
+  __$CollectionGraphOccurrenceCopyWithImpl(this._self, this._then);
+
+  final _CollectionGraphOccurrence _self;
+  final $Res Function(_CollectionGraphOccurrence) _then;
+
+/// Create a copy of _CollectionGraphOccurrence
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
+  return _then(_CollectionGraphOccurrence(
+canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
+as String,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as List<String>,children: null == children ? _self.children : children // ignore: cast_nullable_to_non_nullable
+as List<_CollectionGraphOccurrence>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [_CollectionGraphOccurrence].
+extension _CollectionGraphOccurrencePatterns on _CollectionGraphOccurrence {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __CollectionGraphOccurrence value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __CollectionGraphOccurrence value)  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __CollectionGraphOccurrence value)?  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String canonicalKey,  List<String> path,  List<_CollectionGraphOccurrence> children)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence() when $default != null:
+return $default(_that.canonicalKey,_that.path,_that.children);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String canonicalKey,  List<String> path,  List<_CollectionGraphOccurrence> children)  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence():
+return $default(_that.canonicalKey,_that.path,_that.children);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String canonicalKey,  List<String> path,  List<_CollectionGraphOccurrence> children)?  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrence() when $default != null:
+return $default(_that.canonicalKey,_that.path,_that.children);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __CollectionGraphOccurrence implements _CollectionGraphOccurrence {
+  const __CollectionGraphOccurrence({required this.canonicalKey, required  List<String> path, required  List<_CollectionGraphOccurrence> children}): _path = path,_children = children;
+
+
+@override final  String canonicalKey;
+ final  List<String> _path;
+@override List<String> get path {
+  if (_path is EqualUnmodifiableListView) return _path;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_path);
+}
+
+ final  List<_CollectionGraphOccurrence> _children;
+@override List<_CollectionGraphOccurrence> get children {
+  if (_children is EqualUnmodifiableListView) return _children;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_children);
+}
+
+
+/// Create a copy of _CollectionGraphOccurrence
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_CollectionGraphOccurrenceCopyWith<__CollectionGraphOccurrence> get copyWith => __$_CollectionGraphOccurrenceCopyWithImpl<__CollectionGraphOccurrence>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __CollectionGraphOccurrence&&(identical(other.canonicalKey, canonicalKey) || other.canonicalKey == canonicalKey)&&const DeepCollectionEquality().equals(other.path, _path)&&const DeepCollectionEquality().equals(other.children, _children));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,canonicalKey,const DeepCollectionEquality().hash(_path),const DeepCollectionEquality().hash(_children));
+}
+
+@override
+String toString() {
+    return '_CollectionGraphOccurrence(canonicalKey: $canonicalKey, path: $path, children: $children)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_CollectionGraphOccurrenceCopyWith<$Res> implements _$CollectionGraphOccurrenceCopyWith<$Res> {
+  factory _$_CollectionGraphOccurrenceCopyWith(__CollectionGraphOccurrence value, $Res Function(__CollectionGraphOccurrence) _then) = __$_CollectionGraphOccurrenceCopyWithImpl;
+@override @useResult
+$Res call({
+ String canonicalKey, List<String> path, List<_CollectionGraphOccurrence> children
+});
+
+
+
+
+}
+/// @nodoc
+class __$_CollectionGraphOccurrenceCopyWithImpl<$Res>
+    implements _$_CollectionGraphOccurrenceCopyWith<$Res> {
+  __$_CollectionGraphOccurrenceCopyWithImpl(this._self, this._then);
+
+  final __CollectionGraphOccurrence _self;
+  final $Res Function(__CollectionGraphOccurrence) _then;
+
+/// Create a copy of _CollectionGraphOccurrence
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
+  return _then(__CollectionGraphOccurrence(
+canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
+as String,path: null == path ? _self._path : path // ignore: cast_nullable_to_non_nullable
+as List<String>,children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
+as List<_CollectionGraphOccurrence>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$CollectionGraphProjection {
+
+ List<_CollectionGraphOccurrence> get roots; bool get truncated;
+/// Create a copy of _CollectionGraphProjection
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionGraphProjectionCopyWith<_CollectionGraphProjection> get copyWith => __$CollectionGraphProjectionCopyWithImpl<_CollectionGraphProjection>(this as _CollectionGraphProjection, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _CollectionGraphProjection;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionGraphProjection&&const DeepCollectionEquality().equals(other.roots, _this.roots)&&(identical(other.truncated, _this.truncated) || other.truncated == _this.truncated));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _CollectionGraphProjection;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.roots),_this.truncated);
+}
+
+@override
+String toString() {
+  final _this = this as _CollectionGraphProjection;
+  return '_CollectionGraphProjection(roots: ${_this.roots}, truncated: ${_this.truncated})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionGraphProjectionCopyWith<$Res>  {
+  factory _$CollectionGraphProjectionCopyWith(_CollectionGraphProjection value, $Res Function(_CollectionGraphProjection) _then) = __$CollectionGraphProjectionCopyWithImpl;
+@useResult
+$Res call({
+ List<_CollectionGraphOccurrence> roots, bool truncated
+});
+
+
+
+
+}
+/// @nodoc
+class __$CollectionGraphProjectionCopyWithImpl<$Res>
+    implements _$CollectionGraphProjectionCopyWith<$Res> {
+  __$CollectionGraphProjectionCopyWithImpl(this._self, this._then);
+
+  final _CollectionGraphProjection _self;
+  final $Res Function(_CollectionGraphProjection) _then;
+
+/// Create a copy of _CollectionGraphProjection
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? roots = null,Object? truncated = null,}) {
+  return _then(_CollectionGraphProjection(
+roots: null == roots ? _self.roots : roots // ignore: cast_nullable_to_non_nullable
+as List<_CollectionGraphOccurrence>,truncated: null == truncated ? _self.truncated : truncated // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [_CollectionGraphProjection].
+extension _CollectionGraphProjectionPatterns on _CollectionGraphProjection {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __CollectionGraphProjection value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __CollectionGraphProjection() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __CollectionGraphProjection value)  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphProjection():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __CollectionGraphProjection value)?  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphProjection() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<_CollectionGraphOccurrence> roots,  bool truncated)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __CollectionGraphProjection() when $default != null:
+return $default(_that.roots,_that.truncated);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<_CollectionGraphOccurrence> roots,  bool truncated)  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphProjection():
+return $default(_that.roots,_that.truncated);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<_CollectionGraphOccurrence> roots,  bool truncated)?  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphProjection() when $default != null:
+return $default(_that.roots,_that.truncated);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __CollectionGraphProjection implements _CollectionGraphProjection {
+  const __CollectionGraphProjection({required  List<_CollectionGraphOccurrence> roots, required this.truncated}): _roots = roots;
+
+
+ final  List<_CollectionGraphOccurrence> _roots;
+@override List<_CollectionGraphOccurrence> get roots {
+  if (_roots is EqualUnmodifiableListView) return _roots;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_roots);
+}
+
+@override final  bool truncated;
+
+/// Create a copy of _CollectionGraphProjection
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_CollectionGraphProjectionCopyWith<__CollectionGraphProjection> get copyWith => __$_CollectionGraphProjectionCopyWithImpl<__CollectionGraphProjection>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __CollectionGraphProjection&&const DeepCollectionEquality().equals(other.roots, _roots)&&(identical(other.truncated, truncated) || other.truncated == truncated));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_roots),truncated);
+}
+
+@override
+String toString() {
+    return '_CollectionGraphProjection(roots: $roots, truncated: $truncated)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_CollectionGraphProjectionCopyWith<$Res> implements _$CollectionGraphProjectionCopyWith<$Res> {
+  factory _$_CollectionGraphProjectionCopyWith(__CollectionGraphProjection value, $Res Function(__CollectionGraphProjection) _then) = __$_CollectionGraphProjectionCopyWithImpl;
+@override @useResult
+$Res call({
+ List<_CollectionGraphOccurrence> roots, bool truncated
+});
+
+
+
+
+}
+/// @nodoc
+class __$_CollectionGraphProjectionCopyWithImpl<$Res>
+    implements _$_CollectionGraphProjectionCopyWith<$Res> {
+  __$_CollectionGraphProjectionCopyWithImpl(this._self, this._then);
+
+  final __CollectionGraphProjection _self;
+  final $Res Function(__CollectionGraphProjection) _then;
+
+/// Create a copy of _CollectionGraphProjection
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? roots = null,Object? truncated = null,}) {
+  return _then(__CollectionGraphProjection(
+roots: null == roots ? _self._roots : roots // ignore: cast_nullable_to_non_nullable
+as List<_CollectionGraphOccurrence>,truncated: null == truncated ? _self.truncated : truncated // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$CollectionGraphOccurrenceKey {
+
+ Object get graph; Map<skir.ExpressionBindingId, Object> get invocation; List<String> get path;
+/// Create a copy of _CollectionGraphOccurrenceKey
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionGraphOccurrenceKeyCopyWith<_CollectionGraphOccurrenceKey> get copyWith => __$CollectionGraphOccurrenceKeyCopyWithImpl<_CollectionGraphOccurrenceKey>(this as _CollectionGraphOccurrenceKey, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _CollectionGraphOccurrenceKey;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionGraphOccurrenceKey&&const DeepCollectionEquality().equals(other.graph, _this.graph)&&const DeepCollectionEquality().equals(other.invocation, _this.invocation)&&const DeepCollectionEquality().equals(other.path, _this.path));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _CollectionGraphOccurrenceKey;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.graph),const DeepCollectionEquality().hash(_this.invocation),const DeepCollectionEquality().hash(_this.path));
+}
+
+@override
+String toString() {
+  final _this = this as _CollectionGraphOccurrenceKey;
+  return '_CollectionGraphOccurrenceKey(graph: ${_this.graph}, invocation: ${_this.invocation}, path: ${_this.path})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionGraphOccurrenceKeyCopyWith<$Res>  {
+  factory _$CollectionGraphOccurrenceKeyCopyWith(_CollectionGraphOccurrenceKey value, $Res Function(_CollectionGraphOccurrenceKey) _then) = __$CollectionGraphOccurrenceKeyCopyWithImpl;
+@useResult
+$Res call({
+ Object graph, Map<skir.ExpressionBindingId, Object> invocation, List<String> path
+});
+
+
+
+
+}
+/// @nodoc
+class __$CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
+    implements _$CollectionGraphOccurrenceKeyCopyWith<$Res> {
+  __$CollectionGraphOccurrenceKeyCopyWithImpl(this._self, this._then);
+
+  final _CollectionGraphOccurrenceKey _self;
+  final $Res Function(_CollectionGraphOccurrenceKey) _then;
+
+/// Create a copy of _CollectionGraphOccurrenceKey
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
+  return _then(_CollectionGraphOccurrenceKey(
+graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self.invocation : invocation // ignore: cast_nullable_to_non_nullable
+as Map<skir.ExpressionBindingId, Object>,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [_CollectionGraphOccurrenceKey].
+extension _CollectionGraphOccurrenceKeyPatterns on _CollectionGraphOccurrenceKey {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __CollectionGraphOccurrenceKey value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __CollectionGraphOccurrenceKey value)  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __CollectionGraphOccurrenceKey value)?  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Object graph,  Map<skir.ExpressionBindingId, Object> invocation,  List<String> path)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey() when $default != null:
+return $default(_that.graph,_that.invocation,_that.path);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Object graph,  Map<skir.ExpressionBindingId, Object> invocation,  List<String> path)  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey():
+return $default(_that.graph,_that.invocation,_that.path);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Object graph,  Map<skir.ExpressionBindingId, Object> invocation,  List<String> path)?  $default,) {final _that = this;
+switch (_that) {
+case __CollectionGraphOccurrenceKey() when $default != null:
+return $default(_that.graph,_that.invocation,_that.path);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __CollectionGraphOccurrenceKey implements _CollectionGraphOccurrenceKey {
+  const __CollectionGraphOccurrenceKey({required this.graph, required  Map<skir.ExpressionBindingId, Object> invocation, required  List<String> path}): _invocation = invocation,_path = path;
+
+
+@override final  Object graph;
+ final  Map<skir.ExpressionBindingId, Object> _invocation;
+@override Map<skir.ExpressionBindingId, Object> get invocation {
+  if (_invocation is EqualUnmodifiableMapView) return _invocation;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_invocation);
+}
+
+ final  List<String> _path;
+@override List<String> get path {
+  if (_path is EqualUnmodifiableListView) return _path;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_path);
+}
+
+
+/// Create a copy of _CollectionGraphOccurrenceKey
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_CollectionGraphOccurrenceKeyCopyWith<__CollectionGraphOccurrenceKey> get copyWith => __$_CollectionGraphOccurrenceKeyCopyWithImpl<__CollectionGraphOccurrenceKey>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __CollectionGraphOccurrenceKey&&const DeepCollectionEquality().equals(other.graph, graph)&&const DeepCollectionEquality().equals(other.invocation, _invocation)&&const DeepCollectionEquality().equals(other.path, _path));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(graph),const DeepCollectionEquality().hash(_invocation),const DeepCollectionEquality().hash(_path));
+}
+
+@override
+String toString() {
+    return '_CollectionGraphOccurrenceKey(graph: $graph, invocation: $invocation, path: $path)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_CollectionGraphOccurrenceKeyCopyWith<$Res> implements _$CollectionGraphOccurrenceKeyCopyWith<$Res> {
+  factory _$_CollectionGraphOccurrenceKeyCopyWith(__CollectionGraphOccurrenceKey value, $Res Function(__CollectionGraphOccurrenceKey) _then) = __$_CollectionGraphOccurrenceKeyCopyWithImpl;
+@override @useResult
+$Res call({
+ Object graph, Map<skir.ExpressionBindingId, Object> invocation, List<String> path
+});
+
+
+
+
+}
+/// @nodoc
+class __$_CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
+    implements _$_CollectionGraphOccurrenceKeyCopyWith<$Res> {
+  __$_CollectionGraphOccurrenceKeyCopyWithImpl(this._self, this._then);
+
+  final __CollectionGraphOccurrenceKey _self;
+  final $Res Function(__CollectionGraphOccurrenceKey) _then;
+
+/// Create a copy of _CollectionGraphOccurrenceKey
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
+  return _then(__CollectionGraphOccurrenceKey(
+graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self._invocation : invocation // ignore: cast_nullable_to_non_nullable
+as Map<skir.ExpressionBindingId, Object>,path: null == path ? _self._path : path // ignore: cast_nullable_to_non_nullable
+as List<String>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PortableAppearanceLayer {
 
  skir.InputAppearance get appearance; Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget;
