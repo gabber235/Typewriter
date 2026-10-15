@@ -235,10 +235,19 @@ class RealmInboxContent extends ConsumerWidget {
       state: ref.watch(realmInboxProvider(scope)),
       work: ref.read(localWorkControllerProvider),
       resourceLabel: (id) {
-        final record = document?.resource(id);
-        return record?.authoredField("name")?.authoredString ??
-            record?.authoredField("title")?.authoredString ??
-            id.value;
+        final resource = document?.entry(id);
+        if (resource == null) return id.value;
+        if (resource.definition == coreBookResourceDefinition) {
+          return Book.fromAuthoring(resource).title;
+        }
+        if (resource.definition == coreTagResourceDefinition) {
+          return Tag.fromAuthoring(resource).name;
+        }
+        return (resource.content.authoredField("name")?.authoredString)
+            .displayLabel(
+              (resource.content.authoredField("title")?.authoredString)
+                  .displayLabel(id.value),
+            );
       },
       onClose: onClose,
       openLocation: (location) async {
@@ -367,7 +376,7 @@ class RealmInboxView extends StatelessWidget {
   Widget _publication(BuildContext context) => switch (state.publication) {
     ReadyRealmPublication(:final command) => Padding(
       key: const ValueKey("ready"),
-      padding: EdgeInsets.only(top: context.spacing.space6),
+      padding: EdgeInsets.only(top: context.spacing.space4),
       child: LoadingButton.filledIcon(
         icon: const Icon(Icons.publish_rounded, size: 20),
         onPressed: () => _publish(context, command),
@@ -377,7 +386,7 @@ class RealmInboxView extends StatelessWidget {
     ),
     BlockedRealmPublication() => Padding(
       key: const ValueKey("blocked"),
-      padding: EdgeInsets.only(top: context.spacing.space6),
+      padding: EdgeInsets.only(top: context.spacing.space4),
       child: Row(
         children: [
           Icon(Icons.block, size: 18, color: context.colors.contentSecondary),
@@ -450,7 +459,7 @@ class RealmInboxView extends StatelessWidget {
     final tone = color ?? context.colors.contentSecondary;
     return Padding(
       key: ValueKey(id),
-      padding: EdgeInsets.only(top: context.spacing.space6),
+      padding: EdgeInsets.only(top: context.spacing.space4),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: tone.withValues(alpha: .06),
@@ -538,11 +547,6 @@ class RealmInboxView extends StatelessWidget {
                         sliver: SliverStaggerScope(
                           sliver: SliverMainAxisGroup(
                             slivers: [
-                              SliverAnimatedGap(
-                                extent: state.issues.isEmpty
-                                    ? 0
-                                    : context.spacing.space5,
-                              ),
                               SliverAnimatedContent(
                                 child: state.issues.isEmpty
                                     ? null
@@ -556,14 +560,22 @@ class RealmInboxView extends StatelessWidget {
                               AnimatedSliverList<RealmInboxIssue>(
                                 items: state.issues,
                                 identity: (issue) => issue.identity,
-                                itemBuilder: _issue,
+                                itemBuilder: (context, issue) => Padding(
+                                  padding: EdgeInsets.only(
+                                    bottom: issue == state.issues.lastOrNull
+                                        ? 0
+                                        : context.spacing.space3,
+                                  ),
+                                  child: _issue(context, issue),
+                                ),
                               ),
                               SliverAnimatedGap(
                                 extent:
-                                    state.changes.isEmpty &&
-                                        state.pendingRoots.isEmpty
+                                    state.issues.isEmpty ||
+                                        (state.changes.isEmpty &&
+                                            state.pendingRoots.isEmpty)
                                     ? 0
-                                    : context.spacing.space5,
+                                    : context.spacing.space4,
                               ),
                               SliverAnimatedContent(
                                 child:
@@ -605,9 +617,13 @@ class RealmInboxView extends StatelessWidget {
                                 ),
                               ),
                               SliverAnimatedGap(
-                                extent: local.isEmpty
+                                extent:
+                                    local.isEmpty ||
+                                        (state.issues.isEmpty &&
+                                            state.changes.isEmpty &&
+                                            state.pendingRoots.isEmpty)
                                     ? 0
-                                    : context.spacing.space5,
+                                    : context.spacing.space4,
                               ),
                               SliverAnimatedContent(
                                 child: local.isEmpty
@@ -673,74 +689,64 @@ class RealmInboxView extends StatelessWidget {
         : issue.severity == skir.DiagnosticSeverity.warning
         ? context.colors.warning
         : context.colors.contentSecondary;
-    return Padding(
-      padding: EdgeInsets.only(bottom: context.spacing.space3),
-      child: SearchResultCard(
-        color: color,
-        prefix: Padding(
-          padding: EdgeInsets.only(left: context.spacing.space2),
-          child: _icon(
-            context,
-            issue.severity == skir.DiagnosticSeverity.error
-                ? Icons.error_outline
-                : issue.severity == skir.DiagnosticSeverity.warning
-                ? Icons.warning_amber_outlined
-                : Icons.info_outline,
-            color,
-          ),
+    return SearchResultCard(
+      color: color,
+      prefix: Padding(
+        padding: EdgeInsets.only(left: context.spacing.space2),
+        child: _icon(
+          context,
+          issue.severity == skir.DiagnosticSeverity.error
+              ? Icons.error_outline
+              : issue.severity == skir.DiagnosticSeverity.warning
+              ? Icons.warning_amber_outlined
+              : Icons.info_outline,
+          color,
         ),
-        suffix: issue.primary == null
-            ? null
-            : Icon(
-                Icons.chevron_right,
-                size: 20,
+      ),
+      suffix: issue.primary == null
+          ? null
+          : Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: context.colors.contentSecondary,
+            ),
+      onTap: issue.primary == null ? null : () => openLocation(issue.primary!),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            issue.message,
+            style: context.theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (issue.primary case final location?) ...[
+            SizedBox(height: context.spacing.space1),
+            Text(
+              resourceLabel(location.resource),
+              style: context.theme.textTheme.bodySmall?.copyWith(
                 color: context.colors.contentSecondary,
               ),
-        onTap: issue.primary == null
-            ? null
-            : () => openLocation(issue.primary!),
-        content: Padding(
-          padding: EdgeInsets.symmetric(vertical: context.spacing.space2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                issue.message,
-                style: context.theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              if (issue.primary case final location?) ...[
-                SizedBox(height: context.spacing.space2),
-                Text(
-                  resourceLabel(location.resource),
-                  style: context.theme.textTheme.bodySmall?.copyWith(
-                    color: context.colors.contentSecondary,
-                  ),
-                ),
-              ],
-              SizedBox(height: context.spacing.space1),
-              Text(
-                issue.provenance,
-                style: context.theme.textTheme.labelSmall?.copyWith(
-                  color: context.colors.contentSecondary,
-                ),
-              ),
-              if (issue.related.isNotEmpty)
-                Wrap(
-                  children: [
-                    for (final location in issue.related)
-                      TextButton(
-                        onPressed: () => openLocation(location),
-                        child: Text(
-                          "Related: ${resourceLabel(location.resource)}",
-                        ),
-                      ),
-                  ],
-                ),
-            ],
+            ),
+          ],
+          SizedBox(height: context.spacing.space1),
+          Text(
+            issue.provenance,
+            style: context.theme.textTheme.labelSmall?.copyWith(
+              color: context.colors.contentSecondary,
+            ),
           ),
-        ),
+          if (issue.related.isNotEmpty)
+            Wrap(
+              children: [
+                for (final location in issue.related)
+                  TextButton(
+                    onPressed: () => openLocation(location),
+                    child: Text("Related: ${resourceLabel(location.resource)}"),
+                  ),
+              ],
+            ),
+        ],
       ),
     );
   }
