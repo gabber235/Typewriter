@@ -6,6 +6,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.target
+import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationAlignment
@@ -39,7 +40,7 @@ object TagInspectorPresentation : TagPresentation {
                 identifier = subject.identifier,
             )
             inspectorSection("name", "Name", input = name.input) {
-                name { textInput() }
+                name { textInput { onComplete { value.trim() } } }
             }
             inspectorSection("color", "Color", input = color.input) {
                 color { colorInput { includeAlpha(false) } }
@@ -136,10 +137,10 @@ object PageInspectorPresentation : PagePresentation {
                 book { linkInput() }
             }
             inspectorSection("name", "Name", input = name.input) {
-                name { textInput() }
+                name { textInput { onComplete { value.trim() } } }
             }
             inspectorSection("chapter", "Chapter", input = chapter.input) {
-                chapter { textInput() }
+                chapter { textInput { onComplete { value.trim() } } }
             }
             inspectorSection("priority", "Priority", input = priority.input) {
                 priority { numericInput() }

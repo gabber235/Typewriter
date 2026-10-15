@@ -5,6 +5,7 @@ import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.target
+import com.typewritermc.expression.trim
 import com.typewritermc.presentation.AppliedPresentation
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationInput
@@ -40,7 +41,7 @@ object BookInspectorPresentation : BookPresentation {
                 identifier = subject.identifier,
             )
             inspectorSection("title", "Title", input = title.input) {
-                title { textInput() }
+                title { textInput { onComplete { value.trim() } } }
             }
             inspectorSection("icon", "Icon", input = icon.input) {
                 icon {

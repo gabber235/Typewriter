@@ -19,6 +19,7 @@ import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.elements.Entry
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.trim
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.ChapterPath
@@ -184,6 +185,10 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
                 )
             }
         }
+        name {
+            label("name")
+            textInput { onComplete { value.trim() } }
+        }
         remainingFields()
     }
 }
@@ -208,6 +213,10 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
                     literal("Repeated"),
                 )
             }
+        }
+        name {
+            label("name")
+            textInput { onComplete { value.trim() } }
         }
         remainingFields()
     }

@@ -4,6 +4,7 @@ import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.trim
 import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
@@ -32,6 +33,10 @@ object SimpleMessageActionEntryInspector : SimpleMessageActionEntryPresentation 
             color = literal(Color.parseRgb(requireNotNull(SimpleMessageActionEntryDefinition.display?.color))),
             identifier = subject.identifier,
         )
+        name {
+            label("name")
+            textInput { onComplete { value.trim() } }
+        }
         remainingFields {}
     }
 }
