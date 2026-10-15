@@ -228,6 +228,8 @@ void main() {
     );
     expect(document.diagnostics, hasLength(2));
     expect(projected!.diagnostics, document.diagnostics);
+    expect(document.diagnosticFallback, PortableDiagnosticFallback.resource);
+    expect(projected.diagnosticFallback, PortableDiagnosticFallback.resource);
     final initialization = document.diagnostics.last;
     expect(initialization.code, "initialization_pending");
     expect(initialization.message, "A default could not be prepared");

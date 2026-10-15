@@ -40,6 +40,7 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
   const factory PortableDiagnosticPlacement({
     @Default({}) Map<Object, PortableDiagnosticSummary> summaries,
     @Default([]) List<PortablePresentationDiagnostic> general,
+    @Default([]) List<PortablePresentationDiagnostic> unplaced,
   }) = _PortableDiagnosticPlacement;
   const PortableDiagnosticPlacement._();
 
@@ -47,10 +48,13 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
     required List<PortablePresentationDiagnostic> diagnostics,
     required Iterable<PortableOperationOutcome> outcomes,
     required PortableDiagnosticPresentation presentation,
+    PortableDiagnosticFallback diagnosticFallback =
+        PortableDiagnosticFallback.presentation,
   }) {
     final direct = <Object, Set<PortablePresentationDiagnostic>>{};
     final descendants = <Object, Set<PortablePresentationDiagnostic>>{};
     final general = <PortablePresentationDiagnostic>{};
+    final unplaced = <PortablePresentationDiagnostic>{};
     void place(Object id, PortablePresentationDiagnostic diagnostic) {
       (direct[id] ??= {}).add(diagnostic);
       for (final parent in presentation.headerAncestors(id)) {
@@ -68,16 +72,30 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
         }
       }
     }
-    final global = <PortablePresentationDiagnostic>{...diagnostics};
+    final fallbacks =
+        <PortablePresentationDiagnostic, PortableDiagnosticFallback>{};
+    void include(
+      Iterable<PortablePresentationDiagnostic> values,
+      PortableDiagnosticFallback fallback,
+    ) {
+      for (final diagnostic in values) {
+        if (fallbacks[diagnostic] != PortableDiagnosticFallback.presentation) {
+          fallbacks[diagnostic] = fallback;
+        }
+      }
+    }
+
+    include(diagnostics, diagnosticFallback);
     for (final node in nodes.values.where(
       (node) => node.kind == PortableDiagnosticNodeKind.source,
     )) {
-      global.addAll(node.diagnostics);
+      include(node.diagnostics, node.diagnosticFallback);
     }
     for (final outcome in outcomes) {
-      global.addAll(outcome.diagnostics);
+      include(outcome.diagnostics, PortableDiagnosticFallback.presentation);
     }
-    for (final diagnostic in global) {
+    for (final entry in fallbacks.entries) {
+      final diagnostic = entry.key;
       final destinations = <Object>{};
       for (final target in diagnostic.targets) {
         final controls = nodes.entries.where(
@@ -110,7 +128,12 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
         );
       }
       if (destinations.isEmpty) {
-        general.add(diagnostic);
+        switch (entry.value) {
+          case PortableDiagnosticFallback.presentation:
+            general.add(diagnostic);
+          case PortableDiagnosticFallback.resource:
+            unplaced.add(diagnostic);
+        }
         continue;
       }
       for (final id in destinations) {
@@ -132,6 +155,7 @@ abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
     }
     return PortableDiagnosticPlacement(
       general: general.toList(),
+      unplaced: unplaced.toList(),
       summaries: {
         for (final id in {...direct.keys, ...descendants.keys})
           id: PortableDiagnosticSummary(

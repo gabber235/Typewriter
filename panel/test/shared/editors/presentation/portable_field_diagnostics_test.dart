@@ -6,6 +6,94 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  for (final entry in ["renderer", "node", "search"]) {
+    for (final fallback in PortableDiagnosticFallback.values) {
+      testWidgets("$entry preserves $fallback ownership for absent fields", (
+        tester,
+      ) async {
+        final diagnostic = _diagnostic([_count]);
+        final host = _DiagnosticTextHost(
+          diagnostics: [diagnostic],
+          diagnosticFallback: fallback,
+        );
+        final operations = PortableOperationResults();
+        addTearDown(host.dispose);
+        addTearDown(operations.dispose);
+        final document = host.document;
+        final scope = PortablePresentationScope(
+          bindings: host.rootInvocation.bindings,
+          budget: document.budget,
+          operations: operations,
+          host: host,
+          role: skir.PresentationRole.inspector,
+          catalog: document.catalog,
+        );
+        final search =
+            (skir.SearchControl.mutable()
+                  ..control =
+                      (skir.BoundControl.mutable()
+                            ..binding = skir.BindingRef(
+                              bindingId: _binding,
+                              path: editorRootPath,
+                            ))
+                          .toFrozen()
+                  ..provider = skir.SearchProvider.createStaticValues(
+                    values: skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.createListValue(items: const []),
+                    ),
+                    result: skir.SearchResultMapping.defaultInstance,
+                    selectors: const [],
+                  ))
+                .toFrozen();
+        await tester.pumpTestApp(
+          child: Material(
+            child: switch (entry) {
+              "node" => PortablePresentationNodeRenderer(
+                node: document.root,
+                scope: scope,
+              ),
+              "search" => PortableSearchInput(control: search, scope: scope),
+              _ => PortablePresentationRenderer(host: host),
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text(diagnostic.message),
+          fallback == PortableDiagnosticFallback.presentation
+              ? findsOneWidget
+              : findsNothing,
+        );
+        expect(tester.takeException(), isNull);
+      });
+    }
+  }
+
+  testWidgets(
+    "resource validation cannot suppress an unmatched operation rejection",
+    (tester) async {
+      final diagnostic = _diagnostic([_count]);
+      final host = _DiagnosticTextHost(
+        diagnostics: [diagnostic],
+        diagnosticFallback: PortableDiagnosticFallback.resource,
+        response: Future.value(
+          PortablePresentationWriteResult.rejected([diagnostic]),
+        ),
+      );
+      addTearDown(host.dispose);
+      await tester.pumpTestApp(
+        child: Material(child: PortablePresentationRenderer(host: host)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text(diagnostic.message), findsNothing);
+      await tester.enterText(find.byType(TextFormField), "rejected draft");
+      await tester.pumpAndSettle();
+      expect(host.requests, 1);
+      expect(find.text(diagnostic.message), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     "duplicated controls keep parser feedback with the edited draft",
     (tester) async {
@@ -412,6 +500,117 @@ void main() {
     expect(messages, isEmpty);
   });
 
+  for (final targets in [
+    <PortableDiagnosticTarget>[],
+    [_count],
+  ]) {
+    test(
+      "unplaced resource findings retain ownership with targets: $targets",
+      () {
+        final diagnostic = _diagnostic(targets);
+        final placement = PortableDiagnosticPlacement.route(
+          diagnostics: [diagnostic],
+          diagnosticFallback: PortableDiagnosticFallback.resource,
+          outcomes: const [],
+          presentation: PortableDiagnosticPresentation(
+            nodes: {Object(): _control(_title)},
+          ),
+        );
+        expect(placement.general, isEmpty);
+        expect(placement.unplaced, [diagnostic]);
+      },
+    );
+  }
+
+  test("resource findings still reach fields and addressed headers", () {
+    final control = Object();
+    final header = Object();
+    final diagnostic = _diagnostic([_title, _count]);
+    final placement = PortableDiagnosticPlacement.route(
+      diagnostics: [diagnostic],
+      diagnosticFallback: PortableDiagnosticFallback.resource,
+      outcomes: const [],
+      presentation: PortableDiagnosticPresentation(
+        nodes: {control: _control(_title), header: _header(_count)},
+      ),
+    );
+    expect(placement.forAnchor(control).direct, [diagnostic]);
+    expect(placement.forAnchor(header).direct, [diagnostic]);
+    expect(placement.general, isEmpty);
+    expect(placement.unplaced, isEmpty);
+  });
+
+  for (final localFirst in [false, true]) {
+    test(
+      "local feedback wins shared source ownership, local first: $localFirst",
+      () {
+        final diagnostic = _diagnostic([_count]);
+        final placement = PortableDiagnosticPlacement.route(
+          diagnostics: [diagnostic],
+          diagnosticFallback: localFirst
+              ? PortableDiagnosticFallback.presentation
+              : PortableDiagnosticFallback.resource,
+          outcomes: const [],
+          presentation: PortableDiagnosticPresentation(
+            nodes: {
+              Object(): PortableDiagnosticNode(
+                kind: PortableDiagnosticNodeKind.source,
+                diagnostics: [diagnostic],
+                diagnosticFallback: localFirst
+                    ? PortableDiagnosticFallback.resource
+                    : PortableDiagnosticFallback.presentation,
+              ),
+            },
+          ),
+        );
+        expect(placement.general, [diagnostic]);
+        expect(placement.unplaced, isEmpty);
+      },
+    );
+  }
+
+  test(
+    "an operation rejection keeps local fallback over resource validation",
+    () {
+      final diagnostic = _diagnostic([_count]);
+      final placement = PortableDiagnosticPlacement.route(
+        diagnostics: [diagnostic],
+        diagnosticFallback: PortableDiagnosticFallback.resource,
+        outcomes: [
+          PortableOperationOutcome(
+            request: Object(),
+            diagnostics: [diagnostic],
+          ),
+        ],
+        presentation: const PortableDiagnosticPresentation(),
+      );
+      expect(placement.general, [diagnostic]);
+      expect(placement.unplaced, isEmpty);
+    },
+  );
+
+  test(
+    "projected resource findings do not become parent presentation failures",
+    () {
+      final diagnostic = _diagnostic([_count]);
+      final placement = PortableDiagnosticPlacement.route(
+        diagnostics: const [],
+        outcomes: const [],
+        presentation: PortableDiagnosticPresentation(
+          nodes: {
+            Object(): PortableDiagnosticNode(
+              kind: PortableDiagnosticNodeKind.source,
+              diagnostics: [diagnostic],
+              diagnosticFallback: PortableDiagnosticFallback.resource,
+            ),
+          },
+        ),
+      );
+      expect(placement.general, isEmpty);
+      expect(placement.unplaced, [diagnostic]);
+    },
+  );
+
   test(
     "duplicated controls display one diagnostic while headers count it once",
     () {
@@ -668,11 +867,17 @@ PortableDiagnosticNode _header(
 
 final class _DiagnosticTextHost extends ChangeNotifier
     implements PortablePresentationHost {
-  _DiagnosticTextHost({this.response}) {
+  _DiagnosticTextHost({
+    this.response,
+    this.diagnostics = const [],
+    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
+  }) {
     _delegate = _createDelegate("initial");
     _delegate.addListener(notifyListeners);
   }
   final Future<PortablePresentationWriteResult>? response;
+  final List<PortablePresentationDiagnostic> diagnostics;
+  final PortableDiagnosticFallback diagnosticFallback;
   final source = ValueNotifier(
     skir.DataValue.wrapStringValue("Original value"),
   );
@@ -735,7 +940,19 @@ final class _DiagnosticTextHost extends ChangeNotifier
   }
 
   @override
-  PortablePresentationDocument get document => _delegate.document;
+  PortablePresentationDocument get document {
+    final source = _delegate.document;
+    return PortablePresentationDocument(
+      catalog: source.catalog,
+      root: source.root,
+      bindings: source.bindings,
+      budget: source.budget,
+      role: source.role,
+      diagnostics: diagnostics,
+      diagnosticFallback: diagnosticFallback,
+    );
+  }
+
   @override
   PortablePresentationCapabilities get capabilities => _delegate.capabilities;
   @override

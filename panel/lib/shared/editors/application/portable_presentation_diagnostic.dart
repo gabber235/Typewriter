@@ -39,8 +39,12 @@ sealed class PortableDiagnosticTarget with _$PortableDiagnosticTarget {
   };
 }
 
+/// Chooses the fallback owner when a diagnostic has no rendered target.
+enum PortableDiagnosticFallback { presentation, resource }
+
 /// Carries a finding from its validator to exact fields and enclosing headers.
-/// An empty target list means that the message belongs to the presentation as a whole.
+/// Targets describe addressability. The source fallback determines ownership
+/// when targets are empty or none are represented by this presentation.
 @freezed
 abstract class PortablePresentationDiagnostic
     with _$PortablePresentationDiagnostic {

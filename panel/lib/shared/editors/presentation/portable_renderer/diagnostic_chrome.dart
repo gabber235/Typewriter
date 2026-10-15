@@ -262,7 +262,13 @@ class PortablePresentationChrome extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final tooltip = useMemoized(GlobalKey<TooltipState>.new);
-    final diagnostics = PortableDiagnosticScope.of(context).placement.general;
+    final placement = PortableDiagnosticScope.of(context).placement;
+    final expanded =
+        role == skir.PresentationRole.editor ||
+        role == skir.PresentationRole.inspector;
+    final diagnostics = expanded
+        ? placement.general
+        : {...placement.general, ...placement.unplaced}.toList();
     final severity = PortableDiagnosticSummary(direct: diagnostics)
         .highestSeverity;
     final label = switch (severity?.kind) {
@@ -285,8 +291,7 @@ class PortablePresentationChrome extends HookWidget {
         Tooltip.dismissAllToolTips();
       }
     }, [focus, diagnostics]);
-    if (role == skir.PresentationRole.editor ||
-        role == skir.PresentationRole.inspector) {
+    if (expanded) {
       return LayoutBuilder(
         builder: (context, constraints) {
           final fill = constraints.hasBoundedHeight;

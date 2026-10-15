@@ -602,27 +602,27 @@ $PortablePresentationBindingSchemaCopyWith<$Res> get schema {
 /// @nodoc
 mixin _$PortablePresentationDocument {
 
- CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; List<PortablePresentationDiagnostic> get diagnostics; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
+ CheckedEditorCatalog get catalog; skir.PresentationNode get root; Map<skir.ExpressionBindingId, PortablePresentationBinding> get bindings; skir.EvaluationBudget get budget; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots;
 
 
 
 @override
 bool operator ==(Object other) {
   final _this = this as PortablePresentationDocument;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortablePresentationDocument;
-  return Object.hash(runtimeType,_this.catalog,_this.root,const DeepCollectionEquality().hash(_this.bindings),_this.budget,const DeepCollectionEquality().hash(_this.diagnostics),_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots));
+  return Object.hash(runtimeType,_this.catalog,_this.root,const DeepCollectionEquality().hash(_this.bindings),_this.budget,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots));
 }
 
 @override
 String toString() {
   final _this = this as PortablePresentationDocument;
-  return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, diagnostics: ${_this.diagnostics}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
+  return 'PortablePresentationDocument(catalog: ${_this.catalog}, root: ${_this.root}, bindings: ${_this.bindings}, budget: ${_this.budget}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots})';
 }
 
 
@@ -636,7 +636,7 @@ String toString() {
 
 
 class _PortablePresentationDocument extends PortablePresentationDocument {
-  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required  List<PortablePresentationDiagnostic> diagnostics, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_diagnostics = diagnostics,_activePresentations = activePresentations,_slots = slots,super._();
+  const _PortablePresentationDocument({required this.catalog, required this.root, required  Map<skir.ExpressionBindingId, PortablePresentationBinding> bindings, required this.budget, required  List<PortablePresentationDiagnostic> diagnostics, required this.diagnosticFallback, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots}): _bindings = bindings,_diagnostics = diagnostics,_activePresentations = activePresentations,_slots = slots,super._();
 
 
 @override final  CheckedEditorCatalog catalog;
@@ -656,6 +656,7 @@ class _PortablePresentationDocument extends PortablePresentationDocument {
   return EqualUnmodifiableListView(_diagnostics);
 }
 
+@override final  PortableDiagnosticFallback diagnosticFallback;
 @override final  skir.PresentationRole? role;
 @override final  skir.PresentationMaterial? material;
  final  Set<skir.PresentationId> _activePresentations;
@@ -678,18 +679,18 @@ class _PortablePresentationDocument extends PortablePresentationDocument {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,catalog,root,const DeepCollectionEquality().hash(_bindings),budget,const DeepCollectionEquality().hash(_diagnostics),role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots));
+    return Object.hash(runtimeType,catalog,root,const DeepCollectionEquality().hash(_bindings),budget,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots));
 }
 
 @override
 String toString() {
-    return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, diagnostics: $diagnostics, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots)';
+    return 'PortablePresentationDocument._value(catalog: $catalog, root: $root, bindings: $bindings, budget: $budget, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots)';
 }
 
 
@@ -1672,7 +1673,7 @@ as String?,
 /// @nodoc
 mixin _$PortableResourceProjection {
 
- skir.ResourceId get resource; skir.TypeSelection get configuration; String get label; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics;
+ skir.ResourceId get resource; skir.TypeSelection get configuration; String get label; skir.DataValue get value; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1684,20 +1685,20 @@ $PortableResourceProjectionCopyWith<PortableResourceProjection> get copyWith => 
 @override
 bool operator ==(Object other) {
   final _this = this as PortableResourceProjection;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableResourceProjection&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.configuration, _this.configuration) || other.configuration == _this.configuration)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableResourceProjection;
-  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.label,_this.value,const DeepCollectionEquality().hash(_this.diagnostics));
+  return Object.hash(runtimeType,_this.resource,_this.configuration,_this.label,_this.value,const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback);
 }
 
 @override
 String toString() {
   final _this = this as PortableResourceProjection;
-  return 'PortableResourceProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, label: ${_this.label}, value: ${_this.value}, diagnostics: ${_this.diagnostics})';
+  return 'PortableResourceProjection(resource: ${_this.resource}, configuration: ${_this.configuration}, label: ${_this.label}, value: ${_this.value}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback})';
 }
 
 
@@ -1708,7 +1709,7 @@ abstract mixin class $PortableResourceProjectionCopyWith<$Res>  {
   factory $PortableResourceProjectionCopyWith(PortableResourceProjection value, $Res Function(PortableResourceProjection) _then) = _$PortableResourceProjectionCopyWithImpl;
 @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics
+ skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
@@ -1725,14 +1726,15 @@ class _$PortableResourceProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(PortableResourceProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticFallback,
   ));
 }
 
@@ -1817,10 +1819,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   return orElse();
 
 }
@@ -1838,10 +1840,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection():
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1858,10 +1860,10 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ResourceId resource,  skir.TypeSelection configuration,  String label,  skir.DataValue value,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableResourceProjection() when $default != null:
-return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics);case _:
+return $default(_that.resource,_that.configuration,_that.label,_that.value,_that.diagnostics,_that.diagnosticFallback);case _:
   return null;
 
 }
@@ -1873,7 +1875,7 @@ return $default(_that.resource,_that.configuration,_that.label,_that.value,_that
 
 
 class _PortableResourceProjection implements PortableResourceProjection {
-  const _PortableResourceProjection({required this.resource, required this.configuration, required this.label, required this.value,  List<PortablePresentationDiagnostic> diagnostics = const []}): _diagnostics = diagnostics;
+  const _PortableResourceProjection({required this.resource, required this.configuration, required this.label, required this.value,  List<PortablePresentationDiagnostic> diagnostics = const [], this.diagnosticFallback = PortableDiagnosticFallback.presentation}): _diagnostics = diagnostics;
 
 
 @override final  skir.ResourceId resource;
@@ -1887,6 +1889,7 @@ class _PortableResourceProjection implements PortableResourceProjection {
   return EqualUnmodifiableListView(_diagnostics);
 }
 
+@override@JsonKey() final  PortableDiagnosticFallback diagnosticFallback;
 
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non null parameter values.
@@ -1898,18 +1901,18 @@ _$PortableResourceProjectionCopyWith<_PortableResourceProjection> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableResourceProjection&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.configuration, configuration) || other.configuration == configuration)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,resource,configuration,label,value,const DeepCollectionEquality().hash(_diagnostics));
+    return Object.hash(runtimeType,resource,configuration,label,value,const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback);
 }
 
 @override
 String toString() {
-    return 'PortableResourceProjection(resource: $resource, configuration: $configuration, label: $label, value: $value, diagnostics: $diagnostics)';
+    return 'PortableResourceProjection(resource: $resource, configuration: $configuration, label: $label, value: $value, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback)';
 }
 
 
@@ -1920,7 +1923,7 @@ abstract mixin class _$PortableResourceProjectionCopyWith<$Res> implements $Port
   factory _$PortableResourceProjectionCopyWith(_PortableResourceProjection value, $Res Function(_PortableResourceProjection) _then) = __$PortableResourceProjectionCopyWithImpl;
 @override @useResult
 $Res call({
- skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics
+ skir.ResourceId resource, skir.TypeSelection configuration, String label, skir.DataValue value, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
@@ -1937,14 +1940,15 @@ class __$PortableResourceProjectionCopyWithImpl<$Res>
 
 /// Create a copy of PortableResourceProjection
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? configuration = null,Object? label = null,Object? value = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(_PortableResourceProjection(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId,configuration: null == configuration ? _self.configuration : configuration // ignore: cast_nullable_to_non_nullable
 as skir.TypeSelection,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticFallback,
   ));
 }
 

@@ -31,6 +31,8 @@ abstract class PortableDiagnosticNode with _$PortableDiagnosticNode {
     Object? parent,
     @Default([]) List<PortableDiagnosticObservation> observations,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
+    @Default(PortableDiagnosticFallback.presentation)
+    PortableDiagnosticFallback diagnosticFallback,
   }) = _PortableDiagnosticNode;
   const PortableDiagnosticNode._();
 
@@ -161,9 +163,11 @@ class PortableDiagnosticSource extends StatelessWidget {
     required this.diagnostics,
     required this.observations,
     required this.child,
+    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
     super.key,
   });
   final List<PortablePresentationDiagnostic> diagnostics;
+  final PortableDiagnosticFallback diagnosticFallback;
   final List<PortableDiagnosticObservation> observations;
   final Widget child;
 
@@ -173,6 +177,7 @@ class PortableDiagnosticSource extends StatelessWidget {
       node: PortableDiagnosticNode(
         kind: PortableDiagnosticNodeKind.source,
         diagnostics: diagnostics,
+        diagnosticFallback: diagnosticFallback,
         observations: observations,
       ),
       builder: (context, summary, owner) => child,
@@ -188,12 +193,14 @@ class _PortableDiagnosticBoundary extends HookWidget {
     required this.observations,
     required this.child,
     this.diagnostics = const [],
+    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
     super.key,
   });
 
   final PortableOperationResults operations;
   final List<PortableDiagnosticObservation> observations;
   final List<PortablePresentationDiagnostic> diagnostics;
+  final PortableDiagnosticFallback diagnosticFallback;
   final Widget child;
 
   @override
@@ -225,12 +232,19 @@ class _PortableDiagnosticBoundary extends HookWidget {
     final placement = useMemoized(
       () => PortableDiagnosticPlacement.route(
         diagnostics: diagnostics,
+        diagnosticFallback: diagnosticFallback,
         outcomes: operations.value.outcomes.values.where(
           (outcome) => !obsolete.contains(outcome.request),
         ),
         presentation: presentation,
       ),
-      [diagnostics, operations.value, presentation, obsolete],
+      [
+        diagnostics,
+        diagnosticFallback,
+        operations.value,
+        presentation,
+        obsolete,
+      ],
     );
     return PortableDiagnosticScope(
       tree: tree,

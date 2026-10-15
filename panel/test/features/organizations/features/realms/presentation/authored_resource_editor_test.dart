@@ -402,6 +402,121 @@ void main() {
     expect(size.width > 0 && size.height > 0, isTrue);
   });
 
+  testWidgets(
+    "projected child findings stay off the page canvas and keep compact feedback",
+    (tester) async {
+      final page = _emptyPageGraphFixture();
+      final child = _fixture(title: "", requireTitle: true);
+      final pageType = page.catalog.snapshot.types.first.definition.id;
+      final childType = child.catalog.snapshot.types.first.definition.id;
+      final relation = skir.RelationContract(
+        id: skir.RelationId(value: "test.page.elements"),
+        first: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.page.elements.page"),
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: pageType,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.page.elements.child"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: childType,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        families: const [],
+      );
+      final wire = page.catalog.snapshot.toMutable()
+        ..types = [
+          ...page.catalog.snapshot.types,
+          ...child.catalog.snapshot.types,
+        ]
+        ..presentations = [
+          ...page.catalog.snapshot.presentations,
+          ...child.catalog.snapshot.presentations,
+        ]
+        ..presentationMaterials = [
+          ...page.catalog.snapshot.presentationMaterials,
+          ...child.catalog.snapshot.presentationMaterials,
+        ]
+        ..configuration = child.catalog.snapshot.configuration
+        ..relations = [relation];
+      final document = AuthoringEdit(
+        generation: page.catalog.snapshot.generation,
+        catalog: CheckedEditorCatalog(wire.toFrozen()),
+        resources: [
+          ...page.draft.toDocument().entries.values,
+          ...child.draft.toDocument().entries.values,
+        ],
+        links: [
+          skir.LinkProjection(
+            contract: relation.id,
+            first: page.resource,
+            second: child.resource,
+            firstLocation: editorRootPath.field("elements"),
+            secondLocation: null,
+          ),
+        ],
+      ).toDocument();
+      const message = "Title must not be blank";
+      expect(
+        ResourceIssues.evaluate(document: document)
+            .currentFor(child.resource)
+            .single
+            .diagnostic
+            .message,
+        message,
+      );
+
+      Widget editor(skir.ResourceId resource, skir.PresentationRole role) =>
+          Scaffold(
+            body: AuthoredResourceEditor(
+              resource: resource,
+              document: document,
+              role: role,
+              budget: skir.EvaluationBudget(
+                maxSteps: 1000,
+                maxCollectionItems: 100,
+              ),
+            ),
+          );
+      await tester.pumpTestApp(
+        child: editor(page.resource, skir.PresentationRole.editor),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(Graph), findsOneWidget);
+      expect(find.bySemanticsLabel("Tag"), findsOneWidget);
+      final source = tester.widget<PortableDiagnosticSource>(
+        find.byType(PortableDiagnosticSource),
+      );
+      expect(source.diagnostics.single.message, message);
+      expect(find.text(message), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpTestApp(
+        child: editor(child.resource, skir.PresentationRole.graphNode),
+      );
+      await tester.pumpAndSettle();
+      final marker = find.bySemanticsLabel("Presentation error");
+      expect(marker, findsOneWidget);
+      final button = tester.widget<IconButton>(
+        find.descendant(of: marker, matching: find.byType(IconButton)),
+      );
+      button.focusNode!.requestFocus();
+      await tester.pumpAndSettle();
+      expect(button.focusNode!.hasFocus, isTrue);
+      expect(find.text(message), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets("numeric clearing preserves Unfilled and repair", (tester) async {
     final fixture = _numericFixture(
       generation: "catalog:1",
@@ -534,10 +649,24 @@ void main() {
     expect(find.text("Quest"), findsOneWidget);
   });
 
-  testWidgets("editor roles keep full local diagnostic messages", (
+  testWidgets("editor roles leave unmatched resource findings with the inbox", (
     tester,
   ) async {
-    final fixture = _fixture(title: "", requireTitle: true);
+    final fixture = _fixture(
+      title: "",
+      requireTitle: true,
+      inspectorLayout:
+          (skir.PresentationNode.mutable()
+                ..nodeId = "canvas"
+                ..element = skir.PresentationElement.wrapText(
+                  (skir.TextContent.mutable()
+                        ..value = skir.ExpressionNode.wrapLiteral(
+                          skir.DataValue.wrapStringValue("Canvas"),
+                        ))
+                      .toFrozen(),
+                ))
+              .toFrozen(),
+    );
     await tester.pumpTestApp(
       child: Scaffold(
         body: AuthoredResourceEditor(
@@ -550,7 +679,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text("Title must not be blank"), findsOneWidget);
+    expect(find.text("Title must not be blank"), findsNothing);
     expect(find.bySemanticsLabel("Presentation error"), findsNothing);
   });
 
@@ -582,6 +711,8 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.text("Title must not be blank"), findsOneWidget);
+        expect(find.text("1 issue"), findsNothing);
+        expect(find.text("Saved review differs from this draft"), findsNothing);
         expect(
           find.byType(EditableText),
           showTitleEditor ? findsOneWidget : findsNothing,

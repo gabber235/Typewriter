@@ -53,6 +53,9 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         ),
         operations: scope.operations,
         diagnostics: scope.host?.document.diagnostics ?? const [],
+        diagnosticFallback:
+            scope.host?.document.diagnosticFallback ??
+            PortableDiagnosticFallback.presentation,
         observations:
             scope.host?.document.diagnosticObservations ??
             scope.diagnosticObservations,
@@ -455,6 +458,7 @@ final class PortablePresentationRenderer extends HookWidget {
       key: ValueKey(generation),
       operations: operations,
       diagnostics: document.diagnostics,
+      diagnosticFallback: document.diagnosticFallback,
       observations: document.diagnosticObservations,
       child: PortablePresentationChrome(role: document.role, child: root),
     );

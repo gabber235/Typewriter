@@ -49,6 +49,8 @@ abstract class PortablePresentationDocument
     bindings,
     required skir.EvaluationBudget budget,
     List<PortablePresentationDiagnostic> diagnostics = const [],
+    PortableDiagnosticFallback diagnosticFallback =
+        PortableDiagnosticFallback.presentation,
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
     Set<skir.PresentationId> activePresentations = const {},
@@ -70,6 +72,7 @@ abstract class PortablePresentationDocument
       bindings: Map.unmodifiable(bindings),
       budget: budget,
       diagnostics: List.unmodifiable(diagnostics),
+      diagnosticFallback: diagnosticFallback,
       role: role,
       material: material,
       activePresentations: Set.unmodifiable(activePresentations),
@@ -86,6 +89,7 @@ abstract class PortablePresentationDocument
     bindings,
     required skir.EvaluationBudget budget,
     required List<PortablePresentationDiagnostic> diagnostics,
+    required PortableDiagnosticFallback diagnosticFallback,
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
     required Set<skir.PresentationId> activePresentations,
@@ -290,6 +294,8 @@ abstract class PortableResourceProjection with _$PortableResourceProjection {
     required String label,
     required skir.DataValue value,
     @Default([]) List<PortablePresentationDiagnostic> diagnostics,
+    @Default(PortableDiagnosticFallback.presentation)
+    PortableDiagnosticFallback diagnosticFallback,
   }) = _PortableResourceProjection;
 }
 

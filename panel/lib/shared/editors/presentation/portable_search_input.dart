@@ -290,6 +290,7 @@ final class PortableSearchInput extends HookWidget {
       operations: scope.operations,
       observations: document.diagnosticObservations,
       diagnostics: document.diagnostics,
+      diagnosticFallback: document.diagnosticFallback,
       child: PortablePresentationChrome(role: scope.role, child: content),
     );
   }

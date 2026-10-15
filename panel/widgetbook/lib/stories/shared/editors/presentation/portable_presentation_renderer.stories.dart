@@ -275,6 +275,11 @@ extension _PortableDiagnosticStoryContext on BuildContext {
               ],
               initialOption: skir.PresentationRole.inspector,
             ),
+            diagnosticFallback: knobs.object.dropdown(
+              label: "Diagnostic owner",
+              options: PortableDiagnosticFallback.values,
+              initialOption: PortableDiagnosticFallback.presentation,
+            ),
             general: knobs.boolean(
               label: "General message",
               initialValue: initiallyGeneral,
@@ -293,11 +298,13 @@ class PortableDiagnosticGallery extends HookWidget {
     required this.role,
     required this.general,
     required this.readOnly,
+    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
     super.key,
   });
   final skir.DiagnosticSeverity severity;
   final skir.PresentationRole role;
   final bool general;
+  final PortableDiagnosticFallback diagnosticFallback;
   final bool readOnly;
 
   @override
@@ -307,9 +314,10 @@ class PortableDiagnosticGallery extends HookWidget {
         severity: severity,
         role: role,
         general: general,
+        diagnosticFallback: diagnosticFallback,
         readOnly: readOnly,
       ),
-      [severity, role, general, readOnly],
+      [severity, role, general, readOnly, diagnosticFallback],
     );
     useEffect(() => host.dispose, [host]);
     return PortablePresentationRenderer(host: host);
@@ -323,6 +331,7 @@ class _PortableDiagnosticGalleryHost extends _PortableGalleryHost {
     required this.role,
     required this.general,
     required this.readOnly,
+    this.diagnosticFallback = PortableDiagnosticFallback.presentation,
   }) {
     _values[_title] = skir.DataValue.wrapStringValue("ga");
     _diagnostics = [_titleDiagnostic];
@@ -330,6 +339,7 @@ class _PortableDiagnosticGalleryHost extends _PortableGalleryHost {
   final skir.DiagnosticSeverity severity;
   final skir.PresentationRole role;
   final bool general;
+  final PortableDiagnosticFallback diagnosticFallback;
   @override
   final bool readOnly;
   List<PortablePresentationDiagnostic> _diagnostics = const [];
@@ -358,6 +368,7 @@ class _PortableDiagnosticGalleryHost extends _PortableGalleryHost {
       budget: source.budget,
       role: role,
       diagnostics: _diagnostics,
+      diagnosticFallback: diagnosticFallback,
       material: source.material,
       activePresentations: source.activePresentations,
       slots: source.slots,

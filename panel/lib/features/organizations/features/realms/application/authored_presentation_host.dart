@@ -123,6 +123,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
           ),
       },
       budget: budget,
+      diagnosticFallback: PortableDiagnosticFallback.resource,
       diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
           .currentFor(resource)
           .map((issue) => issue.diagnostic)
@@ -458,6 +459,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       configuration: record.configuration,
       label: _resourceLabel(record) ?? resource.value,
       value: _resourceRow(record),
+      diagnosticFallback: PortableDiagnosticFallback.resource,
       diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
           .currentFor(resource)
           .map((issue) => issue.diagnostic)

@@ -2864,7 +2864,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 /// @nodoc
 mixin _$PortableDiagnosticNode {
 
- PortableDiagnosticNodeKind get kind; Object? get parent; List<PortableDiagnosticObservation> get observations; List<PortablePresentationDiagnostic> get diagnostics;
+ PortableDiagnosticNodeKind get kind; Object? get parent; List<PortableDiagnosticObservation> get observations; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableDiagnosticNode
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2876,20 +2876,20 @@ $PortableDiagnosticNodeCopyWith<PortableDiagnosticNode> get copyWith => _$Portab
 @override
 bool operator ==(Object other) {
   final _this = this as PortableDiagnosticNode;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableDiagnosticNode&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&const DeepCollectionEquality().equals(other.parent, _this.parent)&&const DeepCollectionEquality().equals(other.observations, _this.observations)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableDiagnosticNode&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&const DeepCollectionEquality().equals(other.parent, _this.parent)&&const DeepCollectionEquality().equals(other.observations, _this.observations)&&const DeepCollectionEquality().equals(other.diagnostics, _this.diagnostics)&&(identical(other.diagnosticFallback, _this.diagnosticFallback) || other.diagnosticFallback == _this.diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableDiagnosticNode;
-  return Object.hash(runtimeType,_this.kind,const DeepCollectionEquality().hash(_this.parent),const DeepCollectionEquality().hash(_this.observations),const DeepCollectionEquality().hash(_this.diagnostics));
+  return Object.hash(runtimeType,_this.kind,const DeepCollectionEquality().hash(_this.parent),const DeepCollectionEquality().hash(_this.observations),const DeepCollectionEquality().hash(_this.diagnostics),_this.diagnosticFallback);
 }
 
 @override
 String toString() {
   final _this = this as PortableDiagnosticNode;
-  return 'PortableDiagnosticNode(kind: ${_this.kind}, parent: ${_this.parent}, observations: ${_this.observations}, diagnostics: ${_this.diagnostics})';
+  return 'PortableDiagnosticNode(kind: ${_this.kind}, parent: ${_this.parent}, observations: ${_this.observations}, diagnostics: ${_this.diagnostics}, diagnosticFallback: ${_this.diagnosticFallback})';
 }
 
 
@@ -2900,7 +2900,7 @@ abstract mixin class $PortableDiagnosticNodeCopyWith<$Res>  {
   factory $PortableDiagnosticNodeCopyWith(PortableDiagnosticNode value, $Res Function(PortableDiagnosticNode) _then) = _$PortableDiagnosticNodeCopyWithImpl;
 @useResult
 $Res call({
- PortableDiagnosticNodeKind kind, Object? parent, List<PortableDiagnosticObservation> observations, List<PortablePresentationDiagnostic> diagnostics
+ PortableDiagnosticNodeKind kind, Object? parent, List<PortableDiagnosticObservation> observations, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
@@ -2917,12 +2917,13 @@ class _$PortableDiagnosticNodeCopyWithImpl<$Res>
 
 /// Create a copy of PortableDiagnosticNode
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticNodeKind,parent: freezed == parent ? _self.parent : parent ,observations: null == observations ? _self.observations : observations // ignore: cast_nullable_to_non_nullable
 as List<PortableDiagnosticObservation>,diagnostics: null == diagnostics ? _self.diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticFallback,
   ));
 }
 
@@ -3007,10 +3008,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticNode() when $default != null:
-return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);case _:
+return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_that.diagnosticFallback);case _:
   return orElse();
 
 }
@@ -3028,10 +3029,10 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)  $default,) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticNode():
-return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);case _:
+return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_that.diagnosticFallback);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3048,10 +3049,10 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortableDiagnosticNodeKind kind,  Object? parent,  List<PortableDiagnosticObservation> observations,  List<PortablePresentationDiagnostic> diagnostics,  PortableDiagnosticFallback diagnosticFallback)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticNode() when $default != null:
-return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);case _:
+return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_that.diagnosticFallback);case _:
   return null;
 
 }
@@ -3063,7 +3064,7 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics);ca
 
 
 class _PortableDiagnosticNode extends PortableDiagnosticNode {
-  const _PortableDiagnosticNode({required this.kind, this.parent,  List<PortableDiagnosticObservation> observations = const [],  List<PortablePresentationDiagnostic> diagnostics = const []}): _observations = observations,_diagnostics = diagnostics,super._();
+  const _PortableDiagnosticNode({required this.kind, this.parent,  List<PortableDiagnosticObservation> observations = const [],  List<PortablePresentationDiagnostic> diagnostics = const [], this.diagnosticFallback = PortableDiagnosticFallback.presentation}): _observations = observations,_diagnostics = diagnostics,super._();
 
 
 @override final  PortableDiagnosticNodeKind kind;
@@ -3082,6 +3083,7 @@ class _PortableDiagnosticNode extends PortableDiagnosticNode {
   return EqualUnmodifiableListView(_diagnostics);
 }
 
+@override@JsonKey() final  PortableDiagnosticFallback diagnosticFallback;
 
 /// Create a copy of PortableDiagnosticNode
 /// with the given fields replaced by the non null parameter values.
@@ -3093,18 +3095,18 @@ _$PortableDiagnosticNodeCopyWith<_PortableDiagnosticNode> get copyWith => __$Por
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableDiagnosticNode&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.parent, parent)&&const DeepCollectionEquality().equals(other.observations, _observations)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableDiagnosticNode&&(identical(other.kind, kind) || other.kind == kind)&&const DeepCollectionEquality().equals(other.parent, parent)&&const DeepCollectionEquality().equals(other.observations, _observations)&&const DeepCollectionEquality().equals(other.diagnostics, _diagnostics)&&(identical(other.diagnosticFallback, diagnosticFallback) || other.diagnosticFallback == diagnosticFallback));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(parent),const DeepCollectionEquality().hash(_observations),const DeepCollectionEquality().hash(_diagnostics));
+    return Object.hash(runtimeType,kind,const DeepCollectionEquality().hash(parent),const DeepCollectionEquality().hash(_observations),const DeepCollectionEquality().hash(_diagnostics),diagnosticFallback);
 }
 
 @override
 String toString() {
-    return 'PortableDiagnosticNode(kind: $kind, parent: $parent, observations: $observations, diagnostics: $diagnostics)';
+    return 'PortableDiagnosticNode(kind: $kind, parent: $parent, observations: $observations, diagnostics: $diagnostics, diagnosticFallback: $diagnosticFallback)';
 }
 
 
@@ -3115,7 +3117,7 @@ abstract mixin class _$PortableDiagnosticNodeCopyWith<$Res> implements $Portable
   factory _$PortableDiagnosticNodeCopyWith(_PortableDiagnosticNode value, $Res Function(_PortableDiagnosticNode) _then) = __$PortableDiagnosticNodeCopyWithImpl;
 @override @useResult
 $Res call({
- PortableDiagnosticNodeKind kind, Object? parent, List<PortableDiagnosticObservation> observations, List<PortablePresentationDiagnostic> diagnostics
+ PortableDiagnosticNodeKind kind, Object? parent, List<PortableDiagnosticObservation> observations, List<PortablePresentationDiagnostic> diagnostics, PortableDiagnosticFallback diagnosticFallback
 });
 
 
@@ -3132,12 +3134,13 @@ class __$PortableDiagnosticNodeCopyWithImpl<$Res>
 
 /// Create a copy of PortableDiagnosticNode
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(_PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
 as PortableDiagnosticNodeKind,parent: freezed == parent ? _self.parent : parent ,observations: null == observations ? _self._observations : observations // ignore: cast_nullable_to_non_nullable
 as List<PortableDiagnosticObservation>,diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
-as List<PortablePresentationDiagnostic>,
+as List<PortablePresentationDiagnostic>,diagnosticFallback: null == diagnosticFallback ? _self.diagnosticFallback : diagnosticFallback // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticFallback,
   ));
 }
 
@@ -3696,7 +3699,7 @@ as List<PortablePresentationDiagnostic>,
 /// @nodoc
 mixin _$PortableDiagnosticPlacement {
 
- Map<Object, PortableDiagnosticSummary> get summaries; List<PortablePresentationDiagnostic> get general;
+ Map<Object, PortableDiagnosticSummary> get summaries; List<PortablePresentationDiagnostic> get general; List<PortablePresentationDiagnostic> get unplaced;
 /// Create a copy of PortableDiagnosticPlacement
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3708,20 +3711,20 @@ $PortableDiagnosticPlacementCopyWith<PortableDiagnosticPlacement> get copyWith =
 @override
 bool operator ==(Object other) {
   final _this = this as PortableDiagnosticPlacement;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableDiagnosticPlacement&&const DeepCollectionEquality().equals(other.summaries, _this.summaries)&&const DeepCollectionEquality().equals(other.general, _this.general));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableDiagnosticPlacement&&const DeepCollectionEquality().equals(other.summaries, _this.summaries)&&const DeepCollectionEquality().equals(other.general, _this.general)&&const DeepCollectionEquality().equals(other.unplaced, _this.unplaced));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortableDiagnosticPlacement;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.summaries),const DeepCollectionEquality().hash(_this.general));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.summaries),const DeepCollectionEquality().hash(_this.general),const DeepCollectionEquality().hash(_this.unplaced));
 }
 
 @override
 String toString() {
   final _this = this as PortableDiagnosticPlacement;
-  return 'PortableDiagnosticPlacement(summaries: ${_this.summaries}, general: ${_this.general})';
+  return 'PortableDiagnosticPlacement(summaries: ${_this.summaries}, general: ${_this.general}, unplaced: ${_this.unplaced})';
 }
 
 
@@ -3732,7 +3735,7 @@ abstract mixin class $PortableDiagnosticPlacementCopyWith<$Res>  {
   factory $PortableDiagnosticPlacementCopyWith(PortableDiagnosticPlacement value, $Res Function(PortableDiagnosticPlacement) _then) = _$PortableDiagnosticPlacementCopyWithImpl;
 @useResult
 $Res call({
- Map<Object, PortableDiagnosticSummary> summaries, List<PortablePresentationDiagnostic> general
+ Map<Object, PortableDiagnosticSummary> summaries, List<PortablePresentationDiagnostic> general, List<PortablePresentationDiagnostic> unplaced
 });
 
 
@@ -3749,10 +3752,11 @@ class _$PortableDiagnosticPlacementCopyWithImpl<$Res>
 
 /// Create a copy of PortableDiagnosticPlacement
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? summaries = null,Object? general = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(PortableDiagnosticPlacement(
 summaries: null == summaries ? _self.summaries : summaries // ignore: cast_nullable_to_non_nullable
 as Map<Object, PortableDiagnosticSummary>,general: null == general ? _self.general : general // ignore: cast_nullable_to_non_nullable
+as List<PortablePresentationDiagnostic>,unplaced: null == unplaced ? _self.unplaced : unplaced // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,
   ));
 }
@@ -3838,10 +3842,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general,  List<PortablePresentationDiagnostic> unplaced)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticPlacement() when $default != null:
-return $default(_that.summaries,_that.general);case _:
+return $default(_that.summaries,_that.general,_that.unplaced);case _:
   return orElse();
 
 }
@@ -3859,10 +3863,10 @@ return $default(_that.summaries,_that.general);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general,  List<PortablePresentationDiagnostic> unplaced)  $default,) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticPlacement():
-return $default(_that.summaries,_that.general);case _:
+return $default(_that.summaries,_that.general,_that.unplaced);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3879,10 +3883,10 @@ return $default(_that.summaries,_that.general);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<Object, PortableDiagnosticSummary> summaries,  List<PortablePresentationDiagnostic> general,  List<PortablePresentationDiagnostic> unplaced)?  $default,) {final _that = this;
 switch (_that) {
 case _PortableDiagnosticPlacement() when $default != null:
-return $default(_that.summaries,_that.general);case _:
+return $default(_that.summaries,_that.general,_that.unplaced);case _:
   return null;
 
 }
@@ -3894,7 +3898,7 @@ return $default(_that.summaries,_that.general);case _:
 
 
 class _PortableDiagnosticPlacement extends PortableDiagnosticPlacement {
-  const _PortableDiagnosticPlacement({ Map<Object, PortableDiagnosticSummary> summaries = const {},  List<PortablePresentationDiagnostic> general = const []}): _summaries = summaries,_general = general,super._();
+  const _PortableDiagnosticPlacement({ Map<Object, PortableDiagnosticSummary> summaries = const {},  List<PortablePresentationDiagnostic> general = const [],  List<PortablePresentationDiagnostic> unplaced = const []}): _summaries = summaries,_general = general,_unplaced = unplaced,super._();
 
 
  final  Map<Object, PortableDiagnosticSummary> _summaries;
@@ -3911,6 +3915,13 @@ class _PortableDiagnosticPlacement extends PortableDiagnosticPlacement {
   return EqualUnmodifiableListView(_general);
 }
 
+ final  List<PortablePresentationDiagnostic> _unplaced;
+@override@JsonKey() List<PortablePresentationDiagnostic> get unplaced {
+  if (_unplaced is EqualUnmodifiableListView) return _unplaced;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_unplaced);
+}
+
 
 /// Create a copy of PortableDiagnosticPlacement
 /// with the given fields replaced by the non null parameter values.
@@ -3922,18 +3933,18 @@ _$PortableDiagnosticPlacementCopyWith<_PortableDiagnosticPlacement> get copyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableDiagnosticPlacement&&const DeepCollectionEquality().equals(other.summaries, _summaries)&&const DeepCollectionEquality().equals(other.general, _general));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableDiagnosticPlacement&&const DeepCollectionEquality().equals(other.summaries, _summaries)&&const DeepCollectionEquality().equals(other.general, _general)&&const DeepCollectionEquality().equals(other.unplaced, _unplaced));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_summaries),const DeepCollectionEquality().hash(_general));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_summaries),const DeepCollectionEquality().hash(_general),const DeepCollectionEquality().hash(_unplaced));
 }
 
 @override
 String toString() {
-    return 'PortableDiagnosticPlacement(summaries: $summaries, general: $general)';
+    return 'PortableDiagnosticPlacement(summaries: $summaries, general: $general, unplaced: $unplaced)';
 }
 
 
@@ -3944,7 +3955,7 @@ abstract mixin class _$PortableDiagnosticPlacementCopyWith<$Res> implements $Por
   factory _$PortableDiagnosticPlacementCopyWith(_PortableDiagnosticPlacement value, $Res Function(_PortableDiagnosticPlacement) _then) = __$PortableDiagnosticPlacementCopyWithImpl;
 @override @useResult
 $Res call({
- Map<Object, PortableDiagnosticSummary> summaries, List<PortablePresentationDiagnostic> general
+ Map<Object, PortableDiagnosticSummary> summaries, List<PortablePresentationDiagnostic> general, List<PortablePresentationDiagnostic> unplaced
 });
 
 
@@ -3961,10 +3972,11 @@ class __$PortableDiagnosticPlacementCopyWithImpl<$Res>
 
 /// Create a copy of PortableDiagnosticPlacement
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? summaries = null,Object? general = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(_PortableDiagnosticPlacement(
 summaries: null == summaries ? _self._summaries : summaries // ignore: cast_nullable_to_non_nullable
 as Map<Object, PortableDiagnosticSummary>,general: null == general ? _self._general : general // ignore: cast_nullable_to_non_nullable
+as List<PortablePresentationDiagnostic>,unplaced: null == unplaced ? _self._unplaced : unplaced // ignore: cast_nullable_to_non_nullable
 as List<PortablePresentationDiagnostic>,
   ));
 }

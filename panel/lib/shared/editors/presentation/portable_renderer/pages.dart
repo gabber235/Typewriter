@@ -247,6 +247,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     }
     return PortableDiagnosticSource(
       diagnostics: projected.diagnostics,
+      diagnosticFallback: projected.diagnosticFallback,
       observations: [
         PortableDiagnosticObservation(
           target: PortableDiagnosticTarget.value(
