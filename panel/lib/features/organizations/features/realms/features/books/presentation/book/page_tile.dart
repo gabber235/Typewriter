@@ -6,7 +6,8 @@ part of "route.dart";
 /// movement, and entry drops. It renders working page metadata and stages edits
 /// through the shared workspace.
 class _PageTile extends HookConsumerWidget {
-  const _PageTile({required this.page});
+  const _PageTile({required this.page, this.expanded = true});
+  final bool expanded;
   final Page page;
 
   skir.ResourceId get pageId => page.pageId;
@@ -50,9 +51,12 @@ class _PageTile extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
-    final states = useWidgetStatesController();
-    useListenable(states);
-
+    final scope = ref.watch(selectedAuthoringScopeProvider);
+    final issueState = scope == null
+        ? null
+        : ref.watch(resourceIssuesProvider(scope));
+    final issues =
+        issueState?.value?.currentFor(pageId) ?? const <ResourceIssue>[];
     final backgroundColor = isSelected
         ? context.theme.colorScheme.primaryContainer
         : Surface.colorOf(context);
@@ -61,22 +65,20 @@ class _PageTile extends HookConsumerWidget {
         ? context.theme.colorScheme.onPrimaryContainer
         : context.theme.colorScheme.onSurface;
 
-    final child = Padding(
-      padding: EdgeInsets.all(context.spacing.space2),
-      child: Row(
-        children: [
-          SizedBox(width: context.spacing.space1),
-          Expanded(
-            child: PresentationInteractionScope(
-              value: PresentationInteraction.fromWidgetStates(states.value)
-                  .copyWith(selected: isSelected),
-              child: _PageRoleTile(pageId: pageId),
-            ),
-          ),
-          SizedBox(width: context.spacing.space2),
-          Icon(Icons.chevron_right, size: 16, color: foregroundColor),
-        ],
-      ),
+    final catalog = ref
+        .watch(selectedWorkingAuthoringDocumentProvider)
+        .value
+        ?.catalog;
+    final child = PageNavigationLabel(
+      name: name,
+      icon: catalog?.selectionDisplay(page.configuration)?.icon,
+      expanded: expanded,
+      issues: issues,
+      checking:
+          issueState?.isLoading == true || issueState?.value?.checking == true,
+      unavailable:
+          issueState?.hasError == true ||
+          issueState?.value?.unavailable == true,
     );
 
     return LayoutBuilder(
@@ -187,7 +189,6 @@ class _PageTile extends HookConsumerWidget {
                               : BorderSide.none,
                         ),
                         child: InkWell(
-                          statesController: states,
                           onTap: () {
                             if (isSelected) return;
                             ref
@@ -208,47 +209,4 @@ class _PageTile extends HookConsumerWidget {
       },
     );
   }
-}
-
-/// Compact page marker used when the sidebar is collapsed.
-///
-/// Selection remains read from the route provider, while page kind metadata is
-/// resolved from the active realm catalog.
-class _SmallPageTile extends HookConsumerWidget {
-  const _SmallPageTile({required this.page});
-
-  final Page page;
-
-  skir.ResourceId get pageId => page.pageId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
-
-    return Material(
-      color: isSelected
-          ? context.colors.selectionContainer
-          : Colors.transparent,
-      borderRadius: context.shapes.mediumBorderRadius,
-      child: Padding(
-        padding: EdgeInsets.all(context.spacing.space2),
-        child: SizedBox.square(
-          dimension: 20,
-          child: ClipRect(child: _PageRoleTile(pageId: pageId)),
-        ),
-      ),
-    );
-  }
-}
-
-class _PageRoleTile extends StatelessWidget {
-  const _PageRoleTile({required this.pageId});
-
-  final skir.ResourceId pageId;
-
-  @override
-  Widget build(BuildContext context) => AuthoringSubjectRole(
-    resourceId: pageId,
-    role: skir.PresentationRole.pageTile,
-  );
 }

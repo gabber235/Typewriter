@@ -36,6 +36,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_features_pages_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book/page_navigation_label.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_page_navigation_label_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/book/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/books/presentation/library/route.stories.dart'
@@ -444,6 +446,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                                         builder:
                                             _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_route_stories
                                                 .bookPageUseCase,
+                                      ),
+                                    ],
+                                  ),
+                                  _widgetbook.WidgetbookComponent(
+                                    name: 'PageNavigationLabel',
+                                    useCases: [
+                                      _widgetbook.WidgetbookUseCase(
+                                        name: 'Page navigation',
+                                        builder:
+                                            _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_book_page_navigation_label_stories
+                                                .pageNavigationLabelStory,
                                       ),
                                     ],
                                   ),

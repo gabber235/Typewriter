@@ -20,109 +20,119 @@ void main() {
     expect(page.copyWith(bookId: null).bookId, isNull);
   });
 
-  testWidgets(
-    "sidebar Edit keyboard action inspects the page without toggling it",
-    (tester) async {
-      final image = await tester.runAsync(() async {
-        final recorder = PictureRecorder();
-        Canvas(recorder);
-        return recorder.endRecording().toImage(1, 1);
-      });
-      final avatar = NetworkImage(mockUserInfo.avatarUrl!);
-      PaintingBinding.instance.imageCache.putIfAbsent(
-        avatar,
-        () => OneFrameImageStreamCompleter(
-          Future.value(ImageInfo(image: image!)),
-        ),
-      );
-      addTearDown(() => PaintingBinding.instance.imageCache.evict(avatar));
-      await tester.binding.setSurfaceSize(const Size(1200, 1200));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-      final state = _state(chapter: skir.DataValue.unfilled);
-      final page = Page.fromAuthoring(state.snapshot!.resources.single);
-      late WidgetRef ref;
-      await tester.pumpTestApp(
-        overrides: [
-          ...appearanceProviderOverrides(),
-          ...authProviderOverrides(),
-          organizationIdProvider.overrideWithValue(_organization),
-          realmIdProvider.overrideWithValue(_realm),
-          bookIdProvider.overrideWith((ref) => _book),
-          pageIdProvider.overrideWith((ref) => null),
-          ...authoringFixtureOverrides(
-            document: fixtureAuthoringDocument(
-              books: [
-                Book(
-                  bookId: _book,
-                  title: "Book",
-                  color: Colors.blue,
-                  icon: "mdi:book",
-                  tagIds: const [],
-                ),
-              ],
-              pages: [page.copyWith(bookId: _book)],
-            ),
+  for (final expanded in [true, false]) {
+    testWidgets(
+      "sidebar Edit actions preserve selection, expanded: $expanded",
+      (tester) async {
+        final image = await tester.runAsync(() async {
+          final recorder = PictureRecorder();
+          Canvas(recorder);
+          return recorder.endRecording().toImage(1, 1);
+        });
+        final avatar = NetworkImage(mockUserInfo.avatarUrl!);
+        PaintingBinding.instance.imageCache.putIfAbsent(
+          avatar,
+          () => OneFrameImageStreamCompleter(
+            Future.value(ImageInfo(image: image!)),
           ),
-        ],
-        child: Consumer(
-          builder: (context, value, child) {
-            ref = value;
-            value.watch(selectionProvider);
-            return const Scaffold(
-              body: SizedBox(width: 320, child: BookSidebarContent()),
-            );
-          },
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pumpAndSettle();
-      FocusManager.instance.primaryFocus?.unfocus();
-      for (var tab = 0; tab < 12; tab++) {
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pump();
-        if (ref
-            .read(actionShortcutsProvider)
-            .containsKey("book_sidebar_page_edit")) {
-          break;
+        );
+        addTearDown(() => PaintingBinding.instance.imageCache.evict(avatar));
+        await tester.binding.setSurfaceSize(const Size(1200, 1200));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        final state = _state(chapter: skir.DataValue.unfilled);
+        final page = Page.fromAuthoring(state.snapshot!.resources.single);
+        late WidgetRef ref;
+        await tester.pumpTestApp(
+          overrides: [
+            ...appearanceProviderOverrides(),
+            ...authProviderOverrides(),
+            resourceIssuesProvider.overrideWith(
+              (ref, scope) => const AsyncData(ResourceIssues()),
+            ),
+            organizationIdProvider.overrideWithValue(_organization),
+            realmIdProvider.overrideWithValue(_realm),
+            bookIdProvider.overrideWith((ref) => _book),
+            pageIdProvider.overrideWith((ref) => null),
+            ...authoringFixtureOverrides(
+              document: fixtureAuthoringDocument(
+                books: [
+                  Book(
+                    bookId: _book,
+                    title: "Book",
+                    color: Colors.blue,
+                    icon: "mdi:book",
+                    tagIds: const [],
+                  ),
+                ],
+                pages: [page.copyWith(bookId: _book)],
+              ),
+            ),
+          ],
+          child: Consumer(
+            builder: (context, value, child) {
+              ref = value;
+              value.watch(selectionProvider);
+              return Scaffold(
+                body: SizedBox(
+                  width: 320,
+                  child: BookSidebarContent(expanded: expanded),
+                ),
+              );
+            },
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
+        FocusManager.instance.primaryFocus?.unfocus();
+        for (var tab = 0; tab < 12; tab++) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+          await tester.pump();
+          if (ref
+              .read(actionShortcutsProvider)
+              .containsKey("book_sidebar_page_edit")) {
+            break;
+          }
         }
-      }
-      expect(
-        ref.read(actionShortcutsProvider).containsKey("book_sidebar_page_edit"),
-        isTrue,
-      );
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-      await tester.pump();
-      expect(ref.read(selectionProvider), [
-        AuthoringResourceIdentifier(
-          organizationId: _organization,
-          realmId: _realm,
-          resourceId: _page,
-        ),
-      ]);
-      await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
-      await tester.pump();
-      expect(ref.read(selectionProvider), hasLength(1));
-      ref.read(selectionProvider.notifier).selectAll([]);
-      await tester.pump();
-      await tester.longPress(find.byType(AuthoringSubjectRole));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text("Edit"));
-      await tester.pumpAndSettle();
-      expect(ref.read(selectionProvider), [
-        AuthoringResourceIdentifier(
-          organizationId: _organization,
-          realmId: _realm,
-          resourceId: _page,
-        ),
-      ]);
-      await tester.pumpWidget(const SizedBox());
-      await tester.pumpAndSettle();
-    },
-  );
+        expect(
+          ref
+              .read(actionShortcutsProvider)
+              .containsKey("book_sidebar_page_edit"),
+          isTrue,
+        );
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pump();
+        expect(ref.read(selectionProvider), [
+          AuthoringResourceIdentifier(
+            organizationId: _organization,
+            realmId: _realm,
+            resourceId: _page,
+          ),
+        ]);
+        await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+        await tester.pump();
+        expect(ref.read(selectionProvider), hasLength(1));
+        ref.read(selectionProvider.notifier).selectAll([]);
+        await tester.pump();
+        await tester.longPress(find.byType(PageNavigationLabel));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text("Edit"));
+        await tester.pumpAndSettle();
+        expect(ref.read(selectionProvider), [
+          AuthoringResourceIdentifier(
+            organizationId: _organization,
+            realmId: _realm,
+            resourceId: _page,
+          ),
+        ]);
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+      },
+    );
+  }
 
   testWidgets(
     "Edit selects the scoped page and repeated Edit keeps it selected",

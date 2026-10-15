@@ -61,8 +61,10 @@ class _TreeItem extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return switch (node) {
-      LeafTreeNode<Page>(:final value) when expanded => _PageTile(page: value),
-      LeafTreeNode<Page>(:final value) => _SmallPageTile(page: value),
+      LeafTreeNode<Page>(:final value) => _PageTile(
+        page: value,
+        expanded: expanded,
+      ),
       InnerTreeNode<Page>() => _TreeCategory(
         node: node as InnerTreeNode<Page>,
         expanded: expanded,
