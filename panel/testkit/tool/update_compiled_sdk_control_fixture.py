@@ -22,6 +22,7 @@ for name, wire_type, file_name in [
     ("compiledSdkBookRecord", "AuthoringRecord", "book.bin"),
     ("compiledSdkBookValue", "DataValue", "book-value.bin"),
     ("compiledSdkPlacementValue", "DataValue", "placement.bin"),
+    ("compiledSdkElementValue", "DataValue", "element-value.bin"),
     ("compiledSdkCompositeLayout", "PresentationNode", "composite-layout.bin"),
     ("compiledSdkCompositeValue", "DataValue", "composite-value.bin"),
     ("compiledSdkTypedLayout", "PresentationNode", "typed-layout.bin"),

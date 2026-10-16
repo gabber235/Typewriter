@@ -85,6 +85,23 @@ void main() {
     await tester.pumpAndSettle();
 
     final timeline = tester.widget<Timeline>(find.byType(Timeline));
+    final headers = find.descendant(
+      of: find.byType(Timeline),
+      matching: find.byType(Card),
+    );
+    expect(headers, findsNWidgets(2));
+    expect(find.byType(AdaptiveLeadingLayout), findsNothing);
+    expect(tester.getSize(headers.first).height, lessThanOrEqualTo(60));
+    final menus = find.descendant(
+      of: headers,
+      matching: find.byWidgetPredicate((widget) => widget is PopupMenuButton),
+    );
+    await tester.tap(menus.first);
+    await tester.pumpAndSettle();
+    expect(find.text("Disconnect from page"), findsOneWidget);
+    expect(find.text("Delete resource"), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
     await timeline.onElementsCommited!([
       TimelineCommitPayload(
         id: const TimelineIdentifier("cue:dialogue"),

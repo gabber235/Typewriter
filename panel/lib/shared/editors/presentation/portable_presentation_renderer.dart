@@ -336,6 +336,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       child: PortablePresentationNodeRenderer(
         node: value.child,
         scope: childScope,
+        fillAvailableSpace: fillAvailableSpace,
       ),
     ),
     skir.PresentationElement_dividerWrapper(:final value) => _renderDivider(

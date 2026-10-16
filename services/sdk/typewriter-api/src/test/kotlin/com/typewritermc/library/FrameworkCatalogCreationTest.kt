@@ -58,6 +58,90 @@ import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
 val FrameworkCatalogCreationTest by testSuite {
+    test("element graph defaults inherit while concrete graph presentations keep precedence") {
+        val entries = generatedProviderEntries()
+        val definitions =
+            entries
+                .filter { it.kind == GeneratedProviderKind.Type }
+                .map { entry ->
+                    (instantiateGeneratedProvider(Class.forName(entry.providerClass)) as GeneratedTypeProvider).definition
+                }.distinctBy(TypeDefinition::id)
+        val concreteId =
+            com.typewritermc.types.TypeDefinitionId(
+                com.typewritermc.types.TypeId
+                    .Qualified("test", "ConcreteEntry"),
+                1,
+            )
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration("entry graph inheritance"),
+                StandardTypes.definitions + definitions +
+                    TypeDefinition(
+                        concreteId,
+                        representation = RepresentationTemplate.Record(emptyList()),
+                        parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                    ),
+            )
+        val checked = (catalog.resolve(TypeUse.Named(concreteId)) as Resolution.Ready).value
+        val runtime = DefaultPresentationRuntime()
+        val provider = com.typewritermc.elements.com_typewritermc_elements_ElementGraphNodePresentation_ElementPresentationProvider(runtime)
+        val inherited = provider.descriptor(origin("element_graph"))
+        inherited.roles shouldBe setOf(PresentationRole.GRAPH_NODE)
+        entries.count { it.providerClass == provider.javaClass.name } shouldBe 1
+        val inheritedRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited))
+        (inheritedRegistry.select(PresentationRole.GRAPH_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+            .descriptor.id shouldBe inherited.id
+        val concrete =
+            inherited.copy(
+                id = com.typewritermc.types.PresentationId("test", "concrete entry graph"),
+                target =
+                    com.typewritermc.presentation.PresentationTarget
+                        .Named(TypeTemplate.Named(concreteId)),
+                priority = inherited.priority - 1,
+            )
+        val customRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited, concrete))
+        (customRegistry.select(PresentationRole.GRAPH_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+            .descriptor.id shouldBe concrete.id
+        val material =
+            provider.build(
+                PresentationBuildBinding(
+                    checked.presentationTemplate(),
+                    PresentationRole.GRAPH_NODE,
+                    mapOf(com.typewritermc.elements.Element::class to TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                ),
+            )
+        val surface = (material.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
+        surface.radius shouldBe skirout.editor.v1.presentation.PresentationRadius.MEDIUM
+        val inset = (surface.child.singleFixed().element as PresentationElement.PaddingWrapper).value
+        listOf(inset.start, inset.top, inset.end, inset.bottom) shouldBe listOf(4.0, 4.0, 4.0, 4.0)
+        val frame = (inset.child.singleFixed().element as PresentationElement.ContainerWrapper).value
+        frame.radius shouldBe skirout.editor.v1.presentation.PresentationRadius.SMALL
+        frame.transitionMilliseconds shouldBe 400
+        val border = (frame.border as skirout.editor.v1.presentation.PresentationBorder.AllWrapper).value
+        border.width shouldBe 3.0
+        val states = (border.color as skirout.editor.v1.presentation.PresentationColor.StatesWrapper).value
+        states.rules.map { it.match.required } shouldBe
+            listOf(
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.FOCUSED),
+                listOf(skirout.editor.v1.presentation.PresentationInteractionState.SELECTED),
+            )
+        val leading = frame.child.adaptiveLeading()
+        with((leading.padding as skirout.editor.v1.presentation.PresentationInsets.OnlyWrapper).value) {
+            listOf(left, top, right, bottom)
+        } shouldBe listOf(12.0, 8.0, 12.0, 8.0)
+        with((leading.compactPadding as skirout.editor.v1.presentation.PresentationInsets.OnlyWrapper).value) {
+            listOf(left, top, right, bottom)
+        } shouldBe listOf(4.0, 4.0, 4.0, 4.0)
+        requireNotNull((leading.leading.element as PresentationElement.IconWrapper).value.size)
+            .evaluate(emptyMap()) shouldBe DataValue.Float(18.0)
+        System.getenv("TYPEWRITER_CONTROL_FIXTURE_DIR")?.let { output ->
+            java.io.File(output).mkdirs()
+            java.io.File(output, "element-graph-layout.bin").writeBytes(
+                PresentationNode.serializer.toBytes(material.layout).toByteArray(),
+            )
+        }
+    }
+
     test("framework catalog exposes icon and placement forms with usable resource defaults") {
         val generation = CatalogGeneration("framework creation")
         val entries = generatedProviderEntries()
@@ -667,7 +751,16 @@ private fun exportFrameworkControlFixture(
                 provider.display,
                 provider.nativeClass,
             )
-        }
+        } +
+            com.typewritermc.discovery.OwnedTypeDeclaration(
+                origin("fixture_entry"),
+                TypeDefinition(
+                    entryGraphFixtureType,
+                    representation = RepresentationTemplate.Record(emptyList()),
+                    parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
+                ),
+                com.typewritermc.types.TypeDisplay("Message action", "Entry graph fixture", "fa6-solid:message", "#e74c3c"),
+            )
     val presentations =
         providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
             val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
@@ -720,6 +813,18 @@ private fun exportFrameworkControlFixture(
             .encode(assembly.snapshot)
             .getOrThrow()
     directory.mkdirs()
+    java.io.File(directory, "element-value.bin").writeBytes(
+        skirout.editor.v1.type_catalog.DataValue.serializer
+            .toBytes(
+                SkirDataValueCodec
+                    .encode(
+                        DataValue.Named(
+                            TypeUse.Named(entryGraphFixtureType),
+                            DataValue.Record(mapOf("name" to DataValue.StringValue("Welcome to the village"))),
+                        ),
+                    ).getOrThrow(),
+            ).toByteArray(),
+    )
     java.io.File(directory, "book.bin").writeBytes(
         skirout.editor.v1.type_catalog.AuthoringRecord.serializer
             .toBytes(SkirAuthoringValueCodec.encode(book).getOrThrow())
@@ -775,3 +880,10 @@ private fun exportFrameworkControlFixture(
             """{"generation":"${wire.generation.value}","materials":${wire.presentationMaterials.size},"types":${wire.types.size},"tagType":"${TagDefinition.id}","placementType":"${GraphPlacementDefinition.id}"}""",
         )
 }
+
+private val entryGraphFixtureType =
+    com.typewritermc.types.TypeDefinitionId(
+        com.typewritermc.types.TypeId
+            .Qualified("fixture", "MessageEntry"),
+        1,
+    )

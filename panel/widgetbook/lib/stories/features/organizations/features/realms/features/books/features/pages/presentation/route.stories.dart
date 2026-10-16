@@ -128,6 +128,10 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                 },
                 budget: _budget,
                 catalog: _fixture.catalog,
+                queries: PortableExpressionQueries(
+                  catalog: _fixture.catalog,
+                  authored: _workspace.document,
+                ),
                 resource: _fixture.page,
                 role: skir.PresentationRole.editor,
                 host: _host,

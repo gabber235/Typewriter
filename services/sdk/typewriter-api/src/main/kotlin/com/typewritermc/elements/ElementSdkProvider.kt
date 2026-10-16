@@ -73,3 +73,17 @@ object ElementSearchPresentation : ElementPresentation {
         )
     }
 }
+
+object ElementGraphNodePresentation : ElementPresentation {
+    override val roles = setOf(PresentationRole.GRAPH_NODE)
+
+    override fun ElementPresentationScope.present() {
+        val element = subject.resource<Element>()
+        val display = element.type.display
+        entryNode(
+            title = element.fields.name.orIfBlank("Unnamed element"),
+            iconName = display.icon.orIfBlank("fa6-solid:cube"),
+            accent = display.color.parseColor().orElse(literal(Color(0xff9c64bdu))),
+        )
+    }
+}

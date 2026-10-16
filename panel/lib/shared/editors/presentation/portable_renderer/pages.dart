@@ -58,7 +58,8 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
           targetSide: sides.$2,
         ),
     ];
-    return Graph(
+    final interactions = PortablePageInteractionScope.maybeOf(context);
+    final graph = Graph(
       data: GraphData(
         cellSize: cellSize,
         elements: [
@@ -69,8 +70,27 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
               y: entry.graph?.y ?? projection.entries.indexOf(entry) * 2,
               width: entry.graph?.width ?? 4,
               height: entry.graph?.height ?? 1,
-              builder: (_) =>
-                  _pageResourceCard(entry, childScope, padding: cardPadding),
+              builder: (context) {
+                final presentation = _pageGraphNode(context, entry, childScope);
+                final child = cardPadding == null
+                    ? presentation
+                    : Padding(padding: cardPadding, child: presentation);
+                if (interactions != null) {
+                  return interactions.nodeBuilder(
+                    context,
+                    entry,
+                    childScope,
+                    child,
+                  );
+                }
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: childScope.openResource == null
+                      ? null
+                      : () => childScope.openResource!(entry.resource),
+                  child: child,
+                );
+              },
             ),
         ],
         edges: edges,
@@ -106,6 +126,13 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
             }
           : null,
     );
+    return interactions?.graphBuilder(
+          context,
+          projection.entries,
+          childScope,
+          graph,
+        ) ??
+        graph;
   }
 
   Widget _renderPageTimeline(
@@ -136,7 +163,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
       tracks.add(
         TimelineTrack(
           id: TimelineIdentifier(entry.resource.value),
-          header: (_) => _pageResourceCard(entry, childScope),
+          header: (_) => _pageTimelineHeader(entry, childScope),
           elements: cues,
         ),
       );
@@ -164,16 +191,10 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     );
   }
 
-  Widget _pageResourceCard(
+  Widget _pageTimelineHeader(
     PortablePageEntryProjection entry,
-    PortablePresentationScope childScope, {
-    EdgeInsetsGeometry? padding,
-  }) {
-    final content = _resourcePresentation(
-      entry.resource,
-      skir.PresentationRole.graphNode,
-      childScope,
-    );
+    PortablePresentationScope childScope,
+  ) {
     final editable = childScope.enabled && !childScope.readOnly;
     return Card(
       margin: EdgeInsets.zero,
@@ -185,9 +206,10 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         child: Row(
           children: [
             Expanded(
-              child: padding == null
-                  ? content
-                  : Padding(padding: padding, child: content),
+              child: Text(
+                entry.resourceProjection.label,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             PopupMenuButton<_PageResourceAction>(
               enabled: editable,
@@ -223,81 +245,53 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     );
   }
 
-  Widget _resourcePresentation(
-    skir.ResourceId resource,
-    skir.PresentationRole role,
+  Widget _pageGraphNode(
+    BuildContext context,
+    PortablePageEntryProjection entry,
     PortablePresentationScope parent,
   ) {
-    final catalog = parent.catalog;
-    final host = parent.host;
-    final projectionHost = switch (host) {
-      final PortableCollectionProjectionHost value => value,
-      _ => null,
-    };
-    final projected = projectionHost?.projectResource(
-      resource,
-      context: parent.invocation,
+    final projected = entry.resourceProjection;
+    final selected = parent.catalog?.selectPresentation(
+      projected.configuration,
+      skir.PresentationRole.graphNode,
     );
-    if (catalog == null || projected == null) {
-      return Text(resource.value);
-    }
-    final selected = catalog.selectPresentation(projected.configuration, role);
-    if (selected is! SelectedEditorPresentation) {
-      return Text(projected.label);
-    }
+    final content = switch (selected) {
+      SelectedEditorPresentation() => PortablePresentationNodeRenderer(
+        node: selected.material.layout,
+        scope: parent.forResourcePresentation(projected, selected),
+        fillAvailableSpace: true,
+      ),
+      ConflictingEditorPresentation(:final candidates) => _diagnostic(
+        "The graph node has ${candidates.length} conflicting presentations",
+      ),
+      UnavailableEditorPresentation(:final presentation) => _diagnostic(
+        "Presentation ${presentation.namespace}:${presentation.name} is unavailable",
+      ),
+      _ => DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: context.shapes.mediumBorderRadius,
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Text(projected.label, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+      ),
+    };
     return PortableDiagnosticSource(
       diagnostics: projected.diagnostics,
       diagnosticFallback: projected.diagnosticFallback,
       observations: [
         PortableDiagnosticObservation(
           target: PortableDiagnosticTarget.value(
-            skir.ValueLocation(resource: resource, path: editorRootPath),
+            skir.ValueLocation(resource: entry.resource, path: editorRootPath),
           ),
           value: projected.value,
         ),
       ],
-      child: PortablePresentationNodeRenderer(
-        node: selected.material.layout,
-        scope: PortablePresentationScope(
-          bindings: {
-            ...parent.bindings.withSubjectAt(
-              skir.ValueLocation(resource: resource, path: editorRootPath),
-            ),
-            _configuredValueBindingId: PortableExpressionBinding(
-              value: projected.value,
-              schema: switch (projected.configuration) {
-                skir.TypeSelection_completeWrapper(:final value) =>
-                  CompletePortablePresentationBinding(
-                    skir.TypeUse.wrapNamed(value),
-                  ),
-                skir.TypeSelection_pendingWrapper() =>
-                  PartialPortablePresentationBinding(projected.configuration),
-                _ => null,
-              },
-              location: skir.ValueLocation(
-                resource: resource,
-                path: editorRootPath,
-              ),
-            ),
-          },
-          budget: parent.budget,
-          appearanceLayers: parent.appearanceLayers,
-          readOnly: parent.readOnly,
-          enabled: parent.enabled,
-          operations: parent.operations,
-          watchSearch: parent.watchSearch,
-          reportStatus: parent.reportStatus,
-          catalog: catalog,
-          queries: parent.queries,
-          resourceDiagnostics: parent.resourceDiagnostics,
-          resource: resource,
-          role: selected.resolvedRole,
-          material: selected.material,
-          activePresentations: {selected.material.provider},
-          openResource: parent.openResource,
-          host: parent.host,
-        ).withMaterial(selected.material),
-      ),
+      child: content,
     );
   }
 }

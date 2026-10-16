@@ -61,6 +61,113 @@ void main() {
     expect(scope.projectedWriters.clear, throwsUnsupportedError);
   });
 
+  test(
+    "nested resource keeps its observation and isolates authored ownership",
+    () {
+      final document = compiledTagInheritanceDocument(
+        tags: const [],
+        roots: const [],
+      );
+      final record = document.resource(compiledInheritanceTagId)!;
+      final selected = document.catalog.selectPresentation(
+        record.configuration,
+        skir.PresentationRole.graphNode,
+      ) as SelectedEditorPresentation;
+      final imported = skir.ExpressionBindingId(value: "context:test.page");
+      final pageField = skir.ExpressionBindingId(value: "page_field");
+      final contextType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+      final supplied = PortableExpressionBinding(
+        value: skir.DataValue.wrapStringValue("Shared context"),
+        schema: CompletePortablePresentationBinding(contextType),
+      );
+      final dependencies = selected.material.dependencies.toMutable()
+        ..contextInputs = [
+          skir.PresentationContextInput(
+            bindingId: imported,
+            valueType: contextType,
+          ),
+        ];
+      final nested = SelectedEditorPresentation(
+        requestedRole: selected.requestedRole,
+        resolvedRole: selected.resolvedRole,
+        descriptor: selected.descriptor,
+        material:
+            (selected.material.toMutable()
+                  ..dependencies = dependencies.toFrozen())
+                .toFrozen(),
+      );
+      final queries = PortableExpressionQueries(
+        catalog: document.catalog,
+        authored: document,
+      );
+      final parent = PortablePresentationScope(
+        bindings: {
+          imported: supplied,
+          pageField: PortableExpressionBinding(
+            value: skir.DataValue.wrapStringValue("Page title"),
+            location: skir.ValueLocation(
+              resource: compiledInheritanceBookId,
+              path: editorRootPath.field("title"),
+            ),
+          ),
+          presentationSubjectIdentifierBindingId: compiledInheritanceBookId
+              .toExpressionBinding(),
+        },
+        catalog: document.catalog,
+        queries: queries,
+        operations: testPortableOperations(),
+        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+        resource: compiledInheritanceBookId,
+        readOnly: true,
+        enabled: false,
+        slots: {"body": _visualText("page.body", "Page content")},
+        slotBuilders: {"body": (_) => const Text("Page content")},
+        projectedWriters: {
+          pageField: (_, _, {reads = const []}) =>
+              const PortablePresentationWriteApplied(),
+        },
+      );
+      final value = skir.DataValue.createNamed(
+        actualType:
+            (record.configuration as skir.TypeSelection_completeWrapper).value,
+        payload: skir.DataValue.createRecord(fields: record.fields),
+      );
+      final child = parent.forResourcePresentation(
+        PortableResourceProjection(
+          resource: compiledInheritanceTagId,
+          configuration: record.configuration,
+          label: "Inheritance subject",
+          value: value,
+        ),
+        nested,
+      );
+      expect(child.queries, same(queries));
+      expect(child.operations, same(parent.operations));
+      expect(child.readOnly, isTrue);
+      expect(child.enabled, isFalse);
+      expect(child.bindings[imported], same(supplied));
+      expect(child.bindings, isNot(contains(pageField)));
+      expect(child.authoredAliases, isNot(contains(pageField)));
+      expect(child.slots, isEmpty);
+      expect(child.slotBuilders, isEmpty);
+      expect(child.projectedWriters, isEmpty);
+      expect(child.resource, compiledInheritanceTagId);
+      expect(
+        child.bindings[presentationSubjectIdentifierBindingId]?.value,
+        compiledInheritanceTagId.toExpressionBinding().value,
+      );
+      expect(
+        child.bindings[_configuredBindingId]?.location,
+        skir.ValueLocation(
+          resource: compiledInheritanceTagId,
+          path: editorRootPath,
+        ),
+      );
+      expect(child.bindings[_configuredBindingId]?.value, value);
+      expect(child.activePresentations, {selected.material.provider});
+    },
+  );
+
   testWidgets("relative time refreshes without a new host snapshot", (
     tester,
   ) async {

@@ -614,6 +614,55 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           imports: value.dependencies.contextInputs,
         ),
       ).withAuthoredLayout(value.layout);
+
+  /// Starts a resource presentation with its own subject and authored bindings.
+  /// The caller's observation and declared context inputs remain shared.
+  PortablePresentationScope forResourcePresentation(
+    PortableResourceProjection projected,
+    SelectedEditorPresentation selected,
+  ) {
+    final location = skir.ValueLocation(
+      resource: projected.resource,
+      path: editorRootPath,
+    );
+    return PortablePresentationScope(
+      bindings: {
+        for (final input in selected.material.dependencies.contextInputs)
+          input.bindingId: ?bindings[input.bindingId],
+        presentationSubjectIdentifierBindingId: projected.resource
+            .toExpressionBinding(),
+        _configuredValueBindingId: PortableExpressionBinding(
+          value: projected.value,
+          schema: switch (projected.configuration) {
+            skir.TypeSelection_completeWrapper(:final value) =>
+              CompletePortablePresentationBinding(
+                skir.TypeUse.wrapNamed(value),
+              ),
+            skir.TypeSelection_pendingWrapper() =>
+              PartialPortablePresentationBinding(projected.configuration),
+            _ => null,
+          },
+          location: location,
+        ),
+      },
+      budget: budget,
+      appearanceLayers: appearanceLayers,
+      readOnly: readOnly,
+      enabled: enabled,
+      operations: operations,
+      watchSearch: watchSearch,
+      reportStatus: reportStatus,
+      catalog: catalog,
+      queries: queries,
+      resourceDiagnostics: resourceDiagnostics,
+      resource: projected.resource,
+      searchHistoryNamespace: searchHistoryNamespace,
+      role: selected.resolvedRole,
+      activePresentations: {selected.material.provider},
+      openResource: openResource,
+      host: host,
+    ).withMaterial(selected.material);
+  }
 }
 
 extension _PortableBackendSourceLifetime on Listenable {
