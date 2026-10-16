@@ -29,6 +29,7 @@ enum class GeneratedProviderKind(
     Capability("capability"),
     Registrar("registrar"),
     CollectionProjection("collectionProjection"),
+    ResourceOperation("resourceOperation"),
 }
 
 data class GeneratedProviderIndexEntry(
@@ -64,7 +65,13 @@ interface GeneratedConfigurationProvider : ConfigurationProvider {
 }
 
 interface GeneratedPresentationProvider : PresentationProvider {
+    val reference: com.typewritermc.presentation.PresentationReference? get() = null
+
     fun descriptor(origin: ProviderOrigin): PresentationDescriptor
+}
+
+interface GeneratedResourceOperationProvider {
+    fun contribute(origin: ProviderOrigin): com.typewritermc.operations.OperationDeclaration
 }
 
 interface GeneratedCheckProvider : RealmCheckProvider {

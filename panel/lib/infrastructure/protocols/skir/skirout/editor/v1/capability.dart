@@ -16,6 +16,7 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
+import "./operation.dart" as _lib_editor_v1_operation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 // struct InvocationId
@@ -604,6 +605,7 @@ final class CommandCapabilityDefinition_mutable
 ///     case CapabilityDefinition_search(:var value): { ... }
 ///     case CapabilityDefinition_computation(:var value): { ... }
 ///     case CapabilityDefinition_command(:var value): { ... }
+///     case CapabilityDefinition_authoring(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -664,6 +666,24 @@ sealed class CapabilityDefinition {
     ),
   );
 
+  /// Create a 'authoring' variant wrapping around the given value.
+  factory CapabilityDefinition.wrapAuthoring(
+    AuthoringCapabilityDefinition value,
+  ) => CapabilityDefinition_authoringWrapper._(value);
+
+  /// Same as `wrapAuthoring(AuthoringCapabilityDefinition(...))`.
+  factory CapabilityDefinition.createAuthoring({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
+    required _lib_editor_v1_operation.OperationTargets targets,
+    required _lib_editor_v1_operation.OperationInputDefinition_orMutable? input,
+  }) => CapabilityDefinition.wrapAuthoring(
+    AuthoringCapabilityDefinition(
+      capabilityId: capabilityId,
+      targets: targets,
+      input: input,
+    ),
+  );
+
   /// Returns the kind of variant held by this CapabilityDefinition.
   CapabilityDefinition_kind get kind;
 
@@ -700,6 +720,16 @@ sealed class CapabilityDefinition {
         (it) => it.value,
         ordinal: CapabilityDefinition_kind.commandWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "authoring",
+        "wrapAuthoring",
+        AuthoringCapabilityDefinition.serializer,
+        "",
+        CapabilityDefinition_authoringWrapper._,
+        (it) => it.value,
+        ordinal: CapabilityDefinition_kind.authoringWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -722,7 +752,8 @@ enum CapabilityDefinition_kind {
   unknown(0),
   searchWrapper(1),
   computationWrapper(2),
-  commandWrapper(3);
+  commandWrapper(3),
+  authoringWrapper(4);
 
   final _core.int _ordinal;
 
@@ -795,6 +826,17 @@ final class CapabilityDefinition_commandWrapper
   @_core.override
   CapabilityDefinition_kind get kind =>
       CapabilityDefinition_kind.commandWrapper;
+}
+
+final class CapabilityDefinition_authoringWrapper
+    extends _CapabilityDefinition_wrapper {
+  final AuthoringCapabilityDefinition value;
+
+  CapabilityDefinition_authoringWrapper._(this.value);
+
+  @_core.override
+  CapabilityDefinition_kind get kind =>
+      CapabilityDefinition_kind.authoringWrapper;
 }
 
 // struct ResourceAddress
@@ -3022,6 +3064,177 @@ final class CommandResult_staleGenerationWrapper
 
   @_core.override
   CommandResult_kind get kind => CommandResult_kind.staleGenerationWrapper;
+}
+
+// struct AuthoringCapabilityDefinition
+
+sealed class AuthoringCapabilityDefinition_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capabilityId;
+  _lib_editor_v1_operation.OperationTargets get targets;
+  _lib_editor_v1_operation.OperationInputDefinition_orMutable? get input;
+
+  AuthoringCapabilityDefinition toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringCapabilityDefinition
+    implements AuthoringCapabilityDefinition_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.CapabilityId capabilityId;
+  @_core.override
+  final _lib_editor_v1_operation.OperationTargets targets;
+  @_core.override
+  final _lib_editor_v1_operation.OperationInputDefinition? input;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringCapabilityDefinition({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId,
+    required _lib_editor_v1_operation.OperationTargets targets,
+    required _lib_editor_v1_operation.OperationInputDefinition_orMutable? input,
+  }) => AuthoringCapabilityDefinition._(
+    capabilityId.toFrozen(),
+    targets,
+    (input != null) ? input.toFrozen() : null,
+  );
+
+  AuthoringCapabilityDefinition._(this.capabilityId, this.targets, this.input);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringCapabilityDefinition._(
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+    _lib_editor_v1_operation.OperationTargets.unknown,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringCapabilityDefinition_mutable mutable() =>
+      AuthoringCapabilityDefinition_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_operation.OperationTargets.unknown,
+        null,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringCapabilityDefinition toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringCapabilityDefinition_mutable toMutable() =>
+      AuthoringCapabilityDefinition_mutable._(
+        this.capabilityId,
+        this.targets,
+        this.input,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringCapabilityDefinition) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.capabilityId,
+    this.targets,
+    this.input,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringCapabilityDefinition` instances.
+  static _skir.StructSerializer<
+    AuthoringCapabilityDefinition,
+    AuthoringCapabilityDefinition_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "capability_id",
+        "capabilityId",
+        0,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
+        "",
+        (it) => it.capabilityId,
+        (it, v) => it.capabilityId = v,
+      );
+      _serializerBuilder.addField(
+        "targets",
+        "targets",
+        1,
+        _lib_editor_v1_operation.OperationTargets.serializer,
+        "",
+        (it) => it.targets,
+        (it, v) => it.targets = v,
+      );
+      _serializerBuilder.addField(
+        "input",
+        "input",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_operation.OperationInputDefinition.serializer,
+        ),
+        "",
+        (it) => it.input,
+        (it, v) => it.input = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/capability.skir:AuthoringCapabilityDefinition",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringCapabilityDefinition_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringCapabilityDefinition].
+final class AuthoringCapabilityDefinition_mutable
+    implements AuthoringCapabilityDefinition_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capabilityId;
+  _lib_editor_v1_operation.OperationTargets targets;
+  _lib_editor_v1_operation.OperationInputDefinition_orMutable? input;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringCapabilityDefinition_mutable._(
+    this.capabilityId,
+    this.targets,
+    this.input,
+  );
+
+  /// If the value of [capabilityId] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapabilityId {
+    final value = this.capabilityId;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
+      return value;
+    } else {
+      return this.capabilityId =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringCapabilityDefinition toFrozen() => AuthoringCapabilityDefinition(
+    capabilityId: this.capabilityId,
+    targets: this.targets,
+    input: this.input,
+  ).._u = this._u;
 }
 
 final _skir.Method<CapabilityInvocationRequest, ComputationResult>

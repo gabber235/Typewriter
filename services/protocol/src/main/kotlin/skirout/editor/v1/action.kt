@@ -2293,12 +2293,380 @@ sealed class RealmEditorAction private constructor() {
 }
 
 /** Deeply immutable. */
+sealed class ResourceNavigationMode private constructor() {
+    /** The kind of variant held by a `ResourceNavigationMode`. */
+    enum class Kind {
+        UNKNOWN,
+        OPEN_CONST,
+        REVEAL_CONST,
+        EDIT_CONST,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.ResourceNavigationMode.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.ResourceNavigationMode>?,
+    ) : skirout.editor.v1.action.ResourceNavigationMode() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.ResourceNavigationMode && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    object OPEN : skirout.editor.v1.action.ResourceNavigationMode() {
+        override val kind get() = Kind.OPEN_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.ResourceNavigationMode && other.kind == Kind.OPEN_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.OPEN_CONST.ordinal;
+        }
+    }
+
+    object REVEAL : skirout.editor.v1.action.ResourceNavigationMode() {
+        override val kind get() = Kind.REVEAL_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.ResourceNavigationMode && other.kind == Kind.REVEAL_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.REVEAL_CONST.ordinal;
+        }
+    }
+
+    object EDIT : skirout.editor.v1.action.ResourceNavigationMode() {
+        override val kind get() = Kind.EDIT_CONST;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.ResourceNavigationMode && other.kind == Kind.EDIT_CONST;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return Kind.EDIT_CONST.ordinal;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.ResourceNavigationMode>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResourceNavigationModeSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [ResourceNavigationMode].
+         * Default value for fields of type [ResourceNavigationMode].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Serializer for [ResourceNavigationMode] instances. */
+        val serializer get() = _SerializerRegistry.ResourceNavigationModeSerializer;
+
+        /** Describes the [ResourceNavigationMode] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceNavigationModeSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface ResourceNavigationAction_OrMutable {
+    val resource: skirout.editor.v1.expression.ExpressionNode;
+    val mode: skirout.editor.v1.action.ResourceNavigationMode;
+
+    fun toFrozen(): skirout.editor.v1.action.ResourceNavigationAction;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class ResourceNavigationAction private constructor(
+    override val resource: skirout.editor.v1.expression.ExpressionNode,
+    override val mode: skirout.editor.v1.action.ResourceNavigationMode,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ResourceNavigationAction>? =
+        null,
+): skirout.editor.v1.action.ResourceNavigationAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        resource: skirout.editor.v1.expression.ExpressionNode,
+        mode: skirout.editor.v1.action.ResourceNavigationMode,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ResourceNavigationAction>? =
+            null,
+    ): this(
+        resource,
+        mode,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        resource = this.resource,
+        mode = this.mode,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        resource: skirout.editor.v1.expression.ExpressionNode =
+            this.resource,
+        mode: skirout.editor.v1.action.ResourceNavigationMode =
+            this.mode,
+    ) = skirout.editor.v1.action.ResourceNavigationAction(
+        resource,
+        mode,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.ResourceNavigationAction && this.resource == other.resource && this.mode == other.mode);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.resource, this.mode).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.ResourceNavigationActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [ResourceNavigationAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var resource: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var mode: skirout.editor.v1.action.ResourceNavigationMode =
+            skirout.editor.v1.action.ResourceNavigationMode.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.ResourceNavigationAction>? =
+            null,
+    ): skirout.editor.v1.action.ResourceNavigationAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.ResourceNavigationAction(
+            resource = this.resource,
+            mode = this.mode,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.ResourceNavigationAction(
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                skirout.editor.v1.action.ResourceNavigationMode.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [ResourceNavigationAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resource: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            mode: skirout.editor.v1.action.ResourceNavigationMode =
+                skirout.editor.v1.action.ResourceNavigationMode.UNKNOWN,
+        ) = skirout.editor.v1.action.ResourceNavigationAction(
+            resource = resource,
+            mode = mode,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [ResourceNavigationAction] instances. */
+        val serializer get() = _SerializerRegistry.ResourceNavigationActionSerializer;
+
+        /** Describes the [ResourceNavigationAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.ResourceNavigationActionSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface AuthoringCapabilityAction_OrMutable {
+    val capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
+    val targets: skirout.editor.v1.expression.ExpressionNode;
+    val initialInput: skirout.editor.v1.expression.ExpressionNode?;
+
+    fun toFrozen(): skirout.editor.v1.action.AuthoringCapabilityAction;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AuthoringCapabilityAction private constructor(
+    override val capability: skirout.editor.v1.type_catalog.CapabilityId,
+    override val targets: skirout.editor.v1.expression.ExpressionNode,
+    override val initialInput: skirout.editor.v1.expression.ExpressionNode?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AuthoringCapabilityAction>? =
+        null,
+): skirout.editor.v1.action.AuthoringCapabilityAction_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
+        targets: skirout.editor.v1.expression.ExpressionNode,
+        initialInput: skirout.editor.v1.expression.ExpressionNode?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AuthoringCapabilityAction>? =
+            null,
+    ): this(
+        capability.toFrozen(),
+        targets,
+        initialInput,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        capability = this.capability,
+        targets = this.targets,
+        initialInput = this.initialInput,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capability,
+        targets: skirout.editor.v1.expression.ExpressionNode =
+            this.targets,
+        initialInput: skirout.editor.v1.expression.ExpressionNode? =
+            this.initialInput,
+    ) = skirout.editor.v1.action.AuthoringCapabilityAction(
+        capability.toFrozen(),
+        targets,
+        initialInput,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.action.AuthoringCapabilityAction && this.capability == other.capability && this.targets == other.targets && this.initialInput == other.initialInput);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.capability, this.targets, this.initialInput).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.AuthoringCapabilityActionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [AuthoringCapabilityAction]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
+        override var targets: skirout.editor.v1.expression.ExpressionNode =
+            skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+        override var initialInput: skirout.editor.v1.expression.ExpressionNode? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.action.AuthoringCapabilityAction>? =
+            null,
+    ): skirout.editor.v1.action.AuthoringCapabilityAction_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.action.AuthoringCapabilityAction(
+            capability = this.capability,
+            targets = this.targets,
+            initialInput = this.initialInput,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [capability] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
+         */
+        val mutableCapability: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capability;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
+                    value = value.toMutable();
+                    this.capability = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.action.AuthoringCapabilityAction(
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AuthoringCapabilityAction].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+            targets: skirout.editor.v1.expression.ExpressionNode =
+                skirout.editor.v1.expression.ExpressionNode.UNKNOWN,
+            initialInput: skirout.editor.v1.expression.ExpressionNode? =
+                null,
+        ) = skirout.editor.v1.action.AuthoringCapabilityAction(
+            capability = capability,
+            targets = targets,
+            initialInput = initialInput,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [AuthoringCapabilityAction] instances. */
+        val serializer get() = _SerializerRegistry.AuthoringCapabilityActionSerializer;
+
+        /** Describes the [AuthoringCapabilityAction] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.AuthoringCapabilityActionSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
 sealed class EditorAction private constructor() {
     /** The kind of variant held by a `EditorAction`. */
     enum class Kind {
         UNKNOWN,
         LOCAL_WRAPPER,
         REALM_WRAPPER,
+        NAVIGATE_WRAPPER,
+        AUTHORING_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.action.EditorAction.UNKNOWN")) internal constructor(
@@ -2344,6 +2712,42 @@ sealed class EditorAction private constructor() {
         }
     }
 
+    class NavigateWrapper private constructor (
+        val value: skirout.editor.v1.action.ResourceNavigationAction,
+    ) : skirout.editor.v1.action.EditorAction() {
+        constructor(
+            value: skirout.editor.v1.action.ResourceNavigationAction_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.NAVIGATE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.EditorAction.NavigateWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 2102494577;
+        }
+    }
+
+    class AuthoringWrapper private constructor (
+        val value: skirout.editor.v1.action.AuthoringCapabilityAction,
+    ) : skirout.editor.v1.action.EditorAction() {
+        constructor(
+            value: skirout.editor.v1.action.AuthoringCapabilityAction_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.AUTHORING_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.action.EditorAction.AuthoringWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1475610231;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.action.EditorAction>? get() = null;
 
     abstract val kind: Kind;
@@ -2361,6 +2765,36 @@ sealed class EditorAction private constructor() {
          * Default value for fields of type [EditorAction].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `NavigateWrapper(skirout.editor.v1.action.ResourceNavigationAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createNavigate(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            resource: skirout.editor.v1.expression.ExpressionNode,
+            mode: skirout.editor.v1.action.ResourceNavigationMode,
+        ) = NavigateWrapper(
+            skirout.editor.v1.action.ResourceNavigationAction(
+                resource = resource,
+                mode = mode,
+            )
+        );
+
+        /** Shortcut for `AuthoringWrapper(skirout.editor.v1.action.AuthoringCapabilityAction(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAuthoring(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capability: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
+            targets: skirout.editor.v1.expression.ExpressionNode,
+            initialInput: skirout.editor.v1.expression.ExpressionNode?,
+        ) = AuthoringWrapper(
+            skirout.editor.v1.action.AuthoringCapabilityAction(
+                capability = capability,
+                targets = targets,
+                initialInput = initialInput,
+            )
+        );
 
         /** Serializer for [EditorAction] instances. */
         val serializer get() = _SerializerRegistry.EditorActionSerializer;
@@ -2382,6 +2816,18 @@ private object _SerializerRegistry {
     );
 
     val AppendListItemActionSerializer = build.skir.internal.makeSerializer(AppendListItemActionSerializerImpl);
+
+    val AuthoringCapabilityActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:AuthoringCapabilityAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.AuthoringCapabilityAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.AuthoringCapabilityAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val AuthoringCapabilityActionSerializer = build.skir.internal.makeSerializer(AuthoringCapabilityActionSerializerImpl);
 
     val ChooseFormActionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/action.skir:ChooseFormAction",
@@ -2530,6 +2976,31 @@ private object _SerializerRegistry {
 
     val RemoveMapRowActionSerializer = build.skir.internal.makeSerializer(RemoveMapRowActionSerializerImpl);
 
+    val ResourceNavigationActionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/action.skir:ResourceNavigationAction",
+        doc = "",
+        defaultInstance = skirout.editor.v1.action.ResourceNavigationAction.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.ResourceNavigationAction.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ResourceNavigationActionSerializer = build.skir.internal.makeSerializer(ResourceNavigationActionSerializerImpl);
+
+    val ResourceNavigationModeSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.ResourceNavigationMode, skirout.editor.v1.action.ResourceNavigationMode.Unknown>(
+            recordId = "editor/v1/action.skir:ResourceNavigationMode",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.action.ResourceNavigationMode.Kind.values().size,
+            unknownInstance = skirout.editor.v1.action.ResourceNavigationMode.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.action.ResourceNavigationMode.Unknown(skirout.editor.v1.action.ResourceNavigationMode.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ResourceNavigationModeSerializer = build.skir.internal.makeSerializer(ResourceNavigationModeSerializerImpl);
+
     val SetValueActionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/action.skir:SetValueAction",
         doc = "",
@@ -2574,6 +3045,37 @@ private object _SerializerRegistry {
             { mut, v -> mut.value = v },
         );
         AppendListItemActionSerializerImpl.finalizeStruct();
+
+        AuthoringCapabilityActionSerializerImpl.addField(
+            "capability",
+            "capability",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capability },
+            { mut, v -> mut.capability = v },
+        );
+        AuthoringCapabilityActionSerializerImpl.addField(
+            "targets",
+            "targets",
+            1,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.targets },
+            { mut, v -> mut.targets = v },
+        );
+        AuthoringCapabilityActionSerializerImpl.addField(
+            "initial_input",
+            "initialInput",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.expression.ExpressionNode.serializer,
+            ),
+            "",
+            { it.initialInput },
+            { mut, v -> mut.initialInput = v },
+        );
+        AuthoringCapabilityActionSerializerImpl.finalizeStruct();
 
         ChooseFormActionSerializerImpl.addField(
             "target",
@@ -2651,6 +3153,24 @@ private object _SerializerRegistry {
             _SerializerRegistry.RealmEditorActionSerializer,
             "",
             { skirout.editor.v1.action.EditorAction.RealmWrapper(it) },
+            { it.value },
+        );
+        EditorActionSerializerImpl.addWrapperVariant(
+            3,
+            "navigate",
+            skirout.editor.v1.action.EditorAction.Kind.NAVIGATE_WRAPPER.ordinal,
+            _SerializerRegistry.ResourceNavigationActionSerializer,
+            "",
+            { skirout.editor.v1.action.EditorAction.NavigateWrapper(it) },
+            { it.value },
+        );
+        EditorActionSerializerImpl.addWrapperVariant(
+            4,
+            "authoring",
+            skirout.editor.v1.action.EditorAction.Kind.AUTHORING_WRAPPER.ordinal,
+            _SerializerRegistry.AuthoringCapabilityActionSerializer,
+            "",
+            { skirout.editor.v1.action.EditorAction.AuthoringWrapper(it) },
             { it.value },
         );
         EditorActionSerializerImpl.finalizeEnum();
@@ -2899,6 +3419,49 @@ private object _SerializerRegistry {
             { mut, v -> mut.row = v },
         );
         RemoveMapRowActionSerializerImpl.finalizeStruct();
+
+        ResourceNavigationActionSerializerImpl.addField(
+            "resource",
+            "resource",
+            0,
+            skirout.editor.v1.expression.ExpressionNode.serializer,
+            "",
+            { it.resource },
+            { mut, v -> mut.resource = v },
+        );
+        ResourceNavigationActionSerializerImpl.addField(
+            "mode",
+            "mode",
+            1,
+            _SerializerRegistry.ResourceNavigationModeSerializer,
+            "",
+            { it.mode },
+            { mut, v -> mut.mode = v },
+        );
+        ResourceNavigationActionSerializerImpl.finalizeStruct();
+
+        ResourceNavigationModeSerializerImpl.addConstantVariant(
+            1,
+            "open",
+            skirout.editor.v1.action.ResourceNavigationMode.Kind.OPEN_CONST.ordinal,
+            "",
+            skirout.editor.v1.action.ResourceNavigationMode.OPEN,
+        );
+        ResourceNavigationModeSerializerImpl.addConstantVariant(
+            2,
+            "reveal",
+            skirout.editor.v1.action.ResourceNavigationMode.Kind.REVEAL_CONST.ordinal,
+            "",
+            skirout.editor.v1.action.ResourceNavigationMode.REVEAL,
+        );
+        ResourceNavigationModeSerializerImpl.addConstantVariant(
+            3,
+            "edit",
+            skirout.editor.v1.action.ResourceNavigationMode.Kind.EDIT_CONST.ordinal,
+            "",
+            skirout.editor.v1.action.ResourceNavigationMode.EDIT,
+        );
+        ResourceNavigationModeSerializerImpl.finalizeEnum();
 
         SetValueActionSerializerImpl.addField(
             "target",

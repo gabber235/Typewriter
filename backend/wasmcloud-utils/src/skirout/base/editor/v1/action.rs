@@ -621,6 +621,143 @@ impl RealmEditorAction {
 }
 
 // ==============================================================================
+// enum ResourceNavigationMode
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourceNavigationMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResourceNavigationMode>>),
+    Open,
+    Reveal,
+    Edit,
+}
+
+impl Default for ResourceNavigationMode {
+    fn default() -> Self {
+        ResourceNavigationMode::Unknown(None)
+    }
+}
+
+impl ResourceNavigationMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResourceNavigationMode> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ResourceNavigationMode>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResourceNavigationMode| match x {
+                    ResourceNavigationMode::Unknown(_) => 0,
+                    ResourceNavigationMode::Open => 1,
+                    ResourceNavigationMode::Reveal => 2,
+                    ResourceNavigationMode::Edit => 3,
+                },
+                |u| ResourceNavigationMode::Unknown(Some(u)),
+                |x: &ResourceNavigationMode| match x {
+                    ResourceNavigationMode::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/action.skir",
+                "ResourceNavigationMode",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceNavigationMode> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ResourceNavigationMode::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ResourceNavigationAction
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceNavigationAction {
+    pub resource: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub mode: ResourceNavigationMode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceNavigationAction>>,
+}
+
+impl ResourceNavigationAction {
+    pub fn default_ref() -> &'static ResourceNavigationAction {
+        static D: std::sync::LazyLock<ResourceNavigationAction> =
+            std::sync::LazyLock::new(ResourceNavigationAction::default);
+        &D
+    }
+}
+
+impl ResourceNavigationAction {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResourceNavigationAction>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceNavigationAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "ResourceNavigationAction",
+                "",
+                |x: &ResourceNavigationAction| &x._unrecognized,
+                |x: &mut ResourceNavigationAction, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceNavigationAction> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ResourceNavigationAction::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct AuthoringCapabilityAction
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringCapabilityAction {
+    pub capability: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
+    pub targets: crate::skirout::base::editor::v1::expression::ExpressionNode,
+    pub initial_input: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringCapabilityAction>>,
+}
+
+impl AuthoringCapabilityAction {
+    pub fn default_ref() -> &'static AuthoringCapabilityAction {
+        static D: std::sync::LazyLock<AuthoringCapabilityAction> =
+            std::sync::LazyLock::new(AuthoringCapabilityAction::default);
+        &D
+    }
+}
+
+impl AuthoringCapabilityAction {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringCapabilityAction>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<AuthoringCapabilityAction>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/action.skir",
+                "AuthoringCapabilityAction",
+                "",
+                |x: &AuthoringCapabilityAction| &x._unrecognized,
+                |x: &mut AuthoringCapabilityAction, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringCapabilityAction> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            AuthoringCapabilityAction::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // enum EditorAction
 // ==============================================================================
 
@@ -629,6 +766,8 @@ pub enum EditorAction {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<EditorAction>>),
     Local(Box<LocalEditorAction>),
     Realm(Box<RealmEditorAction>),
+    Navigate(Box<ResourceNavigationAction>),
+    Authoring(Box<AuthoringCapabilityAction>),
 }
 
 impl Default for EditorAction {
@@ -647,6 +786,8 @@ impl EditorAction {
                     EditorAction::Unknown(_) => 0,
                     EditorAction::Local(_) => 1,
                     EditorAction::Realm(_) => 2,
+                    EditorAction::Navigate(_) => 3,
+                    EditorAction::Authoring(_) => 4,
                 },
                 |u| EditorAction::Unknown(Some(u)),
                 |x: &EditorAction| match x {
@@ -1131,6 +1272,68 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResourceNavigationMode> =
+                ResourceNavigationMode::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("open", 1, 1, "", ResourceNavigationMode::Open);
+            (*a).add_constant_variant("reveal", 2, 2, "", ResourceNavigationMode::Reveal);
+            (*a).add_constant_variant("edit", 3, 3, "", ResourceNavigationMode::Edit);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceNavigationAction> =
+                ResourceNavigationAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "resource",
+                0,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &ResourceNavigationAction| &x.resource,
+                |x: &mut ResourceNavigationAction, v| x.resource = v,
+            );
+            (*a).add_field(
+                "mode",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ResourceNavigationMode::_adapter(),
+                ),
+                "",
+                |x: &ResourceNavigationAction| &x.mode,
+                |x: &mut ResourceNavigationAction, v| x.mode = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCapabilityAction> =
+                AuthoringCapabilityAction::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &AuthoringCapabilityAction| &x.capability,
+                |x: &mut AuthoringCapabilityAction, v| x.capability = v,
+            );
+            (*a).add_field(
+                "targets",
+                1,
+                crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                "",
+                |x: &AuthoringCapabilityAction| &x.targets,
+                |x: &mut AuthoringCapabilityAction, v| x.targets = v,
+            );
+            (*a).add_field(
+                "initial_input",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &AuthoringCapabilityAction| &x.initial_input,
+                |x: &mut AuthoringCapabilityAction, v| x.initial_input = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<EditorAction> =
                 EditorAction::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
@@ -1158,6 +1361,34 @@ fn initialize_module_serializers() {
                 |v| EditorAction::Realm(Box::new(v)),
                 |x| match x {
                     EditorAction::Realm(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "navigate",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceNavigationAction::_adapter(),
+                ),
+                "",
+                |v| EditorAction::Navigate(Box::new(v)),
+                |x| match x {
+                    EditorAction::Navigate(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "authoring",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    AuthoringCapabilityAction::_adapter(),
+                ),
+                "",
+                |v| EditorAction::Authoring(Box::new(v)),
+                |x| match x {
+                    EditorAction::Authoring(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

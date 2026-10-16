@@ -1,5 +1,9 @@
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
+  OperationSearchContext,
+  StaleAuthoringObservation,
+} from "editor/v1/resource_operations.skir";
+import {
   CapabilityId,
   CatalogGeneration,
   DataValue,
@@ -50,6 +54,7 @@ struct RealmPresentationSearchRequest(811000007) {
   payload: DataValue = 3;
   result_type: TypeTemplate = 4;
   query: RealmSearchQuery = 5;
+  operation_context: OperationSearchContext? = 6;
 }
 
 enum RealmPresentationSearchStatus(811000008) {
@@ -74,6 +79,10 @@ struct RealmPresentationSearchUnavailable(811000010) {
 enum RealmPresentationSearchUpdate(811000011) {
   snapshot: RealmPresentationSearchSnapshot = 1;
   unavailable: RealmPresentationSearchUnavailable = 2;
+  stale_observation: struct {
+    subscription_id: string = 0;
+    observation: StaleAuthoringObservation = 1;
+  } = 3;
 }
 
 method WatchRealmPresentationSearch(

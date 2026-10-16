@@ -137,6 +137,7 @@ struct AuthoringState(812200018) {
   resources: [AuthoringResource] = 1;
   links: [LinkProjection] = 2;
   findings: [FindingSet] = 3;
+  confirmed_observation: AuthoringObservationId = 4;
 }
 
 struct SetValueIntent(812200019) {
@@ -309,6 +310,11 @@ struct AuthoringTransferUnavailable(812200048) {
   reason: AuthoringTransferUnavailableReason = 1;
   encoded_size: int64 = 2;
   max_encoded_size: int64 = 3;
+}
+
+// Identifies one immutable saved authoring view. It is not a resource revision.
+struct AuthoringObservationId(812200049) {
+  value: string = 0;
 }
 
 method QueryAuthoringState(

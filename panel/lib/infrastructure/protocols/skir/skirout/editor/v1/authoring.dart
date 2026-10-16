@@ -2867,6 +2867,7 @@ sealed class AuthoringState_orMutable {
   _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable>
   get links;
   _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> get findings;
+  AuthoringObservationId_orMutable get confirmedObservation;
 
   AuthoringState toFrozen();
 }
@@ -2881,6 +2882,8 @@ final class AuthoringState implements AuthoringState_orMutable {
   final _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection> links;
   @_core.override
   final _core.Iterable<_lib_editor_v1_checking.FindingSet> findings;
+  @_core.override
+  final AuthoringObservationId confirmedObservation;
   _skir.internal__UnrecognizedFields? _u;
 
   factory AuthoringState({
@@ -2892,14 +2895,22 @@ final class AuthoringState implements AuthoringState_orMutable {
     links,
     required _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable>
     findings,
+    required AuthoringObservationId_orMutable confirmedObservation,
   }) => AuthoringState._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(resources, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(links, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
+    confirmedObservation.toFrozen(),
   );
 
-  AuthoringState._(this.generation, this.resources, this.links, this.findings);
+  AuthoringState._(
+    this.generation,
+    this.resources,
+    this.links,
+    this.findings,
+    this.confirmedObservation,
+  );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = AuthoringState._(
@@ -2907,6 +2918,7 @@ final class AuthoringState implements AuthoringState_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    AuthoringObservationId.defaultInstance,
   );
 
   /// Returns a new mutable instance.
@@ -2916,6 +2928,7 @@ final class AuthoringState implements AuthoringState_orMutable {
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
+    AuthoringObservationId.defaultInstance,
   );
 
   /// Returns this instance (no operation).
@@ -2929,6 +2942,7 @@ final class AuthoringState implements AuthoringState_orMutable {
     this.resources,
     this.links,
     this.findings,
+    this.confirmedObservation,
   );
 
   @_core.override
@@ -2949,6 +2963,7 @@ final class AuthoringState implements AuthoringState_orMutable {
     this.resources,
     this.links,
     this.findings,
+    this.confirmedObservation,
   ];
 
   @_core.override
@@ -2998,6 +3013,15 @@ final class AuthoringState implements AuthoringState_orMutable {
         (it) => it.findings,
         (it, v) => it.findings = v,
       );
+      _serializerBuilder.addField(
+        "confirmed_observation",
+        "confirmedObservation",
+        4,
+        AuthoringObservationId.serializer,
+        "",
+        (it) => it.confirmedObservation,
+        (it, v) => it.confirmedObservation = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3020,6 +3044,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
   _core.Iterable<AuthoringResource_orMutable> resources;
   _core.Iterable<_lib_editor_v1_authoring_facts.LinkProjection_orMutable> links;
   _core.Iterable<_lib_editor_v1_checking.FindingSet_orMutable> findings;
+  AuthoringObservationId_orMutable confirmedObservation;
   _skir.internal__UnrecognizedFields? _u;
 
   AuthoringState_mutable._(
@@ -3027,6 +3052,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     this.resources,
     this.links,
     this.findings,
+    this.confirmedObservation,
   );
 
   /// If the value of [generation] is already mutable, returns it as is.
@@ -3081,6 +3107,18 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     }
   }
 
+  /// If the value of [confirmedObservation] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [confirmedObservation] and returns it.
+  AuthoringObservationId_mutable get mutableConfirmedObservation {
+    final value = this.confirmedObservation;
+    if (value is AuthoringObservationId_mutable) {
+      return value;
+    } else {
+      return this.confirmedObservation = (value as AuthoringObservationId)
+          .toMutable();
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   AuthoringState toFrozen() => AuthoringState(
@@ -3088,6 +3126,7 @@ final class AuthoringState_mutable implements AuthoringState_orMutable {
     resources: this.resources,
     links: this.links,
     findings: this.findings,
+    confirmedObservation: this.confirmedObservation,
   ).._u = this._u;
 }
 
@@ -8095,6 +8134,106 @@ final class AuthoringTransferUnavailable_mutable
     encodedSize: this.encodedSize,
     maxEncodedSize: this.maxEncodedSize,
   ).._u = this._u;
+}
+
+// struct AuthoringObservationId
+
+sealed class AuthoringObservationId_orMutable {
+  _core.String get value;
+
+  AuthoringObservationId toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringObservationId implements AuthoringObservationId_orMutable {
+  @_core.override
+  final _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringObservationId({required _core.String value}) =>
+      AuthoringObservationId._(value);
+
+  AuthoringObservationId._(this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringObservationId._("");
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringObservationId_mutable mutable() =>
+      AuthoringObservationId_mutable._("");
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringObservationId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringObservationId_mutable toMutable() =>
+      AuthoringObservationId_mutable._(this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringObservationId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringObservationId` instances.
+  static _skir.StructSerializer<
+    AuthoringObservationId,
+    AuthoringObservationId_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        0,
+        _skir.Serializers.string,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/authoring.skir:AuthoringObservationId",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringObservationId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringObservationId].
+final class AuthoringObservationId_mutable
+    implements AuthoringObservationId_orMutable {
+  _core.String value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringObservationId_mutable._(this.value);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringObservationId toFrozen() =>
+      AuthoringObservationId(value: this.value).._u = this._u;
 }
 
 // struct QueryAuthoringStateRequest

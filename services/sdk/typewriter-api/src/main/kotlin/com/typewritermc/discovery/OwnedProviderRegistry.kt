@@ -30,6 +30,7 @@ data class OwnedPresentation(
     val origin: ProviderOrigin,
     val descriptor: PresentationDescriptor,
     val provider: PresentationProvider,
+    val reference: com.typewritermc.presentation.PresentationReference? = null,
 )
 
 data class OwnedNativeBinding(
@@ -75,4 +76,5 @@ data class CatalogContributions(
     val presentations: List<OwnedPresentation> = emptyList(),
     val nativeBindings: List<OwnedNativeBinding> = emptyList(),
     val checks: List<OwnedCheck> = emptyList(),
+    val operations: List<com.typewritermc.operations.OperationDeclaration> = emptyList(),
 )

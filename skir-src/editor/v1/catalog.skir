@@ -6,6 +6,10 @@ import {
 } from "editor/v1/diagnostic.skir";
 import { ExpressionNode } from "editor/v1/expression.skir";
 import {
+  ResourceOperationContribution,
+  ResourceOperationDefinition,
+} from "editor/v1/operation.skir";
+import {
   PresentationDependencies,
   PresentationNode,
   ResultAppearance,
@@ -192,6 +196,8 @@ struct EditorCatalogWireSnapshot(810900021) {
   capabilities: [CapabilityDefinition] = 9;
   recommendations: [TypeRecommendation] = 10;
   role_fallbacks: [RoleFallback] = 11;
+  resource_operations: [ResourceOperationDefinition] = 12;
+  resource_operation_contributions: [ResourceOperationContribution] = 13;
 }
 
 struct CatalogTransferChunk(810900022) {

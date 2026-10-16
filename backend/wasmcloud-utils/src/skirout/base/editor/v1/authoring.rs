@@ -798,6 +798,7 @@ pub struct AuthoringState {
     pub resources: Vec<AuthoringResource>,
     pub links: Vec<crate::skirout::base::editor::v1::authoring_facts::LinkProjection>,
     pub findings: Vec<crate::skirout::base::editor::v1::checking::FindingSet>,
+    pub confirmed_observation: AuthoringObservationId,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringState>>,
 }
@@ -2165,6 +2166,48 @@ impl AuthoringTransferUnavailable {
 }
 
 // ==============================================================================
+// struct AuthoringObservationId
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringObservationId {
+    pub value: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AuthoringObservationId>>,
+}
+
+impl AuthoringObservationId {
+    pub fn default_ref() -> &'static AuthoringObservationId {
+        static D: std::sync::LazyLock<AuthoringObservationId> =
+            std::sync::LazyLock::new(AuthoringObservationId::default);
+        &D
+    }
+}
+
+impl AuthoringObservationId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<AuthoringObservationId> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<AuthoringObservationId>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/authoring.skir",
+                "AuthoringObservationId",
+                "",
+                |x: &AuthoringObservationId| &x._unrecognized,
+                |x: &mut AuthoringObservationId, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringObservationId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            AuthoringObservationId::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct QueryAuthoringStateRequest
 // ==============================================================================
 
@@ -3117,6 +3160,16 @@ fn initialize_module_serializers() {
                 "",
                 |x: &AuthoringState| &x.findings,
                 |x: &mut AuthoringState, v| x.findings = v,
+            );
+            (*a).add_field(
+                "confirmed_observation",
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    AuthoringObservationId::_adapter(),
+                ),
+                "",
+                |x: &AuthoringState| &x.confirmed_observation,
+                |x: &mut AuthoringState, v| x.confirmed_observation = v,
             );
             (*a).finalize();
         }
@@ -4083,6 +4136,19 @@ fn initialize_module_serializers() {
                 "",
                 |x: &AuthoringTransferUnavailable| &x.max_encoded_size,
                 |x: &mut AuthoringTransferUnavailable, v| x.max_encoded_size = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringObservationId> =
+                AuthoringObservationId::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "value",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &AuthoringObservationId| &x.value,
+                |x: &mut AuthoringObservationId, v| x.value = v,
             );
             (*a).finalize();
         }

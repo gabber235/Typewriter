@@ -1,5 +1,7 @@
 package com.typewritermc.capability
 
+import com.typewritermc.operations.OperationTargets
+import com.typewritermc.types.PresentationId
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,7 +15,7 @@ value class CapabilityId(
 @Serializable
 sealed interface RealmCapabilityDescriptor {
     val id: CapabilityId
-    val requestType: TypeUse
+    val requestType: TypeUse?
 
     @Serializable
     @SerialName("search")
@@ -37,4 +39,15 @@ sealed interface RealmCapabilityDescriptor {
         override val id: CapabilityId,
         override val requestType: TypeUse,
     ) : RealmCapabilityDescriptor
+
+    @Serializable
+    @SerialName("authoring")
+    data class Authoring(
+        override val id: CapabilityId,
+        override val requestType: TypeUse?,
+        val targets: OperationTargets,
+        val inputPresentation: PresentationId? = null,
+    ) : RealmCapabilityDescriptor {
+        val hasInput: Boolean get() = requestType != null
+    }
 }

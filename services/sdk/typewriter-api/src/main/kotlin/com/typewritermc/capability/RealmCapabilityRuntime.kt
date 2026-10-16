@@ -129,7 +129,14 @@ interface RealmInvocationContext {
     val invocationId: String
 }
 
-interface RealmSearchContext : RealmInvocationContext
+data class ResourceOperationSearchContext(
+    val invocation: com.typewritermc.operations.OperationInvocation,
+    val reads: com.typewritermc.authoring.AuthoredReads,
+)
+
+interface RealmSearchContext : RealmInvocationContext {
+    val operationContext: ResourceOperationSearchContext? get() = null
+}
 
 interface RealmComputationContext : RealmInvocationContext
 

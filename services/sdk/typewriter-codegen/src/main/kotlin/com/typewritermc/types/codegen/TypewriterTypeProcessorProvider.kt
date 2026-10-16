@@ -994,6 +994,26 @@ class ${name}ConfigurationScopeImpl$sourceArguments(
 $configurationImplementation
 }
 
+${if (resource) {
+            val operationParameters = if (typeParameters.isEmpty()) "" else exactDraftParameters
+            val operationDraft = if (typeParameters.isEmpty()) "${name}Draft" else "${name}ExactDraft$exactDraftArguments"
+            """
+@com.typewritermc.operations.GeneratedOperations(resource = $name::class, nativeParameters = ${typeParameters.size})
+interface ${name}Operations$operationParameters$sourceWhere {
+    fun ${name}OperationsScope$operationParameters.operations()
+}
+
+interface ${name}OperationsScope$operationParameters : com.typewritermc.operations.ResourceOperationsScope<$operationDraft>$sourceWhere
+
+class ${name}OperationsScopeImpl$operationParameters(
+    private val build: com.typewritermc.operations.ResourceOperationsBuildScope<$operationDraft>,
+) : ${name}OperationsScope$operationParameters,
+    com.typewritermc.operations.ResourceOperationsScope<$operationDraft> by build$sourceClassWhere
+"""
+        } else {
+            ""
+        }}
+
 interface ${name}Presentation$sourceArguments : com.typewritermc.presentation.PresentationReference$sourceWhere {
     val roles: Set<com.typewritermc.types.PresentationRole> get() = setOf(com.typewritermc.types.PresentationRole.INSPECTOR)
     val priority: Int get() = 0
@@ -1357,6 +1377,10 @@ $descriptors,
         val owner = declaration.qualifiedName?.asString() ?: return
         declaration.getAllSuperTypes().forEach { superType ->
             val interfaceDeclaration = superType.declaration as? KSClassDeclaration ?: return@forEach
+            if (interfaceDeclaration.annotation("com.typewritermc.operations.GeneratedOperations") != null) {
+                generateOperationsAdapter(declaration, superType, interfaceDeclaration)
+                return@forEach
+            }
             val interfaceName = interfaceDeclaration.simpleName.asString()
             val kind =
                 when {
@@ -1392,6 +1416,105 @@ $descriptors,
         }
     }
 
+    private fun generateOperationsAdapter(
+        declaration: KSClassDeclaration,
+        superType: KSType,
+        contract: KSClassDeclaration,
+    ) {
+        val marker = contract.annotation("com.typewritermc.operations.GeneratedOperations") ?: return
+        val resourceType = marker.argument("resource") as? KSType ?: return
+        val resource = resourceType.declaration as? KSClassDeclaration ?: return
+        val count = marker.argument("nativeParameters") as? Int ?: return
+        val owner = declaration.qualifiedName?.asString() ?: return
+        val nativeArguments = superType.arguments.take(count)
+        if (superType.arguments.size != count * 2 ||
+            superType.arguments.any {
+                it.type == null || it.type!!.resolve().isError ||
+                    it.type!!.resolve().declaration is com.google.devtools.ksp.symbol.KSTypeParameter
+            }
+        ) {
+            logger.error("Resource operations require closed native and projection arguments without stars.", declaration)
+            return
+        }
+        val applied = resource.asType(nativeArguments)
+        val conversion = KspTypeGraphConverter().convert(applied)
+        if (conversion !is KspTypeConversionResult.Success || conversion.root !is TypeUse.Named) {
+            logger.error("Resource operations require a supported closed resource application.", declaration)
+            return
+        }
+        val nativeTypes = nativeArguments.map { it.type!!.resolve() }
+        val expectedProjections = nativeTypes.map { draftType(it, resource) }
+        val actualProjections = superType.arguments.drop(count).map { it.type!!.resolve().sourceType() }
+        if (expectedProjections != actualProjections) {
+            logger.error(
+                "Resource operation projection arguments must match their native arguments: expected ${expectedProjections.joinToString()}.",
+                declaration,
+            )
+            return
+        }
+        val application = conversion.root as TypeUse.Named
+        val root = resource.packageName.asString() + "." + resource.generatedTypeName()
+        val contractName = contract.qualifiedName?.asString() ?: return
+        val key = "operations:$owner:$contractName:${applied.sourceType()}"
+        if (!generatedAdapters.add(key)) return
+        val name = owner.replace('.', '_').replace('$', '_') + "_" + resource.generatedTypeName() + "OperationsProvider"
+        val packageName = declaration.packageName.asString()
+        val nativeCode = nativeTypes.map { it.sourceType() }
+        val allArguments =
+            (nativeCode + expectedProjections).joinToString(
+                prefix =
+                    if (count ==
+                        0
+                    ) {
+                        ""
+                    } else {
+                        "<"
+                    },
+                postfix = if (count == 0) "" else ">",
+            )
+        val projection =
+            if (count == 0) {
+                "${root}DraftProjection"
+            } else {
+                val uses = application.arguments.map { it.toOperationTemplate() }
+                val projections =
+                    nativeTypes.mapIndexed {
+                        index,
+                        type,
+                        ->
+                        draftProjectionCode(uses[index], type, resource.typeDefinitionIdentity(), resource, emptyList())
+                    }
+                "com.typewritermc.authoring.draftViewProjection(${application.kotlinCode()}, ${root}ExactDraftType$allArguments(${projections.joinToString()})::bind)"
+            }
+        val reference = if (declaration.isCompanionObject) owner.removeSuffix(".Companion") + ".Companion" else owner
+        val source =
+            """
+package $packageName
+
+class $name : com.typewritermc.discovery.GeneratedResourceOperationProvider {
+    override fun contribute(origin: com.typewritermc.discovery.ProviderOrigin): com.typewritermc.operations.OperationDeclaration =
+        com.typewritermc.operations.collectOperations(
+            origin = origin,
+            declaration = ${owner.kotlinLiteral()},
+            target = ${application.toOperationTemplate().kotlinCode()},
+            projection = $projection,
+        ) { build ->
+            with($reference) { ${root}OperationsScopeImpl$allArguments(build).operations() }
+        }
+}
+""".trimStart()
+        codeGenerator
+            .createNewFile(
+                Dependencies(false, *listOfNotNull(declaration.containingFile).toTypedArray()),
+                packageName,
+                name,
+            ).bufferedWriter()
+            .use {
+                it.write(source)
+            }
+        index("resourceOperation", "$packageName.$name")
+    }
+
     private fun adapterSource(
         packageName: String,
         adapterName: String,
@@ -1423,6 +1546,7 @@ package $packageName
 class $adapterName(
     private val runtime: com.typewritermc.presentation.PresentationRuntime,
 ) : com.typewritermc.discovery.GeneratedPresentationProvider {
+    override val reference: com.typewritermc.presentation.PresentationReference get() = $declaration
     override fun descriptor(origin: com.typewritermc.discovery.ProviderOrigin): com.typewritermc.presentation.PresentationDescriptor =
         with($declaration) {
             val descriptor = com.typewritermc.presentation.PresentationDescriptor(
@@ -3175,3 +3299,10 @@ private val SET_TYPES =
     setOf("kotlin.collections.Set", "kotlin.collections.MutableSet", "kotlin.collections.HashSet", "kotlin.collections.LinkedHashSet")
 private val MAP_TYPES =
     setOf("kotlin.collections.Map", "kotlin.collections.MutableMap", "kotlin.collections.HashMap", "kotlin.collections.LinkedHashMap")
+
+private fun TypeUse.toOperationTemplate(): TypeTemplate =
+    when (this) {
+        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toOperationTemplate() })
+        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toOperationTemplate())
+        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
+    }

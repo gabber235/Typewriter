@@ -18,6 +18,7 @@ import "package:skir_client/skir_client.dart" as _skir;
 import "./capability.dart" as _lib_editor_v1_capability;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./expression.dart" as _lib_editor_v1_expression;
+import "./operation.dart" as _lib_editor_v1_operation;
 import "./presentation.dart" as _lib_editor_v1_presentation;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
@@ -3473,6 +3474,12 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   get capabilities;
   _core.Iterable<TypeRecommendation_orMutable> get recommendations;
   _core.Iterable<RoleFallback_orMutable> get roleFallbacks;
+  _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
+  get resourceOperations;
+  _core.Iterable<
+    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
+  >
+  get resourceOperationContributions;
 
   EditorCatalogWireSnapshot toFrozen();
 }
@@ -3506,6 +3513,12 @@ final class EditorCatalogWireSnapshot
   final _core.Iterable<TypeRecommendation> recommendations;
   @_core.override
   final _core.Iterable<RoleFallback> roleFallbacks;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition>
+  resourceOperations;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_operation.ResourceOperationContribution>
+  resourceOperationContributions;
   _skir.internal__UnrecognizedFields? _u;
 
   factory EditorCatalogWireSnapshot({
@@ -3527,6 +3540,14 @@ final class EditorCatalogWireSnapshot
     capabilities,
     required _core.Iterable<TypeRecommendation_orMutable> recommendations,
     required _core.Iterable<RoleFallback_orMutable> roleFallbacks,
+    required _core.Iterable<
+      _lib_editor_v1_operation.ResourceOperationDefinition_orMutable
+    >
+    resourceOperations,
+    required _core.Iterable<
+      _lib_editor_v1_operation.ResourceOperationContribution_orMutable
+    >
+    resourceOperationContributions,
   }) => EditorCatalogWireSnapshot._(
     generation.toFrozen(),
     _skir.internal__frozenMappedCopy(types, (it) => it.toFrozen()),
@@ -3546,6 +3567,11 @@ final class EditorCatalogWireSnapshot
     _skir.internal__frozenCopy(capabilities),
     _skir.internal__frozenMappedCopy(recommendations, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(roleFallbacks, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(resourceOperations, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(
+      resourceOperationContributions,
+      (it) => it.toFrozen(),
+    ),
   );
 
   EditorCatalogWireSnapshot._(
@@ -3561,11 +3587,15 @@ final class EditorCatalogWireSnapshot
     this.capabilities,
     this.recommendations,
     this.roleFallbacks,
+    this.resourceOperations,
+    this.resourceOperationContributions,
   );
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = EditorCatalogWireSnapshot._(
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
@@ -3584,6 +3614,8 @@ final class EditorCatalogWireSnapshot
   static EditorCatalogWireSnapshot_mutable mutable() =>
       EditorCatalogWireSnapshot_mutable._(
         _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
         _skir.KeyedIterable.empty,
@@ -3617,6 +3649,8 @@ final class EditorCatalogWireSnapshot
         this.capabilities,
         this.recommendations,
         this.roleFallbacks,
+        this.resourceOperations,
+        this.resourceOperationContributions,
       );
 
   @_core.override
@@ -3645,6 +3679,8 @@ final class EditorCatalogWireSnapshot
     this.capabilities,
     this.recommendations,
     this.roleFallbacks,
+    this.resourceOperations,
+    this.resourceOperationContributions,
   ];
 
   @_core.override
@@ -3769,6 +3805,28 @@ final class EditorCatalogWireSnapshot
         (it) => it.roleFallbacks,
         (it, v) => it.roleFallbacks = v,
       );
+      _serializerBuilder.addField(
+        "resource_operations",
+        "resourceOperations",
+        12,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_operation.ResourceOperationDefinition.serializer,
+        ),
+        "",
+        (it) => it.resourceOperations,
+        (it, v) => it.resourceOperations = v,
+      );
+      _serializerBuilder.addField(
+        "resource_operation_contributions",
+        "resourceOperationContributions",
+        13,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_operation.ResourceOperationContribution.serializer,
+        ),
+        "",
+        (it) => it.resourceOperationContributions,
+        (it, v) => it.resourceOperationContributions = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3801,6 +3859,12 @@ final class EditorCatalogWireSnapshot_mutable
   _core.Iterable<_lib_editor_v1_capability.CapabilityDefinition> capabilities;
   _core.Iterable<TypeRecommendation_orMutable> recommendations;
   _core.Iterable<RoleFallback_orMutable> roleFallbacks;
+  _core.Iterable<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
+  resourceOperations;
+  _core.Iterable<
+    _lib_editor_v1_operation.ResourceOperationContribution_orMutable
+  >
+  resourceOperationContributions;
   _skir.internal__UnrecognizedFields? _u;
 
   EditorCatalogWireSnapshot_mutable._(
@@ -3816,6 +3880,8 @@ final class EditorCatalogWireSnapshot_mutable
     this.capabilities,
     this.recommendations,
     this.roleFallbacks,
+    this.resourceOperations,
+    this.resourceOperationContributions,
   );
 
   /// If the value of [generation] is already mutable, returns it as is.
@@ -3965,6 +4031,38 @@ final class EditorCatalogWireSnapshot_mutable
     }
   }
 
+  /// If the value of [resourceOperations] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceOperations] and returns it.
+  _core.List<_lib_editor_v1_operation.ResourceOperationDefinition_orMutable>
+  get mutableResourceOperations {
+    final value = this.resourceOperations;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_operation.ResourceOperationDefinition_orMutable
+        >) {
+      return value;
+    } else {
+      return this.resourceOperations = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [resourceOperationContributions] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
+  _core.List<_lib_editor_v1_operation.ResourceOperationContribution_orMutable>
+  get mutableResourceOperationContributions {
+    final value = this.resourceOperationContributions;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_operation.ResourceOperationContribution_orMutable
+        >) {
+      return value;
+    } else {
+      return this.resourceOperationContributions = _skir.internal__MutableList([
+        ...value,
+      ]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   EditorCatalogWireSnapshot toFrozen() => EditorCatalogWireSnapshot(
@@ -3980,6 +4078,8 @@ final class EditorCatalogWireSnapshot_mutable
     capabilities: this.capabilities,
     recommendations: this.recommendations,
     roleFallbacks: this.roleFallbacks,
+    resourceOperations: this.resourceOperations,
+    resourceOperationContributions: this.resourceOperationContributions,
   ).._u = this._u;
 }
 

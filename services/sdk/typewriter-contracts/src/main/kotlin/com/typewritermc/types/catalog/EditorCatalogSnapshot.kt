@@ -52,6 +52,8 @@ data class EditorCatalogSnapshot(
     val capabilities: List<RealmCapabilityDescriptor> = emptyList(),
     val recommendations: List<TypeRecommendation> = emptyList(),
     val roleFallbacks: List<RoleFallback> = emptyList(),
+    val resourceOperations: List<com.typewritermc.operations.ResourceOperationDefinition> = emptyList(),
+    val resourceOperationContributions: List<com.typewritermc.operations.ResourceOperationContribution> = emptyList(),
 )
 
 fun EditorCatalogSnapshot.toWire(): EditorCatalogWireSnapshot = SkirTypeCodec.encode(this).getOrThrow()

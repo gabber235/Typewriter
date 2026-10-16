@@ -535,6 +535,11 @@ private fun ConversionScope.encodeSnapshot(snapshot: EditorCatalogSnapshot) =
         capabilities = snapshot.capabilities.mapIndexed { index, value -> at("capability $index") { encode(value) } },
         recommendations = snapshot.recommendations.mapIndexed { index, value -> at("recommendation $index") { encode(value) } },
         roleFallbacks = snapshot.roleFallbacks.mapIndexed { index, value -> at("role fallback $index") { encode(value) } },
+        resourceOperations = snapshot.resourceOperations.mapIndexed { index, value -> at("resource operation $index") { encode(value) } },
+        resourceOperationContributions =
+            snapshot.resourceOperationContributions.mapIndexed { index, value ->
+                at("resource operation contribution $index") { encode(value) }
+            },
     )
 
 private fun encode(fallback: RoleFallback): SkirRoleFallback =
@@ -576,6 +581,30 @@ private fun ConversionScope.encode(capability: RealmCapabilityDescriptor): SkirC
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.id.value),
                     requestType = encodeTypeUse(capability.requestType),
+                ),
+            )
+        }
+
+        is RealmCapabilityDescriptor.Authoring -> {
+            SkirCapabilityDefinition.AuthoringWrapper(
+                skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+                    capabilityId =
+                        skirout.editor.v1.type_catalog
+                            .CapabilityId(value = capability.id.value),
+                    targets = encode(capability.targets),
+                    input =
+                        capability.requestType?.let { type ->
+                            skirout.editor.v1.operation.OperationInputDefinition(
+                                type = encodeTypeUse(type),
+                                presentation =
+                                    capability.inputPresentation?.let {
+                                        SkirPresentationId(
+                                            namespace = it.namespace,
+                                            name = it.name,
+                                        )
+                                    },
+                            )
+                        },
                 ),
             )
         }

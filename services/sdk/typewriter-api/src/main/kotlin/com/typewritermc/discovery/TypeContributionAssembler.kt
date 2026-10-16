@@ -91,6 +91,7 @@ data class CatalogAssembly(
     val bindings: com.typewritermc.types.NativeBindingRegistry,
     val providers: OwnedProviderRegistry,
     val checks: List<OwnedCheckRecipe>,
+    val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
 )
 
 interface DeclarationDependencyIndex {
@@ -203,6 +204,15 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 display = owned.first().display,
             )
         }
+    val boundOperations =
+        com.typewritermc.operations.bindOperations(
+            operations,
+            checked,
+            bindingRegistry,
+            assembledDeclarations,
+            presentations,
+            context.capabilities,
+        )
     val snapshot =
         EditorCatalogSnapshot(
             generation = context.generation,
@@ -216,13 +226,20 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                     target == null || target.type.definition !in unavailable
                 },
             configuration = recipes,
-            diagnostics = diagnostics,
+            diagnostics = diagnostics + boundOperations.diagnostics,
             endpointBindings = (endpointBindings + context.endpointBindings).distinct(),
-            capabilities = context.capabilities.sortedBy { it.id.value },
+            capabilities =
+                (
+                    context.capabilities + boundOperations.authoringProviders.map { it.capability } +
+                        com.typewritermc.operations.OperationSearch
+                            .descriptorsFor(boundOperations.authoringProviders)
+                ).sortedBy { it.id.value },
+            resourceOperations = boundOperations.definitions,
+            resourceOperationContributions = boundOperations.contributions,
             recommendations = typeRecommendations(definitionIndex, unavailable),
             roleFallbacks = context.roleFallbacks,
         ).immutableCopy()
-    return CatalogAssembly(snapshot, checked, bindingRegistry, providerRegistry, simpleChecks)
+    return CatalogAssembly(snapshot, checked, bindingRegistry, providerRegistry, simpleChecks, boundOperations)
 }
 
 private data class CollectedOwnedConfiguration(

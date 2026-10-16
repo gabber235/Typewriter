@@ -86,7 +86,26 @@ enum RealmEditorAction(810700014) {
   command: CommandCapabilityAction = 2;
 }
 
-enum EditorAction(810700015) {
+enum ResourceNavigationMode(810700015) {
+  open = 1;
+  reveal = 2;
+  edit = 3;
+}
+
+struct ResourceNavigationAction(810700016) {
+  resource: ExpressionNode = 0;
+  mode: ResourceNavigationMode = 1;
+}
+
+struct AuthoringCapabilityAction(810700017) {
+  capability: CapabilityId = 0;
+  targets: ExpressionNode = 1;
+  initial_input: ExpressionNode? = 2;
+}
+
+enum EditorAction(810700018) {
   local: LocalEditorAction = 1;
   realm: RealmEditorAction = 2;
+  navigate: ResourceNavigationAction = 3;
+  authoring: AuthoringCapabilityAction = 4;
 }

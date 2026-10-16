@@ -1,5 +1,9 @@
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
+  OperationInputDefinition,
+  OperationTargets,
+} from "editor/v1/operation.skir";
+import {
   CapabilityId,
   CatalogGeneration,
   DataValue,
@@ -36,6 +40,7 @@ enum CapabilityDefinition(811200005) {
   search: SearchCapabilityDefinition = 1;
   computation: ComputationCapabilityDefinition = 2;
   command: CommandCapabilityDefinition = 3;
+  authoring: AuthoringCapabilityDefinition = 4;
 }
 
 struct ResourceAddress(811200006) {
@@ -116,6 +121,12 @@ enum CommandResult(811200019) {
   unavailable: CapabilityFailure = 3;
   permission_denied: CapabilityPermissionDenied = 4;
   stale_generation: StaleCatalogGeneration = 5;
+}
+
+struct AuthoringCapabilityDefinition(811200020) {
+  capability_id: CapabilityId = 0;
+  targets: OperationTargets = 1;
+  input: OperationInputDefinition? = 2;
 }
 
 method InvokeRealmComputation(

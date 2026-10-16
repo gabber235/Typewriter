@@ -587,6 +587,7 @@ sealed class CapabilityDefinition private constructor() {
         SEARCH_WRAPPER,
         COMPUTATION_WRAPPER,
         COMMAND_WRAPPER,
+        AUTHORING_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.capability.CapabilityDefinition.UNKNOWN")) internal constructor(
@@ -658,6 +659,24 @@ sealed class CapabilityDefinition private constructor() {
         }
     }
 
+    class AuthoringWrapper private constructor (
+        val value: skirout.editor.v1.capability.AuthoringCapabilityDefinition,
+    ) : skirout.editor.v1.capability.CapabilityDefinition() {
+        constructor(
+            value: skirout.editor.v1.capability.AuthoringCapabilityDefinition_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.AUTHORING_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.capability.CapabilityDefinition.AuthoringWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1475610231;
+        }
+    }
+
     internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.capability.CapabilityDefinition>? get() = null;
 
     abstract val kind: Kind;
@@ -719,6 +738,22 @@ sealed class CapabilityDefinition private constructor() {
             skirout.editor.v1.capability.CommandCapabilityDefinition(
                 capabilityId = capabilityId,
                 requestType = requestType,
+            )
+        );
+
+        /** Shortcut for `AuthoringWrapper(skirout.editor.v1.capability.AuthoringCapabilityDefinition(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createAuthoring(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
+            targets: skirout.editor.v1.operation.OperationTargets,
+            input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?,
+        ) = AuthoringWrapper(
+            skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+                capabilityId = capabilityId,
+                targets = targets,
+                input = input,
             )
         );
 
@@ -2862,6 +2897,161 @@ sealed class CommandResult private constructor() {
     }
 }
 
+sealed interface AuthoringCapabilityDefinition_OrMutable {
+    val capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable;
+    val targets: skirout.editor.v1.operation.OperationTargets;
+    val input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?;
+
+    fun toFrozen(): skirout.editor.v1.capability.AuthoringCapabilityDefinition;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AuthoringCapabilityDefinition private constructor(
+    override val capabilityId: skirout.editor.v1.type_catalog.CapabilityId,
+    override val targets: skirout.editor.v1.operation.OperationTargets,
+    override val input: skirout.editor.v1.operation.OperationInputDefinition?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.AuthoringCapabilityDefinition>? =
+        null,
+): skirout.editor.v1.capability.AuthoringCapabilityDefinition_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable,
+        targets: skirout.editor.v1.operation.OperationTargets,
+        input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.AuthoringCapabilityDefinition>? =
+            null,
+    ): this(
+        capabilityId.toFrozen(),
+        targets,
+        if (input != null) input.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        capabilityId = this.capabilityId,
+        targets = this.targets,
+        input = this.input,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            this.capabilityId,
+        targets: skirout.editor.v1.operation.OperationTargets =
+            this.targets,
+        input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
+            this.input,
+    ) = skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+        capabilityId.toFrozen(),
+        targets,
+        if (input != null) input.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.capability.AuthoringCapabilityDefinition && this.capabilityId == other.capabilityId && this.targets == other.targets && this.input == other.input);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.capabilityId, this.targets, this.input).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.AuthoringCapabilityDefinitionSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [AuthoringCapabilityDefinition]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+            skirout.editor.v1.type_catalog.CapabilityId.partial(),
+        override var targets: skirout.editor.v1.operation.OperationTargets =
+            skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+        override var input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.capability.AuthoringCapabilityDefinition>? =
+            null,
+    ): skirout.editor.v1.capability.AuthoringCapabilityDefinition_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+            capabilityId = this.capabilityId,
+            targets = this.targets,
+            input = this.input,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [capabilityId] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
+         */
+        val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
+            var value = this.capabilityId;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CapabilityId -> {
+                    value = value.toMutable();
+                    this.capabilityId = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CapabilityId.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+                null,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AuthoringCapabilityDefinition].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            capabilityId: skirout.editor.v1.type_catalog.CapabilityId_OrMutable =
+                skirout.editor.v1.type_catalog.CapabilityId.partial(),
+            targets: skirout.editor.v1.operation.OperationTargets =
+                skirout.editor.v1.operation.OperationTargets.UNKNOWN,
+            input: skirout.editor.v1.operation.OperationInputDefinition_OrMutable? =
+                null,
+        ) = skirout.editor.v1.capability.AuthoringCapabilityDefinition(
+            capabilityId = capabilityId,
+            targets = targets,
+            input = input,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [AuthoringCapabilityDefinition] instances. */
+        val serializer get() = _SerializerRegistry.AuthoringCapabilityDefinitionSerializer;
+
+        /** Describes the [AuthoringCapabilityDefinition] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.AuthoringCapabilityDefinitionSerializerImpl.typeDescriptor;
+    }
+}
+
 val InvokeRealmComputation: build.skir.service.Method<
     skirout.editor.v1.capability.CapabilityInvocationRequest,
     skirout.editor.v1.capability.ComputationResult,
@@ -2889,6 +3079,18 @@ val InvokeRealmCommand: build.skir.service.Method<
 }
 
 private object _SerializerRegistry {
+    val AuthoringCapabilityDefinitionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/capability.skir:AuthoringCapabilityDefinition",
+        doc = "",
+        defaultInstance = skirout.editor.v1.capability.AuthoringCapabilityDefinition.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.AuthoringCapabilityDefinition.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val AuthoringCapabilityDefinitionSerializer = build.skir.internal.makeSerializer(AuthoringCapabilityDefinitionSerializerImpl);
+
     val CapabilityDefinitionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.CapabilityDefinition, skirout.editor.v1.capability.CapabilityDefinition.Unknown>(
             recordId = "editor/v1/capability.skir:CapabilityDefinition",
@@ -3123,6 +3325,37 @@ private object _SerializerRegistry {
     val StaleCatalogGenerationSerializer = build.skir.internal.makeSerializer(StaleCatalogGenerationSerializerImpl);
 
     init {
+        AuthoringCapabilityDefinitionSerializerImpl.addField(
+            "capability_id",
+            "capabilityId",
+            0,
+            skirout.editor.v1.type_catalog.CapabilityId.serializer,
+            "",
+            { it.capabilityId },
+            { mut, v -> mut.capabilityId = v },
+        );
+        AuthoringCapabilityDefinitionSerializerImpl.addField(
+            "targets",
+            "targets",
+            1,
+            skirout.editor.v1.operation.OperationTargets.serializer,
+            "",
+            { it.targets },
+            { mut, v -> mut.targets = v },
+        );
+        AuthoringCapabilityDefinitionSerializerImpl.addField(
+            "input",
+            "input",
+            2,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.operation.OperationInputDefinition.serializer,
+            ),
+            "",
+            { it.input },
+            { mut, v -> mut.input = v },
+        );
+        AuthoringCapabilityDefinitionSerializerImpl.finalizeStruct();
+
         CapabilityDefinitionSerializerImpl.addWrapperVariant(
             1,
             "search",
@@ -3148,6 +3381,15 @@ private object _SerializerRegistry {
             _SerializerRegistry.CommandCapabilityDefinitionSerializer,
             "",
             { skirout.editor.v1.capability.CapabilityDefinition.CommandWrapper(it) },
+            { it.value },
+        );
+        CapabilityDefinitionSerializerImpl.addWrapperVariant(
+            4,
+            "authoring",
+            skirout.editor.v1.capability.CapabilityDefinition.Kind.AUTHORING_WRAPPER.ordinal,
+            _SerializerRegistry.AuthoringCapabilityDefinitionSerializer,
+            "",
+            { skirout.editor.v1.capability.CapabilityDefinition.AuthoringWrapper(it) },
             { it.value },
         );
         CapabilityDefinitionSerializerImpl.finalizeEnum();

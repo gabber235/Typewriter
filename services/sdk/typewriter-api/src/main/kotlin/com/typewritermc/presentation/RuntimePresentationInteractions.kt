@@ -15,6 +15,7 @@ internal class RuntimePresentationInteractions(
         action: EditorAction,
         configure: ButtonScope.() -> Unit,
     ) {
+        state.action(action)
         val visual =
             skirout.editor.v1.presentation.InputAppearance
                 .partial()
@@ -44,6 +45,7 @@ internal class RuntimePresentationInteractions(
         action: EditorAction,
         configure: IconButtonScope.() -> Unit,
     ) {
+        state.action(action)
         val visual =
             skirout.editor.v1.presentation.InputAppearance
                 .partial()
@@ -203,6 +205,7 @@ internal class RuntimeMenuScope(
         configure: MenuItemScope.() -> Unit,
     ) {
         require(id.isNotBlank() && items.none { it.itemId == id }) { "Menu item identifiers must be nonempty and unique." }
+        state.action(action)
         val draft =
             skirout.editor.v1.presentation
                 .MenuItem(

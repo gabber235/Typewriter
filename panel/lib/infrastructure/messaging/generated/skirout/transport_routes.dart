@@ -13,6 +13,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1
     as _lib_editor_v1_compiled_content;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/publication.dart"
     as _lib_editor_v1_publication;
+import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/resource_operations.dart"
+    as _lib_editor_v1_resource_operations;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/search.dart"
     as _lib_editor_v1_search;
 import "package:typewriter_panel/infrastructure/protocols/skir/skirout/organization/v1/join_codes.dart"
@@ -1687,6 +1689,90 @@ extension EditorCapabilityCommandInvokeRouteNats
           "command" +
           "." +
           "invoke",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+    );
+  }
+}
+
+extension ResourceOperationsResolveRouteNats
+    on _lib_editor_v1_resource_operations.ResolveResourceOperationsRequest {
+  SkirRouteOperation<
+    _lib_editor_v1_resource_operations.ResolveResourceOperationsResult
+  >
+  operation({
+    required _skir.RecordId organizationId,
+
+    required _skir.RecordId realmId,
+  }) {
+    final organization = organizationId.id._transportIdentity;
+
+    final realm = realmId.id._transportIdentity;
+
+    final method =
+        _lib_editor_v1_resource_operations.resolveResourceOperationsMethod;
+    return SkirRouteOperation(
+      subject:
+          "service" +
+          "." +
+          "to" +
+          "." +
+          realm +
+          "." +
+          "organization" +
+          "." +
+          organization +
+          "." +
+          "realm" +
+          "." +
+          "editor" +
+          "." +
+          "resources" +
+          "." +
+          "operations" +
+          "." +
+          "resolve",
+      requestBytes: method.requestSerializer.toBytes(this),
+      responseSerializer: method.responseSerializer,
+    );
+  }
+}
+
+extension AuthoringActionPrepareRouteNats
+    on _lib_editor_v1_resource_operations.PrepareAuthoringActionRequest {
+  SkirRouteOperation<_lib_editor_v1_resource_operations.AuthoringActionResult>
+  operation({
+    required _skir.RecordId organizationId,
+
+    required _skir.RecordId realmId,
+  }) {
+    final organization = organizationId.id._transportIdentity;
+
+    final realm = realmId.id._transportIdentity;
+
+    final method =
+        _lib_editor_v1_resource_operations.prepareAuthoringActionMethod;
+    return SkirRouteOperation(
+      subject:
+          "service" +
+          "." +
+          "to" +
+          "." +
+          realm +
+          "." +
+          "organization" +
+          "." +
+          organization +
+          "." +
+          "realm" +
+          "." +
+          "editor" +
+          "." +
+          "resources" +
+          "." +
+          "actions" +
+          "." +
+          "prepare",
       requestBytes: method.requestSerializer.toBytes(this),
       responseSerializer: method.responseSerializer,
     );
@@ -3477,6 +3563,50 @@ TransportPermissionGrant panelTransportPermissions({
             "command" +
             "." +
             "invoke",
+      );
+
+      publish.add(
+        "service" +
+            "." +
+            "to" +
+            "." +
+            realm +
+            "." +
+            "organization" +
+            "." +
+            organization +
+            "." +
+            "realm" +
+            "." +
+            "editor" +
+            "." +
+            "resources" +
+            "." +
+            "operations" +
+            "." +
+            "resolve",
+      );
+
+      publish.add(
+        "service" +
+            "." +
+            "to" +
+            "." +
+            realm +
+            "." +
+            "organization" +
+            "." +
+            organization +
+            "." +
+            "realm" +
+            "." +
+            "editor" +
+            "." +
+            "resources" +
+            "." +
+            "actions" +
+            "." +
+            "prepare",
       );
 
       publish.add(

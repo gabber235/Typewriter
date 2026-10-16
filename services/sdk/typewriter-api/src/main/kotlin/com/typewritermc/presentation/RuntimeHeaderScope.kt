@@ -55,7 +55,7 @@ internal class RuntimeHeaderScope(
         configure: HeaderButtonScope.() -> Unit,
     ) {
         requireItemId(id)
-        items += RuntimeHeaderButtonScope(id).apply(configure).build()
+        items += RuntimeHeaderButtonScope(id, state).apply(configure).build()
     }
 
     override fun toggle(
@@ -63,7 +63,7 @@ internal class RuntimeHeaderScope(
         configure: HeaderToggleScope.() -> Unit,
     ) {
         requireItemId(id)
-        items += RuntimeHeaderToggleScope(id).apply(configure).build()
+        items += RuntimeHeaderToggleScope(id, state).apply(configure).build()
     }
 
     override fun reorderHandle(
@@ -128,6 +128,7 @@ private abstract class RuntimeHeaderActionScope {
 
 private class RuntimeHeaderButtonScope(
     private val id: HeaderItemId,
+    private val state: PresentationBuildState,
 ) : RuntimeHeaderActionScope(),
     HeaderButtonScope {
     private var icon: skirout.editor.v1.expression.ExpressionNode? = null
@@ -146,6 +147,7 @@ private class RuntimeHeaderButtonScope(
     override fun tooltip(value: Expr<String, Handled>) = setTooltip(value)
 
     override fun action(value: skirout.editor.v1.action.EditorAction) {
+        state.action(value)
         action = value
     }
 
@@ -183,6 +185,7 @@ private class RuntimeHeaderButtonScope(
 
 private class RuntimeHeaderToggleScope(
     private val id: HeaderItemId,
+    private val state: PresentationBuildState,
 ) : RuntimeHeaderActionScope(),
     HeaderToggleScope {
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
@@ -198,6 +201,7 @@ private class RuntimeHeaderToggleScope(
     }
 
     override fun action(value: skirout.editor.v1.action.EditorAction) {
+        state.action(value)
         action = value
     }
 

@@ -301,6 +301,8 @@ pub struct RealmPresentationSearchRequest {
     pub payload: crate::skirout::base::editor::v1::type_catalog::DataValue,
     pub result_type: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
     pub query: RealmSearchQuery,
+    pub operation_context:
+        Option<crate::skirout::base::editor::v1::resource_operations::OperationSearchContext>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized:
         Option<crate::skir_client::UnrecognizedFields<RealmPresentationSearchRequest>>,
@@ -484,6 +486,57 @@ impl RealmPresentationSearchUnavailable {
 }
 
 // ==============================================================================
+// struct RealmPresentationSearchUpdate.StaleObservation
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RealmPresentationSearchUpdate_StaleObservation {
+    pub subscription_id: String,
+    pub observation:
+        crate::skirout::base::editor::v1::resource_operations::StaleAuthoringObservation,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<
+        crate::skir_client::UnrecognizedFields<RealmPresentationSearchUpdate_StaleObservation>,
+    >,
+}
+
+impl RealmPresentationSearchUpdate_StaleObservation {
+    pub fn default_ref() -> &'static RealmPresentationSearchUpdate_StaleObservation {
+        static D: std::sync::LazyLock<RealmPresentationSearchUpdate_StaleObservation> =
+            std::sync::LazyLock::new(RealmPresentationSearchUpdate_StaleObservation::default);
+        &D
+    }
+}
+
+impl RealmPresentationSearchUpdate_StaleObservation {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<
+        RealmPresentationSearchUpdate_StaleObservation,
+    > {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<
+                RealmPresentationSearchUpdate_StaleObservation,
+            >,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/search.skir",
+                "RealmPresentationSearchUpdate.StaleObservation",
+                "",
+                |x: &RealmPresentationSearchUpdate_StaleObservation| &x._unrecognized,
+                |x: &mut RealmPresentationSearchUpdate_StaleObservation, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer()
+    -> crate::skir_client::Serializer<RealmPresentationSearchUpdate_StaleObservation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RealmPresentationSearchUpdate_StaleObservation::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // enum RealmPresentationSearchUpdate
 // ==============================================================================
 
@@ -492,6 +545,7 @@ pub enum RealmPresentationSearchUpdate {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<RealmPresentationSearchUpdate>>),
     Snapshot(Box<RealmPresentationSearchSnapshot>),
     Unavailable(Box<RealmPresentationSearchUnavailable>),
+    StaleObservation(Box<RealmPresentationSearchUpdate_StaleObservation>),
 }
 
 impl Default for RealmPresentationSearchUpdate {
@@ -511,6 +565,7 @@ impl RealmPresentationSearchUpdate {
                     RealmPresentationSearchUpdate::Unknown(_) => 0,
                     RealmPresentationSearchUpdate::Snapshot(_) => 1,
                     RealmPresentationSearchUpdate::Unavailable(_) => 2,
+                    RealmPresentationSearchUpdate::StaleObservation(_) => 3,
                 },
                 |u| RealmPresentationSearchUpdate::Unknown(Some(u)),
                 |x: &RealmPresentationSearchUpdate| match x {
@@ -868,6 +923,7 @@ fn initialize_module_serializers() {
                 |x: &RealmPresentationSearchRequest| &x.query,
                 |x: &mut RealmPresentationSearchRequest, v| x.query = v,
             );
+            (*a).add_field("operation_context", 6, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::resource_operations::OperationSearchContext::serializer()), "", |x: &RealmPresentationSearchRequest| &x.operation_context, |x: &mut RealmPresentationSearchRequest, v| x.operation_context = v);
             (*a).finalize();
         }
         unsafe {
@@ -955,6 +1011,21 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<
+                RealmPresentationSearchUpdate_StaleObservation,
+            > = RealmPresentationSearchUpdate_StaleObservation::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "subscription_id",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &RealmPresentationSearchUpdate_StaleObservation| &x.subscription_id,
+                |x: &mut RealmPresentationSearchUpdate_StaleObservation, v| x.subscription_id = v,
+            );
+            (*a).add_field("observation", 1, crate::skirout::base::editor::v1::resource_operations::StaleAuthoringObservation::serializer(), "", |x: &RealmPresentationSearchUpdate_StaleObservation| &x.observation, |x: &mut RealmPresentationSearchUpdate_StaleObservation, v| x.observation = v);
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<RealmPresentationSearchUpdate> =
                 RealmPresentationSearchUpdate::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
@@ -982,6 +1053,20 @@ fn initialize_module_serializers() {
                 |v| RealmPresentationSearchUpdate::Unavailable(Box::new(v)),
                 |x| match x {
                     RealmPresentationSearchUpdate::Unavailable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "stale_observation",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RealmPresentationSearchUpdate_StaleObservation::_adapter(),
+                ),
+                "",
+                |v| RealmPresentationSearchUpdate::StaleObservation(Box::new(v)),
+                |x| match x {
+                    RealmPresentationSearchUpdate::StaleObservation(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );

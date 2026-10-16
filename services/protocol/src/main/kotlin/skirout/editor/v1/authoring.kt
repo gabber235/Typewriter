@@ -2776,6 +2776,7 @@ sealed interface AuthoringState_OrMutable {
     val resources: kotlin.collections.List<skirout.editor.v1.authoring.AuthoringResource_OrMutable>;
     val links: kotlin.collections.List<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>;
     val findings: kotlin.collections.List<skirout.editor.v1.checking.FindingSet_OrMutable>;
+    val confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringState;
 }
@@ -2787,6 +2788,7 @@ class AuthoringState private constructor(
     override val resources: kotlin.collections.List<skirout.editor.v1.authoring.AuthoringResource>,
     override val links: kotlin.collections.List<skirout.editor.v1.authoring_facts.LinkProjection>,
     override val findings: kotlin.collections.List<skirout.editor.v1.checking.FindingSet>,
+    override val confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringState>? =
         null,
 ): skirout.editor.v1.authoring.AuthoringState_OrMutable {
@@ -2797,6 +2799,7 @@ class AuthoringState private constructor(
         resources: kotlin.collections.Iterable<skirout.editor.v1.authoring.AuthoringResource_OrMutable>,
         links: kotlin.collections.Iterable<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable>,
         findings: kotlin.collections.Iterable<skirout.editor.v1.checking.FindingSet_OrMutable>,
+        confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringState>? =
             null,
     ): this(
@@ -2804,6 +2807,7 @@ class AuthoringState private constructor(
         build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
         build.skir.internal.toFrozenList(links, { it.toFrozen() }),
         build.skir.internal.toFrozenList(findings, { it.toFrozen() }),
+        confirmedObservation.toFrozen(),
         _unrecognizedFields,
     ) {}
 
@@ -2816,6 +2820,7 @@ class AuthoringState private constructor(
         resources = this.resources,
         links = this.links,
         findings = this.findings,
+        confirmedObservation = this.confirmedObservation,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2830,11 +2835,14 @@ class AuthoringState private constructor(
             this.links,
         findings: kotlin.collections.Iterable<skirout.editor.v1.checking.FindingSet_OrMutable> =
             this.findings,
+        confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable =
+            this.confirmedObservation,
     ) = skirout.editor.v1.authoring.AuthoringState(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(resources, { it.toFrozen() }),
         build.skir.internal.toFrozenList(links, { it.toFrozen() }),
         build.skir.internal.toFrozenList(findings, { it.toFrozen() }),
+        confirmedObservation.toFrozen(),
         this._unrecognizedFields,
     );
 
@@ -2842,11 +2850,11 @@ class AuthoringState private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.authoring.AuthoringState && this.generation == other.generation && this.resources == other.resources && this.links == other.links && this.findings == other.findings);
+        return this === other || (other is skirout.editor.v1.authoring.AuthoringState && this.generation == other.generation && this.resources == other.resources && this.links == other.links && this.findings == other.findings && this.confirmedObservation == other.confirmedObservation);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.resources, this.links, this.findings).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.resources, this.links, this.findings, this.confirmedObservation).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2868,6 +2876,8 @@ class AuthoringState private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.LinkProjection>(),
         override var findings: kotlin.collections.List<skirout.editor.v1.checking.FindingSet_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.FindingSet>(),
+        override var confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable =
+            skirout.editor.v1.authoring.AuthoringObservationId.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringState>? =
             null,
     ): skirout.editor.v1.authoring.AuthoringState_OrMutable {
@@ -2877,6 +2887,7 @@ class AuthoringState private constructor(
             resources = this.resources,
             links = this.links,
             findings = this.findings,
+            confirmedObservation = this.confirmedObservation,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2943,6 +2954,22 @@ class AuthoringState private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [confirmedObservation] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [confirmedObservation] and returns it.
+         */
+        val mutableConfirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId.Mutable get() {
+            var value = this.confirmedObservation;
+            return when (value) {
+                is skirout.editor.v1.authoring.AuthoringObservationId -> {
+                    value = value.toMutable();
+                    this.confirmedObservation = value;
+                    return value;
+                }
+                is skirout.editor.v1.authoring.AuthoringObservationId.Mutable -> value;
+            }
+        }
     }
 
     companion object {
@@ -2952,6 +2979,7 @@ class AuthoringState private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring.AuthoringResource>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.LinkProjection>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.FindingSet>(),
+                skirout.editor.v1.authoring.AuthoringObservationId.partial(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -2973,11 +3001,14 @@ class AuthoringState private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.authoring_facts.LinkProjection>(),
             findings: kotlin.collections.Iterable<skirout.editor.v1.checking.FindingSet_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.checking.FindingSet>(),
+            confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId_OrMutable =
+                skirout.editor.v1.authoring.AuthoringObservationId.partial(),
         ) = skirout.editor.v1.authoring.AuthoringState(
             generation = generation,
             resources = resources,
             links = links,
             findings = findings,
+            confirmedObservation = confirmedObservation,
             _unrecognizedFields = null,
         );
 
@@ -7637,6 +7668,115 @@ class AuthoringTransferUnavailable private constructor(
     }
 }
 
+sealed interface AuthoringObservationId_OrMutable {
+    val value: kotlin.String;
+
+    fun toFrozen(): skirout.editor.v1.authoring.AuthoringObservationId;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class AuthoringObservationId private constructor(
+    override val value: kotlin.String,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringObservationId>? =
+        null,
+): skirout.editor.v1.authoring.AuthoringObservationId_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringObservationId>? =
+            null,
+    ): this(
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        value: kotlin.String =
+            this.value,
+    ) = skirout.editor.v1.authoring.AuthoringObservationId(
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.authoring.AuthoringObservationId && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.AuthoringObservationIdSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [AuthoringObservationId]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var value: kotlin.String =
+            "",
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.authoring.AuthoringObservationId>? =
+            null,
+    ): skirout.editor.v1.authoring.AuthoringObservationId_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.authoring.AuthoringObservationId(
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.authoring.AuthoringObservationId(
+                "",
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [AuthoringObservationId].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            value: kotlin.String =
+                "",
+        ) = skirout.editor.v1.authoring.AuthoringObservationId(
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [AuthoringObservationId] instances. */
+        val serializer get() = _SerializerRegistry.AuthoringObservationIdSerializer;
+
+        /** Describes the [AuthoringObservationId] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.AuthoringObservationIdSerializerImpl.typeDescriptor;
+    }
+}
+
 sealed interface QueryAuthoringStateRequest_OrMutable {
     val generation: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val transferId: kotlin.String;
@@ -8914,6 +9054,18 @@ private object _SerializerRegistry {
 
     val AuthoringInvalidSerializer = build.skir.internal.makeSerializer(AuthoringInvalidSerializerImpl);
 
+    val AuthoringObservationIdSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/authoring.skir:AuthoringObservationId",
+        doc = "",
+        defaultInstance = skirout.editor.v1.authoring.AuthoringObservationId.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringObservationId.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val AuthoringObservationIdSerializer = build.skir.internal.makeSerializer(AuthoringObservationIdSerializerImpl);
+
     val AuthoringOperationSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.AuthoringOperation, skirout.editor.v1.authoring.AuthoringOperation.Unknown>(
             recordId = "editor/v1/authoring.skir:AuthoringOperation",
@@ -9644,6 +9796,17 @@ private object _SerializerRegistry {
         );
         AuthoringInvalidSerializerImpl.finalizeStruct();
 
+        AuthoringObservationIdSerializerImpl.addField(
+            "value",
+            "value",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        AuthoringObservationIdSerializerImpl.finalizeStruct();
+
         AuthoringOperationSerializerImpl.addWrapperVariant(
             1,
             "commit_prepared",
@@ -9796,6 +9959,15 @@ private object _SerializerRegistry {
             "",
             { it.findings },
             { mut, v -> mut.findings = v },
+        );
+        AuthoringStateSerializerImpl.addField(
+            "confirmed_observation",
+            "confirmedObservation",
+            4,
+            _SerializerRegistry.AuthoringObservationIdSerializer,
+            "",
+            { it.confirmedObservation },
+            { mut, v -> mut.confirmedObservation = v },
         );
         AuthoringStateSerializerImpl.finalizeStruct();
 

@@ -3241,6 +3241,8 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     val capabilities: kotlin.collections.List<skirout.editor.v1.capability.CapabilityDefinition>;
     val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>;
     val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback_OrMutable>;
+    val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>;
+    val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.catalog.EditorCatalogWireSnapshot;
 }
@@ -3260,6 +3262,8 @@ class EditorCatalogWireSnapshot private constructor(
     override val capabilities: kotlin.collections.List<skirout.editor.v1.capability.CapabilityDefinition>,
     override val recommendations: kotlin.collections.List<skirout.editor.v1.catalog.TypeRecommendation>,
     override val roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback>,
+    override val resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition>,
+    override val resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
         null,
 ): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
@@ -3278,6 +3282,8 @@ class EditorCatalogWireSnapshot private constructor(
         capabilities: kotlin.collections.Iterable<skirout.editor.v1.capability.CapabilityDefinition>,
         recommendations: kotlin.collections.Iterable<skirout.editor.v1.catalog.TypeRecommendation_OrMutable>,
         roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable>,
+        resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable>,
+        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
             null,
     ): this(
@@ -3293,6 +3299,8 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(capabilities),
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
 
@@ -3313,6 +3321,8 @@ class EditorCatalogWireSnapshot private constructor(
         capabilities = this.capabilities,
         recommendations = this.recommendations,
         roleFallbacks = this.roleFallbacks,
+        resourceOperations = this.resourceOperations,
+        resourceOperationContributions = this.resourceOperationContributions,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -3343,6 +3353,10 @@ class EditorCatalogWireSnapshot private constructor(
             this.recommendations,
         roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable> =
             this.roleFallbacks,
+        resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
+            this.resourceOperations,
+        resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
+            this.resourceOperationContributions,
     ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
         generation.toFrozen(),
         build.skir.internal.toFrozenList(types, { it.toFrozen() }),
@@ -3356,6 +3370,8 @@ class EditorCatalogWireSnapshot private constructor(
         build.skir.internal.toFrozenList(capabilities),
         build.skir.internal.toFrozenList(recommendations, { it.toFrozen() }),
         build.skir.internal.toFrozenList(roleFallbacks, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceOperations, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(resourceOperationContributions, { it.toFrozen() }),
         this._unrecognizedFields,
     );
 
@@ -3363,11 +3379,11 @@ class EditorCatalogWireSnapshot private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDefinitions == other.resourceDefinitions && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks);
+        return this === other || (other is skirout.editor.v1.catalog.EditorCatalogWireSnapshot && this.generation == other.generation && this.types == other.types && this.relations == other.relations && this.resourceDefinitions == other.resourceDefinitions && this.presentations == other.presentations && this.presentationMaterials == other.presentationMaterials && this.configuration == other.configuration && this.diagnostics == other.diagnostics && this.endpointBindings == other.endpointBindings && this.capabilities == other.capabilities && this.recommendations == other.recommendations && this.roleFallbacks == other.roleFallbacks && this.resourceOperations == other.resourceOperations && this.resourceOperationContributions == other.resourceOperationContributions);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDefinitions, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.generation, this.types, this.relations, this.resourceDefinitions, this.presentations, this.presentationMaterials, this.configuration, this.diagnostics, this.endpointBindings, this.capabilities, this.recommendations, this.roleFallbacks, this.resourceOperations, this.resourceOperationContributions).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -3405,6 +3421,10 @@ class EditorCatalogWireSnapshot private constructor(
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.TypeRecommendation>(),
         override var roleFallbacks: kotlin.collections.List<skirout.editor.v1.catalog.RoleFallback_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
+        override var resourceOperations: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
+        override var resourceOperationContributions: kotlin.collections.List<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.EditorCatalogWireSnapshot>? =
             null,
     ): skirout.editor.v1.catalog.EditorCatalogWireSnapshot_OrMutable {
@@ -3422,6 +3442,8 @@ class EditorCatalogWireSnapshot private constructor(
             capabilities = this.capabilities,
             recommendations = this.recommendations,
             roleFallbacks = this.roleFallbacks,
+            resourceOperations = this.resourceOperations,
+            resourceOperationContributions = this.resourceOperationContributions,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -3616,6 +3638,38 @@ class EditorCatalogWireSnapshot private constructor(
                 }
             }
         }
+
+        /**
+         * If the value of [resourceOperations] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [resourceOperations] and returns it.
+         */
+        val mutableResourceOperations: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> get() {
+            var value = this.resourceOperations;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.resourceOperations = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [resourceOperationContributions] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [resourceOperationContributions] and returns it.
+         */
+        val mutableResourceOperationContributions: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> get() {
+            var value = this.resourceOperationContributions;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.resourceOperationContributions = value;
+                    value;
+                }
+            }
+        }
     }
 
     companion object {
@@ -3633,6 +3687,8 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.capability.CapabilityDefinition>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.TypeRecommendation>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -3670,6 +3726,10 @@ class EditorCatalogWireSnapshot private constructor(
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.TypeRecommendation>(),
             roleFallbacks: kotlin.collections.Iterable<skirout.editor.v1.catalog.RoleFallback_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RoleFallback>(),
+            resourceOperations: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationDefinition_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationDefinition>(),
+            resourceOperationContributions: kotlin.collections.Iterable<skirout.editor.v1.operation.ResourceOperationContribution_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.operation.ResourceOperationContribution>(),
         ) = skirout.editor.v1.catalog.EditorCatalogWireSnapshot(
             generation = generation,
             types = types,
@@ -3683,6 +3743,8 @@ class EditorCatalogWireSnapshot private constructor(
             capabilities = capabilities,
             recommendations = recommendations,
             roleFallbacks = roleFallbacks,
+            resourceOperations = resourceOperations,
+            resourceOperationContributions = resourceOperationContributions,
             _unrecognizedFields = null,
         );
 
@@ -7597,6 +7659,28 @@ private object _SerializerRegistry {
             "",
             { it.roleFallbacks },
             { mut, v -> mut.roleFallbacks = v },
+        );
+        EditorCatalogWireSnapshotSerializerImpl.addField(
+            "resource_operations",
+            "resourceOperations",
+            12,
+            build.skir.Serializers.list(
+                skirout.editor.v1.operation.ResourceOperationDefinition.serializer,
+            ),
+            "",
+            { it.resourceOperations },
+            { mut, v -> mut.resourceOperations = v },
+        );
+        EditorCatalogWireSnapshotSerializerImpl.addField(
+            "resource_operation_contributions",
+            "resourceOperationContributions",
+            13,
+            build.skir.Serializers.list(
+                skirout.editor.v1.operation.ResourceOperationContribution.serializer,
+            ),
+            "",
+            { it.resourceOperationContributions },
+            { mut, v -> mut.resourceOperationContributions = v },
         );
         EditorCatalogWireSnapshotSerializerImpl.finalizeStruct();
 

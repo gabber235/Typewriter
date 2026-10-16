@@ -248,6 +248,7 @@ class GeneratedProviderLoader {
                 GeneratedProviderKind.Capability -> GeneratedCapabilityProvider::class.java
                 GeneratedProviderKind.Registrar -> GeneratedRuntimeRegistrarProvider::class.java
                 GeneratedProviderKind.CollectionProjection -> GeneratedCollectionProjectionProvider::class.java
+                GeneratedProviderKind.ResourceOperation -> GeneratedResourceOperationProvider::class.java
             }
         require(expected.isAssignableFrom(providerClass)) {
             "Generated ${kind.key} provider ${providerClass.name} must implement ${expected.name}."
@@ -435,6 +436,7 @@ class GeneratedProviderLoader {
         val registrars = mutableListOf<OwnedRuntimeRegistrar>()
         val registrarIds = mutableSetOf<Pair<ContributionSourceId, String>>()
         val collectionProjections = mutableListOf<OwnedCollectionProjection>()
+        val operations = mutableListOf<com.typewritermc.operations.OperationDeclaration>()
 
         loaded.forEach { loadedProvider ->
             val origin = loadedProvider.origin
@@ -468,7 +470,7 @@ class GeneratedProviderLoader {
 
                 GeneratedProviderKind.Presentation -> {
                     val provider = loadedProvider.require<GeneratedPresentationProvider>()
-                    presentations += OwnedPresentation(origin, provider.descriptor(origin), provider)
+                    presentations += OwnedPresentation(origin, provider.descriptor(origin), provider, provider.reference)
                 }
 
                 GeneratedProviderKind.Check -> {
@@ -492,6 +494,10 @@ class GeneratedProviderLoader {
                         }
                         registrars += OwnedRuntimeRegistrar(origin, provider.descriptor, provider.bind(owners.instantiator))
                     }
+                }
+
+                GeneratedProviderKind.ResourceOperation -> {
+                    operations += loadedProvider.require<GeneratedResourceOperationProvider>().contribute(origin)
                 }
 
                 GeneratedProviderKind.CollectionProjection -> {
@@ -520,6 +526,7 @@ class GeneratedProviderLoader {
                     presentations = presentations,
                     nativeBindings = nativeBindings,
                     checks = ownedChecks,
+                    operations = operations,
                 ),
             capabilities = capabilities,
             registrars = registrars,

@@ -529,6 +529,26 @@ routes:
       failure_slug: editor-capability-command-invoke-failed
       requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke", service: "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke" }
 
+  - name: resource_operations_resolve
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/resource_operations.skir:ResolveResourceOperations"
+      operation: editor.resources.operations.resolve
+      failure_slug: resource-operations-resolve-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve", service: "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve" }
+
+  - name: authoring_action_prepare
+    scope: realm
+    grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }]
+    flow:
+      kind: unary
+      method: "editor/v1/resource_operations.skir:PrepareAuthoringAction"
+      operation: editor.resources.actions.prepare
+      failure_slug: authoring-action-prepare-failed
+      requests: { panel: "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare", service: "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare" }
+
   - name: authoring_state_query
     scope: realm
     grants: [{ role: organization_member, side: panel, direction: publish, channel: request }, { role: organization_member, side: panel, direction: subscribe, channel: updates }, { role: realm_coordinator, side: service, direction: subscribe, channel: request }, { role: realm_coordinator, side: service, direction: publish, channel: updates }]

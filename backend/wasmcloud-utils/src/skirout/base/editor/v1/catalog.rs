@@ -973,6 +973,10 @@ pub struct EditorCatalogWireSnapshot {
     pub capabilities: Vec<crate::skirout::base::editor::v1::capability::CapabilityDefinition>,
     pub recommendations: Vec<TypeRecommendation>,
     pub role_fallbacks: Vec<RoleFallback>,
+    pub resource_operations:
+        Vec<crate::skirout::base::editor::v1::operation::ResourceOperationDefinition>,
+    pub resource_operation_contributions:
+        Vec<crate::skirout::base::editor::v1::operation::ResourceOperationContribution>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<EditorCatalogWireSnapshot>>,
 }
@@ -2732,6 +2736,8 @@ fn initialize_module_serializers() {
                 |x: &EditorCatalogWireSnapshot| &x.role_fallbacks,
                 |x: &mut EditorCatalogWireSnapshot, v| x.role_fallbacks = v,
             );
+            (*a).add_field("resource_operations", 12, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationDefinition::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operations, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operations = v);
+            (*a).add_field("resource_operation_contributions", 13, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::operation::ResourceOperationContribution::serializer()), "", |x: &EditorCatalogWireSnapshot| &x.resource_operation_contributions, |x: &mut EditorCatalogWireSnapshot, v| x.resource_operation_contributions = v);
             (*a).finalize();
         }
         unsafe {

@@ -161,11 +161,11 @@ private class RuntimeSearchResultScope<Value, Row>(
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
     private var appearance: skirout.editor.v1.presentation.ResultAppearance? = null
 
-    override fun key(value: Expr<*, Handled>) {
+    override fun key(value: Expr<*, out com.typewritermc.expression.MissingPolicy>) {
         key = expression(value)
     }
 
-    override fun selectedValue(value: Expr<Value, Handled>) {
+    override fun selectedValue(value: Expr<Value, out com.typewritermc.expression.MissingPolicy>) {
         selectedValue = expression(value)
     }
 

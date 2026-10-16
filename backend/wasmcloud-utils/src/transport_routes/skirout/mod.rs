@@ -163,6 +163,20 @@ impl GrantScope for RealmScope {
                     .publish
                     .insert(
                         format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare"
+                        ),
+                    );
+                grants
+                    .publish
+                    .insert(
+                        format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query"
                         ),
                     );
@@ -338,6 +352,20 @@ impl GrantScope for RealmScope {
                     .insert(
                         format!(
                             "service.to.{realm}.organization.{organization}.realm.editor.capability.command.invoke"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve"
+                        ),
+                    );
+                grants
+                    .subscribe
+                    .insert(
+                        format!(
+                            "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare"
                         ),
                     );
                 grants

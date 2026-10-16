@@ -198,6 +198,7 @@ pub enum CapabilityDefinition {
     Search(Box<SearchCapabilityDefinition>),
     Computation(Box<ComputationCapabilityDefinition>),
     Command(Box<CommandCapabilityDefinition>),
+    Authoring(Box<AuthoringCapabilityDefinition>),
 }
 
 impl Default for CapabilityDefinition {
@@ -217,6 +218,7 @@ impl CapabilityDefinition {
                     CapabilityDefinition::Search(_) => 1,
                     CapabilityDefinition::Computation(_) => 2,
                     CapabilityDefinition::Command(_) => 3,
+                    CapabilityDefinition::Authoring(_) => 4,
                 },
                 |u| CapabilityDefinition::Unknown(Some(u)),
                 |x: &CapabilityDefinition| match x {
@@ -864,6 +866,52 @@ impl CommandResult {
 }
 
 // ==============================================================================
+// struct AuthoringCapabilityDefinition
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct AuthoringCapabilityDefinition {
+    pub capability_id: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
+    pub targets: crate::skirout::base::editor::v1::operation::OperationTargets,
+    pub input: Option<crate::skirout::base::editor::v1::operation::OperationInputDefinition>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized:
+        Option<crate::skir_client::UnrecognizedFields<AuthoringCapabilityDefinition>>,
+}
+
+impl AuthoringCapabilityDefinition {
+    pub fn default_ref() -> &'static AuthoringCapabilityDefinition {
+        static D: std::sync::LazyLock<AuthoringCapabilityDefinition> =
+            std::sync::LazyLock::new(AuthoringCapabilityDefinition::default);
+        &D
+    }
+}
+
+impl AuthoringCapabilityDefinition {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<AuthoringCapabilityDefinition> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<AuthoringCapabilityDefinition>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/capability.skir",
+                "AuthoringCapabilityDefinition",
+                "",
+                |x: &AuthoringCapabilityDefinition| &x._unrecognized,
+                |x: &mut AuthoringCapabilityDefinition, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<AuthoringCapabilityDefinition> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            AuthoringCapabilityDefinition::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -1004,6 +1052,20 @@ fn initialize_module_serializers() {
                 |v| CapabilityDefinition::Command(Box::new(v)),
                 |x| match x {
                     CapabilityDefinition::Command(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "authoring",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    AuthoringCapabilityDefinition::_adapter(),
+                ),
+                "",
+                |v| CapabilityDefinition::Authoring(Box::new(v)),
+                |x| match x {
+                    CapabilityDefinition::Authoring(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
@@ -1457,6 +1519,28 @@ fn initialize_module_serializers() {
                     _ => unreachable!(),
                 },
             );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<AuthoringCapabilityDefinition> =
+                AuthoringCapabilityDefinition::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "capability_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CapabilityId::serializer(),
+                "",
+                |x: &AuthoringCapabilityDefinition| &x.capability_id,
+                |x: &mut AuthoringCapabilityDefinition, v| x.capability_id = v,
+            );
+            (*a).add_field(
+                "targets",
+                1,
+                crate::skirout::base::editor::v1::operation::OperationTargets::serializer(),
+                "",
+                |x: &AuthoringCapabilityDefinition| &x.targets,
+                |x: &mut AuthoringCapabilityDefinition, v| x.targets = v,
+            );
+            (*a).add_field("input", 2, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::operation::OperationInputDefinition::serializer()), "", |x: &AuthoringCapabilityDefinition| &x.input, |x: &mut AuthoringCapabilityDefinition, v| x.input = v);
             (*a).finalize();
         }
     });

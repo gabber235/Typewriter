@@ -55,6 +55,7 @@ fn presentation_search_request_preserves_contiguous_field_payloads() {
             terms: vec!["quest".to_owned()],
             _unrecognized: None,
         },
+        operation_context: None,
         _unrecognized: None,
     };
 

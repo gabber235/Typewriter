@@ -85,6 +85,53 @@ internal class PresentationBuildState(
                 .CapabilityId(value = id.value)
     }
 
+    fun action(action: skirout.editor.v1.action.EditorAction) {
+        val resource = TypeUse.Named(com.typewritermc.types.ResourceIdDefinition.id)
+        val selection = TypeUse.Named(com.typewritermc.types.StandardTypes.list, listOf(resource))
+
+        fun declare(
+            id: String,
+            use: TypeUse,
+        ) {
+            val key = ExpressionBindingId(id)
+            contextInputs[key] =
+                skirout.editor.v1.presentation.PresentationContextInput(
+                    bindingId = key.wire(),
+                    valueType = SkirTypeCodec.encode(use).getOrThrow(),
+                )
+            expressionTypes[key] = use.template()
+            type(use)
+        }
+        when (action) {
+            is skirout.editor.v1.action.EditorAction.NavigateWrapper -> {
+                declare("context:subject", resource)
+                declare("context:selection", selection)
+                val expression =
+                    com.typewritermc.types.skir.SkirExpressionCodec
+                        .decode(action.value.resource)
+                        .getOrThrow()
+                val errors = type.checkExpression(expression, expressionTypes, resource.template(), expressionTypes.keys)
+                require(errors.isEmpty()) { "Invalid resource navigation expression: ${errors.joinToString()}." }
+            }
+
+            is skirout.editor.v1.action.EditorAction.AuthoringWrapper -> {
+                declare("context:subject", resource)
+                declare("context:selection", selection)
+                capability(com.typewritermc.capability.CapabilityId(action.value.capability.value))
+                val expression =
+                    com.typewritermc.types.skir.SkirExpressionCodec
+                        .decode(action.value.targets)
+                        .getOrThrow()
+                val errors = type.checkExpression(expression, expressionTypes, selection.template(), expressionTypes.keys)
+                require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
+            }
+
+            else -> {
+                Unit
+            }
+        }
+    }
+
     fun collection(source: CollectionSource<*, *>) {
         val definition = source.wire(this)
         val previous = collections[definition.sourceId]

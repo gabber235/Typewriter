@@ -21,6 +21,32 @@ cp "$fixture_root/settings.gradle.kts.template" "$workspace/settings.gradle.kts"
     --no-daemon \
     --console=plain
 
+verify_incremental_operations() {
+    local extra="$source_dir/AddedOperations.kt"
+    local index="$workspace/build/generated/ksp/main/resources/META-INF/typewriter/generated-providers"
+    local outcome=0
+    tee "$extra" >/dev/null <<'KOTLIN'
+package fixture
+import com.typewritermc.library.TagOperations
+import com.typewritermc.library.TagOperationsScope
+import com.typewritermc.operations.noInput
+object AddedTagOperations : TagOperations {
+    override fun TagOperationsScope.operations() {
+        operation("extra", noInput()) {
+            label("Extra")
+            prepare { }
+        }
+    }
+}
+KOTLIN
+    "$services_root/gradlew" -p "$workspace" -PtypewriterRepository="$repository" compileKotlin --no-daemon --console=plain >> "$results/resource_operations.log" 2>&1 || outcome=1
+    rg -q 'AddedTagOperations_TagOperationsProvider' "$index" || outcome=1
+    mv "$extra" "$results/AddedOperations.removed.kt"
+    "$services_root/gradlew" -p "$workspace" -PtypewriterRepository="$repository" verifyFixture --no-daemon --console=plain >> "$results/resource_operations.log" 2>&1 || outcome=1
+    if rg -q 'AddedTagOperations_TagOperationsProvider' "$index"; then outcome=1; fi
+    return "$outcome"
+}
+
 failures=0
 while IFS=$'\t' read -r name source expected pattern; do
     cp "$fixture_root/$source/$name.kt" "$source_dir/Fixture.kt"
@@ -40,7 +66,7 @@ while IFS=$'\t' read -r name source expected pattern; do
         if (( result != 0 )) || ! rg -q "$pattern" "$results/$name.log"; then
             print "$name failed acceptance"
             failures=$(( failures + 1 ))
-        elif [[ "$name" == "generated_provider_roundtrip" || "$name" == "navigation_handlers" || "$name" == "effective_inherited_accessors" ]]; then
+        elif [[ "$name" == "resource_operations" || "$name" == "generated_provider_roundtrip" || "$name" == "navigation_handlers" || "$name" == "effective_inherited_accessors" ]]; then
             set +e
             "$services_root/gradlew" \
                 -p "$workspace" \
@@ -51,6 +77,9 @@ while IFS=$'\t' read -r name source expected pattern; do
                 >> "$results/$name.log" 2>&1
             verification=$?
             set -e
+            if [[ "$name" == "resource_operations" ]] && (( verification == 0 )); then
+                verify_incremental_operations || verification=1
+            fi
             if (( verification != 0 )); then
                 print "$name failed runtime verification"
                 failures=$(( failures + 1 ))

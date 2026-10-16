@@ -26,6 +26,8 @@ import skirout.editor.v1.compiled_content.QueryPublishedContent
 import skirout.editor.v1.publication.PublishAuthoring
 import skirout.editor.v1.publication.QueryPublicationView
 import skirout.editor.v1.publication.WatchPublication
+import skirout.editor.v1.resource_operations.PrepareAuthoringAction
+import skirout.editor.v1.resource_operations.ResolveResourceOperations
 import skirout.editor.v1.search.CancelRealmPresentationSearch
 import skirout.editor.v1.search.WatchRealmPresentationSearch
 import skirout.service.v1.artifact.BeginArtifactBlobWrite
@@ -96,6 +98,20 @@ fun RealmRouteScope.editorCapabilityCommandInvoke(policy: ResponsePolicy<skirout
     method = InvokeRealmCommand, name = OperationName.of("editor.capability.command.invoke"),
     address = editorCapabilityCommandInvokeRequestAddress.subscribedAt(this), responsePolicy = policy,
     failureSlug = ErrorSlug.of("editor-capability-command-invoke-failed"),
+)
+
+private val resourceOperationsResolveRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve".realmTemplate()
+fun RealmRouteScope.resourceOperationsResolve(policy: ResponsePolicy<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult>) = skirUnaryContract(
+    method = ResolveResourceOperations, name = OperationName.of("editor.resources.operations.resolve"),
+    address = resourceOperationsResolveRequestAddress.subscribedAt(this), responsePolicy = policy,
+    failureSlug = ErrorSlug.of("resource-operations-resolve-failed"),
+)
+
+private val authoringActionPrepareRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare".realmTemplate()
+fun RealmRouteScope.authoringActionPrepare(policy: ResponsePolicy<skirout.editor.v1.resource_operations.AuthoringActionResult>) = skirUnaryContract(
+    method = PrepareAuthoringAction, name = OperationName.of("editor.resources.actions.prepare"),
+    address = authoringActionPrepareRequestAddress.subscribedAt(this), responsePolicy = policy,
+    failureSlug = ErrorSlug.of("authoring-action-prepare-failed"),
 )
 
 private val authoringStateQueryRequestAddress = "service.to.{realm}.organization.{organization}.realm.editor.authoring.state.query".realmTemplate()

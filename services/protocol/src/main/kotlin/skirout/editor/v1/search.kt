@@ -823,6 +823,7 @@ sealed interface RealmPresentationSearchRequest_OrMutable {
     val payload: skirout.editor.v1.type_catalog.DataValue;
     val resultType: skirout.editor.v1.type_catalog.TypeTemplate;
     val query: skirout.editor.v1.search.RealmSearchQuery_OrMutable;
+    val operationContext: skirout.editor.v1.resource_operations.OperationSearchContext_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchRequest;
 }
@@ -836,6 +837,7 @@ class RealmPresentationSearchRequest private constructor(
     override val payload: skirout.editor.v1.type_catalog.DataValue,
     override val resultType: skirout.editor.v1.type_catalog.TypeTemplate,
     override val query: skirout.editor.v1.search.RealmSearchQuery,
+    override val operationContext: skirout.editor.v1.resource_operations.OperationSearchContext?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchRequest>? =
         null,
 ): skirout.editor.v1.search.RealmPresentationSearchRequest_OrMutable {
@@ -848,6 +850,7 @@ class RealmPresentationSearchRequest private constructor(
         payload: skirout.editor.v1.type_catalog.DataValue,
         resultType: skirout.editor.v1.type_catalog.TypeTemplate,
         query: skirout.editor.v1.search.RealmSearchQuery_OrMutable,
+        operationContext: skirout.editor.v1.resource_operations.OperationSearchContext_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchRequest>? =
             null,
     ): this(
@@ -857,6 +860,7 @@ class RealmPresentationSearchRequest private constructor(
         payload,
         resultType,
         query.toFrozen(),
+        if (operationContext != null) operationContext.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -871,6 +875,7 @@ class RealmPresentationSearchRequest private constructor(
         payload = this.payload,
         resultType = this.resultType,
         query = this.query,
+        operationContext = this.operationContext,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -889,6 +894,8 @@ class RealmPresentationSearchRequest private constructor(
             this.resultType,
         query: skirout.editor.v1.search.RealmSearchQuery_OrMutable =
             this.query,
+        operationContext: skirout.editor.v1.resource_operations.OperationSearchContext_OrMutable? =
+            this.operationContext,
     ) = skirout.editor.v1.search.RealmPresentationSearchRequest(
         subscriptionId,
         generation.toFrozen(),
@@ -896,6 +903,7 @@ class RealmPresentationSearchRequest private constructor(
         payload,
         resultType,
         query.toFrozen(),
+        if (operationContext != null) operationContext.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -903,11 +911,11 @@ class RealmPresentationSearchRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchRequest && this.subscriptionId == other.subscriptionId && this.generation == other.generation && this.capabilityId == other.capabilityId && this.payload == other.payload && this.resultType == other.resultType && this.query == other.query);
+        return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchRequest && this.subscriptionId == other.subscriptionId && this.generation == other.generation && this.capabilityId == other.capabilityId && this.payload == other.payload && this.resultType == other.resultType && this.query == other.query && this.operationContext == other.operationContext);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId, this.generation, this.capabilityId, this.payload, this.resultType, this.query).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId, this.generation, this.capabilityId, this.payload, this.resultType, this.query, this.operationContext).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -933,6 +941,8 @@ class RealmPresentationSearchRequest private constructor(
             skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
         override var query: skirout.editor.v1.search.RealmSearchQuery_OrMutable =
             skirout.editor.v1.search.RealmSearchQuery.partial(),
+        override var operationContext: skirout.editor.v1.resource_operations.OperationSearchContext_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchRequest>? =
             null,
     ): skirout.editor.v1.search.RealmPresentationSearchRequest_OrMutable {
@@ -944,6 +954,7 @@ class RealmPresentationSearchRequest private constructor(
             payload = this.payload,
             resultType = this.resultType,
             query = this.query,
+            operationContext = this.operationContext,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -1005,6 +1016,7 @@ class RealmPresentationSearchRequest private constructor(
                 skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -1030,6 +1042,8 @@ class RealmPresentationSearchRequest private constructor(
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
             query: skirout.editor.v1.search.RealmSearchQuery_OrMutable =
                 skirout.editor.v1.search.RealmSearchQuery.partial(),
+            operationContext: skirout.editor.v1.resource_operations.OperationSearchContext_OrMutable? =
+                null,
         ) = skirout.editor.v1.search.RealmPresentationSearchRequest(
             subscriptionId = subscriptionId,
             generation = generation,
@@ -1037,6 +1051,7 @@ class RealmPresentationSearchRequest private constructor(
             payload = payload,
             resultType = resultType,
             query = query,
+            operationContext = operationContext,
             _unrecognizedFields = null,
         );
 
@@ -1499,6 +1514,7 @@ sealed class RealmPresentationSearchUpdate private constructor() {
         UNKNOWN,
         SNAPSHOT_WRAPPER,
         UNAVAILABLE_WRAPPER,
+        STALE_OBSERVATION_WRAPPER,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.search.RealmPresentationSearchUpdate.UNKNOWN")) internal constructor(
@@ -1549,6 +1565,24 @@ sealed class RealmPresentationSearchUpdate private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + -665462704;
+        }
+    }
+
+    class StaleObservationWrapper private constructor (
+        val value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation,
+    ) : skirout.editor.v1.search.RealmPresentationSearchUpdate() {
+        constructor(
+            value: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.STALE_OBSERVATION_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1006347130;
         }
     }
 
@@ -1604,11 +1638,165 @@ sealed class RealmPresentationSearchUpdate private constructor() {
             )
         );
 
+        /** Shortcut for `StaleObservationWrapper(skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStaleObservation(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            subscriptionId: kotlin.String,
+            observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
+        ) = StaleObservationWrapper(
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+                subscriptionId = subscriptionId,
+                observation = observation,
+            )
+        );
+
         /** Serializer for [RealmPresentationSearchUpdate] instances. */
         val serializer get() = _SerializerRegistry.RealmPresentationSearchUpdateSerializer;
 
         /** Describes the [RealmPresentationSearchUpdate] type. Provides runtime introspection capabilities. */
         val typeDescriptor get() = _SerializerRegistry.RealmPresentationSearchUpdateSerializerImpl.typeDescriptor;
+    }
+
+    sealed interface StaleObservation_OrMutable {
+        val subscriptionId: kotlin.String;
+        val observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable;
+
+        fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class StaleObservation private constructor(
+        override val subscriptionId: kotlin.String,
+        override val observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation,
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+            null,
+    ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            subscriptionId: kotlin.String,
+            observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable,
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+                null,
+        ): this(
+            subscriptionId,
+            observation.toFrozen(),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            subscriptionId = this.subscriptionId,
+            observation = this.observation,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            subscriptionId: kotlin.String =
+                this.subscriptionId,
+            observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
+                this.observation,
+        ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+            subscriptionId,
+            observation.toFrozen(),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation && this.subscriptionId == other.subscriptionId && this.observation == other.observation);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.subscriptionId, this.observation).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [StaleObservation]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var subscriptionId: kotlin.String =
+                "",
+            override var observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
+                skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation>? =
+                null,
+        ): skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+                subscriptionId = this.subscriptionId,
+                observation = this.observation,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [observation] is already mutable, returns it as is.
+             * Otherwise, makes a mutable copy, assigns it back to [observation] and returns it.
+             */
+            val mutableObservation: skirout.editor.v1.resource_operations.StaleAuthoringObservation.Mutable get() {
+                var value = this.observation;
+                return when (value) {
+                    is skirout.editor.v1.resource_operations.StaleAuthoringObservation -> {
+                        value = value.toMutable();
+                        this.observation = value;
+                        return value;
+                    }
+                    is skirout.editor.v1.resource_operations.StaleAuthoringObservation.Mutable -> value;
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+                    "",
+                    skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [StaleObservation].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                subscriptionId: kotlin.String =
+                    "",
+                observation: skirout.editor.v1.resource_operations.StaleAuthoringObservation_OrMutable =
+                    skirout.editor.v1.resource_operations.StaleAuthoringObservation.partial(),
+            ) = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation(
+                subscriptionId = subscriptionId,
+                observation = observation,
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [StaleObservation] instances. */
+            val serializer get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializer;
+
+            /** Describes the [StaleObservation] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializerImpl.typeDescriptor;
+        }
     }
 }
 
@@ -1922,6 +2110,18 @@ private object _SerializerRegistry {
 
     val RealmPresentationSearchUpdateSerializer = build.skir.internal.makeSerializer(RealmPresentationSearchUpdateSerializerImpl);
 
+    val RealmPresentationSearchUpdate_StaleObservationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/search.skir:RealmPresentationSearchUpdate.StaleObservation",
+        doc = "",
+        defaultInstance = skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservation.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmPresentationSearchUpdate_StaleObservationSerializer = build.skir.internal.makeSerializer(RealmPresentationSearchUpdate_StaleObservationSerializerImpl);
+
     val RealmSearchQuerySerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmSearchQuery",
         doc = "",
@@ -2085,6 +2285,17 @@ private object _SerializerRegistry {
             { it.query },
             { mut, v -> mut.query = v },
         );
+        RealmPresentationSearchRequestSerializerImpl.addField(
+            "operation_context",
+            "operationContext",
+            6,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.resource_operations.OperationSearchContext.serializer,
+            ),
+            "",
+            { it.operationContext },
+            { mut, v -> mut.operationContext = v },
+        );
         RealmPresentationSearchRequestSerializerImpl.finalizeStruct();
 
         RealmPresentationSearchSnapshotSerializerImpl.addField(
@@ -2203,7 +2414,36 @@ private object _SerializerRegistry {
             { skirout.editor.v1.search.RealmPresentationSearchUpdate.UnavailableWrapper(it) },
             { it.value },
         );
+        RealmPresentationSearchUpdateSerializerImpl.addWrapperVariant(
+            3,
+            "stale_observation",
+            skirout.editor.v1.search.RealmPresentationSearchUpdate.Kind.STALE_OBSERVATION_WRAPPER.ordinal,
+            _SerializerRegistry.RealmPresentationSearchUpdate_StaleObservationSerializer,
+            "",
+            { skirout.editor.v1.search.RealmPresentationSearchUpdate.StaleObservationWrapper(it) },
+            { it.value },
+        );
         RealmPresentationSearchUpdateSerializerImpl.finalizeEnum();
+
+        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.addField(
+            "subscription_id",
+            "subscriptionId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.subscriptionId },
+            { mut, v -> mut.subscriptionId = v },
+        );
+        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.addField(
+            "observation",
+            "observation",
+            1,
+            skirout.editor.v1.resource_operations.StaleAuthoringObservation.serializer,
+            "",
+            { it.observation },
+            { mut, v -> mut.observation = v },
+        );
+        RealmPresentationSearchUpdate_StaleObservationSerializerImpl.finalizeStruct();
 
         RealmSearchQuerySerializerImpl.addField(
             "normalized_query",

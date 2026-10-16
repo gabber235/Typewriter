@@ -168,9 +168,9 @@ interface SearchSelectorsScope {
 interface SearchResultScope<Value, Row> {
     val row: Expr<Row, Handled>
 
-    fun key(value: Expr<*, Handled>)
+    fun key(value: Expr<*, out com.typewritermc.expression.MissingPolicy>)
 
-    fun selectedValue(value: Expr<Value, Handled>)
+    fun selectedValue(value: Expr<Value, out com.typewritermc.expression.MissingPolicy>)
 
     fun presentation(body: Layout.() -> Unit)
 

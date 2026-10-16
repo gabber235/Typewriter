@@ -2283,6 +2283,392 @@ final class RealmEditorAction_commandWrapper
   RealmEditorAction_kind get kind => RealmEditorAction_kind.commandWrapper;
 }
 
+// enum ResourceNavigationMode
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case ResourceNavigationMode_unknown(): { ... }
+///     case ResourceNavigationMode.open: { ... }
+///     case ResourceNavigationMode.reveal: { ... }
+///     case ResourceNavigationMode.edit: { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class ResourceNavigationMode {
+  /// Constant indicating an unknown `ResourceNavigationMode`.
+  /// Default value for fields of type `ResourceNavigationMode`.
+  static const ResourceNavigationMode unknown =
+      ResourceNavigationMode_unknown._instance;
+
+  static const open = _ResourceNavigationMode_consts.openConst;
+  static const reveal = _ResourceNavigationMode_consts.revealConst;
+  static const edit = _ResourceNavigationMode_consts.editConst;
+
+  /// Returns the kind of variant held by this ResourceNavigationMode.
+  ResourceNavigationMode_kind get kind;
+
+  /// Serializer for `ResourceNavigationMode` instances.
+  static _skir.EnumSerializer<ResourceNavigationMode> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addConstantVariant(1, "open", "open", "", open);
+      _serializerBuilder.addConstantVariant(2, "reveal", "reveal", "", reveal);
+      _serializerBuilder.addConstantVariant(3, "edit", "edit", "", edit);
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/action.skir:ResourceNavigationMode",
+        doc: "",
+        unknownInstance: ResourceNavigationMode_unknown._instance,
+        enumInstance: ResourceNavigationMode.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: ResourceNavigationMode_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `ResourceNavigationMode`.
+enum ResourceNavigationMode_kind {
+  unknown(0),
+  openConst(1),
+  revealConst(2),
+  editConst(3);
+
+  final _core.int _ordinal;
+
+  const ResourceNavigationMode_kind(this._ordinal);
+}
+
+final class ResourceNavigationMode_unknown implements ResourceNavigationMode {
+  static const _instance = ResourceNavigationMode_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const ResourceNavigationMode_unknown._() : _u = null;
+  ResourceNavigationMode_unknown._unrecognized(this._u);
+
+  @_core.override
+  ResourceNavigationMode_kind get kind => ResourceNavigationMode_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is ResourceNavigationMode_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourceNavigationMode.serializer);
+}
+
+enum _ResourceNavigationMode_consts implements ResourceNavigationMode {
+  openConst(ResourceNavigationMode_kind.openConst),
+  revealConst(ResourceNavigationMode_kind.revealConst),
+  editConst(ResourceNavigationMode_kind.editConst);
+
+  @_core.override
+  final ResourceNavigationMode_kind kind;
+
+  const _ResourceNavigationMode_consts(this.kind);
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, ResourceNavigationMode.serializer);
+}
+
+// struct ResourceNavigationAction
+
+sealed class ResourceNavigationAction_orMutable {
+  _lib_editor_v1_expression.ExpressionNode get resource;
+  ResourceNavigationMode get mode;
+
+  ResourceNavigationAction toFrozen();
+}
+
+/// Deeply immutable.
+final class ResourceNavigationAction
+    implements ResourceNavigationAction_orMutable {
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode resource;
+  @_core.override
+  final ResourceNavigationMode mode;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory ResourceNavigationAction({
+    required _lib_editor_v1_expression.ExpressionNode resource,
+    required ResourceNavigationMode mode,
+  }) => ResourceNavigationAction._(resource, mode);
+
+  ResourceNavigationAction._(this.resource, this.mode);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = ResourceNavigationAction._(
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    ResourceNavigationMode.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static ResourceNavigationAction_mutable mutable() =>
+      ResourceNavigationAction_mutable._(
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        ResourceNavigationMode.unknown,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  ResourceNavigationAction toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  ResourceNavigationAction_mutable toMutable() =>
+      ResourceNavigationAction_mutable._(this.resource, this.mode);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! ResourceNavigationAction) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.resource, this.mode];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `ResourceNavigationAction` instances.
+  static _skir.StructSerializer<
+    ResourceNavigationAction,
+    ResourceNavigationAction_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "resource",
+        "resource",
+        0,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.resource,
+        (it, v) => it.resource = v,
+      );
+      _serializerBuilder.addField(
+        "mode",
+        "mode",
+        1,
+        ResourceNavigationMode.serializer,
+        "",
+        (it) => it.mode,
+        (it, v) => it.mode = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/action.skir:ResourceNavigationAction",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (ResourceNavigationAction_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [ResourceNavigationAction].
+final class ResourceNavigationAction_mutable
+    implements ResourceNavigationAction_orMutable {
+  _lib_editor_v1_expression.ExpressionNode resource;
+  ResourceNavigationMode mode;
+  _skir.internal__UnrecognizedFields? _u;
+
+  ResourceNavigationAction_mutable._(this.resource, this.mode);
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  ResourceNavigationAction toFrozen() =>
+      ResourceNavigationAction(resource: this.resource, mode: this.mode)
+        .._u = this._u;
+}
+
+// struct AuthoringCapabilityAction
+
+sealed class AuthoringCapabilityAction_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable get capability;
+  _lib_editor_v1_expression.ExpressionNode get targets;
+  _lib_editor_v1_expression.ExpressionNode? get initialInput;
+
+  AuthoringCapabilityAction toFrozen();
+}
+
+/// Deeply immutable.
+final class AuthoringCapabilityAction
+    implements AuthoringCapabilityAction_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.CapabilityId capability;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode targets;
+  @_core.override
+  final _lib_editor_v1_expression.ExpressionNode? initialInput;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory AuthoringCapabilityAction({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capability,
+    required _lib_editor_v1_expression.ExpressionNode targets,
+    required _lib_editor_v1_expression.ExpressionNode? initialInput,
+  }) =>
+      AuthoringCapabilityAction._(capability.toFrozen(), targets, initialInput);
+
+  AuthoringCapabilityAction._(this.capability, this.targets, this.initialInput);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = AuthoringCapabilityAction._(
+    _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+    _lib_editor_v1_expression.ExpressionNode.unknown,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static AuthoringCapabilityAction_mutable mutable() =>
+      AuthoringCapabilityAction_mutable._(
+        _lib_editor_v1_type_catalog.CapabilityId.defaultInstance,
+        _lib_editor_v1_expression.ExpressionNode.unknown,
+        null,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  AuthoringCapabilityAction toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  AuthoringCapabilityAction_mutable toMutable() =>
+      AuthoringCapabilityAction_mutable._(
+        this.capability,
+        this.targets,
+        this.initialInput,
+      );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! AuthoringCapabilityAction) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.capability,
+    this.targets,
+    this.initialInput,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `AuthoringCapabilityAction` instances.
+  static _skir.StructSerializer<
+    AuthoringCapabilityAction,
+    AuthoringCapabilityAction_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "capability",
+        "capability",
+        0,
+        _lib_editor_v1_type_catalog.CapabilityId.serializer,
+        "",
+        (it) => it.capability,
+        (it, v) => it.capability = v,
+      );
+      _serializerBuilder.addField(
+        "targets",
+        "targets",
+        1,
+        _lib_editor_v1_expression.ExpressionNode.serializer,
+        "",
+        (it) => it.targets,
+        (it, v) => it.targets = v,
+      );
+      _serializerBuilder.addField(
+        "initial_input",
+        "initialInput",
+        2,
+        _skir.Serializers.optional(
+          _lib_editor_v1_expression.ExpressionNode.serializer,
+        ),
+        "",
+        (it) => it.initialInput,
+        (it, v) => it.initialInput = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/action.skir:AuthoringCapabilityAction",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (AuthoringCapabilityAction_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [AuthoringCapabilityAction].
+final class AuthoringCapabilityAction_mutable
+    implements AuthoringCapabilityAction_orMutable {
+  _lib_editor_v1_type_catalog.CapabilityId_orMutable capability;
+  _lib_editor_v1_expression.ExpressionNode targets;
+  _lib_editor_v1_expression.ExpressionNode? initialInput;
+  _skir.internal__UnrecognizedFields? _u;
+
+  AuthoringCapabilityAction_mutable._(
+    this.capability,
+    this.targets,
+    this.initialInput,
+  );
+
+  /// If the value of [capability] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
+  _lib_editor_v1_type_catalog.CapabilityId_mutable get mutableCapability {
+    final value = this.capability;
+    if (value is _lib_editor_v1_type_catalog.CapabilityId_mutable) {
+      return value;
+    } else {
+      return this.capability =
+          (value as _lib_editor_v1_type_catalog.CapabilityId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  AuthoringCapabilityAction toFrozen() => AuthoringCapabilityAction(
+    capability: this.capability,
+    targets: this.targets,
+    initialInput: this.initialInput,
+  ).._u = this._u;
+}
+
 // enum EditorAction
 
 /// To switch on the variants:
@@ -2291,6 +2677,8 @@ final class RealmEditorAction_commandWrapper
 ///     case EditorAction_unknown(): { ... }
 ///     case EditorAction_local(:var value): { ... }
 ///     case EditorAction_realm(:var value): { ... }
+///     case EditorAction_navigate(:var value): { ... }
+///     case EditorAction_authoring(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -2307,6 +2695,35 @@ sealed class EditorAction {
   /// Create a 'realm' variant wrapping around the given value.
   factory EditorAction.wrapRealm(RealmEditorAction value) =>
       EditorAction_realmWrapper._(value);
+
+  /// Create a 'navigate' variant wrapping around the given value.
+  factory EditorAction.wrapNavigate(ResourceNavigationAction value) =>
+      EditorAction_navigateWrapper._(value);
+
+  /// Same as `wrapNavigate(ResourceNavigationAction(...))`.
+  factory EditorAction.createNavigate({
+    required _lib_editor_v1_expression.ExpressionNode resource,
+    required ResourceNavigationMode mode,
+  }) => EditorAction.wrapNavigate(
+    ResourceNavigationAction(resource: resource, mode: mode),
+  );
+
+  /// Create a 'authoring' variant wrapping around the given value.
+  factory EditorAction.wrapAuthoring(AuthoringCapabilityAction value) =>
+      EditorAction_authoringWrapper._(value);
+
+  /// Same as `wrapAuthoring(AuthoringCapabilityAction(...))`.
+  factory EditorAction.createAuthoring({
+    required _lib_editor_v1_type_catalog.CapabilityId_orMutable capability,
+    required _lib_editor_v1_expression.ExpressionNode targets,
+    required _lib_editor_v1_expression.ExpressionNode? initialInput,
+  }) => EditorAction.wrapAuthoring(
+    AuthoringCapabilityAction(
+      capability: capability,
+      targets: targets,
+      initialInput: initialInput,
+    ),
+  );
 
   /// Returns the kind of variant held by this EditorAction.
   EditorAction_kind get kind;
@@ -2334,6 +2751,26 @@ sealed class EditorAction {
         (it) => it.value,
         ordinal: EditorAction_kind.realmWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "navigate",
+        "wrapNavigate",
+        ResourceNavigationAction.serializer,
+        "",
+        EditorAction_navigateWrapper._,
+        (it) => it.value,
+        ordinal: EditorAction_kind.navigateWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        4,
+        "authoring",
+        "wrapAuthoring",
+        AuthoringCapabilityAction.serializer,
+        "",
+        EditorAction_authoringWrapper._,
+        (it) => it.value,
+        ordinal: EditorAction_kind.authoringWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -2355,7 +2792,9 @@ sealed class EditorAction {
 enum EditorAction_kind {
   unknown(0),
   localWrapper(1),
-  realmWrapper(2);
+  realmWrapper(2),
+  navigateWrapper(3),
+  authoringWrapper(4);
 
   final _core.int _ordinal;
 
@@ -2414,4 +2853,22 @@ final class EditorAction_realmWrapper extends _EditorAction_wrapper {
 
   @_core.override
   EditorAction_kind get kind => EditorAction_kind.realmWrapper;
+}
+
+final class EditorAction_navigateWrapper extends _EditorAction_wrapper {
+  final ResourceNavigationAction value;
+
+  EditorAction_navigateWrapper._(this.value);
+
+  @_core.override
+  EditorAction_kind get kind => EditorAction_kind.navigateWrapper;
+}
+
+final class EditorAction_authoringWrapper extends _EditorAction_wrapper {
+  final AuthoringCapabilityAction value;
+
+  EditorAction_authoringWrapper._(this.value);
+
+  @_core.override
+  EditorAction_kind get kind => EditorAction_kind.authoringWrapper;
 }

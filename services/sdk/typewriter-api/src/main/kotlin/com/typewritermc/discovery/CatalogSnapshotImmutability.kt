@@ -26,6 +26,17 @@ import com.typewritermc.types.immutableSetCopy
 
 internal fun EditorCatalogSnapshot.immutableCopy(): EditorCatalogSnapshot =
     copy(
+        resourceOperations =
+            resourceOperations.immutableListCopy { operation ->
+                operation.copy(targets = operation.targets.immutableCopy())
+            },
+        resourceOperationContributions =
+            resourceOperationContributions.immutableListCopy { contribution ->
+                contribution.copy(
+                    target = contribution.target.immutableCopy() as TypeTemplate.Named,
+                    operations = contribution.operations.immutableListCopy(),
+                )
+            },
         types = types.immutableListCopy(PublishedType::immutableCopy),
         relations = relations.immutableListCopy(RelationContract::immutableCopy),
         resourceDefinitions = resourceDefinitions.immutableListCopy(),
@@ -168,6 +179,10 @@ private fun RealmCapabilityDescriptor.immutableCopy(): RealmCapabilityDescriptor
             )
         }
 
+        is RealmCapabilityDescriptor.Authoring -> {
+            copy(requestType = requestType?.immutableCopy(), targets = targets.immutableCopy())
+        }
+
         is RealmCapabilityDescriptor.Command -> {
             copy(requestType = requestType.immutableCopy())
         }
@@ -182,3 +197,14 @@ private fun DeclarationDiagnostic.immutableCopy(): DeclarationDiagnostic =
     )
 
 private fun RelativeFieldPattern.immutableCopy(): RelativeFieldPattern = copy(segments = segments.immutableListCopy())
+
+private fun com.typewritermc.operations.OperationTargets.immutableCopy(): com.typewritermc.operations.OperationTargets =
+    when (this) {
+        is com.typewritermc.operations.OperationTargets.Single -> copy(type = type.immutableCopy() as TypeTemplate.Named)
+
+        is com.typewritermc.operations.OperationTargets.Selection -> copy(type = type.immutableCopy() as TypeTemplate.Named)
+
+        com.typewritermc.operations.OperationTargets.ContributedSingle,
+        com.typewritermc.operations.OperationTargets.ContributedSelection,
+        -> this
+    }
