@@ -44,6 +44,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_books_presentation_library_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_result_items.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/compiled_search_results.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_compiled_search_results_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_graph.stories.dart'
@@ -500,6 +502,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                                     builder:
                                         _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_authoring_search_result_items_stories
                                             .authoringBookSearchResultItemUseCase,
+                                  ),
+                                  _widgetbook.WidgetbookUseCase(
+                                    name: 'Compiled live resources',
+                                    builder:
+                                        _widgetbook_workspace_stories_features_organizations_features_realms_features_search_presentation_compiled_search_results_stories
+                                            .compiledLiveResourcesUseCase,
                                   ),
                                   _widgetbook.WidgetbookUseCase(
                                     name: 'Element result',
