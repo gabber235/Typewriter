@@ -11,7 +11,10 @@ sealed class PortableOperationKey with _$PortableOperationKey {
   const factory PortableOperationKey.addMapRow(
     PortableDiagnosticTarget target,
   ) = _PortableAddMapRowKey;
-  const factory PortableOperationKey.mapping(PortableDiagnosticTarget target, {required bool completion}) = _PortableMappingKey;
+  const factory PortableOperationKey.mapping(
+    PortableDiagnosticTarget target, {
+    required bool completion,
+  }) = _PortableMappingKey;
   const factory PortableOperationKey.status() = _PortableStatusKey;
 }
 
@@ -56,6 +59,7 @@ class PortableOperationResults extends ValueNotifier<PortableOperationState> {
     required PortableOperationKey key,
     required FutureOr<PortablePresentationWriteResult> Function() operation,
     PortableDiagnosticObservation? input,
+    VoidCallback? onApplied,
   }) async {
     if (_closed) return;
     final request = Object();
@@ -95,6 +99,8 @@ class PortableOperationResults extends ValueNotifier<PortableOperationState> {
     switch (result) {
       case PortablePresentationWriteApplied():
         value = value.copyWith(outcomes: {...value.outcomes}..remove(key));
+        // Settled feedback can synchronously replace or dispose this owner.
+        if (!_closed && !value.outcomes.containsKey(key)) onApplied?.call();
       case PortablePresentationWriteRejected(:final diagnostics):
         _put(
           key,
