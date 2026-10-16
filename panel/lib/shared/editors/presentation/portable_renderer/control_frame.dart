@@ -7,12 +7,10 @@ Widget _controlFrame(
   skir.InputAppearance? appearance,
   bool renderPrefix = false,
 }) {
-  final resolvedLabel = _controlString(control.label, childScope);
-  final description = _controlString(control.description, childScope);
-  final semanticLabel = _controlString(
-    control.semanticLabel ?? control.label,
-    childScope,
-  );
+  final association = childScope.associationFor(control);
+  final resolvedLabel = association.label;
+  final description = association.description;
+  final semanticLabel = association.semanticLabel;
   final content = renderPrefix
       ? _compositeControlContent(control, childScope, child)
       : child;
@@ -53,16 +51,11 @@ Widget? _controlPrefix(
   skir.BoundControl control,
   PortablePresentationScope childScope,
 ) {
-  final prefix = control.prefix;
+  final association = childScope.associationFor(control);
+  final prefix = association.prefix;
   if (prefix == null) return null;
-  final rendered = PortablePresentationNodeRenderer(
-    node: prefix,
-    scope: childScope,
-  );
-  final semanticLabel = _controlString(
-    control.semanticLabel ?? control.label,
-    childScope,
-  );
+  final rendered = prefix.render(childScope);
+  final semanticLabel = association.semanticLabel;
   return semanticLabel == null || semanticLabel.isEmpty
       ? rendered
       : ExcludeSemantics(child: rendered);
@@ -73,14 +66,14 @@ Widget _compositeControlContent(
   PortablePresentationScope scope,
   Widget child,
 ) {
-  final prefix = control.prefix;
+  final prefix = scope.associationFor(control).prefix;
   if (prefix == null) return child;
   return Builder(
     builder: (context) => Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: context.spacing.space2,
       children: [
-        PortablePresentationNodeRenderer(node: prefix, scope: scope),
+        prefix.render(scope),
         Expanded(child: child),
       ],
     ),
@@ -92,12 +85,10 @@ Widget _controlAssociation(
   PortablePresentationScope scope,
   Widget child,
 ) {
-  final label = _controlString(control.label, scope);
-  final description = _controlString(control.description, scope);
-  final semanticLabel = _controlString(
-    control.semanticLabel ?? control.label,
-    scope,
-  );
+  final association = scope.associationFor(control);
+  final label = association.label;
+  final description = association.description;
+  final semanticLabel = association.semanticLabel;
   return PortableLocationTarget(
     location: scope.location(control.binding),
     child: PortableDiagnosticAnchor(
@@ -113,7 +104,8 @@ Widget _controlAssociation(
       builder: (context, summary, owner) {
         final style = _controlStyle(context, scope, null);
         final enclosing = _PortableHeaderTitle.maybeOf(context);
-        final effectiveLabel = label?.trim() == enclosing?.trim()
+        final effectiveLabel =
+            label == null || label.isEmpty || label.trim() == enclosing?.trim()
             ? null
             : label;
         return Semantics(
@@ -153,8 +145,16 @@ Widget _semanticInput(
   PortablePresentationScope scope,
   Widget child,
 ) {
-  final label = _controlString(control.semanticLabel ?? control.label, scope);
+  final label = scope.associationFor(control).semanticLabel;
   return MergeSemantics(
     child: Semantics(label: label ?? "", child: child),
   );
+}
+
+Widget? _fieldLabel(
+  skir.BoundControl control,
+  PortablePresentationScope scope,
+) {
+  final label = scope.associationFor(control).label;
+  return label == null || label.isEmpty ? null : Text(label);
 }

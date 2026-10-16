@@ -99,6 +99,14 @@ internal class PresentationBuildState(
             "No authored resource type is registered for ${native.qualifiedName}."
         }
 
+    fun partId(key: PresentationPartKey<*>): skirout.editor.v1.presentation.PresentationPartId {
+        val owner = resourceType(key.ownerClass)
+        return skirout.editor.v1.presentation.PresentationPartId(
+            owner = SkirTypeCodec.encode(owner.definition).getOrThrow(),
+            name = key.name,
+        )
+    }
+
     fun result(
         layout: PresentationNode,
         appearance: skirout.editor.v1.presentation.ResultAppearance? = null,

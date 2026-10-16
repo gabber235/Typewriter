@@ -28,10 +28,9 @@ import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationNestedTemplate
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.RoleFallback
-import com.typewritermc.presentation.explicitFieldSelections
-import com.typewritermc.presentation.isEquivalentTo
-import com.typewritermc.presentation.isMoreSpecificThan
+import com.typewritermc.presentation.inferInheritableNodes
 import com.typewritermc.presentation.selectMostSpecificDescriptors
+import com.typewritermc.presentation.validateInheritableNodes
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.EndpointBindingTemplate
 import com.typewritermc.types.FieldDeclaration
@@ -160,17 +159,10 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             structural,
             resourceDefinitions,
         )
-    val presentationDiagnostics =
-        presentationFieldDiagnostics(
-            materialCollection.materials,
-            presentations.map(OwnedPresentation::descriptor),
-            definitionIndex,
-            structural,
-        )
     val directFailures =
         collectionResults.mapNotNull(ConfigurationCollectionResult::failure) +
             duplicateDiagnostics + reservedDiagnostics + symbolicDiagnostics + ruleDiagnostics +
-            materialCollection.failures + presentationDiagnostics + resourceFamilyDiagnostics
+            materialCollection.failures + resourceFamilyDiagnostics
     val unavailable = propagateUnavailableDefinitions(directFailures.map(DeclarationDiagnostic::affected).toSet(), definitions)
     val checked = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in unavailable })
     val bindingRegistry =
@@ -298,6 +290,20 @@ private fun collectPresentationMaterials(
                     ) {
                         "Result appearance requires an authoring result or reference option role."
                     }
+                    val inferred = result.layout.inferInheritableNodes(result.dependencies)
+                    result.layout.validateInheritableNodes(
+                        inferred,
+                        result.dependencies,
+                        partOwnerCompatible = { key ->
+                            val owner = SkirTypeCodec.decode(key.owner).valueOrNull()
+                            val actual = (subject as? TypeTemplate.Named)?.definition
+                            owner != null && actual != null && definitions[owner]?.representation is RepresentationTemplate.Record &&
+                                catalog.isNominalSubtype(actual, owner)
+                        },
+                    ) { field ->
+                        subject.field(field, definitions) !=
+                            null
+                    }
                     if (result.dependencies.validCollections(subject, definitions, catalog, resources)) {
                         materials +=
                             PresentationMaterial(
@@ -308,6 +314,7 @@ private fun collectPresentationMaterials(
                                 layout = result.layout,
                                 dependencies = result.dependencies,
                                 resultAppearance = result.resultAppearance,
+                                inheritableNodes = inferred,
                             )
                     } else {
                         val affected = (subject as? TypeTemplate.Named)?.definition
@@ -600,81 +607,6 @@ private data class ConfigurationCollectionResult(
     val collected: CollectedOwnedConfiguration? = null,
     val failure: DeclarationDiagnostic? = null,
 )
-
-private data class FieldPresentationCandidate(
-    val selection: com.typewritermc.presentation.OwnedFieldPresentation,
-    val descriptor: PresentationDescriptor?,
-)
-
-private fun presentationFieldDiagnostics(
-    materials: List<PresentationMaterial>,
-    descriptors: List<PresentationDescriptor>,
-    definitions: Map<TypeDefinitionId, TypeDefinition>,
-    catalog: CheckedCatalog,
-): List<DeclarationDiagnostic> {
-    val descriptorsById =
-        descriptors
-            .groupBy(PresentationDescriptor::id)
-            .mapValues { (_, matching) -> matching.singleOrNull() }
-    val selections =
-        materials.flatMap(PresentationMaterial::explicitFieldSelections).map { selection ->
-            FieldPresentationCandidate(selection, descriptorsById[selection.provider])
-        }
-    return definitions.values.flatMap { definition ->
-        selections
-            .filter { candidate -> candidate.selection.target.appliesTo(definition, definitions) }
-            .groupBy { candidate -> candidate.selection.role to candidate.selection.field }
-            .values
-            .mapNotNull { candidates ->
-                val maximal =
-                    candidates.filterNot { candidate ->
-                        candidates.any { other ->
-                            other.selection.target.isMoreSpecificThan(candidate.selection.target, catalog)
-                        }
-                    }
-                val incomparable =
-                    maximal.any { candidate ->
-                        maximal.any { other ->
-                            !candidate.selection.target.isEquivalentTo(other.selection.target, catalog)
-                        }
-                    }
-                val winners =
-                    if (incomparable) {
-                        maximal
-                    } else {
-                        val highestPriority = maximal.maxOfOrNull { it.descriptor?.priority ?: 0 } ?: return@mapNotNull null
-                        maximal.filter { (it.descriptor?.priority ?: 0) == highestPriority }
-                    }
-                if (winners.map { it.selection.selected }.distinct().size < 2) return@mapNotNull null
-                DeclarationDiagnostic(
-                    affected = definition.id,
-                    code = "conflicting_field_presentation",
-                    origins =
-                        winners
-                            .mapNotNull { it.descriptor?.owner }
-                            .distinct()
-                            .map(::DeclarationOrigin),
-                )
-            }
-    }
-}
-
-private fun PresentationTarget.appliesTo(
-    definition: TypeDefinition,
-    definitions: Map<TypeDefinitionId, TypeDefinition>,
-): Boolean =
-    when (this) {
-        is PresentationTarget.Representation -> {
-            definition.representation.presentationKind() == kind
-        }
-
-        is PresentationTarget.Named -> {
-            val own = TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
-            (listOf(own) + definition.transitiveAncestors(definitions)).any { application ->
-                type.matchesTemplate(application, linkedMapOf())
-            }
-        }
-    }
 
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {

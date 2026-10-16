@@ -1,5 +1,7 @@
 package com.typewritermc.engine.pages
 
+import com.typewritermc.authoring.GraphPlacementDefinition
+import com.typewritermc.authoring.TimelineEntryPlacementDefinition
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
@@ -31,6 +33,7 @@ import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PageGraphDirection
 import skirout.editor.v1.presentation.PresentationElement
+import skirout.editor.v1.type_catalog.PathSegment
 import java.util.Collections
 
 val CorePageEditorPresentationTest by testSuite {
@@ -50,7 +53,10 @@ val CorePageEditorPresentationTest by testSuite {
         entries
             .filter {
                 it.kind == GeneratedProviderKind.Presentation &&
-                    it.providerClass.startsWith("com.typewritermc.engine.pages.")
+                    (
+                        it.providerClass.startsWith("com.typewritermc.engine.pages.") ||
+                            it.providerClass.contains("PlacementSdkProvider_")
+                    )
             }.associate { entry ->
                 val provider =
                     Class
@@ -68,6 +74,45 @@ val CorePageEditorPresentationTest by testSuite {
                 provider.descriptor(origin) to provider
             }
     val registry = DefaultPresentationRegistry(catalog, providers.keys.toList())
+
+    listOf(
+        Triple("Sequence", SequenceEntryDefinition.use, GraphPlacementDefinition.use),
+        Triple("Static", StaticEntryDefinition.use, GraphPlacementDefinition.use),
+        Triple("Manifest", ManifestEntryDefinition.use, GraphPlacementDefinition.use),
+        Triple("Scene", SceneEntryDefinition.use, TimelineEntryPlacementDefinition.use),
+    ).forEach { (name, type, placement) ->
+        test("$name entry inspector inherits name and places its named placement after the remainder") {
+            val checked = (catalog.resolve(type) as Resolution.Ready).value
+            val selected = registry.select(PresentationRole.INSPECTOR, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
+            val layout =
+                providers
+                    .getValue(selected.descriptor)
+                    .build(
+                        PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
+                    ).layout
+            val column =
+                layout.element
+                    .shouldBeInstanceOf<PresentationElement.ChildrenWrapper>()
+                    .value
+                    .shouldBeInstanceOf<ChildrenElement.ColumnWrapper>()
+                    .value
+            val nodes = column.children.map { it.shouldBeInstanceOf<AxisChild.FixedWrapper>().value }
+            nodes.size shouldBe 3
+            val nameRequest = nodes[0].element.shouldBeInstanceOf<PresentationElement.DefaultPresentationWrapper>().value
+            nameRequest.control.binding.path.segments shouldBe listOf(PathSegment.createField(name = "name"))
+            nameRequest.presentationId shouldBe null
+            nodes[1].element.shouldBeInstanceOf<PresentationElement.RemainingFieldsWrapper>()
+            val placementRequest = nodes[2].element.shouldBeInstanceOf<PresentationElement.DefaultPresentationWrapper>().value
+            placementRequest.control.binding.path.segments shouldBe listOf(PathSegment.createField(name = "placement"))
+            val checkedPlacement = (catalog.resolve(placement) as Resolution.Ready).value
+            val placementSelection =
+                registry
+                    .select(PresentationRole.INSPECTOR, checkedPlacement)
+                    .shouldBeInstanceOf<PresentationSelection.Selected>()
+            placementRequest.presentationId?.namespace shouldBe placementSelection.descriptor.id.namespace
+            placementRequest.presentationId?.name shouldBe placementSelection.descriptor.id.name
+        }
+    }
 
     listOf(
         Triple("Sequence", SequencePageDefinition.use, PageGraphDirection.LEFT_TO_RIGHT),

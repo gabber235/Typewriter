@@ -1,7 +1,41 @@
 package com.typewritermc.engine.pages
 
+import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.types.PresentationRole
+
+object CoreEntryInspectors :
+    SequenceEntryPresentation,
+    StaticEntryPresentation,
+    ManifestEntryPresentation,
+    SceneEntryPresentation {
+    override val roles = setOf(PresentationRole.INSPECTOR)
+    override val priority = 0
+
+    override fun SequenceEntryPresentationScope.present() {
+        name()
+        remainingFields()
+        placement(using = PlacementSdkProvider)
+    }
+
+    override fun StaticEntryPresentationScope.present() {
+        name()
+        remainingFields()
+        placement(using = PlacementSdkProvider)
+    }
+
+    override fun ManifestEntryPresentationScope.present() {
+        name()
+        remainingFields()
+        placement(using = PlacementSdkProvider)
+    }
+
+    override fun SceneEntryPresentationScope.present() {
+        name()
+        remainingFields()
+        placement(using = PlacementSdkProvider)
+    }
+}
 
 object SequencePageEditor : SequencePagePresentation {
     override val roles = setOf(PresentationRole.EDITOR)

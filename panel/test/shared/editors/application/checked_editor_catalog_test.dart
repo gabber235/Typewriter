@@ -4,6 +4,65 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test(
+    "representation field subjects match generic complete and pending owners",
+    () {
+      final fixture = _catalog();
+      final original = fixture.catalog.snapshot;
+      final descriptor =
+          (original.presentations.first.toMutable()
+                ..target = skir.PresentationTarget.wrapRepresentation(
+                  skir.RepresentationKind.record,
+                ))
+              .toFrozen();
+      final binding = skir.BindingRef(
+        bindingId: skir.ExpressionBindingId(value: "configured_value"),
+        path: skir.ValuePath(
+          segments: [skir.PathSegment.createField(name: "title")],
+        ),
+      );
+      final node =
+          (skir.PresentationNode.defaultInstance.toMutable()
+                ..nodeId = "title"
+                ..element = skir.PresentationElement.wrapTextInput(
+                  (skir.TextControl.defaultInstance.toMutable()
+                        ..control =
+                            (skir.BoundControl.defaultInstance.toMutable()
+                              ..binding = binding))
+                      .toFrozen(),
+                ))
+              .toFrozen();
+      final material =
+          (original.presentationMaterials.first.toMutable()
+                ..target = descriptor.target
+                ..layout = node
+                ..inheritableNodes = [
+                  "title",
+                ])
+              .toFrozen();
+      final catalog = CheckedEditorCatalog(
+        (original.toMutable()
+              ..presentations = [descriptor]
+              ..presentationMaterials = [material])
+            .toFrozen(),
+      );
+      for (final actual in [
+        fixture.catalog.beginSelection(fixture.root),
+        skir.TypeSelection.createComplete(
+          definition: fixture.root,
+          arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+        ),
+      ]) {
+        final selected = catalog.fieldPresentation(
+          actual,
+          "title",
+          skir.PresentationRole.editor,
+        );
+        expect(selected, isA<SelectedEditorFieldPresentation>());
+      }
+    },
+  );
+
   test("concrete generic material mappings reject incompatible candidate operations", () {
     final fixture = _catalog();
     final parameter = fixture.catalog
@@ -46,6 +105,7 @@ void main() {
       ),
     );
     final material = skir.PresentationMaterial(
+      inheritableNodes: const [],
       resultAppearance: null,
 
       provider: original.provider,
@@ -87,6 +147,7 @@ void main() {
       final original = fixture.catalog.snapshot.presentationMaterials.first;
       final configured = skir.ExpressionBindingId(value: "configured_value");
       final material = skir.PresentationMaterial(
+        inheritableNodes: const [],
         resultAppearance: null,
 
         provider: original.provider,
@@ -446,6 +507,7 @@ void main() {
         presentationMaterials: [
           for (final descriptor in descriptors)
             skir.PresentationMaterial(
+              inheritableNodes: const [],
               resultAppearance: null,
 
               provider: descriptor.id,
@@ -598,6 +660,7 @@ void main() {
         presentationMaterials: [
           ...original.presentationMaterials,
           skir.PresentationMaterial(
+            inheritableNodes: const [],
             resultAppearance: null,
 
             provider: tie,
@@ -770,6 +833,7 @@ _patternCatalog({required bool repeated}) {
     presentationMaterials: [
       for (final descriptor in descriptors)
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: descriptor.id,
@@ -965,6 +1029,7 @@ _catalog() {
         (recordPresentation, recordTarget),
       ])
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: entry.$1,

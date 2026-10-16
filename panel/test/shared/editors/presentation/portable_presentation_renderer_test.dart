@@ -1950,6 +1950,7 @@ _linkCollectionFixture({
     ),
   );
   final collectionMaterial = skir.PresentationMaterial(
+    inheritableNodes: const [],
     resultAppearance: null,
 
     provider: skir.PresentationId(namespace: "test", name: "link.collection"),
@@ -2072,6 +2073,7 @@ _linkCollectionFixture({
       presentationMaterials: adaptiveAppearance
           ? [
               skir.PresentationMaterial(
+                inheritableNodes: const [],
                 resultAppearance: null,
 
                 provider: appearanceId,
@@ -2803,6 +2805,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     presentations: const [],
     presentationMaterials: [
       skir.PresentationMaterial(
+        inheritableNodes: const [],
         resultAppearance: null,
 
         provider: _iconifyPresentation,
@@ -3657,6 +3660,7 @@ void registerRemainingFieldsTests() {
                 segments: [skir.FieldPatternSegment.createField(name: "Z")],
               ),
             ],
+            excludedParts: const [],
           ),
         ),
       );

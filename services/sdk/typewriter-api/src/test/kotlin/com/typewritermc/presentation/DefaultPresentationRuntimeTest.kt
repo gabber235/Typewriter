@@ -84,6 +84,93 @@ val DefaultPresentationRuntimeTest by testSuite {
         input.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
     }
 
+    test("callable part keys compile declarations requests and typed exclusions with canonical owner identity") {
+        val id = TypeDefinitionId(TypeId.Qualified("test", "PartOwner"), 1)
+        val catalog =
+            DefaultCheckedCatalog(
+                CatalogGeneration("parts"),
+                StandardTypes.definitions + TypeDefinition(id, representation = RepresentationTemplate.Record(emptyList())),
+            )
+        val checked = catalog.ready(TypeUse.Named(id))
+        val heading = presentationPart<String>("heading")
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(
+                    checked.presentationTemplate(),
+                    PresentationRole.INSPECTOR,
+                    mapOf(String::class to TypeTemplate.Named(id)),
+                ),
+            ) { build ->
+                with(build) {
+                    heading { text(literal("Shared heading")) }
+                    heading()
+                    remainingFields { exclude(heading) }
+                }
+            }
+        val nodes = ((result.layout.element as PresentationElement.ChildrenWrapper).value as ChildrenElement.ColumnWrapper).value.children
+        val definition =
+            (nodes[0] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.PartWrapper
+        val request = (nodes[1] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.PartWrapper
+        val rest =
+            (nodes[2] as skirout.editor.v1.presentation.AxisChild.FixedWrapper).value.element as PresentationElement.RemainingFieldsWrapper
+        definition.value.key.owner shouldBe SkirTypeCodec.encode(id).getOrThrow()
+        definition.value.key.name shouldBe "heading"
+        (definition.value.body != null) shouldBe true
+        request.value.body shouldBe null
+        rest.value.excludedParts shouldBe listOf(definition.value.key)
+        result.layout.validateInheritableNodes(result.layout.inferInheritableNodes()) { true }
+    }
+
+    test("nested record part requests bind the configured record to their field") {
+        val nestedId = TypeDefinitionId(TypeId.Qualified("test", "NestedPartOwner"), 1)
+        val rootId = TypeDefinitionId(TypeId.Qualified("test", "PartEnvelope"), 1)
+        val nested = TypeDefinition(nestedId, representation = RepresentationTemplate.Record(emptyList()))
+        val root =
+            TypeDefinition(
+                rootId,
+                representation =
+                    RepresentationTemplate.Record(
+                        listOf(
+                            FieldDeclaration(FieldOwner(rootId, "details"), TypeTemplate.Named(nestedId)),
+                        ),
+                    ),
+            )
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("nested part request"), StandardTypes.definitions + listOf(nested, root))
+        val heading = presentationPart<String>("heading")
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(
+                    catalog.ready(TypeUse.Named(rootId)).presentationTemplate(),
+                    PresentationRole.INSPECTOR,
+                    mapOf(String::class to TypeTemplate.Named(nestedId)),
+                ),
+            ) { build ->
+                @Suppress("UNCHECKED_CAST")
+                val details =
+                    build.field<Any, RecordControl<Layout>>(
+                        "details",
+                        RecordControl::class as kotlin.reflect.KClass<RecordControl<Layout>>,
+                        mapOf(NestedPresentationSlot.Fields to NestedPresentationScope(Layout::class, create = { it })),
+                    )
+                details { recordInput { fields { heading() } } }
+            }
+        val record = result.layout.singleFixed().element as PresentationElement.RecordInputWrapper
+        val scope =
+            record.value.fieldPresentation!!
+                .singleFixed()
+                .element as PresentationElement.ScopedBindingWrapper
+        scope.value.binding.path.segments shouldBe
+            listOf(
+                skirout.editor.v1.type_catalog.PathSegment
+                    .createField(name = "details"),
+            )
+        scope.value.scopeBindingId.value shouldBe "configured_value"
+        val part = scope.value.child.element as PresentationElement.PartWrapper
+        part.value.key.owner shouldBe SkirTypeCodec.encode(nestedId).getOrThrow()
+        part.value.body shouldBe null
+        result.layout.inferInheritableNodes() shouldBe emptyList()
+    }
+
     test("result appearance captures root decoration separately from body") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("result appearance"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
@@ -1500,7 +1587,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .binding.path.segments.size shouldBe 2
     }
 
-    test("derives complete explicit presentation paths through records and collection items") {
+    test("nested named controls remain local to their record and collection binders") {
         val positionId = TypeDefinitionId(TypeId.Qualified("test", "NestedChoicePosition"), 1)
         val subjectId = TypeDefinitionId(TypeId.Qualified("test", "NestedChoiceSubject"), 1)
         val integer = ScalarKind.Integer(com.typewritermc.types.IntegerWidth.SIGNED_32)
@@ -1590,26 +1677,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 dependencies = layout.dependencies,
             )
 
-        material.explicitFieldSelections().map(OwnedFieldPresentation::field) shouldBe
-            listOf(
-                com.typewritermc.configuration.RelativeFieldPattern(
-                    listOf(
-                        com.typewritermc.configuration.FieldPatternSegment
-                            .Field("style"),
-                        com.typewritermc.configuration.FieldPatternSegment
-                            .Field("x"),
-                    ),
-                ),
-                com.typewritermc.configuration.RelativeFieldPattern(
-                    listOf(
-                        com.typewritermc.configuration.FieldPatternSegment
-                            .Field("buttons"),
-                        com.typewritermc.configuration.FieldPatternSegment.Items,
-                        com.typewritermc.configuration.FieldPatternSegment
-                            .Field("x"),
-                    ),
-                ),
-            )
+        material.layout.inferInheritableNodes().size shouldBe 3
     }
 
     test("builds scoped collection match and invocation data nodes with lexical bindings") {

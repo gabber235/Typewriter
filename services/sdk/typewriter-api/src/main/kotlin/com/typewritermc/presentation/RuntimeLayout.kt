@@ -96,6 +96,13 @@ internal class RuntimeLayout(
         target += state.node(PresentationElement.createSlot(slotId = id))
     }
 
+    override fun part(
+        key: PresentationPartKey<*>,
+        body: (Layout.() -> Unit)?,
+    ) {
+        target += configuredScope(state.node(PresentationElement.createPart(key = state.partId(key), body = body?.let(::child))))
+    }
+
     override fun divider(configure: DividerAppearanceScope.() -> Unit) {
         val draft =
             skirout.editor.v1.presentation.DividerAppearance
@@ -114,8 +121,13 @@ internal class RuntimeLayout(
 
     override fun remainingFields(configure: RemainingFields.() -> Unit) {
         val excluded = mutableListOf<String>()
+        val excludedParts = mutableListOf<skirout.editor.v1.presentation.PresentationPartId>()
         val scope =
             object : RemainingFields {
+                override fun exclude(part: PresentationPartKey<*>) {
+                    excludedParts += state.partId(part)
+                }
+
                 override fun exclude(field: PresentedField<*, *>) {
                     excluded += (field as RuntimePresentedField<*, *>).name
                 }
@@ -133,20 +145,22 @@ internal class RuntimeLayout(
                         ),
                 )
             }
-        val remainder = state.node(PresentationElement.createRemainingFields(excluded = patterns))
-        target +=
-            if (base.bindingId == CONFIGURED_VALUE.wire() && base.path.segments.isEmpty()) {
-                remainder
-            } else {
-                state.node(
-                    PresentationElement.createScopedBinding(
-                        binding = base,
-                        scopeBindingId = CONFIGURED_VALUE.wire(),
-                        child = remainder,
-                    ),
-                )
-            }
+        val remainder = state.node(PresentationElement.createRemainingFields(excluded = patterns, excludedParts = excludedParts))
+        target += configuredScope(remainder)
     }
+
+    private fun configuredScope(node: PresentationNode): PresentationNode =
+        if (base.bindingId == CONFIGURED_VALUE.wire() && base.path.segments.isEmpty()) {
+            node
+        } else {
+            state.node(
+                PresentationElement.createScopedBinding(
+                    binding = base,
+                    scopeBindingId = CONFIGURED_VALUE.wire(),
+                    child = node,
+                ),
+            )
+        }
 
     override fun tabs(
         initial: String?,

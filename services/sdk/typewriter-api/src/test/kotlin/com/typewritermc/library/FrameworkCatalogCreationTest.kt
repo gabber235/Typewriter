@@ -1,8 +1,10 @@
 package com.typewritermc.library
 
 import com.typewritermc.authoring.DefaultInitializationRuntime
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.GraphPlacementDefinition
 import com.typewritermc.authoring.InitializationRequest
+import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedValue
@@ -12,28 +14,48 @@ import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.GeneratedProviderIndex
 import com.typewritermc.discovery.GeneratedProviderKind
 import com.typewritermc.discovery.GeneratedTypeProvider
+import com.typewritermc.discovery.OwnedPresentation
+import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.elements.Element
+import com.typewritermc.elements.ElementDefinition
+import com.typewritermc.expression.literal
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
 import com.typewritermc.presentation.DefaultPresentationRuntime
+import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBuildBinding
+import com.typewritermc.presentation.PresentationBuildScope
+import com.typewritermc.presentation.PresentationDescriptor
+import com.typewritermc.presentation.PresentationProvider
 import com.typewritermc.presentation.PresentationRuntime
+import com.typewritermc.presentation.PresentationTarget
+import com.typewritermc.presentation.RecordControl
+import com.typewritermc.presentation.TextControl
+import com.typewritermc.presentation.invoke
+import com.typewritermc.presentation.presentationPart
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.FactoryNativeBindingRegistry
+import com.typewritermc.types.FieldDeclaration
+import com.typewritermc.types.FieldOwner
 import com.typewritermc.types.Icon
 import com.typewritermc.types.IconDefinition
 import com.typewritermc.types.IconIconifyDefinition
 import com.typewritermc.types.IconSvgDefinition
 import com.typewritermc.types.NativeBindingFactory
+import com.typewritermc.types.PresentationId
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
+import com.typewritermc.types.TypeDefinitionId
+import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
@@ -52,6 +74,7 @@ import skirout.editor.v1.presentation.PresentationHeaderTitle
 import skirout.editor.v1.presentation.PresentationNode
 import java.lang.reflect.Modifier
 import java.util.Collections
+import kotlin.reflect.KClass
 import skirout.editor.v1.expression.ExpressionNode as WireExpressionNode
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.PathSegment as WirePathSegment
@@ -248,6 +271,29 @@ val FrameworkCatalogCreationTest by testSuite {
                 .first()
                 .element is PresentationElement.SearchInputWrapper
         ) shouldBe true
+        // Search sources intentionally reuse the same canonical result body.
+        val search =
+            iconifyMaterial.layout
+                .fixedChildren()
+                .first()
+                .element as PresentationElement.SearchInputWrapper
+        val distinct = search.value.provider as skirout.editor.v1.presentation.SearchProvider.DistinctWrapper
+        val merge = distinct.value.child as skirout.editor.v1.presentation.SearchProvider.MergeWrapper
+        val remoteSection = merge.value.children[0] as skirout.editor.v1.presentation.SearchProvider.SectionWrapper
+        val history = remoteSection.value.child as skirout.editor.v1.presentation.SearchProvider.HistoryWrapper
+        val cache = history.value.child as skirout.editor.v1.presentation.SearchProvider.CacheWrapper
+        val limit = cache.value.child as skirout.editor.v1.presentation.SearchProvider.LimitWrapper
+        val debounce = limit.value.child as skirout.editor.v1.presentation.SearchProvider.DebounceWrapper
+        val gate = debounce.value.child as skirout.editor.v1.presentation.SearchProvider.GateWrapper
+        val remote = gate.value.child as skirout.editor.v1.presentation.SearchProvider.HttpJsonWrapper
+        val suggestedSection = merge.value.children[1] as skirout.editor.v1.presentation.SearchProvider.SectionWrapper
+        val suggested = suggestedSection.value.child as skirout.editor.v1.presentation.SearchProvider.StaticValuesWrapper
+        remote.value.result.presentation shouldBe suggested.value.result.presentation
+        remote.value.result.presentation!!
+            .nodeId shouldBe
+            suggested.value.result.presentation!!
+                .nodeId
+
         val material =
             bookProvider.build(
                 PresentationBuildBinding(
@@ -760,17 +806,41 @@ private fun exportFrameworkControlFixture(
                     parents = listOf(TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
                 ),
                 com.typewritermc.types.TypeDisplay("Message action", "Entry graph fixture", "fa6-solid:message", "#e74c3c"),
-            )
+            ) + inheritedInspectorDeclarations()
     val presentations =
         providers.filterKeys { it.kind == GeneratedProviderKind.Presentation }.map { (entry, value) ->
             val provider = value as com.typewritermc.discovery.GeneratedPresentationProvider
             val owner = origin(entry.providerClass.substringAfterLast('.'))
             com.typewritermc.discovery.OwnedPresentation(owner, provider.descriptor(owner), provider)
         }
+    val inspectorOrigin = origin("fixture_entry_inspector")
+    val entryInspector =
+        com.typewritermc.discovery.OwnedPresentation(
+            inspectorOrigin,
+            com.typewritermc.presentation.PresentationDescriptor(
+                id = com.typewritermc.types.PresentationId("fixture", "entry inspector"),
+                owner = inspectorOrigin.owner,
+                target =
+                    com.typewritermc.presentation.PresentationTarget
+                        .Named(TypeTemplate.Named(entryGraphFixtureType)),
+                roles = setOf(PresentationRole.INSPECTOR),
+                priority = 0,
+            ),
+            object : com.typewritermc.presentation.PresentationProvider {
+                override fun build(binding: PresentationBuildBinding) =
+                    runtime.build(binding) { scope ->
+                        scope.field<String, com.typewritermc.presentation.TextControl>(
+                            "name",
+                            com.typewritermc.presentation.TextControl::class,
+                        )()
+                        scope.remainingFields()
+                    }
+            },
+        )
     val contributions =
         com.typewritermc.discovery.CatalogContributions(
             declarations = declarations,
-            presentations = presentations,
+            presentations = presentations + entryInspector + inheritedInspectorPresentations(runtime),
             configurations =
                 providers.filterKeys { it.kind == GeneratedProviderKind.Configuration }.map { (entry, value) ->
                     val provider = value as com.typewritermc.discovery.GeneratedConfigurationProvider
@@ -808,6 +878,16 @@ private fun exportFrameworkControlFixture(
         )
     val assembly = contributions.assemble(com.typewritermc.discovery.CatalogAssemblyContext(CatalogGeneration("compiled controls fixture")))
     assembly.snapshot.diagnostics.filter { it.code.contains("presentation") } shouldBe emptyList()
+    val elementMaterial =
+        assembly.snapshot.presentationMaterials.single {
+            it.role == PresentationRole.INSPECTOR &&
+                (it.target as? com.typewritermc.presentation.PresentationTarget.Named)?.type?.definition ==
+                com.typewritermc.elements.ElementDefinition.id
+        }
+    elementMaterial.inheritableNodes.size shouldBe 3
+    assembly.snapshot.presentationMaterials
+        .single { it.provider == entryInspector.descriptor.id }
+        .inheritableNodes.size shouldBe 3
     val wire =
         com.typewritermc.types.skir.SkirTypeCodec
             .encode(assembly.snapshot)
@@ -821,6 +901,26 @@ private fun exportFrameworkControlFixture(
                         DataValue.Named(
                             TypeUse.Named(entryGraphFixtureType),
                             DataValue.Record(mapOf("name" to DataValue.StringValue("Welcome to the village"))),
+                        ),
+                    ).getOrThrow(),
+            ).toByteArray(),
+    )
+    java.io.File(directory, "inherited-inspector-value.bin").writeBytes(
+        skirout.editor.v1.type_catalog.DataValue.serializer
+            .toBytes(
+                SkirDataValueCodec
+                    .encode(
+                        DataValue.Named(
+                            TypeUse.Named(inspectorMessageFixtureType),
+                            DataValue.Record(
+                                mapOf(
+                                    "name" to DataValue.StringValue("Welcome"),
+                                    "message" to DataValue.StringValue("Hello player"),
+                                    "other" to DataValue.StringValue("Cooldown"),
+                                    "notes" to DataValue.StringValue("Shared note"),
+                                    "placement" to placement,
+                                ),
+                            ),
                         ),
                     ).getOrThrow(),
             ).toByteArray(),
@@ -887,3 +987,155 @@ private val entryGraphFixtureType =
             .Qualified("fixture", "MessageEntry"),
         1,
     )
+
+private interface CompiledInspectorFamily : Element {
+    override val placement: GraphPlacement
+    val notes: String
+}
+
+private val inspectorFamilyFixtureType =
+    TypeDefinitionId(
+        TypeId
+            .Qualified("fixture", "InspectorFamily"),
+        1,
+    )
+private val inspectorMessageFixtureType =
+    TypeDefinitionId(
+        TypeId
+            .Qualified("fixture", "InspectorMessage"),
+        1,
+    )
+
+private fun inheritedInspectorDeclarations(): List<OwnedTypeDeclaration> {
+    val family =
+        TypeDefinition(
+            inspectorFamilyFixtureType,
+            representation =
+                RepresentationTemplate.Record(
+                    listOf(
+                        FieldDeclaration(
+                            FieldOwner(inspectorFamilyFixtureType, "placement"),
+                            TypeTemplate.Named(GraphPlacementDefinition.id),
+                            overrides =
+                                listOf(
+                                    FieldOwner(ElementDefinition.id, "placement"),
+                                ),
+                        ),
+                        FieldDeclaration(
+                            FieldOwner(inspectorFamilyFixtureType, "notes"),
+                            TypeTemplate.Scalar(ScalarKind.Text),
+                        ),
+                    ),
+                    abstract = true,
+                ),
+            parents = listOf(TypeTemplate.Named(ElementDefinition.id)),
+        )
+    val message =
+        TypeDefinition(
+            inspectorMessageFixtureType,
+            representation =
+                RepresentationTemplate.Record(
+                    listOf("message", "other").map { name ->
+                        FieldDeclaration(
+                            FieldOwner(inspectorMessageFixtureType, name),
+                            TypeTemplate.Scalar(ScalarKind.Text),
+                        )
+                    },
+                ),
+            parents = listOf(TypeTemplate.Named(inspectorFamilyFixtureType)),
+        )
+    return listOf(
+        OwnedTypeDeclaration(
+            origin("inherited_inspector_family"),
+            family,
+            nativeClass = CompiledInspectorFamily::class,
+        ),
+        OwnedTypeDeclaration(origin("inherited_inspector_message"), message),
+    )
+}
+
+private fun inheritedInspectorPresentations(runtime: PresentationRuntime): List<OwnedPresentation> {
+    val heading = presentationPart<Element>("fixture_heading")
+    val details = presentationPart<CompiledInspectorFamily>("fixture_details")
+
+    fun provider(
+        name: String,
+        target: TypeDefinitionId,
+        body: (PresentationBuildScope) -> Unit,
+    ): OwnedPresentation {
+        val owner = origin(name.replace(' ', '_'))
+        return OwnedPresentation(
+            owner,
+            PresentationDescriptor(
+                id = PresentationId("fixture", name),
+                owner = owner.owner,
+                target =
+                    PresentationTarget
+                        .Named(TypeTemplate.Named(target)),
+                roles = setOf(PresentationRole.INSPECTOR),
+                priority = 0,
+            ),
+            object : PresentationProvider {
+                override fun build(binding: PresentationBuildBinding) = runtime.build(binding, body)
+            },
+        )
+    }
+    return listOf(
+        provider("inherited family inspector", inspectorFamilyFixtureType) { scope ->
+            val name =
+                scope.field<String, TextControl>(
+                    "name",
+                    TextControl::class,
+                )
+            val notes =
+                scope.field<String, TextControl>(
+                    "notes",
+                    TextControl::class,
+                )
+
+            @Suppress("UNCHECKED_CAST")
+            val placement =
+                scope
+                    .field<GraphPlacement, RecordControl<Layout>>(
+                        "placement",
+                        RecordControl::class as KClass<RecordControl<Layout>>,
+                    )
+            with(scope) {
+                name()
+                heading { text(literal("Entry heading")) }
+                details {
+                    section {
+                        text(literal("Shared details"))
+                        notes {
+                            label("Notes")
+                            textInput()
+                        }
+                    }
+                }
+                remainingFields()
+                placement(using = PlacementSdkProvider)
+            }
+        },
+        provider("inherited child inspector", inspectorMessageFixtureType) { scope ->
+            val name =
+                scope.field<String, TextControl>(
+                    "name",
+                    TextControl::class,
+                )
+            val message =
+                scope.field<String, TextControl>(
+                    "message",
+                    TextControl::class,
+                )
+            with(scope) {
+                name()
+                heading()
+                message {
+                    label("Message")
+                    textInput()
+                }
+                remainingFields()
+            }
+        },
+    )
+}

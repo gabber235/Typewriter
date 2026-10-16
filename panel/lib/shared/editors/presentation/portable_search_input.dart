@@ -388,7 +388,7 @@ final class _PortableSearchSurface extends ConsumerWidget {
     final outsideLeading = _interactiveAdornment(
       switch (control.content?.leading) {
         skir.InputAdornment_contentWrapper(:final value) => value,
-        _ => control.control.prefix,
+        _ => scope.associationFor(control.control).prefix?.node,
       },
     );
     final outsideSuffix = _interactiveAdornment(control.content?.suffix);

@@ -2,6 +2,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "checked_editor_catalog.freezed.dart";
+part "inherited_inspector_catalog.dart";
+
 final class AppliedEditorField {
   const AppliedEditorField({required this.template, required this.type});
 
@@ -69,22 +72,119 @@ final class UnavailableEditorPresentation extends EditorPresentationSelection {
   final skir.PresentationId presentation;
 }
 
-sealed class EditorFieldPresentationSelection {
-  const EditorFieldPresentationSelection();
+/// Identifies a source control within one compiled material and role.
+@freezed
+abstract class EditorFieldPresentationIdentity
+    with _$EditorFieldPresentationIdentity {
+  const factory EditorFieldPresentationIdentity({
+    required skir.PresentationId provider,
+    required skir.TypeTemplate subject,
+    required skir.PresentationRole role,
+    required String field,
+    required String nodeId,
+  }) = _EditorFieldPresentationIdentity;
 }
 
-final class SelectedEditorFieldPresentation
-    extends EditorFieldPresentationSelection {
-  const SelectedEditorFieldPresentation(this.presentation);
-
-  final skir.PresentationId presentation;
+@freezed
+sealed class EditorFieldPresentationSelection
+    with _$EditorFieldPresentationSelection {
+  const factory EditorFieldPresentationSelection.selected({
+    required EditorFieldPresentationIdentity identity,
+    required skir.PresentationMaterial material,
+    required skir.PresentationNode node,
+  }) = SelectedEditorFieldPresentation;
+  const factory EditorFieldPresentationSelection.conflicting({
+    required List<EditorFieldPresentationIdentity> candidates,
+  }) = ConflictingEditorFieldPresentation;
+  const factory EditorFieldPresentationSelection.invalid({
+    required EditorFieldPresentationIdentity identity,
+    required String diagnostic,
+  }) = InvalidEditorFieldPresentation;
+  const factory EditorFieldPresentationSelection.missing() =
+      MissingEditorFieldPresentation;
 }
 
-final class ConflictingEditorFieldPresentation
-    extends EditorFieldPresentationSelection {
-  const ConflictingEditorFieldPresentation(this.presentations);
+@freezed
+sealed class _CheckedFieldPresentation with _$CheckedFieldPresentation {
+  const factory _CheckedFieldPresentation.valid({
+    required EditorFieldPresentationIdentity identity,
+    required skir.PresentationMaterial material,
+    required skir.PresentationNode node,
+  }) = _ValidFieldPresentation;
+  const factory _CheckedFieldPresentation.invalid({
+    required EditorFieldPresentationIdentity identity,
+    required skir.PresentationMaterial material,
+    required String diagnostic,
+  }) = _InvalidFieldPresentation;
+}
 
-  final List<skir.PresentationId> presentations;
+@freezed
+abstract class _FieldPresentationCandidate with _$FieldPresentationCandidate {
+  const factory _FieldPresentationCandidate({
+    required skir.PresentationDescriptor descriptor,
+    required _CheckedFieldPresentation reference,
+  }) = __FieldPresentationCandidate;
+}
+
+/// Canonical source membership checked once for an immutable catalog snapshot.
+@freezed
+abstract class CheckedInheritableLayout with _$CheckedInheritableLayout {
+  const factory CheckedInheritableLayout({
+    required Map<String, skir.PresentationNode> nodes,
+    required Set<String> inheritableNodes,
+    required int remainderCount,
+    required Set<String> canonicalFields,
+    required Set<skir.PresentationPartId> declaredParts,
+    String? diagnostic,
+  }) = _CheckedInheritableLayout;
+}
+
+@freezed
+sealed class EditorInspectorLayoutSelection
+    with _$EditorInspectorLayoutSelection {
+  const factory EditorInspectorLayoutSelection.selected({
+    required skir.PresentationDescriptor descriptor,
+    required skir.PresentationMaterial material,
+    required Set<String> inheritableNodes,
+  }) = SelectedEditorInspectorLayout;
+  const factory EditorInspectorLayoutSelection.conflicting({
+    required List<skir.PresentationId> candidates,
+  }) = ConflictingEditorInspectorLayout;
+  const factory EditorInspectorLayoutSelection.invalid({
+    required String diagnostic,
+  }) = InvalidEditorInspectorLayout;
+  const factory EditorInspectorLayoutSelection.missing() =
+      MissingEditorInspectorLayout;
+}
+
+/// An explicitly authored body, independent of the catalog's winning body.
+@freezed
+abstract class EditorPartDeclaration with _$EditorPartDeclaration {
+  const factory EditorPartDeclaration({
+    required skir.PresentationMaterial material,
+    required skir.PresentationNode body,
+  }) = _EditorPartDeclaration;
+}
+
+@freezed
+sealed class EditorPartPresentationSelection
+    with _$EditorPartPresentationSelection {
+  const factory EditorPartPresentationSelection.selected({
+    required skir.PresentationPartId key,
+    required skir.PresentationMaterial material,
+    required skir.PresentationNode body,
+    required Set<String> editedFields,
+    required Set<String> fallbackFields,
+    required Set<skir.PresentationPartId> claimedParts,
+  }) = SelectedEditorPartPresentation;
+  const factory EditorPartPresentationSelection.conflicting({
+    required List<skir.PresentationId> candidates,
+  }) = ConflictingEditorPartPresentation;
+  const factory EditorPartPresentationSelection.invalid({
+    required String diagnostic,
+  }) = InvalidEditorPartPresentation;
+  const factory EditorPartPresentationSelection.missing() =
+      MissingEditorPartPresentation;
 }
 
 final class CheckedEditorCatalog {
@@ -240,85 +340,316 @@ final class CheckedEditorCatalog {
       )
       .firstOrNull;
 
-  Map<skir.ValuePath, EditorFieldPresentationSelection> fieldPresentations(
-    skir.TypeSelection actual,
+  /// Selects a control from matching owner presentations for one direct field.
+  /// Invalid published references remain errors instead of becoming absent defaults.
+  EditorFieldPresentationSelection fieldPresentation(
+    skir.TypeSelection actualOwner,
+    String field,
     skir.PresentationRole role,
   ) {
-    final candidates = <skir.ValuePath, List<_FieldPresentationCandidate>>{};
+    final byProvider =
+        <skir.PresentationId, List<_FieldPresentationCandidate>>{};
     for (final material in snapshot.presentationMaterials) {
       if (material.role != role ||
-          !_presentationTargetMatches(material.target, actual) ||
-          (actual is! skir.TypeSelection_pendingWrapper &&
-              presentationExpressionProblems(material, actual).isNotEmpty)) {
+          !_presentationTargetMatches(material.target, actualOwner) ||
+          !_fieldMaterialSubjectMatches(material, actualOwner)) {
         continue;
       }
+      final expressionProblems =
+          actualOwner is skir.TypeSelection_pendingWrapper
+          ? const <String>[]
+          : presentationExpressionProblems(material, actualOwner);
+      final references =
+          _fieldPresentationIndex[material]!
+              .where((reference) => reference.identity.field == field)
+              .toList(growable: true)
+            ..removeWhere(
+              (reference) =>
+                  expressionProblems.isEmpty &&
+                  reference is _ValidFieldPresentation &&
+                  switch (reference.node.element) {
+                    skir.PresentationElement_defaultPresentationWrapper(
+                      :final value,
+                    ) =>
+                      value.presentationId == null,
+                    _ => false,
+                  },
+            );
+      if (references.isEmpty) continue;
       final descriptor = snapshot.presentations
           .where((candidate) => candidate.id == material.provider)
           .firstOrNull;
       if (descriptor == null) continue;
-      for (final selection in [
-        ..._explicitFieldSelections(material.layout),
-        if (material.resultAppearance?.leading case final leading?)
-          ..._explicitFieldSelections(leading),
-      ]) {
-        candidates
-            .putIfAbsent(selection.path, () => [])
+      for (final reference in references) {
+        final checked =
+            reference is _ValidFieldPresentation &&
+                expressionProblems.isNotEmpty
+            ? _CheckedFieldPresentation.invalid(
+                identity: reference.identity,
+                material: material,
+                diagnostic:
+                    "Field presentation ${material.provider.namespace}:${material.provider.name} "
+                    "for $field at ${reference.identity.nodeId}: "
+                    "the source expressions are invalid (${expressionProblems.join(", ")})",
+              )
+            : reference;
+        byProvider
+            .putIfAbsent(descriptor.id, () => [])
             .add(
               _FieldPresentationCandidate(
-                presentation: selection.presentation,
-                target: material.target,
-                priority: descriptor.priority,
+                descriptor: descriptor,
+                reference: checked,
               ),
             );
       }
     }
-    return {
-      for (final entry in candidates.entries)
-        entry.key: _selectFieldPresentation(entry.value),
+    final winners = _rankPresentationDescriptors([
+      for (final candidates in byProvider.values) candidates.first.descriptor,
+    ]);
+    final surviving = [for (final winner in winners) ...byProvider[winner.id]!];
+    if (surviving.isEmpty) return const MissingEditorFieldPresentation();
+    if (surviving.length != 1) {
+      return ConflictingEditorFieldPresentation(
+        candidates: [
+          for (final candidate in surviving) candidate.reference.identity,
+        ],
+      );
+    }
+    return switch (surviving.single.reference) {
+      _ValidFieldPresentation(:final identity, :final material, :final node) =>
+        SelectedEditorFieldPresentation(
+          identity: identity,
+          material: material,
+          node: node,
+        ),
+      _InvalidFieldPresentation(:final identity, :final diagnostic) =>
+        InvalidEditorFieldPresentation(
+          identity: identity,
+          diagnostic: diagnostic,
+        ),
     };
   }
 
-  EditorFieldPresentationSelection _selectFieldPresentation(
-    List<_FieldPresentationCandidate> candidates,
+  bool _fieldMaterialSubjectMatches(
+    skir.PresentationMaterial material,
+    skir.TypeSelection actualOwner,
   ) {
-    final maximal = candidates
-        .where(
-          (candidate) => !candidates.any(
-            (other) =>
-                other != candidate &&
-                _isMoreSpecific(other.target, candidate.target),
-          ),
-        )
-        .toList(growable: false);
-    final presentations = maximal
-        .map((candidate) => candidate.presentation)
-        .toSet();
-    if (presentations.length == 1) {
-      return SelectedEditorFieldPresentation(presentations.single);
+    if (material.target is! skir.PresentationTarget_representationWrapper) {
+      return true;
     }
-    if (maximal
-        .skip(1)
-        .any(
-          (candidate) => !_presentationTargetsEquivalent(
-            maximal.first.target,
-            candidate.target,
-          ),
-        )) {
-      return ConflictingEditorFieldPresentation(
-        List.unmodifiable(presentations),
-      );
-    }
-    final priority = maximal
-        .map((candidate) => candidate.priority)
-        .reduce((left, right) => left > right ? left : right);
-    final winners = maximal
-        .where((candidate) => candidate.priority == priority)
-        .map((candidate) => candidate.presentation)
-        .toSet();
-    return winners.length == 1
-        ? SelectedEditorFieldPresentation(winners.single)
-        : ConflictingEditorFieldPresentation(List.unmodifiable(winners));
+    return switch (material.subject) {
+      skir.TypeTemplate_namedWrapper(:final value) =>
+        value.definition == selected(actualOwner)?.definition.id &&
+            _namedPresentationTargetMatches(value, actualOwner),
+      _ => false,
+    };
   }
+
+  late final Map<skir.PresentationMaterial, CheckedInheritableLayout>
+  _inheritableViews = {
+    for (final material in snapshot.presentationMaterials)
+      material: _checkInheritableLayout(material),
+  };
+
+  late final Map<skir.PresentationMaterial, List<_CheckedFieldPresentation>>
+  _fieldPresentationIndex = {
+    for (final material in snapshot.presentationMaterials)
+      material: _checkFieldPresentations(material),
+  };
+
+  List<_CheckedFieldPresentation> _checkFieldPresentations(
+    skir.PresentationMaterial material,
+  ) {
+    if (material.inheritableNodes.isEmpty) return const [];
+    final view = _inheritableViews[material]!;
+    final nodes = view.nodes;
+    if (view.diagnostic case final diagnostic?) {
+      final fields = {
+        ...view.canonicalFields,
+        for (final id in view.inheritableNodes)
+          if (nodes[id]?.boundControl?.binding.path.segments.singleOrNull
+              case skir.PathSegment_fieldWrapper(:final value))
+            value.name,
+      };
+      return [
+        for (final field in fields)
+          _CheckedFieldPresentation.invalid(
+            identity: EditorFieldPresentationIdentity(
+              provider: material.provider,
+              subject: material.subject,
+              role: material.role,
+              field: field,
+              nodeId: material.inheritableNodes.first,
+            ),
+            material: material,
+            diagnostic:
+                "Field presentation ${material.provider.namespace}:${material.provider.name} for $field at ${material.inheritableNodes.first}: $diagnostic",
+          ),
+      ];
+    }
+    if (!view.inheritableNodes.any((id) => nodes[id]?.boundControl != null)) {
+      return const [];
+    }
+    final subject = material.subject as skir.TypeTemplate_namedWrapper;
+    final owner = published(subject.value.definition)!;
+    return [
+      for (final nodeId in view.inheritableNodes)
+        if (nodes[nodeId] case final node? when node.boundControl != null)
+          (() {
+            final field =
+                (node.boundControl!.binding.path.segments.single
+                        as skir.PathSegment_fieldWrapper)
+                    .value
+                    .name;
+            final identity = EditorFieldPresentationIdentity(
+              provider: material.provider,
+              subject: material.subject,
+              role: material.role,
+              field: field,
+              nodeId: nodeId,
+            );
+            final type = owner.effectiveFields
+                .singleWhere((entry) => entry.key == field)
+                .type;
+            final problem =
+                _fieldControlProblem(node, type) ??
+                _fieldSubtreeProblem(node, field, material);
+            return problem == null
+                ? _CheckedFieldPresentation.valid(
+                    identity: identity,
+                    material: material,
+                    node: node,
+                  )
+                : _CheckedFieldPresentation.invalid(
+                    identity: identity,
+                    material: material,
+                    diagnostic:
+                        "Field presentation ${material.provider.namespace}:${material.provider.name} for $field at $nodeId: $problem",
+                  );
+          })(),
+    ];
+  }
+
+  String? _fieldSubtreeProblem(
+    skir.PresentationNode node,
+    String field,
+    skir.PresentationMaterial material,
+  ) {
+    final configured = skir.ExpressionBindingId(value: "configured_value");
+    final origin = AuthoredBindingAddress(
+      root: AuthoredBindingRoot.local(configured),
+      path: const [],
+    );
+    String? problem;
+    AuthoredPresentationIndex.build(
+      node,
+      {configured: origin},
+      sources: {
+        for (final source in material.dependencies.collections)
+          source.sourceId: source,
+      },
+      onPart: (node, part, aliases) {
+        problem ??= "the source control has an unresolved editable part";
+        return false;
+      },
+      onEditableBinding: (binding, address) {
+        if (problem != null) return;
+        if (address == null) {
+          problem = "the source control has an unresolved editable binding";
+          return;
+        }
+        final first = address.path.firstOrNull;
+        if (address.root != origin.root ||
+            first is! ExactAuthoredPathStep ||
+            first.segment is! skir.PathSegment_fieldWrapper ||
+            (first.segment as skir.PathSegment_fieldWrapper).value.name !=
+                field) {
+          problem = "the source control edits outside its field subtree";
+        }
+      },
+    );
+    return problem;
+  }
+
+  String? _fieldControlProblem(
+    skir.PresentationNode node,
+    skir.TypeTemplate type,
+  ) {
+    if (node.element case skir.PresentationElement_defaultPresentationWrapper(
+      :final value,
+    )) {
+      if (value.presentationId == null) {
+        return null;
+      }
+      if (!snapshot.presentations.any(
+        (descriptor) => descriptor.id == value.presentationId,
+      )) {
+        return "the named presentation is missing";
+      }
+      return null;
+    }
+    final kind = _templateRepresentationKind(type);
+    if (kind == null) return null;
+    final allowed = switch (node.element) {
+      skir.PresentationElement_textInputWrapper() => [
+        skir.RepresentationKind.text,
+      ],
+      skir.PresentationElement_numericInputWrapper() ||
+      skir.PresentationElement_sliderInputWrapper() => [
+        skir.RepresentationKind.integer,
+        skir.RepresentationKind.float,
+        skir.RepresentationKind.decimal,
+      ],
+      skir.PresentationElement_toggleInputWrapper() => [
+        skir.RepresentationKind.boolean,
+      ],
+      skir.PresentationElement_bytesInputWrapper() => [
+        skir.RepresentationKind.bytes,
+      ],
+      skir.PresentationElement_durationInputWrapper() => [
+        skir.RepresentationKind.duration,
+      ],
+      skir.PresentationElement_dateTimeInputWrapper() => [
+        skir.RepresentationKind.timestamp,
+      ],
+      skir.PresentationElement_enumInputWrapper() => [
+        skir.RepresentationKind.enumeration,
+      ],
+      skir.PresentationElement_recordInputWrapper() => [
+        skir.RepresentationKind.record,
+      ],
+      skir.PresentationElement_listInputWrapper() => [
+        skir.RepresentationKind.list,
+      ],
+      skir.PresentationElement_setInputWrapper() => [
+        skir.RepresentationKind.set_,
+      ],
+      skir.PresentationElement_mapInputWrapper() => [
+        skir.RepresentationKind.map,
+      ],
+      skir.PresentationElement_linkInputWrapper() => [
+        skir.RepresentationKind.link,
+      ],
+      _ => null,
+    };
+    return allowed != null && !allowed.contains(kind)
+        ? "the control is incompatible with the declaring field type"
+        : null;
+  }
+
+  skir.RepresentationKind? _templateRepresentationKind(
+    skir.TypeTemplate type,
+  ) => switch (type) {
+    skir.TypeTemplate_scalarWrapper(:final value) => _scalarRepresentation(
+      value,
+    ),
+    skir.TypeTemplate_namedWrapper(:final value) => _representationKind(
+      published(value.definition)?.definition.representation,
+    ),
+    skir.TypeTemplate_nullableWrapper(:final value) =>
+      _templateRepresentationKind(value.value),
+    _ => null,
+  };
 
   bool isPresentationCompatible(
     skir.PresentationTarget target,
@@ -1083,35 +1414,7 @@ final class CheckedEditorCatalog {
         )
         .toList(growable: false);
     if (matching.isEmpty) return MissingEditorPresentation(role);
-    final maximal = matching
-        .where(
-          (candidate) => !matching.any(
-            (other) =>
-                other != candidate &&
-                _isMoreSpecific(other.target, candidate.target),
-          ),
-        )
-        .toList(growable: false);
-    if (maximal.length > 1 &&
-        maximal
-            .skip(1)
-            .any(
-              (candidate) => !_presentationTargetsEquivalent(
-                maximal.first.target,
-                candidate.target,
-              ),
-            )) {
-      return ConflictingEditorPresentation(
-        role: role,
-        candidates: List.unmodifiable(maximal.map((candidate) => candidate.id)),
-      );
-    }
-    final priority = maximal
-        .map((candidate) => candidate.priority)
-        .reduce((left, right) => left > right ? left : right);
-    final winners = maximal
-        .where((candidate) => candidate.priority == priority)
-        .toList(growable: false);
+    final winners = _rankPresentationDescriptors(matching);
     if (winners.length != 1) {
       return ConflictingEditorPresentation(
         role: role,
@@ -1139,6 +1442,37 @@ final class CheckedEditorCatalog {
       descriptor: descriptor,
       material: material,
     );
+  }
+
+  List<skir.PresentationDescriptor> _rankPresentationDescriptors(
+    List<skir.PresentationDescriptor> candidates,
+  ) {
+    final maximal = candidates
+        .where(
+          (candidate) => !candidates.any(
+            (other) =>
+                other != candidate &&
+                _isMoreSpecific(other.target, candidate.target),
+          ),
+        )
+        .toList(growable: false);
+    if (maximal.isEmpty) return const [];
+    if (maximal
+        .skip(1)
+        .any(
+          (candidate) => !_presentationTargetsEquivalent(
+            maximal.first.target,
+            candidate.target,
+          ),
+        )) {
+      return maximal;
+    }
+    final priority = maximal
+        .map((candidate) => candidate.priority)
+        .reduce((left, right) => left > right ? left : right);
+    return maximal
+        .where((candidate) => candidate.priority == priority)
+        .toList(growable: false);
   }
 
   bool _presentationTargetMatches(
@@ -1596,57 +1930,19 @@ final class CheckedEditorCatalog {
 
 const _maximumCheckedTypeDepth = 512;
 
-final class _FieldPresentationCandidate {
-  const _FieldPresentationCandidate({
-    required this.presentation,
-    required this.target,
-    required this.priority,
-  });
-
-  final skir.PresentationId presentation;
-  final skir.PresentationTarget target;
-  final int priority;
-}
-
-final class _ExplicitFieldPresentation {
-  const _ExplicitFieldPresentation({
-    required this.path,
-    required this.presentation,
-  });
-
-  final skir.ValuePath path;
-  final skir.PresentationId presentation;
-}
-
-Iterable<_ExplicitFieldPresentation> _explicitFieldSelections(
-  skir.PresentationNode root,
-) sync* {
-  final configured = skir.ExpressionBindingId(value: "configured_value");
-  final origin = AuthoredBindingRoot.local(configured);
-  for (final use in root.authoredBindingUses({
-    configured: AuthoredBindingAddress(root: origin, path: const []),
-  })) {
-    if (use.selectedPresentation == null ||
-        use.address.root != origin ||
-        use.address.path.isEmpty ||
-        use.address.path.any((step) => step is! ExactAuthoredPathStep)) {
-      continue;
-    }
-    yield _ExplicitFieldPresentation(
-      path: skir.ValuePath(
-        segments: [
-          for (final step in use.address.path)
-            (step as ExactAuthoredPathStep).segment,
-        ],
-      ),
-      presentation: use.selectedPresentation!,
-    );
-  }
-}
-
 extension PresentationNodeStructure on skir.PresentationNode {
   Iterable<skir.PresentationNode> get nestedPresentationNodes =>
       _nestedPresentationNodes(this);
+
+  Iterable<skir.PresentationNode> get presentationBodyNodes =>
+      _presentationBodyNodes(this);
+
+  Iterable<skir.PresentationNode> presentationDecorationNodes({
+    bool includeControlPrefix = true,
+  }) => _presentationDecorationNodes(
+    this,
+    includeControlPrefix: includeControlPrefix,
+  );
 
   skir.BoundControl? get boundControl => switch (element) {
     skir.PresentationElement_textInputWrapper(:final value) => value.control,
@@ -1683,6 +1979,14 @@ extension PresentationNodeStructure on skir.PresentationNode {
 Iterable<skir.PresentationNode> _nestedPresentationNodes(
   skir.PresentationNode node,
 ) sync* {
+  yield* node.presentationDecorationNodes();
+  yield* node.presentationBodyNodes;
+}
+
+Iterable<skir.PresentationNode> _presentationDecorationNodes(
+  skir.PresentationNode node, {
+  bool includeControlPrefix = true,
+}) sync* {
   final title = node.header?.title;
   if (title case skir.PresentationHeaderTitle_presentationWrapper(
     :final value,
@@ -1736,13 +2040,42 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
       if (child != null) yield child;
     }
   }
+  if (includeControlPrefix) {
+    if (node.boundControl?.prefix case final prefix?) yield prefix;
+  }
+  final displayAppearances = switch (element) {
+    skir.PresentationElement_badgeWrapper(:final value) => [value.options],
+    skir.PresentationElement_chipWrapper(:final value) => [value.options],
+    skir.PresentationElement_dateTimeWrapper(:final value) => [value.options],
+    skir.PresentationElement_relativeTimeWrapper(:final value) => [
+      value.options,
+    ],
+    skir.PresentationElement_statusWrapper(:final value) => [
+      for (final item in value.cases) item.appearance.options,
+      value.fallback?.options,
+    ],
+    _ => const <skir.DisplayAppearance?>[],
+  };
+  for (final appearance in displayAppearances) {
+    if (appearance?.icon case skir.InputAdornment_contentWrapper(
+      :final value,
+    )) {
+      yield value;
+    }
+  }
+}
+
+Iterable<skir.PresentationNode> _presentationBodyNodes(
+  skir.PresentationNode node,
+) sync* {
+  final element = node.element;
   switch (element) {
+    case skir.PresentationElement_partWrapper(:final value):
+      if (value.body case final body?) yield body;
     case skir.PresentationElement_childrenWrapper(:final value):
       yield* _childrenNodes(value);
     case skir.PresentationElement_appearanceDefaultsWrapper(:final value):
       yield value.child;
-    case skir.PresentationElement_defaultPresentationWrapper(:final value):
-      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_sectionWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_paddingWrapper(:final value):
@@ -1761,14 +2094,7 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
       yield* _sequenceNodes(value.presentation);
     case skir.PresentationElement_scopedBindingWrapper(:final value):
       yield value.child;
-    case skir.PresentationElement_textInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_numericInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_toggleInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_selectInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       for (final option in value.options) {
         if (option.content case final child?) yield child;
       }
@@ -1777,25 +2103,13 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
               const <skir.ChoiceOptionAppearance>[]) {
         if (option.content case final child?) yield child;
       }
-    case skir.PresentationElement_sliderInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_dateTimeInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_durationInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_colorInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_bytesInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_enumInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       for (final option
           in value.options?.optionOverrides ??
               const <skir.ChoiceOptionAppearance>[]) {
         if (option.content case final child?) yield child;
       }
     case skir.PresentationElement_namedInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.payloadPresentation case final child?) yield child;
     case skir.PresentationElement_buttonWrapper(:final value):
       if (value.icon case final child?) yield child;
@@ -1806,25 +2120,19 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
     case skir.PresentationElement_tooltipWrapper(:final value):
       yield value.child;
     case skir.PresentationElement_listInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.itemPresentation case final child?) yield child;
     case skir.PresentationElement_setInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.itemPresentation case final child?) yield child;
     case skir.PresentationElement_mapInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.keyPresentation case final child?) yield child;
       if (value.valuePresentation case final child?) yield child;
     case skir.PresentationElement_recordInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.fieldPresentation case final child?) yield child;
     case skir.PresentationElement_polymorphicInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       for (final option in value.concreteTypes) {
         if (option.presentation case final child?) yield child;
       }
     case skir.PresentationElement_searchInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.summary case final child?) yield child;
       if (value.empty case final child?) yield child;
       if (value.loading case final child?) yield child;
@@ -1853,19 +2161,12 @@ Iterable<skir.PresentationNode> _nestedPresentationNodes(
         yield item.child;
       }
       if (value.fallback case final child?) yield child;
-    case skir.PresentationElement_linkInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
     case skir.PresentationElement_adaptiveLeadingWrapper(:final value):
       yield value.leading;
       if (value.center case final child?) yield child;
       if (value.suffix case final child?) yield child;
     case skir.PresentationElement_nullableInputWrapper(:final value):
-      yield* _boundControlNodes(value.control);
       if (value.valuePresentation case final child?) yield child;
-    case skir.PresentationElement_pageGraphWrapper(:final value):
-      yield* _boundControlNodes(value.control);
-    case skir.PresentationElement_pageTimelineWrapper(:final value):
-      yield* _boundControlNodes(value.control);
     default:
       break;
   }
@@ -1904,12 +2205,6 @@ Iterable<skir.PresentationNode> _sequenceNodes(
   yield sequence.item;
   if (sequence.empty case final child?) yield child;
   if (sequence.separator case final child?) yield child;
-}
-
-Iterable<skir.PresentationNode> _boundControlNodes(
-  skir.BoundControl control,
-) sync* {
-  if (control.prefix case final prefix?) yield prefix;
 }
 
 Iterable<skir.PresentationNode> _connectionNodes(

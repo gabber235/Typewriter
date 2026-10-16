@@ -31,6 +31,7 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.assemble
+import com.typewritermc.discovery.immutableCopy
 import com.typewritermc.expression.DefaultExpressionEvaluator
 import com.typewritermc.expression.EvaluationBudget
 import com.typewritermc.expression.EvaluationDiagnostic
@@ -72,6 +73,7 @@ import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DeclarationStatus
+import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -1008,7 +1010,7 @@ val SdkRuntimeConformanceTest by testSuite {
         ) shouldBe true
     }
 
-    test("catalog assembly isolates inherited field presentation conflicts and accepts an explicit child choice") {
+    test("catalog assembly retains competing field defaults without invalidating their types") {
         val origin = providerOrigin("field_presentation_conflicts")
         val root = recordDefinition("PresentationRoot", "value", TypeTemplate.Scalar(ScalarKind.Text))
         val textNamed =
@@ -1071,18 +1073,131 @@ val SdkRuntimeConformanceTest by testSuite {
                 presentations = descriptors,
             ).assemble(CatalogAssemblyContext(CatalogGeneration("field presentation conflicts")))
 
-        val conflictStatus =
+        assembly.snapshot.types
+            .filter { it.definition.id in setOf(conflicted.id, resolved.id, unrelated.id) }
+            .forEach { it.status shouldBe DeclarationStatus.Ready }
+        assembly.snapshot.presentationMaterials.forEach { material ->
+            material.inheritableNodes shouldBe listOf("field choice")
+        }
+        assembly.snapshot.diagnostics.none { it.code == "conflicting_field_presentation" } shouldBe true
+    }
+
+    test("catalog assembly rejects an inferred control outside its owning record") {
+        val origin = providerOrigin("invalid_field_presentation")
+        val definition = recordDefinition("InvalidPresentationField", "actual", TypeTemplate.Scalar(ScalarKind.Text))
+        val provider = com.typewritermc.types.PresentationId("test", "invalid field")
+        val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
+        val material = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val assembly =
+            CatalogContributions(
+                declarations = listOf(OwnedTypeDeclaration(origin, definition)),
+                presentations = listOf(ownedPresentation(origin, provider, target, material)),
+            ).assemble(CatalogAssemblyContext(CatalogGeneration("invalid field")))
+        val status =
             assembly.snapshot.types
-                .single { it.definition.id == conflicted.id }
-                .status
-        (conflictStatus as DeclarationStatus.Unavailable).reasons.map { it.code } shouldBe
-            listOf("conflicting_field_presentation")
-        assembly.snapshot.types
-            .single { it.definition.id == resolved.id }
-            .status shouldBe DeclarationStatus.Ready
-        assembly.snapshot.types
-            .single { it.definition.id == unrelated.id }
-            .status shouldBe DeclarationStatus.Ready
+                .single { it.definition.id == definition.id }
+                .status as DeclarationStatus.Unavailable
+        status.reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+    }
+
+    test("catalog assembly admits bounded atomic parts and rejects foreign owners or owner remainders") {
+        val origin = providerOrigin("atomic_parts")
+        val definition = recordDefinition("PartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
+        val foreign = recordDefinition("ForeignPartOwner", "value", TypeTemplate.Scalar(ScalarKind.Text))
+        val provider = com.typewritermc.types.PresentationId("test", "atomic part")
+        val target = PresentationTarget.Named(TypeTemplate.Named(definition.id))
+        val base = fieldPresentationMaterial(provider, target, com.typewritermc.types.PresentationId("test", "text"))
+        val ownKey =
+            skirout.editor.v1.presentation.PresentationPartId(
+                owner =
+                    com.typewritermc.types.skir.SkirTypeCodec
+                        .encode(definition.id)
+                        .getOrThrow(),
+                name = "details",
+            )
+        val part =
+            skirout.editor.v1.presentation.PresentationNode.partial(
+                nodeId = "part",
+                element =
+                    skirout.editor.v1.presentation.PresentationElement
+                        .createPart(key = ownKey, body = base.layout),
+            )
+        val variants =
+            listOf(
+                part to true,
+                part.copy(
+                    element =
+                        skirout.editor.v1.presentation.PresentationElement.createPart(
+                            key =
+                                ownKey.copy(
+                                    owner =
+                                        com.typewritermc.types.skir.SkirTypeCodec
+                                            .encode(foreign.id)
+                                            .getOrThrow(),
+                                ),
+                            body = base.layout,
+                        ),
+                ) to false,
+                part.copy(
+                    element =
+                        skirout.editor.v1.presentation.PresentationElement.createPart(
+                            key = ownKey,
+                            body =
+                                skirout.editor.v1.presentation.PresentationNode.partial(
+                                    nodeId = "owner remainder",
+                                    element =
+                                        skirout.editor.v1.presentation.PresentationElement.createRemainingFields(
+                                            excluded = emptyList(),
+                                            excludedParts = emptyList(),
+                                        ),
+                                ),
+                        ),
+                ) to false,
+            )
+        variants.forEach { (layout, admitted) ->
+            val assembly =
+                CatalogContributions(
+                    declarations = listOf(OwnedTypeDeclaration(origin, definition), OwnedTypeDeclaration(origin, foreign)),
+                    presentations = listOf(ownedPresentation(origin, provider, target, base.copy(layout = layout))),
+                ).assemble(CatalogAssemblyContext(CatalogGeneration("atomic parts")))
+            val status =
+                assembly.snapshot.types
+                    .single { it.definition.id == definition.id }
+                    .status
+            if (admitted) {
+                status shouldBe DeclarationStatus.Ready
+                assembly.snapshot.presentationMaterials
+                    .single()
+                    .inheritableNodes shouldBe listOf("part")
+            } else {
+                (status as DeclarationStatus.Unavailable).reasons.map { it.code } shouldBe listOf("presentation_material_build_failed")
+            }
+        }
+    }
+
+    test("published materials own immutable inferred references") {
+        val references = mutableListOf("node")
+        val material =
+            fieldPresentationMaterial(
+                com.typewritermc.types.PresentationId("test", "immutable fields"),
+                PresentationTarget.Named(TypeTemplate.Named(definitionId("ImmutablePresentation"))),
+                com.typewritermc.types.PresentationId("test", "text"),
+            ).copy(inheritableNodes = references)
+        val snapshot =
+            com.typewritermc.types.catalog.EditorCatalogSnapshot(
+                generation = CatalogGeneration("immutable fields"),
+                types = emptyList(),
+                relations = emptyList(),
+                resourceDefinitions = emptyList(),
+                presentations = emptyList(),
+                presentationMaterials = listOf(material),
+                configuration = emptyList(),
+                diagnostics = emptyList(),
+            )
+        val published = snapshot.immutableCopy()
+        references.clear()
+        published.presentationMaterials.single().inheritableNodes shouldBe
+            listOf("node")
     }
 
     test("catalog assembly owns one immutable portable snapshot graph") {

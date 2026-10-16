@@ -50,7 +50,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                 final style = _controlStyle(context, scope, appearance);
                 final leadingNode = switch (content?.leading) {
                   skir.InputAdornment_contentWrapper(:final value) => value,
-                  _ => control.prefix,
+                  _ => scope.associationFor(control).prefix?.node,
                 };
                 final leading = _entryLeading(
                   context,
@@ -171,7 +171,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                 final multiple = lines != null;
                 final leadingNode = switch (input.content?.leading) {
                   skir.InputAdornment_contentWrapper(:final value) => value,
-                  _ => input.control.prefix,
+                  _ => scope.associationFor(input.control).prefix?.node,
                 };
                 final leading = _entryLeading(
                   context,
@@ -518,15 +518,14 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
             }
           }
 
-          final interactivePrefix = _interactiveAdornment(input.control.prefix);
+          final interactivePrefix = _interactiveAdornment(
+            scope.associationFor(input.control).prefix?.node,
+          );
           return _controlSurface(
             style,
             _entryComposition(
               leading: interactivePrefix
-                  ? PortablePresentationNodeRenderer(
-                      node: input.control.prefix!,
-                      scope: scope,
-                    )
+                  ? scope.associationFor(input.control).prefix!.render(scope)
                   : null,
               child:
                   selected == null &&
@@ -760,7 +759,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
           final externalLeading = _interactiveAdornment(
             switch (content?.leading) {
               skir.InputAdornment_contentWrapper(:final value) => value,
-              _ => control.prefix,
+              _ => scope.associationFor(control).prefix?.node,
             },
           );
           final externalSuffix = _interactiveAdornment(content?.suffix);
@@ -1185,7 +1184,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                 );
                 final leadingNode = switch (input.content?.leading) {
                   skir.InputAdornment_contentWrapper(:final value) => value,
-                  _ => input.control.prefix,
+                  _ => scope.associationFor(input.control).prefix?.node,
                 };
                 final externalLeading = _interactiveAdornment(leadingNode);
                 final suffix = _entrySuffix(input.content, scope);
@@ -1678,7 +1677,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                 );
                 final leadingNode = switch (input.content?.leading) {
                   skir.InputAdornment_contentWrapper(:final value) => value,
-                  _ => input.control.prefix,
+                  _ => scope.associationFor(input.control).prefix?.node,
                 };
                 final externalLeading = _interactiveAdornment(leadingNode);
                 final suffix = _entrySuffix(input.content, scope);
@@ -1713,7 +1712,11 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                         : (input.content?.leading == null ||
                                   input.content?.leading ==
                                       skir.InputAdornment.default_) &&
-                              input.control.prefix == null
+                              scope
+                                      .associationFor(input.control)
+                                      .prefix
+                                      ?.node ==
+                                  null
                         ? null
                         : leading,
                     suffixIcon: externalSuffix ? null : suffix,

@@ -26,6 +26,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
     );
     materials.add(
       skir.PresentationMaterial(
+        inheritableNodes: const [],
         provider: presentation,
         target: target,
         role: skir.PresentationRole.authoringResult,

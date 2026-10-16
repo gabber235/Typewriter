@@ -1,7 +1,7 @@
 package com.typewritermc.extensions.conformance
 
-import com.typewritermc.types.text
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
 import com.typewritermc.capability.RealmCapabilities
@@ -20,7 +20,6 @@ import com.typewritermc.discovery.TypewriterRegistrar
 import com.typewritermc.elements.Entry
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.trim
 import com.typewritermc.library.Book
 import com.typewritermc.library.BookPages
 import com.typewritermc.library.ChapterPath
@@ -34,6 +33,7 @@ import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.text
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -64,6 +64,16 @@ data class RepeatedMessage(
 interface ConformanceEntry : Entry {
     override val page: Ref<PageElements.Element, SyntheticPage>
     override val placement: GraphPlacement
+}
+
+object ConformanceEntryInspector : ConformanceEntryPresentation {
+    override val roles = setOf(PresentationRole.INSPECTOR)
+
+    override fun ConformanceEntryPresentationScope.present() {
+        name()
+        remainingFields()
+        placement(using = PlacementSdkProvider)
+    }
 }
 
 /** Conformance fixture connecting generated element discovery to polymorphic authoring metadata. */
@@ -188,10 +198,6 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
                 )
             }
         }
-        name {
-            label("name")
-            textInput { onComplete { value.trim() } }
-        }
         remainingFields()
     }
 }
@@ -216,10 +222,6 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
                     literal("Repeated"),
                 )
             }
-        }
-        name {
-            label("name")
-            textInput { onComplete { value.trim() } }
         }
         remainingFields()
     }

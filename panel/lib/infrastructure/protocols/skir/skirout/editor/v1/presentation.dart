@@ -24485,6 +24485,7 @@ final class TooltipElement_mutable implements TooltipElement_orMutable {
 ///     case PresentationElement_pageTimeline(:var value): { ... }
 ///     case PresentationElement_align(:var value): { ... }
 ///     case PresentationElement_appearanceDefaults(:var value): { ... }
+///     case PresentationElement_part(:var value): { ... }
 ///   }
 ///   ```
 ///
@@ -25605,8 +25606,9 @@ sealed class PresentationElement {
       _lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable
     >
     excluded,
+    required _core.Iterable<PresentationPartId_orMutable> excludedParts,
   }) => PresentationElement.wrapRemainingFields(
-    RemainingFieldsElement(excluded: excluded),
+    RemainingFieldsElement(excluded: excluded, excludedParts: excludedParts),
   );
 
   /// Create a 'nullable_input' variant wrapping around the given value.
@@ -25706,6 +25708,18 @@ sealed class PresentationElement {
     required PresentationNode_orMutable child,
   }) => PresentationElement.wrapAppearanceDefaults(
     AppearanceDefaultsElement(appearance: appearance, child: child),
+  );
+
+  /// Create a 'part' variant wrapping around the given value.
+  factory PresentationElement.wrapPart(PresentationPartElement value) =>
+      PresentationElement_partWrapper._(value);
+
+  /// Same as `wrapPart(PresentationPartElement(...))`.
+  factory PresentationElement.createPart({
+    required PresentationPartId_orMutable key,
+    required PresentationNode_orMutable? body,
+  }) => PresentationElement.wrapPart(
+    PresentationPartElement(key: key, body: body),
   );
 
   /// Returns the kind of variant held by this PresentationElement.
@@ -26314,6 +26328,16 @@ sealed class PresentationElement {
         (it) => it.value,
         ordinal: PresentationElement_kind.appearanceDefaultsWrapper._ordinal,
       );
+      _serializerBuilder.addWrapperVariant(
+        61,
+        "part",
+        "wrapPart",
+        PresentationPartElement.serializer,
+        "",
+        PresentationElement_partWrapper._,
+        (it) => it.value,
+        ordinal: PresentationElement_kind.partWrapper._ordinal,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -26393,7 +26417,8 @@ enum PresentationElement_kind {
   pageGraphWrapper(57),
   pageTimelineWrapper(58),
   alignWrapper(59),
-  appearanceDefaultsWrapper(60);
+  appearanceDefaultsWrapper(60),
+  partWrapper(61);
 
   final _core.int _ordinal;
 
@@ -27069,6 +27094,16 @@ final class PresentationElement_appearanceDefaultsWrapper
   @_core.override
   PresentationElement_kind get kind =>
       PresentationElement_kind.appearanceDefaultsWrapper;
+}
+
+final class PresentationElement_partWrapper
+    extends _PresentationElement_wrapper {
+  final PresentationPartElement value;
+
+  PresentationElement_partWrapper._(this.value);
+
+  @_core.override
+  PresentationElement_kind get kind => PresentationElement_kind.partWrapper;
 }
 
 // struct PresentationDefinition
@@ -29895,6 +29930,7 @@ enum _LinkRejectionDisplay_consts implements LinkRejectionDisplay {
 sealed class RemainingFieldsElement_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
   get excluded;
+  _core.Iterable<PresentationPartId_orMutable> get excludedParts;
 
   RemainingFieldsElement toFrozen();
 }
@@ -29904,6 +29940,8 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
   @_core.override
   final _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern>
   excluded;
+  @_core.override
+  final _core.Iterable<PresentationPartId> excludedParts;
   _skir.internal__UnrecognizedFields? _u;
 
   factory RemainingFieldsElement({
@@ -29911,21 +29949,27 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
       _lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable
     >
     excluded,
+    required _core.Iterable<PresentationPartId_orMutable> excludedParts,
   }) => RemainingFieldsElement._(
     _skir.internal__frozenMappedCopy(excluded, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(excludedParts, (it) => it.toFrozen()),
   );
 
-  RemainingFieldsElement._(this.excluded);
+  RemainingFieldsElement._(this.excluded, this.excludedParts);
 
   /// Default instance with all fields set to their default values.
   static final defaultInstance = RemainingFieldsElement._(
+    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
   /// Fields are initialized to their default values.
   static RemainingFieldsElement_mutable mutable() =>
-      RemainingFieldsElement_mutable._(_skir.KeyedIterable.empty);
+      RemainingFieldsElement_mutable._(
+        _skir.KeyedIterable.empty,
+        _skir.KeyedIterable.empty,
+      );
 
   /// Returns this instance (no operation).
   @_core.Deprecated("This instance is already frozen.")
@@ -29934,7 +29978,7 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
 
   /// Returns a mutable shallow copy of this instance.
   RemainingFieldsElement_mutable toMutable() =>
-      RemainingFieldsElement_mutable._(this.excluded);
+      RemainingFieldsElement_mutable._(this.excluded, this.excludedParts);
 
   @_core.override
   _core.bool operator ==(other) {
@@ -29949,7 +29993,7 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
   @_core.override
   _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
 
-  _core.List get _equality_proxy => [this.excluded];
+  _core.List get _equality_proxy => [this.excluded, this.excludedParts];
 
   @_core.override
   _core.String toString() => _skir.internal__stringify(this, serializer);
@@ -29972,6 +30016,15 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
         (it) => it.excluded,
         (it, v) => it.excluded = v,
       );
+      _serializerBuilder.addField(
+        "excluded_parts",
+        "excludedParts",
+        1,
+        _skir.Serializers.iterable(PresentationPartId.serializer),
+        "",
+        (it) => it.excludedParts,
+        (it, v) => it.excludedParts = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -29993,9 +30046,10 @@ final class RemainingFieldsElement_mutable
     implements RemainingFieldsElement_orMutable {
   _core.Iterable<_lib_editor_v1_type_catalog.RelativeFieldPattern_orMutable>
   excluded;
+  _core.Iterable<PresentationPartId_orMutable> excludedParts;
   _skir.internal__UnrecognizedFields? _u;
 
-  RemainingFieldsElement_mutable._(this.excluded);
+  RemainingFieldsElement_mutable._(this.excluded, this.excludedParts);
 
   /// If the value of [excluded] is already mutable, returns it as is.
   /// Otherwise, makes a mutable copy, assigns it back to [excluded] and returns it.
@@ -30012,10 +30066,23 @@ final class RemainingFieldsElement_mutable
     }
   }
 
+  /// If the value of [excludedParts] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [excludedParts] and returns it.
+  _core.List<PresentationPartId_orMutable> get mutableExcludedParts {
+    final value = this.excludedParts;
+    if (value is _skir.internal__MutableList<PresentationPartId_orMutable>) {
+      return value;
+    } else {
+      return this.excludedParts = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
-  RemainingFieldsElement toFrozen() =>
-      RemainingFieldsElement(excluded: this.excluded).._u = this._u;
+  RemainingFieldsElement toFrozen() => RemainingFieldsElement(
+    excluded: this.excluded,
+    excludedParts: this.excludedParts,
+  ).._u = this._u;
 }
 
 // struct NullableControl
@@ -42648,4 +42715,272 @@ final class PresentationContextInput_mutable
     bindingId: this.bindingId,
     valueType: this.valueType,
   ).._u = this._u;
+}
+
+// struct PresentationPartId
+
+sealed class PresentationPartId_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable get owner;
+  _core.String get name;
+
+  PresentationPartId toFrozen();
+}
+
+/// An explicitly reusable inspector part, identified by its declaring contract.
+///
+/// Deeply immutable.
+final class PresentationPartId implements PresentationPartId_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeDefinitionId owner;
+  @_core.override
+  final _core.String name;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationPartId({
+    required _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable owner,
+    required _core.String name,
+  }) => PresentationPartId._(owner.toFrozen(), name);
+
+  PresentationPartId._(this.owner, this.name);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationPartId._(
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+    "",
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationPartId_mutable mutable() => PresentationPartId_mutable._(
+    _lib_editor_v1_type_catalog.TypeDefinitionId.defaultInstance,
+    "",
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationPartId toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationPartId_mutable toMutable() =>
+      PresentationPartId_mutable._(this.owner, this.name);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationPartId) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.owner, this.name];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationPartId` instances.
+  static _skir.StructSerializer<PresentationPartId, PresentationPartId_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "owner",
+        "owner",
+        0,
+        _lib_editor_v1_type_catalog.TypeDefinitionId.serializer,
+        "",
+        (it) => it.owner,
+        (it, v) => it.owner = v,
+      );
+      _serializerBuilder.addField(
+        "name",
+        "name",
+        1,
+        _skir.Serializers.string,
+        "",
+        (it) => it.name,
+        (it, v) => it.name = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationPartId",
+    doc: "An explicitly reusable inspector part, identified by its declaring contract.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationPartId_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationPartId].
+final class PresentationPartId_mutable implements PresentationPartId_orMutable {
+  _lib_editor_v1_type_catalog.TypeDefinitionId_orMutable owner;
+  _core.String name;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationPartId_mutable._(this.owner, this.name);
+
+  /// If the value of [owner] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
+  _lib_editor_v1_type_catalog.TypeDefinitionId_mutable get mutableOwner {
+    final value = this.owner;
+    if (value is _lib_editor_v1_type_catalog.TypeDefinitionId_mutable) {
+      return value;
+    } else {
+      return this.owner =
+          (value as _lib_editor_v1_type_catalog.TypeDefinitionId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationPartId toFrozen() =>
+      PresentationPartId(owner: this.owner, name: this.name).._u = this._u;
+}
+
+// struct PresentationPartElement
+
+sealed class PresentationPartElement_orMutable {
+  PresentationPartId_orMutable get key;
+  PresentationNode_orMutable? get body;
+
+  PresentationPartElement toFrozen();
+}
+
+/// A body declares an atomic part. Without a body, this requests an inherited part.
+///
+/// Deeply immutable.
+final class PresentationPartElement
+    implements PresentationPartElement_orMutable {
+  @_core.override
+  final PresentationPartId key;
+  @_core.override
+  final PresentationNode? body;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PresentationPartElement({
+    required PresentationPartId_orMutable key,
+    required PresentationNode_orMutable? body,
+  }) => PresentationPartElement._(
+    key.toFrozen(),
+    (body != null) ? body.toFrozen() : null,
+  );
+
+  PresentationPartElement._(this.key, this.body);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PresentationPartElement._(
+    PresentationPartId.defaultInstance,
+    null,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PresentationPartElement_mutable mutable() =>
+      PresentationPartElement_mutable._(
+        PresentationPartId.defaultInstance,
+        null,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PresentationPartElement toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PresentationPartElement_mutable toMutable() =>
+      PresentationPartElement_mutable._(this.key, this.body);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PresentationPartElement) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.key, this.body];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PresentationPartElement` instances.
+  static _skir.StructSerializer<
+    PresentationPartElement,
+    PresentationPartElement_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "key",
+        "key",
+        0,
+        PresentationPartId.serializer,
+        "",
+        (it) => it.key,
+        (it, v) => it.key = v,
+      );
+      _serializerBuilder.addField(
+        "body",
+        "body",
+        1,
+        _skir.Serializers.optional(PresentationNode.serializer),
+        "",
+        (it) => it.body,
+        (it, v) => it.body = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/presentation.skir:PresentationPartElement",
+    doc: "A body declares an atomic part. Without a body, this requests an inherited part.",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PresentationPartElement_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PresentationPartElement].
+final class PresentationPartElement_mutable
+    implements PresentationPartElement_orMutable {
+  PresentationPartId_orMutable key;
+  PresentationNode_orMutable? body;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PresentationPartElement_mutable._(this.key, this.body);
+
+  /// If the value of [key] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [key] and returns it.
+  PresentationPartId_mutable get mutableKey {
+    final value = this.key;
+    if (value is PresentationPartId_mutable) {
+      return value;
+    } else {
+      return this.key = (value as PresentationPartId).toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PresentationPartElement toFrozen() =>
+      PresentationPartElement(key: this.key, body: this.body).._u = this._u;
 }

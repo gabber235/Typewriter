@@ -99,12 +99,97 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     skir.DefaultPresentationElement element,
     PortablePresentationScope childScope,
   ) {
-    final nested = childScope.withConfiguredValue(element.control.binding);
+    if (element.presentationId != null) {
+      return _renderTypeDefault(element, childScope);
+    }
+    final owner = childScope.recordOwning(element.control.binding);
+    final checked = childScope.catalog;
+    if (owner != null && checked != null) {
+      final selected = checked.fieldPresentation(
+        owner.type,
+        owner.field,
+        childScope.role ?? skir.PresentationRole.inspector,
+      );
+      switch (selected) {
+        case SelectedEditorFieldPresentation():
+          return _renderInheritedField(
+            selected,
+            owner,
+            element.control,
+            childScope,
+          );
+        case ConflictingEditorFieldPresentation():
+          return _diagnostic(
+            "Field ${owner.field} has conflicting presentations",
+          );
+        case InvalidEditorFieldPresentation(:final diagnostic):
+          return _diagnostic(diagnostic);
+        case MissingEditorFieldPresentation():
+          break;
+      }
+    }
+    return _renderTypeDefault(element, childScope, fallbackLabel: owner?.field);
+  }
+
+  Widget _renderInheritedField(
+    SelectedEditorFieldPresentation selected,
+    PortableRecordFieldOwner owner,
+    skir.BoundControl request,
+    PortablePresentationScope caller,
+  ) {
+    final active = ActiveFieldPresentation(
+      identity: selected.identity,
+      owner: owner.address,
+    );
+    if (caller.activeFieldPresentations.contains(active)) {
+      return _diagnostic(
+        "Field ${owner.field} presentation inheritance is recursive",
+      );
+    }
+    final nested = owner.scope
+        .withMaterialContext(selected.material)
+        .copyWith(
+          activeFieldPresentations: {
+            ...caller.activeFieldPresentations,
+            active,
+          },
+        )
+        .withAuthoredFragment(
+          selected.node,
+          includeRootPrefix: request.prefix == null,
+        );
+    final association = _resolveFieldAssociation(
+      inherited: selected.node.boundControl!,
+      inheritedScope: nested,
+      local: request,
+      localScope: caller,
+      fallbackLabel: owner.field,
+    );
+    return PortablePresentationNodeRenderer(
+      node: selected.node,
+      scope: nested,
+      fieldAssociation: association,
+    );
+  }
+
+  Widget _renderTypeDefault(
+    skir.DefaultPresentationElement element,
+    PortablePresentationScope childScope, {
+    String? fallbackLabel,
+  }) {
+    final association = childScope
+        .associationFor(element.control)
+        .withFallbackLabel(fallbackLabel);
+    final controlScope = childScope.copyWith(
+      associatedControl: element.control,
+      fieldAssociation: association,
+    );
+    final nested = controlScope.withConfiguredValue(element.control.binding);
     if (nested == null) {
       return _diagnostic("The default presentation binding is unavailable");
     }
-    final selection = _selectionFor(element.control.binding, childScope);
-    final checked = childScope.catalog;
+    final selection = _selectionFor(element.control.binding, controlScope);
+    final checked = controlScope.catalog;
     if (selection != null && checked != null) {
       final material = element.presentationId == null
           ? switch (checked.selectPresentation(
@@ -116,14 +201,14 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
             }
           : checked.presentationMaterial(element.presentationId!, selection);
       if (material != null) {
-        if (childScope.activePresentations.contains(material.provider)) {
+        if (controlScope.activePresentations.contains(material.provider)) {
           if (element.presentationId != null) {
             return _diagnostic("Presentation delegation is recursive");
           }
         } else {
           return _controlAssociation(
             element.control,
-            childScope,
+            controlScope,
             PortablePresentationNodeRenderer(
               node: material.layout,
               scope: nested
@@ -134,11 +219,11 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
         }
       }
     }
-    final expected = childScope.expectedType(element.control.binding);
+    final expected = controlScope.expectedType(element.control.binding);
     final generated = _defaultElement(
       expected ?? _typeUseForSelection(selection),
-      element.control.binding,
-      childScope,
+      element.control,
+      controlScope,
     );
     return generated == null
         ? _diagnostic("No default presentation is available")
@@ -146,10 +231,11 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
             node: skir.PresentationNode(
               nodeId: "${node.nodeId}.default",
               properties: skir.PresentationProperties.defaultInstance,
-              element: _withDefaultControl(generated, element.control),
+              element: generated,
               header: null,
             ),
-            scope: childScope,
+            scope: controlScope,
+            fieldAssociation: association,
           );
   }
 
@@ -163,70 +249,43 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     if (checked == null || configured == null) {
       return _diagnostic("The remaining fields are unavailable");
     }
-    final selection = _selectionForConfigured(childScope, configured.value);
+    final selection = childScope.configuredSelection;
     if (selection == null) {
       return _diagnostic("The remaining field type is unavailable");
     }
-    final reserved = childScope.authoredAliases[_configuredValueBindingId];
-    final excluded = {
-      if (reserved != null) ...?childScope.authoredIndex?.fieldsOf(reserved),
-      for (final pattern in element.excluded)
-        if (pattern.segments.length == 1)
-          switch (pattern.segments.single) {
-            skir.FieldPatternSegment_fieldWrapper(:final value) => value.name,
-            _ => null,
-          },
-    }..remove(null);
-    final role = childScope.role;
-    final explicit = role == null
-        ? const <skir.ValuePath, EditorFieldPresentationSelection>{}
-        : checked.fieldPresentations(selection, role);
+    final claims = childScope.withRemainderExclusions(
+      childScope.inspectorClaims(),
+      element,
+      node.nodeId,
+    );
+    if (claims.problems.isNotEmpty) {
+      return _diagnostic(claims.problems.values.first);
+    }
+    final inherited = _renderInheritedInspector(childScope, claims);
+    if (inherited != null) return inherited;
+    final excluded = claims.reservedFields;
     final children = <Widget>[];
     for (final field in checked.fields(selection)) {
       if (excluded.contains(field.template.key)) continue;
-      final path = skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field.template.key)],
-      );
       final reference = skir.BindingRef(
         bindingId: _configuredValueBindingId,
-        path: path,
+        path: skir.ValuePath(
+          segments: [skir.PathSegment.createField(name: field.template.key)],
+        ),
       );
-      final choice = explicit[path];
-      final generated = switch (choice) {
-        SelectedEditorFieldPresentation(
-          presentation: final selectedPresentation,
-        ) =>
-          skir.PresentationElement.createDefaultPresentation(
-            control: (skir.BoundControl.defaultInstance.toMutable()
-              ..binding = reference),
-            presentationId: selectedPresentation,
-          ),
-        ConflictingEditorFieldPresentation() => null,
-        null => _defaultElement(field.type, reference, childScope),
-      };
       children.add(
-        Column(
+        PortablePresentationNodeRenderer(
           key: ValueKey("${node.nodeId}.${field.template.key}"),
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(field.template.key),
-            if (choice is ConflictingEditorFieldPresentation)
-              _diagnostic(
-                "Field ${field.template.key} has conflicting presentations",
-              )
-            else if (generated == null)
-              _diagnostic("Field ${field.template.key} has no presentation")
-            else
-              PortablePresentationNodeRenderer(
-                node: skir.PresentationNode(
-                  nodeId: "${node.nodeId}.${field.template.key}.control",
-                  properties: skir.PresentationProperties.defaultInstance,
-                  element: generated,
-                  header: null,
-                ),
-                scope: childScope,
-              ),
-          ],
+          node: skir.PresentationNode(
+            nodeId: "${node.nodeId}.${field.template.key}.control",
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.createDefaultPresentation(
+              control: _generatedControl(reference),
+              presentationId: null,
+            ),
+            header: null,
+          ),
+          scope: childScope,
         ),
       );
     }
@@ -251,25 +310,6 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     };
   }
 
-  skir.TypeSelection? _selectionForConfigured(
-    PortablePresentationScope childScope,
-    skir.DataValue value,
-  ) {
-    final actual = value.authoredActualType;
-    if (actual != null) return skir.TypeSelection.wrapComplete(actual);
-    final resource = childScope.resource;
-    final host = childScope.host;
-    final projectionHost = switch (host) {
-      final PortableCollectionProjectionHost value => value,
-      _ => null,
-    };
-    return resource == null || projectionHost == null
-        ? null
-        : projectionHost
-              .projectResource(resource, context: childScope.invocation)
-              ?.configuration;
-  }
-
   skir.TypeUse? _typeUseForSelection(skir.TypeSelection? selection) =>
       switch (selection) {
         skir.TypeSelection_completeWrapper(:final value) =>
@@ -279,19 +319,20 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
 
   skir.PresentationElement? _defaultElement(
     skir.TypeUse? declared,
-    skir.BindingRef reference,
+    skir.BoundControl control,
     PortablePresentationScope childScope,
   ) {
+    final reference = control.binding;
     final type = declared.withoutNullableWrappers;
     if (declared is skir.TypeUse_nullableWrapper) {
       final nested = _defaultElement(
         declared.value.value,
-        reference,
+        _generatedControl(reference),
         childScope,
       );
       return skir.PresentationElement.wrapNullableInput(
         skir.NullableControl(
-          control: _generatedControl(reference),
+          control: control,
           emptyText: null,
           clearLabel: null,
           valuePresentation: nested == null
@@ -306,7 +347,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       );
     }
     if (type case skir.TypeUse_scalarWrapper(:final value)) {
-      return _scalarDefaultElement(value, reference);
+      return _scalarDefaultElement(value, control);
     }
     if (type case skir.TypeUse_namedWrapper(:final value)) {
       final representation = childScope.catalog
@@ -315,11 +356,11 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
           .representation;
       return switch (representation) {
         skir.RepresentationTemplate_scalarWrapper(:final value) =>
-          _scalarDefaultElement(value.kind, reference),
+          _scalarDefaultElement(value.kind, control),
         skir.RepresentationTemplate_recordWrapper() =>
           skir.PresentationElement.wrapRecordInput(
             skir.RecordControl(
-              control: _generatedControl(reference),
+              control: control,
               appearance: null,
               content: null,
               fieldPresentation: skir.PresentationNode(
@@ -333,7 +374,10 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                       nodeId: "${node.nodeId}.remainingFields",
                       properties: skir.PresentationProperties.defaultInstance,
                       element: skir.PresentationElement.wrapRemainingFields(
-                        skir.RemainingFieldsElement(excluded: const []),
+                        skir.RemainingFieldsElement(
+                          excluded: const [],
+                          excludedParts: const [],
+                        ),
                       ),
                       header: null,
                     ),
@@ -347,7 +391,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
           value.kind == skir.CollectionKind.set_
               ? skir.PresentationElement.wrapSetInput(
                   skir.SetControl(
-                    control: _generatedControl(reference),
+                    control: control,
                     appearance: null,
                     content: null,
                     itemPresentation: null,
@@ -360,7 +404,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
                 )
               : skir.PresentationElement.wrapListInput(
                   skir.ListControl(
-                    control: _generatedControl(reference),
+                    control: control,
                     appearance: null,
                     content: null,
                     itemPresentation: null,
@@ -378,7 +422,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
         skir.RepresentationTemplate_mappingWrapper() =>
           skir.PresentationElement.wrapMapInput(
             skir.MapControl(
-              control: _generatedControl(reference),
+              control: control,
               appearance: null,
               content: null,
               keyPresentation: null,
@@ -393,14 +437,13 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
           ),
         skir.RepresentationTemplate_enumerationWrapper() =>
           skir.PresentationElement.wrapEnumInput(
-            (skir.EnumControl.defaultInstance.toMutable()
-                  ..control = _generatedControl(reference))
+            (skir.EnumControl.defaultInstance.toMutable()..control = control)
                 .toFrozen(),
           ),
         skir.RepresentationTemplate_linkWrapper() =>
           skir.PresentationElement.wrapLinkInput(
             skir.LinkControl(
-              control: _generatedControl(reference),
+              control: control,
               appearance: null,
               content: null,
               inputAppearance: null,
@@ -420,9 +463,8 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
 
   skir.PresentationElement? _scalarDefaultElement(
     skir.ScalarKind kind,
-    skir.BindingRef reference,
+    skir.BoundControl control,
   ) {
-    final control = _generatedControl(reference);
     return switch (kind) {
       skir.ScalarKind.boolean => skir.PresentationElement.wrapToggleInput(
         (skir.ToggleControl.defaultInstance.toMutable()..control = control)
@@ -456,72 +498,13 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       _ => null,
     };
   }
-
-  skir.BoundControl _generatedControl(skir.BindingRef reference) =>
-      skir.BoundControl(
-        binding: reference,
-        label: null,
-        description: null,
-        prefix: null,
-        semanticLabel: null,
-      );
 }
 
-skir.PresentationElement _withDefaultControl(
-  skir.PresentationElement element,
-  skir.BoundControl control,
-) => switch (element) {
-  skir.PresentationElement_textInputWrapper(:final value) =>
-    skir.PresentationElement.wrapTextInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_numericInputWrapper(:final value) =>
-    skir.PresentationElement.wrapNumericInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_toggleInputWrapper(:final value) =>
-    skir.PresentationElement.wrapToggleInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_dateTimeInputWrapper(:final value) =>
-    skir.PresentationElement.wrapDateTimeInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_durationInputWrapper(:final value) =>
-    skir.PresentationElement.wrapDurationInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_bytesInputWrapper(:final value) =>
-    skir.PresentationElement.wrapBytesInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_enumInputWrapper(:final value) =>
-    skir.PresentationElement.wrapEnumInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_recordInputWrapper(:final value) =>
-    skir.PresentationElement.wrapRecordInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_listInputWrapper(:final value) =>
-    skir.PresentationElement.wrapListInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_setInputWrapper(:final value) =>
-    skir.PresentationElement.wrapSetInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_mapInputWrapper(:final value) =>
-    skir.PresentationElement.wrapMapInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_nullableInputWrapper(:final value) =>
-    skir.PresentationElement.wrapNullableInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  skir.PresentationElement_linkInputWrapper(:final value) =>
-    skir.PresentationElement.wrapLinkInput(
-      (value.toMutable()..control = control).toFrozen(),
-    ),
-  _ => element,
-};
+skir.BoundControl _generatedControl(skir.BindingRef reference) =>
+    skir.BoundControl(
+      binding: reference,
+      label: null,
+      description: null,
+      prefix: null,
+      semanticLabel: null,
+    );

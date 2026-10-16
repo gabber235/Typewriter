@@ -171,6 +171,7 @@ struct PresentationMaterial(810900019) {
   dependencies: PresentationDependencies = 4;
   subject: TypeTemplate = 5;
   result_appearance: ResultAppearance? = 6;
+  inheritable_nodes: [string] = 7;
 }
 
 struct RoleFallback(810900020) {

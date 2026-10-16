@@ -80,14 +80,6 @@ String? _controlString(
   };
 }
 
-Widget? _controlText(
-  skir.ExpressionNode? value,
-  PortablePresentationScope scope,
-) {
-  final text = _controlString(value, scope);
-  return text == null ? null : Text(text);
-}
-
 double? _number(PortablePresentationScope scope, skir.ExpressionNode? value) {
   if (value == null) return null;
   return switch (scope.evaluate(value)) {

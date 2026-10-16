@@ -222,11 +222,14 @@ Widget? _entryLeading(
 ) {
   final leading = content?.leading;
   if (leading == skir.InputAdornment.none) return null;
-  final node = switch (leading) {
-    skir.InputAdornment_contentWrapper(:final value) => value,
-    _ => control.prefix,
+  final prefix = switch (leading) {
+    skir.InputAdornment_contentWrapper(:final value) => ScopedControlPrefix(
+      node: value,
+      scope: scope,
+    ),
+    _ => scope.associationFor(control).prefix,
   };
-  if (node != null) {
+  if (prefix != null) {
     return IconTheme.merge(
       data: IconThemeData(color: style.iconColor, size: style.iconSize),
       child: DefaultTextStyle.merge(
@@ -238,7 +241,7 @@ Widget? _entryLeading(
           alignment: Alignment.center,
           widthFactor: 1,
           heightFactor: 1,
-          child: PortablePresentationNodeRenderer(node: node, scope: scope),
+          child: prefix.render(scope),
         ),
       ),
     );

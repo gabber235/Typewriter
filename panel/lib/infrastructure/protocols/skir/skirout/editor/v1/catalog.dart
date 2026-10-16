@@ -3017,6 +3017,7 @@ sealed class PresentationMaterial_orMutable {
   get dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate get subject;
   _lib_editor_v1_presentation.ResultAppearance_orMutable? get resultAppearance;
+  _core.Iterable<_core.String> get inheritableNodes;
 
   PresentationMaterial toFrozen();
 }
@@ -3037,6 +3038,8 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
   final _lib_editor_v1_type_catalog.TypeTemplate subject;
   @_core.override
   final _lib_editor_v1_presentation.ResultAppearance? resultAppearance;
+  @_core.override
+  final _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationMaterial({
@@ -3049,6 +3052,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     required _lib_editor_v1_type_catalog.TypeTemplate subject,
     required _lib_editor_v1_presentation.ResultAppearance_orMutable?
     resultAppearance,
+    required _core.Iterable<_core.String> inheritableNodes,
   }) => PresentationMaterial._(
     provider.toFrozen(),
     target,
@@ -3057,6 +3061,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     dependencies.toFrozen(),
     subject,
     (resultAppearance != null) ? resultAppearance.toFrozen() : null,
+    _skir.internal__frozenCopy(inheritableNodes),
   );
 
   PresentationMaterial._(
@@ -3067,6 +3072,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.dependencies,
     this.subject,
     this.resultAppearance,
+    this.inheritableNodes,
   );
 
   /// Default instance with all fields set to their default values.
@@ -3078,6 +3084,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
     _lib_editor_v1_type_catalog.TypeTemplate.unknown,
     null,
+    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
@@ -3091,6 +3098,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
         _lib_editor_v1_type_catalog.TypeTemplate.unknown,
         null,
+        _skir.KeyedIterable.empty,
       );
 
   /// Returns this instance (no operation).
@@ -3107,6 +3115,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.dependencies,
     this.subject,
     this.resultAppearance,
+    this.inheritableNodes,
   );
 
   @_core.override
@@ -3130,6 +3139,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.dependencies,
     this.subject,
     this.resultAppearance,
+    this.inheritableNodes,
   ];
 
   @_core.override
@@ -3207,6 +3217,15 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         (it) => it.resultAppearance,
         (it, v) => it.resultAppearance = v,
       );
+      _serializerBuilder.addField(
+        "inheritable_nodes",
+        "inheritableNodes",
+        7,
+        _skir.Serializers.iterable(_skir.Serializers.string),
+        "",
+        (it) => it.inheritableNodes,
+        (it, v) => it.inheritableNodes = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3233,6 +3252,7 @@ final class PresentationMaterial_mutable
   _lib_editor_v1_presentation.PresentationDependencies_orMutable dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate subject;
   _lib_editor_v1_presentation.ResultAppearance_orMutable? resultAppearance;
+  _core.Iterable<_core.String> inheritableNodes;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationMaterial_mutable._(
@@ -3243,6 +3263,7 @@ final class PresentationMaterial_mutable
     this.dependencies,
     this.subject,
     this.resultAppearance,
+    this.inheritableNodes,
   );
 
   /// If the value of [provider] is already mutable, returns it as is.
@@ -3283,6 +3304,17 @@ final class PresentationMaterial_mutable
     }
   }
 
+  /// If the value of [inheritableNodes] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [inheritableNodes] and returns it.
+  _core.List<_core.String> get mutableInheritableNodes {
+    final value = this.inheritableNodes;
+    if (value is _skir.internal__MutableList<_core.String>) {
+      return value;
+    } else {
+      return this.inheritableNodes = _skir.internal__MutableList([...value]);
+    }
+  }
+
   /// Returns a deeply immutable copy of this instance.
   @_core.override
   PresentationMaterial toFrozen() => PresentationMaterial(
@@ -3293,6 +3325,7 @@ final class PresentationMaterial_mutable
     dependencies: this.dependencies,
     subject: this.subject,
     resultAppearance: this.resultAppearance,
+    inheritableNodes: this.inheritableNodes,
   ).._u = this._u;
 }
 

@@ -1078,6 +1078,7 @@ enum PresentationElement(810800140) {
   page_timeline: PageTimelineElement = 58;
   align: AlignmentLayout = 59;
   appearance_defaults: AppearanceDefaultsElement = 60;
+  part: PresentationPartElement = 61;
 }
 
 struct PresentationDefinition(810800141) {
@@ -1183,6 +1184,7 @@ enum LinkRejectionDisplay(810800155) {
 
 struct RemainingFieldsElement(810800156) {
   excluded: [RelativeFieldPattern] = 0;
+  excluded_parts: [PresentationPartId] = 1;
 }
 
 struct NullableControl(810800157) {
@@ -1739,4 +1741,16 @@ struct ResultAppearance(810800235) {
 struct PresentationContextInput(810800236) {
   binding_id: ExpressionBindingId = 0;
   value_type: TypeUse = 1;
+}
+
+/// An explicitly reusable inspector part, identified by its declaring contract.
+struct PresentationPartId(810800237) {
+  owner: TypeDefinitionId = 0;
+  name: string = 1;
+}
+
+/// A body declares an atomic part. Without a body, this requests an inherited part.
+struct PresentationPartElement(810800238) {
+  key: PresentationPartId = 0;
+  body: PresentationNode? = 1;
 }

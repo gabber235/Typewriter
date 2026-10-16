@@ -1,12 +1,10 @@
 package com.typewritermc.extensions.basic.entries.sequence.events
 
-import com.typewritermc.types.text
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
-import com.typewritermc.expression.trim
 import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
 import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.resourceHeading
@@ -14,6 +12,7 @@ import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
 import com.typewritermc.types.TypewriterDisplay
 import com.typewritermc.types.TypewriterType
+import com.typewritermc.types.text
 
 @TypewriterType(id = "01a0b180-cac6-770c-bbe8-101a740011ac", revision = 1)
 @TypewriterDisplay(
@@ -38,10 +37,6 @@ object PlayerMessageContainsTextEventEntryInspector : PlayerMessageContainsTextE
             color = literal(Color.parseRgb(requireNotNull(PlayerMessageContainsTextEventEntryDefinition.display?.color))),
             identifier = subject.identifier.text,
         )
-        name {
-            label("name")
-            textInput { onComplete { value.trim() } }
-        }
         remainingFields {}
     }
 }

@@ -564,6 +564,7 @@ _nestedMaterialFixture() {
     header: null,
   );
   final nestedMaterial = skir.PresentationMaterial(
+    inheritableNodes: const [],
     resultAppearance: null,
 
     provider: nestedProvider,
@@ -623,7 +624,7 @@ _nestedMaterialFixture() {
         catalog: checked,
         authored: AuthoringDocument(
           catalog: checked,
-            entries: base.document.entries,
+          entries: base.document.entries,
           links: base.document.links,
         ),
       ),
@@ -832,6 +833,7 @@ _fixture({
     arguments: const [],
   );
   final material = skir.PresentationMaterial(
+    inheritableNodes: const [],
     resultAppearance: null,
 
     provider: provider,

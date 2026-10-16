@@ -223,7 +223,7 @@ extension _PortableStructuredInputRendering
         childScope,
         SwitchListTile(
           value: false,
-          title: _controlText(nullable.control.label, childScope),
+          title: _fieldLabel(nullable.control, childScope),
           subtitle: Text(
             _operationText(childScope, nullable.emptyText, "No value"),
           ),
@@ -240,7 +240,7 @@ extension _PortableStructuredInputRendering
         children: [
           SwitchListTile(
             value: true,
-            title: _controlText(nullable.control.label, childScope),
+            title: _fieldLabel(nullable.control, childScope),
             subtitle: nullable.clearLabel == null
                 ? null
                 : Text(

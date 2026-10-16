@@ -236,6 +236,11 @@ interface Layout :
 
     fun slot(id: String)
 
+    fun part(
+        key: PresentationPartKey<*>,
+        body: (Layout.() -> Unit)? = null,
+    )
+
     fun divider(configure: DividerAppearanceScope.() -> Unit = {})
 
     fun spacer(
@@ -274,6 +279,8 @@ interface AxisLayout : Layout {
 }
 
 interface RemainingFields {
+    fun exclude(part: PresentationPartKey<*>)
+
     fun exclude(field: PresentedField<*, *>)
 }
 

@@ -129,6 +129,10 @@ import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 
 object SkirTypeCodec {
+    fun encode(id: TypeDefinitionId): SkirConversionResult<SkirTypeDefinitionId> = captureSkirConversion { encodeDefinitionId(id) }
+
+    fun decode(id: SkirTypeDefinitionId): SkirConversionResult<TypeDefinitionId> = captureSkirConversion { decodeDefinitionId(id) }
+
     fun encode(definition: TypeDefinition): SkirConversionResult<SkirTypeDefinition> =
         captureSkirConversion { encodeTypeDefinition(definition) }
 
@@ -696,6 +700,7 @@ private fun ConversionScope.encode(material: PresentationMaterial) =
         dependencies = material.dependencies,
         subject = encodeTypeTemplate(material.subject),
         resultAppearance = material.resultAppearance,
+        inheritableNodes = material.inheritableNodes,
     )
 
 private fun encode(id: PresentationId) = SkirPresentationId(namespace = id.namespace, name = id.name)

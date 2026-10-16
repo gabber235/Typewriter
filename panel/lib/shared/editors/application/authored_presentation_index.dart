@@ -62,6 +62,49 @@ abstract class AuthoredBindingAddress with _$AuthoredBindingAddress {
   AuthoredBindingAddress get items =>
       copyWith(path: [...path, const AuthoredPathStep.item()]);
 
+  /// Matches a concrete record against structural collection item addresses.
+  bool matches(AuthoredBindingAddress actual) =>
+      root == actual.root &&
+      path.length == actual.path.length &&
+      _matchesPrefix(actual);
+
+  bool _matchesPrefix(AuthoredBindingAddress actual) {
+    if (root != actual.root || path.length > actual.path.length) return false;
+    for (var i = 0; i < path.length; i++) {
+      final expected = path[i];
+      final value = actual.path[i];
+      if (expected is AnyAuthoredItem) {
+        if (value is! AnyAuthoredItem &&
+            (value is! ExactAuthoredPathStep ||
+                value.segment is! skir.PathSegment_itemWrapper)) {
+          return false;
+        }
+      } else if (value is AnyAuthoredItem) {
+        if (expected is! ExactAuthoredPathStep ||
+            expected.segment is! skir.PathSegment_itemWrapper) {
+          return false;
+        }
+      } else if (expected != value) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Projects any descendant editor to the first field below its record owner.
+  String? fieldBelow(AuthoredBindingAddress record) {
+    if (!record._matchesPrefix(this) || path.length <= record.path.length) {
+      return null;
+    }
+    return switch (path[record.path.length]) {
+      ExactAuthoredPathStep(
+        segment: skir.PathSegment_fieldWrapper(:final value),
+      ) =>
+        value.name,
+      _ => null,
+    };
+  }
+
   String? directFieldOf(AuthoredBindingAddress record) {
     if (root != record.root || path.length != record.path.length + 1) {
       return null;
@@ -94,10 +137,8 @@ extension AuthoredBindingAliases
 
 @freezed
 abstract class AuthoredBindingUse with _$AuthoredBindingUse {
-  const factory AuthoredBindingUse({
-    required AuthoredBindingAddress address,
-    skir.PresentationId? selectedPresentation,
-  }) = _AuthoredBindingUse;
+  const factory AuthoredBindingUse({required AuthoredBindingAddress address}) =
+      _AuthoredBindingUse;
 }
 
 /// An immutable structural observation of one authored layout application.
@@ -109,16 +150,39 @@ abstract class AuthoredPresentationIndex with _$AuthoredPresentationIndex {
   }) = _AuthoredPresentationIndex;
   const AuthoredPresentationIndex._();
 
+  /// Observes controls in their lexical scopes, including hidden decorations.
+  /// [onEditableBinding] also receives unresolved and implicit edit destinations.
+  /// Excluding the root prefix preserves every descendant prefix and header.
   factory AuthoredPresentationIndex.build(
     skir.PresentationNode layout,
     Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases, {
     Map<String, skir.PresentationCollectionDefinition> sources = const {},
     Iterable<skir.PresentationNode> additionalLayouts = const [],
+    bool includeRootPrefix = true,
+    void Function(skir.BindingRef, AuthoredBindingAddress?)? onEditableBinding,
+    bool Function(
+      skir.PresentationNode node,
+      skir.PresentationPartElement part,
+      Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases,
+    )?
+    onPart,
   }) => AuthoredPresentationIndex(
     uses: [
-      ...layout.authoredBindingUses(aliases, sources),
+      ...layout.authoredBindingUses(
+        aliases,
+        sources,
+        onEditableBinding,
+        includeRootPrefix,
+        onPart,
+      ),
       for (final additional in additionalLayouts)
-        ...additional.authoredBindingUses(aliases, sources),
+        ...additional.authoredBindingUses(
+          aliases,
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        ),
     ],
   );
 
@@ -131,69 +195,187 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
   Iterable<AuthoredBindingUse> authoredBindingUses(
     Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases, [
     Map<String, skir.PresentationCollectionDefinition> sources = const {},
+    void Function(skir.BindingRef, AuthoredBindingAddress?)? onEditableBinding,
+    bool includeRootPrefix = true,
+    bool Function(
+      skir.PresentationNode node,
+      skir.PresentationPartElement part,
+      Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases,
+    )?
+    onPart,
   ]) sync* {
     final control = boundControl;
-    final selected = switch (element) {
-      skir.PresentationElement_defaultPresentationWrapper(:final value) =>
-        value.presentationId,
-      _ => null,
-    };
     if (control != null) {
+      onEditableBinding?.call(
+        control.binding,
+        aliases.resolve(control.binding),
+      );
       if (aliases.resolve(control.binding) case final address?) {
-        yield AuthoredBindingUse(
-          address: address,
-          selectedPresentation: selected,
-        );
+        yield AuthoredBindingUse(address: address);
       }
     }
     final configured = skir.ExpressionBindingId(value: "configured_value");
+    for (final item in header?.items ?? const <skir.HeaderItem>[]) {
+      if (item case skir.HeaderItem_reorderHandleWrapper(:final value)) {
+        onEditableBinding?.call(value.source, aliases.resolve(value.source));
+      }
+    }
     switch (element) {
+      case skir.PresentationElement_partWrapper(:final value):
+        if (onPart?.call(this, value, aliases) ?? true) {
+          if (value.body case final body?) {
+            yield* body.authoredBindingUses(
+              aliases,
+              sources,
+              onEditableBinding,
+              true,
+              onPart,
+            );
+          }
+        }
+      case skir.PresentationElement_remainingFieldsWrapper():
+        final reference = skir.BindingRef(
+          bindingId: configured,
+          path: skir.ValuePath.defaultInstance,
+        );
+        onEditableBinding?.call(reference, aliases.resolve(reference));
+      case skir.PresentationElement_invocationWrapper(:final value):
+        final arguments = {...aliases};
+        for (final argument in value.arguments) {
+          final address = arguments.resolve(argument.binding);
+          onEditableBinding?.call(argument.binding, address);
+          arguments.remove(argument.input);
+          if (address != null) arguments[argument.input] = address;
+        }
+        final implicit = skir.BindingRef(
+          bindingId: configured,
+          path: skir.ValuePath.defaultInstance,
+        );
+        onEditableBinding?.call(implicit, arguments.resolve(implicit));
+
       case skir.PresentationElement_typedFieldWrapper(:final value):
         if (aliases.resolve(value.binding) case final address?) {
           yield AuthoredBindingUse(address: address);
         }
         if (value.presentation case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_scopedBindingWrapper(:final value):
-        if (aliases.resolve(value.binding) case final address?) {
-          yield* value.child.authoredBindingUses({
-            ...aliases,
-            value.scopeBindingId: address,
-          }, sources);
-        }
+        final address = aliases.resolve(value.binding);
+        final nested = {...aliases}..remove(value.scopeBindingId);
+        if (address != null) nested[value.scopeBindingId] = address;
+        yield* value.child.authoredBindingUses(
+          nested,
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
       case skir.PresentationElement_recordInputWrapper(:final value):
         if (value.fieldPresentation case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_namedInputWrapper(:final value):
         if (value.payloadPresentation case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_nullableInputWrapper(:final value):
         if (value.valuePresentation case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
+      case skir.PresentationElement_searchInputWrapper(:final value):
+        AuthoredBindingAddress local(skir.ExpressionBindingId binding) =>
+            AuthoredBindingAddress(
+              root: AuthoredBindingRoot.local(binding, origin: nodeId),
+              path: const [],
+            );
+        if (value.summary case final child?) {
+          yield* child.authoredBindingUses(
+            {...aliases, value.summaryBindingId: local(value.summaryBindingId)},
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
+        }
+        for (final child in [value.empty, value.loading]) {
+          if (child != null) {
+            yield* child.authoredBindingUses(
+              aliases,
+              sources,
+              onEditableBinding,
+              true,
+              onPart,
+            );
+          }
+        }
+        yield* _searchAuthoredBindingUses(
+          value.provider,
+          {...aliases, value.queryBindingId: local(value.queryBindingId)},
+          sources,
+          onEditableBinding,
+          nodeId,
+          onPart,
+        );
       case skir.PresentationElement_polymorphicInputWrapper(:final value):
         if (aliases.resolve(value.control.binding) case final address?) {
           for (final option in value.concreteTypes) {
             if (option.presentation case final child?) {
-              yield* child.authoredBindingUses({
-                ...aliases,
-                configured: address,
-              }, sources);
+              yield* child.authoredBindingUses(
+                {...aliases, configured: address},
+                sources,
+                onEditableBinding,
+                true,
+                onPart,
+              );
             }
           }
         }
       case skir.PresentationElement_polymorphicMatchWrapper(:final value):
-        if (aliases.resolve(value.binding) case final address?) {
-          final nested = {...aliases, value.scopeBindingId: address};
-          for (final item in value.cases) {
-            yield* item.child.authoredBindingUses(nested, sources);
-          }
+        final address = aliases.resolve(value.binding);
+        final nested = {...aliases}..remove(value.scopeBindingId);
+        if (address != null) nested[value.scopeBindingId] = address;
+        for (final item in value.cases) {
+          yield* item.child.authoredBindingUses(
+            nested,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
         if (value.fallback case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_listInputWrapper(:final value):
         if (value.itemPresentation case final child?) {
@@ -203,10 +385,13 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
                 root: AuthoredBindingRoot.local(value.itemBindingId),
                 path: const [],
               );
-          yield* child.authoredBindingUses({
-            ...aliases,
-            value.itemBindingId: address,
-          }, sources);
+          yield* child.authoredBindingUses(
+            {...aliases, value.itemBindingId: address},
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_setInputWrapper(:final value):
         if (value.itemPresentation case final child?) {
@@ -216,34 +401,49 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
                 root: AuthoredBindingRoot.local(value.itemBindingId),
                 path: const [],
               );
-          yield* child.authoredBindingUses({
-            ...aliases,
-            value.itemBindingId: address,
-          }, sources);
+          yield* child.authoredBindingUses(
+            {...aliases, value.itemBindingId: address},
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_mapInputWrapper(:final value):
         final address = aliases.resolve(value.control.binding)?.items;
         if (value.keyPresentation case final child?) {
-          yield* child.authoredBindingUses({
-            ...aliases,
-            value.keyBindingId:
-                address?.append([skir.PathSegment.mapKey]) ??
-                AuthoredBindingAddress(
-                  root: AuthoredBindingRoot.local(value.keyBindingId),
-                  path: const [],
-                ),
-          }, sources);
+          yield* child.authoredBindingUses(
+            {
+              ...aliases,
+              value.keyBindingId:
+                  address?.append([skir.PathSegment.mapKey]) ??
+                  AuthoredBindingAddress(
+                    root: AuthoredBindingRoot.local(value.keyBindingId),
+                    path: const [],
+                  ),
+            },
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
         if (value.valuePresentation case final child?) {
-          yield* child.authoredBindingUses({
-            ...aliases,
-            value.valueBindingId:
-                address?.append([skir.PathSegment.mapValue]) ??
-                AuthoredBindingAddress(
-                  root: AuthoredBindingRoot.local(value.valueBindingId),
-                  path: const [],
-                ),
-          }, sources);
+          yield* child.authoredBindingUses(
+            {
+              ...aliases,
+              value.valueBindingId:
+                  address?.append([skir.PathSegment.mapValue]) ??
+                  AuthoredBindingAddress(
+                    root: AuthoredBindingRoot.local(value.valueBindingId),
+                    path: const [],
+                  ),
+            },
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_repeatedWrapper(:final value):
         final source = switch (value.source) {
@@ -261,21 +461,42 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
               ),
               path: const [],
             );
-        yield* value.presentation.item.authoredBindingUses({
-          ...aliases,
-          value.itemBindingId: address,
-        }, sources);
+        yield* value.presentation.item.authoredBindingUses(
+          {...aliases, value.itemBindingId: address},
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
         if (source != null) {
-          yield* value.presentation.item.authoredBindingUses({
-            ...aliases,
-            value.itemBindingId: address.append([skir.PathSegment.mapValue]),
-          }, sources);
+          yield* value.presentation.item.authoredBindingUses(
+            {
+              ...aliases,
+              value.itemBindingId: address.append([skir.PathSegment.mapValue]),
+            },
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
         if (value.presentation.empty case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
         if (value.presentation.separator case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_collectionLookupWrapper(:final value):
         final definition = sources[value.sourceId];
@@ -283,13 +504,31 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           root: AuthoredBindingRoot.collection(value.sourceId),
           path: const [AuthoredPathStep.item()],
         );
-        yield* value.found.authoredBindingUses({
-          ...aliases,
-          if (definition != null) definition.rowBindingId: address,
-        }, sources);
-        yield* value.missing.authoredBindingUses(aliases, sources);
+        yield* value.found.authoredBindingUses(
+          {
+            ...aliases,
+            if (definition != null) definition.rowBindingId: address,
+          },
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
+        yield* value.missing.authoredBindingUses(
+          aliases,
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
         if (value.loading case final child?) {
-          yield* child.authoredBindingUses(aliases, sources);
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
       case skir.PresentationElement_collectionGraphWrapper(:final value):
         final definition = sources[value.sourceId];
@@ -303,29 +542,209 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
           if (definition != null) definition.rowBindingId: address,
           value.childrenBindingId: source,
         };
-        yield* value.node.authoredBindingUses(nested, sources);
-        yield* value.rootSequence.item.authoredBindingUses(nested, sources);
-        yield* value.children.item.authoredBindingUses({
-          ...nested,
-          value.childBindingId: address,
-        }, sources);
+        yield* value.node.authoredBindingUses(
+          nested,
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
+        yield* value.rootSequence.item.authoredBindingUses(
+          nested,
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
+        yield* value.children.item.authoredBindingUses(
+          {...nested, value.childBindingId: address},
+          sources,
+          onEditableBinding,
+          true,
+          onPart,
+        );
         for (final child in [
           value.rootSequence.empty,
           value.rootSequence.separator,
           value.children.empty,
           value.children.separator,
         ]) {
-          if (child != null) yield* child.authoredBindingUses(aliases, sources);
+          if (child != null) {
+            yield* child.authoredBindingUses(
+              aliases,
+              sources,
+              onEditableBinding,
+              true,
+              onPart,
+            );
+          }
         }
       default:
-        for (final child in nestedPresentationNodes.where(
-          (child) => child != control?.prefix,
-        )) {
-          yield* child.authoredBindingUses(aliases, sources);
+        for (final child in presentationBodyNodes) {
+          yield* child.authoredBindingUses(
+            aliases,
+            sources,
+            onEditableBinding,
+            true,
+            onPart,
+          );
         }
     }
-    if (control?.prefix case final prefix?) {
-      yield* prefix.authoredBindingUses(aliases, sources);
+    for (final child in presentationDecorationNodes(
+      includeControlPrefix: includeRootPrefix,
+    )) {
+      yield* child.authoredBindingUses(
+        aliases,
+        sources,
+        onEditableBinding,
+        true,
+        onPart,
+      );
     }
+  }
+}
+
+Iterable<AuthoredBindingUse> _searchAuthoredBindingUses(
+  skir.SearchProvider provider,
+  Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases,
+  Map<String, skir.PresentationCollectionDefinition> sources,
+  void Function(skir.BindingRef, AuthoredBindingAddress?)? onEditableBinding,
+  String origin,
+  bool Function(
+    skir.PresentationNode node,
+    skir.PresentationPartElement part,
+    Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases,
+  )?
+  onPart,
+) sync* {
+  AuthoredBindingAddress foreign(skir.ExpressionBindingId binding) =>
+      AuthoredBindingAddress(
+        root: AuthoredBindingRoot.local(binding, origin: origin),
+        path: const [],
+      );
+  Iterable<AuthoredBindingUse> result(
+    skir.SearchResultMapping mapping,
+    Map<skir.ExpressionBindingId, AuthoredBindingAddress> environment,
+  ) sync* {
+    final nested = {
+      ...environment,
+      mapping.bindingId: foreign(mapping.bindingId),
+    };
+    yield* mapping.presentation.authoredBindingUses(
+      nested,
+      sources,
+      onEditableBinding,
+      true,
+      onPart,
+    );
+    if (mapping.resultAppearance?.leading case final leading?) {
+      yield* leading.authoredBindingUses(
+        nested,
+        sources,
+        onEditableBinding,
+        true,
+        onPart,
+      );
+    }
+  }
+
+  switch (provider) {
+    case skir.SearchProvider_staticValuesWrapper(:final value):
+      yield* result(value.result, aliases);
+    case skir.SearchProvider_collectionWrapper(:final value):
+      yield* result(value.result, aliases);
+    case skir.SearchProvider_realmCallbackWrapper(:final value):
+      yield* result(value.result, aliases);
+    case skir.SearchProvider_httpJsonWrapper(:final value):
+      yield* result(value.result, {
+        ...aliases,
+        for (final context in value.contextBindings)
+          context.bindingId: foreign(context.bindingId),
+      });
+    case skir.SearchProvider_gateWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_debounceWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_cacheWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_rankWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_limitWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_distinctWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_historyWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_sectionWrapper(:final value):
+      yield* _searchAuthoredBindingUses(
+        value.child,
+        aliases,
+        sources,
+        onEditableBinding,
+        origin,
+        onPart,
+      );
+    case skir.SearchProvider_mergeWrapper(:final value):
+      for (final child in value.children) {
+        yield* _searchAuthoredBindingUses(
+          child,
+          aliases,
+          sources,
+          onEditableBinding,
+          origin,
+          onPart,
+        );
+      }
+    default:
+      break;
   }
 }

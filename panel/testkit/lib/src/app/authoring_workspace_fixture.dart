@@ -630,6 +630,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
       );
       materials.add(
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: id,

@@ -1001,6 +1001,18 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .configuredScalarControlsUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Inherited field presentation',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                            .inheritedFieldPresentationUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Inherited inspector layout',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                            .inheritedInspectorLayoutUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Portable document',
                     builder:
                         _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories

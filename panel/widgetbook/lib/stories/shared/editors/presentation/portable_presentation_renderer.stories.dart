@@ -30,6 +30,121 @@ Widget portablePresentationRendererUseCase(BuildContext context) {
   );
 }
 
+@widgetbook.UseCase(
+  name: "Inherited field presentation",
+  type: PortablePresentationRenderer,
+)
+Widget inheritedFieldPresentationUseCase(BuildContext context) {
+  final variant = context.knobs.object.dropdown(
+    label: "Name presentation",
+    options: InheritedFieldVariant.values,
+    labelBuilder: (value) => switch (value) {
+      InheritedFieldVariant.inherited => "Inherited trim",
+      InheritedFieldVariant.localLabel => "Local label with inherited trim",
+      InheritedFieldVariant.explicitControl => "Explicit control",
+      InheritedFieldVariant.disabled => "Disabled",
+    },
+  );
+  return FakeApp(
+    child: Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: SizedBox(
+            width: context.knobs.double.slider(
+              label: "Editor width",
+              initialValue: 640,
+              min: 320,
+              max: 900,
+            ),
+            child: InheritedFieldPresentationGallery(variant: variant),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+@widgetbook.UseCase(
+  name: "Inherited inspector layout",
+  type: PortablePresentationRenderer,
+)
+Widget inheritedInspectorLayoutUseCase(BuildContext context) {
+  final variant = context.knobs.object.dropdown(
+    label: "Inspector layout",
+    options: InheritedInspectorLayoutVariant.values,
+    labelBuilder: (value) => switch (value) {
+      InheritedInspectorLayoutVariant.childOrder => "Child controls order",
+      InheritedInspectorLayoutVariant.excludedHeading => "Excluded heading",
+      InheritedInspectorLayoutVariant.replacedDetails => "Replaced details",
+    },
+  );
+  return FakeApp(
+    child: Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: SizedBox(
+            width: context.knobs.double.slider(
+              label: "Inspector width",
+              initialValue: 640,
+              min: 320,
+              max: 900,
+            ),
+            child: InheritedInspectorLayoutGallery(variant: variant),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+final class InheritedInspectorLayoutGallery extends HookWidget {
+  const InheritedInspectorLayoutGallery({
+    this.variant = InheritedInspectorLayoutVariant.childOrder,
+    super.key,
+  });
+
+  final InheritedInspectorLayoutVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    final scenario = useMemoized(
+      () => InheritedInspectorLayoutScenario(variant: variant),
+      [variant],
+    );
+    useEffect(() => scenario.dispose, [scenario]);
+    return PortablePresentationRenderer(host: scenario.host);
+  }
+}
+
+final class InheritedFieldPresentationGallery extends HookWidget {
+  const InheritedFieldPresentationGallery({
+    this.variant = InheritedFieldVariant.inherited,
+    super.key,
+  });
+
+  final InheritedFieldVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    final scenario = useMemoized(
+      () => InheritedFieldPresentationScenario(variant: variant),
+      [variant],
+    );
+    useEffect(() => scenario.dispose, [scenario]);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text("Quest action"),
+        const SizedBox(height: 12),
+        PortablePresentationRenderer(host: scenario.host),
+      ],
+    );
+  }
+}
+
 final class PortablePresentationGallery extends HookWidget {
   const PortablePresentationGallery({super.key});
 

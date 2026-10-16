@@ -474,6 +474,7 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
       priority: 0,
     ),
     skir.PresentationMaterial(
+      inheritableNodes: const [],
       resultAppearance: null,
 
       provider: id,
@@ -484,6 +485,7 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createRemainingFields(
           excluded: const [],
+          excludedParts: const [],
         ),
         header: null,
       ),

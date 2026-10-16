@@ -42,7 +42,7 @@ $AuthoredBindingRootCopyWith(AuthoredBindingRoot _, $Res Function(AuthoredBindin
 }
 
 
-/// Adds methods for matching patterns to [AuthoredBindingRoot].
+/// Adds pattern matching related methods to [AuthoredBindingRoot].
 extension AuthoredBindingRootPatterns on AuthoredBindingRoot {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -67,7 +67,7 @@ return collection(_that);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -133,7 +133,7 @@ return collection(_that.sourceId);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -414,7 +414,7 @@ $AuthoredPathStepCopyWith(AuthoredPathStep _, $Res Function(AuthoredPathStep) __
 }
 
 
-/// Adds methods for matching patterns to [AuthoredPathStep].
+/// Adds pattern matching related methods to [AuthoredPathStep].
 extension AuthoredPathStepPatterns on AuthoredPathStep {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -438,7 +438,7 @@ return item(_that);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -501,7 +501,7 @@ return item();case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -720,7 +720,7 @@ $AuthoredBindingRootCopyWith<$Res> get root {
 }
 
 
-/// Adds methods for matching patterns to [AuthoredBindingAddress].
+/// Adds pattern matching related methods to [AuthoredBindingAddress].
 extension AuthoredBindingAddressPatterns on AuthoredBindingAddress {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -743,7 +743,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -806,7 +806,7 @@ return $default(_that.root,_that.path);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -938,7 +938,7 @@ $AuthoredBindingRootCopyWith<$Res> get root {
 /// @nodoc
 mixin _$AuthoredBindingUse {
 
- AuthoredBindingAddress get address; skir.PresentationId? get selectedPresentation;
+ AuthoredBindingAddress get address;
 /// Create a copy of AuthoredBindingUse
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -950,20 +950,20 @@ $AuthoredBindingUseCopyWith<AuthoredBindingUse> get copyWith => _$AuthoredBindin
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoredBindingUse;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoredBindingUse&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.selectedPresentation, _this.selectedPresentation) || other.selectedPresentation == _this.selectedPresentation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoredBindingUse&&(identical(other.address, _this.address) || other.address == _this.address));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoredBindingUse;
-  return Object.hash(runtimeType,_this.address,_this.selectedPresentation);
+  return Object.hash(runtimeType,_this.address);
 }
 
 @override
 String toString() {
   final _this = this as AuthoredBindingUse;
-  return 'AuthoredBindingUse(address: ${_this.address}, selectedPresentation: ${_this.selectedPresentation})';
+  return 'AuthoredBindingUse(address: ${_this.address})';
 }
 
 
@@ -974,7 +974,7 @@ abstract mixin class $AuthoredBindingUseCopyWith<$Res>  {
   factory $AuthoredBindingUseCopyWith(AuthoredBindingUse value, $Res Function(AuthoredBindingUse) _then) = _$AuthoredBindingUseCopyWithImpl;
 @useResult
 $Res call({
- AuthoredBindingAddress address, skir.PresentationId? selectedPresentation
+ AuthoredBindingAddress address
 });
 
 
@@ -991,11 +991,10 @@ class _$AuthoredBindingUseCopyWithImpl<$Res>
 
 /// Create a copy of AuthoredBindingUse
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? address = null,Object? selectedPresentation = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? address = null,}) {
   return _then(AuthoredBindingUse(
 address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as AuthoredBindingAddress,selectedPresentation: freezed == selectedPresentation ? _self.selectedPresentation : selectedPresentation // ignore: cast_nullable_to_non_nullable
-as skir.PresentationId?,
+as AuthoredBindingAddress,
   ));
 }
 /// Create a copy of AuthoredBindingUse
@@ -1011,7 +1010,7 @@ $AuthoredBindingAddressCopyWith<$Res> get address {
 }
 
 
-/// Adds methods for matching patterns to [AuthoredBindingUse].
+/// Adds pattern matching related methods to [AuthoredBindingUse].
 extension AuthoredBindingUsePatterns on AuthoredBindingUse {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1034,7 +1033,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1089,15 +1088,15 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthoredBindingAddress address,  skir.PresentationId? selectedPresentation)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthoredBindingAddress address)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoredBindingUse() when $default != null:
-return $default(_that.address,_that.selectedPresentation);case _:
+return $default(_that.address);case _:
   return orElse();
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1110,10 +1109,10 @@ return $default(_that.address,_that.selectedPresentation);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthoredBindingAddress address,  skir.PresentationId? selectedPresentation)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthoredBindingAddress address)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoredBindingUse():
-return $default(_that.address,_that.selectedPresentation);case _:
+return $default(_that.address);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1130,10 +1129,10 @@ return $default(_that.address,_that.selectedPresentation);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthoredBindingAddress address,  skir.PresentationId? selectedPresentation)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthoredBindingAddress address)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoredBindingUse() when $default != null:
-return $default(_that.address,_that.selectedPresentation);case _:
+return $default(_that.address);case _:
   return null;
 
 }
@@ -1145,11 +1144,10 @@ return $default(_that.address,_that.selectedPresentation);case _:
 
 
 class _AuthoredBindingUse implements AuthoredBindingUse {
-  const _AuthoredBindingUse({required this.address, this.selectedPresentation});
+  const _AuthoredBindingUse({required this.address});
 
 
 @override final  AuthoredBindingAddress address;
-@override final  skir.PresentationId? selectedPresentation;
 
 /// Create a copy of AuthoredBindingUse
 /// with the given fields replaced by the non null parameter values.
@@ -1161,18 +1159,18 @@ _$AuthoredBindingUseCopyWith<_AuthoredBindingUse> get copyWith => __$AuthoredBin
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredBindingUse&&(identical(other.address, address) || other.address == address)&&(identical(other.selectedPresentation, selectedPresentation) || other.selectedPresentation == selectedPresentation));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredBindingUse&&(identical(other.address, address) || other.address == address));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,address,selectedPresentation);
+    return Object.hash(runtimeType,address);
 }
 
 @override
 String toString() {
-    return 'AuthoredBindingUse(address: $address, selectedPresentation: $selectedPresentation)';
+    return 'AuthoredBindingUse(address: $address)';
 }
 
 
@@ -1183,7 +1181,7 @@ abstract mixin class _$AuthoredBindingUseCopyWith<$Res> implements $AuthoredBind
   factory _$AuthoredBindingUseCopyWith(_AuthoredBindingUse value, $Res Function(_AuthoredBindingUse) _then) = __$AuthoredBindingUseCopyWithImpl;
 @override @useResult
 $Res call({
- AuthoredBindingAddress address, skir.PresentationId? selectedPresentation
+ AuthoredBindingAddress address
 });
 
 
@@ -1200,11 +1198,10 @@ class __$AuthoredBindingUseCopyWithImpl<$Res>
 
 /// Create a copy of AuthoredBindingUse
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? address = null,Object? selectedPresentation = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? address = null,}) {
   return _then(_AuthoredBindingUse(
 address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
-as AuthoredBindingAddress,selectedPresentation: freezed == selectedPresentation ? _self.selectedPresentation : selectedPresentation // ignore: cast_nullable_to_non_nullable
-as skir.PresentationId?,
+as AuthoredBindingAddress,
   ));
 }
 
@@ -1286,7 +1283,7 @@ as List<AuthoredBindingUse>,
 }
 
 
-/// Adds methods for matching patterns to [AuthoredPresentationIndex].
+/// Adds pattern matching related methods to [AuthoredPresentationIndex].
 extension AuthoredPresentationIndexPatterns on AuthoredPresentationIndex {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1309,7 +1306,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1372,7 +1369,7 @@ return $default(_that.uses);case _:
 
 }
 }
-/// A `switch` style method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:

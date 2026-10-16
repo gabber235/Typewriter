@@ -1135,6 +1135,7 @@ _emptyPageGraphFixture() {
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: presentationId,
@@ -1307,6 +1308,7 @@ _numericFixture({
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: presentationId,
@@ -1643,6 +1645,7 @@ _fixture({
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: presentationId,
@@ -1656,6 +1659,7 @@ _fixture({
           ),
         ),
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: presentationId,
@@ -1682,6 +1686,7 @@ _fixture({
           ),
         ),
         skir.PresentationMaterial(
+          inheritableNodes: const [],
           resultAppearance: null,
 
           provider: presentationId,

@@ -17,6 +17,8 @@ part "portable_renderer/diagnostic_tree.dart";
 part "portable_renderer/diagnostic_placement.dart";
 part "portable_renderer/diagnostic_chrome.dart";
 part "portable_renderer/delegation.dart";
+part "portable_renderer/field_presentations.dart";
+part "portable_renderer/inspector_layouts.dart";
 part "portable_renderer/expression_resolution.dart";
 part "portable_renderer/header.dart";
 part "portable_renderer/header_layout.dart";
@@ -36,12 +38,14 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
   const PortablePresentationNodeRenderer({
     required this.node,
     required this.scope,
+    this.fieldAssociation,
     this.fillAvailableSpace = false,
     super.key,
   });
 
   final skir.PresentationNode node;
   final PortablePresentationScope scope;
+  final ResolvedFieldAssociation? fieldAssociation;
   final bool fillAvailableSpace;
 
   @override
@@ -65,6 +69,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
           child: PortablePresentationNodeRenderer(
             node: node,
             scope: scope,
+            fieldAssociation: fieldAssociation,
             fillAvailableSpace: fillAvailableSpace,
           ),
         ),
@@ -75,6 +80,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       return PortablePresentationNodeRenderer(
         node: node,
         scope: scope.withAuthoredLayout(node),
+        fieldAssociation: fieldAssociation,
         fillAvailableSpace: fillAvailableSpace,
       );
     }
@@ -82,9 +88,18 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       return _diagnostic(message);
     }
     final available = (enabled as _ResolvedValue<bool>).value;
-    final childScope = scope
+    var childScope = scope
         .withReadOnly(node.properties.readOnly)
         .withEnabled(available);
+    final control = node.boundControl;
+    childScope = childScope.copyWith(
+      associatedControl: control,
+      fieldAssociation:
+          fieldAssociation ??
+          (control == null
+              ? null
+              : ResolvedFieldAssociation.fromControl(control, childScope)),
+    );
     final element = node.element;
     if (element == null) {
       return _diagnostic("The presentation node has no element");
@@ -143,6 +158,10 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       fillAvailableSpace: fillAvailableSpace,
     ),
     skir.PresentationElement_slotWrapper(:final value) => _renderSlot(
+      value,
+      childScope,
+    ),
+    skir.PresentationElement_partWrapper(:final value) => _renderPart(
       value,
       childScope,
     ),

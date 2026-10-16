@@ -6462,6 +6462,7 @@ pub enum PresentationElement {
     PageTimeline(Box<PageTimelineElement>),
     Align(Box<AlignmentLayout>),
     AppearanceDefaults(Box<AppearanceDefaultsElement>),
+    Part(Box<PresentationPartElement>),
 }
 
 impl Default for PresentationElement {
@@ -6538,6 +6539,7 @@ impl PresentationElement {
                     PresentationElement::PageTimeline(_) => 58,
                     PresentationElement::Align(_) => 59,
                     PresentationElement::AppearanceDefaults(_) => 60,
+                    PresentationElement::Part(_) => 61,
                 },
                 |u| PresentationElement::Unknown(Some(u)),
                 |x: &PresentationElement| match x {
@@ -7292,6 +7294,7 @@ impl LinkRejectionDisplay {
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RemainingFieldsElement {
     pub excluded: Vec<crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern>,
+    pub excluded_parts: Vec<PresentationPartId>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RemainingFieldsElement>>,
 }
@@ -11013,6 +11016,92 @@ impl PresentationContextInput {
         initialize_module_serializers();
         crate::skir_client::internal::struct_serializer_from_static(
             PresentationContextInput::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct PresentationPartId
+// ==============================================================================
+
+/// An explicitly reusable inspector part, identified by its declaring contract.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationPartId {
+    pub owner: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
+    pub name: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationPartId>>,
+}
+
+impl PresentationPartId {
+    pub fn default_ref() -> &'static PresentationPartId {
+        static D: std::sync::LazyLock<PresentationPartId> =
+            std::sync::LazyLock::new(PresentationPartId::default);
+        &D
+    }
+}
+
+impl PresentationPartId {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationPartId> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationPartId>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationPartId",
+                "An explicitly reusable inspector part, identified by its declaring contract.",
+                |x: &PresentationPartId| &x._unrecognized,
+                |x: &mut PresentationPartId, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationPartId> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PresentationPartId::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationPartElement
+// ==============================================================================
+
+/// A body declares an atomic part. Without a body, this requests an inherited part.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationPartElement {
+    pub key: PresentationPartId,
+    pub body: Option<PresentationNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationPartElement>>,
+}
+
+impl PresentationPartElement {
+    pub fn default_ref() -> &'static PresentationPartElement {
+        static D: std::sync::LazyLock<PresentationPartElement> =
+            std::sync::LazyLock::new(PresentationPartElement::default);
+        &D
+    }
+}
+
+impl PresentationPartElement {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationPartElement> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationPartElement>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationPartElement",
+                "A body declares an atomic part. Without a body, this requests an inherited part.",
+                |x: &PresentationPartElement| &x._unrecognized,
+                |x: &mut PresentationPartElement, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationPartElement> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationPartElement::_adapter(),
         )
     }
 }
@@ -17484,6 +17573,20 @@ fn initialize_module_serializers() {
                     _ => unreachable!(),
                 },
             );
+            (*a).add_wrapper_variant(
+                "part",
+                61,
+                61,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationPartElement::_adapter(),
+                ),
+                "",
+                |v| PresentationElement::Part(Box::new(v)),
+                |x| match x {
+                    PresentationElement::Part(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
             (*a).finalize();
         }
         unsafe {
@@ -18070,6 +18173,18 @@ fn initialize_module_serializers() {
             let a: *mut crate::skir_client::internal::StructAdapter<RemainingFieldsElement> =
                 RemainingFieldsElement::_adapter() as *const _ as *mut _;
             (*a).add_field("excluded", 0, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern::serializer()), "", |x: &RemainingFieldsElement| &x.excluded, |x: &mut RemainingFieldsElement, v| x.excluded = v);
+            (*a).add_field(
+                "excluded_parts",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationPartId::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &RemainingFieldsElement| &x.excluded_parts,
+                |x: &mut RemainingFieldsElement, v| x.excluded_parts = v,
+            );
             (*a).finalize();
         }
         unsafe {
@@ -21102,6 +21217,54 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationContextInput| &x.value_type,
                 |x: &mut PresentationContextInput, v| x.value_type = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationPartId> =
+                PresentationPartId::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "owner",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
+                "",
+                |x: &PresentationPartId| &x.owner,
+                |x: &mut PresentationPartId, v| x.owner = v,
+            );
+            (*a).add_field(
+                "name",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &PresentationPartId| &x.name,
+                |x: &mut PresentationPartId, v| x.name = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationPartElement> =
+                PresentationPartElement::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "key",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PresentationPartId::_adapter(),
+                ),
+                "",
+                |x: &PresentationPartElement| &x.key,
+                |x: &mut PresentationPartElement, v| x.key = v,
+            );
+            (*a).add_field(
+                "body",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PresentationPartElement| &x.body,
+                |x: &mut PresentationPartElement, v| x.body = v,
             );
             (*a).finalize();
         }

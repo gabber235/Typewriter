@@ -16,6 +16,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases =
         const {},
     AuthoredPresentationIndex? authoredIndex,
+    AuthoredPresentationIndex? independentAuthoredIndex,
+    List<PortableAuthoredPart> authoredParts = const [],
+    PortableInspectorFrame? inspectorFrame,
+    Set<ActiveInspectorLayout> activeInspectorLayouts = const {},
+    Set<ActivePartPresentation> activeParts = const {},
     bool readOnly = false,
     bool enabled = true,
     Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -32,6 +37,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     skir.PresentationRole? role,
     skir.PresentationMaterial? material,
     Set<skir.PresentationId> activePresentations = const {},
+    Set<ActiveFieldPresentation> activeFieldPresentations = const {},
+    skir.BoundControl? associatedControl,
+    ResolvedFieldAssociation? fieldAssociation,
     Map<String, skir.PresentationNode> slots = const {},
     Map<String, PortableSlotBuilder> slotBuilders = const {},
     PortablePresentationHost? host,
@@ -44,6 +52,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     appearanceLayers: List.unmodifiable(appearanceLayers),
     authoredAliases: Map.unmodifiable(authoredAliases),
     authoredIndex: authoredIndex,
+    independentAuthoredIndex: independentAuthoredIndex,
+    authoredParts: List.unmodifiable(authoredParts),
+    inspectorFrame: inspectorFrame,
+    activeInspectorLayouts: Set.unmodifiable(activeInspectorLayouts),
+    activeParts: Set.unmodifiable(activeParts),
     readOnly: readOnly,
     enabled: enabled,
     watchSearch: watchSearch,
@@ -57,6 +70,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     role: role,
     material: material,
     activePresentations: Set.unmodifiable(activePresentations),
+    activeFieldPresentations: Set.unmodifiable(activeFieldPresentations),
+    associatedControl: associatedControl,
+    fieldAssociation: fieldAssociation,
     slots: Map.unmodifiable(slots),
     slotBuilders: Map.unmodifiable(slotBuilders),
     host: host,
@@ -71,6 +87,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required Map<skir.ExpressionBindingId, AuthoredBindingAddress>
     authoredAliases,
     required AuthoredPresentationIndex? authoredIndex,
+    required AuthoredPresentationIndex? independentAuthoredIndex,
+    required List<PortableAuthoredPart> authoredParts,
+    required PortableInspectorFrame? inspectorFrame,
+    required Set<ActiveInspectorLayout> activeInspectorLayouts,
+    required Set<ActivePartPresentation> activeParts,
     required bool readOnly,
     required bool enabled,
     required Stream<skir.RealmPresentationSearchUpdate> Function(
@@ -87,6 +108,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     required skir.PresentationRole? role,
     required skir.PresentationMaterial? material,
     required Set<skir.PresentationId> activePresentations,
+    required Set<ActiveFieldPresentation> activeFieldPresentations,
+    required skir.BoundControl? associatedControl,
+    required ResolvedFieldAssociation? fieldAssociation,
     required Map<String, skir.PresentationNode> slots,
     required Map<String, PortableSlotBuilder> slotBuilders,
     required PortablePresentationHost? host,
@@ -95,7 +119,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   }) = _PortablePresentationScope;
   const PortablePresentationScope._();
 
-  PortablePresentationScope withAuthoredLayout(skir.PresentationNode layout) {
+  PortablePresentationScope withAuthoredLayout(
+    skir.PresentationNode layout, {
+    bool startInspector = true,
+  }) {
     final aliases = {
       for (final entry in bindings.entries)
         entry.key: entry.value.location == null
@@ -103,24 +130,46 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
                   AuthoredBindingAddress.binding(entry.key, entry.value)
             : AuthoredBindingAddress.binding(entry.key, entry.value),
     };
-    return copyWith(
+    final additional = [
+      if (layout == material?.layout &&
+          material?.resultAppearance?.leading != null)
+        material!.resultAppearance!.leading!,
+    ];
+    final sources = {
+      for (final source
+          in material?.dependencies.collections ??
+              const <skir.PresentationCollectionDefinition>[])
+        source.sourceId: source,
+    };
+    final parts = <PortableAuthoredPart>[];
+    final independent = AuthoredPresentationIndex.build(
+      layout,
+      aliases,
+      additionalLayouts: additional,
+      sources: sources,
+      onPart: (node, part, lexicalAliases) {
+        parts.add(
+          PortableAuthoredPart(
+            nodeId: node.nodeId,
+            part: part,
+            owner: lexicalAliases[_configuredValueBindingId],
+          ),
+        );
+        return false;
+      },
+    );
+    final indexed = copyWith(
       authoredAliases: Map.unmodifiable(aliases),
+      independentAuthoredIndex: independent,
+      authoredParts: parts,
       authoredIndex: AuthoredPresentationIndex.build(
         layout,
         aliases,
-        additionalLayouts: [
-          if (layout == material?.layout &&
-              material?.resultAppearance?.leading != null)
-            material!.resultAppearance!.leading!,
-        ],
-        sources: {
-          for (final source
-              in material?.dependencies.collections ??
-                  const <skir.PresentationCollectionDefinition>[])
-            source.sourceId: source,
-        },
+        additionalLayouts: additional,
+        sources: sources,
       ),
     );
+    return startInspector ? indexed.startInspectorLayout() : indexed;
   }
 
   PortablePresentationScope withAppearance(skir.InputAppearance appearance) =>
@@ -607,13 +656,17 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   ) => copyWith(activePresentations: {...activePresentations, presentation});
 
   PortablePresentationScope withMaterial(skir.PresentationMaterial value) =>
-      copyWith(
-        material: value,
-        bindings: bindings.withContextImports(
-          catalog: queries?.catalog ?? catalog!,
-          imports: value.dependencies.contextInputs,
-        ),
-      ).withAuthoredLayout(value.layout);
+      withMaterialContext(value).withAuthoredLayout(value.layout);
+
+  PortablePresentationScope withMaterialContext(
+    skir.PresentationMaterial value,
+  ) => copyWith(
+    material: value,
+    bindings: bindings.withContextImports(
+      catalog: queries?.catalog ?? catalog!,
+      imports: value.dependencies.contextInputs,
+    ),
+  );
 
   /// Starts a resource presentation with its own subject and authored bindings.
   /// The caller's observation and declared context inputs remain shared.

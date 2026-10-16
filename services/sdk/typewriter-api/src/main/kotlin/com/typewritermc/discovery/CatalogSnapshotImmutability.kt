@@ -77,7 +77,8 @@ private fun PresentationDescriptor.immutableCopy(): PresentationDescriptor =
         roles = roles.immutableSetCopy(),
     )
 
-private fun PresentationMaterial.immutableCopy(): PresentationMaterial = copy(target = target.immutableCopy())
+private fun PresentationMaterial.immutableCopy(): PresentationMaterial =
+    copy(target = target.immutableCopy(), inheritableNodes = inheritableNodes.immutableListCopy())
 
 private fun PresentationTarget.immutableCopy(): PresentationTarget =
     when (this) {
