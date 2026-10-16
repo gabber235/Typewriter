@@ -9,6 +9,7 @@ import com.google.devtools.ksp.symbol.KSTypeArgument
 import com.google.devtools.ksp.symbol.KSTypeParameter
 import com.google.devtools.ksp.symbol.Nullability
 import com.typewritermc.types.EndpointId
+import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeTemplate
@@ -24,6 +25,38 @@ val KspTypeGraphConverterTest by testSuite {
 
         result.root shouldBe TypeUse.Scalar(ScalarKind.Text)
         result.definitions shouldBe emptyList()
+    }
+
+    test("synthetic nullable parent arguments retain explicit nullability only") {
+        fun verifyArgument(markedNullable: Boolean) {
+            val childParameter = mockk<KSTypeParameter>()
+            every { childParameter.name } returns name("T")
+            every { childParameter.bounds } returns emptySequence()
+            val parentParameter = mockk<KSTypeParameter>()
+            every { parentParameter.name } returns name("P")
+            every { parentParameter.bounds } returns emptySequence()
+            val parent = classDeclaration("example.Parent", listOf(parentParameter))
+            val child = classDeclaration("example.Child", listOf(childParameter))
+            val parameterType = type(childParameter, Nullability.NULLABLE, markedNullable = markedNullable)
+            every { child.superTypes } returns
+                sequenceOf(
+                    mockk {
+                        every { resolve() } returns type(parent, arguments = listOf(argument(parameterType)))
+                    },
+                )
+
+            val result = KspTypeGraphConverter().convertDeclaration(child) as KspTypeConversionResult.Success
+            val childDefinition = result.definitions.single { it.id == (result.root as TypeUse.Named).definition }
+            val parameter = TypeTemplate.Parameter(ParameterKey(childDefinition.id, 0))
+            childDefinition.parents
+                .single()
+                .arguments
+                .single() shouldBe
+                if (markedNullable) TypeTemplate.Nullable(parameter) else parameter
+        }
+
+        verifyArgument(markedNullable = true)
+        verifyArgument(markedNullable = false)
     }
 
     test("resource reference requires a generated endpoint") {
@@ -102,10 +135,12 @@ private fun type(
     declaration: KSDeclaration,
     nullability: Nullability = Nullability.NOT_NULL,
     arguments: List<KSTypeArgument> = emptyList(),
+    markedNullable: Boolean = nullability == Nullability.NULLABLE,
 ): KSType =
     mockk {
         every { this@mockk.declaration } returns declaration
         every { this@mockk.nullability } returns nullability
+        every { this@mockk.isMarkedNullable } returns markedNullable
         every { this@mockk.arguments } returns arguments
     }
 

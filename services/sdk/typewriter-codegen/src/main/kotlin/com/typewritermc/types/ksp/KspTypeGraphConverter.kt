@@ -432,7 +432,7 @@ private val KSType.displayName: String
     get() = declaration.qualifiedName?.asString() ?: declaration.simpleName.asString()
 
 private val com.google.devtools.ksp.symbol.KSTypeReference.explicitNullable: Boolean
-    get() = element?.toString()?.trim()?.endsWith("?") == true
+    get() = resolve().isMarkedNullable
 
 private val KSDeclaration.serialName: String?
     get() = annotation(SERIAL_NAME_ANNOTATION)?.argument("value") as? String

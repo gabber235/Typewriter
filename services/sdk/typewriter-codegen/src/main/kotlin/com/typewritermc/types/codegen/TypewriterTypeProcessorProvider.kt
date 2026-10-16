@@ -2163,7 +2163,7 @@ private fun KSType.sourceType(explicitParameterNullable: Boolean = false): Strin
 }
 
 private val com.google.devtools.ksp.symbol.KSTypeReference.explicitNullable: Boolean
-    get() = element?.toString()?.trim()?.endsWith("?") == true
+    get() = resolve().isMarkedNullable
 
 private fun KSType.generatedConfigurationScopeClass(): String {
     val qualified = declaration.qualifiedName?.asString() ?: return "com.typewritermc.configuration.RecordField"
