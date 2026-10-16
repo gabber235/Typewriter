@@ -14,3 +14,4 @@ export "src/app/resource_creation_fixture.dart";
 export "src/app/inherited_field_presentation_fixture.dart";
 
 export "src/app/inherited_inspector_layout_fixture.dart";
+export "src/app/collection_editor_fixture.dart";

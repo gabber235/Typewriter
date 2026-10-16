@@ -39,15 +39,17 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
         : PortablePresentationNodeRenderer(node: node, scope: nested);
   }
 
-  Widget _renderInvocation(
+  EditorSelection selectInvocation(
     skir.PresentationInvocation invocation,
-    PortablePresentationScope childScope,
+    PortablePresentationScope caller,
   ) {
-    final catalog = childScope.catalog;
+    final catalog = caller.catalog;
     if (catalog == null) {
-      return _diagnostic("The presentation catalog is unavailable");
+      return const EditorSelection.failed(
+        "The presentation catalog is unavailable",
+      );
     }
-    var nested = childScope;
+    var nested = caller;
     skir.TypeSelection? target;
     for (final argument in invocation.arguments) {
       final value = nested.read(argument.binding);
@@ -56,7 +58,9 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       }
       final rebound = nested.withBinding(argument.binding, argument.input);
       if (rebound == null) {
-        return _diagnostic("A presentation argument is unavailable");
+        return const EditorSelection.failed(
+          "A presentation argument is unavailable",
+        );
       }
       nested = rebound;
     }
@@ -67,27 +71,31 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       final actual? => skir.TypeSelection.wrapComplete(actual),
       null => null,
     };
-    final host = childScope.host;
-    final resource = childScope.resource;
+    final host = caller.host;
+    final resource = caller.resource;
     final projectionHost = switch (host) {
       final PortableCollectionProjectionHost value => value,
       _ => null,
     };
     if (projectionHost != null && resource != null) {
       target ??= projectionHost
-          .projectResource(resource, context: childScope.invocation)
+          .projectResource(resource, context: caller.invocation)
           ?.configuration;
     }
     final material = target == null
         ? null
         : catalog.presentationMaterial(invocation.presentationId, target);
     if (material == null) {
-      return _diagnostic("The invoked presentation is unavailable");
+      return const EditorSelection.failed(
+        "The invoked presentation is unavailable",
+      );
     }
     if (nested.activePresentations.contains(invocation.presentationId)) {
-      return _diagnostic("The invoked presentation is recursive");
+      return const EditorSelection.failed(
+        "The invoked presentation is recursive",
+      );
     }
-    return PortablePresentationNodeRenderer(
+    return EditorSelection.ready(
       node: material.layout,
       scope: nested
           .withActivePresentation(invocation.presentationId)
@@ -95,43 +103,43 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     );
   }
 
-  Widget _renderDefaultPresentation(
-    skir.DefaultPresentationElement element,
+  Widget _renderInvocation(
+    skir.PresentationInvocation invocation,
     PortablePresentationScope childScope,
+  ) => selectInvocation(invocation, childScope).render();
+
+  EditorSelection selectDefault(
+    skir.DefaultPresentationElement element,
+    PortablePresentationScope caller,
   ) {
     if (element.presentationId != null) {
-      return _renderTypeDefault(element, childScope);
+      return selectTypeDefault(element, caller);
     }
-    final owner = childScope.recordOwning(element.control.binding);
-    final checked = childScope.catalog;
+    final owner = caller.recordOwning(element.control.binding);
+    final checked = caller.catalog;
     if (owner != null && checked != null) {
       final selected = checked.fieldPresentation(
         owner.type,
         owner.field,
-        childScope.role ?? skir.PresentationRole.inspector,
+        caller.role ?? skir.PresentationRole.inspector,
       );
       switch (selected) {
         case SelectedEditorFieldPresentation():
-          return _renderInheritedField(
-            selected,
-            owner,
-            element.control,
-            childScope,
-          );
+          return selectInherited(selected, owner, element.control, caller);
         case ConflictingEditorFieldPresentation():
-          return _diagnostic(
+          return EditorSelection.failed(
             "Field ${owner.field} has conflicting presentations",
           );
         case InvalidEditorFieldPresentation(:final diagnostic):
-          return _diagnostic(diagnostic);
+          return EditorSelection.failed(diagnostic);
         case MissingEditorFieldPresentation():
           break;
       }
     }
-    return _renderTypeDefault(element, childScope, fallbackLabel: owner?.field);
+    return selectTypeDefault(element, caller, fallbackLabel: owner?.field);
   }
 
-  Widget _renderInheritedField(
+  EditorSelection selectInherited(
     SelectedEditorFieldPresentation selected,
     PortableRecordFieldOwner owner,
     skir.BoundControl request,
@@ -142,7 +150,7 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       owner: owner.address,
     );
     if (caller.activeFieldPresentations.contains(active)) {
-      return _diagnostic(
+      return EditorSelection.failed(
         "Field ${owner.field} presentation inheritance is recursive",
       );
     }
@@ -158,35 +166,36 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
           selected.node,
           includeRootPrefix: request.prefix == null,
         );
-    final association = _resolveFieldAssociation(
-      inherited: selected.node.boundControl!,
-      inheritedScope: nested,
-      local: request,
-      localScope: caller,
-      fallbackLabel: owner.field,
-    );
-    return PortablePresentationNodeRenderer(
+    return EditorSelection.ready(
       node: selected.node,
       scope: nested,
-      fieldAssociation: association,
+      fieldAssociation: _resolveFieldAssociation(
+        inherited: selected.node.boundControl!,
+        inheritedScope: nested,
+        local: request,
+        localScope: caller,
+        fallbackLabel: owner.field,
+      ),
     );
   }
 
-  Widget _renderTypeDefault(
+  EditorSelection selectTypeDefault(
     skir.DefaultPresentationElement element,
-    PortablePresentationScope childScope, {
+    PortablePresentationScope caller, {
     String? fallbackLabel,
   }) {
-    final association = childScope
+    final association = caller
         .associationFor(element.control)
         .withFallbackLabel(fallbackLabel);
-    final controlScope = childScope.copyWith(
+    final controlScope = caller.copyWith(
       associatedControl: element.control,
       fieldAssociation: association,
     );
     final nested = controlScope.withConfiguredValue(element.control.binding);
     if (nested == null) {
-      return _diagnostic("The default presentation binding is unavailable");
+      return const EditorSelection.failed(
+        "The default presentation binding is unavailable",
+      );
     }
     final selection = _selectionFor(element.control.binding, controlScope);
     final checked = controlScope.catalog;
@@ -203,41 +212,51 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
       if (material != null) {
         if (controlScope.activePresentations.contains(material.provider)) {
           if (element.presentationId != null) {
-            return _diagnostic("Presentation delegation is recursive");
+            return const EditorSelection.failed(
+              "Presentation delegation is recursive",
+            );
           }
         } else {
-          return _controlAssociation(
-            element.control,
-            controlScope,
-            PortablePresentationNodeRenderer(
-              node: material.layout,
-              scope: nested
-                  .withActivePresentation(material.provider)
-                  .withMaterial(material),
+          return EditorSelection.ready(
+            node: material.layout,
+            scope: nested
+                .withActivePresentation(material.provider)
+                .withMaterial(material),
+            guidance: ScopedEditorGuidance(
+              control: element.control,
+              scope: controlScope,
             ),
           );
         }
       }
     }
-    final expected = controlScope.expectedType(element.control.binding);
     final generated = _defaultElement(
-      expected ?? _typeUseForSelection(selection),
+      controlScope.expectedType(element.control.binding) ??
+          _typeUseForSelection(selection),
       element.control,
       controlScope,
     );
-    return generated == null
-        ? _diagnostic("No default presentation is available")
-        : PortablePresentationNodeRenderer(
-            node: skir.PresentationNode(
-              nodeId: "${node.nodeId}.default",
-              properties: skir.PresentationProperties.defaultInstance,
-              element: generated,
-              header: null,
-            ),
-            scope: controlScope,
-            fieldAssociation: association,
-          );
+    if (generated == null) {
+      return const EditorSelection.failed(
+        "No default presentation is available",
+      );
+    }
+    return EditorSelection.ready(
+      node: skir.PresentationNode(
+        nodeId: "${node.nodeId}.default",
+        properties: skir.PresentationProperties.defaultInstance,
+        element: generated,
+        header: null,
+      ),
+      scope: controlScope,
+      fieldAssociation: association,
+    );
   }
+
+  Widget _renderDefaultPresentation(
+    skir.DefaultPresentationElement element,
+    PortablePresentationScope childScope,
+  ) => selectDefault(element, childScope).render();
 
   Widget _renderRemainingFields(
     BuildContext context,

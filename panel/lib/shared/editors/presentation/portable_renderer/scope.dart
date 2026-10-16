@@ -269,10 +269,13 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         ),
       );
     }
-    if (document.bindings.containsKey(reference.bindingId)) {
+    final local = bindings[reference.bindingId]?.location;
+    final documentBinding = document.bindings[reference.bindingId];
+    // A selected presentation can reuse a document binding ID for a nested
+    // value. Only an unchanged source location makes the lexical path global.
+    if (documentBinding != null && local == documentBinding.location) {
       return reference;
     }
-    final local = bindings[reference.bindingId]?.location;
     if (local == null) return null;
     final targetSegments = [...local.path.segments, ...reference.path.segments];
     MapEntry<skir.ExpressionBindingId, PortablePresentationBinding>? owner;

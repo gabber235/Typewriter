@@ -1,13 +1,17 @@
 part of "../portable_presentation_renderer.dart";
 
 extension _PortableScopeActions on PortablePresentationScope {
-  Future<void> executeAction(skir.EditorAction editorAction) async {
+  Future<void> executeAction(
+    skir.EditorAction editorAction, {
+    VoidCallback? onApplied,
+  }) async {
     final target = host;
     if (!canExecuteActionFor(editorAction) || target == null) return;
     final context = invocation;
     final source = sourceAction(editorAction);
     await operations.run(
       key: PortableOperationKey.execute(source),
+      onApplied: onApplied,
       operation: () async {
         if (editorAction
             case skir.EditorAction_localWrapper(
@@ -49,22 +53,6 @@ extension _PortableScopeActions on PortablePresentationScope {
           item: item,
           after: after,
         ),
-      ),
-    ),
-  );
-
-  void removeListItem(skir.BindingRef target, skir.ItemId item) => unawaited(
-    executeAction(
-      skir.EditorAction.wrapLocal(
-        skir.LocalEditorAction.createRemoveListItem(target: target, item: item),
-      ),
-    ),
-  );
-
-  void removeMapRow(skir.BindingRef target, skir.ItemId row) => unawaited(
-    executeAction(
-      skir.EditorAction.wrapLocal(
-        skir.LocalEditorAction.createRemoveMapRow(target: target, row: row),
       ),
     ),
   );

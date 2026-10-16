@@ -997,6 +997,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'PortablePresentationRenderer',
                 useCases: [
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Collections',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories
+                            .collectionPresentationUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Compiled SDK Placement',
                     builder:
                         _widgetbook_workspace_stories_shared_editors_presentation_compiled_sdk_controls_stories

@@ -13,6 +13,3426 @@ part of 'portable_presentation_renderer.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$EditorSelection {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorSelection);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'EditorSelection()';
+}
+
+
+}
+
+/// @nodoc
+class $EditorSelectionCopyWith<$Res>  {
+$EditorSelectionCopyWith(EditorSelection _, $Res Function(EditorSelection) __);
+}
+
+
+/// Adds pattern matching related methods to [EditorSelection].
+extension EditorSelectionPatterns on EditorSelection {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( ReadyEditorSelection value)?  ready,TResult Function( FailedEditorSelection value)?  failed,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case ReadyEditorSelection() when ready != null:
+return ready(_that);case FailedEditorSelection() when failed != null:
+return failed(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( ReadyEditorSelection value)  ready,required TResult Function( FailedEditorSelection value)  failed,}){
+final _that = this;
+switch (_that) {
+case ReadyEditorSelection():
+return ready(_that);case FailedEditorSelection():
+return failed(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( ReadyEditorSelection value)?  ready,TResult? Function( FailedEditorSelection value)?  failed,}){
+final _that = this;
+switch (_that) {
+case ReadyEditorSelection() when ready != null:
+return ready(_that);case FailedEditorSelection() when failed != null:
+return failed(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.PresentationNode node,  PortablePresentationScope scope,  ResolvedFieldAssociation? fieldAssociation,  ScopedEditorGuidance? guidance)?  ready,TResult Function( String message)?  failed,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case ReadyEditorSelection() when ready != null:
+return ready(_that.node,_that.scope,_that.fieldAssociation,_that.guidance);case FailedEditorSelection() when failed != null:
+return failed(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.PresentationNode node,  PortablePresentationScope scope,  ResolvedFieldAssociation? fieldAssociation,  ScopedEditorGuidance? guidance)  ready,required TResult Function( String message)  failed,}) {final _that = this;
+switch (_that) {
+case ReadyEditorSelection():
+return ready(_that.node,_that.scope,_that.fieldAssociation,_that.guidance);case FailedEditorSelection():
+return failed(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.PresentationNode node,  PortablePresentationScope scope,  ResolvedFieldAssociation? fieldAssociation,  ScopedEditorGuidance? guidance)?  ready,TResult? Function( String message)?  failed,}) {final _that = this;
+switch (_that) {
+case ReadyEditorSelection() when ready != null:
+return ready(_that.node,_that.scope,_that.fieldAssociation,_that.guidance);case FailedEditorSelection() when failed != null:
+return failed(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class ReadyEditorSelection implements EditorSelection {
+  const ReadyEditorSelection({required this.node, required this.scope, this.fieldAssociation, this.guidance});
+
+
+ final  skir.PresentationNode node;
+ final  PortablePresentationScope scope;
+ final  ResolvedFieldAssociation? fieldAssociation;
+ final  ScopedEditorGuidance? guidance;
+
+/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReadyEditorSelectionCopyWith<ReadyEditorSelection> get copyWith => _$ReadyEditorSelectionCopyWithImpl<ReadyEditorSelection>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ReadyEditorSelection&&(identical(other.node, node) || other.node == node)&&(identical(other.scope, scope) || other.scope == scope)&&(identical(other.fieldAssociation, fieldAssociation) || other.fieldAssociation == fieldAssociation)&&(identical(other.guidance, guidance) || other.guidance == guidance));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,node,scope,fieldAssociation,guidance);
+}
+
+@override
+String toString() {
+    return 'EditorSelection.ready(node: $node, scope: $scope, fieldAssociation: $fieldAssociation, guidance: $guidance)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReadyEditorSelectionCopyWith<$Res> implements $EditorSelectionCopyWith<$Res> {
+  factory $ReadyEditorSelectionCopyWith(ReadyEditorSelection value, $Res Function(ReadyEditorSelection) _then) = _$ReadyEditorSelectionCopyWithImpl;
+@useResult
+$Res call({
+ skir.PresentationNode node, PortablePresentationScope scope, ResolvedFieldAssociation? fieldAssociation, ScopedEditorGuidance? guidance
+});
+
+
+$PortablePresentationScopeCopyWith<$Res> get scope;$ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation;$ScopedEditorGuidanceCopyWith<$Res>? get guidance;
+
+}
+/// @nodoc
+class _$ReadyEditorSelectionCopyWithImpl<$Res>
+    implements $ReadyEditorSelectionCopyWith<$Res> {
+  _$ReadyEditorSelectionCopyWithImpl(this._self, this._then);
+
+  final ReadyEditorSelection _self;
+  final $Res Function(ReadyEditorSelection) _then;
+
+/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? node = null,Object? scope = null,Object? fieldAssociation = freezed,Object? guidance = freezed,}) {
+  return _then(ReadyEditorSelection(
+node: null == node ? _self.node : node // ignore: cast_nullable_to_non_nullable
+as skir.PresentationNode,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,fieldAssociation: freezed == fieldAssociation ? _self.fieldAssociation : fieldAssociation // ignore: cast_nullable_to_non_nullable
+as ResolvedFieldAssociation?,guidance: freezed == guidance ? _self.guidance : guidance // ignore: cast_nullable_to_non_nullable
+as ScopedEditorGuidance?,
+  ));
+}
+
+/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
+    if (_self.fieldAssociation == null) {
+    return null;
+  }
+
+  return $ResolvedFieldAssociationCopyWith<$Res>(_self.fieldAssociation!, (value) {
+    return _then(_self.copyWith(fieldAssociation: value));
+  });
+}/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ScopedEditorGuidanceCopyWith<$Res>? get guidance {
+    if (_self.guidance == null) {
+    return null;
+  }
+
+  return $ScopedEditorGuidanceCopyWith<$Res>(_self.guidance!, (value) {
+    return _then(_self.copyWith(guidance: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class FailedEditorSelection implements EditorSelection {
+  const FailedEditorSelection(this.message);
+
+
+ final  String message;
+
+/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$FailedEditorSelectionCopyWith<FailedEditorSelection> get copyWith => _$FailedEditorSelectionCopyWithImpl<FailedEditorSelection>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is FailedEditorSelection&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'EditorSelection.failed(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $FailedEditorSelectionCopyWith<$Res> implements $EditorSelectionCopyWith<$Res> {
+  factory $FailedEditorSelectionCopyWith(FailedEditorSelection value, $Res Function(FailedEditorSelection) _then) = _$FailedEditorSelectionCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$FailedEditorSelectionCopyWithImpl<$Res>
+    implements $FailedEditorSelectionCopyWith<$Res> {
+  _$FailedEditorSelectionCopyWithImpl(this._self, this._then);
+
+  final FailedEditorSelection _self;
+  final $Res Function(FailedEditorSelection) _then;
+
+/// Create a copy of EditorSelection
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(FailedEditorSelection(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$ScopedEditorGuidance {
+
+ skir.BoundControl get control; PortablePresentationScope get scope;
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ScopedEditorGuidanceCopyWith<ScopedEditorGuidance> get copyWith => _$ScopedEditorGuidanceCopyWithImpl<ScopedEditorGuidance>(this as ScopedEditorGuidance, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ScopedEditorGuidance;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScopedEditorGuidance&&(identical(other.control, _this.control) || other.control == _this.control)&&(identical(other.scope, _this.scope) || other.scope == _this.scope));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as ScopedEditorGuidance;
+  return Object.hash(runtimeType,_this.control,_this.scope);
+}
+
+@override
+String toString() {
+  final _this = this as ScopedEditorGuidance;
+  return 'ScopedEditorGuidance(control: ${_this.control}, scope: ${_this.scope})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ScopedEditorGuidanceCopyWith<$Res>  {
+  factory $ScopedEditorGuidanceCopyWith(ScopedEditorGuidance value, $Res Function(ScopedEditorGuidance) _then) = _$ScopedEditorGuidanceCopyWithImpl;
+@useResult
+$Res call({
+ skir.BoundControl control, PortablePresentationScope scope
+});
+
+
+$PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class _$ScopedEditorGuidanceCopyWithImpl<$Res>
+    implements $ScopedEditorGuidanceCopyWith<$Res> {
+  _$ScopedEditorGuidanceCopyWithImpl(this._self, this._then);
+
+  final ScopedEditorGuidance _self;
+  final $Res Function(ScopedEditorGuidance) _then;
+
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? control = null,Object? scope = null,}) {
+  return _then(ScopedEditorGuidance(
+control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
+as skir.BoundControl,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,
+  ));
+}
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [ScopedEditorGuidance].
+extension ScopedEditorGuidancePatterns on ScopedEditorGuidance {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ScopedEditorGuidance value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ScopedEditorGuidance value)  $default,){
+final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ScopedEditorGuidance value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.BoundControl control,  PortablePresentationScope scope)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance() when $default != null:
+return $default(_that.control,_that.scope);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.BoundControl control,  PortablePresentationScope scope)  $default,) {final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance():
+return $default(_that.control,_that.scope);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.BoundControl control,  PortablePresentationScope scope)?  $default,) {final _that = this;
+switch (_that) {
+case _ScopedEditorGuidance() when $default != null:
+return $default(_that.control,_that.scope);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ScopedEditorGuidance extends ScopedEditorGuidance {
+  const _ScopedEditorGuidance({required this.control, required this.scope}): super._();
+
+
+@override final  skir.BoundControl control;
+@override final  PortablePresentationScope scope;
+
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ScopedEditorGuidanceCopyWith<_ScopedEditorGuidance> get copyWith => __$ScopedEditorGuidanceCopyWithImpl<_ScopedEditorGuidance>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScopedEditorGuidance&&(identical(other.control, control) || other.control == control)&&(identical(other.scope, scope) || other.scope == scope));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,control,scope);
+}
+
+@override
+String toString() {
+    return 'ScopedEditorGuidance(control: $control, scope: $scope)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ScopedEditorGuidanceCopyWith<$Res> implements $ScopedEditorGuidanceCopyWith<$Res> {
+  factory _$ScopedEditorGuidanceCopyWith(_ScopedEditorGuidance value, $Res Function(_ScopedEditorGuidance) _then) = __$ScopedEditorGuidanceCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.BoundControl control, PortablePresentationScope scope
+});
+
+
+@override $PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$ScopedEditorGuidanceCopyWithImpl<$Res>
+    implements _$ScopedEditorGuidanceCopyWith<$Res> {
+  __$ScopedEditorGuidanceCopyWithImpl(this._self, this._then);
+
+  final _ScopedEditorGuidance _self;
+  final $Res Function(_ScopedEditorGuidance) _then;
+
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? control = null,Object? scope = null,}) {
+  return _then(_ScopedEditorGuidance(
+control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
+as skir.BoundControl,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,
+  ));
+}
+
+/// Create a copy of ScopedEditorGuidance
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$ScopedCollectionHeader {
+
+ PortablePresentationScope get scope; skir.PresentationHeader? get header; List<_SuppliedHeaderControl> get controls;
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ScopedCollectionHeaderCopyWith<_ScopedCollectionHeader> get copyWith => __$ScopedCollectionHeaderCopyWithImpl<_ScopedCollectionHeader>(this as _ScopedCollectionHeader, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _ScopedCollectionHeader;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScopedCollectionHeader&&(identical(other.scope, _this.scope) || other.scope == _this.scope)&&(identical(other.header, _this.header) || other.header == _this.header)&&const DeepCollectionEquality().equals(other.controls, _this.controls));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _ScopedCollectionHeader;
+  return Object.hash(runtimeType,_this.scope,_this.header,const DeepCollectionEquality().hash(_this.controls));
+}
+
+@override
+String toString() {
+  final _this = this as _ScopedCollectionHeader;
+  return '_ScopedCollectionHeader(scope: ${_this.scope}, header: ${_this.header}, controls: ${_this.controls})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ScopedCollectionHeaderCopyWith<$Res>  {
+  factory _$ScopedCollectionHeaderCopyWith(_ScopedCollectionHeader value, $Res Function(_ScopedCollectionHeader) _then) = __$ScopedCollectionHeaderCopyWithImpl;
+@useResult
+$Res call({
+ PortablePresentationScope scope, skir.PresentationHeader? header, List<_SuppliedHeaderControl> controls
+});
+
+
+$PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$ScopedCollectionHeaderCopyWithImpl<$Res>
+    implements _$ScopedCollectionHeaderCopyWith<$Res> {
+  __$ScopedCollectionHeaderCopyWithImpl(this._self, this._then);
+
+  final _ScopedCollectionHeader _self;
+  final $Res Function(_ScopedCollectionHeader) _then;
+
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scope = null,Object? header = freezed,Object? controls = null,}) {
+  return _then(_ScopedCollectionHeader(
+scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,header: freezed == header ? _self.header : header // ignore: cast_nullable_to_non_nullable
+as skir.PresentationHeader?,controls: null == controls ? _self.controls : controls // ignore: cast_nullable_to_non_nullable
+as List<_SuppliedHeaderControl>,
+  ));
+}
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_ScopedCollectionHeader].
+extension _ScopedCollectionHeaderPatterns on _ScopedCollectionHeader {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __ScopedCollectionHeader value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __ScopedCollectionHeader value)  $default,){
+final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __ScopedCollectionHeader value)?  $default,){
+final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationScope scope,  skir.PresentationHeader? header,  List<_SuppliedHeaderControl> controls)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader() when $default != null:
+return $default(_that.scope,_that.header,_that.controls);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationScope scope,  skir.PresentationHeader? header,  List<_SuppliedHeaderControl> controls)  $default,) {final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader():
+return $default(_that.scope,_that.header,_that.controls);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationScope scope,  skir.PresentationHeader? header,  List<_SuppliedHeaderControl> controls)?  $default,) {final _that = this;
+switch (_that) {
+case __ScopedCollectionHeader() when $default != null:
+return $default(_that.scope,_that.header,_that.controls);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __ScopedCollectionHeader implements _ScopedCollectionHeader {
+  const __ScopedCollectionHeader({required this.scope, this.header,  List<_SuppliedHeaderControl> controls = const []}): _controls = controls;
+
+
+@override final  PortablePresentationScope scope;
+@override final  skir.PresentationHeader? header;
+ final  List<_SuppliedHeaderControl> _controls;
+@override@JsonKey() List<_SuppliedHeaderControl> get controls {
+  if (_controls is EqualUnmodifiableListView) return _controls;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_controls);
+}
+
+
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_ScopedCollectionHeaderCopyWith<__ScopedCollectionHeader> get copyWith => __$_ScopedCollectionHeaderCopyWithImpl<__ScopedCollectionHeader>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __ScopedCollectionHeader&&(identical(other.scope, scope) || other.scope == scope)&&(identical(other.header, header) || other.header == header)&&const DeepCollectionEquality().equals(other.controls, _controls));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,scope,header,const DeepCollectionEquality().hash(_controls));
+}
+
+@override
+String toString() {
+    return '_ScopedCollectionHeader(scope: $scope, header: $header, controls: $controls)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_ScopedCollectionHeaderCopyWith<$Res> implements _$ScopedCollectionHeaderCopyWith<$Res> {
+  factory _$_ScopedCollectionHeaderCopyWith(__ScopedCollectionHeader value, $Res Function(__ScopedCollectionHeader) _then) = __$_ScopedCollectionHeaderCopyWithImpl;
+@override @useResult
+$Res call({
+ PortablePresentationScope scope, skir.PresentationHeader? header, List<_SuppliedHeaderControl> controls
+});
+
+
+@override $PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$_ScopedCollectionHeaderCopyWithImpl<$Res>
+    implements _$_ScopedCollectionHeaderCopyWith<$Res> {
+  __$_ScopedCollectionHeaderCopyWithImpl(this._self, this._then);
+
+  final __ScopedCollectionHeader _self;
+  final $Res Function(__ScopedCollectionHeader) _then;
+
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scope = null,Object? header = freezed,Object? controls = null,}) {
+  return _then(__ScopedCollectionHeader(
+scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,header: freezed == header ? _self.header : header // ignore: cast_nullable_to_non_nullable
+as skir.PresentationHeader?,controls: null == controls ? _self._controls : controls // ignore: cast_nullable_to_non_nullable
+as List<_SuppliedHeaderControl>,
+  ));
+}
+
+/// Create a copy of _ScopedCollectionHeader
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$CollectionEditorContinuation {
+
+ AuthoredBindingAddress get owner; PortablePresentationScope get scope; CollectionEntryLayout get layout; Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) get render; Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? get renderIntrinsicBody;
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionEditorContinuationCopyWith<_CollectionEditorContinuation> get copyWith => __$CollectionEditorContinuationCopyWithImpl<_CollectionEditorContinuation>(this as _CollectionEditorContinuation, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _CollectionEditorContinuation;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionEditorContinuation&&(identical(other.owner, _this.owner) || other.owner == _this.owner)&&(identical(other.scope, _this.scope) || other.scope == _this.scope)&&(identical(other.layout, _this.layout) || other.layout == _this.layout)&&(identical(other.render, _this.render) || other.render == _this.render)&&(identical(other.renderIntrinsicBody, _this.renderIntrinsicBody) || other.renderIntrinsicBody == _this.renderIntrinsicBody));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _CollectionEditorContinuation;
+  return Object.hash(runtimeType,_this.owner,_this.scope,_this.layout,_this.render,_this.renderIntrinsicBody);
+}
+
+@override
+String toString() {
+  final _this = this as _CollectionEditorContinuation;
+  return '_CollectionEditorContinuation(owner: ${_this.owner}, scope: ${_this.scope}, layout: ${_this.layout}, render: ${_this.render}, renderIntrinsicBody: ${_this.renderIntrinsicBody})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionEditorContinuationCopyWith<$Res>  {
+  factory _$CollectionEditorContinuationCopyWith(_CollectionEditorContinuation value, $Res Function(_CollectionEditorContinuation) _then) = __$CollectionEditorContinuationCopyWithImpl;
+@useResult
+$Res call({
+ AuthoredBindingAddress owner, PortablePresentationScope scope, CollectionEntryLayout layout, Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render, Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody
+});
+
+
+$AuthoredBindingAddressCopyWith<$Res> get owner;$PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$CollectionEditorContinuationCopyWithImpl<$Res>
+    implements _$CollectionEditorContinuationCopyWith<$Res> {
+  __$CollectionEditorContinuationCopyWithImpl(this._self, this._then);
+
+  final _CollectionEditorContinuation _self;
+  final $Res Function(_CollectionEditorContinuation) _then;
+
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? owner = null,Object? scope = null,Object? layout = null,Object? render = null,Object? renderIntrinsicBody = freezed,}) {
+  return _then(_CollectionEditorContinuation(
+owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as AuthoredBindingAddress,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,layout: null == layout ? _self.layout : layout // ignore: cast_nullable_to_non_nullable
+as CollectionEntryLayout,render: null == render ? _self.render : render // ignore: cast_nullable_to_non_nullable
+as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?),renderIntrinsicBody: freezed == renderIntrinsicBody ? _self.renderIntrinsicBody : renderIntrinsicBody // ignore: cast_nullable_to_non_nullable
+as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))?,
+  ));
+}
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoredBindingAddressCopyWith<$Res> get owner {
+
+  return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
+    return _then(_self.copyWith(owner: value));
+  });
+}/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_CollectionEditorContinuation].
+extension _CollectionEditorContinuationPatterns on _CollectionEditorContinuation {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __CollectionEditorContinuation value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __CollectionEditorContinuation value)  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __CollectionEditorContinuation value)?  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthoredBindingAddress owner,  PortablePresentationScope scope,  CollectionEntryLayout layout,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation() when $default != null:
+return $default(_that.owner,_that.scope,_that.layout,_that.render,_that.renderIntrinsicBody);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthoredBindingAddress owner,  PortablePresentationScope scope,  CollectionEntryLayout layout,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody)  $default,) {final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation():
+return $default(_that.owner,_that.scope,_that.layout,_that.render,_that.renderIntrinsicBody);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthoredBindingAddress owner,  PortablePresentationScope scope,  CollectionEntryLayout layout,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render,  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody)?  $default,) {final _that = this;
+switch (_that) {
+case __CollectionEditorContinuation() when $default != null:
+return $default(_that.owner,_that.scope,_that.layout,_that.render,_that.renderIntrinsicBody);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __CollectionEditorContinuation extends _CollectionEditorContinuation {
+  const __CollectionEditorContinuation({required this.owner, required this.scope, required this.layout, required this.render, this.renderIntrinsicBody}): super._();
+
+
+@override final  AuthoredBindingAddress owner;
+@override final  PortablePresentationScope scope;
+@override final  CollectionEntryLayout layout;
+@override final  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render;
+@override final  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody;
+
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_CollectionEditorContinuationCopyWith<__CollectionEditorContinuation> get copyWith => __$_CollectionEditorContinuationCopyWithImpl<__CollectionEditorContinuation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __CollectionEditorContinuation&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.scope, scope) || other.scope == scope)&&(identical(other.layout, layout) || other.layout == layout)&&(identical(other.render, render) || other.render == render)&&(identical(other.renderIntrinsicBody, renderIntrinsicBody) || other.renderIntrinsicBody == renderIntrinsicBody));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,owner,scope,layout,render,renderIntrinsicBody);
+}
+
+@override
+String toString() {
+    return '_CollectionEditorContinuation(owner: $owner, scope: $scope, layout: $layout, render: $render, renderIntrinsicBody: $renderIntrinsicBody)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_CollectionEditorContinuationCopyWith<$Res> implements _$CollectionEditorContinuationCopyWith<$Res> {
+  factory _$_CollectionEditorContinuationCopyWith(__CollectionEditorContinuation value, $Res Function(__CollectionEditorContinuation) _then) = __$_CollectionEditorContinuationCopyWithImpl;
+@override @useResult
+$Res call({
+ AuthoredBindingAddress owner, PortablePresentationScope scope, CollectionEntryLayout layout, Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) render, Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody
+});
+
+
+@override $AuthoredBindingAddressCopyWith<$Res> get owner;@override $PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$_CollectionEditorContinuationCopyWithImpl<$Res>
+    implements _$_CollectionEditorContinuationCopyWith<$Res> {
+  __$_CollectionEditorContinuationCopyWithImpl(this._self, this._then);
+
+  final __CollectionEditorContinuation _self;
+  final $Res Function(__CollectionEditorContinuation) _then;
+
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? owner = null,Object? scope = null,Object? layout = null,Object? render = null,Object? renderIntrinsicBody = freezed,}) {
+  return _then(__CollectionEditorContinuation(
+owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as AuthoredBindingAddress,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,layout: null == layout ? _self.layout : layout // ignore: cast_nullable_to_non_nullable
+as CollectionEntryLayout,render: null == render ? _self.render : render // ignore: cast_nullable_to_non_nullable
+as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?),renderIntrinsicBody: freezed == renderIntrinsicBody ? _self.renderIntrinsicBody : renderIntrinsicBody // ignore: cast_nullable_to_non_nullable
+as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))?,
+  ));
+}
+
+/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoredBindingAddressCopyWith<$Res> get owner {
+
+  return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
+    return _then(_self.copyWith(owner: value));
+  });
+}/// Create a copy of _CollectionEditorContinuation
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$PreparedNode {
+
+ PortablePresentationScope get scope; bool get available;
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PreparedNodeCopyWith<PreparedNode> get copyWith => _$PreparedNodeCopyWithImpl<PreparedNode>(this as PreparedNode, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PreparedNode;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PreparedNode&&(identical(other.scope, _this.scope) || other.scope == _this.scope)&&(identical(other.available, _this.available) || other.available == _this.available));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PreparedNode;
+  return Object.hash(runtimeType,_this.scope,_this.available);
+}
+
+@override
+String toString() {
+  final _this = this as PreparedNode;
+  return 'PreparedNode(scope: ${_this.scope}, available: ${_this.available})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PreparedNodeCopyWith<$Res>  {
+  factory $PreparedNodeCopyWith(PreparedNode value, $Res Function(PreparedNode) _then) = _$PreparedNodeCopyWithImpl;
+@useResult
+$Res call({
+ PortablePresentationScope scope, bool available
+});
+
+
+$PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class _$PreparedNodeCopyWithImpl<$Res>
+    implements $PreparedNodeCopyWith<$Res> {
+  _$PreparedNodeCopyWithImpl(this._self, this._then);
+
+  final PreparedNode _self;
+  final $Res Function(PreparedNode) _then;
+
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? scope = null,Object? available = null,}) {
+  return _then(PreparedNode(
+scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [PreparedNode].
+extension PreparedNodePatterns on PreparedNode {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PreparedNode value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PreparedNode() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PreparedNode value)  $default,){
+final _that = this;
+switch (_that) {
+case _PreparedNode():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PreparedNode value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PreparedNode() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationScope scope,  bool available)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PreparedNode() when $default != null:
+return $default(_that.scope,_that.available);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationScope scope,  bool available)  $default,) {final _that = this;
+switch (_that) {
+case _PreparedNode():
+return $default(_that.scope,_that.available);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationScope scope,  bool available)?  $default,) {final _that = this;
+switch (_that) {
+case _PreparedNode() when $default != null:
+return $default(_that.scope,_that.available);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PreparedNode implements PreparedNode {
+  const _PreparedNode({required this.scope, required this.available});
+
+
+@override final  PortablePresentationScope scope;
+@override final  bool available;
+
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PreparedNodeCopyWith<_PreparedNode> get copyWith => __$PreparedNodeCopyWithImpl<_PreparedNode>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreparedNode&&(identical(other.scope, scope) || other.scope == scope)&&(identical(other.available, available) || other.available == available));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,scope,available);
+}
+
+@override
+String toString() {
+    return 'PreparedNode(scope: $scope, available: $available)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PreparedNodeCopyWith<$Res> implements $PreparedNodeCopyWith<$Res> {
+  factory _$PreparedNodeCopyWith(_PreparedNode value, $Res Function(_PreparedNode) _then) = __$PreparedNodeCopyWithImpl;
+@override @useResult
+$Res call({
+ PortablePresentationScope scope, bool available
+});
+
+
+@override $PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$PreparedNodeCopyWithImpl<$Res>
+    implements _$PreparedNodeCopyWith<$Res> {
+  __$PreparedNodeCopyWithImpl(this._self, this._then);
+
+  final _PreparedNode _self;
+  final $Res Function(_PreparedNode) _then;
+
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? scope = null,Object? available = null,}) {
+  return _then(_PreparedNode(
+scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,available: null == available ? _self.available : available // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+/// Create a copy of PreparedNode
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$CollectionCommand {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionCommand);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return '_CollectionCommand()';
+}
+
+
+}
+
+/// @nodoc
+class _$CollectionCommandCopyWith<$Res>  {
+_$CollectionCommandCopyWith(_CollectionCommand _, $Res Function(_CollectionCommand) __);
+}
+
+
+/// Adds pattern matching related methods to [_CollectionCommand].
+extension _CollectionCommandPatterns on _CollectionCommand {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _RemoveListCommand value)?  removeList,TResult Function( _RemoveMapCommand value)?  removeMap,TResult Function( _ReorderCommand value)?  reorder,TResult Function( _DisconnectCommand value)?  disconnect,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _RemoveListCommand() when removeList != null:
+return removeList(_that);case _RemoveMapCommand() when removeMap != null:
+return removeMap(_that);case _ReorderCommand() when reorder != null:
+return reorder(_that);case _DisconnectCommand() when disconnect != null:
+return disconnect(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _RemoveListCommand value)  removeList,required TResult Function( _RemoveMapCommand value)  removeMap,required TResult Function( _ReorderCommand value)  reorder,required TResult Function( _DisconnectCommand value)  disconnect,}){
+final _that = this;
+switch (_that) {
+case _RemoveListCommand():
+return removeList(_that);case _RemoveMapCommand():
+return removeMap(_that);case _ReorderCommand():
+return reorder(_that);case _DisconnectCommand():
+return disconnect(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _RemoveListCommand value)?  removeList,TResult? Function( _RemoveMapCommand value)?  removeMap,TResult? Function( _ReorderCommand value)?  reorder,TResult? Function( _DisconnectCommand value)?  disconnect,}){
+final _that = this;
+switch (_that) {
+case _RemoveListCommand() when removeList != null:
+return removeList(_that);case _RemoveMapCommand() when removeMap != null:
+return removeMap(_that);case _ReorderCommand() when reorder != null:
+return reorder(_that);case _DisconnectCommand() when disconnect != null:
+return disconnect(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( PortableDiagnosticTarget target,  skir.ItemId item)?  removeList,TResult Function( PortableDiagnosticTarget target,  skir.ItemId row)?  removeMap,TResult Function( PortableDiagnosticTarget item)?  reorder,TResult Function( skir.LinkOccurrence occurrence)?  disconnect,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _RemoveListCommand() when removeList != null:
+return removeList(_that.target,_that.item);case _RemoveMapCommand() when removeMap != null:
+return removeMap(_that.target,_that.row);case _ReorderCommand() when reorder != null:
+return reorder(_that.item);case _DisconnectCommand() when disconnect != null:
+return disconnect(_that.occurrence);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( PortableDiagnosticTarget target,  skir.ItemId item)  removeList,required TResult Function( PortableDiagnosticTarget target,  skir.ItemId row)  removeMap,required TResult Function( PortableDiagnosticTarget item)  reorder,required TResult Function( skir.LinkOccurrence occurrence)  disconnect,}) {final _that = this;
+switch (_that) {
+case _RemoveListCommand():
+return removeList(_that.target,_that.item);case _RemoveMapCommand():
+return removeMap(_that.target,_that.row);case _ReorderCommand():
+return reorder(_that.item);case _DisconnectCommand():
+return disconnect(_that.occurrence);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( PortableDiagnosticTarget target,  skir.ItemId item)?  removeList,TResult? Function( PortableDiagnosticTarget target,  skir.ItemId row)?  removeMap,TResult? Function( PortableDiagnosticTarget item)?  reorder,TResult? Function( skir.LinkOccurrence occurrence)?  disconnect,}) {final _that = this;
+switch (_that) {
+case _RemoveListCommand() when removeList != null:
+return removeList(_that.target,_that.item);case _RemoveMapCommand() when removeMap != null:
+return removeMap(_that.target,_that.row);case _ReorderCommand() when reorder != null:
+return reorder(_that.item);case _DisconnectCommand() when disconnect != null:
+return disconnect(_that.occurrence);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _RemoveListCommand implements _CollectionCommand {
+  const _RemoveListCommand(this.target, this.item);
+
+
+ final  PortableDiagnosticTarget target;
+ final  skir.ItemId item;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RemoveListCommandCopyWith<_RemoveListCommand> get copyWith => __$RemoveListCommandCopyWithImpl<_RemoveListCommand>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RemoveListCommand&&(identical(other.target, target) || other.target == target)&&(identical(other.item, item) || other.item == item));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,target,item);
+}
+
+@override
+String toString() {
+    return '_CollectionCommand.removeList(target: $target, item: $item)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RemoveListCommandCopyWith<$Res> implements _$CollectionCommandCopyWith<$Res> {
+  factory _$RemoveListCommandCopyWith(_RemoveListCommand value, $Res Function(_RemoveListCommand) _then) = __$RemoveListCommandCopyWithImpl;
+@useResult
+$Res call({
+ PortableDiagnosticTarget target, skir.ItemId item
+});
+
+
+$PortableDiagnosticTargetCopyWith<$Res> get target;
+
+}
+/// @nodoc
+class __$RemoveListCommandCopyWithImpl<$Res>
+    implements _$RemoveListCommandCopyWith<$Res> {
+  __$RemoveListCommandCopyWithImpl(this._self, this._then);
+
+  final _RemoveListCommand _self;
+  final $Res Function(_RemoveListCommand) _then;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? target = null,Object? item = null,}) {
+  return _then(_RemoveListCommand(
+null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticTarget,null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,
+  ));
+}
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableDiagnosticTargetCopyWith<$Res> get target {
+
+  return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class _RemoveMapCommand implements _CollectionCommand {
+  const _RemoveMapCommand(this.target, this.row);
+
+
+ final  PortableDiagnosticTarget target;
+ final  skir.ItemId row;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RemoveMapCommandCopyWith<_RemoveMapCommand> get copyWith => __$RemoveMapCommandCopyWithImpl<_RemoveMapCommand>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RemoveMapCommand&&(identical(other.target, target) || other.target == target)&&(identical(other.row, row) || other.row == row));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,target,row);
+}
+
+@override
+String toString() {
+    return '_CollectionCommand.removeMap(target: $target, row: $row)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RemoveMapCommandCopyWith<$Res> implements _$CollectionCommandCopyWith<$Res> {
+  factory _$RemoveMapCommandCopyWith(_RemoveMapCommand value, $Res Function(_RemoveMapCommand) _then) = __$RemoveMapCommandCopyWithImpl;
+@useResult
+$Res call({
+ PortableDiagnosticTarget target, skir.ItemId row
+});
+
+
+$PortableDiagnosticTargetCopyWith<$Res> get target;
+
+}
+/// @nodoc
+class __$RemoveMapCommandCopyWithImpl<$Res>
+    implements _$RemoveMapCommandCopyWith<$Res> {
+  __$RemoveMapCommandCopyWithImpl(this._self, this._then);
+
+  final _RemoveMapCommand _self;
+  final $Res Function(_RemoveMapCommand) _then;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? target = null,Object? row = null,}) {
+  return _then(_RemoveMapCommand(
+null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticTarget,null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,
+  ));
+}
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableDiagnosticTargetCopyWith<$Res> get target {
+
+  return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class _ReorderCommand implements _CollectionCommand {
+  const _ReorderCommand(this.item);
+
+
+ final  PortableDiagnosticTarget item;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReorderCommandCopyWith<_ReorderCommand> get copyWith => __$ReorderCommandCopyWithImpl<_ReorderCommand>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReorderCommand&&(identical(other.item, item) || other.item == item));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,item);
+}
+
+@override
+String toString() {
+    return '_CollectionCommand.reorder(item: $item)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReorderCommandCopyWith<$Res> implements _$CollectionCommandCopyWith<$Res> {
+  factory _$ReorderCommandCopyWith(_ReorderCommand value, $Res Function(_ReorderCommand) _then) = __$ReorderCommandCopyWithImpl;
+@useResult
+$Res call({
+ PortableDiagnosticTarget item
+});
+
+
+$PortableDiagnosticTargetCopyWith<$Res> get item;
+
+}
+/// @nodoc
+class __$ReorderCommandCopyWithImpl<$Res>
+    implements _$ReorderCommandCopyWith<$Res> {
+  __$ReorderCommandCopyWithImpl(this._self, this._then);
+
+  final _ReorderCommand _self;
+  final $Res Function(_ReorderCommand) _then;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? item = null,}) {
+  return _then(_ReorderCommand(
+null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
+as PortableDiagnosticTarget,
+  ));
+}
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableDiagnosticTargetCopyWith<$Res> get item {
+
+  return $PortableDiagnosticTargetCopyWith<$Res>(_self.item, (value) {
+    return _then(_self.copyWith(item: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class _DisconnectCommand implements _CollectionCommand {
+  const _DisconnectCommand(this.occurrence);
+
+
+ final  skir.LinkOccurrence occurrence;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DisconnectCommandCopyWith<_DisconnectCommand> get copyWith => __$DisconnectCommandCopyWithImpl<_DisconnectCommand>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DisconnectCommand&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,occurrence);
+}
+
+@override
+String toString() {
+    return '_CollectionCommand.disconnect(occurrence: $occurrence)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DisconnectCommandCopyWith<$Res> implements _$CollectionCommandCopyWith<$Res> {
+  factory _$DisconnectCommandCopyWith(_DisconnectCommand value, $Res Function(_DisconnectCommand) _then) = __$DisconnectCommandCopyWithImpl;
+@useResult
+$Res call({
+ skir.LinkOccurrence occurrence
+});
+
+
+
+
+}
+/// @nodoc
+class __$DisconnectCommandCopyWithImpl<$Res>
+    implements _$DisconnectCommandCopyWith<$Res> {
+  __$DisconnectCommandCopyWithImpl(this._self, this._then);
+
+  final _DisconnectCommand _self;
+  final $Res Function(_DisconnectCommand) _then;
+
+/// Create a copy of _CollectionCommand
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? occurrence = null,}) {
+  return _then(_DisconnectCommand(
+null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
+as skir.LinkOccurrence,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$ScopedHeaderDeclaration {
+
+ skir.HeaderItem get item; PortablePresentationScope get scope;
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ScopedHeaderDeclarationCopyWith<_ScopedHeaderDeclaration> get copyWith => __$ScopedHeaderDeclarationCopyWithImpl<_ScopedHeaderDeclaration>(this as _ScopedHeaderDeclaration, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _ScopedHeaderDeclaration;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ScopedHeaderDeclaration&&(identical(other.item, _this.item) || other.item == _this.item)&&(identical(other.scope, _this.scope) || other.scope == _this.scope));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _ScopedHeaderDeclaration;
+  return Object.hash(runtimeType,_this.item,_this.scope);
+}
+
+@override
+String toString() {
+  final _this = this as _ScopedHeaderDeclaration;
+  return '_ScopedHeaderDeclaration(item: ${_this.item}, scope: ${_this.scope})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ScopedHeaderDeclarationCopyWith<$Res>  {
+  factory _$ScopedHeaderDeclarationCopyWith(_ScopedHeaderDeclaration value, $Res Function(_ScopedHeaderDeclaration) _then) = __$ScopedHeaderDeclarationCopyWithImpl;
+@useResult
+$Res call({
+ skir.HeaderItem item, PortablePresentationScope scope
+});
+
+
+$PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$ScopedHeaderDeclarationCopyWithImpl<$Res>
+    implements _$ScopedHeaderDeclarationCopyWith<$Res> {
+  __$ScopedHeaderDeclarationCopyWithImpl(this._self, this._then);
+
+  final _ScopedHeaderDeclaration _self;
+  final $Res Function(_ScopedHeaderDeclaration) _then;
+
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? item = null,Object? scope = null,}) {
+  return _then(_ScopedHeaderDeclaration(
+item: null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
+as skir.HeaderItem,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,
+  ));
+}
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_ScopedHeaderDeclaration].
+extension _ScopedHeaderDeclarationPatterns on _ScopedHeaderDeclaration {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __ScopedHeaderDeclaration value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __ScopedHeaderDeclaration value)  $default,){
+final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __ScopedHeaderDeclaration value)?  $default,){
+final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.HeaderItem item,  PortablePresentationScope scope)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration() when $default != null:
+return $default(_that.item,_that.scope);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.HeaderItem item,  PortablePresentationScope scope)  $default,) {final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration():
+return $default(_that.item,_that.scope);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.HeaderItem item,  PortablePresentationScope scope)?  $default,) {final _that = this;
+switch (_that) {
+case __ScopedHeaderDeclaration() when $default != null:
+return $default(_that.item,_that.scope);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __ScopedHeaderDeclaration implements _ScopedHeaderDeclaration {
+  const __ScopedHeaderDeclaration({required this.item, required this.scope});
+
+
+@override final  skir.HeaderItem item;
+@override final  PortablePresentationScope scope;
+
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_ScopedHeaderDeclarationCopyWith<__ScopedHeaderDeclaration> get copyWith => __$_ScopedHeaderDeclarationCopyWithImpl<__ScopedHeaderDeclaration>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __ScopedHeaderDeclaration&&(identical(other.item, item) || other.item == item)&&(identical(other.scope, scope) || other.scope == scope));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,item,scope);
+}
+
+@override
+String toString() {
+    return '_ScopedHeaderDeclaration(item: $item, scope: $scope)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_ScopedHeaderDeclarationCopyWith<$Res> implements _$ScopedHeaderDeclarationCopyWith<$Res> {
+  factory _$_ScopedHeaderDeclarationCopyWith(__ScopedHeaderDeclaration value, $Res Function(__ScopedHeaderDeclaration) _then) = __$_ScopedHeaderDeclarationCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.HeaderItem item, PortablePresentationScope scope
+});
+
+
+@override $PortablePresentationScopeCopyWith<$Res> get scope;
+
+}
+/// @nodoc
+class __$_ScopedHeaderDeclarationCopyWithImpl<$Res>
+    implements _$_ScopedHeaderDeclarationCopyWith<$Res> {
+  __$_ScopedHeaderDeclarationCopyWithImpl(this._self, this._then);
+
+  final __ScopedHeaderDeclaration _self;
+  final $Res Function(__ScopedHeaderDeclaration) _then;
+
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? item = null,Object? scope = null,}) {
+  return _then(__ScopedHeaderDeclaration(
+item: null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
+as skir.HeaderItem,scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
+as PortablePresentationScope,
+  ));
+}
+
+/// Create a copy of _ScopedHeaderDeclaration
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationScopeCopyWith<$Res> get scope {
+
+  return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
+    return _then(_self.copyWith(scope: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$SuppliedHeaderControl {
+
+ WidgetBuilder get build; _CollectionCommand? get command;
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SuppliedHeaderControlCopyWith<_SuppliedHeaderControl> get copyWith => __$SuppliedHeaderControlCopyWithImpl<_SuppliedHeaderControl>(this as _SuppliedHeaderControl, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _SuppliedHeaderControl;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SuppliedHeaderControl&&(identical(other.build, _this.build) || other.build == _this.build)&&(identical(other.command, _this.command) || other.command == _this.command));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _SuppliedHeaderControl;
+  return Object.hash(runtimeType,_this.build,_this.command);
+}
+
+@override
+String toString() {
+  final _this = this as _SuppliedHeaderControl;
+  return '_SuppliedHeaderControl(build: ${_this.build}, command: ${_this.command})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SuppliedHeaderControlCopyWith<$Res>  {
+  factory _$SuppliedHeaderControlCopyWith(_SuppliedHeaderControl value, $Res Function(_SuppliedHeaderControl) _then) = __$SuppliedHeaderControlCopyWithImpl;
+@useResult
+$Res call({
+ WidgetBuilder build, _CollectionCommand? command
+});
+
+
+_$CollectionCommandCopyWith<$Res>? get command;
+
+}
+/// @nodoc
+class __$SuppliedHeaderControlCopyWithImpl<$Res>
+    implements _$SuppliedHeaderControlCopyWith<$Res> {
+  __$SuppliedHeaderControlCopyWithImpl(this._self, this._then);
+
+  final _SuppliedHeaderControl _self;
+  final $Res Function(_SuppliedHeaderControl) _then;
+
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? build = null,Object? command = freezed,}) {
+  return _then(_SuppliedHeaderControl(
+build: null == build ? _self.build : build // ignore: cast_nullable_to_non_nullable
+as WidgetBuilder,command: freezed == command ? _self.command : command // ignore: cast_nullable_to_non_nullable
+as _CollectionCommand?,
+  ));
+}
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+_$CollectionCommandCopyWith<$Res>? get command {
+    if (_self.command == null) {
+    return null;
+  }
+
+  return _$CollectionCommandCopyWith<$Res>(_self.command!, (value) {
+    return _then(_self.copyWith(command: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_SuppliedHeaderControl].
+extension _SuppliedHeaderControlPatterns on _SuppliedHeaderControl {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __SuppliedHeaderControl value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __SuppliedHeaderControl value)  $default,){
+final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __SuppliedHeaderControl value)?  $default,){
+final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( WidgetBuilder build,  _CollectionCommand? command)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl() when $default != null:
+return $default(_that.build,_that.command);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( WidgetBuilder build,  _CollectionCommand? command)  $default,) {final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl():
+return $default(_that.build,_that.command);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( WidgetBuilder build,  _CollectionCommand? command)?  $default,) {final _that = this;
+switch (_that) {
+case __SuppliedHeaderControl() when $default != null:
+return $default(_that.build,_that.command);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __SuppliedHeaderControl implements _SuppliedHeaderControl {
+  const __SuppliedHeaderControl({required this.build, this.command});
+
+
+@override final  WidgetBuilder build;
+@override final  _CollectionCommand? command;
+
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_SuppliedHeaderControlCopyWith<__SuppliedHeaderControl> get copyWith => __$_SuppliedHeaderControlCopyWithImpl<__SuppliedHeaderControl>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __SuppliedHeaderControl&&(identical(other.build, build) || other.build == build)&&(identical(other.command, command) || other.command == command));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,build,command);
+}
+
+@override
+String toString() {
+    return '_SuppliedHeaderControl(build: $build, command: $command)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_SuppliedHeaderControlCopyWith<$Res> implements _$SuppliedHeaderControlCopyWith<$Res> {
+  factory _$_SuppliedHeaderControlCopyWith(__SuppliedHeaderControl value, $Res Function(__SuppliedHeaderControl) _then) = __$_SuppliedHeaderControlCopyWithImpl;
+@override @useResult
+$Res call({
+ WidgetBuilder build, _CollectionCommand? command
+});
+
+
+@override _$CollectionCommandCopyWith<$Res>? get command;
+
+}
+/// @nodoc
+class __$_SuppliedHeaderControlCopyWithImpl<$Res>
+    implements _$_SuppliedHeaderControlCopyWith<$Res> {
+  __$_SuppliedHeaderControlCopyWithImpl(this._self, this._then);
+
+  final __SuppliedHeaderControl _self;
+  final $Res Function(__SuppliedHeaderControl) _then;
+
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? build = null,Object? command = freezed,}) {
+  return _then(__SuppliedHeaderControl(
+build: null == build ? _self.build : build // ignore: cast_nullable_to_non_nullable
+as WidgetBuilder,command: freezed == command ? _self.command : command // ignore: cast_nullable_to_non_nullable
+as _CollectionCommand?,
+  ));
+}
+
+/// Create a copy of _SuppliedHeaderControl
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+_$CollectionCommandCopyWith<$Res>? get command {
+    if (_self.command == null) {
+    return null;
+  }
+
+  return _$CollectionCommandCopyWith<$Res>(_self.command!, (value) {
+    return _then(_self.copyWith(command: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$RemovalFocusIntent {
+
+ Object get token; skir.ItemId get row; FocusNode get origin; Set<FocusNode> get fallbackScopes; int get index; bool get applied; bool get observedRemoval; bool get recoveryQueued;
+/// Create a copy of _RemovalFocusIntent
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$RemovalFocusIntentCopyWith<_RemovalFocusIntent> get copyWith => __$RemovalFocusIntentCopyWithImpl<_RemovalFocusIntent>(this as _RemovalFocusIntent, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _RemovalFocusIntent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RemovalFocusIntent&&const DeepCollectionEquality().equals(other.token, _this.token)&&(identical(other.row, _this.row) || other.row == _this.row)&&(identical(other.origin, _this.origin) || other.origin == _this.origin)&&const DeepCollectionEquality().equals(other.fallbackScopes, _this.fallbackScopes)&&(identical(other.index, _this.index) || other.index == _this.index)&&(identical(other.applied, _this.applied) || other.applied == _this.applied)&&(identical(other.observedRemoval, _this.observedRemoval) || other.observedRemoval == _this.observedRemoval)&&(identical(other.recoveryQueued, _this.recoveryQueued) || other.recoveryQueued == _this.recoveryQueued));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _RemovalFocusIntent;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.token),_this.row,_this.origin,const DeepCollectionEquality().hash(_this.fallbackScopes),_this.index,_this.applied,_this.observedRemoval,_this.recoveryQueued);
+}
+
+@override
+String toString() {
+  final _this = this as _RemovalFocusIntent;
+  return '_RemovalFocusIntent(token: ${_this.token}, row: ${_this.row}, origin: ${_this.origin}, fallbackScopes: ${_this.fallbackScopes}, index: ${_this.index}, applied: ${_this.applied}, observedRemoval: ${_this.observedRemoval}, recoveryQueued: ${_this.recoveryQueued})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$RemovalFocusIntentCopyWith<$Res>  {
+  factory _$RemovalFocusIntentCopyWith(_RemovalFocusIntent value, $Res Function(_RemovalFocusIntent) _then) = __$RemovalFocusIntentCopyWithImpl;
+@useResult
+$Res call({
+ Object token, skir.ItemId row, FocusNode origin, Set<FocusNode> fallbackScopes, int index, bool applied, bool observedRemoval, bool recoveryQueued
+});
+
+
+
+
+}
+/// @nodoc
+class __$RemovalFocusIntentCopyWithImpl<$Res>
+    implements _$RemovalFocusIntentCopyWith<$Res> {
+  __$RemovalFocusIntentCopyWithImpl(this._self, this._then);
+
+  final _RemovalFocusIntent _self;
+  final $Res Function(_RemovalFocusIntent) _then;
+
+/// Create a copy of _RemovalFocusIntent
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,Object? index = null,Object? applied = null,Object? observedRemoval = null,Object? recoveryQueued = null,}) {
+  return _then(_RemovalFocusIntent(
+token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as FocusNode,fallbackScopes: null == fallbackScopes ? _self.fallbackScopes : fallbackScopes // ignore: cast_nullable_to_non_nullable
+as Set<FocusNode>,index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,applied: null == applied ? _self.applied : applied // ignore: cast_nullable_to_non_nullable
+as bool,observedRemoval: null == observedRemoval ? _self.observedRemoval : observedRemoval // ignore: cast_nullable_to_non_nullable
+as bool,recoveryQueued: null == recoveryQueued ? _self.recoveryQueued : recoveryQueued // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [_RemovalFocusIntent].
+extension _RemovalFocusIntentPatterns on _RemovalFocusIntent {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __RemovalFocusIntent value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __RemovalFocusIntent() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __RemovalFocusIntent value)  $default,){
+final _that = this;
+switch (_that) {
+case __RemovalFocusIntent():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __RemovalFocusIntent value)?  $default,){
+final _that = this;
+switch (_that) {
+case __RemovalFocusIntent() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes,  int index,  bool applied,  bool observedRemoval,  bool recoveryQueued)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __RemovalFocusIntent() when $default != null:
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes,_that.index,_that.applied,_that.observedRemoval,_that.recoveryQueued);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes,  int index,  bool applied,  bool observedRemoval,  bool recoveryQueued)  $default,) {final _that = this;
+switch (_that) {
+case __RemovalFocusIntent():
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes,_that.index,_that.applied,_that.observedRemoval,_that.recoveryQueued);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes,  int index,  bool applied,  bool observedRemoval,  bool recoveryQueued)?  $default,) {final _that = this;
+switch (_that) {
+case __RemovalFocusIntent() when $default != null:
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes,_that.index,_that.applied,_that.observedRemoval,_that.recoveryQueued);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __RemovalFocusIntent implements _RemovalFocusIntent {
+  const __RemovalFocusIntent({required this.token, required this.row, required this.origin, required  Set<FocusNode> fallbackScopes, required this.index, this.applied = false, this.observedRemoval = false, this.recoveryQueued = false}): _fallbackScopes = fallbackScopes;
+
+
+@override final  Object token;
+@override final  skir.ItemId row;
+@override final  FocusNode origin;
+ final  Set<FocusNode> _fallbackScopes;
+@override Set<FocusNode> get fallbackScopes {
+  if (_fallbackScopes is EqualUnmodifiableSetView) return _fallbackScopes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_fallbackScopes);
+}
+
+@override final  int index;
+@override@JsonKey() final  bool applied;
+@override@JsonKey() final  bool observedRemoval;
+@override@JsonKey() final  bool recoveryQueued;
+
+/// Create a copy of _RemovalFocusIntent
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_RemovalFocusIntentCopyWith<__RemovalFocusIntent> get copyWith => __$_RemovalFocusIntentCopyWithImpl<__RemovalFocusIntent>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __RemovalFocusIntent&&const DeepCollectionEquality().equals(other.token, token)&&(identical(other.row, row) || other.row == row)&&(identical(other.origin, origin) || other.origin == origin)&&const DeepCollectionEquality().equals(other.fallbackScopes, _fallbackScopes)&&(identical(other.index, index) || other.index == index)&&(identical(other.applied, applied) || other.applied == applied)&&(identical(other.observedRemoval, observedRemoval) || other.observedRemoval == observedRemoval)&&(identical(other.recoveryQueued, recoveryQueued) || other.recoveryQueued == recoveryQueued));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(token),row,origin,const DeepCollectionEquality().hash(_fallbackScopes),index,applied,observedRemoval,recoveryQueued);
+}
+
+@override
+String toString() {
+    return '_RemovalFocusIntent(token: $token, row: $row, origin: $origin, fallbackScopes: $fallbackScopes, index: $index, applied: $applied, observedRemoval: $observedRemoval, recoveryQueued: $recoveryQueued)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_RemovalFocusIntentCopyWith<$Res> implements _$RemovalFocusIntentCopyWith<$Res> {
+  factory _$_RemovalFocusIntentCopyWith(__RemovalFocusIntent value, $Res Function(__RemovalFocusIntent) _then) = __$_RemovalFocusIntentCopyWithImpl;
+@override @useResult
+$Res call({
+ Object token, skir.ItemId row, FocusNode origin, Set<FocusNode> fallbackScopes, int index, bool applied, bool observedRemoval, bool recoveryQueued
+});
+
+
+
+
+}
+/// @nodoc
+class __$_RemovalFocusIntentCopyWithImpl<$Res>
+    implements _$_RemovalFocusIntentCopyWith<$Res> {
+  __$_RemovalFocusIntentCopyWithImpl(this._self, this._then);
+
+  final __RemovalFocusIntent _self;
+  final $Res Function(__RemovalFocusIntent) _then;
+
+/// Create a copy of _RemovalFocusIntent
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,Object? index = null,Object? applied = null,Object? observedRemoval = null,Object? recoveryQueued = null,}) {
+  return _then(__RemovalFocusIntent(
+token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as FocusNode,fallbackScopes: null == fallbackScopes ? _self._fallbackScopes : fallbackScopes // ignore: cast_nullable_to_non_nullable
+as Set<FocusNode>,index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
+as int,applied: null == applied ? _self.applied : applied // ignore: cast_nullable_to_non_nullable
+as bool,observedRemoval: null == observedRemoval ? _self.observedRemoval : observedRemoval // ignore: cast_nullable_to_non_nullable
+as bool,recoveryQueued: null == recoveryQueued ? _self.recoveryQueued : recoveryQueued // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$LiveCollectionSource {
+
+ PortablePresentationHost get host; skir.BindingRef get source; AuthoredBindingAddress get owner; skir.CatalogGeneration get generation; Object? get lifetime;
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$LiveCollectionSourceCopyWith<_LiveCollectionSource> get copyWith => __$LiveCollectionSourceCopyWithImpl<_LiveCollectionSource>(this as _LiveCollectionSource, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _LiveCollectionSource;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LiveCollectionSource&&(identical(other.host, _this.host) || other.host == _this.host)&&(identical(other.source, _this.source) || other.source == _this.source)&&(identical(other.owner, _this.owner) || other.owner == _this.owner)&&(identical(other.generation, _this.generation) || other.generation == _this.generation)&&const DeepCollectionEquality().equals(other.lifetime, _this.lifetime));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _LiveCollectionSource;
+  return Object.hash(runtimeType,_this.host,_this.source,_this.owner,_this.generation,const DeepCollectionEquality().hash(_this.lifetime));
+}
+
+@override
+String toString() {
+  final _this = this as _LiveCollectionSource;
+  return '_LiveCollectionSource(host: ${_this.host}, source: ${_this.source}, owner: ${_this.owner}, generation: ${_this.generation}, lifetime: ${_this.lifetime})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$LiveCollectionSourceCopyWith<$Res>  {
+  factory _$LiveCollectionSourceCopyWith(_LiveCollectionSource value, $Res Function(_LiveCollectionSource) _then) = __$LiveCollectionSourceCopyWithImpl;
+@useResult
+$Res call({
+ PortablePresentationHost host, skir.BindingRef source, AuthoredBindingAddress owner, skir.CatalogGeneration generation, Object? lifetime
+});
+
+
+$AuthoredBindingAddressCopyWith<$Res> get owner;
+
+}
+/// @nodoc
+class __$LiveCollectionSourceCopyWithImpl<$Res>
+    implements _$LiveCollectionSourceCopyWith<$Res> {
+  __$LiveCollectionSourceCopyWithImpl(this._self, this._then);
+
+  final _LiveCollectionSource _self;
+  final $Res Function(_LiveCollectionSource) _then;
+
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? host = null,Object? source = null,Object? owner = null,Object? generation = null,Object? lifetime = freezed,}) {
+  return _then(_LiveCollectionSource(
+host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
+as PortablePresentationHost,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as skir.BindingRef,owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as AuthoredBindingAddress,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as skir.CatalogGeneration,lifetime: freezed == lifetime ? _self.lifetime : lifetime ,
+  ));
+}
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoredBindingAddressCopyWith<$Res> get owner {
+
+  return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
+    return _then(_self.copyWith(owner: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_LiveCollectionSource].
+extension _LiveCollectionSourcePatterns on _LiveCollectionSource {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __LiveCollectionSource value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __LiveCollectionSource() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __LiveCollectionSource value)  $default,){
+final _that = this;
+switch (_that) {
+case __LiveCollectionSource():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __LiveCollectionSource value)?  $default,){
+final _that = this;
+switch (_that) {
+case __LiveCollectionSource() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortablePresentationHost host,  skir.BindingRef source,  AuthoredBindingAddress owner,  skir.CatalogGeneration generation,  Object? lifetime)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __LiveCollectionSource() when $default != null:
+return $default(_that.host,_that.source,_that.owner,_that.generation,_that.lifetime);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortablePresentationHost host,  skir.BindingRef source,  AuthoredBindingAddress owner,  skir.CatalogGeneration generation,  Object? lifetime)  $default,) {final _that = this;
+switch (_that) {
+case __LiveCollectionSource():
+return $default(_that.host,_that.source,_that.owner,_that.generation,_that.lifetime);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortablePresentationHost host,  skir.BindingRef source,  AuthoredBindingAddress owner,  skir.CatalogGeneration generation,  Object? lifetime)?  $default,) {final _that = this;
+switch (_that) {
+case __LiveCollectionSource() when $default != null:
+return $default(_that.host,_that.source,_that.owner,_that.generation,_that.lifetime);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __LiveCollectionSource extends _LiveCollectionSource {
+  const __LiveCollectionSource({required this.host, required this.source, required this.owner, required this.generation, required this.lifetime}): super._();
+
+
+@override final  PortablePresentationHost host;
+@override final  skir.BindingRef source;
+@override final  AuthoredBindingAddress owner;
+@override final  skir.CatalogGeneration generation;
+@override final  Object? lifetime;
+
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_LiveCollectionSourceCopyWith<__LiveCollectionSource> get copyWith => __$_LiveCollectionSourceCopyWithImpl<__LiveCollectionSource>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __LiveCollectionSource&&(identical(other.host, host) || other.host == host)&&(identical(other.source, source) || other.source == source)&&(identical(other.owner, owner) || other.owner == owner)&&(identical(other.generation, generation) || other.generation == generation)&&const DeepCollectionEquality().equals(other.lifetime, lifetime));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,host,source,owner,generation,const DeepCollectionEquality().hash(lifetime));
+}
+
+@override
+String toString() {
+    return '_LiveCollectionSource(host: $host, source: $source, owner: $owner, generation: $generation, lifetime: $lifetime)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_LiveCollectionSourceCopyWith<$Res> implements _$LiveCollectionSourceCopyWith<$Res> {
+  factory _$_LiveCollectionSourceCopyWith(__LiveCollectionSource value, $Res Function(__LiveCollectionSource) _then) = __$_LiveCollectionSourceCopyWithImpl;
+@override @useResult
+$Res call({
+ PortablePresentationHost host, skir.BindingRef source, AuthoredBindingAddress owner, skir.CatalogGeneration generation, Object? lifetime
+});
+
+
+@override $AuthoredBindingAddressCopyWith<$Res> get owner;
+
+}
+/// @nodoc
+class __$_LiveCollectionSourceCopyWithImpl<$Res>
+    implements _$_LiveCollectionSourceCopyWith<$Res> {
+  __$_LiveCollectionSourceCopyWithImpl(this._self, this._then);
+
+  final __LiveCollectionSource _self;
+  final $Res Function(__LiveCollectionSource) _then;
+
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? host = null,Object? source = null,Object? owner = null,Object? generation = null,Object? lifetime = freezed,}) {
+  return _then(__LiveCollectionSource(
+host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
+as PortablePresentationHost,source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as skir.BindingRef,owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
+as AuthoredBindingAddress,generation: null == generation ? _self.generation : generation // ignore: cast_nullable_to_non_nullable
+as skir.CatalogGeneration,lifetime: freezed == lifetime ? _self.lifetime : lifetime ,
+  ));
+}
+
+/// Create a copy of _LiveCollectionSource
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoredBindingAddressCopyWith<$Res> get owner {
+
+  return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
+    return _then(_self.copyWith(owner: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$CollectionActionOrigin {
+
+ Object get token; skir.ItemId get row; FocusNode get origin; Set<FocusNode> get fallbackScopes;
+/// Create a copy of _CollectionActionOrigin
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$CollectionActionOriginCopyWith<_CollectionActionOrigin> get copyWith => __$CollectionActionOriginCopyWithImpl<_CollectionActionOrigin>(this as _CollectionActionOrigin, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _CollectionActionOrigin;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CollectionActionOrigin&&const DeepCollectionEquality().equals(other.token, _this.token)&&(identical(other.row, _this.row) || other.row == _this.row)&&(identical(other.origin, _this.origin) || other.origin == _this.origin)&&const DeepCollectionEquality().equals(other.fallbackScopes, _this.fallbackScopes));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _CollectionActionOrigin;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.token),_this.row,_this.origin,const DeepCollectionEquality().hash(_this.fallbackScopes));
+}
+
+@override
+String toString() {
+  final _this = this as _CollectionActionOrigin;
+  return '_CollectionActionOrigin(token: ${_this.token}, row: ${_this.row}, origin: ${_this.origin}, fallbackScopes: ${_this.fallbackScopes})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$CollectionActionOriginCopyWith<$Res>  {
+  factory _$CollectionActionOriginCopyWith(_CollectionActionOrigin value, $Res Function(_CollectionActionOrigin) _then) = __$CollectionActionOriginCopyWithImpl;
+@useResult
+$Res call({
+ Object token, skir.ItemId row, FocusNode origin, Set<FocusNode> fallbackScopes
+});
+
+
+
+
+}
+/// @nodoc
+class __$CollectionActionOriginCopyWithImpl<$Res>
+    implements _$CollectionActionOriginCopyWith<$Res> {
+  __$CollectionActionOriginCopyWithImpl(this._self, this._then);
+
+  final _CollectionActionOrigin _self;
+  final $Res Function(_CollectionActionOrigin) _then;
+
+/// Create a copy of _CollectionActionOrigin
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,}) {
+  return _then(_CollectionActionOrigin(
+token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as FocusNode,fallbackScopes: null == fallbackScopes ? _self.fallbackScopes : fallbackScopes // ignore: cast_nullable_to_non_nullable
+as Set<FocusNode>,
+  ));
+}
+
+}
+
+
+/// Adds pattern matching related methods to [_CollectionActionOrigin].
+extension _CollectionActionOriginPatterns on _CollectionActionOrigin {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __CollectionActionOrigin value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __CollectionActionOrigin() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __CollectionActionOrigin value)  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionActionOrigin():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __CollectionActionOrigin value)?  $default,){
+final _that = this;
+switch (_that) {
+case __CollectionActionOrigin() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __CollectionActionOrigin() when $default != null:
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes)  $default,) {final _that = this;
+switch (_that) {
+case __CollectionActionOrigin():
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Object token,  skir.ItemId row,  FocusNode origin,  Set<FocusNode> fallbackScopes)?  $default,) {final _that = this;
+switch (_that) {
+case __CollectionActionOrigin() when $default != null:
+return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __CollectionActionOrigin implements _CollectionActionOrigin {
+  const __CollectionActionOrigin({required this.token, required this.row, required this.origin, required  Set<FocusNode> fallbackScopes}): _fallbackScopes = fallbackScopes;
+
+
+@override final  Object token;
+@override final  skir.ItemId row;
+@override final  FocusNode origin;
+ final  Set<FocusNode> _fallbackScopes;
+@override Set<FocusNode> get fallbackScopes {
+  if (_fallbackScopes is EqualUnmodifiableSetView) return _fallbackScopes;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableSetView(_fallbackScopes);
+}
+
+
+/// Create a copy of _CollectionActionOrigin
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_CollectionActionOriginCopyWith<__CollectionActionOrigin> get copyWith => __$_CollectionActionOriginCopyWithImpl<__CollectionActionOrigin>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __CollectionActionOrigin&&const DeepCollectionEquality().equals(other.token, token)&&(identical(other.row, row) || other.row == row)&&(identical(other.origin, origin) || other.origin == origin)&&const DeepCollectionEquality().equals(other.fallbackScopes, _fallbackScopes));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(token),row,origin,const DeepCollectionEquality().hash(_fallbackScopes));
+}
+
+@override
+String toString() {
+    return '_CollectionActionOrigin(token: $token, row: $row, origin: $origin, fallbackScopes: $fallbackScopes)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_CollectionActionOriginCopyWith<$Res> implements _$CollectionActionOriginCopyWith<$Res> {
+  factory _$_CollectionActionOriginCopyWith(__CollectionActionOrigin value, $Res Function(__CollectionActionOrigin) _then) = __$_CollectionActionOriginCopyWithImpl;
+@override @useResult
+$Res call({
+ Object token, skir.ItemId row, FocusNode origin, Set<FocusNode> fallbackScopes
+});
+
+
+
+
+}
+/// @nodoc
+class __$_CollectionActionOriginCopyWithImpl<$Res>
+    implements _$_CollectionActionOriginCopyWith<$Res> {
+  __$_CollectionActionOriginCopyWithImpl(this._self, this._then);
+
+  final __CollectionActionOrigin _self;
+  final $Res Function(__CollectionActionOrigin) _then;
+
+/// Create a copy of _CollectionActionOrigin
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,}) {
+  return _then(__CollectionActionOrigin(
+token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as skir.ItemId,origin: null == origin ? _self.origin : origin // ignore: cast_nullable_to_non_nullable
+as FocusNode,fallbackScopes: null == fallbackScopes ? _self._fallbackScopes : fallbackScopes // ignore: cast_nullable_to_non_nullable
+as Set<FocusNode>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$CollectionGraphOccurrence {
 
  String get canonicalKey; List<String> get path; List<_CollectionGraphOccurrence> get children;

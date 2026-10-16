@@ -5,6 +5,88 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 
+@widgetbook.UseCase(name: "Collections", type: PortablePresentationRenderer)
+Widget collectionPresentationUseCase(BuildContext context) {
+  final example = context.knobs.object.dropdown(
+    label: "Collection example",
+    options: CollectionEditorExample.values,
+    labelBuilder: (value) => switch (value) {
+      CollectionEditorExample.textList => "Text list",
+      CollectionEditorExample.textSet => "Text set",
+      CollectionEditorExample.scalarMap => "Scalar map",
+      CollectionEditorExample.authoredSteps => "Authored step headers",
+      CollectionEditorExample.fallbackSteps => "Generated step headers",
+      CollectionEditorExample.structuredMap => "Structured map values",
+      CollectionEditorExample.nestedLists => "Nested lists",
+      CollectionEditorExample.unfinishedSteps => "Unfinished steps",
+      CollectionEditorExample.directLinks => "Direct resource links",
+    },
+  );
+  return FakeApp(
+    child: Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: SizedBox(
+            width: context.knobs.double.slider(
+              label: "Collection width",
+              initialValue: 400,
+              min: 320,
+              max: 900,
+            ),
+            child: CollectionPresentationGallery(
+              example: example,
+              longTitles: context.knobs.boolean(
+                label: "Long collection titles",
+              ),
+              empty: context.knobs.boolean(label: "Empty collection"),
+              readOnly: context.knobs.boolean(label: "Collection read only"),
+              enabled: context.knobs.boolean(
+                label: "Collection enabled",
+                initialValue: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+final class CollectionPresentationGallery extends HookWidget {
+  const CollectionPresentationGallery({
+    this.example = CollectionEditorExample.textList,
+    this.longTitles = false,
+    this.empty = false,
+    this.readOnly = false,
+    this.enabled = true,
+    super.key,
+  });
+  final CollectionEditorExample example;
+  final bool longTitles;
+  final bool empty;
+  final bool readOnly;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final scenario = useMemoized(
+      () => CollectionEditorScenario(
+        example: example,
+        longTitles: longTitles,
+        empty: empty,
+      ),
+      [example, longTitles, empty],
+    );
+    useEffect(() => scenario.dispose, [scenario]);
+    return CollectionEditorScenarioView(
+      scenario: scenario,
+      readOnly: readOnly,
+      enabled: enabled,
+    );
+  }
+}
+
 @widgetbook.UseCase(
   name: "Portable document",
   type: PortablePresentationRenderer,

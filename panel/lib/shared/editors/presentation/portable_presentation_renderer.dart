@@ -6,6 +6,9 @@ part "portable_presentation_renderer.freezed.dart";
 part "portable_renderer/actions.dart";
 part "portable_renderer/appearance.dart";
 part "portable_renderer/collection_inputs.dart";
+part "portable_renderer/collection_editor.dart";
+part "portable_renderer/collection_rows.dart";
+part "portable_renderer/collection_interaction.dart";
 part "portable_renderer/collections.dart";
 part "portable_renderer/collection_graph_projection.dart";
 part "portable_renderer/content.dart";
@@ -75,42 +78,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
         ),
       );
     }
-    final enabled = _boolean(scope, node.properties.enabledIf, fallback: true);
-    if (scope.authoredIndex == null) {
-      return PortablePresentationNodeRenderer(
-        node: node,
-        scope: scope.withAuthoredLayout(node),
-        fieldAssociation: fieldAssociation,
-        fillAvailableSpace: fillAvailableSpace,
-      );
-    }
-    if (enabled case _ResolvedFailure(:final message)) {
-      return _diagnostic(message);
-    }
-    final available = (enabled as _ResolvedValue<bool>).value;
-    var childScope = scope
-        .withReadOnly(node.properties.readOnly)
-        .withEnabled(available);
-    final control = node.boundControl;
-    childScope = childScope.copyWith(
-      associatedControl: control,
-      fieldAssociation:
-          fieldAssociation ??
-          (control == null
-              ? null
-              : ResolvedFieldAssociation.fromControl(control, childScope)),
-    );
-    final element = node.element;
-    if (element == null) {
-      return _diagnostic("The presentation node has no element");
-    }
-    try {
-      return _renderNode(context, element, childScope, available);
-    } on PresentationColorFailure catch (failure) {
-      return _diagnostic(failure.message);
-    } on FormatException catch (failure) {
-      return _diagnostic(failure.message);
-    }
+    return renderPreparedNode(context);
   }
 
   Widget _renderNode(
@@ -119,39 +87,42 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     PortablePresentationScope childScope,
     bool available, {
     Widget? renderedContent,
+    Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
   }) {
+    final ownsCollection = ownsIntrinsicCollectionHeader(childScope);
     final rendered =
-        renderedContent ?? _renderElement(context, element, childScope);
-    var child = node.header == null
+        renderedContent ??
+        _renderElement(
+          context,
+          element,
+          childScope,
+          ownedCollectionHeaderBuilder: ownsCollection ? headerBuilder : null,
+        );
+    var child = ownsCollection || node.header == null
         ? rendered
-        : _AuthoredPresentationHeader(
-            header: node.header!,
-            contained: element is skir.PresentationElement_sectionWrapper,
-            body: rendered,
-            scope: childScope,
-          );
+        : headerBuilder?.call(
+                _ScopedCollectionHeader(header: node.header, scope: childScope),
+                rendered,
+              ) ??
+              _AuthoredPresentationHeader(
+                header: node.header!,
+                body: rendered,
+                scope: childScope,
+                contained: element is skir.PresentationElement_sectionWrapper,
+              );
     if (element case skir.PresentationElement_sectionWrapper(:final value)) {
       child = _decorateSection(context, value, childScope, child);
     }
-    return Semantics(
-      container: true,
-      enabled: available,
-      child: IgnorePointer(
-        ignoring: !available,
-        child: AnimatedOpacity(
-          opacity: available ? 1 : 0.55,
-          duration: const Duration(milliseconds: 120),
-          child: KeyedSubtree(key: ValueKey(node.nodeId), child: child),
-        ),
-      ),
-    );
+    return nodeEnvelope(child, available);
   }
 
   Widget _renderElement(
     BuildContext context,
     skir.PresentationElement element,
-    PortablePresentationScope childScope,
-  ) => switch (element) {
+    PortablePresentationScope childScope, {
+    Widget Function(_ScopedCollectionHeader, Widget)?
+    ownedCollectionHeaderBuilder,
+  }) => switch (element) {
     skir.PresentationElement_childrenWrapper(:final value) => _renderChildren(
       value,
       childScope,
@@ -225,7 +196,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
     skir.PresentationElement_typedFieldWrapper(:final value) =>
       _renderTypedField(value, childScope),
     skir.PresentationElement_scopedBindingWrapper(:final value) =>
-      _renderScopedBinding(value, childScope),
+      selectScopedBinding(value, childScope).render(),
     skir.PresentationElement_collectionLookupWrapper(:final value) =>
       _renderCollectionLookup(value, childScope),
     skir.PresentationElement_collectionGraphWrapper(:final value) =>
@@ -274,16 +245,19 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       context,
       value,
       childScope,
+      headerBuilder: ownedCollectionHeaderBuilder,
     ),
     skir.PresentationElement_setInputWrapper(:final value) => _renderSetInput(
       context,
       value,
       childScope,
+      headerBuilder: ownedCollectionHeaderBuilder,
     ),
     skir.PresentationElement_mapInputWrapper(:final value) => _renderMapInput(
       context,
       value,
       childScope,
+      headerBuilder: ownedCollectionHeaderBuilder,
     ),
     skir.PresentationElement_recordInputWrapper(:final value) =>
       _renderRecordInput(value, childScope),
@@ -299,6 +273,7 @@ final class PortablePresentationNodeRenderer extends StatelessWidget {
       context,
       value,
       childScope,
+      headerBuilder: ownedCollectionHeaderBuilder,
     ),
     skir.PresentationElement_pageGraphWrapper(:final value) => _renderPageGraph(
       context,

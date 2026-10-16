@@ -6,11 +6,17 @@ final class _AuthoredPresentationHeader extends HookWidget {
     required this.body,
     required this.scope,
     this.contained = false,
+    this.collectionControls = const [],
+    this.collectionRecoveryFocusNode,
+    this.collectionDisclosureFocusNode,
   });
   final skir.PresentationHeader header;
   final Widget body;
   final PortablePresentationScope scope;
   final bool contained;
+  final List<_SuppliedHeaderControl> collectionControls;
+  final FocusNode? collectionRecoveryFocusNode;
+  final FocusNode? collectionDisclosureFocusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +32,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
     }, [header.initiallyExpanded]);
     final expanded = controller.isExpanded;
     void toggleExpanded() {
+      _CollectionInteractionScope.invalidateAncestors(context);
       controller.toggle();
     }
 
@@ -42,6 +49,11 @@ final class _AuthoredPresentationHeader extends HookWidget {
               ],
       ),
       builder: (context, summary, owner) {
+        final raw = [
+          for (final item in header.items)
+            _ScopedHeaderDeclaration(item: item, scope: scope),
+        ];
+        final supplied = _remainingCollectionControls(raw, collectionControls);
         final items = _items(context);
         final before = items
             .where(
@@ -119,6 +131,9 @@ final class _AuthoredPresentationHeader extends HookWidget {
                                 ),
                         ),
                         for (final item in before) item.widget,
+                        for (final item in supplied)
+                          if (item.command is _ReorderCommand)
+                            item.build(context),
                       ],
                       title: ConstrainedBox(
                         constraints: BoxConstraints(
@@ -126,7 +141,12 @@ final class _AuthoredPresentationHeader extends HookWidget {
                         ),
                         child: title,
                       ),
-                      after: [for (final item in after) item.widget],
+                      after: [
+                        for (final item in after) item.widget,
+                        for (final item in supplied)
+                          if (item.command is! _ReorderCommand)
+                            item.build(context),
+                      ],
                       end: [for (final item in end) item.widget],
                     ),
                     if (description != null)
@@ -228,6 +248,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
 
   Widget _expandButton(bool expanded, VoidCallback toggleExpanded) {
     return IconButton(
+      focusNode: collectionDisclosureFocusNode ?? collectionRecoveryFocusNode,
       tooltip: expanded ? "Collapse" : "Expand",
       onPressed: scope.enabled ? toggleExpanded : null,
       icon: Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
@@ -261,22 +282,35 @@ final class _AuthoredPresentationHeader extends HookWidget {
   List<_AuthoredHeaderItem> _items(BuildContext context) {
     final resolved = <_AuthoredHeaderItem>[];
     var order = 0;
+    var recoveryAttached = false;
+    final contributed = collectionControls
+        .map((item) => item.command)
+        .nonNulls
+        .toSet();
     for (final item in header.items) {
+      final command = _ScopedHeaderDeclaration(
+        item: item,
+        scope: scope,
+      ).command;
+      final pinned = command != null && contributed.contains(command);
       final currentOrder = order++;
       switch (item) {
         case skir.HeaderItem_buttonWrapper(:final value):
+          final placement = pinned
+              ? skir.HeaderActionPlacement.afterTitle
+              : value.placement;
           final visible = _boolean(scope, value.visibleIf, fallback: true);
           if (visible case _ResolvedValue(value: false)) continue;
           if (visible case _ResolvedFailure(:final message)) {
             resolved.add(
-              _failureItem(context, message, value.placement, currentOrder),
+              _failureItem(context, message, placement, currentOrder),
             );
             continue;
           }
           final labelResult = _string(scope, value.label);
           if (labelResult case _ResolvedFailure(:final message)) {
             resolved.add(
-              _failureItem(context, message, value.placement, currentOrder),
+              _failureItem(context, message, placement, currentOrder),
             );
             continue;
           }
@@ -303,29 +337,57 @@ final class _AuthoredPresentationHeader extends HookWidget {
           };
           final destructive =
               value.tone.kind == skir.HeaderActionTone_kind.destructiveConst;
-          final button = TextButton.icon(
-            onPressed: enabled
-                ? () => _runAction(
-                    context,
-                    value.action,
-                    value.confirmation,
-                    destructive: destructive,
-                  )
-                : null,
-            style: destructive
-                ? TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  )
-                : null,
-            icon: iconName == null
-                ? const Icon(Icons.more_horiz, size: 18)
-                : Icones(iconName, size: 18),
-            label: Text(label),
+          final focusNode =
+              pinned &&
+                  !recoveryAttached &&
+                  header.initiallyExpanded == null &&
+                  enabled
+              ? collectionRecoveryFocusNode
+              : null;
+          recoveryAttached = recoveryAttached || focusNode != null;
+          final button = Builder(
+            builder: (buttonContext) {
+              void activate() => _invokeAction(
+                context,
+                buttonContext,
+                value.action,
+                value.confirmation,
+                destructive: destructive,
+              );
+              final icon = iconName == null
+                  ? const Icon(Icons.more_horiz, size: 18)
+                  : Icones(iconName, size: 18);
+              if (pinned) {
+                return IconButton(
+                  focusNode: focusNode,
+                  tooltip: tooltip,
+                  onPressed: enabled ? activate : null,
+                  style: destructive
+                      ? IconButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        )
+                      : null,
+                  icon: Semantics(label: label, child: icon),
+                );
+              }
+              return TextButton.icon(
+                onPressed: enabled ? activate : null,
+                style: destructive
+                    ? TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      )
+                    : null,
+                icon: icon,
+                label: Text(label),
+              );
+            },
           );
           resolved.add(
             _AuthoredHeaderItem(
-              widget: Tooltip(message: tooltip, child: button),
-              placement: value.placement,
+              widget: pinned
+                  ? button
+                  : Tooltip(message: tooltip, child: button),
+              placement: placement,
               priority: _priority(value.priority),
               order: currentOrder,
             ),
@@ -364,13 +426,20 @@ final class _AuthoredPresentationHeader extends HookWidget {
               SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
               SingleActivator(LogicalKeyboardKey.numpadEnter): ActivateIntent(),
             },
-            child: Checkbox(
-              value: checkedValue,
-              semanticLabel: labelValue,
-              visualDensity: VisualDensity.compact,
-              onChanged: enabled
-                  ? (_) => _runAction(context, value.action, value.confirmation)
-                  : null,
+            child: Builder(
+              builder: (checkboxContext) => Checkbox(
+                value: checkedValue,
+                semanticLabel: labelValue,
+                visualDensity: VisualDensity.compact,
+                onChanged: enabled
+                    ? (_) => _invokeAction(
+                        context,
+                        checkboxContext,
+                        value.action,
+                        value.confirmation,
+                      )
+                    : null,
+              ),
             ),
           );
           resolved.add(
@@ -448,12 +517,14 @@ final class _AuthoredPresentationHeader extends HookWidget {
                 canMoveLater:
                     actualTarget.index < actualTarget.items.length - 1,
                 onMoveEarlier: () => _moveReorderTarget(
+                  context,
                   actualTarget,
                   after: actualTarget.index == 1
                       ? null
                       : actualTarget.items[actualTarget.index - 2].id,
                 ),
                 onMoveLater: () => _moveReorderTarget(
+                  context,
                   actualTarget,
                   after: actualTarget.items[actualTarget.index + 1].id,
                 ),
@@ -516,9 +587,11 @@ final class _AuthoredPresentationHeader extends HookWidget {
   }
 
   void _moveReorderTarget(
+    BuildContext context,
     _AuthoredReorderTarget target, {
     required skir.ItemId? after,
   }) {
+    _CollectionInteractionScope.invalidateAncestors(context);
     scope.moveListItem(target.containing, target.item, after);
   }
 
@@ -542,12 +615,47 @@ final class _AuthoredPresentationHeader extends HookWidget {
         _ => null,
       };
 
+  void _invokeAction(
+    BuildContext declarationContext,
+    BuildContext occurrenceContext,
+    skir.EditorAction action,
+    skir.HeaderActionConfirmation? confirmation, {
+    bool destructive = false,
+  }) {
+    final menu = _CollectionMenuInvocation.maybeOf(occurrenceContext);
+    final row = menu?.row ?? _CollectionRowContext.maybeOf(occurrenceContext);
+    final local =
+        row?.focus?.matchesLocalRemoval(row.row, scope, action) ?? false;
+    final origin = local
+        ? menu != null
+              ? menu.origin
+              : row?.focus?.captureOrigin(row.row)
+        : null;
+    unawaited(
+      _runAction(
+        declarationContext,
+        action,
+        confirmation,
+        destructive: destructive,
+        actionRow: row,
+        removalRow: local ? row : null,
+        removalOrigin: origin,
+        closeMenu: menu?.close,
+      ),
+    );
+  }
+
   Future<void> _runAction(
     BuildContext context,
     skir.EditorAction editorAction,
     skir.HeaderActionConfirmation? confirmation, {
     bool destructive = false,
+    _CollectionRowBinding? actionRow,
+    _CollectionRowBinding? removalRow,
+    _CollectionActionOrigin? removalOrigin,
+    VoidCallback? closeMenu,
   }) async {
+    closeMenu?.call();
     if (confirmation != null) {
       final title = _resolvedString(confirmation.title);
       final message = _resolvedString(confirmation.message);
@@ -580,6 +688,24 @@ final class _AuthoredPresentationHeader extends HookWidget {
       );
       if (confirmed != true) return;
     }
+    if (!context.mounted) return;
+    final recovery = removalRow?.focus;
+    if (recovery != null &&
+        recovery.matchesLocalRemoval(removalRow!.row, scope, editorAction)) {
+      if (closeMenu != null || confirmation != null) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (!context.mounted) return;
+      }
+      await recovery.removeLocal(
+        row: removalRow.row,
+        scope: scope,
+        action: editorAction,
+        origin: removalOrigin,
+      );
+      return;
+    }
+    actionRow?.focus?.invalidateInteraction();
+    _CollectionInteractionScope.invalidateAncestors(context);
     await scope.executeAction(editorAction);
   }
 }

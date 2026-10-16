@@ -50,26 +50,65 @@ final class _PortableHeaderRowState extends State<_PortableHeaderRow> {
   }
 }
 
-final class _PortableHeaderOverflow extends StatelessWidget {
-  const _PortableHeaderOverflow({required this.items});
+class _CollectionMenuInvocation extends InheritedWidget {
+  const _CollectionMenuInvocation({
+    required this.origin,
+    required this.row,
+    required this.close,
+    required super.child,
+  });
+  final _CollectionActionOrigin? origin;
+  final _CollectionRowBinding? row;
+  final VoidCallback close;
 
+  static _CollectionMenuInvocation? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_CollectionMenuInvocation>();
+
+  @override
+  bool updateShouldNotify(_CollectionMenuInvocation oldWidget) =>
+      origin != oldWidget.origin || row != oldWidget.row;
+}
+
+final class _PortableHeaderOverflow extends HookWidget {
+  const _PortableHeaderOverflow({required this.items});
   final List<Widget> items;
 
   @override
-  Widget build(BuildContext context) => MenuAnchor(
-    menuChildren: [
-      for (final item in items)
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: context.spacing.space1),
-          child: item,
-        ),
-    ],
-    builder: (context, controller, child) => IconButton(
-      tooltip: "More actions",
-      onPressed: controller.isOpen ? controller.close : controller.open,
-      icon: const Icon(Icons.more_horiz),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final row = _CollectionRowContext.maybeOf(context);
+    final captured = useState<_CollectionActionOrigin?>(null);
+    final triggerFocus = useFocusNode();
+    final controller = useMemoized(MenuController.new);
+    return MenuAnchor(
+      controller: controller,
+      childFocusNode: triggerFocus,
+      menuChildren: [
+        for (final item in items)
+          _CollectionMenuInvocation(
+            origin: captured.value,
+            row: row,
+            close: controller.close,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: context.spacing.space1),
+              child: item,
+            ),
+          ),
+      ],
+      builder: (context, menu, child) => IconButton(
+        focusNode: triggerFocus,
+        tooltip: "More actions",
+        onPressed: () {
+          if (menu.isOpen) {
+            menu.close();
+            return;
+          }
+          captured.value = row?.focus?.captureOrigin(row.row);
+          menu.open();
+        },
+        icon: const Icon(Icons.more_horiz),
+      ),
+    );
+  }
 }
 
 final class _PortableHeaderParentData

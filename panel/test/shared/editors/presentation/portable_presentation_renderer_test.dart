@@ -1154,7 +1154,7 @@ void main() {
     await tester.pumpTestApp(child: fixture.widget);
 
     expect(find.text("The collection binding is unavailable"), findsNothing);
-    await tester.tap(find.text("Add item"));
+    await tester.tap(find.byTooltip("Add item"));
     await tester.pumpAndSettle();
 
     final submitted = await _submit(tester, fixture.document);
@@ -1180,13 +1180,18 @@ void main() {
     await tester.pumpTestApp(child: list.widget);
     expect(find.text("Pages"), findsOneWidget);
     expect(find.text("Pages in this book"), findsOneWidget);
-    expect(find.text("Add item"), findsOneWidget);
+    expect(find.byTooltip("Add item"), findsOneWidget);
 
     final map = _mapFixture(label: "Translations");
     await tester.pumpTestApp(child: map.widget);
     expect(find.text("Translations"), findsOneWidget);
-    expect(find.text("Add entry"), findsOneWidget);
-    expect(find.widgetWithText(FilledButton, "Add entry"), findsOneWidget);
+    expect(find.byTooltip("Add entry"), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is IconButton && widget.tooltip == "Add entry",
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets("does not offer collection insertion when addition is disabled", (
@@ -1198,7 +1203,7 @@ void main() {
     );
     await tester.pumpTestApp(child: fixture.widget);
 
-    expect(find.text("Add item"), findsNothing);
+    expect(find.byTooltip("Add item"), findsNothing);
     expect(fixture.document.workspace.state.groups, isEmpty);
   });
 
@@ -1207,7 +1212,7 @@ void main() {
     await tester.pumpTestApp(child: fixture.widget);
 
     expect(find.text("The map binding is unavailable"), findsNothing);
-    await tester.tap(find.text("Add entry"));
+    await tester.tap(find.byTooltip("Add entry"));
     await tester.pump();
 
     final submitted = await _submit(tester, fixture.document);
@@ -1231,7 +1236,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.text("Add link"));
+    await tester.tap(find.byTooltip("Add link"));
     await tester.pumpAndSettle();
     expect(find.text("Target Alpha"), findsOneWidget);
     expect(find.text(fixture.target.value), findsNothing);
@@ -1258,7 +1263,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.text("Add link"));
+    await tester.tap(find.byTooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
     await tester.pumpAndSettle();
@@ -1273,7 +1278,7 @@ void main() {
     final fixture = _linkCollectionFixture();
     await tester.pumpTestApp(child: fixture.widget);
 
-    await tester.tap(find.text("Add link"));
+    await tester.tap(find.byTooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField).first, "Target Beta");
     await tester.pumpAndSettle();
@@ -1334,6 +1339,30 @@ void main() {
     expect(find.byTooltip("Remove item"), findsNWidgets(2));
     expect(find.text("Change"), findsNothing);
   });
+
+  testWidgets(
+    "ordinary link collection rows own one surface and one spacing boundary",
+    (tester) async {
+      final fixture = _linkCollectionFixture(
+        withPartialLinks: true,
+        collectionAppearance:
+            (skir.CollectionAppearance.mutable()..itemSpacing = 14).toFrozen(),
+      );
+      await tester.pumpTestApp(child: fixture.widget);
+      final surfaces = find.byType(DepthBox);
+      expect(surfaces, findsNWidgets(3));
+      expect(
+        tester.getRect(surfaces.at(2)).top -
+            tester.getRect(surfaces.at(1)).bottom,
+        closeTo(14, 0.01),
+      );
+      expect(find.text("Target Alpha"), findsOneWidget);
+      expect(find.byTooltip("Change linked resource"), findsOneWidget);
+      expect(find.byTooltip("Clear link"), findsOneWidget);
+      expect(find.byTooltip("Remove item"), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets("frames a link collection once with explicit reorder handles", (
     tester,
@@ -1789,6 +1818,7 @@ _linkCollectionFixture({
   bool directCollection = false,
   bool adaptiveAppearance = false,
   String? label,
+  skir.CollectionAppearance? collectionAppearance,
   skir.CollectionContent? content,
   skir.InputAppearance? inputAppearance,
   skir.InputContent? inputContent,
@@ -2243,7 +2273,7 @@ _linkCollectionFixture({
                     allowAdd: true,
                     allowRemove: true,
                     itemBindingId: itemBinding,
-                    appearance: null,
+                    appearance: collectionAppearance,
                     content: null,
                   ),
                 ),
@@ -3086,7 +3116,7 @@ void registerConfiguredCollectionTests() {
       await tester.pumpTestApp(child: fixture.widget);
       expect(find.text("Prefix insertion"), findsOneWidget);
       expect(find.text("Coordinates"), findsOneWidget);
-      expect(find.text("Add item"), findsOneWidget);
+      expect(find.byTooltip("Add item"), findsOneWidget);
       expect(
         tester
             .getSemantics(find.widgetWithText(FilledButton, "Prefix insertion"))
@@ -3123,8 +3153,10 @@ void registerConfiguredCollectionTests() {
         inputDefaults: shared,
       );
       await tester.pumpTestApp(child: inherited.widget);
-      final add = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, "Add item"),
+      final add = tester.widget<IconButton>(
+        find.byWidgetPredicate(
+          (widget) => widget is IconButton && widget.tooltip == "Add item",
+        ),
       );
       expect(add.style?.visualDensity, VisualDensity.compact);
       expect(
@@ -3146,8 +3178,10 @@ void registerConfiguredCollectionTests() {
                 .toFrozen(),
       );
       await tester.pumpTestApp(child: local.widget);
-      final localAdd = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, "Add item"),
+      final localAdd = tester.widget<IconButton>(
+        find.byWidgetPredicate(
+          (widget) => widget is IconButton && widget.tooltip == "Add item",
+        ),
       );
       expect(localAdd.style?.visualDensity, VisualDensity.standard);
       expect(tester.takeException(), isNull);
@@ -3182,12 +3216,15 @@ void registerConfiguredCollectionTests() {
       await tester.pumpTestApp(child: fixture.widget);
       expect(find.text("No coordinates"), findsOneWidget);
       expect(find.text("No items"), findsNothing);
-      expect(find.text("New coordinate"), findsOneWidget);
-      final add = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, "New coordinate"),
+      expect(find.byTooltip("New coordinate"), findsOneWidget);
+      final add = tester.widget<IconButton>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is IconButton && widget.tooltip == "New coordinate",
+        ),
       );
       expect(add.style?.visualDensity, VisualDensity.compact);
-      await tester.tap(find.text("New coordinate"));
+      await tester.tap(find.byTooltip("New coordinate"));
       await tester.pumpAndSettle();
       final submitted = await _submit(tester, fixture.document);
       expect(submitted.intents, hasLength(1));
@@ -3244,7 +3281,10 @@ void registerConfiguredCollectionTests() {
       await tester.pumpTestApp(child: fixture.widget);
       expect(find.byTooltip("Remove coordinate"), findsNWidgets(2));
       expect(find.text("Remove glyph"), findsNWidgets(2));
-      final cards = find.byType(DepthBox);
+      final cards = find.descendant(
+        of: find.byType(ReorderableListView),
+        matching: find.byType(DepthBox),
+      );
       expect(cards, findsNWidgets(2));
       expect(
         tester.getRect(cards.at(1)).top - tester.getRect(cards.at(0)).bottom,

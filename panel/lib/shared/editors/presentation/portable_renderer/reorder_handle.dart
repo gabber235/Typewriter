@@ -87,29 +87,36 @@ final class _AuthoredReorderHandleState extends State<_AuthoredReorderHandle> {
       child: ReorderableDragStartListener(
         index: widget.index,
         enabled: widget.enabled,
-        child: GestureDetector(
-          onTap: widget.enabled ? _focusNode.requestFocus : null,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: _focused
-                    ? Theme.of(context).colorScheme.primary
-                    : context.colors.surface.withValues(alpha: 0),
-                width: 2,
+        child: Listener(
+          // Drag recognition can beat a tap callback. Transfer focus before
+          // the row and any editable selection anchor enter the drag overlay.
+          onPointerDown: widget.enabled
+              ? (_) => _focusNode.requestFocus()
+              : null,
+          child: GestureDetector(
+            onTap: widget.enabled ? _focusNode.requestFocus : null,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _focused
+                      ? Theme.of(context).colorScheme.primary
+                      : context.colors.surface.withValues(alpha: 0),
+                  width: 2,
+                ),
+                borderRadius: context.shapes.smallBorderRadius,
               ),
-              borderRadius: context.shapes.smallBorderRadius,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(6),
-              child:
-                  widget.icon ??
-                  Icon(
-                    Icons.drag_handle,
-                    color: widget.enabled
-                        ? null
-                        : Theme.of(context).disabledColor,
-                    semanticLabel: widget.label,
-                  ),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child:
+                    widget.icon ??
+                    Icon(
+                      Icons.drag_handle,
+                      color: widget.enabled
+                          ? null
+                          : Theme.of(context).disabledColor,
+                      semanticLabel: widget.label,
+                    ),
+              ),
             ),
           ),
         ),

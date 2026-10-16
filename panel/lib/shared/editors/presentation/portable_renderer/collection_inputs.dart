@@ -5,8 +5,9 @@ extension _PortableCollectionInputRendering
   Widget _renderListInput(
     BuildContext context,
     skir.ListControl control,
-    PortablePresentationScope childScope,
-  ) => _renderSequenceInput(
+    PortablePresentationScope childScope, {
+    Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
+  }) => _renderSequenceInput(
     context: context,
     control: control.control,
     itemPresentation: control.itemPresentation,
@@ -18,13 +19,15 @@ extension _PortableCollectionInputRendering
     childScope: childScope,
     appearance: control.appearance,
     content: control.content,
+    headerBuilder: headerBuilder,
   );
 
   Widget _renderSetInput(
     BuildContext context,
     skir.SetControl control,
-    PortablePresentationScope childScope,
-  ) => _renderSequenceInput(
+    PortablePresentationScope childScope, {
+    Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
+  }) => _renderSequenceInput(
     context: context,
     control: control.control,
     itemPresentation: control.itemPresentation,
@@ -36,6 +39,7 @@ extension _PortableCollectionInputRendering
     childScope: childScope,
     appearance: control.appearance,
     content: control.content,
+    headerBuilder: headerBuilder,
   );
 
   Widget _renderSequenceInput({
@@ -50,6 +54,7 @@ extension _PortableCollectionInputRendering
     required PortablePresentationScope childScope,
     required skir.CollectionAppearance? appearance,
     required skir.CollectionContent? content,
+    Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
   }) {
     final current = childScope.read(control.binding);
     final items =
@@ -61,191 +66,126 @@ extension _PortableCollectionInputRendering
     if (items == null || collection == null) {
       return _diagnostic("The collection binding is unavailable");
     }
-    Widget item(int index) {
-      final current = items[index];
-      final reference = skir.BindingRef(
-        bindingId: control.binding.bindingId,
-        path: skir.ValuePath(
-          segments: [
-            ...control.binding.path.segments,
-            skir.PathSegment.createItem(id: current.id),
-          ],
-        ),
-      );
-      var itemScope = childScope.withBinding(reference, itemBindingId);
-      if (itemScope == null) {
-        return _diagnostic(
-          "Collection item ${current.id.value} is unavailable",
-        );
-      }
-      if (indexBindingId != null) {
-        itemScope = itemScope.withValues({
-          indexBindingId: skir.DataValue.wrapInteger(index.toString()),
-        });
-      }
-      final itemContent = itemPresentation == null
-          ? Text(current.value.authoredString ?? current.id.value)
-          : PortablePresentationNodeRenderer(
-              node: itemPresentation,
-              scope: itemScope,
-            );
-      final presentationOwnsHandle =
-          itemPresentation?.header?.items.any(
-            (item) => item is skir.HeaderItem_reorderHandleWrapper,
-          ) ??
-          false;
-      return Padding(
-        key: ValueKey(current.id.value),
-        padding: EdgeInsets.only(
-          bottom: _collectionSpacing(context, appearance),
-        ),
-        child: _collectionSurface(
-          context,
-          appearance,
-          childScope,
-          node,
-          Padding(
-            padding: appearance?.itemPadding == null
-                ? EdgeInsets.all(context.spacing.space2)
-                : _presentationInsets(appearance!.itemPadding),
-            child: Row(
-              children: [
-                if (allowReorder && !presentationOwnsHandle)
-                  _AuthoredReorderHandle(
-                    index: index,
-                    label: "Reorder ${current.id.value}",
-                    enabled: childScope.enabled && !childScope.readOnly,
-                    canMoveEarlier: index > 0,
-                    canMoveLater: index < items.length - 1,
-                    icon: _operationGlyph(
-                      content?.reorderIcon,
-                      childScope,
-                      const Icon(Icons.drag_handle),
-                    ),
-                    onMoveEarlier: () {
-                      final after = index == 1 ? null : items[index - 2].id;
-                      childScope.moveListItem(
-                        control.binding,
-                        current.id,
-                        after,
-                      );
-                    },
-                    onMoveLater: () {
-                      childScope.moveListItem(
-                        control.binding,
-                        current.id,
-                        items[index + 1].id,
-                      );
-                    },
-                  ),
-                Expanded(child: itemContent),
-                if (allowRemove)
-                  _operationAppearance(
-                    content,
-                    childScope,
-                    (states, style) => IconButton(
-                      statesController: states,
-                      style: style,
-                      tooltip: _operationText(
-                        childScope,
-                        content?.operationTooltip ?? content?.removeLabel,
-                        "Remove item",
-                      ),
-                      onPressed: childScope.enabled && !childScope.readOnly
-                          ? () {
-                              childScope.removeListItem(
-                                control.binding,
-                                current.id,
-                              );
-                            }
-                          : null,
-                      icon: _operationGlyph(
-                        content?.removeIcon,
-                        childScope,
-                        const Icon(Icons.delete_outline),
-                      ),
-                    ),
-                    tooltip: false,
-                  ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    final list = allowReorder
-        ? ReorderableListView.builder(
-            buildDefaultDragHandles: false,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: items.length,
-            itemBuilder: (_, index) => item(index),
-            onReorderItem: childScope.enabled && !childScope.readOnly
-                ? (from, to) {
-                    final moving = items[from];
-                    final remaining = [...items]..removeAt(from);
-                    final after = to == 0 ? null : remaining[to - 1].id;
-                    childScope.moveListItem(control.binding, moving.id, after);
-                  }
-                : (_, _) {},
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (var index = 0; index < items.length; index++) item(index),
-            ],
-          );
     final linkControl = switch (itemPresentation?.element) {
       skir.PresentationElement_linkInputWrapper(:final value) => value,
       _ => null,
     };
-    return _decorateCollection(
-      control,
-      childScope,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (items.isEmpty)
-            _collectionEmpty(context, childScope, content, "No items"),
-          list,
-          if (allowAdd)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: _operationAppearance(
-                content,
-                childScope,
-                (states, style) => FilledButton.icon(
-                  statesController: states,
-                  onPressed: childScope.enabled && !childScope.readOnly
-                      ? () => unawaited(
-                          _addSequenceItem(
-                            context: context,
-                            control: control,
-                            linkControl: linkControl,
-                            collection: collection,
-                            childScope: childScope,
-                          ),
-                        )
-                      : null,
-                  style: style,
-                  icon: _operationGlyph(
-                    content?.addIcon,
-                    childScope,
-                    Icon(linkControl == null ? Icons.add : Icons.add_link),
-                  ),
-                  label: Text(
-                    _operationText(
-                      childScope,
-                      content?.addLabel,
-                      linkControl == null ? "Add item" : "Add link",
+    return collectionWithFocus(
+      sourceScope: childScope,
+      mutationScope: childScope,
+      reference: control.binding,
+      removalKind: _CollectionRemovalKind.listItem,
+      renderedOrder: [for (final item in items) item.id],
+      sourceHeader: _ScopedCollectionHeader(
+        scope: childScope,
+        header: node.header,
+      ),
+      fallbackHeader: () => _generatedCollectionHeader(
+        childScope.associationFor(control).label ?? "Items",
+      ),
+      contained: false,
+      allowAdd: allowAdd,
+      content: content,
+      addLabel: linkControl == null ? "Add item" : "Add link",
+      addIcon: linkControl == null ? Icons.add : Icons.add_link,
+      add: (context) => unawaited(
+        _addSequenceItem(
+          context: context,
+          control: control,
+          linkControl: linkControl,
+          collection: collection,
+          childScope: childScope,
+        ),
+      ),
+      headerBuilder: headerBuilder,
+      buildBody: (context) {
+        late final CollectionSequence sequence;
+        sequence = CollectionSequence(
+          scope: childScope,
+          collection: control.binding,
+          items: items,
+          allowReorder: allowReorder,
+          entryBuilder: (context, item, index) {
+            final reference = skir.BindingRef(
+              bindingId: control.binding.bindingId,
+              path: skir.ValuePath(
+                segments: [
+                  ...control.binding.path.segments,
+                  skir.PathSegment.createItem(id: item.id),
+                ],
+              ),
+            );
+            var itemScope = childScope.withBinding(reference, itemBindingId);
+            if (itemScope == null) {
+              return _diagnostic(
+                "Collection item ${item.id.value} is unavailable",
+              );
+            }
+            if (indexBindingId != null) {
+              itemScope = itemScope.withValues({
+                indexBindingId: skir.DataValue.wrapInteger(index.toString()),
+              });
+            }
+            final editor = prepareListChild(
+              itemPresentation,
+              itemBindingId,
+              itemScope,
+            );
+            return collectionRowWithFocus(
+              id: item.id,
+              editor: editor,
+              scope: childScope,
+              owner: node,
+              generatedHeader: () => _generatedEntryHeader("Item ${index + 1}"),
+              initiallyNeedsRepair:
+                  item.value.authoredPayload == skir.DataValue.unfilled,
+              controls: [
+                if (allowReorder)
+                  _SuppliedHeaderControl(
+                    command: switch (childScope.collectionCommandTarget(
+                      reference,
+                    )) {
+                      final target? => _CollectionCommand.reorder(target),
+                      null => null,
+                    },
+                    build: (context) => sequence.handle(
+                      context,
+                      index,
+                      editor.scope,
+                      icon: _operationGlyph(
+                        content?.reorderIcon,
+                        childScope,
+                        const Icon(Icons.drag_handle),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-        ],
-      ),
+              ],
+              permittedRemove: allowRemove
+                  ? skir.EditorAction.wrapLocal(
+                      skir.LocalEditorAction.createRemoveListItem(
+                        target: control.binding,
+                        item: item.id,
+                      ),
+                    )
+                  : null,
+              appearance: appearance,
+              content: content,
+            );
+          },
+        );
+        return _decorateCollection(
+          control,
+          childScope,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (items.isEmpty)
+                _collectionEmpty(context, childScope, content, "No items"),
+              sequence,
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -297,10 +237,10 @@ extension _PortableCollectionInputRendering
   Widget _renderMapInput(
     BuildContext context,
     skir.MapControl control,
-    PortablePresentationScope childScope,
-  ) {
-    final current = childScope.read(control.control.binding);
-    final value = current?.authoredPayload;
+    PortablePresentationScope childScope, {
+    Widget Function(_ScopedCollectionHeader, Widget)? headerBuilder,
+  }) {
+    final value = childScope.read(control.control.binding)?.authoredPayload;
     final rows = switch (value) {
       skir.DataValue_mapValueWrapper(:final value) => value.rows.toList(),
       _ when value == skir.DataValue.unfilled => <skir.MapRow>[],
@@ -310,49 +250,50 @@ extension _PortableCollectionInputRendering
     if (rows == null || collection == null) {
       return _diagnostic("The map binding is unavailable");
     }
-    return _decorateCollection(
-      control.control,
-      childScope,
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (rows.isEmpty)
-            _collectionEmpty(
-              context,
-              childScope,
-              control.content,
-              "No entries",
-            ),
-          for (final row in rows)
-            _renderMapRow(context, control, row, collection, childScope),
-          if (control.allowAdd)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: _operationAppearance(
-                control.content,
+    return collectionWithFocus(
+      sourceScope: childScope,
+      mutationScope: childScope,
+      reference: control.control.binding,
+      removalKind: _CollectionRemovalKind.mapRow,
+      renderedOrder: [for (final row in rows) row.id],
+      sourceHeader: _ScopedCollectionHeader(
+        scope: childScope,
+        header: node.header,
+      ),
+      fallbackHeader: () => _generatedCollectionHeader(
+        childScope.associationFor(control.control).label ?? "Entries",
+      ),
+      contained: false,
+      allowAdd: control.allowAdd,
+      content: control.content,
+      addLabel: "Add entry",
+      addIcon: Icons.add,
+      add: (context) => childScope.addMapRow(control.control.binding),
+      headerBuilder: headerBuilder,
+      buildBody: (context) => _decorateCollection(
+        control.control,
+        childScope,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (rows.isEmpty)
+              _collectionEmpty(
+                context,
                 childScope,
-                (states, style) => FilledButton.icon(
-                  statesController: states,
-                  onPressed: childScope.enabled && !childScope.readOnly
-                      ? () => childScope.addMapRow(control.control.binding)
-                      : null,
-                  style: style,
-                  icon: _operationGlyph(
-                    control.content?.addIcon,
-                    childScope,
-                    const Icon(Icons.add),
-                  ),
-                  label: Text(
-                    _operationText(
-                      childScope,
-                      control.content?.addLabel,
-                      "Add entry",
-                    ),
-                  ),
-                ),
+                control.content,
+                "No entries",
               ),
-            ),
-        ],
+            for (final (index, row) in rows.indexed)
+              _renderMapRow(
+                context,
+                control,
+                row,
+                collection,
+                childScope,
+                rowIndex: index,
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -362,8 +303,9 @@ extension _PortableCollectionInputRendering
     skir.MapControl control,
     skir.MapRow row,
     skir.ValueLocation collection,
-    PortablePresentationScope childScope,
-  ) {
+    PortablePresentationScope childScope, {
+    required int rowIndex,
+  }) {
     final base = [
       ...control.control.binding.path.segments,
       skir.PathSegment.createItem(id: row.id),
@@ -384,80 +326,75 @@ extension _PortableCollectionInputRendering
     if (keyScope == null || valueScope == null) {
       return _diagnostic("Map row ${row.id.value} is unavailable");
     }
-    return Padding(
-      key: ValueKey(row.id.value),
-      padding: EdgeInsets.only(
-        bottom: _collectionSpacing(context, control.appearance),
+    final key = prepareListChild(
+      control.keyPresentation,
+      control.keyBindingId,
+      keyScope,
+    );
+    final value = prepareListChild(
+      control.valuePresentation,
+      control.valueBindingId,
+      valueScope,
+    );
+    final scalarPair = key.effectiveInline && value.effectiveInline;
+    final rowReference = skir.BindingRef(
+      bindingId: control.control.binding.bindingId,
+      path: skir.ValuePath(segments: base),
+    );
+    final rowOwner = childScope.authoredAliases.resolve(rowReference);
+    if (rowOwner == null) return _diagnostic("The map row is unavailable");
+    final editor = _CollectionEditorContinuation(
+      owner: rowOwner,
+      scope: childScope,
+      layout: scalarPair
+          ? CollectionEntryLayout.inline
+          : CollectionEntryLayout.disclosure,
+      render: (context, _) {
+        final keyWidget = _mapGuidance(
+          childScope,
+          control.content?.keyLabel,
+          key.renderStandalone(context),
+        );
+        final valueWidget = _mapGuidance(
+          childScope,
+          control.content?.valueLabel,
+          value.renderStandalone(context),
+        );
+        return scalarPair
+            ? _inlineMapPair(
+                context: context,
+                keyEditor: keyWidget,
+                valueEditor: valueWidget,
+              )
+            : _structuredMapBody(
+                context: context,
+                keyEditor: keyWidget,
+                valueEditor: valueWidget,
+              );
+      },
+    );
+    return collectionRowWithFocus(
+      id: row.id,
+      editor: editor,
+      scope: childScope,
+      owner: node,
+      generatedHeader: () => _generatedEntryHeader(
+        row.key.collectionKeyTitle ?? "Entry ${rowIndex + 1}",
       ),
-      child: _collectionSurface(
-        context,
-        control.appearance,
-        childScope,
-        node,
-        Padding(
-          padding: control.appearance?.itemPadding == null
-              ? EdgeInsets.all(context.spacing.space2)
-              : _presentationInsets(control.appearance!.itemPadding),
-          child: Row(
-            children: [
-              Expanded(
-                child: _mapGuidance(
-                  childScope,
-                  control.content?.keyLabel,
-                  control.keyPresentation == null
-                      ? Text(row.key.authoredString ?? "Key")
-                      : PortablePresentationNodeRenderer(
-                          node: control.keyPresentation!,
-                          scope: keyScope,
-                        ),
-                ),
+      initiallyNeedsRepair:
+          row.key.authoredPayload == skir.DataValue.unfilled ||
+          row.value.authoredPayload == skir.DataValue.unfilled,
+      controls: const [],
+      permittedRemove: control.allowRemove
+          ? skir.EditorAction.wrapLocal(
+              skir.LocalEditorAction.createRemoveMapRow(
+                target: control.control.binding,
+                row: row.id,
               ),
-              SizedBox(width: context.spacing.space2),
-              Expanded(
-                child: _mapGuidance(
-                  childScope,
-                  control.content?.valueLabel,
-                  control.valuePresentation == null
-                      ? Text(row.value.authoredString ?? "Value")
-                      : PortablePresentationNodeRenderer(
-                          node: control.valuePresentation!,
-                          scope: valueScope,
-                        ),
-                ),
-              ),
-              if (control.allowRemove)
-                _operationAppearance(
-                  control.content,
-                  childScope,
-                  (states, style) => IconButton(
-                    statesController: states,
-                    style: style,
-                    tooltip: _operationText(
-                      childScope,
-                      control.content?.operationTooltip ??
-                          control.content?.removeLabel,
-                      "Remove row",
-                    ),
-                    onPressed: childScope.enabled && !childScope.readOnly
-                        ? () {
-                            childScope.removeMapRow(
-                              control.control.binding,
-                              row.id,
-                            );
-                          }
-                        : null,
-                    icon: _operationGlyph(
-                      control.content?.removeIcon,
-                      childScope,
-                      const Icon(Icons.delete_outline),
-                    ),
-                  ),
-                  tooltip: false,
-                ),
-            ],
-          ),
-        ),
-      ),
+            )
+          : null,
+      appearance: control.appearance,
+      content: control.content,
     );
   }
 

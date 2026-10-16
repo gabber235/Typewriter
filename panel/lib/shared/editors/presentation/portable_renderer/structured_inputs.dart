@@ -16,20 +16,6 @@ extension _PortableStructuredInputRendering
     return PortablePresentationNodeRenderer(node: custom, scope: childScope);
   }
 
-  Widget _renderScopedBinding(
-    skir.ScopedBindingElement element,
-    PortablePresentationScope childScope,
-  ) {
-    final nested = childScope.withBinding(
-      element.binding,
-      element.scopeBindingId,
-    );
-    if (nested == null) {
-      return _diagnostic("The scoped binding is unavailable");
-    }
-    return PortablePresentationNodeRenderer(node: element.child, scope: nested);
-  }
-
   Widget _renderPolymorphicInput(
     BuildContext context,
     skir.PolymorphicControl control,
