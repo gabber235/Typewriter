@@ -104,7 +104,11 @@ private class TypewriterTypeProcessor(
                     .mapNotNull { type -> type.declaration as? KSClassDeclaration }
                     .forEach { declaration ->
                         declaration.qualifiedName?.asString()?.let(explicitlyImportedTypes::add)
-                        generateType(declaration)
+                        if (declaration.isTypeGraphReady()) {
+                            generateType(declaration)
+                        } else {
+                            deferred += carrier
+                        }
                     }
             }
         val resourceProperties =
@@ -3007,7 +3011,7 @@ private fun KSClassDeclaration.isTypeGraphReady(): Boolean {
             yieldAll(superTypes)
             typeParameters.forEach { parameter -> yieldAll(parameter.bounds) }
             primaryConstructor?.parameters?.forEach { parameter -> yield(parameter.type) }
-            declarations.filterIsInstance<KSPropertyDeclaration>().forEach { property -> yield(property.type) }
+            getAllProperties().forEach { property -> yield(property.type) }
         }
     return references.all { reference -> runCatching { reference.resolve().isResolvedTypeGraph() }.getOrDefault(false) }
 }
