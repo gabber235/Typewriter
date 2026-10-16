@@ -13,9 +13,11 @@ import com.typewritermc.discovery.GeneratedProviderArtifact
 import com.typewritermc.discovery.GeneratedProviderDeployment
 import com.typewritermc.discovery.GeneratedProviderLoader
 import com.typewritermc.discovery.assemble
+import com.typewritermc.imprint.COMMON_SOURCE_PART
+import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.loader.api.HostedArtifact
+import com.typewritermc.loader.api.HostedArtifactPackage
 import com.typewritermc.loader.api.HostedDeploymentContext
-import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationRuntime
 import com.typewritermc.realm.authoring.PreparationEvaluator
@@ -62,7 +64,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                 )
             val loaded =
                 GeneratedProviderLoader().load(
-                    artifacts = context.generatedProviderArtifacts(),
+                    artifacts = context.artifacts.realmProviderArtifacts(),
                     facts = DeploymentFacts(context.facts),
                     domain = DiscoveryDomains.Realm,
                     runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
@@ -127,20 +129,12 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
     }
 }
 
-private fun HostedDeploymentContext.generatedProviderArtifacts(): List<GeneratedProviderArtifact> {
-    val extensionParts =
-        artifacts.extensions.associate { extension ->
-            extension.id to
-                extension.sourceParts.mapNotNullTo(linkedSetOf()) { part ->
-                    val eligible = part.disposition as? SourcePartDisposition.Eligible
-                    part.name.takeIf { eligible != null && identity.placement in eligible.placements }
-                }
-        }
+internal fun HostedArtifactPackage.realmProviderArtifacts(): List<GeneratedProviderArtifact> {
     val physical =
         buildList {
-            add(artifacts.runtimeArtifact)
-            addAll(artifacts.catalogArtifacts)
-            artifacts.extensions.forEach { extension -> add(HostedArtifact(extension.path, extension.manifest)) }
+            add(runtimeArtifact)
+            addAll(catalogArtifacts)
+            extensions.forEach { extension -> add(HostedArtifact(extension.path, extension.manifest)) }
         }.distinctBy { it.path }
     val duplicateIdentities = physical.groupBy { it.manifest.id }.filterValues { entries -> entries.map { it.path }.distinct().size > 1 }
     require(duplicateIdentities.isEmpty()) {
@@ -150,7 +144,12 @@ private fun HostedDeploymentContext.generatedProviderArtifacts(): List<Generated
         GeneratedProviderArtifact(
             artifact = artifact.manifest.id,
             path = artifact.path,
-            acceptedSourceParts = extensionParts[artifact.manifest.id],
+            acceptedSourceParts =
+                if (artifact.manifest is ExtensionManifest) {
+                    setOf(COMMON_SOURCE_PART)
+                } else {
+                    null
+                },
         )
     }
 }
