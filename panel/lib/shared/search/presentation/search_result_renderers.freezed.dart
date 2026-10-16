@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SearchResultRowContext {
 
- SearchResult get result; bool get selected; bool get focused; bool get loading; VoidCallback get onTap; ShortcutActivator? get shortcutActivator;
+ SearchResult get result; bool get selected; bool get focused; bool get loading; VoidCallback? get onTap; ShortcutActivator? get shortcutActivator;
 /// Create a copy of SearchResultRowContext
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,7 +51,7 @@ abstract mixin class $SearchResultRowContextCopyWith<$Res>  {
   factory $SearchResultRowContextCopyWith(SearchResultRowContext value, $Res Function(SearchResultRowContext) _then) = _$SearchResultRowContextCopyWithImpl;
 @useResult
 $Res call({
- SearchResult result, bool selected, bool focused, bool loading, VoidCallback onTap, ShortcutActivator? shortcutActivator
+ SearchResult result, bool selected, bool focused, bool loading, VoidCallback? onTap, ShortcutActivator? shortcutActivator
 });
 
 
@@ -68,14 +68,14 @@ class _$SearchResultRowContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchResultRowContext
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? result = null,Object? selected = null,Object? focused = null,Object? loading = null,Object? onTap = null,Object? shortcutActivator = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? result = null,Object? selected = null,Object? focused = null,Object? loading = null,Object? onTap = freezed,Object? shortcutActivator = freezed,}) {
   return _then(SearchResultRowContext(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as SearchResult,selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable
 as bool,focused: null == focused ? _self.focused : focused // ignore: cast_nullable_to_non_nullable
 as bool,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
-as bool,onTap: null == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
-as VoidCallback,shortcutActivator: freezed == shortcutActivator ? _self.shortcutActivator : shortcutActivator // ignore: cast_nullable_to_non_nullable
+as bool,onTap: freezed == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
+as VoidCallback?,shortcutActivator: freezed == shortcutActivator ? _self.shortcutActivator : shortcutActivator // ignore: cast_nullable_to_non_nullable
 as ShortcutActivator?,
   ));
 }
@@ -84,7 +84,7 @@ as ShortcutActivator?,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -170,7 +170,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback onTap,  ShortcutActivator? shortcutActivator)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback? onTap,  ShortcutActivator? shortcutActivator)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SearchResultRowContext() when $default != null:
 return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.onTap,_that.shortcutActivator);case _:
@@ -191,7 +191,7 @@ return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.on
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback onTap,  ShortcutActivator? shortcutActivator)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback? onTap,  ShortcutActivator? shortcutActivator)  $default,) {final _that = this;
 switch (_that) {
 case _SearchResultRowContext():
 return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.onTap,_that.shortcutActivator);case _:
@@ -211,7 +211,7 @@ return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.on
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback onTap,  ShortcutActivator? shortcutActivator)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SearchResult result,  bool selected,  bool focused,  bool loading,  VoidCallback? onTap,  ShortcutActivator? shortcutActivator)?  $default,) {final _that = this;
 switch (_that) {
 case _SearchResultRowContext() when $default != null:
 return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.onTap,_that.shortcutActivator);case _:
@@ -227,13 +227,13 @@ return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.on
 
 class _SearchResultRowContext implements SearchResultRowContext {
   const _SearchResultRowContext({required this.result, required this.selected, required this.focused, required this.loading, required this.onTap, this.shortcutActivator});
-  
+
 
 @override final  SearchResult result;
 @override final  bool selected;
 @override final  bool focused;
 @override final  bool loading;
-@override final  VoidCallback onTap;
+@override final  VoidCallback? onTap;
 @override final  ShortcutActivator? shortcutActivator;
 
 /// Create a copy of SearchResultRowContext
@@ -268,7 +268,7 @@ abstract mixin class _$SearchResultRowContextCopyWith<$Res> implements $SearchRe
   factory _$SearchResultRowContextCopyWith(_SearchResultRowContext value, $Res Function(_SearchResultRowContext) _then) = __$SearchResultRowContextCopyWithImpl;
 @override @useResult
 $Res call({
- SearchResult result, bool selected, bool focused, bool loading, VoidCallback onTap, ShortcutActivator? shortcutActivator
+ SearchResult result, bool selected, bool focused, bool loading, VoidCallback? onTap, ShortcutActivator? shortcutActivator
 });
 
 
@@ -285,14 +285,14 @@ class __$SearchResultRowContextCopyWithImpl<$Res>
 
 /// Create a copy of SearchResultRowContext
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? result = null,Object? selected = null,Object? focused = null,Object? loading = null,Object? onTap = null,Object? shortcutActivator = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? result = null,Object? selected = null,Object? focused = null,Object? loading = null,Object? onTap = freezed,Object? shortcutActivator = freezed,}) {
   return _then(_SearchResultRowContext(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as SearchResult,selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable
 as bool,focused: null == focused ? _self.focused : focused // ignore: cast_nullable_to_non_nullable
 as bool,loading: null == loading ? _self.loading : loading // ignore: cast_nullable_to_non_nullable
-as bool,onTap: null == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
-as VoidCallback,shortcutActivator: freezed == shortcutActivator ? _self.shortcutActivator : shortcutActivator // ignore: cast_nullable_to_non_nullable
+as bool,onTap: freezed == onTap ? _self.onTap : onTap // ignore: cast_nullable_to_non_nullable
+as VoidCallback?,shortcutActivator: freezed == shortcutActivator ? _self.shortcutActivator : shortcutActivator // ignore: cast_nullable_to_non_nullable
 as ShortcutActivator?,
   ));
 }
@@ -302,7 +302,7 @@ as ShortcutActivator?,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -376,7 +376,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -525,7 +525,7 @@ return error(_that.result,_that.message);case _:
 
 class SearchResultPreviewContextLoading implements SearchResultPreviewContext {
   const SearchResultPreviewContextLoading({required this.result});
-  
+
 
 @override final  SearchResult result;
 
@@ -590,7 +590,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -602,7 +602,7 @@ $SearchResultCopyWith<$Res> get result {
 
 class SearchResultPreviewContextData implements SearchResultPreviewContext {
   const SearchResultPreviewContextData({required this.result, required this.data});
-  
+
 
 @override final  SearchResult result;
  final  Object data;
@@ -668,7 +668,7 @@ as SearchResult,data: null == data ? _self.data : data ,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -680,7 +680,7 @@ $SearchResultCopyWith<$Res> get result {
 
 class SearchResultPreviewContextError implements SearchResultPreviewContext {
   const SearchResultPreviewContextError({required this.result, required this.message}): assert(message != "", 'Message must not be empty.');
-  
+
 
 @override final  SearchResult result;
  final  String message;
@@ -747,7 +747,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });

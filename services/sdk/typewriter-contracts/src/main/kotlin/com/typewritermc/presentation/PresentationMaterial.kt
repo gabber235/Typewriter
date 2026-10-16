@@ -24,6 +24,7 @@ data class PresentationMaterial(
     val role: PresentationRole,
     val layout: PresentationNode,
     val dependencies: PresentationDependencies,
+    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance? = null,
 )
 
 data class OwnedFieldPresentation(
@@ -40,10 +41,9 @@ internal data class AuthoredBindingUse(
 )
 
 fun PresentationMaterial.explicitFieldSelections(): List<OwnedFieldPresentation> =
-    layout
-        .authoredBindingUses(
-            bindings = mapOf("configured_value" to RelativeFieldPattern()),
-        ).mapNotNull { use ->
+    listOfNotNull(layout, resultAppearance?.leading)
+        .flatMap { it.authoredBindingUses(bindings = mapOf("configured_value" to RelativeFieldPattern())) }
+        .mapNotNull { use ->
             val selected = use.selected ?: return@mapNotNull null
             OwnedFieldPresentation(
                 provider = provider,
@@ -515,10 +515,10 @@ private fun PresentationConnection.nodes(): List<PresentationNode> =
 
 private fun SearchProvider.nodes(): List<PresentationNode> =
     when (this) {
-        is SearchProvider.StaticValuesWrapper -> listOf(value.result.presentation)
-        is SearchProvider.HttpJsonWrapper -> listOf(value.result.presentation)
-        is SearchProvider.RealmCallbackWrapper -> listOf(value.result.presentation)
-        is SearchProvider.CollectionWrapper -> listOf(value.result.presentation)
+        is SearchProvider.StaticValuesWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
+        is SearchProvider.HttpJsonWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
+        is SearchProvider.RealmCallbackWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
+        is SearchProvider.CollectionWrapper -> listOfNotNull(value.result.presentation, value.result.resultAppearance?.leading)
         is SearchProvider.GateWrapper -> value.child.nodes()
         is SearchProvider.DebounceWrapper -> value.child.nodes()
         is SearchProvider.CacheWrapper -> value.child.nodes()

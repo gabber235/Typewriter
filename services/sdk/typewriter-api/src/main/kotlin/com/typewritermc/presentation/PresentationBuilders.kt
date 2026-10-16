@@ -231,7 +231,12 @@ data class TextStyle(
     val color: PresentationColor? = null,
     val weight: Int? = null,
     val sizing: TextSizing? = null,
-)
+    val lineHeight: Double? = null,
+) {
+    init {
+        require(lineHeight == null || (lineHeight.isFinite() && lineHeight > 0)) { "Text line height must be finite and positive." }
+    }
+}
 
 data class TextStyleOverride(
     val color: PresentationColor? = null,
@@ -350,7 +355,9 @@ interface HeaderReorderScope {
     fun enabledIf(value: Expr<Boolean, Handled>)
 }
 
-interface SequenceScope<Item> : Layout {
+interface SequenceScope<Item> :
+    Layout,
+    SequenceLayoutScope {
     val item: Expr<Item, MayBeMissing>
 
     fun empty(body: Layout.() -> Unit)
@@ -679,6 +686,8 @@ enum class ConnectorAnchor { Start, Center }
 
 /** Arranges graph occurrences without changing their traversal or content. */
 interface SequenceLayoutScope {
+    fun clippedRow(spacing: Double = 0.0)
+
     fun column(
         spacing: Double = 0.0,
         cross: CrossAxisAlignment = CrossAxisAlignment.Start,

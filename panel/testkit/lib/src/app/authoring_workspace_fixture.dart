@@ -630,6 +630,8 @@ CheckedEditorCatalog authoringFixtureCatalog({
       );
       materials.add(
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: id,
           target: target,
           role: role,

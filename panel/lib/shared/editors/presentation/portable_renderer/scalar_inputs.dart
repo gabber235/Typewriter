@@ -110,7 +110,12 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                       serialize: parse,
                       validator: validate,
                       display: (value) =>
-                          _mappedDisplay(scope, mappings, value) ??
+                          _mappedDisplay(
+                            scope,
+                            mappings,
+                            value,
+                            reference: control.binding,
+                          ) ??
                           encode(value),
                       onChanged: write,
                       onCommittedDone: complete,
@@ -194,7 +199,12 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                           : "",
                       displayText: current == null
                           ? null
-                          : _mappedDisplay(scope, input.mappings, current),
+                          : _mappedDisplay(
+                              scope,
+                              input.mappings,
+                              current,
+                              reference: input.control.binding,
+                            ),
                       readOnly: scope.readOnly,
                       enabled: scope.enabled,
                       statesController: states,
@@ -1016,7 +1026,12 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                   ),
                   child: Slider(
                     label:
-                        _mappedDisplay(childScope, slider.mappings, current!) ??
+                        _mappedDisplay(
+                          childScope,
+                          slider.mappings,
+                          current!,
+                          reference: slider.control.binding,
+                        ) ??
                         _displayNumber(value),
                     allowedInteraction:
                         options?.interaction == skir.SliderInteraction.dragOnly
@@ -1054,6 +1069,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                                   childScope,
                                   slider.mappings,
                                   current,
+                                  reference: slider.control.binding,
                                 ) ??
                                 _displayNumber(value),
                             style: style.valueStyle,
@@ -1204,6 +1220,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                         scope,
                         input.mappings,
                         skir.DataValue.wrapTimestamp(value),
+                        reference: input.control.binding,
                       ) ??
                       encode(value),
                   validator: (value) =>
@@ -1702,7 +1719,12 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
                     suffixIcon: externalSuffix ? null : suffix,
                   ),
                   display: (value) =>
-                      _mappedDisplay(scope, input.mappings, value.asValue) ??
+                      _mappedDisplay(
+                        scope,
+                        input.mappings,
+                        value.asValue,
+                        reference: input.control.binding,
+                      ) ??
                       encode(value),
                   onChanged: (value) => write(value.asValue),
                   onCleared: () => write(skir.DataValue.unfilled),

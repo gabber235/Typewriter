@@ -82,6 +82,8 @@ void main() {
                   skir.AxisChild.wrapFixed(childSlot),
                 ],
                 layout: skir.AxisChildrenLayout(
+                  clipOverflow: false,
+
                   spacing: 0,
                   mainAxisAlignment: skir.MainAxisAlignment.start,
                   crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -562,6 +564,8 @@ _nestedMaterialFixture() {
     header: null,
   );
   final nestedMaterial = skir.PresentationMaterial(
+    resultAppearance: null,
+
     provider: nestedProvider,
     target: skir.PresentationTarget.createNamed(
       definition: type,
@@ -570,6 +574,8 @@ _nestedMaterialFixture() {
     role: skir.PresentationRole.inspector,
     layout: nestedLayout,
     dependencies: skir.PresentationDependencies(
+      contextInputs: const [],
+
       types: const [],
       presentations: const [],
       conversions: const [],
@@ -613,6 +619,14 @@ _nestedMaterialFixture() {
       },
       budget: base.scope.budget,
       catalog: checked,
+      queries: PortableExpressionQueries(
+        catalog: checked,
+        authored: AuthoringDocument(
+          catalog: checked,
+            entries: base.document.entries,
+          links: base.document.links,
+        ),
+      ),
       resource: resource,
       material: base.material,
       host: base.scope.host,
@@ -643,13 +657,18 @@ _fixture({
   final type = _definition("Tag");
   final list = _definition("List");
   final listParameter = skir.ParameterKey(owner: list, index: 0);
-  final listOfText = skir.NamedTypeUse(
+  final listOfResources = skir.NamedTypeUse(
     definition: list,
-    arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+    arguments: [skir.TypeUse.wrapNamed(frameworkResourceIdUse)],
   );
-  final listOfTextTemplate = skir.TypeTemplate.createNamed(
+  final listOfResourcesTemplate = skir.TypeTemplate.createNamed(
     definition: list,
-    arguments: [skir.TypeTemplate.wrapScalar(skir.ScalarKind.text)],
+    arguments: [
+      skir.TypeTemplate.createNamed(
+        definition: frameworkResourceIdUse.definition,
+        arguments: const [],
+      ),
+    ],
   );
   final generation = skir.CatalogGeneration(value: "catalog:collections");
   final published = skir.PublishedType(
@@ -664,7 +683,7 @@ _fixture({
             "name",
             skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
           ),
-          _field(type, "next", listOfTextTemplate),
+          _field(type, "next", listOfResourcesTemplate),
         ],
         abstract_: false,
       ),
@@ -677,7 +696,7 @@ _fixture({
         "name",
         skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       ),
-      _effective(type, "next", listOfTextTemplate),
+      _effective(type, "next", listOfResourcesTemplate),
     ],
     ancestorTemplates: const [],
   );
@@ -733,11 +752,11 @@ _fixture({
     generation: generation,
     resources: graph == null
         ? [
-            _resource(one, type, listOfText, "Alpha", [two]),
+            _resource(one, type, listOfResources, "Alpha", [two]),
             _resource(
               two,
               type,
-              listOfText,
+              listOfResources,
               duplicateKey ? "Alpha" : "Beta",
               cycle ? [one] : const [],
             ),
@@ -747,7 +766,7 @@ _fixture({
               _resource(
                 skir.ResourceId(value: entry.key),
                 type,
-                listOfText,
+                listOfResources,
                 switch (entry.key) {
                   "tag:one" => "Alpha",
                   "tag:two" => "Beta",
@@ -813,11 +832,15 @@ _fixture({
     arguments: const [],
   );
   final material = skir.PresentationMaterial(
+    resultAppearance: null,
+
     provider: provider,
     target: target,
     role: skir.PresentationRole.inspector,
     layout: _slotNode("material", "unused"),
     dependencies: skir.PresentationDependencies(
+      contextInputs: const [],
+
       types: const [],
       presentations: const [],
       conversions: const [],
@@ -849,16 +872,18 @@ _fixture({
       operations: testPortableOperations(),
       bindings: {
         _lookupBinding: PortableExpressionBinding(
-          value: skir.DataValue.wrapStringValue(
-            projected ? "Alpha" : one.value,
-          ),
+          value: projected
+              ? skir.DataValue.wrapStringValue("Alpha")
+              : one.toExpressionValue(),
         ),
         _rootsBinding: PortableExpressionBinding(
-          value: _values([one], listOfText),
+          value: _values([one], listOfResources),
         ),
       },
       budget: budget,
       catalog: checked,
+      queries: host.document.queries,
+      resourceDiagnostics: host.document.resourceDiagnostics,
       material: material,
       host: host,
     ),
@@ -899,6 +924,8 @@ skir.PresentationNode _graphNode({
               skir.AxisChild.wrapFixed(childSlot),
             ],
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 0,
               mainAxisAlignment: skir.MainAxisAlignment.start,
               crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -937,7 +964,7 @@ skir.DataValue _keys(List<String> values) => skir.DataValue.createListValue(
     for (final (index, value) in values.indexed)
       skir.ListItem(
         id: skir.ItemId(value: "root:$index"),
-        value: skir.DataValue.wrapStringValue(value),
+        value: skir.ResourceId(value: value).toExpressionValue(),
       ),
   ],
 );
@@ -976,7 +1003,7 @@ skir.DataValue _values(
       for (final indexed in values.indexed)
         skir.ListItem(
           id: skir.ItemId(value: "item:${indexed.$1}"),
-          value: skir.DataValue.wrapStringValue(indexed.$2.value),
+          value: indexed.$2.toExpressionValue(),
         ),
     ],
   ),
@@ -1050,6 +1077,8 @@ skir.SequencePresentation _sequence(skir.PresentationNode item) =>
       separator: null,
       layout: skir.SequenceLayout.wrapChildren(
         skir.ChildrenLayout.createColumn(
+          clipOverflow: false,
+
           spacing: 0,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,

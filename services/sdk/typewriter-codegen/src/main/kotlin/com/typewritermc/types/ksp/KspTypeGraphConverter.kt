@@ -256,10 +256,19 @@ class KspTypeGraphConverter(
                 .mapNotNull { reference ->
                     val parent = reference.resolve()
                     val qualified = parent.declaration.qualifiedName?.asString()
-                    if (qualified == "kotlin.Any" || qualified == RESOURCE_MARKER) return@mapNotNull null
+                    if (qualified == "kotlin.Any" || qualified == RESOURCE_MARKER ||
+                        (declaration.classKind == ClassKind.ENUM_CLASS && qualified == "kotlin.Enum")
+                    ) {
+                        return@mapNotNull null
+                    }
                     template(parent, declaration, path + "parent") as? TypeTemplate.Named
                 }.toList()
-        val fields = ownedFields(declaration, identity, path)
+        val fields =
+            if (declaration.hasAnnotation(TYPEWRITER_STRING_ANNOTATION) || declaration.valueClassScalarKind() != null) {
+                emptyList()
+            } else {
+                ownedFields(declaration, identity, path)
+            }
         ownedFields[identity] = fields
         val representation =
             when {

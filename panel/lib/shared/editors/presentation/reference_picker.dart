@@ -84,42 +84,7 @@ Future<T?> showReferencePicker<T extends Object>(
     rowRenderers: {
       _referencePickerResultType.rowRendererId:
           rowBuilder ??
-          (row) {
-            final candidate = byId[row.result.id]!;
-            return SearchResultCard(
-              color: Theme.of(context).colorScheme.primary,
-              prefix: SearchResultIconTile(
-                color: Theme.of(context).colorScheme.primary,
-                onColor: Theme.of(context).colorScheme.primary.on(context),
-                icon: candidate.display?.icon.trim().isNotEmpty == true
-                    ? Icones(candidate.display!.icon)
-                    : const Icon(Icons.link),
-                focused: row.focused,
-                loading: row.loading,
-              ),
-              selected: row.selected,
-              focused: row.focused,
-              onTap: row.onTap,
-              content: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SearchResultTitle(title: candidate.label),
-                  if (candidate.description.isNotEmpty)
-                    SearchResultDescription(description: candidate.description),
-                  if (candidate.disabledReason case final reason?)
-                    SearchResultDescription(description: reason),
-                ],
-              ),
-              suffix: SearchResultSuffix(
-                label: candidate.disabledReason == null
-                    ? "select"
-                    : "unavailable",
-                shortcutActivator: row.shortcutActivator,
-                selected: row.selected,
-              ),
-            );
-          },
+          (row) => buildReferencePickerResult(byId[row.result.id]!, row),
     },
   );
 }
@@ -217,4 +182,50 @@ final class _ReferencePickerSearchSource<T extends Object>
     _disposed = true;
     unawaited(_snapshots.close());
   }
+}
+
+extension SearchResultTypeDisplay on skir.TypeDisplay {
+  Color? get searchResultAccent {
+    final text = color.trim();
+    if (text.isEmpty) return null;
+    try {
+      return parseColorHex(text, includeAlpha: true);
+    } on FormatException {
+      return null;
+    }
+  }
+}
+
+Widget referencePickerDescription<T extends Object>(
+  ReferencePickerCandidate<T> candidate,
+) => Builder(
+  builder: (context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    spacing: context.spacing.space1,
+    children: [
+      if (candidate.description.isNotEmpty)
+        SearchResultDescription(description: candidate.description),
+      if (candidate.disabledReason case final reason?)
+        SearchResultDescription(description: reason),
+    ],
+  ),
+);
+
+Widget buildReferencePickerResult<T extends Object>(
+  ReferencePickerCandidate<T> candidate,
+  SearchResultRowContext row,
+) {
+  final icon = candidate.display?.icon.trim();
+  return SearchResultRow(
+    row: row,
+    density: SearchResultDensity.card,
+    accent: candidate.display?.searchResultAccent,
+    leading: icon == null || icon.isEmpty
+        ? const Icon(Icons.link)
+        : Icones(icon),
+    kindLabel: candidate.disabledReason == null ? "select" : "unavailable",
+    body: SearchResultTitle(title: candidate.label),
+    footer: referencePickerDescription(candidate),
+  );
 }

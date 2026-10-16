@@ -65,17 +65,50 @@ extension on _ResourceCreationOperation {
   Future<ReferenceChoice?> _showReferenceQuestion({
     required List<ReferencePickerCandidate<ReferenceChoice>> candidates,
     required String searchHint,
-  }) => _presentQuestion(
-    (query, onQueryChanged, onBack) => showReferencePicker<ReferenceChoice>(
-      context,
-      candidates: candidates,
-      searchHint: searchHint,
-      initialQuery: query,
-      onQueryChanged: onQueryChanged,
-      onBack: onBack,
-      cancelled: _cancelledSignal.future,
-    ),
-  );
+    required AuthoringDocument presentationDocument,
+    required ResourceIssues presentationIssues,
+  }) {
+    // Capture before the popup route crosses the inherited widget boundary.
+    final surfaceContext =
+        PresentationEnvironment.maybeOf(context)?.bindings ?? const {};
+    final byId = {for (final candidate in candidates) candidate.id: candidate};
+    return _presentQuestion(
+      (query, onQueryChanged, onBack) => showReferencePicker<ReferenceChoice>(
+        context,
+        candidates: candidates,
+        searchHint: searchHint,
+        initialQuery: query,
+        onQueryChanged: onQueryChanged,
+        onBack: onBack,
+        cancelled: _cancelledSignal.future,
+        rowBuilder: (row) {
+          final candidate = byId[row.result.id]!;
+          final resource = switch (candidate.value) {
+            ExistingReference(:final reference) => reference.connection.target,
+            NewEmbeddedCounterpart(:final slot) => slot.containing.resource,
+            NewResourceReference() => null,
+          };
+          if (resource == null) {
+            return buildReferencePickerResult(candidate, row);
+          }
+          return AuthoredResourceSearchResult(
+            key: ValueKey(row.result.id),
+            document: presentationDocument,
+            issues: presentationIssues,
+            presentationContext: surfaceContext,
+            resource: resource,
+            row: row,
+            role: skir.PresentationRole.referenceOption,
+            fallbackLabel: candidate.label,
+            kindLabelOverride: candidate.disabledReason == null
+                ? "select"
+                : "unavailable",
+            footer: referencePickerDescription(candidate),
+          );
+        },
+      ),
+    );
+  }
 
   Future<skir.TypeSelection?> _chooseConcreteType(skir.TypeSelection expected) {
     if (catalog.concreteRecordSelections(expected).length == 1) {

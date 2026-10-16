@@ -180,6 +180,8 @@ skir.PresentationNode _actions() {
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 16,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -286,6 +288,8 @@ skir.PresentationNode _projections() {
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 24,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.stretch,
@@ -552,6 +556,8 @@ skir.PresentationNode _displays() {
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 16,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,

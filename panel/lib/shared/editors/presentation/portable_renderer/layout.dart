@@ -1,5 +1,26 @@
 part of "../portable_presentation_renderer.dart";
 
+Widget _row({
+  required skir.AxisChildrenLayout layout,
+  required List<Widget> children,
+  double spacing = 0,
+}) {
+  final row = Row(
+    mainAxisSize: MainAxisSize.min,
+    mainAxisAlignment: _mainAxis(layout.mainAxisAlignment),
+    crossAxisAlignment: _crossAxis(layout.crossAxisAlignment),
+    spacing: spacing,
+    children: children,
+  );
+  if (!layout.clipOverflow) return row;
+  return UnconstrainedBox(
+    alignment: Alignment.centerLeft,
+    constrainedAxis: Axis.vertical,
+    clipBehavior: Clip.antiAlias,
+    child: row,
+  );
+}
+
 extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
   Widget _renderChildren(
     skir.ChildrenElement element,
@@ -119,12 +140,7 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
           children: children,
         );
       }
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: _mainAxis(element.layout.mainAxisAlignment),
-        crossAxisAlignment: _crossAxis(element.layout.crossAxisAlignment),
-        children: children,
-      );
+      return _row(layout: element.layout, children: children);
     }
 
     if (!vertical || element.children.length != 1) return buildAxis(null);
@@ -163,6 +179,14 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     if (evaluated is! PortableExpressionAvailable) {
       return _diagnostic("The repeated value is unavailable");
     }
+    final sourceSchema = childScope.expressionSchema(element.source);
+    final itemType = switch (sourceSchema) {
+      CompletePortablePresentationBinding(:final use) =>
+        (childScope.queries?.catalog ?? childScope.catalog)?.collectionItemType(
+          use,
+        ),
+      _ => null,
+    };
     final rows = switch (evaluated.value.authoredPayload) {
       skir.DataValue_listValueWrapper(:final value) ||
       skir.DataValue_setValueWrapper(:final value) => [
@@ -217,9 +241,16 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
               ),
             );
       final itemScope = rowReference == null
-          ? childScope.withValues({
-              element.itemBindingId: row.value,
-            }, authoredOrigin: node.nodeId)
+          ? childScope.withValues(
+              {element.itemBindingId: row.value},
+              schemas: {
+                if (itemType != null)
+                  element.itemBindingId: CompletePortablePresentationBinding(
+                    itemType,
+                  ),
+              },
+              authoredOrigin: node.nodeId,
+            )
           : childScope.withBinding(rowReference, element.itemBindingId);
       children.add(
         itemScope == null
@@ -267,12 +298,10 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
       spacing: value.spacing,
       children: children,
     ),
-    skir.ChildrenLayout_rowWrapper(:final value) => Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: _mainAxis(value.mainAxisAlignment),
-      crossAxisAlignment: _crossAxis(value.crossAxisAlignment),
-      spacing: value.spacing,
+    skir.ChildrenLayout_rowWrapper(:final value) => _row(
+      layout: value,
       children: children,
+      spacing: value.spacing,
     ),
     skir.ChildrenLayout_wrapWrapper(:final value) => Wrap(
       spacing: value.spacing,

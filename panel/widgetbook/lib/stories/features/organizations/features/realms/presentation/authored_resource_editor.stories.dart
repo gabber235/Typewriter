@@ -298,6 +298,8 @@ _fixture({bool unfilled = false}) {
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.inspector,

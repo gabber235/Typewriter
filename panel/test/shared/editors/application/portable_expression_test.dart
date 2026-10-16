@@ -143,7 +143,7 @@ void main() {
   });
 
   test("publishes the complete portable operation registry", () {
-    expect(authoredPortableOperationIds, hasLength(68));
+    expect(authoredPortableOperationIds, hasLength(75));
     expect(
       authoredPortableOperationIds,
       containsAll(const {
@@ -322,7 +322,7 @@ void main() {
     );
     expect(
       _availableCall("typewriter.link.target", [link]),
-      skir.DataValue.wrapStringValue("page:first"),
+      skir.ResourceId(value: "page:first").toExpressionValue(),
     );
   });
 

@@ -4,11 +4,11 @@ import "package:widgetbook/widgetbook.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/features/search/presentation/authoring_search_story_fixtures.dart";
 
-@widgetbook.UseCase(name: "Book result", type: AuthoringSearchResultItem)
+@widgetbook.UseCase(name: "Book result", type: AuthoredResourceSearchResult)
 Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringSearchResultItem(
+      (fixtures, state) => _result(
         payload: fixtures.mainQuest,
         selected: state.selected,
         focused: state.focused,
@@ -18,11 +18,11 @@ Widget authoringBookSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Tag result", type: AuthoringSearchResultItem)
+@widgetbook.UseCase(name: "Tag result", type: AuthoredResourceSearchResult)
 Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringSearchResultItem(
+      (fixtures, state) => _result(
         payload: fixtures.mainQuestTag,
         selected: state.selected,
         focused: state.focused,
@@ -32,11 +32,11 @@ Widget authoringTagSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Page result", type: AuthoringSearchResultItem)
+@widgetbook.UseCase(name: "Page result", type: AuthoredResourceSearchResult)
 Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringSearchResultItem(
+      (fixtures, state) => _result(
         payload: fixtures.meetTheMayor,
         selected: state.selected,
         focused: state.focused,
@@ -46,11 +46,11 @@ Widget authoringPageSearchResultItemUseCase(BuildContext context) =>
       ),
     );
 
-@widgetbook.UseCase(name: "Element result", type: AuthoringSearchResultItem)
+@widgetbook.UseCase(name: "Element result", type: AuthoredResourceSearchResult)
 Widget authoringElementSearchResultItemUseCase(BuildContext context) =>
     _authoringSearchResultStory(
       context,
-      (fixtures, state) => AuthoringSearchResultItem(
+      (fixtures, state) => _result(
         payload: fixtures.mayorGreeting,
         selected: state.selected,
         focused: state.focused,
@@ -94,7 +94,7 @@ Widget authoringSearchResultGalleryStory() {
         mainAxisSize: MainAxisSize.min,
         spacing: 8,
         children: [
-          AuthoringSearchResultItem(
+          _result(
             payload: fixtures.mainQuest,
             selected: false,
             focused: true,
@@ -102,7 +102,7 @@ Widget authoringSearchResultGalleryStory() {
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringSearchResultItem(
+          _result(
             payload: fixtures.mainQuestTag,
             selected: false,
             focused: false,
@@ -110,7 +110,7 @@ Widget authoringSearchResultGalleryStory() {
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringSearchResultItem(
+          _result(
             payload: fixtures.meetTheMayor,
             selected: false,
             focused: false,
@@ -118,7 +118,7 @@ Widget authoringSearchResultGalleryStory() {
             onTap: () {},
             shortcutActivator: null,
           ),
-          AuthoringSearchResultItem(
+          _result(
             payload: fixtures.mayorGreeting,
             selected: false,
             focused: false,
@@ -145,3 +145,26 @@ final class _ResultStoryState {
   final bool loading;
   final ShortcutActivator? shortcut;
 }
+
+Widget _result({
+  required AuthoringSearchResultPayload payload,
+  required bool selected,
+  required bool focused,
+  required bool loading,
+  required VoidCallback onTap,
+  ShortcutActivator? shortcutActivator,
+}) => buildAuthoringResourceSearchResultItem(
+  SearchResultRowContext(
+    result: SearchResult(
+      id: payload.id.value,
+      type: authoringResourceSearchResultType,
+      payload: payload,
+      title: payload.title,
+    ),
+    selected: selected,
+    focused: focused,
+    loading: loading,
+    onTap: onTap,
+    shortcutActivator: shortcutActivator,
+  ),
+);

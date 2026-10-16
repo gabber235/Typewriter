@@ -120,6 +120,8 @@ extension PortableResourceHeading on skir.ExpressionNode {
                   ),
               ],
               layout: skir.AxisChildrenLayout(
+                clipOverflow: false,
+
                 spacing: 8,
                 mainAxisAlignment: skir.MainAxisAlignment.start,
                 crossAxisAlignment: skir.CrossAxisAlignment.stretch,

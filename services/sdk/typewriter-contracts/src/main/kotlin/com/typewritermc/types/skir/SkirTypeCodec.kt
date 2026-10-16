@@ -695,6 +695,7 @@ private fun ConversionScope.encode(material: PresentationMaterial) =
         layout = material.layout,
         dependencies = material.dependencies,
         subject = encodeTypeTemplate(material.subject),
+        resultAppearance = material.resultAppearance,
     )
 
 private fun encode(id: PresentationId) = SkirPresentationId(namespace = id.namespace, name = id.name)

@@ -29,7 +29,8 @@ void main() {
       "body": (_) => const SizedBox.shrink(),
     };
     final projectedWriters = <skir.ExpressionBindingId, PortableBindingSetter>{
-      bindingId: (_, _) => const PortablePresentationWriteApplied(),
+      bindingId: (_, _, {reads = const []}) =>
+          const PortablePresentationWriteApplied(),
     };
 
     final scope = PortablePresentationScope(
@@ -653,6 +654,8 @@ void main() {
           skir.ChildrenElement.createColumn(
             children: [skir.AxisChild.wrapFixed(card)],
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 0,
               mainAxisAlignment: skir.MainAxisAlignment.start,
               crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -1809,6 +1812,8 @@ _linkCollectionFixture({
       skir.ChildrenElement.createColumn(
         children: [skir.AxisChild.wrapFixed(appearanceCard)],
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 0,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -1838,11 +1843,15 @@ _linkCollectionFixture({
     ),
   );
   final collectionMaterial = skir.PresentationMaterial(
+    resultAppearance: null,
+
     provider: skir.PresentationId(namespace: "test", name: "link.collection"),
     target: appearanceTarget,
     role: skir.PresentationRole.inspector,
     layout: _compactNode,
     dependencies: skir.PresentationDependencies(
+      contextInputs: const [],
+
       types: const [],
       presentations: const [],
       conversions: const [],
@@ -1956,6 +1965,8 @@ _linkCollectionFixture({
       presentationMaterials: adaptiveAppearance
           ? [
               skir.PresentationMaterial(
+                resultAppearance: null,
+
                 provider: appearanceId,
                 target: appearanceTarget,
                 role: skir.PresentationRole.referenceOption,
@@ -2139,6 +2150,8 @@ _linkCollectionFixture({
           },
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
           catalog: checked,
+          queries: host.document.queries,
+          resourceDiagnostics: host.document.resourceDiagnostics,
           material: adaptiveAppearance ? collectionMaterial : null,
           host: host,
         ),
@@ -2166,6 +2179,10 @@ PortablePresentationScope _authoringScope(
   },
   budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
   catalog: document.workspace.document.catalog,
+  queries: PortableExpressionQueries(
+    catalog: document.workspace.document.catalog,
+    authored: document.workspace.document,
+  ),
   host: _authoredHost(document),
 );
 
@@ -2679,6 +2696,8 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     presentations: const [],
     presentationMaterials: [
       skir.PresentationMaterial(
+        resultAppearance: null,
+
         provider: _iconifyPresentation,
         target: skir.PresentationTarget.createNamed(
           definition: _iconifyDefinition,
@@ -2748,6 +2767,8 @@ final _actionNode = _node(
         ),
       ],
       layout: skir.AxisChildrenLayout(
+        clipOverflow: false,
+
         spacing: 8,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,
@@ -3556,6 +3577,8 @@ void registerRemainingFieldsTests() {
               ),
             ],
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 8,
               mainAxisAlignment: skir.MainAxisAlignment.start,
               crossAxisAlignment: skir.CrossAxisAlignment.center,
@@ -3572,6 +3595,8 @@ void registerRemainingFieldsTests() {
               skir.AxisChild.wrapFixed(row),
             ],
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 8,
               mainAxisAlignment: skir.MainAxisAlignment.start,
               crossAxisAlignment: skir.CrossAxisAlignment.stretch,

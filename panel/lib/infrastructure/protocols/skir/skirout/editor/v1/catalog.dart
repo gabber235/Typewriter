@@ -3016,6 +3016,7 @@ sealed class PresentationMaterial_orMutable {
   _lib_editor_v1_presentation.PresentationDependencies_orMutable
   get dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate get subject;
+  _lib_editor_v1_presentation.ResultAppearance_orMutable? get resultAppearance;
 
   PresentationMaterial toFrozen();
 }
@@ -3034,6 +3035,8 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
   final _lib_editor_v1_presentation.PresentationDependencies dependencies;
   @_core.override
   final _lib_editor_v1_type_catalog.TypeTemplate subject;
+  @_core.override
+  final _lib_editor_v1_presentation.ResultAppearance? resultAppearance;
   _skir.internal__UnrecognizedFields? _u;
 
   factory PresentationMaterial({
@@ -3044,6 +3047,8 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     required _lib_editor_v1_presentation.PresentationDependencies_orMutable
     dependencies,
     required _lib_editor_v1_type_catalog.TypeTemplate subject,
+    required _lib_editor_v1_presentation.ResultAppearance_orMutable?
+    resultAppearance,
   }) => PresentationMaterial._(
     provider.toFrozen(),
     target,
@@ -3051,6 +3056,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     layout.toFrozen(),
     dependencies.toFrozen(),
     subject,
+    (resultAppearance != null) ? resultAppearance.toFrozen() : null,
   );
 
   PresentationMaterial._(
@@ -3060,6 +3066,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
+    this.resultAppearance,
   );
 
   /// Default instance with all fields set to their default values.
@@ -3070,6 +3077,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     _lib_editor_v1_presentation.PresentationNode.defaultInstance,
     _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
     _lib_editor_v1_type_catalog.TypeTemplate.unknown,
+    null,
   );
 
   /// Returns a new mutable instance.
@@ -3082,6 +3090,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         _lib_editor_v1_presentation.PresentationNode.defaultInstance,
         _lib_editor_v1_presentation.PresentationDependencies.defaultInstance,
         _lib_editor_v1_type_catalog.TypeTemplate.unknown,
+        null,
       );
 
   /// Returns this instance (no operation).
@@ -3097,6 +3106,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
+    this.resultAppearance,
   );
 
   @_core.override
@@ -3119,6 +3129,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
     this.layout,
     this.dependencies,
     this.subject,
+    this.resultAppearance,
   ];
 
   @_core.override
@@ -3185,6 +3196,17 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
         (it) => it.subject,
         (it, v) => it.subject = v,
       );
+      _serializerBuilder.addField(
+        "result_appearance",
+        "resultAppearance",
+        6,
+        _skir.Serializers.optional(
+          _lib_editor_v1_presentation.ResultAppearance.serializer,
+        ),
+        "",
+        (it) => it.resultAppearance,
+        (it, v) => it.resultAppearance = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -3210,6 +3232,7 @@ final class PresentationMaterial_mutable
   _lib_editor_v1_presentation.PresentationNode_orMutable layout;
   _lib_editor_v1_presentation.PresentationDependencies_orMutable dependencies;
   _lib_editor_v1_type_catalog.TypeTemplate subject;
+  _lib_editor_v1_presentation.ResultAppearance_orMutable? resultAppearance;
   _skir.internal__UnrecognizedFields? _u;
 
   PresentationMaterial_mutable._(
@@ -3219,6 +3242,7 @@ final class PresentationMaterial_mutable
     this.layout,
     this.dependencies,
     this.subject,
+    this.resultAppearance,
   );
 
   /// If the value of [provider] is already mutable, returns it as is.
@@ -3268,6 +3292,7 @@ final class PresentationMaterial_mutable
     layout: this.layout,
     dependencies: this.dependencies,
     subject: this.subject,
+    resultAppearance: this.resultAppearance,
   ).._u = this._u;
 }
 

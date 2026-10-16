@@ -818,6 +818,7 @@ pub struct AxisChildrenLayout {
     pub spacing: f64,
     pub main_axis_alignment: MainAxisAlignment,
     pub cross_axis_alignment: CrossAxisAlignment,
+    pub clip_overflow: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<AxisChildrenLayout>>,
 }
@@ -5207,6 +5208,7 @@ pub struct SearchResultMapping {
     pub selected_value: crate::skirout::base::editor::v1::expression::ExpressionNode,
     pub presentation: PresentationNode,
     pub label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub result_appearance: Option<ResultAppearance>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SearchResultMapping>>,
 }
@@ -6612,6 +6614,7 @@ pub struct PresentationDependencies {
     pub conversions: Vec<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
     pub capabilities: Vec<crate::skirout::base::editor::v1::type_catalog::CapabilityId>,
     pub collections: crate::skir_client::KeyedVec<PresentationCollectionDefinition_bySourceId>,
+    pub context_inputs: Vec<PresentationContextInput>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationDependencies>>,
 }
@@ -10882,6 +10885,139 @@ impl DividerAppearance {
 }
 
 // ==============================================================================
+// enum ResultStyle
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResultStyle {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResultStyle>>),
+    Compact,
+    Card,
+}
+
+impl Default for ResultStyle {
+    fn default() -> Self {
+        ResultStyle::Unknown(None)
+    }
+}
+
+impl ResultStyle {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResultStyle> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ResultStyle>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResultStyle| match x {
+                    ResultStyle::Unknown(_) => 0,
+                    ResultStyle::Compact => 1,
+                    ResultStyle::Card => 2,
+                },
+                |u| ResultStyle::Unknown(Some(u)),
+                |x: &ResultStyle| match x {
+                    ResultStyle::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/presentation.skir",
+                "ResultStyle",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResultStyle> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ResultStyle::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ResultAppearance
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResultAppearance {
+    pub style: Option<ResultStyle>,
+    pub accent: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    pub leading: Option<PresentationNode>,
+    pub kind_label: Option<crate::skirout::base::editor::v1::expression::ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResultAppearance>>,
+}
+
+impl ResultAppearance {
+    pub fn default_ref() -> &'static ResultAppearance {
+        static D: std::sync::LazyLock<ResultAppearance> =
+            std::sync::LazyLock::new(ResultAppearance::default);
+        &D
+    }
+}
+
+impl ResultAppearance {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ResultAppearance> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResultAppearance>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "ResultAppearance",
+                "",
+                |x: &ResultAppearance| &x._unrecognized,
+                |x: &mut ResultAppearance, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResultAppearance> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ResultAppearance::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PresentationContextInput
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PresentationContextInput {
+    pub binding_id: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
+    pub value_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PresentationContextInput>>,
+}
+
+impl PresentationContextInput {
+    pub fn default_ref() -> &'static PresentationContextInput {
+        static D: std::sync::LazyLock<PresentationContextInput> =
+            std::sync::LazyLock::new(PresentationContextInput::default);
+        &D
+    }
+}
+
+impl PresentationContextInput {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PresentationContextInput>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PresentationContextInput>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/presentation.skir",
+                "PresentationContextInput",
+                "",
+                |x: &PresentationContextInput| &x._unrecognized,
+                |x: &mut PresentationContextInput, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PresentationContextInput> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PresentationContextInput::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // initialize_module_serializers()
 // ==============================================================================
 
@@ -11607,6 +11743,14 @@ fn initialize_module_serializers() {
                 "",
                 |x: &AxisChildrenLayout| &x.cross_axis_alignment,
                 |x: &mut AxisChildrenLayout, v| x.cross_axis_alignment = v,
+            );
+            (*a).add_field(
+                "clip_overflow",
+                3,
+                crate::skir_client::Serializer::bool(),
+                "",
+                |x: &AxisChildrenLayout| &x.clip_overflow,
+                |x: &mut AxisChildrenLayout, v| x.clip_overflow = v,
             );
             (*a).finalize();
         }
@@ -15423,6 +15567,18 @@ fn initialize_module_serializers() {
                 |x: &SearchResultMapping| &x.label,
                 |x: &mut SearchResultMapping, v| x.label = v,
             );
+            (*a).add_field(
+                "result_appearance",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ResultAppearance::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &SearchResultMapping| &x.result_appearance,
+                |x: &mut SearchResultMapping, v| x.result_appearance = v,
+            );
             (*a).finalize();
         }
         unsafe {
@@ -17442,6 +17598,18 @@ fn initialize_module_serializers() {
                 "",
                 |x: &PresentationDependencies| &x.collections,
                 |x: &mut PresentationDependencies, v| x.collections = v,
+            );
+            (*a).add_field(
+                "context_inputs",
+                5,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationContextInput::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PresentationDependencies| &x.context_inputs,
+                |x: &mut PresentationDependencies, v| x.context_inputs = v,
             );
             (*a).finalize();
         }
@@ -20857,6 +21025,83 @@ fn initialize_module_serializers() {
                 "",
                 |x: &DividerAppearance| &x.end_indent,
                 |x: &mut DividerAppearance, v| x.end_indent = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResultStyle> =
+                ResultStyle::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("compact", 1, 1, "", ResultStyle::Compact);
+            (*a).add_constant_variant("card", 2, 2, "", ResultStyle::Card);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResultAppearance> =
+                ResultAppearance::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "style",
+                0,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ResultStyle::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ResultAppearance| &x.style,
+                |x: &mut ResultAppearance, v| x.style = v,
+            );
+            (*a).add_field(
+                "accent",
+                1,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &ResultAppearance| &x.accent,
+                |x: &mut ResultAppearance, v| x.accent = v,
+            );
+            (*a).add_field(
+                "leading",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        PresentationNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &ResultAppearance| &x.leading,
+                |x: &mut ResultAppearance, v| x.leading = v,
+            );
+            (*a).add_field(
+                "kind_label",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::expression::ExpressionNode::serializer(),
+                ),
+                "",
+                |x: &ResultAppearance| &x.kind_label,
+                |x: &mut ResultAppearance, v| x.kind_label = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PresentationContextInput> =
+                PresentationContextInput::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "binding_id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
+                "",
+                |x: &PresentationContextInput| &x.binding_id,
+                |x: &mut PresentationContextInput, v| x.binding_id = v,
+            );
+            (*a).add_field(
+                "value_type",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &PresentationContextInput| &x.value_type,
+                |x: &mut PresentationContextInput, v| x.value_type = v,
             );
             (*a).finalize();
         }

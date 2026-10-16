@@ -170,6 +170,7 @@ internal class RuntimePresentationData(
                     parameter: PresentationParameter<Value>,
                     value: PresentationInput<out Value, *>,
                 ) {
+                    require(!parameter.binding.value.startsWith("context:")) { "Presentation parameters cannot shadow caller inputs." }
                     require(wireArguments.none { it.input.value == parameter.binding.value }) {
                         "A presentation parameter may be bound once per invocation."
                     }

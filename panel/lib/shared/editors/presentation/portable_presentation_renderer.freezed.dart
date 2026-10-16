@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_presentation_renderer.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$CollectionGraphOccurrence {
 
  String get canonicalKey; List<String> get path; List<_CollectionGraphOccurrence> get children;
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphOccurrenceCopyWith<_CollectionGraphOccurrence> get copyWith => __$CollectionGraphOccurrenceCopyWithImpl<_CollectionGraphOccurrence>(this as _CollectionGraphOccurrence, _$identity);
@@ -67,7 +67,7 @@ class __$CollectionGraphOccurrenceCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphOccurrence) _then;
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
   return _then(_CollectionGraphOccurrence(
 canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
@@ -80,7 +80,7 @@ as List<_CollectionGraphOccurrence>,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphOccurrence].
+/// Adds pattern-matching-related methods to [_CollectionGraphOccurrence].
 extension _CollectionGraphOccurrencePatterns on _CollectionGraphOccurrence {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -103,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return $default(_that.canonicalKey,_that.path,_that.children);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -234,7 +234,7 @@ class __CollectionGraphOccurrence implements _CollectionGraphOccurrence {
 
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphOccurrenceCopyWith<__CollectionGraphOccurrence> get copyWith => __$_CollectionGraphOccurrenceCopyWithImpl<__CollectionGraphOccurrence>(this, _$identity);
@@ -281,7 +281,7 @@ class __$_CollectionGraphOccurrenceCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphOccurrence) _then;
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
   return _then(__CollectionGraphOccurrence(
 canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
@@ -299,7 +299,7 @@ mixin _$CollectionGraphProjection {
 
  List<_CollectionGraphOccurrence> get roots; bool get truncated;
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphProjectionCopyWith<_CollectionGraphProjection> get copyWith => __$CollectionGraphProjectionCopyWithImpl<_CollectionGraphProjection>(this as _CollectionGraphProjection, _$identity);
@@ -349,7 +349,7 @@ class __$CollectionGraphProjectionCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphProjection) _then;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? roots = null,Object? truncated = null,}) {
   return _then(_CollectionGraphProjection(
 roots: null == roots ? _self.roots : roots // ignore: cast_nullable_to_non_nullable
@@ -361,7 +361,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphProjection].
+/// Adds pattern-matching-related methods to [_CollectionGraphProjection].
 extension _CollectionGraphProjectionPatterns on _CollectionGraphProjection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -384,7 +384,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -447,7 +447,7 @@ return $default(_that.roots,_that.truncated);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -508,7 +508,7 @@ class __CollectionGraphProjection implements _CollectionGraphProjection {
 @override final  bool truncated;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphProjectionCopyWith<__CollectionGraphProjection> get copyWith => __$_CollectionGraphProjectionCopyWithImpl<__CollectionGraphProjection>(this, _$identity);
@@ -555,7 +555,7 @@ class __$_CollectionGraphProjectionCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphProjection) _then;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? roots = null,Object? truncated = null,}) {
   return _then(__CollectionGraphProjection(
 roots: null == roots ? _self._roots : roots // ignore: cast_nullable_to_non_nullable
@@ -572,7 +572,7 @@ mixin _$CollectionGraphOccurrenceKey {
 
  Object get graph; Map<skir.ExpressionBindingId, Object> get invocation; List<String> get path;
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphOccurrenceKeyCopyWith<_CollectionGraphOccurrenceKey> get copyWith => __$CollectionGraphOccurrenceKeyCopyWithImpl<_CollectionGraphOccurrenceKey>(this as _CollectionGraphOccurrenceKey, _$identity);
@@ -622,7 +622,7 @@ class __$CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphOccurrenceKey) _then;
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
   return _then(_CollectionGraphOccurrenceKey(
 graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self.invocation : invocation // ignore: cast_nullable_to_non_nullable
@@ -634,7 +634,7 @@ as List<String>,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphOccurrenceKey].
+/// Adds pattern-matching-related methods to [_CollectionGraphOccurrenceKey].
 extension _CollectionGraphOccurrenceKeyPatterns on _CollectionGraphOccurrenceKey {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -657,7 +657,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -720,7 +720,7 @@ return $default(_that.graph,_that.invocation,_that.path);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -788,7 +788,7 @@ class __CollectionGraphOccurrenceKey implements _CollectionGraphOccurrenceKey {
 
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphOccurrenceKeyCopyWith<__CollectionGraphOccurrenceKey> get copyWith => __$_CollectionGraphOccurrenceKeyCopyWithImpl<__CollectionGraphOccurrenceKey>(this, _$identity);
@@ -835,7 +835,7 @@ class __$_CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphOccurrenceKey) _then;
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
   return _then(__CollectionGraphOccurrenceKey(
 graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self._invocation : invocation // ignore: cast_nullable_to_non_nullable
@@ -852,7 +852,7 @@ mixin _$PortableAppearanceLayer {
 
  skir.InputAppearance get appearance; Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget;
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableAppearanceLayerCopyWith<PortableAppearanceLayer> get copyWith => _$PortableAppearanceLayerCopyWithImpl<PortableAppearanceLayer>(this as PortableAppearanceLayer, _$identity);
@@ -902,7 +902,7 @@ class _$PortableAppearanceLayerCopyWithImpl<$Res>
   final $Res Function(PortableAppearanceLayer) _then;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appearance = null,Object? bindings = null,Object? budget = null,}) {
   return _then(PortableAppearanceLayer(
 appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
@@ -915,7 +915,7 @@ as skir.EvaluationBudget,
 }
 
 
-/// Adds pattern matching related methods to [PortableAppearanceLayer].
+/// Adds pattern-matching-related methods to [PortableAppearanceLayer].
 extension PortableAppearanceLayerPatterns on PortableAppearanceLayer {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -938,7 +938,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1001,7 +1001,7 @@ return $default(_that.appearance,_that.bindings,_that.budget);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1063,7 +1063,7 @@ class _PortableAppearanceLayer implements PortableAppearanceLayer {
 @override final  skir.EvaluationBudget budget;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAppearanceLayerCopyWith<_PortableAppearanceLayer> get copyWith => __$PortableAppearanceLayerCopyWithImpl<_PortableAppearanceLayer>(this, _$identity);
@@ -1110,7 +1110,7 @@ class __$PortableAppearanceLayerCopyWithImpl<$Res>
   final $Res Function(_PortableAppearanceLayer) _then;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? appearance = null,Object? bindings = null,Object? budget = null,}) {
   return _then(_PortableAppearanceLayer(
 appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
@@ -1128,7 +1128,7 @@ mixin _$PortableControlStyle {
 
  InputDecoration get decoration; TextStyle get valueStyle; TextStyle get labelStyle; TextStyle get descriptionStyle; TextAlign get alignment; double get iconSize; Color? get iconColor; EdgeInsetsGeometry? get padding; bool? get dense;
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableControlStyleCopyWith<_PortableControlStyle> get copyWith => __$PortableControlStyleCopyWithImpl<_PortableControlStyle>(this as _PortableControlStyle, _$identity);
@@ -1178,7 +1178,7 @@ class __$PortableControlStyleCopyWithImpl<$Res>
   final $Res Function(_PortableControlStyle) _then;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? decoration = null,Object? valueStyle = null,Object? labelStyle = null,Object? descriptionStyle = null,Object? alignment = null,Object? iconSize = null,Object? iconColor = freezed,Object? padding = freezed,Object? dense = freezed,}) {
   return _then(_PortableControlStyle(
 decoration: null == decoration ? _self.decoration : decoration // ignore: cast_nullable_to_non_nullable
@@ -1197,7 +1197,7 @@ as bool?,
 }
 
 
-/// Adds pattern matching related methods to [_PortableControlStyle].
+/// Adds pattern-matching-related methods to [_PortableControlStyle].
 extension _PortableControlStylePatterns on _PortableControlStyle {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1220,7 +1220,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1283,7 +1283,7 @@ return $default(_that.decoration,_that.valueStyle,_that.labelStyle,_that.descrip
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1345,7 +1345,7 @@ class _ResolvedPortableControlStyle implements _PortableControlStyle {
 @override final  bool? dense;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ResolvedPortableControlStyleCopyWith<_ResolvedPortableControlStyle> get copyWith => __$ResolvedPortableControlStyleCopyWithImpl<_ResolvedPortableControlStyle>(this, _$identity);
@@ -1392,7 +1392,7 @@ class __$ResolvedPortableControlStyleCopyWithImpl<$Res>
   final $Res Function(_ResolvedPortableControlStyle) _then;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? decoration = null,Object? valueStyle = null,Object? labelStyle = null,Object? descriptionStyle = null,Object? alignment = null,Object? iconSize = null,Object? iconColor = freezed,Object? padding = freezed,Object? dense = freezed,}) {
   return _then(_ResolvedPortableControlStyle(
 decoration: null == decoration ? _self.decoration : decoration // ignore: cast_nullable_to_non_nullable
@@ -1441,7 +1441,7 @@ $PortableOperationKeyCopyWith(PortableOperationKey _, $Res Function(PortableOper
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationKey].
+/// Adds pattern-matching-related methods to [PortableOperationKey].
 extension PortableOperationKeyPatterns on PortableOperationKey {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1469,7 +1469,7 @@ return status(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1544,7 +1544,7 @@ return status();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1605,7 +1605,7 @@ class _PortableWriteKey implements PortableOperationKey {
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableWriteKeyCopyWith<_PortableWriteKey> get copyWith => __$PortableWriteKeyCopyWithImpl<_PortableWriteKey>(this, _$identity);
@@ -1652,7 +1652,7 @@ class __$PortableWriteKeyCopyWithImpl<$Res>
   final $Res Function(_PortableWriteKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableWriteKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1661,7 +1661,7 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -1682,7 +1682,7 @@ class _PortableExecuteKey implements PortableOperationKey {
  final  skir.EditorAction action;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableExecuteKeyCopyWith<_PortableExecuteKey> get copyWith => __$PortableExecuteKeyCopyWithImpl<_PortableExecuteKey>(this, _$identity);
@@ -1729,7 +1729,7 @@ class __$PortableExecuteKeyCopyWithImpl<$Res>
   final $Res Function(_PortableExecuteKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? action = null,}) {
   return _then(_PortableExecuteKey(
 null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
@@ -1750,7 +1750,7 @@ class _PortableAddItemKey implements PortableOperationKey {
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAddItemKeyCopyWith<_PortableAddItemKey> get copyWith => __$PortableAddItemKeyCopyWithImpl<_PortableAddItemKey>(this, _$identity);
@@ -1797,7 +1797,7 @@ class __$PortableAddItemKeyCopyWithImpl<$Res>
   final $Res Function(_PortableAddItemKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableAddItemKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1806,7 +1806,7 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -1827,7 +1827,7 @@ class _PortableAddMapRowKey implements PortableOperationKey {
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAddMapRowKeyCopyWith<_PortableAddMapRowKey> get copyWith => __$PortableAddMapRowKeyCopyWithImpl<_PortableAddMapRowKey>(this, _$identity);
@@ -1874,7 +1874,7 @@ class __$PortableAddMapRowKeyCopyWithImpl<$Res>
   final $Res Function(_PortableAddMapRowKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableAddMapRowKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1883,7 +1883,7 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -1905,7 +1905,7 @@ class _PortableMappingKey implements PortableOperationKey {
  final  bool completion;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableMappingKeyCopyWith<_PortableMappingKey> get copyWith => __$PortableMappingKeyCopyWithImpl<_PortableMappingKey>(this, _$identity);
@@ -1952,7 +1952,7 @@ class __$PortableMappingKeyCopyWithImpl<$Res>
   final $Res Function(_PortableMappingKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? completion = null,}) {
   return _then(_PortableMappingKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1962,7 +1962,7 @@ as bool,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -2010,7 +2010,7 @@ mixin _$PortableOperationOutcome {
 
  Object get request; PortableDiagnosticObservation? get input; bool get pending; List<PortablePresentationDiagnostic> get diagnostics;
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableOperationOutcomeCopyWith<PortableOperationOutcome> get copyWith => _$PortableOperationOutcomeCopyWithImpl<PortableOperationOutcome>(this as PortableOperationOutcome, _$identity);
@@ -2060,7 +2060,7 @@ class _$PortableOperationOutcomeCopyWithImpl<$Res>
   final $Res Function(PortableOperationOutcome) _then;
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? request = null,Object? input = freezed,Object? pending = null,Object? diagnostics = null,}) {
   return _then(PortableOperationOutcome(
 request: null == request ? _self.request : request ,input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
@@ -2070,7 +2070,7 @@ as List<PortablePresentationDiagnostic>,
   ));
 }
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<$Res>? get input {
@@ -2085,7 +2085,7 @@ $PortableDiagnosticObservationCopyWith<$Res>? get input {
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationOutcome].
+/// Adds pattern-matching-related methods to [PortableOperationOutcome].
 extension PortableOperationOutcomePatterns on PortableOperationOutcome {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2108,7 +2108,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2171,7 +2171,7 @@ return $default(_that.request,_that.input,_that.pending,_that.diagnostics);case 
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2234,7 +2234,7 @@ class _PortableOperationOutcome implements PortableOperationOutcome {
 
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableOperationOutcomeCopyWith<_PortableOperationOutcome> get copyWith => __$PortableOperationOutcomeCopyWithImpl<_PortableOperationOutcome>(this, _$identity);
@@ -2281,7 +2281,7 @@ class __$PortableOperationOutcomeCopyWithImpl<$Res>
   final $Res Function(_PortableOperationOutcome) _then;
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? request = null,Object? input = freezed,Object? pending = null,Object? diagnostics = null,}) {
   return _then(_PortableOperationOutcome(
 request: null == request ? _self.request : request ,input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
@@ -2292,7 +2292,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<$Res>? get input {
@@ -2311,7 +2311,7 @@ mixin _$PortableOperationState {
 
  Map<PortableOperationKey, PortableOperationOutcome> get outcomes;
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableOperationStateCopyWith<PortableOperationState> get copyWith => _$PortableOperationStateCopyWithImpl<PortableOperationState>(this as PortableOperationState, _$identity);
@@ -2361,7 +2361,7 @@ class _$PortableOperationStateCopyWithImpl<$Res>
   final $Res Function(PortableOperationState) _then;
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? outcomes = null,}) {
   return _then(PortableOperationState(
 outcomes: null == outcomes ? _self.outcomes : outcomes // ignore: cast_nullable_to_non_nullable
@@ -2372,7 +2372,7 @@ as Map<PortableOperationKey, PortableOperationOutcome>,
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationState].
+/// Adds pattern-matching-related methods to [PortableOperationState].
 extension PortableOperationStatePatterns on PortableOperationState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2395,7 +2395,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2458,7 +2458,7 @@ return $default(_that.outcomes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2518,7 +2518,7 @@ class _PortableOperationState extends PortableOperationState {
 
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableOperationStateCopyWith<_PortableOperationState> get copyWith => __$PortableOperationStateCopyWithImpl<_PortableOperationState>(this, _$identity);
@@ -2565,7 +2565,7 @@ class __$PortableOperationStateCopyWithImpl<$Res>
   final $Res Function(_PortableOperationState) _then;
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? outcomes = null,}) {
   return _then(_PortableOperationState(
 outcomes: null == outcomes ? _self._outcomes : outcomes // ignore: cast_nullable_to_non_nullable
@@ -2581,7 +2581,7 @@ mixin _$PortableDiagnosticObservation {
 
  PortableDiagnosticTarget get target; skir.DataValue? get value;
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<PortableDiagnosticObservation> get copyWith => _$PortableDiagnosticObservationCopyWithImpl<PortableDiagnosticObservation>(this as PortableDiagnosticObservation, _$identity);
@@ -2631,7 +2631,7 @@ class _$PortableDiagnosticObservationCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticObservation) _then;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? target = null,Object? value = freezed,}) {
   return _then(PortableDiagnosticObservation(
 target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -2640,7 +2640,7 @@ as skir.DataValue?,
   ));
 }
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -2652,7 +2652,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticObservation].
+/// Adds pattern-matching-related methods to [PortableDiagnosticObservation].
 extension PortableDiagnosticObservationPatterns on PortableDiagnosticObservation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2675,7 +2675,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2738,7 +2738,7 @@ return $default(_that.target,_that.value);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2793,7 +2793,7 @@ class _PortableDiagnosticObservation extends PortableDiagnosticObservation {
 @override final  skir.DataValue? value;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticObservationCopyWith<_PortableDiagnosticObservation> get copyWith => __$PortableDiagnosticObservationCopyWithImpl<_PortableDiagnosticObservation>(this, _$identity);
@@ -2840,7 +2840,7 @@ class __$PortableDiagnosticObservationCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticObservation) _then;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? value = freezed,}) {
   return _then(_PortableDiagnosticObservation(
 target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -2850,7 +2850,7 @@ as skir.DataValue?,
 }
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -2866,7 +2866,7 @@ mixin _$PortableDiagnosticNode {
 
  PortableDiagnosticNodeKind get kind; Object? get parent; List<PortableDiagnosticObservation> get observations; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticNodeCopyWith<PortableDiagnosticNode> get copyWith => _$PortableDiagnosticNodeCopyWithImpl<PortableDiagnosticNode>(this as PortableDiagnosticNode, _$identity);
@@ -2916,7 +2916,7 @@ class _$PortableDiagnosticNodeCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticNode) _then;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -2930,7 +2930,7 @@ as PortableDiagnosticFallback,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticNode].
+/// Adds pattern-matching-related methods to [PortableDiagnosticNode].
 extension PortableDiagnosticNodePatterns on PortableDiagnosticNode {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2953,7 +2953,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3016,7 +3016,7 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_th
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3086,7 +3086,7 @@ class _PortableDiagnosticNode extends PortableDiagnosticNode {
 @override@JsonKey() final  PortableDiagnosticFallback diagnosticFallback;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticNodeCopyWith<_PortableDiagnosticNode> get copyWith => __$PortableDiagnosticNodeCopyWithImpl<_PortableDiagnosticNode>(this, _$identity);
@@ -3133,7 +3133,7 @@ class __$PortableDiagnosticNodeCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticNode) _then;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(_PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -3152,7 +3152,7 @@ mixin _$PortableDiagnosticPresentation {
 
  Map<Object, PortableDiagnosticNode> get nodes;
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticPresentationCopyWith<PortableDiagnosticPresentation> get copyWith => _$PortableDiagnosticPresentationCopyWithImpl<PortableDiagnosticPresentation>(this as PortableDiagnosticPresentation, _$identity);
@@ -3202,7 +3202,7 @@ class _$PortableDiagnosticPresentationCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticPresentation) _then;
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? nodes = null,}) {
   return _then(PortableDiagnosticPresentation(
 nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -3213,7 +3213,7 @@ as Map<Object, PortableDiagnosticNode>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticPresentation].
+/// Adds pattern-matching-related methods to [PortableDiagnosticPresentation].
 extension PortableDiagnosticPresentationPatterns on PortableDiagnosticPresentation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3236,7 +3236,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3299,7 +3299,7 @@ return $default(_that.nodes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3359,7 +3359,7 @@ class _PortableDiagnosticPresentation extends PortableDiagnosticPresentation {
 
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticPresentationCopyWith<_PortableDiagnosticPresentation> get copyWith => __$PortableDiagnosticPresentationCopyWithImpl<_PortableDiagnosticPresentation>(this, _$identity);
@@ -3406,7 +3406,7 @@ class __$PortableDiagnosticPresentationCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticPresentation) _then;
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? nodes = null,}) {
   return _then(_PortableDiagnosticPresentation(
 nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -3422,7 +3422,7 @@ mixin _$PortableDiagnosticSummary {
 
  List<PortablePresentationDiagnostic> get direct; List<PortablePresentationDiagnostic> get descendants;
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticSummaryCopyWith<PortableDiagnosticSummary> get copyWith => _$PortableDiagnosticSummaryCopyWithImpl<PortableDiagnosticSummary>(this as PortableDiagnosticSummary, _$identity);
@@ -3472,7 +3472,7 @@ class _$PortableDiagnosticSummaryCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticSummary) _then;
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? direct = null,Object? descendants = null,}) {
   return _then(PortableDiagnosticSummary(
 direct: null == direct ? _self.direct : direct // ignore: cast_nullable_to_non_nullable
@@ -3484,7 +3484,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticSummary].
+/// Adds pattern-matching-related methods to [PortableDiagnosticSummary].
 extension PortableDiagnosticSummaryPatterns on PortableDiagnosticSummary {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3507,7 +3507,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3570,7 +3570,7 @@ return $default(_that.direct,_that.descendants);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3637,7 +3637,7 @@ class _PortableDiagnosticSummary extends PortableDiagnosticSummary {
 
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticSummaryCopyWith<_PortableDiagnosticSummary> get copyWith => __$PortableDiagnosticSummaryCopyWithImpl<_PortableDiagnosticSummary>(this, _$identity);
@@ -3684,7 +3684,7 @@ class __$PortableDiagnosticSummaryCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticSummary) _then;
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? direct = null,Object? descendants = null,}) {
   return _then(_PortableDiagnosticSummary(
 direct: null == direct ? _self._direct : direct // ignore: cast_nullable_to_non_nullable
@@ -3701,7 +3701,7 @@ mixin _$PortableDiagnosticPlacement {
 
  Map<Object, PortableDiagnosticSummary> get summaries; List<PortablePresentationDiagnostic> get general; List<PortablePresentationDiagnostic> get unplaced;
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticPlacementCopyWith<PortableDiagnosticPlacement> get copyWith => _$PortableDiagnosticPlacementCopyWithImpl<PortableDiagnosticPlacement>(this as PortableDiagnosticPlacement, _$identity);
@@ -3751,7 +3751,7 @@ class _$PortableDiagnosticPlacementCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticPlacement) _then;
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(PortableDiagnosticPlacement(
 summaries: null == summaries ? _self.summaries : summaries // ignore: cast_nullable_to_non_nullable
@@ -3764,7 +3764,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticPlacement].
+/// Adds pattern-matching-related methods to [PortableDiagnosticPlacement].
 extension PortableDiagnosticPlacementPatterns on PortableDiagnosticPlacement {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3787,7 +3787,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3850,7 +3850,7 @@ return $default(_that.summaries,_that.general,_that.unplaced);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3924,7 +3924,7 @@ class _PortableDiagnosticPlacement extends PortableDiagnosticPlacement {
 
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticPlacementCopyWith<_PortableDiagnosticPlacement> get copyWith => __$PortableDiagnosticPlacementCopyWithImpl<_PortableDiagnosticPlacement>(this, _$identity);
@@ -3971,7 +3971,7 @@ class __$PortableDiagnosticPlacementCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticPlacement) _then;
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(_PortableDiagnosticPlacement(
 summaries: null == summaries ? _self._summaries : summaries // ignore: cast_nullable_to_non_nullable
@@ -3989,7 +3989,7 @@ mixin _$PortableControlValidationIdentity {
 
  Object get owner; PortableDiagnosticTarget get target;
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableControlValidationIdentityCopyWith<PortableControlValidationIdentity> get copyWith => _$PortableControlValidationIdentityCopyWithImpl<PortableControlValidationIdentity>(this as PortableControlValidationIdentity, _$identity);
@@ -4039,7 +4039,7 @@ class _$PortableControlValidationIdentityCopyWithImpl<$Res>
   final $Res Function(PortableControlValidationIdentity) _then;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? owner = null,Object? target = null,}) {
   return _then(PortableControlValidationIdentity(
 owner: null == owner ? _self.owner : owner ,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -4047,7 +4047,7 @@ as PortableDiagnosticTarget,
   ));
 }
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -4059,7 +4059,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 }
 
 
-/// Adds pattern matching related methods to [PortableControlValidationIdentity].
+/// Adds pattern-matching-related methods to [PortableControlValidationIdentity].
 extension PortableControlValidationIdentityPatterns on PortableControlValidationIdentity {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4082,7 +4082,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4145,7 +4145,7 @@ return $default(_that.owner,_that.target);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4200,7 +4200,7 @@ class _PortableControlValidationIdentity implements PortableControlValidationIde
 @override final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableControlValidationIdentityCopyWith<_PortableControlValidationIdentity> get copyWith => __$PortableControlValidationIdentityCopyWithImpl<_PortableControlValidationIdentity>(this, _$identity);
@@ -4247,7 +4247,7 @@ class __$PortableControlValidationIdentityCopyWithImpl<$Res>
   final $Res Function(_PortableControlValidationIdentity) _then;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? owner = null,Object? target = null,}) {
   return _then(_PortableControlValidationIdentity(
 owner: null == owner ? _self.owner : owner ,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -4256,7 +4256,7 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
@@ -4272,7 +4272,7 @@ mixin _$AuthoredLinkDecision {
 
  PortableLinkPlan get plan; PortableLinkTargetChoice get target; PortableLinkCounterpartRequest get counterpart;
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredLinkDecisionCopyWith<_AuthoredLinkDecision> get copyWith => __$AuthoredLinkDecisionCopyWithImpl<_AuthoredLinkDecision>(this as _AuthoredLinkDecision, _$identity);
@@ -4322,7 +4322,7 @@ class __$AuthoredLinkDecisionCopyWithImpl<$Res>
   final $Res Function(_AuthoredLinkDecision) _then;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
   return _then(_AuthoredLinkDecision(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
@@ -4332,7 +4332,7 @@ as PortableLinkCounterpartRequest,
   ));
 }
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
@@ -4341,7 +4341,7 @@ $PortableLinkPlanCopyWith<$Res> get plan {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
@@ -4350,7 +4350,7 @@ $PortableLinkTargetChoiceCopyWith<$Res> get target {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
@@ -4362,7 +4362,7 @@ $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
 }
 
 
-/// Adds pattern matching related methods to [_AuthoredLinkDecision].
+/// Adds pattern-matching-related methods to [_AuthoredLinkDecision].
 extension _AuthoredLinkDecisionPatterns on _AuthoredLinkDecision {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4385,7 +4385,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4448,7 +4448,7 @@ return $default(_that.plan,_that.target,_that.counterpart);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4504,7 +4504,7 @@ class __AuthoredLinkDecision implements _AuthoredLinkDecision {
 @override final  PortableLinkCounterpartRequest counterpart;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_AuthoredLinkDecisionCopyWith<__AuthoredLinkDecision> get copyWith => __$_AuthoredLinkDecisionCopyWithImpl<__AuthoredLinkDecision>(this, _$identity);
@@ -4551,7 +4551,7 @@ class __$_AuthoredLinkDecisionCopyWithImpl<$Res>
   final $Res Function(__AuthoredLinkDecision) _then;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
   return _then(__AuthoredLinkDecision(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
@@ -4562,7 +4562,7 @@ as PortableLinkCounterpartRequest,
 }
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
@@ -4571,7 +4571,7 @@ $PortableLinkPlanCopyWith<$Res> get plan {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
@@ -4580,7 +4580,7 @@ $PortableLinkTargetChoiceCopyWith<$Res> get target {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
@@ -4596,7 +4596,7 @@ mixin _$AuthoredLinkChoice {
 
  String get id; String get widgetKey; PortableLinkPlan get plan; PortableLinkTargetChoice get target; _AuthoredLinkChoiceKind get kind; String get label; String get typeLabel; String get subtitle; String get searchText; _AuthoredCollectionRow? get row; skir.PresentationCollectionDefinition? get definition; skir.LinkOccurrence? get occurrence; PortableNewCounterpartChoice? get slot; skir.ValueLocation? get collection; String? get disabledReason;
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredLinkChoiceCopyWith<_AuthoredLinkChoice> get copyWith => __$AuthoredLinkChoiceCopyWithImpl<_AuthoredLinkChoice>(this as _AuthoredLinkChoice, _$identity);
@@ -4646,7 +4646,7 @@ class __$AuthoredLinkChoiceCopyWithImpl<$Res>
   final $Res Function(_AuthoredLinkChoice) _then;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
   return _then(_AuthoredLinkChoice(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -4668,7 +4668,7 @@ as String?,
   ));
 }
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
@@ -4677,7 +4677,7 @@ $PortableLinkPlanCopyWith<$Res> get plan {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
@@ -4686,7 +4686,7 @@ $PortableLinkTargetChoiceCopyWith<$Res> get target {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
@@ -4701,7 +4701,7 @@ $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
 }
 
 
-/// Adds pattern matching related methods to [_AuthoredLinkChoice].
+/// Adds pattern-matching-related methods to [_AuthoredLinkChoice].
 extension _AuthoredLinkChoicePatterns on _AuthoredLinkChoice {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4724,7 +4724,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4787,7 +4787,7 @@ return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_tha
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4855,7 +4855,7 @@ class __AuthoredLinkChoice implements _AuthoredLinkChoice {
 @override final  String? disabledReason;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_AuthoredLinkChoiceCopyWith<__AuthoredLinkChoice> get copyWith => __$_AuthoredLinkChoiceCopyWithImpl<__AuthoredLinkChoice>(this, _$identity);
@@ -4902,7 +4902,7 @@ class __$_AuthoredLinkChoiceCopyWithImpl<$Res>
   final $Res Function(__AuthoredLinkChoice) _then;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
   return _then(__AuthoredLinkChoice(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -4925,7 +4925,7 @@ as String?,
 }
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
@@ -4934,7 +4934,7 @@ $PortableLinkPlanCopyWith<$Res> get plan {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
@@ -4943,7 +4943,7 @@ $PortableLinkTargetChoiceCopyWith<$Res> get target {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
@@ -4960,9 +4960,9 @@ $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
 /// @nodoc
 mixin _$PortablePresentationScope {
 
- Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<PortablePresentationScope> get copyWith => _$PortablePresentationScopeCopyWithImpl<PortablePresentationScope>(this as PortablePresentationScope, _$identity);
@@ -4972,20 +4972,20 @@ $PortablePresentationScopeCopyWith<PortablePresentationScope> get copyWith => _$
 @override
 bool operator ==(Object other) {
   final _this = this as PortablePresentationScope;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.operations, _this.operations) || other.operations == _this.operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _this.appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _this.authoredAliases)&&(identical(other.authoredIndex, _this.authoredIndex) || other.authoredIndex == _this.authoredIndex)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reportStatus, _this.reportStatus) || other.reportStatus == _this.reportStatus)&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.searchHistoryNamespace, _this.searchHistoryNamespace) || other.searchHistoryNamespace == _this.searchHistoryNamespace)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _this.slotBuilders)&&(identical(other.host, _this.host) || other.host == _this.host)&&const DeepCollectionEquality().equals(other.projectedWriters, _this.projectedWriters));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _this.bindings)&&(identical(other.budget, _this.budget) || other.budget == _this.budget)&&(identical(other.operations, _this.operations) || other.operations == _this.operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _this.appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _this.authoredAliases)&&(identical(other.authoredIndex, _this.authoredIndex) || other.authoredIndex == _this.authoredIndex)&&(identical(other.readOnly, _this.readOnly) || other.readOnly == _this.readOnly)&&(identical(other.enabled, _this.enabled) || other.enabled == _this.enabled)&&(identical(other.watchSearch, _this.watchSearch) || other.watchSearch == _this.watchSearch)&&(identical(other.reportStatus, _this.reportStatus) || other.reportStatus == _this.reportStatus)&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&(identical(other.queries, _this.queries) || other.queries == _this.queries)&&(identical(other.resourceDiagnostics, _this.resourceDiagnostics) || other.resourceDiagnostics == _this.resourceDiagnostics)&&(identical(other.resource, _this.resource) || other.resource == _this.resource)&&(identical(other.searchHistoryNamespace, _this.searchHistoryNamespace) || other.searchHistoryNamespace == _this.searchHistoryNamespace)&&(identical(other.openResource, _this.openResource) || other.openResource == _this.openResource)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.material, _this.material) || other.material == _this.material)&&const DeepCollectionEquality().equals(other.activePresentations, _this.activePresentations)&&const DeepCollectionEquality().equals(other.slots, _this.slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _this.slotBuilders)&&(identical(other.host, _this.host) || other.host == _this.host)&&const DeepCollectionEquality().equals(other.projectedWriters, _this.projectedWriters));
 }
 
 
 @override
 int get hashCode {
   final _this = this as PortablePresentationScope;
-  return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.operations,const DeepCollectionEquality().hash(_this.appearanceLayers),const DeepCollectionEquality().hash(_this.authoredAliases),_this.authoredIndex,_this.readOnly,_this.enabled,_this.watchSearch,_this.reportStatus,_this.catalog,_this.resource,_this.searchHistoryNamespace,_this.openResource,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots),const DeepCollectionEquality().hash(_this.slotBuilders),_this.host,const DeepCollectionEquality().hash(_this.projectedWriters)]);
+  return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_this.bindings),_this.budget,_this.operations,const DeepCollectionEquality().hash(_this.appearanceLayers),const DeepCollectionEquality().hash(_this.authoredAliases),_this.authoredIndex,_this.readOnly,_this.enabled,_this.watchSearch,_this.reportStatus,_this.catalog,_this.queries,_this.resourceDiagnostics,_this.resource,_this.searchHistoryNamespace,_this.openResource,_this.role,_this.material,const DeepCollectionEquality().hash(_this.activePresentations),const DeepCollectionEquality().hash(_this.slots),const DeepCollectionEquality().hash(_this.slotBuilders),_this.host,const DeepCollectionEquality().hash(_this.projectedWriters)]);
 }
 
 @override
 String toString() {
   final _this = this as PortablePresentationScope;
-  return 'PortablePresentationScope(bindings: ${_this.bindings}, budget: ${_this.budget}, operations: ${_this.operations}, appearanceLayers: ${_this.appearanceLayers}, authoredAliases: ${_this.authoredAliases}, authoredIndex: ${_this.authoredIndex}, readOnly: ${_this.readOnly}, enabled: ${_this.enabled}, watchSearch: ${_this.watchSearch}, reportStatus: ${_this.reportStatus}, catalog: ${_this.catalog}, resource: ${_this.resource}, searchHistoryNamespace: ${_this.searchHistoryNamespace}, openResource: ${_this.openResource}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots}, slotBuilders: ${_this.slotBuilders}, host: ${_this.host}, projectedWriters: ${_this.projectedWriters})';
+  return 'PortablePresentationScope(bindings: ${_this.bindings}, budget: ${_this.budget}, operations: ${_this.operations}, appearanceLayers: ${_this.appearanceLayers}, authoredAliases: ${_this.authoredAliases}, authoredIndex: ${_this.authoredIndex}, readOnly: ${_this.readOnly}, enabled: ${_this.enabled}, watchSearch: ${_this.watchSearch}, reportStatus: ${_this.reportStatus}, catalog: ${_this.catalog}, queries: ${_this.queries}, resourceDiagnostics: ${_this.resourceDiagnostics}, resource: ${_this.resource}, searchHistoryNamespace: ${_this.searchHistoryNamespace}, openResource: ${_this.openResource}, role: ${_this.role}, material: ${_this.material}, activePresentations: ${_this.activePresentations}, slots: ${_this.slots}, slotBuilders: ${_this.slotBuilders}, host: ${_this.host}, projectedWriters: ${_this.projectedWriters})';
 }
 
 
@@ -4996,7 +4996,7 @@ abstract mixin class $PortablePresentationScopeCopyWith<$Res>  {
   factory $PortablePresentationScopeCopyWith(PortablePresentationScope value, $Res Function(PortablePresentationScope) _then) = _$PortablePresentationScopeCopyWithImpl;
 @useResult
 $Res call({
- Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
 });
 
 
@@ -5012,8 +5012,8 @@ class _$PortablePresentationScopeCopyWithImpl<$Res>
   final $Res Function(PortablePresentationScope) _then;
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
   return _then(PortablePresentationScope(
 bindings: null == bindings ? _self.bindings : bindings // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
@@ -5026,7 +5026,9 @@ as bool,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nulla
 as bool,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
 as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reportStatus: freezed == reportStatus ? _self.reportStatus : reportStatus // ignore: cast_nullable_to_non_nullable
 as ValueChanged<String>?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
-as CheckedEditorCatalog?,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
+as CheckedEditorCatalog?,queries: freezed == queries ? _self.queries : queries // ignore: cast_nullable_to_non_nullable
+as PortableExpressionQueries?,resourceDiagnostics: null == resourceDiagnostics ? _self.resourceDiagnostics : resourceDiagnostics // ignore: cast_nullable_to_non_nullable
+as ResourceDiagnosticReader,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId?,searchHistoryNamespace: freezed == searchHistoryNamespace ? _self.searchHistoryNamespace : searchHistoryNamespace // ignore: cast_nullable_to_non_nullable
 as String?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
 as ValueChanged<skir.ResourceId>?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
@@ -5040,7 +5042,7 @@ as Map<skir.ExpressionBindingId, PortableBindingSetter>,
   ));
 }
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
@@ -5060,7 +5062,7 @@ $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
 
 
 class _PortablePresentationScope extends PortablePresentationScope {
-  const _PortablePresentationScope({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.operations, required  List<PortableAppearanceLayer> appearanceLayers, required  Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, required this.authoredIndex, required this.readOnly, required this.enabled, required this.watchSearch, required this.reportStatus, required this.catalog, required this.resource, required this.searchHistoryNamespace, required this.openResource, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots, required  Map<String, PortableSlotBuilder> slotBuilders, required this.host, required  Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters}): _bindings = bindings,_appearanceLayers = appearanceLayers,_authoredAliases = authoredAliases,_activePresentations = activePresentations,_slots = slots,_slotBuilders = slotBuilders,_projectedWriters = projectedWriters,super._();
+  const _PortablePresentationScope({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.operations, required  List<PortableAppearanceLayer> appearanceLayers, required  Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, required this.authoredIndex, required this.readOnly, required this.enabled, required this.watchSearch, required this.reportStatus, required this.catalog, required this.queries, required this.resourceDiagnostics, required this.resource, required this.searchHistoryNamespace, required this.openResource, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Map<String, skir.PresentationNode> slots, required  Map<String, PortableSlotBuilder> slotBuilders, required this.host, required  Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters}): _bindings = bindings,_appearanceLayers = appearanceLayers,_authoredAliases = authoredAliases,_activePresentations = activePresentations,_slots = slots,_slotBuilders = slotBuilders,_projectedWriters = projectedWriters,super._();
 
 
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
@@ -5092,6 +5094,8 @@ class _PortablePresentationScope extends PortablePresentationScope {
 @override final  Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch;
 @override final  ValueChanged<String>? reportStatus;
 @override final  CheckedEditorCatalog? catalog;
+@override final  PortableExpressionQueries? queries;
+@override final  ResourceDiagnosticReader resourceDiagnostics;
 @override final  skir.ResourceId? resource;
 @override final  String? searchHistoryNamespace;
 @override final  ValueChanged<skir.ResourceId>? openResource;
@@ -5128,7 +5132,7 @@ class _PortablePresentationScope extends PortablePresentationScope {
 
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortablePresentationScopeCopyWith<_PortablePresentationScope> get copyWith => __$PortablePresentationScopeCopyWithImpl<_PortablePresentationScope>(this, _$identity);
@@ -5137,18 +5141,18 @@ _$PortablePresentationScopeCopyWith<_PortablePresentationScope> get copyWith => 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.operations, operations) || other.operations == operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _authoredAliases)&&(identical(other.authoredIndex, authoredIndex) || other.authoredIndex == authoredIndex)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reportStatus, reportStatus) || other.reportStatus == reportStatus)&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.searchHistoryNamespace, searchHistoryNamespace) || other.searchHistoryNamespace == searchHistoryNamespace)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _slotBuilders)&&(identical(other.host, host) || other.host == host)&&const DeepCollectionEquality().equals(other.projectedWriters, _projectedWriters));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortablePresentationScope&&const DeepCollectionEquality().equals(other.bindings, _bindings)&&(identical(other.budget, budget) || other.budget == budget)&&(identical(other.operations, operations) || other.operations == operations)&&const DeepCollectionEquality().equals(other.appearanceLayers, _appearanceLayers)&&const DeepCollectionEquality().equals(other.authoredAliases, _authoredAliases)&&(identical(other.authoredIndex, authoredIndex) || other.authoredIndex == authoredIndex)&&(identical(other.readOnly, readOnly) || other.readOnly == readOnly)&&(identical(other.enabled, enabled) || other.enabled == enabled)&&(identical(other.watchSearch, watchSearch) || other.watchSearch == watchSearch)&&(identical(other.reportStatus, reportStatus) || other.reportStatus == reportStatus)&&(identical(other.catalog, catalog) || other.catalog == catalog)&&(identical(other.queries, queries) || other.queries == queries)&&(identical(other.resourceDiagnostics, resourceDiagnostics) || other.resourceDiagnostics == resourceDiagnostics)&&(identical(other.resource, resource) || other.resource == resource)&&(identical(other.searchHistoryNamespace, searchHistoryNamespace) || other.searchHistoryNamespace == searchHistoryNamespace)&&(identical(other.openResource, openResource) || other.openResource == openResource)&&(identical(other.role, role) || other.role == role)&&(identical(other.material, material) || other.material == material)&&const DeepCollectionEquality().equals(other.activePresentations, _activePresentations)&&const DeepCollectionEquality().equals(other.slots, _slots)&&const DeepCollectionEquality().equals(other.slotBuilders, _slotBuilders)&&(identical(other.host, host) || other.host == host)&&const DeepCollectionEquality().equals(other.projectedWriters, _projectedWriters));
 }
 
 
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_bindings),budget,operations,const DeepCollectionEquality().hash(_appearanceLayers),const DeepCollectionEquality().hash(_authoredAliases),authoredIndex,readOnly,enabled,watchSearch,reportStatus,catalog,resource,searchHistoryNamespace,openResource,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_slotBuilders),host,const DeepCollectionEquality().hash(_projectedWriters)]);
+    return Object.hashAll([runtimeType,const DeepCollectionEquality().hash(_bindings),budget,operations,const DeepCollectionEquality().hash(_appearanceLayers),const DeepCollectionEquality().hash(_authoredAliases),authoredIndex,readOnly,enabled,watchSearch,reportStatus,catalog,queries,resourceDiagnostics,resource,searchHistoryNamespace,openResource,role,material,const DeepCollectionEquality().hash(_activePresentations),const DeepCollectionEquality().hash(_slots),const DeepCollectionEquality().hash(_slotBuilders),host,const DeepCollectionEquality().hash(_projectedWriters)]);
 }
 
 @override
 String toString() {
-    return 'PortablePresentationScope._value(bindings: $bindings, budget: $budget, operations: $operations, appearanceLayers: $appearanceLayers, authoredAliases: $authoredAliases, authoredIndex: $authoredIndex, readOnly: $readOnly, enabled: $enabled, watchSearch: $watchSearch, reportStatus: $reportStatus, catalog: $catalog, resource: $resource, searchHistoryNamespace: $searchHistoryNamespace, openResource: $openResource, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots, slotBuilders: $slotBuilders, host: $host, projectedWriters: $projectedWriters)';
+    return 'PortablePresentationScope._value(bindings: $bindings, budget: $budget, operations: $operations, appearanceLayers: $appearanceLayers, authoredAliases: $authoredAliases, authoredIndex: $authoredIndex, readOnly: $readOnly, enabled: $enabled, watchSearch: $watchSearch, reportStatus: $reportStatus, catalog: $catalog, queries: $queries, resourceDiagnostics: $resourceDiagnostics, resource: $resource, searchHistoryNamespace: $searchHistoryNamespace, openResource: $openResource, role: $role, material: $material, activePresentations: $activePresentations, slots: $slots, slotBuilders: $slotBuilders, host: $host, projectedWriters: $projectedWriters)';
 }
 
 
@@ -5159,7 +5163,7 @@ abstract mixin class _$PortablePresentationScopeCopyWith<$Res> implements $Porta
   factory _$PortablePresentationScopeCopyWith(_PortablePresentationScope value, $Res Function(_PortablePresentationScope) _then) = __$PortablePresentationScopeCopyWithImpl;
 @override @useResult
 $Res call({
- Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
+ Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, skir.EvaluationBudget budget, PortableOperationResults operations, List<PortableAppearanceLayer> appearanceLayers, Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, AuthoredPresentationIndex? authoredIndex, bool readOnly, bool enabled, Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? watchSearch, ValueChanged<String>? reportStatus, CheckedEditorCatalog? catalog, PortableExpressionQueries? queries, ResourceDiagnosticReader resourceDiagnostics, skir.ResourceId? resource, String? searchHistoryNamespace, ValueChanged<skir.ResourceId>? openResource, skir.PresentationRole? role, skir.PresentationMaterial? material, Set<skir.PresentationId> activePresentations, Map<String, skir.PresentationNode> slots, Map<String, PortableSlotBuilder> slotBuilders, PortablePresentationHost? host, Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters
 });
 
 
@@ -5175,8 +5179,8 @@ class __$PortablePresentationScopeCopyWithImpl<$Res>
   final $Res Function(_PortablePresentationScope) _then;
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
   return _then(_PortablePresentationScope(
 bindings: null == bindings ? _self._bindings : bindings // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortableExpressionBinding>,budget: null == budget ? _self.budget : budget // ignore: cast_nullable_to_non_nullable
@@ -5189,7 +5193,9 @@ as bool,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nulla
 as bool,watchSearch: freezed == watchSearch ? _self.watchSearch : watchSearch // ignore: cast_nullable_to_non_nullable
 as Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)?,reportStatus: freezed == reportStatus ? _self.reportStatus : reportStatus // ignore: cast_nullable_to_non_nullable
 as ValueChanged<String>?,catalog: freezed == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
-as CheckedEditorCatalog?,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
+as CheckedEditorCatalog?,queries: freezed == queries ? _self.queries : queries // ignore: cast_nullable_to_non_nullable
+as PortableExpressionQueries?,resourceDiagnostics: null == resourceDiagnostics ? _self.resourceDiagnostics : resourceDiagnostics // ignore: cast_nullable_to_non_nullable
+as ResourceDiagnosticReader,resource: freezed == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
 as skir.ResourceId?,searchHistoryNamespace: freezed == searchHistoryNamespace ? _self.searchHistoryNamespace : searchHistoryNamespace // ignore: cast_nullable_to_non_nullable
 as String?,openResource: freezed == openResource ? _self.openResource : openResource // ignore: cast_nullable_to_non_nullable
 as ValueChanged<skir.ResourceId>?,role: freezed == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
@@ -5204,7 +5210,7 @@ as Map<skir.ExpressionBindingId, PortableBindingSetter>,
 }
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {

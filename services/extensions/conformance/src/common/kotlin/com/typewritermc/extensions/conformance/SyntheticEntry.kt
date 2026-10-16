@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.conformance
 
+import com.typewritermc.types.text
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
@@ -172,7 +173,7 @@ object SyntheticEntryEditorPresentation : SyntheticEntryPresentation {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed entry")),
             color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
-            identifier = subject.identifier,
+            identifier = subject.identifier.text,
         )
         message {
             label("Message")
@@ -202,7 +203,7 @@ object SyntheticEntryCompactPresentation : SyntheticEntryPresentation {
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed entry")),
             color = literal(Color.parseRgb(requireNotNull(SyntheticEntryDefinition.display?.color))),
-            identifier = subject.identifier,
+            identifier = subject.identifier.text,
         )
         message {
             polymorphicInput {

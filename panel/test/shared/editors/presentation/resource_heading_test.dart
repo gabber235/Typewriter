@@ -201,7 +201,7 @@ void main() {
     )!;
     expect(
       resource.bindings[presentationSubjectIdentifierBindingId]?.value,
-      skir.DataValue.wrapStringValue("inner"),
+      skir.ResourceId(value: "inner").toExpressionValue(),
     );
     final field = scope.withConfiguredValue(
       skir.BindingRef(

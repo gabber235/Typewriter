@@ -221,31 +221,27 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
     final link = value?.authoredLink;
     final enabled = scope.enabled && !scope.readOnly;
     final selectedRow = link == null ? null : candidates?[link.target.resource];
-    final summary = selectedRow != null && candidateDefinition != null
-        ? _AuthoredCollectionRowAppearance(
-            row: selectedRow,
-            definition: candidateDefinition!,
-          )
-        : Text(
-            link == null
-                ? _entryPlaceholder(control.inputContent, scope) ??
-                      _operationText(
-                        scope,
-                        control.content?.emptyText,
-                        "No resource selected",
-                      )
-                : switch (scope.host) {
-                    final PortableCollectionProjectionHost host =>
-                      host
-                              .projectResource(
-                                link.target.resource,
-                                context: scope.invocation,
-                              )
-                              ?.label ??
-                          link.target.resource.value,
-                    _ => link.target.resource.value,
-                  },
+    final summary = link == null
+        ? Text(
+            _entryPlaceholder(control.inputContent, scope) ??
+                _operationText(
+                  scope,
+                  control.content?.emptyText,
+                  "No resource selected",
+                ),
             overflow: TextOverflow.ellipsis,
+          )
+        : _ResourceReferenceAppearance(
+            resource: link.target.resource,
+            scope: selectedRow?.scope ?? scope,
+            role: skir.PresentationRole.referenceSummary,
+            fallbackLabel: link.target.resource.value,
+            render: (node, targetScope, appearance, accent) =>
+                PortablePresentationNodeRenderer(
+                  node: node,
+                  scope: targetScope,
+                ),
+            fallback: (body, accent) => body,
           );
     final content = InputDecorator(
       decoration: style.decoration.copyWith(enabled: enabled),

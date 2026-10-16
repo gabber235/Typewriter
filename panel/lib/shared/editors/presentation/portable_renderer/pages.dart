@@ -260,8 +260,20 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         node: selected.material.layout,
         scope: PortablePresentationScope(
           bindings: {
+            ...parent.bindings.withSubjectAt(
+              skir.ValueLocation(resource: resource, path: editorRootPath),
+            ),
             _configuredValueBindingId: PortableExpressionBinding(
               value: projected.value,
+              schema: switch (projected.configuration) {
+                skir.TypeSelection_completeWrapper(:final value) =>
+                  CompletePortablePresentationBinding(
+                    skir.TypeUse.wrapNamed(value),
+                  ),
+                skir.TypeSelection_pendingWrapper() =>
+                  PartialPortablePresentationBinding(projected.configuration),
+                _ => null,
+              },
               location: skir.ValueLocation(
                 resource: resource,
                 path: editorRootPath,
@@ -276,13 +288,15 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
           watchSearch: parent.watchSearch,
           reportStatus: parent.reportStatus,
           catalog: catalog,
+          queries: parent.queries,
+          resourceDiagnostics: parent.resourceDiagnostics,
           resource: resource,
           role: selected.resolvedRole,
           material: selected.material,
           activePresentations: {selected.material.provider},
           openResource: parent.openResource,
           host: parent.host,
-        ),
+        ).withMaterial(selected.material),
       ),
     );
   }

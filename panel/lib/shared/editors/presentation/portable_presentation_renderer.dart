@@ -25,6 +25,7 @@ part "portable_renderer/link_input.dart";
 part "portable_renderer/link_selection.dart";
 part "portable_renderer/pages.dart";
 part "portable_renderer/reorder_handle.dart";
+part "portable_renderer/result_content.dart";
 part "portable_renderer/scalar_inputs.dart";
 part "portable_renderer/scope.dart";
 part "portable_renderer/structured_inputs.dart";
@@ -387,12 +388,23 @@ final class PortablePresentationRenderer extends HookWidget {
   const PortablePresentationRenderer({
     required this.host,
     this.scopeBuilder,
+    this.contextBindings = const {},
+    this.contentBuilder,
+    this.errorBuilder,
     this.onStatus,
     this.fillAvailableSpace = false,
     super.key,
   });
   final PortablePresentationHost host;
   final PortablePresentationScopeBuilder? scopeBuilder;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
+  contextBindings;
+  final Widget Function(
+    skir.PresentationNode node,
+    PortablePresentationScope scope,
+  )?
+  contentBuilder;
+  final Widget Function(String message)? errorBuilder;
   final ValueChanged<String>? onStatus;
   final bool fillAvailableSpace;
 
@@ -410,19 +422,18 @@ final class PortablePresentationRenderer extends HookWidget {
     }, [host, operations]);
     final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
     try {
-      bindings =
-          {
-            for (final entry in document.bindings.entries)
-              entry.key: PortableExpressionBinding(
-                value: entry.value.value,
-                location: entry.value.location,
-                schema: entry.value.schema,
-              ),
-          }.withPresentationEnvironment(
-            PresentationEnvironment.maybeOf(context)?.bindings ?? const {},
-          );
+      bindings = normalizePresentationBindings(
+        catalog: document.catalog,
+        document: document.bindings,
+        surface:
+            (PresentationEnvironment.maybeOf(context)?.bindings ?? const {})
+                .withCallerInputs(contextBindings),
+        imports: document.material?.dependencies.contextInputs ?? const [],
+      );
+    } on FormatException catch (error) {
+      return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
     } on StateError catch (error) {
-      return _diagnostic(error.message);
+      return errorBuilder?.call(error.message) ?? _diagnostic(error.message);
     }
     final scope =
         scopeBuilder?.call(
@@ -435,6 +446,8 @@ final class PortablePresentationRenderer extends HookWidget {
         PortablePresentationScope(
           bindings: bindings,
           budget: document.budget,
+          queries: document.queries,
+          resourceDiagnostics: document.resourceDiagnostics,
           enabled: host.enabled,
           readOnly: host.readOnly,
           operations: operations,
@@ -448,12 +461,15 @@ final class PortablePresentationRenderer extends HookWidget {
           slots: document.slots,
           host: host,
         );
-    final root = PortablePresentationNodeRenderer(
-      node: document.root,
-      scope: scope,
-      fillAvailableSpace:
-          fillAvailableSpace || document.role == skir.PresentationRole.editor,
-    );
+    final root =
+        contentBuilder?.call(document.root, scope) ??
+        PortablePresentationNodeRenderer(
+          node: document.root,
+          scope: scope,
+          fillAvailableSpace:
+              fillAvailableSpace ||
+              document.role == skir.PresentationRole.editor,
+        );
     return _PortableDiagnosticBoundary(
       key: ValueKey(generation),
       operations: operations,

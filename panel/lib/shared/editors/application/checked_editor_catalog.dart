@@ -92,15 +92,27 @@ final class CheckedEditorCatalog {
     : _types = {
         for (final published in snapshot.types)
           published.definition.id: published,
-      };
+      } {
+    for (final id in _types.keys) {
+      if (id.typeId case skir.TypeId_qualifiedWrapper(:final value)
+          when value.namespace == "typewriter.read") {
+        throw const FormatException(
+          "Authored declarations cannot use the reserved canonical read namespace",
+        );
+      }
+    }
+  }
+
+  late final expressionPrograms = PortableExpressionPrograms(this);
 
   final skir.EditorCatalogWireSnapshot snapshot;
   final Map<skir.TypeDefinitionId, skir.PublishedType> _types;
 
-  skir.PublishedType? published(skir.TypeDefinitionId id) => _types[id];
+  skir.PublishedType? published(skir.TypeDefinitionId id) =>
+      _types[id] ?? canonicalReadModels.published(id);
 
   skir.TypeDisplay? typeDisplay(skir.TypeDefinitionId id) =>
-      _types[id]?.display;
+      published(id)?.display;
 
   skir.TypeDisplay? selectionDisplay(skir.TypeSelection selection) =>
       selected(selection)?.display;
@@ -244,7 +256,11 @@ final class CheckedEditorCatalog {
           .where((candidate) => candidate.id == material.provider)
           .firstOrNull;
       if (descriptor == null) continue;
-      for (final selection in _explicitFieldSelections(material.layout)) {
+      for (final selection in [
+        ..._explicitFieldSelections(material.layout),
+        if (material.resultAppearance?.leading case final leading?)
+          ..._explicitFieldSelections(leading),
+      ]) {
         candidates
             .putIfAbsent(selection.path, () => [])
             .add(
@@ -327,7 +343,7 @@ final class CheckedEditorCatalog {
       skir.TypeSelection_pendingWrapper(:final value) => value.definition,
       _ => null,
     };
-    return definition == null ? null : _types[definition];
+    return definition == null ? null : published(definition);
   }
 
   List<AppliedEditorField> fields(skir.TypeSelection selection) {
@@ -368,7 +384,16 @@ final class CheckedEditorCatalog {
           currentValue = _fieldValue(currentValue, value.name);
           index++;
         case skir.PathSegment_itemWrapper():
-          final named = _namedValueUse(current);
+          final named = _namedValueUse(
+            current ??
+                (index == 0
+                    ? switch (root) {
+                        skir.TypeSelection_completeWrapper(:final value) =>
+                          skir.TypeUse.wrapNamed(value),
+                        _ => null,
+                      }
+                    : null),
+          );
           if (named == null) return null;
           final containing = _selectionForUse(named, currentValue);
           if (containing == null) return null;
@@ -802,7 +827,7 @@ final class CheckedEditorCatalog {
   }
 
   skir.TypeSelection beginSelection(skir.TypeDefinitionId definition) {
-    final published = _types[definition];
+    final published = this.published(definition);
     if (published == null || published.status != skir.DeclarationStatus.ready) {
       return skir.TypeSelection.unknown;
     }
@@ -937,12 +962,14 @@ final class CheckedEditorCatalog {
   /// This boundary also proves that every referenced declaration is ready,
   /// every application has the declared arity, and every applied argument
   /// satisfies its parameter bounds.
+  bool isReadyTypeUse(skir.TypeUse use) => _isReadyTypeUse(use, 0);
+
   bool isReadyApplication(skir.NamedTypeUse application) =>
       _isReadyApplication(application, 0);
 
   bool _isReadyApplication(skir.NamedTypeUse application, int depth) {
     if (depth > _maximumCheckedTypeDepth) return false;
-    final published = _types[application.definition];
+    final published = this.published(application.definition);
     if (published == null || published.status != skir.DeclarationStatus.ready) {
       return false;
     }
@@ -1271,7 +1298,7 @@ final class CheckedEditorCatalog {
     while (pending.isNotEmpty) {
       final current = pending.removeLast();
       if (!visited.add(current)) continue;
-      final published = _types[current];
+      final published = this.published(current);
       if (published == null ||
           published.status != skir.DeclarationStatus.ready) {
         continue;
@@ -1488,7 +1515,7 @@ final class CheckedEditorCatalog {
     for (final ancestor in definition.ancestorTemplates) {
       final applied = _applyNamed(ancestor, result);
       if (applied == null) continue;
-      final publishedAncestor = _types[applied.definition];
+      final publishedAncestor = published(applied.definition);
       if (publishedAncestor == null) continue;
       final ancestorParameters = publishedAncestor.definition.parameters
           .toList();
@@ -1902,18 +1929,25 @@ Iterable<skir.PresentationNode> _connectionNodes(
   }
 }
 
+Iterable<skir.PresentationNode> _searchResultNodes(
+  skir.SearchResultMapping result,
+) sync* {
+  yield result.presentation;
+  if (result.resultAppearance?.leading case final leading?) yield leading;
+}
+
 Iterable<skir.PresentationNode> _searchProviderNodes(
   skir.SearchProvider provider,
 ) sync* {
   switch (provider) {
     case skir.SearchProvider_staticValuesWrapper(:final value):
-      yield value.result.presentation;
+      yield* _searchResultNodes(value.result);
     case skir.SearchProvider_collectionWrapper(:final value):
-      yield value.result.presentation;
+      yield* _searchResultNodes(value.result);
     case skir.SearchProvider_httpJsonWrapper(:final value):
-      yield value.result.presentation;
+      yield* _searchResultNodes(value.result);
     case skir.SearchProvider_realmCallbackWrapper(:final value):
-      yield value.result.presentation;
+      yield* _searchResultNodes(value.result);
     case skir.SearchProvider_gateWrapper(:final value):
       yield* _searchProviderNodes(value.child);
     case skir.SearchProvider_debounceWrapper(:final value):

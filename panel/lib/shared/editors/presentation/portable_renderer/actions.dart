@@ -18,7 +18,7 @@ extension _PortableScopeActions on PortablePresentationScope {
           if (evaluated case PortableExpressionAvailable(
             value: final replacement,
           )) {
-            return apply(value.target, replacement);
+            return apply(value.target, replacement, reads: evaluated.reads);
           }
           return PortablePresentationWriteRejected([
             PortablePresentationDiagnostic(

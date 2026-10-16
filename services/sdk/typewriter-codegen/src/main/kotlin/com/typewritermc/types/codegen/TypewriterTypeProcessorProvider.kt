@@ -73,10 +73,12 @@ private class TypewriterTypeProcessor(
     private val registrarProviders = RegistrarProviderProcessor(codeGenerator, logger)
     private val collectionProjectionProviders = CollectionProjectionProviderProcessor(codeGenerator, logger)
     private val capabilityProviders = CapabilityProviderProcessor(codeGenerator, logger, options[SOURCE_PART_OPTION].orEmpty())
+    private val readModels = ReadModelProcessor(codeGenerator, logger)
     private val claimDependencyClosure = options[CLAIM_DEPENDENCY_CLOSURE_OPTION]?.toBooleanStrictOrNull() == true
     private var optionsValidated = false
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
+        readModels.process(resolver)
         if (!optionsValidated) {
             optionsValidated = true
             if (!validateOptions()) return emptyList()
@@ -843,6 +845,27 @@ object ${name}ExpressionsFactory : com.typewritermc.expression.ExpressionFactory
         ${name}ExpressionsImpl$nothingArguments(value)
 }
 
+${if (resource) {
+            """
+@get:kotlin.jvm.JvmName("${name}ResourceFields")
+@Suppress("UNCHECKED_CAST")
+val $sourceArguments com.typewritermc.presentation.ResourceExpr<$name$appliedTypeArguments>.fields: ${name}Expressions$appliedTypeArguments$sourceWhere
+    get() = ${name}ExpressionsFactory.create(value) as ${name}Expressions$appliedTypeArguments
+"""
+        } else {
+            ""
+        }}
+
+${if (typeParameters.isEmpty() && (typeDefinition.representation as? RepresentationTemplate.Scalar)?.kind == ScalarKind.Text) {
+            """
+@get:kotlin.jvm.JvmName("${name}TextRepresentation")
+val <M : com.typewritermc.expression.MissingPolicy> com.typewritermc.expression.Expr<$name, M>.text: com.typewritermc.expression.Expr<kotlin.String, M>
+    get() = com.typewritermc.expression.textRepresentation(this)
+"""
+        } else {
+            ""
+        }}
+
 @kotlin.jvm.JvmName("${name}ExpressionAny")
 @Suppress("UNCHECKED_CAST")
 fun $expressionFunctionArguments com.typewritermc.expression.Expr<kotlin.collections.List<$name$appliedTypeArguments>, M>.any(
@@ -1018,6 +1041,7 @@ object ${name}Definition : com.typewritermc.discovery.GeneratedTypeProvider {
     val id: com.typewritermc.types.TypeDefinitionId = $definition
     val declaration: com.typewritermc.types.TypeDefinition = ${typeDefinition.kotlinCode()}
     override val definition: com.typewritermc.types.TypeDefinition get() = declaration
+    override val nativeClass: kotlin.reflect.KClass<*> get() = $name::class
     override val display: com.typewritermc.types.TypeDisplay? = $display
     fun applied(arguments: List<com.typewritermc.types.TypeUse> = emptyList()): com.typewritermc.types.TypeUse.Named {
         require(arguments.size == ${typeParameters.size}) { "$name requires ${typeParameters.size} type arguments." }
@@ -1120,9 +1144,9 @@ $decodeCases
                 }
 
                 declaration.valueClassScalarKind() != null -> {
-                    val field = fields.singleOrNull() ?: return ""
-                    val property = properties[field.sourceName] ?: return ""
-                    val nativeRepresentation = property.type.resolve().sourceType()
+                    val parameter = declaration.primaryConstructor?.parameters?.singleOrNull() ?: return ""
+                    val propertyName = parameter.name?.asString() ?: return ""
+                    val nativeRepresentation = parameter.type.resolve().sourceType()
                     val kind = requireNotNull(declaration.valueClassScalarKind())
                     """com.typewritermc.types.GeneratedScalarNativeBinding<$nativeType>(
             checked = actual,
@@ -1130,7 +1154,7 @@ $decodeCases
             signature = $signature,
             nativeClass = $name::class,
             representation = arguments.resolver.bind(com.typewritermc.types.TypeUse.Scalar(${kind.kotlinCode()})),
-            unwrap = { value -> value.${field.sourceName} },
+            unwrap = { value -> value.$propertyName },
             construct = { value -> $name(value as $nativeRepresentation) },
         )"""
                 }

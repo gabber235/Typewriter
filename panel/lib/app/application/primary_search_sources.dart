@@ -40,15 +40,8 @@ PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
             onTap: context.onTap,
             shortcutActivator: context.shortcutActivator,
           ),
-      authoringResourceSearchResultType.rowRendererId: (context) =>
-          AuthoringSearchResultItem(
-            payload: context.result.payload as AuthoringSearchResultPayload,
-            focused: context.focused,
-            selected: context.selected,
-            loading: context.loading,
-            onTap: context.onTap,
-            shortcutActivator: context.shortcutActivator,
-          ),
+      authoringResourceSearchResultType.rowRendererId:
+          buildAuthoringResourceSearchResultItem,
       authoringCreationSearchResultType.rowRendererId:
           buildAuthoringCreationSearchResultItem,
     },
@@ -88,6 +81,9 @@ SearchContribution<void> _builder(Ref ref, BuildContext context) {
           ref: ref,
           organizationId: organizationId,
           realmId: realmId,
+          presentationContext: libraryOriginBindings(
+            ref.read(pageIdProvider) ?? ref.read(bookIdProvider),
+          ),
         ).debounced(100.ms).cached(),
       ]);
       commands.addAll([

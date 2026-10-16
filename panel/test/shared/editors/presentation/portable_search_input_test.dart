@@ -6,6 +6,32 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets(
+    "rich mapped rows share activation and leave the compact summary unchanged",
+    (tester) async {
+      final fixture = _SearchFixture(richRows: true);
+      await fixture.pump(tester, width: 300);
+      await fixture.open(tester);
+      expect(find.byType(SearchResultCard), findsNWidgets(3));
+      expect(
+        tester
+            .widgetList<SearchResultSuffix>(find.byType(SearchResultSuffix))
+            .map((suffix) => suffix.label),
+        everyElement("reward"),
+      );
+      await tester.tapAt(tester.getCenter(find.text("Map")));
+      await tester.pumpAndSettle();
+      expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
+      expect(find.byType(SearchResultCard), findsNothing);
+      expect(find.text("Map"), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey("authored_search_summary")),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets("result navigation does not depend on platform focus shortcuts", (
     tester,
   ) async {
@@ -70,7 +96,7 @@ void main() {
     final fixture = _SearchFixture(rebuildDuringWrite: true);
     await fixture.pump(tester);
     await fixture.open(tester);
-    await tester.tap(find.text("Map"));
+    await tester.tapAt(tester.getCenter(find.text("Map")));
     await tester.pump();
     await tester.pumpAndSettle();
     expect(fixture.value.authoredString, "Map");
@@ -136,7 +162,7 @@ void main() {
       );
       expect(find.byType(SearchFrame), findsNothing);
       expect(fixture.writes, isEmpty);
-      await tester.tap(find.text("Map"));
+      await tester.tapAt(tester.getCenter(find.text("Map")));
       await tester.pumpAndSettle();
 
       expect(fixture.writes, [skir.DataValue.wrapStringValue("Map")]);
@@ -207,7 +233,7 @@ void main() {
       await fixture.open(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
-      await tester.tap(find.text("Following field"));
+      await tester.tapAt(tester.getCenter(find.text("Following field")));
       await tester.pumpAndSettle();
       expect(find.byType(QueryBar), findsNothing);
       expect(fixture.writes, isEmpty);
@@ -220,20 +246,20 @@ void main() {
       final fixture = _SearchFixture(multiple: true);
       await fixture.pump(tester);
       await fixture.open(tester);
-      await tester.tap(find.text("Map"));
+      await tester.tapAt(tester.getCenter(find.text("Map")));
       await tester.pumpAndSettle();
       expect(
         fixture.value.authoredItems!.map((item) => item.value.authoredString),
         ["Map"],
       );
       expect(find.byType(QueryBar), findsOneWidget);
-      await tester.tap(find.text("Star"));
+      await tester.tapAt(tester.getCenter(find.text("Star")));
       await tester.pumpAndSettle();
       expect(
         fixture.value.authoredItems!.map((item) => item.value.authoredString),
         ["Map", "Star"],
       );
-      await tester.tap(find.text("Map"));
+      await tester.tapAt(tester.getCenter(find.text("Map")));
       await tester.pumpAndSettle();
       expect(
         fixture.value.authoredItems!.map((item) => item.value.authoredString),
@@ -247,7 +273,7 @@ void main() {
     final fixture = _SearchFixture(reject: true);
     await fixture.pump(tester);
     await fixture.open(tester);
-    await tester.tap(find.text("Map"));
+    await tester.tapAt(tester.getCenter(find.text("Map")));
     await tester.pumpAndSettle();
     expect(find.text("Selection is unavailable"), findsOneWidget);
     expect(find.byType(QueryBar), findsOneWidget);
@@ -271,7 +297,7 @@ void main() {
     expect(fixture.writes, isEmpty);
     await tester.ensureVisible(find.text("Use this custom value"));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Use this custom value"));
+    await tester.tapAt(tester.getCenter(find.text("Use this custom value")));
     await tester.pumpAndSettle();
     expect(fixture.value, skir.DataValue.wrapStringValue("Lantern"));
     expect(find.byType(QueryBar), findsNothing);
@@ -329,10 +355,12 @@ void main() {
 final class _SearchFixture {
   _SearchFixture({
     this.readOnly = false,
+    this.richRows = false,
     this.multiple = false,
     this.reject = false,
     this.rebuildDuringWrite = false,
   });
+  final bool richRows;
   final bool multiple;
   final bool reject;
   final bool rebuildDuringWrite;
@@ -389,6 +417,15 @@ final class _SearchFixture {
                 key: rowRead,
                 selectedValue: rowRead,
                 label: rowRead,
+                resultAppearance: richRows
+                    ? skir.ResultAppearance(
+                        accent: null,
+                        leading: null,
+
+                        style: skir.ResultStyle.card,
+                        kindLabel: _text("reward"),
+                      )
+                    : null,
                 presentation:
                     (skir.PresentationNode.mutable()
                           ..nodeId = "result"

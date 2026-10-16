@@ -30,8 +30,9 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     val itemLayout = state.scope(itemNodes)
     var empty: PresentationNode? = null
     var separator: PresentationNode? = null
+    val sequenceLayout = RuntimeSequenceLayoutScope()
     val scope =
-        object : SequenceScope<ItemScope>, Layout by itemLayout {
+        object : SequenceScope<ItemScope>, Layout by itemLayout, SequenceLayoutScope by sequenceLayout {
             override val item =
                 Expr<ItemScope, MayBeMissing>(
                     ExpressionNode.Read(binding, ValuePath()),
@@ -53,7 +54,13 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
             PresentationElement.createRepeated(
                 source = expression(source),
                 itemBindingId = binding.wire(),
-                presentation = sequence(state.column(itemNodes), empty, separator),
+                presentation =
+                    skirout.editor.v1.presentation.SequencePresentation(
+                        item = state.column(itemNodes),
+                        empty = empty,
+                        separator = separator,
+                        layout = sequenceLayout.build(),
+                    ),
             ),
         )
 }
@@ -267,12 +274,27 @@ private fun RuntimePresentationData.sequence(
                     spacing = 0.0,
                     mainAxisAlignment = WireMainAxisAlignment.START,
                     crossAxisAlignment = WireCrossAxisAlignment.START,
+                    clipOverflow = false,
                 ),
             ),
     )
 
 private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
     private var layout: skirout.editor.v1.presentation.SequenceLayout? = null
+
+    override fun clippedRow(spacing: Double) {
+        require(spacing.isFinite() && spacing >= 0) { "Sequence spacing must be finite and nonnegative." }
+        set(
+            skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper(
+                skirout.editor.v1.presentation.ChildrenLayout.createRow(
+                    spacing = spacing,
+                    mainAxisAlignment = WireMainAxisAlignment.START,
+                    crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                    clipOverflow = true,
+                ),
+            ),
+        )
+    }
 
     override fun column(
         spacing: Double,
@@ -285,6 +307,7 @@ private class RuntimeSequenceLayoutScope : SequenceLayoutScope {
                     spacing = spacing,
                     mainAxisAlignment = WireMainAxisAlignment.START,
                     crossAxisAlignment = cross.wire(),
+                    clipOverflow = false,
                 ),
             ),
         )

@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_search_payload.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$PortableSearchPayload {
 
  skir.DataValue get selectedValue; String get providerPath; SearchQueryContext get query;
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchPayloadCopyWith<PortableSearchPayload> get copyWith => _$PortableSearchPayloadCopyWithImpl<PortableSearchPayload>(this as PortableSearchPayload, _$identity);
@@ -67,7 +67,7 @@ class _$PortableSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selectedValue = null,Object? providerPath = null,Object? query = null,}) {
   return _then(_self.copyWith(
 selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
@@ -77,7 +77,7 @@ as SearchQueryContext,
   ));
 }
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -89,7 +89,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 
-/// Adds pattern matching related methods to [PortableSearchPayload].
+/// Adds pattern-matching-related methods to [PortableSearchPayload].
 extension PortableSearchPayloadPatterns on PortableSearchPayload {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -113,7 +113,7 @@ return custom(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -167,16 +167,16 @@ return custom(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)?  mapped,TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue sourceValue,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)?  mapped,TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload() when mapped != null:
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload() when custom != null:
+return mapped(_that.sourceValue,_that.sourceSchema,_that.contextBindings,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload() when custom != null:
 return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
   return orElse();
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -189,10 +189,10 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)  mapped,required TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)  custom,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue sourceValue,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)  mapped,required TResult Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)  custom,}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload():
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload():
+return mapped(_that.sourceValue,_that.sourceSchema,_that.contextBindings,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload():
 return custom(_that.selectedValue,_that.providerPath,_that.query);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -207,10 +207,10 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue sourceValue,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)?  mapped,TResult? Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue sourceValue,  PortablePresentationBindingSchema? sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings,  skir.DataValue selectedValue,  skir.SearchResultMapping mapping,  String providerPath,  String distinctKey,  SearchQueryContext query)?  mapped,TResult? Function( skir.DataValue selectedValue,  String providerPath,  SearchQueryContext query)?  custom,}) {final _that = this;
 switch (_that) {
 case PortableMappedSearchPayload() when mapped != null:
-return mapped(_that.sourceValue,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload() when custom != null:
+return mapped(_that.sourceValue,_that.sourceSchema,_that.contextBindings,_that.selectedValue,_that.mapping,_that.providerPath,_that.distinctKey,_that.query);case PortableCustomSearchPayload() when custom != null:
 return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
   return null;
 
@@ -223,10 +223,18 @@ return custom(_that.selectedValue,_that.providerPath,_that.query);case _:
 
 
 class PortableMappedSearchPayload implements PortableSearchPayload {
-  const PortableMappedSearchPayload({required this.sourceValue, required this.selectedValue, required this.mapping, required this.providerPath, required this.distinctKey, required this.query});
+  const PortableMappedSearchPayload({required this.sourceValue, this.sourceSchema,  Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings = const {}, required this.selectedValue, required this.mapping, required this.providerPath, required this.distinctKey, required this.query}): _contextBindings = contextBindings;
 
 
  final  skir.DataValue sourceValue;
+ final  PortablePresentationBindingSchema? sourceSchema;
+ final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _contextBindings;
+@JsonKey() Map<skir.ExpressionBindingId, PortableExpressionBinding> get contextBindings {
+  if (_contextBindings is EqualUnmodifiableMapView) return _contextBindings;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_contextBindings);
+}
+
 @override final  skir.DataValue selectedValue;
  final  skir.SearchResultMapping mapping;
 @override final  String providerPath;
@@ -234,7 +242,7 @@ class PortableMappedSearchPayload implements PortableSearchPayload {
 @override final  SearchQueryContext query;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableMappedSearchPayloadCopyWith<PortableMappedSearchPayload> get copyWith => _$PortableMappedSearchPayloadCopyWithImpl<PortableMappedSearchPayload>(this, _$identity);
@@ -243,18 +251,18 @@ $PortableMappedSearchPayloadCopyWith<PortableMappedSearchPayload> get copyWith =
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableMappedSearchPayload&&(identical(other.sourceValue, sourceValue) || other.sourceValue == sourceValue)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.mapping, mapping) || other.mapping == mapping)&&(identical(other.providerPath, providerPath) || other.providerPath == providerPath)&&(identical(other.distinctKey, distinctKey) || other.distinctKey == distinctKey)&&(identical(other.query, query) || other.query == query));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableMappedSearchPayload&&(identical(other.sourceValue, sourceValue) || other.sourceValue == sourceValue)&&(identical(other.sourceSchema, sourceSchema) || other.sourceSchema == sourceSchema)&&const DeepCollectionEquality().equals(other.contextBindings, _contextBindings)&&(identical(other.selectedValue, selectedValue) || other.selectedValue == selectedValue)&&(identical(other.mapping, mapping) || other.mapping == mapping)&&(identical(other.providerPath, providerPath) || other.providerPath == providerPath)&&(identical(other.distinctKey, distinctKey) || other.distinctKey == distinctKey)&&(identical(other.query, query) || other.query == query));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,sourceValue,selectedValue,mapping,providerPath,distinctKey,query);
+    return Object.hash(runtimeType,sourceValue,sourceSchema,const DeepCollectionEquality().hash(_contextBindings),selectedValue,mapping,providerPath,distinctKey,query);
 }
 
 @override
 String toString() {
-    return 'PortableSearchPayload.mapped(sourceValue: $sourceValue, selectedValue: $selectedValue, mapping: $mapping, providerPath: $providerPath, distinctKey: $distinctKey, query: $query)';
+    return 'PortableSearchPayload.mapped(sourceValue: $sourceValue, sourceSchema: $sourceSchema, contextBindings: $contextBindings, selectedValue: $selectedValue, mapping: $mapping, providerPath: $providerPath, distinctKey: $distinctKey, query: $query)';
 }
 
 
@@ -265,11 +273,11 @@ abstract mixin class $PortableMappedSearchPayloadCopyWith<$Res> implements $Port
   factory $PortableMappedSearchPayloadCopyWith(PortableMappedSearchPayload value, $Res Function(PortableMappedSearchPayload) _then) = _$PortableMappedSearchPayloadCopyWithImpl;
 @override @useResult
 $Res call({
- skir.DataValue sourceValue, skir.DataValue selectedValue, skir.SearchResultMapping mapping, String providerPath, String distinctKey, SearchQueryContext query
+ skir.DataValue sourceValue, PortablePresentationBindingSchema? sourceSchema, Map<skir.ExpressionBindingId, PortableExpressionBinding> contextBindings, skir.DataValue selectedValue, skir.SearchResultMapping mapping, String providerPath, String distinctKey, SearchQueryContext query
 });
 
 
-@override $SearchQueryContextCopyWith<$Res> get query;
+$PortablePresentationBindingSchemaCopyWith<$Res>? get sourceSchema;@override $SearchQueryContextCopyWith<$Res> get query;
 
 }
 /// @nodoc
@@ -281,11 +289,13 @@ class _$PortableMappedSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableMappedSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? sourceValue = null,Object? selectedValue = null,Object? mapping = null,Object? providerPath = null,Object? distinctKey = null,Object? query = null,}) {
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? sourceValue = null,Object? sourceSchema = freezed,Object? contextBindings = null,Object? selectedValue = null,Object? mapping = null,Object? providerPath = null,Object? distinctKey = null,Object? query = null,}) {
   return _then(PortableMappedSearchPayload(
 sourceValue: null == sourceValue ? _self.sourceValue : sourceValue // ignore: cast_nullable_to_non_nullable
-as skir.DataValue,selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,sourceSchema: freezed == sourceSchema ? _self.sourceSchema : sourceSchema // ignore: cast_nullable_to_non_nullable
+as PortablePresentationBindingSchema?,contextBindings: null == contextBindings ? _self._contextBindings : contextBindings // ignore: cast_nullable_to_non_nullable
+as Map<skir.ExpressionBindingId, PortableExpressionBinding>,selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,mapping: null == mapping ? _self.mapping : mapping // ignore: cast_nullable_to_non_nullable
 as skir.SearchResultMapping,providerPath: null == providerPath ? _self.providerPath : providerPath // ignore: cast_nullable_to_non_nullable
 as String,distinctKey: null == distinctKey ? _self.distinctKey : distinctKey // ignore: cast_nullable_to_non_nullable
@@ -295,7 +305,19 @@ as SearchQueryContext,
 }
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortablePresentationBindingSchemaCopyWith<$Res>? get sourceSchema {
+    if (_self.sourceSchema == null) {
+    return null;
+  }
+
+  return $PortablePresentationBindingSchemaCopyWith<$Res>(_self.sourceSchema!, (value) {
+    return _then(_self.copyWith(sourceSchema: value));
+  });
+}/// Create a copy of PortableSearchPayload
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -318,7 +340,7 @@ class PortableCustomSearchPayload implements PortableSearchPayload {
 @override final  SearchQueryContext query;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableCustomSearchPayloadCopyWith<PortableCustomSearchPayload> get copyWith => _$PortableCustomSearchPayloadCopyWithImpl<PortableCustomSearchPayload>(this, _$identity);
@@ -365,7 +387,7 @@ class _$PortableCustomSearchPayloadCopyWithImpl<$Res>
   final $Res Function(PortableCustomSearchPayload) _then;
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? selectedValue = null,Object? providerPath = null,Object? query = null,}) {
   return _then(PortableCustomSearchPayload(
 selectedValue: null == selectedValue ? _self.selectedValue : selectedValue // ignore: cast_nullable_to_non_nullable
@@ -376,7 +398,7 @@ as SearchQueryContext,
 }
 
 /// Create a copy of PortableSearchPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
@@ -417,7 +439,7 @@ $PortableSearchSelectionResultCopyWith(PortableSearchSelectionResult _, $Res Fun
 }
 
 
-/// Adds pattern matching related methods to [PortableSearchSelectionResult].
+/// Adds pattern-matching-related methods to [PortableSearchSelectionResult].
 extension PortableSearchSelectionResultPatterns on PortableSearchSelectionResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -441,7 +463,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -504,7 +526,7 @@ return rejected(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -557,7 +579,7 @@ class PortableSearchSelectionApplied implements PortableSearchSelectionResult {
  final  bool added;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchSelectionAppliedCopyWith<PortableSearchSelectionApplied> get copyWith => _$PortableSearchSelectionAppliedCopyWithImpl<PortableSearchSelectionApplied>(this, _$identity);
@@ -604,7 +626,7 @@ class _$PortableSearchSelectionAppliedCopyWithImpl<$Res>
   final $Res Function(PortableSearchSelectionApplied) _then;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? added = null,}) {
   return _then(PortableSearchSelectionApplied(
 added: null == added ? _self.added : added // ignore: cast_nullable_to_non_nullable
@@ -625,7 +647,7 @@ class PortableSearchSelectionRejected implements PortableSearchSelectionResult {
  final  String message;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableSearchSelectionRejectedCopyWith<PortableSearchSelectionRejected> get copyWith => _$PortableSearchSelectionRejectedCopyWithImpl<PortableSearchSelectionRejected>(this, _$identity);
@@ -672,7 +694,7 @@ class _$PortableSearchSelectionRejectedCopyWithImpl<$Res>
   final $Res Function(PortableSearchSelectionRejected) _then;
 
 /// Create a copy of PortableSearchSelectionResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(PortableSearchSelectionRejected(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

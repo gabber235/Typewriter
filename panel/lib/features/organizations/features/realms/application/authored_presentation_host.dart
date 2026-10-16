@@ -101,15 +101,27 @@ final class AuthoredPresentationHost extends ChangeNotifier
       ),
       skir.TypeSelection_unknown() => null,
     };
+    final observationIssues =
+        issues ?? ResourceIssues.evaluate(document: observation);
+    List<PortablePresentationDiagnostic> diagnosticsFor(skir.ResourceId id) =>
+        observationIssues
+            .currentFor(id)
+            .map((issue) => issue.diagnostic)
+            .toList();
     return PortablePresentationDocument(
       catalog: checked,
+      queries: PortableExpressionQueries(
+        catalog: checked,
+        authored: observation,
+      ),
+      resourceDiagnostics: diagnosticsFor,
       root: material.layout,
       bindings: {
         presentationSubjectIdentifierBindingId: PortablePresentationBinding(
           schema: CompletePortablePresentationBinding(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+            skir.TypeUse.wrapNamed(frameworkResourceIdUse),
           ),
-          value: skir.DataValue.wrapStringValue(resource.value),
+          value: resource.toExpressionValue(),
         ),
         if (schema != null)
           configuredValueBindingId: PortablePresentationBinding(
@@ -124,10 +136,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       },
       budget: budget,
       diagnosticFallback: PortableDiagnosticFallback.resource,
-      diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
-          .currentFor(resource)
-          .map((issue) => issue.diagnostic)
-          .toList(),
+      diagnostics: diagnosticsFor(resource),
       role: role,
       material: material,
       activePresentations: {material.provider},
@@ -156,10 +165,14 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) {
     final target = location(reference, context: context);
-    final record = target == null ? null : authored.resource(target.resource);
+    final observation = context.queries?.authored ?? authored;
+    final checked = context.queries?.catalog ?? authored.catalog;
+    final record = target == null
+        ? null
+        : observation.resource(target.resource);
     return record == null
         ? null
-        : authored.catalog.valueTypeAt(
+        : checked.valueTypeAt(
             record.configuration,
             target!.path,
             value: _recordValue(record),
@@ -207,8 +220,9 @@ final class AuthoredPresentationHost extends ChangeNotifier
     }
     final result = await binding.prepare(
       label: "Edit value",
-      from: authored,
+      from: _observation(context),
       apply: (operation) async {
+        operation.observeExpressionReads(context.expressionReads);
         if (prepareValue case final prepare?) {
           await operation.setWithInitialization(target, value, prepare);
         } else {
@@ -351,8 +365,13 @@ final class AuthoredPresentationHost extends ChangeNotifier
     final definition = material.dependencies.collections
         .where((candidate) => candidate.sourceId == sourceId)
         .firstOrNull;
+    final queries = context.queries;
+    final observation = queries?.authored;
+    final checked = queries?.catalog;
     if (definition == null ||
-        context.catalogGeneration != authored.generation) {
+        observation == null ||
+        checked == null ||
+        context.catalogGeneration != observation.generation) {
       return PortableCollectionProjection(
         definition: definition,
         rows: const [],
@@ -369,22 +388,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
       );
     }
     final rows = <PortableCollectionRowProjection>[];
-    final entries = authored.resources.entries.toList()
+    final entries = observation.resources.entries.toList()
       ..sort((left, right) => left.key.value.compareTo(right.key.value));
     for (final entry in entries) {
       final record = entry.value;
       final eligible = resources != null
-          ? authored.catalog
+          ? checked
                 .nominalDefinitions(record.configuration)
                 .contains(resources.root)
-          : authored.catalog.matchesNamedTemplate(
-              record.configuration,
-              projected!.root,
-            );
+          : checked.matchesNamedTemplate(record.configuration, projected!.root);
       if (!eligible) continue;
       final row = resources != null
           ? _resourceRow(record)
-          : _projectionRow(definition, projected!, record);
+          : _projectionRow(definition, projected!, record, checked);
       if (row == null) {
         return PortableCollectionProjection(
           definition: definition,
@@ -392,21 +408,45 @@ final class AuthoredPresentationHost extends ChangeNotifier
           problem: "A presentation collection row could not be projected",
         );
       }
+      final projectedUse = resources == null
+          ? checked.applyTemplate(definition.rowType, record.configuration) ??
+                checked.concreteType(definition.rowType)
+          : null;
+      final rowSchema = resources != null
+          ? switch (record.configuration) {
+              skir.TypeSelection_completeWrapper(:final value) =>
+                CompletePortablePresentationBinding(
+                  skir.TypeUse.wrapNamed(value),
+                ),
+              skir.TypeSelection_pendingWrapper() =>
+                PartialPortablePresentationBinding(record.configuration),
+              _ => null,
+            }
+          : projectedUse == null
+          ? null
+          : CompletePortablePresentationBinding(projectedUse);
       final resourceBinding =
           resources?.resourceBindingId ?? projected!.resourceBindingId;
       final bindings = {
         ...context.bindings,
-        definition.rowBindingId: PortableExpressionBinding(value: row),
-        resourceBinding: PortableExpressionBinding(
-          value: skir.DataValue.wrapStringValue(entry.key.value),
+        definition.rowBindingId: PortableExpressionBinding(
+          value: row,
+          schema: rowSchema,
         ),
+        resourceBinding: entry.key.toExpressionBinding(),
       };
-      final evaluator = PortableExpressionEvaluator.located(
-        bindings,
+      final key = checked.evaluateExpression(
+        definition.key,
+        bindings: bindings,
         budget: budget,
+        queries: queries,
       );
-      final key = evaluator.evaluate(definition.key);
-      final selectable = evaluator.evaluate(definition.selectability);
+      final selectable = checked.evaluateExpression(
+        definition.selectability,
+        bindings: bindings,
+        budget: budget,
+        queries: queries,
+      );
       if (key is! PortableExpressionAvailable) {
         return PortableCollectionProjection(
           definition: definition,
@@ -427,6 +467,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
           configuration: record.configuration,
           label: _resourceLabel(record) ?? entry.key.value,
           row: row,
+          schema: rowSchema,
           key: key.value,
           canonicalKey: canonicalAuthoredValue(key.value),
           selectable: selected,
@@ -441,8 +482,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.ResourceId resource, {
     required PortableInvocationContext context,
   }) {
-    final observation = authored;
-    if (context.catalogGeneration != observation.generation) return null;
+    final observation = context.queries?.authored;
+    if (observation == null ||
+        context.catalogGeneration != observation.generation) {
+      return null;
+    }
     final record = observation.resource(resource);
     if (record == null) return null;
     return PortableResourceProjection(
@@ -451,10 +495,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       label: _resourceLabel(record) ?? resource.value,
       value: _resourceRow(record),
       diagnosticFallback: PortableDiagnosticFallback.resource,
-      diagnostics: (issues ?? ResourceIssues.evaluate(document: observation))
-          .currentFor(resource)
-          .map((issue) => issue.diagnostic)
-          .toList(),
+      diagnostics: context.resourceDiagnostics(resource),
     );
   }
 
@@ -891,6 +932,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.PresentationCollectionDefinition definition,
     skir.PresentationCollectionProjection projection,
     skir.AuthoringRecord record,
+    CheckedEditorCatalog catalog,
   ) {
     skir.DataValue? row;
     for (final field in projection.fields) {
@@ -923,25 +965,28 @@ final class AuthoredPresentationHost extends ChangeNotifier
     }
     row ??= skir.DataValue.createRecord(fields: const []);
     if (row == skir.DataValue.unfilled) return row;
-    final applied = authored.catalog.applyTemplate(
+    final applied = catalog.applyTemplate(
       definition.rowType,
       record.configuration,
     );
-    return applied == null ? row : _completeProjectedValue(row, applied);
+    return applied == null
+        ? row
+        : _completeProjectedValue(row, applied, catalog);
   }
 
   skir.DataValue? _completeProjectedValue(
     skir.DataValue authoredValue,
     skir.TypeUse expected,
+    CheckedEditorCatalog catalog,
   ) {
     if (authoredValue == skir.DataValue.unfilled) return authoredValue;
     return switch (expected) {
       skir.TypeUse_nullableWrapper(value: final nullable) =>
         authoredValue == skir.DataValue.null_
             ? authoredValue
-            : _completeProjectedValue(authoredValue, nullable.value),
+            : _completeProjectedValue(authoredValue, nullable.value, catalog),
       skir.TypeUse_namedWrapper(value: final named) =>
-        _completeProjectedNamedValue(authoredValue, named),
+        _completeProjectedNamedValue(authoredValue, named, catalog),
       _ => authoredValue,
     };
   }
@@ -949,6 +994,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
   skir.DataValue? _completeProjectedNamedValue(
     skir.DataValue authoredValue,
     skir.NamedTypeUse expected,
+    CheckedEditorCatalog catalog,
   ) {
     final payload = switch (authoredValue) {
       skir.DataValue_namedWrapper(:final value)
@@ -958,7 +1004,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       _ => authoredValue,
     };
     if (payload == null) return null;
-    final representation = authored.catalog
+    final representation = catalog
         .published(expected.definition)
         ?.definition
         .representation;
@@ -967,9 +1013,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     }
     final projected = payload.authoredRecord;
     if (projected == null) return null;
-    final fields = authored.catalog.fields(
-      skir.TypeSelection.wrapComplete(expected),
-    );
+    final fields = catalog.fields(skir.TypeSelection.wrapComplete(expected));
     final expectedNames = {for (final field in fields) field.template.key};
     if (projected.fields.any((field) => !expectedNames.contains(field.name))) {
       return null;
@@ -982,7 +1026,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
       final fieldValue = existing?.value ?? skir.DataValue.unfilled;
       final normalized = field.type == null
           ? fieldValue
-          : _completeProjectedValue(fieldValue, field.type!);
+          : _completeProjectedValue(fieldValue, field.type!, catalog);
       if (normalized == null) return null;
       completed.add(
         skir.FieldValue(name: field.template.key, value: normalized),
@@ -1165,15 +1209,20 @@ final class AuthoredPresentationHost extends ChangeNotifier
                 "The action value is unavailable",
                 target: location(value.target, context: context),
               )
-            : _stage("Edit value", (operation) {
-                final target = location(value.target, context: context);
-                if (target == null) {
-                  throw StateError("The action target is unavailable");
-                }
-                operation
-                  ..observeExpressionReads(replacement.reads)
-                  ..set(target, replacement.value);
-              }, target: location(value.target, context: context));
+            : _stage(
+                "Edit value",
+                (operation) {
+                  final target = location(value.target, context: context);
+                  if (target == null) {
+                    throw StateError("The action target is unavailable");
+                  }
+                  operation
+                    ..observeExpressionReads(replacement.reads)
+                    ..set(target, replacement.value);
+                },
+                target: location(value.target, context: context),
+                from: _observation(context),
+              );
       case skir.LocalEditorAction_insertListItemWrapper(:final value):
         final replacement = _evaluate(value.value, context);
         if (replacement == null) {
@@ -1364,14 +1413,17 @@ final class AuthoredPresentationHost extends ChangeNotifier
   _AuthoredActionValue? _evaluate(
     skir.ExpressionNode expression,
     PortableInvocationContext context,
-  ) => switch (PortableExpressionEvaluator.located(
-    context.bindings,
-    budget: budget,
-  ).evaluate(expression)) {
-    PortableExpressionAvailable(:final value, :final reads) =>
-      _AuthoredActionValue(value, reads),
-    PortableExpressionUnavailable() || PortableExpressionFailed() => null,
-  };
+  ) =>
+      switch ((context.queries?.catalog ?? authored.catalog).evaluateExpression(
+        expression,
+        bindings: context.bindings,
+        budget: budget,
+        queries: context.queries,
+      )) {
+        PortableExpressionAvailable(:final value, :final reads) =>
+          _AuthoredActionValue(value, reads),
+        PortableExpressionUnavailable() || PortableExpressionFailed() => null,
+      };
 
   PortablePresentationWriteResult _editList(
     skir.BindingRef reference,
@@ -1387,10 +1439,15 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (target == null) {
       return _reject("The action target is unavailable", target: target);
     }
-    return _stage("Edit collection", (operation) {
-      operation.observeExpressionReads(reads);
-      apply(target, operation);
-    }, target: target);
+    return _stage(
+      "Edit collection",
+      (operation) {
+        operation.observeExpressionReads(reads);
+        apply(target, operation);
+      },
+      target: target,
+      from: _observation(context),
+    );
   }
 
   PortablePresentationWriteResult _editMap(
@@ -1409,15 +1466,20 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (requiredRow != null && rows.every((row) => row.id != requiredRow)) {
       return _reject("The map row is no longer available", target: target);
     }
-    return _stage("Edit map", (operation) {
-      operation.observeExpressionReads(reads);
-      final latest = operation.expect(target);
-      if (latest is! PortablePathValue<skir.DataValue> ||
-          latest.value.authoredPayload != current) {
-        throw StateError("The map changed before this action");
-      }
-      operation.replaceMap(target, update(rows));
-    }, target: target);
+    return _stage(
+      "Edit map",
+      (operation) {
+        operation.observeExpressionReads(reads);
+        final latest = operation.expect(target);
+        if (latest is! PortablePathValue<skir.DataValue> ||
+            latest.value.authoredPayload != current) {
+          throw StateError("The map changed before this action");
+        }
+        operation.replaceMap(target, update(rows));
+      },
+      target: target,
+      from: _observation(context),
+    );
   }
 
   Future<PortablePresentationWriteResult> _chooseForm(
@@ -1459,19 +1521,34 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return const PortablePresentationWriteApplied();
   }
 
+  /// The current operation owns the write, but expectations belong to the read observation.
+  AuthoringDocument _observation(PortableInvocationContext context) =>
+      switch (context.queries?.authored) {
+        final AuthoringDocument document => document,
+        null => authored,
+        _ => throw StateError(
+          "The authored query observation cannot own edit expectations",
+        ),
+      };
+
   PortablePresentationWriteResult _stage(
     String label,
     void Function(AuthoringEdit operation) apply, {
     bool independent = false,
     skir.ValueLocation? target,
+    AuthoringDocument? from,
   }) {
     final binding = edit;
     if (!enabled || readOnly || binding == null) {
       return _reject("This presentation is read only", target: target);
     }
     final result = independent
-        ? binding.workspace.edit(label: label, apply: apply, from: authored)
-        : binding.edit(label: label, apply: apply, from: authored);
+        ? binding.workspace.edit(
+            label: label,
+            apply: apply,
+            from: from ?? authored,
+          )
+        : binding.edit(label: label, apply: apply, from: from ?? authored);
     return switch (result) {
       EditStageRejected(:final message) => _reject(message, target: target),
       _ => const PortablePresentationWriteApplied(),

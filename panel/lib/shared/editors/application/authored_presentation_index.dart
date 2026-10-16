@@ -113,8 +113,13 @@ abstract class AuthoredPresentationIndex with _$AuthoredPresentationIndex {
     skir.PresentationNode layout,
     Map<skir.ExpressionBindingId, AuthoredBindingAddress> aliases, {
     Map<String, skir.PresentationCollectionDefinition> sources = const {},
+    Iterable<skir.PresentationNode> additionalLayouts = const [],
   }) => AuthoredPresentationIndex(
-    uses: layout.authoredBindingUses(aliases, sources).toList(),
+    uses: [
+      ...layout.authoredBindingUses(aliases, sources),
+      for (final additional in additionalLayouts)
+        ...additional.authoredBindingUses(aliases, sources),
+    ],
   );
 
   Set<String> fieldsOf(AuthoredBindingAddress record) => {

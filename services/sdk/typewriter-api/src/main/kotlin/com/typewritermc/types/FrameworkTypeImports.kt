@@ -10,6 +10,7 @@ import com.typewritermc.elements.Segment
     Icon::class,
     Icon.Iconify::class,
     Icon.Svg::class,
+    ResourceId::class,
     Keyframe::class,
     Segment::class,
 )

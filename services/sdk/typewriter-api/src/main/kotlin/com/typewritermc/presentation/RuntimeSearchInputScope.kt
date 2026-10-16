@@ -159,6 +159,7 @@ private class RuntimeSearchResultScope<Value, Row>(
     private var selectedValue: skirout.editor.v1.expression.ExpressionNode? = null
     private var presentation: PresentationNode? = null
     private var label: skirout.editor.v1.expression.ExpressionNode? = null
+    private var appearance: skirout.editor.v1.presentation.ResultAppearance? = null
 
     override fun key(value: Expr<*, Handled>) {
         key = expression(value)
@@ -169,7 +170,10 @@ private class RuntimeSearchResultScope<Value, Row>(
     }
 
     override fun presentation(body: Layout.() -> Unit) {
-        presentation = state.presentation(body)
+        check(presentation == null) { "Search result presentation may be declared once." }
+        val captured = state.captureResult { scope -> scope.body() }
+        presentation = captured.nodes.singleOrNull() ?: state.column(captured.nodes)
+        appearance = captured.appearance
     }
 
     override fun label(value: Expr<String, Handled>) {
@@ -183,6 +187,7 @@ private class RuntimeSearchResultScope<Value, Row>(
             selectedValue = requireNotNull(selectedValue) { "Search result mapping must declare a selected value." },
             presentation = requireNotNull(presentation) { "Search result mapping must declare a presentation." },
             label = label,
+            resultAppearance = appearance,
         )
 }
 

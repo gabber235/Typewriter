@@ -11,8 +11,10 @@ final class _AuthoredCollectionRow {
     required this.selectable,
     required this.scope,
     required this.authoredAddress,
+    this.schema,
   });
 
+  final PortablePresentationBindingSchema? schema;
   final skir.ResourceId resource;
   final skir.TypeSelection configuration;
   final String label;
@@ -182,7 +184,26 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         ],
       );
       final nodeScope = row.scope
-          .withValues({element.childrenBindingId: childValues})
+          .withValues(
+            {element.childrenBindingId: childValues},
+            schemas: {
+              if (row.schema case CompletePortablePresentationBinding(
+                :final use,
+              ))
+                element.childrenBindingId: CompletePortablePresentationBinding(
+                  skir.TypeUse.createNamed(
+                    definition: skir.TypeDefinitionId(
+                      typeId: skir.TypeId.createQualified(
+                        namespace: "typewriter",
+                        name: "List",
+                      ),
+                      revision: 1,
+                    ),
+                    arguments: [use],
+                  ),
+                ),
+            },
+          )
           .copyWith(
             authoredAliases: {
               ...row.scope.authoredAliases,
@@ -265,7 +286,10 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
       }
       final row = indexed.$2;
       final scope = row.scope
-          .withValues({itemBinding: row.row})
+          .withValues(
+            {itemBinding: row.row},
+            schemas: {itemBinding: ?row.schema},
+          )
           .copyWith(
             authoredAliases: {
               ...row.scope.authoredAliases,
@@ -338,6 +362,7 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
         for (final row in projected.rows)
           _AuthoredCollectionRow(
             resource: row.resource,
+            schema: row.schema,
             configuration: row.configuration,
             label: row.label,
             row: row.row,
@@ -355,12 +380,18 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
               ],
             ),
             scope: scope
-                .withValues({
-                  definition.rowBindingId: row.row,
-                  resourceBinding: skir.DataValue.wrapStringValue(
-                    row.resource.value,
-                  ),
-                })
+                .withValues(
+                  {
+                    definition.rowBindingId: row.row,
+                    resourceBinding: row.resource.toExpressionValue(),
+                  },
+                  schemas: {
+                    definition.rowBindingId: ?row.schema,
+                    resourceBinding: CompletePortablePresentationBinding(
+                      skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+                    ),
+                  },
+                )
                 .copyWith(
                   authoredAliases: {
                     ...scope.authoredAliases,
@@ -406,47 +437,129 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
   };
 }
 
-final class _AuthoredCollectionRowAppearance extends StatelessWidget {
-  const _AuthoredCollectionRowAppearance({
-    required this.row,
-    required this.definition,
+final class _ResourceReferenceAppearance extends HookWidget {
+  const _ResourceReferenceAppearance({
+    required this.resource,
+    required this.scope,
+    required this.role,
+    required this.fallbackLabel,
+    required this.render,
+    required this.fallback,
+    this.appearanceOverride,
   });
 
-  final _AuthoredCollectionRow row;
-  final skir.PresentationCollectionDefinition definition;
+  final skir.ResourceId resource;
+  final PortablePresentationScope scope;
+  final skir.PresentationRole role;
+  final String fallbackLabel;
+  final skir.PresentationId? appearanceOverride;
+  final Widget Function(
+    skir.PresentationNode,
+    PortablePresentationScope,
+    skir.ResultAppearance?,
+    Color?,
+  )
+  render;
+  final Widget Function(Widget, Color?) fallback;
 
   @override
   Widget build(BuildContext context) {
-    final catalog = row.scope.catalog;
-    if (catalog == null) return Text(row.label);
-    final appearance = definition.resources?.appearance;
-    final material = appearance == null
-        ? switch (catalog.selectPresentation(
-            row.configuration,
-            skir.PresentationRole.referenceOption,
-          )) {
+    final operations = useMemoized(PortableOperationResults.new, [
+      scope.host,
+      resource,
+      scope.catalog?.snapshot.generation,
+    ]);
+    useEffect(() => operations.dispose, [operations]);
+    final host = scope.host;
+    final catalog = scope.catalog;
+    if (host == null ||
+        host is! PortableCollectionProjectionHost ||
+        catalog == null) {
+      return fallback(Text(fallbackLabel), null);
+    }
+    final projection = (host as PortableCollectionProjectionHost)
+        .projectResource(resource, context: scope.invocation);
+    if (projection == null) return fallback(Text(fallbackLabel), null);
+    final display = catalog.selectionDisplay(projection.configuration);
+    final fallbackAccent = display?.searchResultAccent;
+    final override = role == skir.PresentationRole.referenceOption
+        ? appearanceOverride
+        : null;
+    final material = override == null
+        ? switch (catalog.selectPresentation(projection.configuration, role)) {
             SelectedEditorPresentation(:final material) => material,
             _ => null,
           }
-        : catalog.presentationMaterial(appearance, row.configuration);
-    if (material == null) return Text(row.label);
-    final scope = row.scope
-        .withValues({
-          _configuredValueBindingId: row.row,
-          presentationSubjectIdentifierBindingId:
-              skir.DataValue.wrapStringValue(row.resource.value),
-        })
-        .copyWith(
-          authoredAliases: {
-            ...row.scope.authoredAliases,
-            _configuredValueBindingId: row.authoredAddress,
-          },
-        )
-        .withMaterial(material)
-        .withActivePresentation(material.provider);
-    return PortablePresentationNodeRenderer(
-      node: material.layout,
-      scope: scope,
+        : catalog.presentationMaterial(override, projection.configuration);
+    if (material == null) {
+      return fallback(Text(projection.label), fallbackAccent);
+    }
+    final configured = PortableExpressionBinding(
+      value: projection.value,
+      location: skir.ValueLocation(resource: resource, path: editorRootPath),
+      schema: switch (projection.configuration) {
+        skir.TypeSelection_completeWrapper(:final value) =>
+          CompletePortablePresentationBinding(skir.TypeUse.wrapNamed(value)),
+        skir.TypeSelection_pendingWrapper() =>
+          PartialPortablePresentationBinding(projection.configuration),
+        _ => null,
+      },
+    );
+    final PortablePresentationScope targetScope;
+    try {
+      targetScope = scope
+          .copyWith(
+            resource: resource,
+            role: material.role,
+            operations: operations,
+            reportStatus: operations.reportStatus,
+            bindings: {
+              ...scope.bindings,
+              _configuredValueBindingId: configured,
+              presentationSubjectIdentifierBindingId: resource
+                  .toExpressionBinding(),
+            },
+            authoredAliases: {
+              ...scope.authoredAliases,
+              _configuredValueBindingId: AuthoredBindingAddress.binding(
+                _configuredValueBindingId,
+                configured,
+              ),
+            },
+          )
+          .withMaterial(material)
+          .withActivePresentation(material.provider)
+          .withReadOnly(true);
+    } on FormatException catch (error) {
+      return fallback(Text(error.message), fallbackAccent);
+    } on StateError catch (error) {
+      return fallback(Text(error.message), fallbackAccent);
+    }
+    final content = PortablePresentationChrome(
+      role: role,
+      child: render(
+        material.layout,
+        targetScope,
+        material.resultAppearance,
+        fallbackAccent,
+      ),
+    );
+    return _PortableDiagnosticBoundary(
+      key: ValueKey((scope.catalog?.snapshot.generation, resource)),
+      operations: operations,
+      diagnostics: projection.diagnostics,
+      diagnosticFallback: projection.diagnosticFallback,
+      observations: [
+        PortableDiagnosticObservation(
+          target: PortableDiagnosticTarget.value(
+            skir.ValueLocation(resource: resource, path: editorRootPath),
+          ),
+          value: projection.value,
+        ),
+      ],
+      child: role == skir.PresentationRole.referenceSummary
+          ? ExcludeFocus(child: IgnorePointer(child: content))
+          : content,
     );
   }
 }

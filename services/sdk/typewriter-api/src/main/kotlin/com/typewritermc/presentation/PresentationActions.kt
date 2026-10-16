@@ -44,6 +44,7 @@ data class PresentationParameter<Value>(
 
 fun <Value> presentationParameter(name: String): PresentationParameter<Value> {
     require(name.isNotBlank()) { "Presentation parameter names must not be blank." }
+    require(!name.startsWith("context:")) { "Presentation parameters cannot shadow caller inputs." }
     return PresentationParameter(ExpressionBindingId(name))
 }
 

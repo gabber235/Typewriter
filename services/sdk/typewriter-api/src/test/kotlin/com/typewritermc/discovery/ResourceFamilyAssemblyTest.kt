@@ -19,6 +19,18 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 
 val ResourceFamilyAssemblyTest by testSuite {
+    test("reserved read identities cannot replace intrinsic schemas or isolate unrelated declarations") {
+        val reserved = TypeDefinitionId(TypeId.Qualified("typewriter.read", "UnfamiliarModel"), 1)
+        val healthy = id("Healthy")
+        val assembly = assemble(listOf(record(reserved), record(healthy)), emptyList())
+        val status =
+            assembly.snapshot.types
+                .single { it.definition.id == reserved }
+                .status
+        (status is DeclarationStatus.Unavailable && status.reasons.any { it.code == "reserved_intrinsic_type_identity" }) shouldBe true
+        assembly.checked.definition(healthy) shouldBe DeclarationStatus.Ready
+    }
+
     test("keeps disjoint nominal families available") {
         val book = id("Book")
         val tag = id("Tag")

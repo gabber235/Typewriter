@@ -248,6 +248,8 @@ skir.NamedControl _control() => skir.NamedControl(
           ),
         ],
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 8,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,

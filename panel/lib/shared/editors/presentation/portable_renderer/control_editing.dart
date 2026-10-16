@@ -17,24 +17,40 @@ skir.DataValue _payloadReplacement(
 PortableExpressionResult _evaluateMapping(
   PortablePresentationScope scope,
   skir.ExpressionMapping mapping,
-  skir.DataValue candidate,
-) => PortableExpressionEvaluator.located({
-  ...scope.bindings,
-  mapping.inputBinding: PortableExpressionBinding(value: candidate),
-}, budget: scope.budget).evaluate(mapping.body);
+  skir.DataValue candidate, {
+  skir.TypeUse? candidateType,
+}) => scope
+    .copyWith(
+      bindings: {
+        ...scope.bindings,
+        mapping.inputBinding: PortableExpressionBinding(
+          value: candidate,
+          schema: candidateType == null
+              ? null
+              : CompletePortablePresentationBinding(candidateType),
+        ),
+      },
+    )
+    .evaluate(mapping.body);
 
 String? _mappedDisplay(
   PortablePresentationScope scope,
   skir.ValueMappings? mappings,
-  skir.DataValue value,
-) {
+  skir.DataValue value, {
+  required skir.BindingRef reference,
+}) {
   final mapping = mappings?.display;
   if (mapping == null ||
       value == skir.DataValue.unfilled ||
       value == skir.DataValue.null_) {
     return null;
   }
-  final result = _evaluateMapping(scope, mapping, value);
+  final result = _evaluateMapping(
+    scope,
+    mapping,
+    value,
+    candidateType: scope.expectedPayloadType(reference),
+  );
   return result is PortableExpressionAvailable &&
           result.value is skir.DataValue_stringValueWrapper
       ? (result.value as skir.DataValue_stringValueWrapper).value
@@ -125,7 +141,12 @@ class _PortableEntryEditing extends HookWidget {
           currentPayload == skir.DataValue.null_) {
         return null;
       }
-      final result = _evaluateMapping(scope, mapping, currentPayload);
+      final result = _evaluateMapping(
+        scope,
+        mapping,
+        currentPayload,
+        candidateType: scope.expectedPayloadType(control.binding),
+      );
       final message =
           result is PortableExpressionAvailable &&
               result.value is skir.DataValue_stringValueWrapper
@@ -147,7 +168,10 @@ class _PortableEntryEditing extends HookWidget {
       });
     }
 
-    Future<void> write(skir.DataValue payload) async {
+    Future<void> write(
+      skir.DataValue payload, {
+      Iterable<PortableExpressionRead> reads = const [],
+    }) async {
       if (!active.value || latestIdentity.value != identity) return;
       final current = latest.value;
       final replacement =
@@ -165,7 +189,11 @@ class _PortableEntryEditing extends HookWidget {
           value: current.read(control.binding),
         ),
         operation: () async {
-          outcome = await current.apply(control.binding, replacement);
+          outcome = await current.apply(
+            control.binding,
+            replacement,
+            reads: reads,
+          );
           return outcome!;
         },
       );
@@ -213,7 +241,12 @@ class _PortableEntryEditing extends HookWidget {
             );
             return;
           }
-          final result = _evaluateMapping(source, mapping, candidate);
+          final result = _evaluateMapping(
+            source,
+            mapping,
+            candidate,
+            candidateType: source.expectedPayloadType(control.binding),
+          );
           if (result is! PortableExpressionAvailable) {
             await feedback(
               "The completion expression could not produce a value",
@@ -258,7 +291,7 @@ class _PortableEntryEditing extends HookWidget {
             return;
           }
           await feedback(null, completion: true);
-          await write(replacement);
+          await write(replacement, reads: result.reads);
         });
       },
       (transform) => enqueue(() async {

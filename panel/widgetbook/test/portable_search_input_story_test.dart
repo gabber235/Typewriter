@@ -15,7 +15,7 @@ void main() {
       tester.getTopLeft(find.text("Description")).dy,
       greaterThan(before.dy),
     );
-    await tester.tap(find.text("Experience reward"));
+    await tester.tapAt(tester.getCenter(find.text("Experience reward")));
     await tester.pumpAndSettle();
     expect(find.text("Experience reward"), findsOneWidget);
     expect(find.byType(QueryBar), findsNothing);

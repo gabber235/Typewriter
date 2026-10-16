@@ -35,7 +35,7 @@ class DefaultPresentationRuntime : PresentationRuntime {
         content: (PresentationBuildScope) -> Unit,
     ): PresentationBuildResult {
         val state = PresentationBuildState(binding, ::resolve, expressions)
-        state.withTarget(state.nodes) { content(state.scope()) }
-        return state.result(state.column(state.nodes))
+        val captured = state.captureResult(content)
+        return state.result(state.column(captured.nodes), captured.appearance)
     }
 }

@@ -257,6 +257,8 @@ skir.PresentationNode _portableColumn(
     skir.ChildrenElement.createColumn(
       children: children.map(skir.AxisChild.wrapFixed),
       layout: skir.AxisChildrenLayout(
+        clipOverflow: false,
+
         spacing: spacing,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,

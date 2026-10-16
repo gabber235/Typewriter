@@ -435,8 +435,14 @@ final class _ResourceCreationOperation {
             : "No compatible reference destination is available${reasons.isEmpty ? '' : ': ${reasons.join('; ')}'}",
       );
     }
+    final presentationDocument = view.toDocument();
+    final presentationIssues = ResourceIssues.evaluate(
+      document: presentationDocument,
+    );
     final choice = await _showReferenceQuestion(
       candidates: candidates,
+      presentationDocument: presentationDocument,
+      presentationIssues: presentationIssues,
       searchHint:
           "Select or create ${catalog.typeSelectionName(catalog.beginSelection(plan.opposite.resource.definition))}",
     );

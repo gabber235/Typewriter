@@ -2,6 +2,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "portable_expression.freezed.dart";
+part "portable_expression_queries.dart";
+part "canonical_read_models.dart";
+part "canonical_read_models.generated.dart";
+
 const authoredPortableOperationIds = <String>{
   "typewriter.boolean.not",
   "typewriter.collection.access",
@@ -23,6 +28,13 @@ const authoredPortableOperationIds = <String>{
   "typewriter.duration.format",
   "typewriter.timestamp.format",
   "typewriter.link.target",
+  "typewriter.resource.id",
+  "typewriter.resource.value",
+  "typewriter.resource.configuration",
+  "typewriter.value.configuration",
+  "typewriter.catalog.declaration",
+  "typewriter.color.parse",
+  "typewriter.text.value",
   "typewriter.record.field",
   "typewriter.regex.capture",
   "typewriter.regex.matches",
@@ -143,6 +155,8 @@ final class PortableExpressionEvaluator {
   PortableExpressionEvaluator(
     Map<skir.ExpressionBindingId, skir.DataValue> bindings, {
     required this.budget,
+    this.queries,
+    this.queryContracts = const {},
   }) : _bindings = Map.unmodifiable({
          for (final entry in bindings.entries)
            entry.key: PortableExpressionBinding(value: entry.value),
@@ -151,6 +165,8 @@ final class PortableExpressionEvaluator {
   PortableExpressionEvaluator.located(
     Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, {
     required this.budget,
+    this.queries,
+    this.queryContracts = const {},
   }) : _bindings = Map.unmodifiable(bindings);
 
   factory PortableExpressionEvaluator.configuredValue({
@@ -166,6 +182,10 @@ final class PortableExpressionEvaluator {
   }, budget: budget);
 
   final skir.EvaluationBudget budget;
+  final PortableExpressionQueries? queries;
+  final Map<ExpressionOccurrence, CheckedQueryCall> queryContracts;
+  List<int> _occurrence = const [];
+  int _collectionBodyIndex = 1;
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> _locals = {};
   final Set<PortableExpressionRead> _reads = {};
@@ -179,6 +199,7 @@ final class PortableExpressionEvaluator {
     _steps = 0;
     _collectionItems = 0;
     _depth = 0;
+    _occurrence = const [];
     try {
       final result = _evaluate(node);
       return switch (result) {
@@ -215,6 +236,8 @@ final class PortableExpressionEvaluator {
         );
       }
       _consumeStep();
+      final projection = node.canonicalLeafProjection;
+      if (projection != null) return _query(projection);
       return switch (node) {
         skir.ExpressionNode_literalWrapper(:final value) => _Available(value),
         skir.ExpressionNode_readWrapper(:final value) => _read(value),
@@ -243,6 +266,16 @@ final class PortableExpressionEvaluator {
       };
     } finally {
       _depth--;
+    }
+  }
+
+  _Evaluation _child(skir.ExpressionNode node, int index) {
+    final previous = _occurrence;
+    _occurrence = [...previous, index];
+    try {
+      return _evaluate(node);
+    } finally {
+      _occurrence = previous;
     }
   }
 
@@ -284,13 +317,13 @@ final class PortableExpressionEvaluator {
     skir.ExpressionNode right, {
     required bool conjunction,
   }) {
-    final first = _evaluate(left);
+    final first = _child(left, 0);
     if (first is _Unavailable) return first;
     final firstValue = _booleanValue((first as _Available).value);
     if (conjunction ? !firstValue : firstValue) {
       return _Available(skir.DataValue.wrapBoolean(firstValue));
     }
-    final second = _evaluate(right);
+    final second = _child(right, 1);
     if (second is _Unavailable) return second;
     return _Available(
       skir.DataValue.wrapBoolean(_booleanValue((second as _Available).value)),
@@ -298,26 +331,25 @@ final class PortableExpressionEvaluator {
   }
 
   _Evaluation _conditional(skir.ConditionalExpression value) {
-    final test = _evaluate(value.test);
+    final test = _child(value.test, 0);
     if (test is _Unavailable) return test;
-    return _evaluate(
-      _booleanValue((test as _Available).value) ? value.yes : value.no,
-    );
+    final yes = _booleanValue((test as _Available).value);
+    return _child(yes ? value.yes : value.no, yes ? 1 : 2);
   }
 
   _Evaluation _orElse(skir.OrElseExpression value) {
-    final input = _evaluate(value.input);
-    if (input is _Unavailable) return _evaluate(value.fallback);
+    final input = _child(value.input, 0);
+    if (input is _Unavailable) return _child(value.fallback, 1);
     final actual = (input as _Available).value;
     return actual == skir.DataValue.null_ || actual == skir.DataValue.unfilled
-        ? _evaluate(value.fallback)
+        ? _child(value.fallback, 1)
         : input;
   }
 
   _Evaluation _call(skir.ExpressionCall call) {
     final arguments = <skir.DataValue>[];
-    for (final argument in call.arguments) {
-      final evaluated = _evaluate(argument);
+    for (final (index, argument) in call.arguments.indexed) {
+      final evaluated = _child(argument, index);
       if (evaluated is _Unavailable) return evaluated;
       arguments.add((evaluated as _Available).value);
     }
@@ -325,68 +357,99 @@ final class PortableExpressionEvaluator {
     if (call.operation.value == "typewriter.rule.unique") {
       return _unique(arguments.single);
     }
-    return _Available(_operation(call.operation.value, arguments));
+    if (call.operation.value == "typewriter.color.parse") {
+      final text = _text(arguments.single).trim();
+      if (text.isEmpty) return const _Unavailable();
+      try {
+        if (!RegExp(r"^#[0-9a-fA-F]{6}$").hasMatch(text)) {
+          throw const FormatException("Invalid RGB color");
+        }
+        return _Available(
+          _namedColor(0xff000000 | int.parse(text.substring(1), radix: 16)),
+        );
+      } on FormatException {
+        throw const _ExpressionFailure(
+          "invalid_color",
+          "The color is not a hexadecimal color",
+        );
+      }
+    }
+    if (call.operation.value == "typewriter.record.field" &&
+        (arguments.first == skir.DataValue.null_ ||
+            arguments.first == skir.DataValue.unfilled)) {
+      return const _Unavailable();
+    }
+    final result = _operation(call.operation.value, arguments);
+    return result == skir.DataValue.unfilled
+        ? const _Unavailable()
+        : _Available(result);
   }
 
   _Evaluation _collection(skir.CollectionExpression expression) {
-    final input = _evaluate(expression.input);
+    final input = _child(expression.input, 0);
     if (input is _Unavailable) return input;
     final inputValue = (input as _Available).value;
     final entries = _collectionEntries(inputValue);
     final sourceLocation = _sourceLocation(expression.input);
     final arguments = <skir.DataValue>[];
-    for (final argument in expression.arguments) {
-      final result = _evaluate(argument);
+    for (final (index, argument) in expression.arguments.indexed) {
+      final result = _child(argument, index + 1);
       if (result is _Unavailable) return result;
       final value = (result as _Available).value;
       if (_containsUnfilled(value)) return const _Unavailable();
       arguments.add(value);
     }
-    return switch (expression.operation.value) {
-      "typewriter.collection.take" => _takeOrSkip(
-        expression,
-        inputValue,
-        entries,
-        arguments,
-        take: true,
-      ),
-      "typewriter.collection.skip" => _takeOrSkip(
-        expression,
-        inputValue,
-        entries,
-        arguments,
-        take: false,
-      ),
-      "typewriter.collection.reverse" => _reverse(
-        expression,
-        inputValue,
-        entries,
-      ),
-      "typewriter.collection.distinct" => _distinct(
-        expression,
-        inputValue,
-        entries,
-      ),
-      "typewriter.collection.reduce" || "typewriter.collection.fold" => _fold(
-        expression,
-        entries,
-        arguments,
-        sourceLocation,
-      ),
-      "typewriter.collection.sort_with" => _sortWith(
-        expression,
-        inputValue,
-        entries,
-        sourceLocation,
-      ),
-      _ => _collectionWithUnaryBody(
-        expression,
-        inputValue,
-        entries,
-        arguments,
-        sourceLocation,
-      ),
-    };
+    final previousBodyIndex = _collectionBodyIndex;
+    _collectionBodyIndex = expression.arguments.length + 1;
+    try {
+      return switch (expression.operation.value) {
+        "typewriter.collection.take" => _takeOrSkip(
+          expression,
+          inputValue,
+          entries,
+          arguments,
+          take: true,
+        ),
+        "typewriter.collection.skip" => _takeOrSkip(
+          expression,
+          inputValue,
+          entries,
+          arguments,
+          take: false,
+        ),
+        "typewriter.collection.reverse" => _reverse(
+          expression,
+          inputValue,
+          entries,
+        ),
+        "typewriter.collection.distinct" => _distinct(
+          expression,
+          inputValue,
+          entries,
+        ),
+        "typewriter.collection.reduce" || "typewriter.collection.fold" => _fold(
+          expression,
+          entries,
+          arguments,
+          sourceLocation,
+        ),
+        "typewriter.collection.sort_with" => _sortWith(
+          expression,
+          inputValue,
+          entries,
+          sourceLocation,
+        ),
+        _ => _collectionWithUnaryBody(
+          expression,
+          inputValue,
+          entries,
+          arguments,
+          sourceLocation,
+        ),
+      };
+    } finally {
+      _collectionBodyIndex = previousBodyIndex;
+    }
   }
 
   _Evaluation _takeOrSkip(
@@ -653,7 +716,7 @@ final class PortableExpressionEvaluator {
       _locals[entry.key] = entry.value;
     }
     try {
-      return _evaluate(body);
+      return _child(body, _collectionBodyIndex);
     } finally {
       for (final entry in previous.entries) {
         if (entry.value.present) {
@@ -774,6 +837,7 @@ final class PortableExpressionEvaluator {
       "typewriter.text.has_line_break" => _bool(
         _hasLineBreak(_text(values.single)),
       ),
+      "typewriter.text.value" => _string(_text(values.single)),
       "typewriter.text.trim" => _string(_portableTrim(_text(values.single))),
       "typewriter.text.lower" => _string(_text(values.single).toLowerCase()),
       "typewriter.text.upper" => _string(_text(values.single).toUpperCase()),
@@ -1349,6 +1413,9 @@ void _validateOperationArity(String id, int count) {
 bool portableOperationAcceptsArity(String id, int count) {
   if (!authoredPortableOperationIds.contains(id)) return false;
   final (minimum, maximum) = switch (id) {
+    "typewriter.resource.id" ||
+    "typewriter.resource.value" ||
+    "typewriter.resource.configuration" => (1, 2),
     "typewriter.value.is_null" ||
     "typewriter.boolean.not" ||
     "typewriter.number.negate" ||
@@ -1361,6 +1428,10 @@ bool portableOperationAcceptsArity(String id, int count) {
     "typewriter.collection.size" ||
     "typewriter.rule.nonEmpty" ||
     "typewriter.link.target" ||
+    "typewriter.value.configuration" ||
+    "typewriter.catalog.declaration" ||
+    "typewriter.color.parse" ||
+    "typewriter.text.value" ||
     "typewriter.rule.nonBlank" ||
     "typewriter.rule.singleLine" ||
     "typewriter.rule.positive" ||
@@ -1444,13 +1515,7 @@ skir.DataValue _recordField(List<skir.DataValue> values) {
   }
   final name = _text(values[1]);
   final field = record.fields.where((field) => field.name == name).firstOrNull;
-  if (field == null) {
-    throw const _ExpressionFailure(
-      "record_field_absent",
-      "The record field is absent",
-    );
-  }
-  return field.value;
+  return field?.value ?? skir.DataValue.unfilled;
 }
 
 int _compareNumbers(List<skir.DataValue> values) =>
@@ -2194,7 +2259,7 @@ BigInt _tenPow(int exponent) {
 
 skir.DataValue _linkTarget(skir.DataValue value) {
   if (_unwrap(value) case skir.DataValue_linkWrapper(:final value)) {
-    return _string(value.target.resource.value);
+    return value.target.resource.toExpressionValue();
   }
   throw const _ExpressionFailure(
     "expected_link",

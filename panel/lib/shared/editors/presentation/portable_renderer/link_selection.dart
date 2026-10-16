@@ -70,7 +70,7 @@ Future<void> _chooseLink({
           ? null
           : _presentationInsets(control.popup!.padding),
     ),
-    rowBuilder: _buildAuthoredLinkChoiceResult,
+    rowBuilder: (row) => _buildAuthoredLinkChoiceResult(row, scope: scope),
   );
   if (selected == null || !context.mounted) return;
   final decision = await _resolveAuthoredLinkChoice(choice: selected);
@@ -275,57 +275,80 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
   return choices;
 }
 
-Widget _buildAuthoredLinkChoiceResult(SearchResultRowContext context) {
-  final choice = context.result.payload as _AuthoredLinkChoice;
+Widget _buildAuthoredLinkChoiceResult(
+  SearchResultRowContext row, {
+  required PortablePresentationScope scope,
+}) {
+  final payload = row.result.payload;
+  if (payload is! _AuthoredLinkChoice) {
+    return MissingSearchResultRendererRow(result: row.result);
+  }
+  final choice = payload;
   return Builder(
-    builder: (buildContext) {
-      final color = Theme.of(buildContext).colorScheme.primary;
-      final appearance = choice.row != null && choice.definition != null
-          ? _AuthoredCollectionRowAppearance(
-              row: choice.row!,
-              definition: choice.definition!,
-            )
-          : SearchResultTitle(title: choice.label);
-      return SearchResultCard(
+    builder: (context) {
+      final kind = switch (choice.kind) {
+        _AuthoredLinkChoiceKind.automatic => "automatic",
+        _AuthoredLinkChoiceKind.existing => "existing",
+        _AuthoredLinkChoiceKind.append => "append",
+        _AuthoredLinkChoiceKind.create => "create",
+        _AuthoredLinkChoiceKind.unavailable => "unavailable",
+      };
+      final leading = Icon(switch (choice.kind) {
+        _AuthoredLinkChoiceKind.automatic => Icons.link,
+        _AuthoredLinkChoiceKind.existing => Icons.link_outlined,
+        _AuthoredLinkChoiceKind.append ||
+        _AuthoredLinkChoiceKind.create => Icons.add_link,
+        _AuthoredLinkChoiceKind.unavailable => Icons.link_off,
+      });
+      final footer = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        spacing: context.spacing.space1,
+        children: [
+          SearchResultDescription(
+            description: "${choice.typeLabel}. ${choice.subtitle}",
+          ),
+          if (choice.disabledReason case final reason?
+              when reason != choice.subtitle)
+            SearchResultDescription(description: reason),
+        ],
+      );
+      Widget fallback(Widget body, Color? accent) => SearchResultRow(
+        row: row,
+        density: SearchResultDensity.card,
+        accent: accent,
+        leading: leading,
+        kindLabel: kind,
+        footer: footer,
+        body: body,
+      );
+      Widget render(
+        skir.PresentationNode node,
+        PortablePresentationScope targetScope,
+        skir.ResultAppearance? appearance,
+        Color? fallbackAccent,
+      ) => PortableResultContent(
+        node: node,
+        appearance: appearance,
+        scope: targetScope,
+        row: row,
+        fallbackStyle: SearchResultDensity.card,
+        fallbackKindLabel: choice.typeLabel,
+        fallbackAccent: fallbackAccent,
+        kindLabelOverride: kind,
+        fallbackLeading: leading,
+        footer: footer,
+      );
+      return KeyedSubtree(
         key: ValueKey(choice.widgetKey),
-        color: color,
-        prefix: SearchResultIconTile(
-          color: color,
-          onColor: color.on(buildContext),
-          icon: Icon(switch (choice.kind) {
-            _AuthoredLinkChoiceKind.automatic => Icons.link,
-            _AuthoredLinkChoiceKind.existing => Icons.link_outlined,
-            _AuthoredLinkChoiceKind.append ||
-            _AuthoredLinkChoiceKind.create => Icons.add_link,
-            _AuthoredLinkChoiceKind.unavailable => Icons.link_off,
-          }),
-          focused: context.focused,
-          loading: context.loading,
-        ),
-        selected: context.selected,
-        focused: context.focused,
-        onTap: context.onTap,
-        content: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          spacing: buildContext.spacing.space1,
-          children: [
-            IgnorePointer(child: appearance),
-            SearchResultDescription(
-              description: "${choice.typeLabel}. ${choice.subtitle}",
-            ),
-          ],
-        ),
-        suffix: SearchResultSuffix(
-          label: switch (choice.kind) {
-            _AuthoredLinkChoiceKind.automatic => "automatic",
-            _AuthoredLinkChoiceKind.existing => "existing",
-            _AuthoredLinkChoiceKind.append => "append",
-            _AuthoredLinkChoiceKind.create => "create",
-            _AuthoredLinkChoiceKind.unavailable => "unavailable",
-          },
-          shortcutActivator: context.shortcutActivator,
-          selected: context.selected,
+        child: _ResourceReferenceAppearance(
+          resource: choice.target.resource,
+          scope: choice.row?.scope ?? scope,
+          role: skir.PresentationRole.referenceOption,
+          fallbackLabel: choice.label,
+          appearanceOverride: choice.definition?.resources?.appearance,
+          render: render,
+          fallback: fallback,
         ),
       );
     },

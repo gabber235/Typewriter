@@ -43,7 +43,7 @@ val ExpressionTypeSafetyTest by testSuite {
                 {},
                 {},
             )
-        projected shouldBe DataValue.StringValue("page:first")
+        projected shouldBe DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue("page:first"))
     }
 
     test("every executable portable operation has compiler type semantics") {

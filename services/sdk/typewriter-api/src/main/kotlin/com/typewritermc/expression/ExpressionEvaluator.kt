@@ -74,6 +74,7 @@ class PortableOperationRegistry private constructor(
 class DefaultExpressionEvaluator(
     private val reader: ExpressionValueReader,
     private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,
+    private val queries: CanonicalQueryReader? = null,
 ) : ExpressionEvaluator {
     context(reads: AuthoredReads)
     override fun evaluate(
@@ -81,6 +82,15 @@ class DefaultExpressionEvaluator(
         bindings: ExpressionBindings,
         budget: EvaluationBudget,
     ): Availability<DataValue> = evaluateScoped(expression, bindings, emptyMap(), budget)
+
+    context(reads: AuthoredReads)
+    fun evaluateChecked(
+        program: CheckedExpressionProgram,
+        bindings: ExpressionBindings,
+        budget: EvaluationBudget,
+        localValues: Map<ExpressionBindingId, DataValue> = emptyMap(),
+    ): Availability<DataValue> =
+        EvaluatorState(reader, operations, bindings, budget, localValues, queries, program.queries).evaluate(program.body)
 
     context(reads: AuthoredReads)
     override fun evaluateScoped(
@@ -106,7 +116,11 @@ private class EvaluatorState(
     private val bindings: ExpressionBindings,
     private val budget: EvaluationBudget,
     initialValues: Map<ExpressionBindingId, DataValue>,
+    private val queries: CanonicalQueryReader? = null,
+    private val queryContracts: Map<ExpressionOccurrence, CheckedQueryCall> = emptyMap(),
 ) {
+    private var currentOccurrence = ExpressionOccurrence()
+    private var collectionBodyOccurrence = ExpressionOccurrence()
     private var steps = 0L
     private var collectionItems = 0L
     private var depth = 0
@@ -154,6 +168,26 @@ private class EvaluatorState(
         }
 
     context(reads: AuthoredReads)
+    private fun evaluateAt(
+        expression: ExpressionNode,
+        occurrence: ExpressionOccurrence,
+    ): Availability<DataValue> {
+        val previous = currentOccurrence
+        currentOccurrence = occurrence
+        return try {
+            evaluate(expression)
+        } finally {
+            currentOccurrence = previous
+        }
+    }
+
+    context(reads: AuthoredReads)
+    private fun child(
+        expression: ExpressionNode,
+        index: Int,
+    ): Availability<DataValue> = evaluateAt(expression, currentOccurrence.child(index))
+
+    context(reads: AuthoredReads)
     private fun read(expression: ExpressionNode.Read): Availability<DataValue> {
         val local = localValues[expression.binding]
         if (local != null) {
@@ -178,11 +212,13 @@ private class EvaluatorState(
 
     context(reads: AuthoredReads)
     private fun call(expression: ExpressionNode.Call): Availability<DataValue> {
+        canonicalProjection(expression)?.let { return it }
+        if (expression.operation.value == "typewriter.record.field") return recordField(expression)
         val arguments = mutableListOf<DataValue>()
         val unavailable = linkedSetOf<ValueLocation>()
         val operation = expression.operation.value
         for ((index, argument) in expression.arguments.withIndex()) {
-            when (val result = evaluate(argument)) {
+            when (val result = child(argument, index)) {
                 is Availability.Available -> {
                     arguments += result.value
                     if (
@@ -221,6 +257,215 @@ private class EvaluatorState(
         }
         return available(operations.evaluate(expression.operation, arguments, ::step, ::consumeItems))
     }
+
+    context(reads: AuthoredReads)
+    private fun recordField(expression: ExpressionNode.Call): Availability<DataValue> {
+        val receiver = child(expression.arguments[0], 0)
+        if (receiver !is Availability.Available) return receiver
+        val value = receiver.value.unwrapNamed()
+        if (value == DataValue.Null || value == DataValue.Unfilled) return Availability.Unavailable(emptyList())
+        val record = value as? DataValue.Record ?: throw OperationFailure("expected_record", "The expression value is not a record.")
+        val key = child(expression.arguments[1], 1)
+        if (key !is Availability.Available) return key
+        val selected =
+            record.fields[text(key.value)] ?: if (receiver.value is DataValue.Named) {
+                throw OperationFailure("record_field_absent", "A complete record is missing a declared field.")
+            } else {
+                return Availability.Unavailable(emptyList())
+            }
+        return if (selected == DataValue.Unfilled) Availability.Unavailable(emptyList()) else available(selected)
+    }
+
+    context(reads: AuthoredReads)
+    private fun canonicalProjection(expression: ExpressionNode.Call): Availability<DataValue>? {
+        var root = expression
+        var occurrence = currentOccurrence
+        val fields = mutableListOf<String>()
+        while (root.operation.value == "typewriter.record.field" && root.arguments.size == 2) {
+            val key = ((root.arguments[1] as? ExpressionNode.Literal)?.value as? DataValue.StringValue)?.value ?: return null
+            val next = root.arguments[0] as? ExpressionNode.Call ?: return null
+            fields.add(0, key)
+            root = next
+            occurrence = occurrence.child(0)
+        }
+        val operation = CanonicalQueryOperation.from(root.operation.value) ?: return null
+        repeat(fields.size) { step() }
+        val contract =
+            queryContracts[occurrence] ?: throw OperationFailure("unchecked_query", "Canonical queries require checked lexical contracts.")
+        val source = evaluateAt(root.arguments[0], occurrence.child(0))
+        if (source !is Availability.Available) return source
+        if (operation == CanonicalQueryOperation.ValueConfiguration) {
+            val named = source.value as? DataValue.Named ?: return Availability.Unavailable(emptyList())
+            return projected(
+                CanonicalReadModels.encode(
+                    com.typewritermc.authoring.TypeSelection
+                        .Complete(named.actualType),
+                    fields,
+                    ::step,
+                    ::consumeItems,
+                ),
+            )
+        }
+        val query = queries ?: throw OperationFailure("unsupported_query", "The expression has no canonical snapshot query capability.")
+        if (query.catalog.generation !=
+            reads.catalog
+        ) {
+            throw OperationFailure("query_catalog_mismatch", "Canonical queries must use the authored read catalog.")
+        }
+        if (operation == CanonicalQueryOperation.CatalogDeclaration) {
+            val selection = CanonicalReadModels.typeSelection.decode(source.value)
+            val definition =
+                when (selection) {
+                    is com.typewritermc.authoring.TypeSelection.Complete -> selection.use.definition
+                    is com.typewritermc.authoring.TypeSelection.Pending -> selection.definition
+                }
+            return when (val declaration = query.declaration(definition)) {
+                is Availability.Available -> projected(CanonicalReadModels.encode(declaration.value, fields, ::step, ::consumeItems))
+                is Availability.Unavailable -> declaration
+                is Availability.Failed -> declaration
+            }
+        }
+        val id =
+            if (contract.sourceIsReference) {
+                val link =
+                    source.value.unwrapNamed() as? DataValue.Link
+                        ?: throw OperationFailure("expected_link", "The query receiver is not a relationship.")
+                link.target.resource
+            } else {
+                val named =
+                    source.value as? DataValue.Named
+                        ?: throw OperationFailure("expected_resource_identity", "Resource queries require a typed identity.")
+                if (named.actualType !=
+                    com.typewritermc.types.ResourceIdDefinition.use
+                ) {
+                    throw OperationFailure("expected_resource_identity", "Resource queries require a typed identity.")
+                }
+                com.typewritermc.types.ResourceId(text(named))
+            }
+        val path = com.typewritermc.authoring.ValuePath(fields.map(PathSegment::Field))
+        val location =
+            ValueLocation(
+                id,
+                if (operation ==
+                    CanonicalQueryOperation.ResourceValue
+                ) {
+                    path
+                } else {
+                    com.typewritermc.authoring.ValuePath()
+                },
+            )
+        observedLocations += location
+        val record =
+            when (val selected = query.resource(id)) {
+                is Availability.Available -> selected.value
+                is Availability.Unavailable -> return selected
+                is Availability.Failed -> return selected
+            }
+        val expected = requireNotNull(contract.targetType)
+        val readable = query.catalog.knownApplications(record.configuration).any { query.catalog.isReadableAs(it, expected) }
+        if (!readable) {
+            if (!contract.sourceIsReference ||
+                record.configuration is com.typewritermc.authoring.TypeSelection.Pending
+            ) {
+                return Availability.Unavailable(listOf(location))
+            }
+            throw OperationFailure("incompatible_resource_reference", "The referenced resource does not match its checked target contract.")
+        }
+        return when (operation) {
+            CanonicalQueryOperation.ResourceIdentity -> {
+                available(DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(id.value)))
+            }
+
+            CanonicalQueryOperation.ResourceConfiguration -> {
+                projected(CanonicalReadModels.encode(record.configuration, fields, ::step, ::consumeItems))
+            }
+
+            CanonicalQueryOperation.ResourceValue -> {
+                var payload: DataValue = DataValue.Record(record.fields)
+                for (field in fields) {
+                    step()
+                    val current = payload.unwrapNamed()
+                    if (current == DataValue.Null || current == DataValue.Unfilled) return Availability.Unavailable(listOf(location))
+                    val currentRecord =
+                        current as? DataValue.Record ?: throw OperationFailure("expected_record", "The expression value is not a record.")
+                    payload =
+                        currentRecord.fields[field] ?: if (record.configuration is com.typewritermc.authoring.TypeSelection.Complete) {
+                            throw OperationFailure("record_field_absent", "A complete record is missing a declared field.")
+                        } else {
+                            return Availability.Unavailable(listOf(location))
+                        }
+                }
+                val configuration = record.configuration
+                if (fields.isEmpty() &&
+                    configuration is com.typewritermc.authoring.TypeSelection.Complete
+                ) {
+                    payload =
+                        DataValue.Named(configuration.use, payload)
+                }
+                if (fields.isEmpty()) chargeProjection(payload)
+                projected(payload)
+            }
+
+            else -> {
+                error("The canonical query operation is not a resource read.")
+            }
+        }
+    }
+
+    private fun chargeProjection(
+        value: DataValue,
+        depth: Int = 0,
+    ) {
+        if (depth >
+            PortableExpressionLimits.MAX_DEPTH
+        ) {
+            throw OperationFailure("expression_depth_limit", "The projected value exceeded its depth limit.")
+        }
+        step()
+        when (value) {
+            is DataValue.Named -> {
+                chargeProjection(value.payload, depth + 1)
+            }
+
+            is DataValue.Record -> {
+                value.fields.values.forEach { chargeProjection(it, depth + 1) }
+            }
+
+            is DataValue.ListValue -> {
+                consumeItems(value.items.size)
+                value.items.forEach { chargeProjection(it.value, depth + 1) }
+            }
+
+            is DataValue.SetValue -> {
+                consumeItems(value.items.size)
+                value.items.forEach { chargeProjection(it.value, depth + 1) }
+            }
+
+            is DataValue.MapValue -> {
+                consumeItems(value.rows.size)
+                value.rows.forEach {
+                    chargeProjection(it.key, depth + 1)
+                    chargeProjection(
+                        it.value,
+                        depth + 1,
+                    )
+                }
+            }
+
+            else -> {
+                Unit
+            }
+        }
+    }
+
+    private fun projected(value: DataValue): Availability<DataValue> =
+        if (value ==
+            DataValue.Unfilled
+        ) {
+            Availability.Unavailable(emptyList())
+        } else {
+            available(value)
+        }
 
     private fun collectionUnique(
         value: DataValue,
@@ -358,31 +603,31 @@ private class EvaluatorState(
         right: ExpressionNode,
         conjunction: Boolean,
     ): Availability<DataValue> {
-        val first = evaluate(left)
+        val first = child(left, 0)
         if (first !is Availability.Available) return first
         val value = first.value.boolean()
         if ((conjunction && !value) || (!conjunction && value)) return available(DataValue.Boolean(value))
-        val second = evaluate(right)
+        val second = child(right, 1)
         if (second !is Availability.Available) return second
         return available(DataValue.Boolean(second.value.boolean()))
     }
 
     context(reads: AuthoredReads)
     private fun conditional(expression: ExpressionNode.Conditional): Availability<DataValue> {
-        val test = evaluate(expression.test)
+        val test = child(expression.test, 0)
         if (test !is Availability.Available) return test
-        return evaluate(if (test.value.boolean()) expression.yes else expression.no)
+        return if (test.value.boolean()) child(expression.yes, 1) else child(expression.no, 2)
     }
 
     context(reads: AuthoredReads)
     private fun orElse(expression: ExpressionNode.OrElse): Availability<DataValue> =
-        when (val input = evaluate(expression.input)) {
+        when (val input = child(expression.input, 0)) {
             is Availability.Available -> {
-                if (input.value == DataValue.Null || input.value == DataValue.Unfilled) evaluate(expression.fallback) else input
+                if (input.value == DataValue.Null || input.value == DataValue.Unfilled) child(expression.fallback, 1) else input
             }
 
             is Availability.Unavailable -> {
-                evaluate(expression.fallback)
+                child(expression.fallback, 1)
             }
 
             is Availability.Failed -> {
@@ -392,13 +637,24 @@ private class EvaluatorState(
 
     context(reads: AuthoredReads)
     private fun collection(expression: ExpressionNode.Collection): Availability<DataValue> {
-        val input = evaluate(expression.input)
+        val previous = collectionBodyOccurrence
+        collectionBodyOccurrence = currentOccurrence.child(expression.arguments.size + 1)
+        return try {
+            collectionOperation(expression)
+        } finally {
+            collectionBodyOccurrence = previous
+        }
+    }
+
+    context(reads: AuthoredReads)
+    private fun collectionOperation(expression: ExpressionNode.Collection): Availability<DataValue> {
+        val input = child(expression.input, 0)
         if (input !is Availability.Available) return input
         val entries = input.value.collectionEntries()
         val sourceLocation = sourceLocation(expression.input)
         val arguments = mutableListOf<DataValue>()
-        expression.arguments.forEach { argument ->
-            when (val result = evaluate(argument)) {
+        expression.arguments.forEachIndexed { index, argument ->
+            when (val result = child(argument, index + 1)) {
                 is Availability.Available -> {
                     if (result.value.containsUnfilled()) {
                         return Availability.Unavailable(listOfNotNull(sourceLocation(argument)))
@@ -715,7 +971,7 @@ private class EvaluatorState(
                 localValues[binding.id] = binding.value
                 if (binding.location == null) localLocations.remove(binding.id) else localLocations[binding.id] = binding.location
             }
-            evaluate(body)
+            evaluateAt(body, collectionBodyOccurrence)
         } finally {
             previous.forEach { (id, state) ->
                 if (state.hadValue) localValues[id] = requireNotNull(state.value) else localValues.remove(id)
@@ -978,6 +1234,27 @@ private fun available(value: DataValue): Availability<DataValue> = Availability.
 
 private fun standardOperations(): List<OperationDefinition> =
     buildList {
+        CanonicalQueryOperation.entries.forEach { query ->
+            operation(query.id, 1, if (query.name.startsWith("Resource")) 2 else 1, "canonical snapshot read") {
+                throw OperationFailure("unsupported_query", "Canonical queries require a checked program and its supplied observation.")
+            }
+        }
+        operation("typewriter.text.value", 1, "text representation") { DataValue.StringValue(text(it)) }
+        operation("typewriter.color.parse", 1, "canonical RGB color") {
+            val value = text(it)
+            if (value.isBlank()) {
+                DataValue.Unfilled
+            } else {
+                val color =
+                    try {
+                        com.typewritermc.types.Color
+                            .parseRgb(value)
+                    } catch (_: IllegalArgumentException) {
+                        throw OperationFailure("invalid_color", "Color text must use hexadecimal RGB syntax.")
+                    }
+                DataValue.Named(com.typewritermc.types.ColorDefinition.use, DataValue.Integer(color.argb.toString().toBigInteger()))
+            }
+        }
         operation("typewriter.value.eq", 2, "equality") {
             DataValue.Boolean(it[0].canonicalValueKey() == it[1].canonicalValueKey())
         }
@@ -989,7 +1266,7 @@ private fun standardOperations(): List<OperationDefinition> =
             val link =
                 it.single().unwrapNamed() as? DataValue.Link
                     ?: throw OperationFailure("expected_link", "The expression value is not a relationship link.")
-            DataValue.StringValue(link.target.resource.value)
+            DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(link.target.resource.value))
         }
         operation("typewriter.record.field", 2, "record field access") {
             val record =

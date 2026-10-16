@@ -470,6 +470,8 @@ skir.PublishedType _published(skir.TypeDefinitionId id, List<_Field> fields) =>
       priority: 0,
     ),
     skir.PresentationMaterial(
+      resultAppearance: null,
+
       provider: id,
       target: target,
       role: skir.PresentationRole.inspector,

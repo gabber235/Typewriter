@@ -24,10 +24,15 @@ Widget authoredSearchInputUseCase(BuildContext context) =>
       ),
     );
 
+@widgetbook.UseCase(name: "Rich portable result", type: PortableSearchInput)
+Widget richPortableSearchInputUseCase(BuildContext context) =>
+    portableSearchInputStory(richRows: true);
+
 Widget portableSearchInputStory({
   double width = 360,
   bool readOnly = false,
   bool customValue = false,
+  bool richRows = false,
 }) => FakeApp(
   child: Scaffold(
     body: Center(
@@ -38,9 +43,10 @@ Widget portableSearchInputStory({
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SearchInputStory(
-                key: ValueKey((readOnly, customValue)),
+                key: ValueKey((readOnly, customValue, richRows)),
                 readOnly: readOnly,
                 customValue: customValue,
+                richRows: richRows,
               ),
               const SizedBox(height: 20),
               const Text("Description"),
@@ -59,10 +65,12 @@ final class _SearchInputStory extends StatefulWidget {
   const _SearchInputStory({
     required this.readOnly,
     required this.customValue,
+    required this.richRows,
     super.key,
   });
   final bool readOnly;
   final bool customValue;
+  final bool richRows;
 
   @override
   State<_SearchInputStory> createState() => _SearchInputStoryState();
@@ -75,112 +83,137 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
     binding: _row,
     path: skir.ValuePath(segments: const []),
   );
-  static final _control = skir.SearchControl(
-    control: skir.BoundControl(
-      binding: skir.BindingRef(
-        bindingId: _target,
-        path: skir.ValuePath(segments: const []),
-      ),
-      label: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapStringValue("Reward"),
-      ),
-      description: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.wrapStringValue(
-          "Search with the keyboard or select a result",
-        ),
-      ),
-      prefix: null,
-      semanticLabel: null,
-    ),
-    selectionMode: skir.SearchSelectionMode.single,
-    queryBindingId: skir.ExpressionBindingId(value: "query"),
-    summaryBindingId: skir.ExpressionBindingId(value: "summary"),
-    maximumExtent: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapInteger("280"),
-    ),
-    provider: skir.SearchProvider.createStaticValues(
-      values: skir.ExpressionNode.wrapLiteral(
-        skir.DataValue.createListValue(
-          items: [
-            skir.ListItem(
-              id: skir.ItemId(value: "coin"),
-              value: skir.DataValue.wrapStringValue("Coin reward"),
-            ),
-            skir.ListItem(
-              id: skir.ItemId(value: "experience"),
-              value: skir.DataValue.wrapStringValue("Experience reward"),
-            ),
-          ],
-        ),
-      ),
-      result: skir.SearchResultMapping(
-        bindingId: _row,
-        key: _rowRead,
-        selectedValue: _rowRead,
-        presentation: skir.PresentationNode(
-          nodeId: "reward.result",
-          properties: skir.PresentationProperties.defaultInstance,
-          element: skir.PresentationElement.createText(
-            value: _rowRead,
-            color: null,
-            sizing: null,
-            fontWeight: null,
-            fontItalic: null,
-            fontOpticalSize: null,
-            fontSlant: null,
-            fontWidth: null,
-            textAlignment: null,
-            lineHeight: null,
-            letterSpacing: null,
-            decoration: null,
-            semanticLabel: null,
-            paragraph: skir.TextParagraph.defaultInstance,
+  static skir.SearchControl _control({bool richRows = false}) =>
+      skir.SearchControl(
+        control: skir.BoundControl(
+          binding: skir.BindingRef(
+            bindingId: _target,
+            path: skir.ValuePath(segments: const []),
           ),
-          header: null,
+          label: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("Reward"),
+          ),
+          description: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(
+              "Search with the keyboard or select a result",
+            ),
+          ),
+          prefix: null,
+          semanticLabel: null,
         ),
-        label: _rowRead,
-      ),
-      selectors: const [],
-    ),
-    summary: null,
-    placeholder: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapStringValue("Find a reward"),
-    ),
-    customValue: null,
-    initialQuery: null,
-    appearance:
-        (skir.InputAppearance.mutable()
-              ..density = skir.ControlDensity.compact
-              ..valueStyle = (skir.InputTextStyle.mutable()..weight = 500)
-                  .toFrozen())
-            .toFrozen(),
-    content:
-        (skir.InputContent.mutable()
-              ..placeholder = skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapStringValue("Find a reward"),
-              )
-              ..leading = skir.InputAdornment.none)
-            .toFrozen(),
-    popup:
-        (skir.PopupAppearance.mutable()
-              ..maximumWidth = skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapFloat(480),
-              )
-              ..maximumExtent = skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapFloat(320),
-              )
-              ..padding = skir.PresentationInsets.wrapAll(8))
-            .toFrozen(),
-    popupSide: skir.PopupSide.below,
-    emptyText: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapStringValue("No matching rewards"),
-    ),
-    loadingText: skir.ExpressionNode.wrapLiteral(
-      skir.DataValue.wrapStringValue("Finding rewards"),
-    ),
-    empty: null,
-    loading: null,
-  );
+        selectionMode: skir.SearchSelectionMode.single,
+        queryBindingId: skir.ExpressionBindingId(value: "query"),
+        summaryBindingId: skir.ExpressionBindingId(value: "summary"),
+        maximumExtent: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapInteger("280"),
+        ),
+        provider: skir.SearchProvider.createStaticValues(
+          values: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.createListValue(
+              items: [
+                skir.ListItem(
+                  id: skir.ItemId(value: "coin"),
+                  value: skir.DataValue.wrapStringValue("Coin reward"),
+                ),
+                skir.ListItem(
+                  id: skir.ItemId(value: "experience"),
+                  value: skir.DataValue.wrapStringValue("Experience reward"),
+                ),
+              ],
+            ),
+          ),
+          result: skir.SearchResultMapping(
+            bindingId: _row,
+            key: _rowRead,
+            selectedValue: _rowRead,
+            presentation: skir.PresentationNode(
+              nodeId: "reward.result",
+              properties: skir.PresentationProperties.defaultInstance,
+              element: skir.PresentationElement.createText(
+                value: _rowRead,
+                color: null,
+                sizing: null,
+                fontWeight: null,
+                fontItalic: null,
+                fontOpticalSize: null,
+                fontSlant: null,
+                fontWidth: null,
+                textAlignment: null,
+                lineHeight: null,
+                letterSpacing: null,
+                decoration: null,
+                semanticLabel: null,
+                paragraph: skir.TextParagraph.defaultInstance,
+              ),
+              header: null,
+            ),
+            label: _rowRead,
+            resultAppearance: richRows
+                ? skir.ResultAppearance(
+                    accent: null,
+
+                    style: skir.ResultStyle.card,
+                    kindLabel: skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapStringValue("reward"),
+                    ),
+                    leading: skir.PresentationNode(
+                      nodeId: "reward.result.leading",
+                      header: null,
+                      properties: skir.PresentationProperties.defaultInstance,
+                      element: skir.PresentationElement.wrapIcon(
+                        (skir.IconContent.mutable()
+                              ..name = skir.ExpressionNode.wrapLiteral(
+                                skir.DataValue.wrapStringValue(
+                                  "material-symbols:stars",
+                                ),
+                              ))
+                            .toFrozen(),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          selectors: const [],
+        ),
+        summary: null,
+        placeholder: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Find a reward"),
+        ),
+        customValue: null,
+        initialQuery: null,
+        appearance:
+            (skir.InputAppearance.mutable()
+                  ..density = skir.ControlDensity.compact
+                  ..valueStyle = (skir.InputTextStyle.mutable()..weight = 500)
+                      .toFrozen())
+                .toFrozen(),
+        content:
+            (skir.InputContent.mutable()
+                  ..placeholder = skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapStringValue("Find a reward"),
+                  )
+                  ..leading = skir.InputAdornment.none)
+                .toFrozen(),
+        popup:
+            (skir.PopupAppearance.mutable()
+                  ..maximumWidth = skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapFloat(480),
+                  )
+                  ..maximumExtent = skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapFloat(320),
+                  )
+                  ..padding = skir.PresentationInsets.wrapAll(8))
+                .toFrozen(),
+        popupSide: skir.PopupSide.below,
+        emptyText: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("No matching rewards"),
+        ),
+        loadingText: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("Finding rewards"),
+        ),
+        empty: null,
+        loading: null,
+      );
 
   skir.DataValue _value = skir.DataValue.wrapStringValue("Coin reward");
 
@@ -192,10 +225,10 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
       nodeId: "reward.search",
       properties: skir.PresentationProperties.defaultInstance,
       element: skir.PresentationElement.wrapSearchInput(
-        (_control.toMutable()
+        (_control(richRows: widget.richRows).toMutable()
               ..customValue = widget.customValue
                   ? skir.ExpressionNode.createRead(
-                      binding: _control.queryBindingId,
+                      binding: _control().queryBindingId,
                       path: editorRootPath,
                     )
                   : null)

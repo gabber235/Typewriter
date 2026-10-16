@@ -394,8 +394,18 @@ final class PortableSearchBinding {
     PortablePresentationScope base,
   ) {
     return switch (result.payload as PortableSearchPayload) {
-      PortableMappedSearchPayload(:final mapping, :final sourceValue) =>
-        base.withValues({mapping.bindingId: sourceValue}),
+      PortableMappedSearchPayload(
+        :final mapping,
+        :final sourceValue,
+        :final sourceSchema,
+        :final contextBindings,
+      ) =>
+        base
+            .copyWith(bindings: {...base.bindings, ...contextBindings})
+            .withValues(
+              {mapping.bindingId: sourceValue},
+              schemas: {mapping.bindingId: ?sourceSchema},
+            ),
       PortableCustomSearchPayload() => base,
     };
   }
@@ -422,6 +432,7 @@ final class _PortableSearchEvaluation {
     required Iterable<skir.SearchSelectorDefinition> selectors,
     skir.ExpressionBindingId? rowBinding,
     skir.DataValue? rowValue,
+    PortablePresentationBindingSchema? rowSchema,
   }) => environment.evaluate(
     expression,
     query: query,
@@ -429,7 +440,30 @@ final class _PortableSearchEvaluation {
     selectors: selectors,
     rowBinding: rowBinding,
     rowValue: rowValue,
+    rowSchema: rowSchema,
   );
+
+  PortablePresentationBindingSchema? collectionItemSchema(
+    skir.ExpressionNode source,
+    SearchQueryContext query,
+    Iterable<skir.SearchSelectorDefinition> selectors,
+  ) {
+    final checked = environment.catalog.expressionPrograms.program(
+      source,
+      lexicalTypes: environment
+          .expressionBindings(
+            query: query,
+            queryBindingId: queryBindingId,
+            selectors: selectors,
+          )
+          .lexicalSchemas,
+    );
+    if (checked case CheckedExpressionReady(:final program)) {
+      final item = environment.catalog.collectionItemType(program.result.value);
+      if (item != null) return CompletePortablePresentationBinding(item);
+    }
+    return null;
+  }
 
   String? resultText(
     SearchResult result,
@@ -443,14 +477,26 @@ final class _PortableSearchEvaluation {
         :final query,
         :final mapping,
         :final sourceValue,
+        :final sourceSchema,
+        :final contextBindings,
       ) =>
         _text(
-          evaluate(
+          environment.catalog.evaluateExpression(
             expression,
-            query: query,
-            selectors: selectors,
-            rowBinding: mapping.bindingId,
-            rowValue: sourceValue,
+            bindings: {
+              ...environment.expressionBindings(
+                query: query,
+                queryBindingId: queryBindingId,
+                selectors: selectors,
+              ),
+              ...contextBindings,
+              mapping.bindingId: PortableExpressionBinding(
+                value: sourceValue,
+                schema: sourceSchema,
+              ),
+            },
+            budget: environment.budget,
+            queries: environment.context.queries,
           ),
         ),
       PortableCustomSearchPayload() => result.title,
@@ -462,14 +508,16 @@ final class _PortableSearchEvaluation {
     skir.SearchResultMapping mapping,
     SearchQueryContext query,
     Iterable<skir.SearchSelectorDefinition> selectors,
-    String providerPath,
-  ) {
+    String providerPath, {
+    PortablePresentationBindingSchema? sourceSchema,
+  }) {
     final key = evaluate(
       mapping.key,
       query: query,
       selectors: selectors,
       rowBinding: mapping.bindingId,
       rowValue: source,
+      rowSchema: sourceSchema,
     );
     final selected = evaluate(
       mapping.selectedValue,
@@ -477,6 +525,7 @@ final class _PortableSearchEvaluation {
       selectors: selectors,
       rowBinding: mapping.bindingId,
       rowValue: source,
+      rowSchema: sourceSchema,
     );
     if (key is! PortableExpressionAvailable ||
         selected is! PortableExpressionAvailable) {
@@ -491,6 +540,7 @@ final class _PortableSearchEvaluation {
               selectors: selectors,
               rowBinding: mapping.bindingId,
               rowValue: source,
+              rowSchema: sourceSchema,
             ),
           );
     final distinctKey = canonicalAuthoredValue(key.value);
@@ -499,6 +549,12 @@ final class _PortableSearchEvaluation {
       type: portableSearchResultType,
       payload: PortableSearchPayload.mapped(
         sourceValue: source,
+        sourceSchema: sourceSchema,
+        contextBindings: environment.expressionBindings(
+          query: query,
+          queryBindingId: queryBindingId,
+          selectors: selectors,
+        ),
         selectedValue: selected.value,
         mapping: mapping,
         providerPath: providerPath,
@@ -618,8 +674,9 @@ abstract base class _PortableLeafSearchSource implements SearchSource {
   List<SearchNode> mapValues(
     Iterable<skir.DataValue> values,
     skir.SearchResultMapping mapping,
-    SearchQueryContext query,
-  ) => values
+    SearchQueryContext query, {
+    PortablePresentationBindingSchema? sourceSchema,
+  }) => values
       .map(
         (value) => evaluation.mapResult(
           value,
@@ -627,6 +684,7 @@ abstract base class _PortableLeafSearchSource implements SearchSource {
           query,
           selectorDefinitions,
           providerPath,
+          sourceSchema: sourceSchema,
         ),
       )
       .nonNulls
@@ -666,6 +724,11 @@ final class _PortableStaticSearchSource extends _PortableLeafSearchSource {
               items.map((item) => item.value),
               provider.result,
               context,
+              sourceSchema: evaluation.collectionItemSchema(
+                provider.values,
+                context,
+                selectorDefinitions,
+              ),
             ),
           ),
         );
@@ -713,12 +776,25 @@ final class _PortableCollectionSearchSource extends _PortableLeafSearchSource {
                 selectors: selectorDefinitions,
                 rowBinding: provider.result.bindingId,
                 rowValue: row.row,
+                rowSchema: row.schema,
               ),
             );
           });
     emit(
       SearchSourceSnapshot.ready(
-        nodes: mapValues(rows.map((row) => row.row), provider.result, context),
+        nodes: [
+          for (final row in rows)
+            if (evaluation.mapResult(
+                  row.row,
+                  provider.result,
+                  context,
+                  selectorDefinitions,
+                  providerPath,
+                  sourceSchema: row.schema,
+                )
+                case final result?)
+              SearchNode.result(result: result),
+        ],
       ),
     );
   }
@@ -807,6 +883,7 @@ final class _PortableHttpSearchSource extends _PortableLeafSearchSource {
           );
         }
         extraBindings[binding.bindingId] = PortableExpressionBinding(
+          schema: CompletePortablePresentationBinding(expected),
           value: _decodePortableJson(
             values.length == 1 ? values.single : values,
             expected,
@@ -870,7 +947,20 @@ final class _PortableHttpSearchSource extends _PortableLeafSearchSource {
     SearchQueryContext query,
     Map<skir.ExpressionBindingId, PortableExpressionBinding> extraBindings,
   ) {
-    if (extraBindings.isEmpty) return mapValues(values, provider.result, query);
+    final expected = evaluation.environment.catalog.concreteType(
+      provider.resultType,
+    );
+    final sourceSchema = expected == null
+        ? null
+        : CompletePortablePresentationBinding(expected);
+    if (extraBindings.isEmpty) {
+      return mapValues(
+        values,
+        provider.result,
+        query,
+        sourceSchema: sourceSchema,
+      );
+    }
     final environment = evaluation.environment;
     final scoped = PortableSearchEnvironment(
       catalog: environment.catalog,
@@ -895,6 +985,7 @@ final class _PortableHttpSearchSource extends _PortableLeafSearchSource {
             query,
             selectorDefinitions,
             providerPath,
+            sourceSchema: sourceSchema,
           ),
         )
         .nonNulls
@@ -1276,7 +1367,14 @@ final class _PortableRealmSearchSource extends _PortableLeafSearchSource {
         switch (update) {
           case skir.RealmPresentationSearchUpdate_snapshotWrapper(:final value):
             if (value.subscriptionId != subscriptionId) return;
-            final nodes = mapValues(value.values, provider.result, context);
+            final nodes = mapValues(
+              value.values,
+              provider.result,
+              context,
+              sourceSchema: CompletePortablePresentationBinding(
+                definition.resultType,
+              ),
+            );
             final guidance = [
               for (final (index, message) in value.guidance.indexed)
                 SearchGuidance(

@@ -15,7 +15,7 @@ import com.typewritermc.types.catalog.resolve
 class PresentationBuildBinding(
     val type: CheckedPresentationTemplate,
     val role: PresentationRole,
-    internal val resourceTypes: Map<kotlin.reflect.KClass<*>, TypeTemplate.Named> = emptyMap(),
+    internal val nativeTypes: Map<kotlin.reflect.KClass<*>, TypeTemplate.Named> = emptyMap(),
 )
 
 class CheckedPresentationTemplate internal constructor(
@@ -162,12 +162,20 @@ interface Layout :
     PresentationContent,
     PresentationData,
     PresentationInteractions,
+    PresentationQueries,
     InputAppearanceLayout {
     val role: PresentationRole
 
     val subject: PresentationSubjectExpressions
 
     val context: PresentationContextExpressions
+
+    fun searchResult(body: SearchResultLayout.() -> Unit)
+
+    fun clippedRow(
+        spacing: Double = 0.0,
+        body: Layout.() -> Unit,
+    )
 
     fun row(
         spacing: Double = 0.0,
@@ -466,13 +474,15 @@ interface ConnectionBundleScope {
 
 /** Resource identity observed outside editable fields, absent for plain values. */
 class PresentationSubjectExpressions(
-    val identifier: Expr<String, com.typewritermc.expression.MayBeMissing>,
+    val identifier: Expr<com.typewritermc.types.ResourceId, com.typewritermc.expression.MayBeMissing>,
 )
 
 /** Read only observations from the surface hosting this presentation. */
-class PresentationContextExpressions(
-    val selectionCount: Expr<Int, com.typewritermc.expression.MayBeMissing>,
-)
+interface PresentationContextExpressions {
+    val selectionCount: Expr<Int, com.typewritermc.expression.MayBeMissing>
+
+    fun <Value : Any> read(key: PresentationContextKey<Value>): Expr<Value, com.typewritermc.expression.MayBeMissing>
+}
 
 internal fun checkPresentationExpression(
     body: ExpressionNode,

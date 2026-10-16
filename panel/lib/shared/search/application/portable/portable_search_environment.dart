@@ -32,21 +32,27 @@ final class PortableSearchEnvironment {
   final PortableCollectionProjectionHost? collectionHost;
   final skir.PresentationMaterial? material;
 
-  PortableExpressionResult evaluate(
-    skir.ExpressionNode expression, {
+  Map<skir.ExpressionBindingId, PortableExpressionBinding> expressionBindings({
     required SearchQueryContext query,
     required skir.ExpressionBindingId queryBindingId,
     required Iterable<skir.SearchSelectorDefinition> selectors,
     skir.ExpressionBindingId? rowBinding,
     skir.DataValue? rowValue,
+    PortablePresentationBindingSchema? rowSchema,
   }) {
     final bindings = <skir.ExpressionBindingId, PortableExpressionBinding>{
       ...context.bindings,
       queryBindingId: PortableExpressionBinding(
         value: skir.DataValue.wrapStringValue(query.normalizedQuery),
+        schema: CompletePortablePresentationBinding(
+          skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        ),
       ),
       if (rowBinding != null && rowValue != null)
-        rowBinding: PortableExpressionBinding(value: rowValue),
+        rowBinding: PortableExpressionBinding(
+          value: rowValue,
+          schema: rowSchema,
+        ),
     };
     for (final definition in selectors) {
       final values = query.selectors
@@ -55,6 +61,20 @@ final class PortableSearchEnvironment {
           .whereType<String>()
           .toList(growable: false);
       bindings[definition.valueBindingId] = PortableExpressionBinding(
+        schema: CompletePortablePresentationBinding(
+          definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
+              ? skir.TypeUse.createNamed(
+                  definition: skir.TypeDefinitionId(
+                    typeId: skir.TypeId.createQualified(
+                      namespace: "typewriter",
+                      name: "List",
+                    ),
+                    revision: 1,
+                  ),
+                  arguments: [skir.TypeUse.wrapScalar(skir.ScalarKind.text)],
+                )
+              : skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        ),
         value:
             definition.multiplicity == skir.SearchSelectorMultiplicity.multiple
             ? skir.DataValue.createListValue(
@@ -72,11 +92,30 @@ final class PortableSearchEnvironment {
             : skir.DataValue.wrapStringValue(values.firstOrNull ?? ""),
       );
     }
-    return PortableExpressionEvaluator.located(
-      bindings,
-      budget: budget,
-    ).evaluate(expression);
+    return Map.unmodifiable(bindings);
   }
+
+  PortableExpressionResult evaluate(
+    skir.ExpressionNode expression, {
+    required SearchQueryContext query,
+    required skir.ExpressionBindingId queryBindingId,
+    required Iterable<skir.SearchSelectorDefinition> selectors,
+    skir.ExpressionBindingId? rowBinding,
+    skir.DataValue? rowValue,
+    PortablePresentationBindingSchema? rowSchema,
+  }) => catalog.evaluateExpression(
+    expression,
+    bindings: expressionBindings(
+      query: query,
+      queryBindingId: queryBindingId,
+      selectors: selectors,
+      rowBinding: rowBinding,
+      rowValue: rowValue,
+      rowSchema: rowSchema,
+    ),
+    budget: budget,
+    queries: context.queries,
+  );
 
   PortableExpressionBinding? binding(skir.ExpressionBindingId id) =>
       context.bindings[id];

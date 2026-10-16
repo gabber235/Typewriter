@@ -6,33 +6,53 @@ import "package:widgetbook_workspace/stories/features/organizations/features/rea
 
 final class AuthoringSearchStoryFixtures {
   AuthoringSearchStoryFixtures() : catalog = authoringSearchStoryCatalog() {
-    mainQuest = _payload(
+    final book = _hit(
       kind: "book",
       id: "book:main_quest",
       label: "Main Quest",
       summary: "The primary story book",
     );
-    mainQuestTag = _payload(
+    final tag = _hit(
       kind: "tag",
       id: "tag:main_quest",
       label: "Main Quest",
       summary: "Applied to the main quest resources",
     );
-    meetTheMayor = _payload(
+    final page = _hit(
       kind: "page",
       id: "page:meet_the_mayor",
       label: "Meet the Mayor",
       summary: "quest.intro.dialogue in Main Quest",
     );
-    mayorGreeting = _payload(
+    final element = _hit(
       kind: "element",
       id: "element:mayor_greeting",
       label: "Mayor Greeting",
       summary: "The old bridge is no longer safe after sunset",
     );
+    final hits = [book, tag, page, element];
+    document = AuthoringDocument(
+      catalog: catalog,
+      entries: {
+        for (final hit in hits)
+          hit.resource: skir.AuthoringResource(
+            id: hit.resource,
+            definition: hit.definition,
+            content: hit.subject.content,
+          ),
+      },
+      links: const [],
+    );
+    issues = ResourceIssues.evaluate(document: document);
+    mainQuest = _payload(book);
+    mainQuestTag = _payload(tag);
+    meetTheMayor = _payload(page);
+    mayorGreeting = _payload(element);
   }
 
   final CheckedEditorCatalog catalog;
+  late final AuthoringDocument document;
+  late final ResourceIssues issues;
   final organizationId = skir.recordId("organization:widgetbook");
   final realmId = skir.recordId("realm_instance:authoring_demo");
 
@@ -91,7 +111,7 @@ final class AuthoringSearchStoryFixtures {
     initialQuery: initialQuery,
   );
 
-  AuthoringSearchResultPayload _payload({
+  skir.AuthoringSearchHit _hit({
     required String kind,
     required String id,
     required String label,
@@ -118,24 +138,28 @@ final class AuthoringSearchStoryFixtures {
         ),
       ],
     );
-    return AuthoringSearchResultPayload(
-      hit: skir.AuthoringSearchHit(
+    return skir.AuthoringSearchHit(
+      resource: resource,
+      definition: resourceDefinition,
+      subject: skir.PresentationSubject(
         resource: resource,
         definition: resourceDefinition,
-        subject: skir.PresentationSubject(
-          resource: resource,
-          definition: resourceDefinition,
-          content: content,
-          descriptor: skir.DataValue.wrapStringValue(label),
-        ),
-        context: skir.PortableValue(
-          actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
-          payload: skir.DataValue.wrapStringValue(kind),
-        ),
+        content: content,
+        descriptor: skir.DataValue.wrapStringValue(label),
       ),
-      catalog: catalog,
+      context: skir.PortableValue(
+        actualType: skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+        payload: skir.DataValue.wrapStringValue(kind),
+      ),
     );
   }
+
+  AuthoringSearchResultPayload _payload(skir.AuthoringSearchHit hit) =>
+      AuthoringSearchResultPayload(
+        hit: hit,
+        document: document,
+        issues: issues,
+      );
 }
 
 SearchNode _node(String id, AuthoringSearchResultPayload payload) =>

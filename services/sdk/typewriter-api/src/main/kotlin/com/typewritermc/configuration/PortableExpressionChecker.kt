@@ -2,12 +2,20 @@ package com.typewritermc.configuration
 
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.expression.CanonicalQueryOperation
+import com.typewritermc.expression.CanonicalReadModels
+import com.typewritermc.expression.CheckedExpressionProgram
+import com.typewritermc.expression.CheckedQueryCall
 import com.typewritermc.expression.ExpressionBindingId
+import com.typewritermc.expression.ExpressionOccurrence
+import com.typewritermc.expression.ExpressionType
 import com.typewritermc.expression.OperationId
 import com.typewritermc.expression.PortableOperationRegistry
 import com.typewritermc.expression.PortableOperationSemantics
 import com.typewritermc.presentation.ExpressionNode
+import com.typewritermc.types.ColorDefinition
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.ResourceIdDefinition
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
@@ -21,19 +29,47 @@ import java.math.BigDecimal
 /** A checked portable expression keeps its authored tree and required result contract. */
 data class CheckedExpression(
     val body: ExpressionNode,
-    val result: com.typewritermc.expression.ExpressionType,
+    val result: ExpressionType,
 )
 
 /** Checks the same expression language for rules and value mappings under explicit lexical bindings. */
 class PortableExpressionChecker(
-    private val resolveType: (TypeUse) -> Resolution<CheckedType>,
+    resolveType: (TypeUse) -> Resolution<CheckedType>,
     private val owner: TypeDefinitionId? = null,
     private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,
 ) {
+    private val resolveType: (TypeUse) -> Resolution<CheckedType> = { use ->
+        if (CanonicalReadModels
+                .supports(use)
+        ) {
+            CanonicalReadModels.catalog
+                .resolve(use)
+        } else {
+            resolveType(use)
+        }
+    }
+
+    fun checkProgram(
+        body: ExpressionNode,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+        expectedOutput: ExpressionType,
+        affected: TypeDefinitionId,
+    ): Resolution<CheckedExpressionProgram> {
+        val queryCalls = linkedMapOf<ExpressionOccurrence, CheckedQueryCall>()
+        val codes = checkExpressionCodes(body, bindings, expectedOutput, queryCalls)
+        return if (codes.isEmpty()) {
+            Resolution.Ready(
+                CheckedExpressionProgram(body, expectedOutput, queryCalls.toMap()),
+            )
+        } else {
+            Resolution.Invalid(codes.map { DeclarationDiagnostic(affected, it) })
+        }
+    }
+
     fun checkExpression(
         body: ExpressionNode,
-        bindings: Map<ExpressionBindingId, com.typewritermc.expression.ExpressionType>,
-        expectedOutput: com.typewritermc.expression.ExpressionType,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+        expectedOutput: ExpressionType,
         affected: TypeDefinitionId,
     ): Resolution<CheckedExpression> {
         val codes = checkExpressionCodes(body, bindings, expectedOutput)
@@ -60,13 +96,20 @@ class PortableExpressionChecker(
     /** Allows presentation builders to report errors without inventing a catalog type identity. */
     fun checkExpressionCodes(
         body: ExpressionNode,
-        bindings: Map<ExpressionBindingId, com.typewritermc.expression.ExpressionType>,
-        expectedOutput: com.typewritermc.expression.ExpressionType,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+        expectedOutput: ExpressionType,
+    ): List<String> = checkExpressionCodes(body, bindings, expectedOutput, linkedMapOf())
+
+    private fun checkExpressionCodes(
+        body: ExpressionNode,
+        bindings: Map<ExpressionBindingId, ExpressionType>,
+        expectedOutput: ExpressionType,
+        queryCalls: MutableMap<ExpressionOccurrence, CheckedQueryCall>,
     ): List<String> {
         val diagnostics = mutableListOf<String>()
         validateSymbols(body, bindings.keys.toMutableSet(), owner, diagnostics)
         val locals = bindings.mapValues { (_, type) -> resolveType(type.value).toInferredType() }.toMutableMap()
-        val inferred = validate(body, locals, owner, diagnostics)
+        val inferred = validate(body, locals, owner, diagnostics, queryCalls = queryCalls)
         val expected = resolveType(expectedOutput.value).toInferredType()
         compatible(inferred, expected, owner, diagnostics)
         if (!expectedOutput.mayBeMissing &&
@@ -177,6 +220,9 @@ class PortableExpressionChecker(
         localBindings: MutableMap<ExpressionBindingId, InferredType>,
         owner: TypeDefinitionId?,
         diagnostics: MutableList<String>,
+        occurrence: ExpressionOccurrence = ExpressionOccurrence(),
+        queryCalls: MutableMap<ExpressionOccurrence, CheckedQueryCall> =
+            linkedMapOf(),
     ): InferredType =
         when (expression) {
             is ExpressionNode.Literal -> {
@@ -193,42 +239,118 @@ class PortableExpressionChecker(
             }
 
             is ExpressionNode.Call -> {
-                val arguments = expression.arguments.map { validate(it, localBindings, owner, diagnostics) }
-                validateCall(expression.operation, arguments, owner, diagnostics)
+                val arguments =
+                    expression.arguments.mapIndexed {
+                        index,
+                        argument,
+                        ->
+                        validate(argument, localBindings, owner, diagnostics, occurrence.child(index), queryCalls)
+                    }
+                val query =
+                    CanonicalQueryOperation
+                        .from(expression.operation.value)
+                when {
+                    query != null -> {
+                        validateQuery(expression, query, arguments, occurrence, diagnostics, queryCalls)
+                    }
+
+                    expression.operation.value == "typewriter.record.field" && arguments.firstOrNull() is InferredType.Value -> {
+                        val key = ((expression.arguments.getOrNull(1) as? ExpressionNode.Literal)?.value as? DataValue.StringValue)?.value
+                        if (key == null) {
+                            diagnostics += "invalid_expression_field_key"
+                            InferredType.Invalid
+                        } else {
+                            arguments.first().at(ValuePath(listOf(PathSegment.Field(key))), owner, diagnostics)
+                        }
+                    }
+
+                    expression.operation.value == "typewriter.color.parse" -> {
+                        if (arguments.singleOrNull()?.kind != InferredKind.Text) diagnostics += "invalid_expression_operand_type"
+                        resolveType(ColorDefinition.use).toInferredType()
+                    }
+
+                    expression.operation.value == "typewriter.link.target" -> {
+                        resolveType(ResourceIdDefinition.use).toInferredType()
+                    }
+
+                    else -> {
+                        validateCall(expression.operation, arguments, owner, diagnostics)
+                    }
+                }
             }
 
             is ExpressionNode.And -> {
-                requireBoolean(validate(expression.left, localBindings, owner, diagnostics), owner, diagnostics)
-                requireBoolean(validate(expression.right, localBindings, owner, diagnostics), owner, diagnostics)
+                requireBoolean(
+                    validate(expression.left, localBindings, owner, diagnostics, occurrence.child(0), queryCalls),
+                    owner,
+                    diagnostics,
+                )
+                requireBoolean(
+                    validate(expression.right, localBindings, owner, diagnostics, occurrence.child(1), queryCalls),
+                    owner,
+                    diagnostics,
+                )
                 InferredType.Boolean
             }
 
             is ExpressionNode.Or -> {
-                requireBoolean(validate(expression.left, localBindings, owner, diagnostics), owner, diagnostics)
-                requireBoolean(validate(expression.right, localBindings, owner, diagnostics), owner, diagnostics)
+                requireBoolean(
+                    validate(expression.left, localBindings, owner, diagnostics, occurrence.child(0), queryCalls),
+                    owner,
+                    diagnostics,
+                )
+                requireBoolean(
+                    validate(expression.right, localBindings, owner, diagnostics, occurrence.child(1), queryCalls),
+                    owner,
+                    diagnostics,
+                )
                 InferredType.Boolean
             }
 
             is ExpressionNode.Conditional -> {
-                requireBoolean(validate(expression.test, localBindings, owner, diagnostics), owner, diagnostics)
-                val yes = validate(expression.yes, localBindings, owner, diagnostics)
-                val no = validate(expression.no, localBindings, owner, diagnostics)
+                requireBoolean(
+                    validate(expression.test, localBindings, owner, diagnostics, occurrence.child(0), queryCalls),
+                    owner,
+                    diagnostics,
+                )
+                val yes = validate(expression.yes, localBindings, owner, diagnostics, occurrence.child(1), queryCalls)
+                val no = validate(expression.no, localBindings, owner, diagnostics, occurrence.child(2), queryCalls)
                 compatible(yes, no, owner, diagnostics)
             }
 
             is ExpressionNode.OrElse -> {
-                val input = validate(expression.input, localBindings, owner, diagnostics)
-                val fallback = validate(expression.fallback, localBindings, owner, diagnostics)
+                val input = validate(expression.input, localBindings, owner, diagnostics, occurrence.child(0), queryCalls)
+                val fallback = validate(expression.fallback, localBindings, owner, diagnostics, occurrence.child(1), queryCalls)
                 compatible(input, fallback, owner, diagnostics)
             }
 
             is ExpressionNode.Collection -> {
-                val input = validate(expression.input, localBindings, owner, diagnostics)
+                val input = validate(expression.input, localBindings, owner, diagnostics, occurrence.child(0), queryCalls)
                 val item = input.collectionItem(owner, diagnostics)
-                val arguments = expression.arguments.map { validate(it, localBindings, owner, diagnostics) }
+                val arguments =
+                    expression.arguments.mapIndexed { index, argument ->
+                        validate(
+                            argument,
+                            localBindings,
+                            owner,
+                            diagnostics,
+                            occurrence.child(index + 1),
+                            queryCalls,
+                        )
+                    }
                 val bindingTypes = collectionBindingTypes(expression.operation, item, arguments, owner, diagnostics)
                 expression.bindings.zip(bindingTypes).forEach { (binding, type) -> localBindings[binding] = type }
-                val body = expression.body?.let { validate(it, localBindings, owner, diagnostics) }
+                val body =
+                    expression.body?.let {
+                        validate(
+                            it,
+                            localBindings,
+                            owner,
+                            diagnostics,
+                            occurrence.child(expression.arguments.size + 1),
+                            queryCalls,
+                        )
+                    }
                 expression.bindings.forEach(localBindings::remove)
                 when (expression.operation.value) {
                     "typewriter.collection.any", "typewriter.collection.all", "typewriter.collection.none" -> {
@@ -304,6 +426,89 @@ class PortableExpressionChecker(
             }
         }
 
+    private fun validateQuery(
+        expression: ExpressionNode.Call,
+        operation: CanonicalQueryOperation,
+        arguments: List<InferredType>,
+        occurrence: ExpressionOccurrence,
+        diagnostics: MutableList<String>,
+        queryCalls: MutableMap<ExpressionOccurrence, CheckedQueryCall>,
+    ): InferredType {
+        val models = CanonicalReadModels
+        val resource =
+            operation in
+                setOf(
+                    CanonicalQueryOperation.ResourceIdentity,
+                    CanonicalQueryOperation.ResourceValue,
+                    CanonicalQueryOperation.ResourceConfiguration,
+                )
+        var reference = false
+        var target: TypeUse? = null
+        if (resource) {
+            if (arguments.size == 1) {
+                val link =
+                    (arguments.singleOrNull() as? InferredType.Value)?.checked?.schema?.representation as? ResolvedRepresentation.Link
+                if (link == null) {
+                    diagnostics += "invalid_resource_reference_query"
+                    return InferredType.Invalid
+                }
+                target = link.target
+                reference = true
+            } else if (arguments.size == 2) {
+                if (arguments.first().use != ResourceIdDefinition.use) {
+                    diagnostics += "resource_query_requires_identity"
+                    return InferredType.Invalid
+                }
+                target =
+                    runCatching {
+                        models.typeUse.decode((expression.arguments[1] as ExpressionNode.Literal).value)
+                    }.getOrNull() as? TypeUse.Named
+                if (target == null || resolveType(target) !is Resolution.Ready) {
+                    diagnostics += "invalid_resource_query_witness"
+                    return InferredType.Invalid
+                }
+            } else {
+                diagnostics += "invalid_expression_operation_arity"
+                return InferredType.Invalid
+            }
+        }
+        val output =
+            when (operation) {
+                CanonicalQueryOperation.ResourceIdentity -> {
+                    ResourceIdDefinition.use
+                }
+
+                CanonicalQueryOperation.ResourceValue -> {
+                    requireNotNull(target)
+                }
+
+                CanonicalQueryOperation.ResourceConfiguration,
+                CanonicalQueryOperation.ValueConfiguration,
+                -> {
+                    models.typeSelection.type
+                }
+
+                CanonicalQueryOperation.CatalogDeclaration -> {
+                    if (arguments.singleOrNull()?.use != models.typeSelection.type) {
+                        val actual = arguments.singleOrNull()?.use
+                        if (actual == null || !models.catalog.isReadableAs(actual, models.typeSelection.type)) {
+                            diagnostics += "catalog_query_requires_selection"
+                            return InferredType.Invalid
+                        }
+                    }
+                    models.publishedType.type
+                }
+            }
+        queryCalls[occurrence] =
+            CheckedQueryCall(
+                operation,
+                target,
+                ExpressionType(output, true),
+                reference,
+            )
+        return resolveType(output).toInferredType()
+    }
+
     private fun collectionBindingTypes(
         operation: OperationId,
         item: InferredType,
@@ -347,7 +552,7 @@ class PortableExpressionChecker(
                 com.typewritermc.expression.SharedOperationSignatures.resolveOrNull(
                     operation,
                     uses.map {
-                        com.typewritermc.expression.ExpressionType(requireNotNull(it), false)
+                        ExpressionType(requireNotNull(it), false)
                     },
                 ) ==
                 null
@@ -708,6 +913,8 @@ private val OPERATION_TYPES =
         "typewriter.value.neq" to OperationType(listOf(InferredKind.Any, InferredKind.Any), InferredKind.Boolean),
         "typewriter.value.is_null" to OperationType(listOf(InferredKind.Any), InferredKind.Boolean),
         "typewriter.link.target" to OperationType(listOf(InferredKind.Any), InferredKind.Text),
+        "typewriter.text.value" to OperationType(listOf(InferredKind.Text), InferredKind.Text),
+        "typewriter.color.parse" to OperationType(listOf(InferredKind.Text), InferredKind.Integer),
         "typewriter.record.field" to OperationType(listOf(InferredKind.Any, InferredKind.Text), InferredKind.Any),
         "typewriter.boolean.not" to OperationType(listOf(InferredKind.Boolean), InferredKind.Boolean),
         "typewriter.number.gt" to OperationType(listOf(InferredKind.Number, InferredKind.Number), InferredKind.Boolean),
@@ -791,9 +998,12 @@ private val OPERATION_TYPES =
     )
 
 internal fun untypedPortableOperations(registry: PortableOperationRegistry = PortableOperationRegistry.Standard): Set<OperationId> =
-    registry.semantics.map(PortableOperationSemantics::id).toSet() - OPERATION_TYPES.keys.map(::OperationId).toSet()
+    registry.semantics.map(PortableOperationSemantics::id).toSet() - OPERATION_TYPES.keys.map(::OperationId).toSet() -
+        CanonicalQueryOperation.entries
+            .map { OperationId(it.id) }
+            .toSet()
 
-private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, com.typewritermc.expression.ExpressionType>): Boolean =
+private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, ExpressionType>): Boolean =
     when (this) {
         is ExpressionNode.Literal -> {
             value == DataValue.Unfilled
@@ -804,7 +1014,9 @@ private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, com.t
         }
 
         is ExpressionNode.Call -> {
-            arguments.any { it.mayBeMissing(bindings) }
+            CanonicalQueryOperation
+                .from(operation.value) != null ||
+                operation.value == "typewriter.color.parse" || arguments.any { it.mayBeMissing(bindings) }
         }
 
         is ExpressionNode.And -> {
@@ -829,7 +1041,7 @@ private fun ExpressionNode.mayBeMissing(bindings: Map<ExpressionBindingId, com.t
                     body?.mayBeMissing(
                         bindings +
                             this.bindings.associateWith {
-                                com.typewritermc.expression.ExpressionType(TypeUse.Scalar(ScalarKind.Unit), false)
+                                ExpressionType(TypeUse.Scalar(ScalarKind.Unit), false)
                             },
                     )
                         ?: false

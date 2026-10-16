@@ -46,6 +46,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import skirout.editor.v1.presentation.ChildrenElement
@@ -53,6 +54,85 @@ import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 
 val DefaultPresentationRuntimeTest by testSuite {
+    test("caller inputs register one typed dependency without copying canonical facts") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("caller inputs"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val key = presentationContextKey<ResourceId>("test.active_resource")
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(
+                    checked.presentationTemplate(),
+                    PresentationRole.AUTHORING_RESULT,
+                    mapOf(ResourceId::class to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id)),
+                ),
+            ) { build ->
+                build.text(
+                    build.context
+                        .read(key)
+                        .text
+                        .orElse(literal("No origin")),
+                )
+                build.text(
+                    build.context
+                        .read(key)
+                        .text
+                        .orElse(literal("No origin")),
+                )
+            }
+        val input = result.dependencies.contextInputs.single()
+        input.bindingId.value shouldBe "context:test.active_resource"
+        input.valueType shouldBe SkirTypeCodec.encode(com.typewritermc.types.ResourceIdDefinition.use).getOrThrow()
+    }
+
+    test("result appearance captures root decoration separately from body") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("result appearance"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.AUTHORING_RESULT),
+            ) { build ->
+                build.searchResult {
+                    appearance(SearchResultAppearance.Card)
+                    kindLabel(literal("page"))
+                    leading { icon(literal("fa6-solid:file-lines")) }
+                    searchTitle(literal("A page"))
+                }
+            }
+        result.resultAppearance!!.style shouldBe skirout.editor.v1.presentation.ResultStyle.CARD
+        (result.resultAppearance!!.leading!!.element as PresentationElement.IconWrapper).value.name shouldBe
+            expression("fa6-solid:file-lines")
+        val title = result.layout.singleFixed().element as PresentationElement.TextWrapper
+        title.value.value shouldBe expression("A page")
+        title.value.lineHeight shouldBe expression(1.1)
+    }
+
+    test("clipped fixed and repeated rows preserve one line layout") {
+        val catalog = DefaultCheckedCatalog(CatalogGeneration("clipped rows"), StandardTypes.definitions)
+        val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
+        val result =
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.AUTHORING_RESULT),
+            ) { build ->
+                build.clippedRow(spacing = 4.0) {
+                    text(literal("Book"))
+                    text(literal("Page"))
+                }
+                build.repeated<String, String>(com.typewritermc.expression.emptyListExpression()) {
+                    clippedRow(spacing = 4.0)
+                    text(item.orElse(literal("")))
+                }
+            }
+        val roots = result.layout.fixedChildren()
+        val fixed = ((roots.first().element as PresentationElement.ChildrenWrapper).value as ChildrenElement.RowWrapper).value
+        fixed.layout.clipOverflow shouldBe true
+        fixed.layout.spacing shouldBe 4.0
+        val repeated = (roots.last().element as PresentationElement.RepeatedWrapper).value
+        val sequence = repeated.presentation.layout as skirout.editor.v1.presentation.SequenceLayout.ChildrenWrapper
+        val layout = sequence.value as skirout.editor.v1.presentation.ChildrenLayout.RowWrapper
+        layout.value.clipOverflow shouldBe true
+        layout.value.spacing shouldBe 4.0
+    }
+
     test("headers acquire data scopes only when explicitly declared") {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("header diagnostics"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
@@ -403,7 +483,7 @@ val DefaultPresentationRuntimeTest by testSuite {
                 PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.INSPECTOR),
             ) { build ->
                 with(build) {
-                    resourceHeading(literal("A title"), literal(com.typewritermc.types.Color(0xff123456u)), subject.identifier)
+                    resourceHeading(literal("A title"), literal(com.typewritermc.types.Color(0xff123456u)), subject.identifier.text)
                 }
             }
         val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
@@ -441,8 +521,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         idText.paragraph.selectable shouldBe true
         idText.paragraph.softWrap shouldBe true
         val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        (identifier.value.input as skirout.editor.v1.expression.ExpressionNode.ReadWrapper).value.binding.value shouldBe
-            "presentation.subject.identifier"
+        val representation = identifier.value.input as skirout.editor.v1.expression.ExpressionNode.CallWrapper
+        val identityRead = representation.value.arguments.single() as skirout.editor.v1.expression.ExpressionNode.ReadWrapper
+        identityRead.value.binding.value shouldBe "presentation.subject.identifier"
     }
 
     test("rich paragraphs serialize sizing and paragraph behavior") {

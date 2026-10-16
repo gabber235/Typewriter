@@ -106,6 +106,8 @@ import 'package:widgetbook_workspace/stories/shared/search/presentation/search_f
     as _widgetbook_workspace_stories_shared_search_presentation_search_frame_stories;
 import 'package:widgetbook_workspace/stories/shared/search/presentation/search_modal.stories.dart'
     as _widgetbook_workspace_stories_shared_search_presentation_search_modal_stories;
+import 'package:widgetbook_workspace/stories/shared/search/presentation/search_result_row.stories.dart'
+    as _widgetbook_workspace_stories_shared_search_presentation_search_result_row_stories;
 import 'package:widgetbook_workspace/stories/shared/selectables/operations/delete_operation.stories.dart'
     as _widgetbook_workspace_stories_shared_selectables_operations_delete_operation_stories;
 import 'package:widgetbook_workspace/stories/shared/selectables/presentation/selector.stories.dart'
@@ -491,7 +493,7 @@ final directories = <_widgetbook.WidgetbookNode>[
                             name: 'presentation',
                             children: [
                               _widgetbook.WidgetbookComponent(
-                                name: 'AuthoringSearchResultItem',
+                                name: 'AuthoredResourceSearchResult',
                                 useCases: [
                                   _widgetbook.WidgetbookUseCase(
                                     name: 'Book result',
@@ -994,6 +996,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                         _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories
                             .authoredSearchInputUseCase,
                   ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Rich portable result',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories
+                            .richPortableSearchInputUseCase,
+                  ),
                 ],
               ),
               _widgetbook.WidgetbookFolder(
@@ -1264,6 +1272,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_search_presentation_search_modal_stories
                             .searchModalRouteUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'SearchResultRow',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Appearance and state',
+                    builder:
+                        _widgetbook_workspace_stories_shared_search_presentation_search_result_row_stories
+                            .searchResultRowUseCase,
                   ),
                 ],
               ),

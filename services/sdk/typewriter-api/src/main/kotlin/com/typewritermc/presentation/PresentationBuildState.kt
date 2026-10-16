@@ -31,6 +31,8 @@ internal class PresentationBuildState(
     val type get() = binding.type
     val nodes = mutableListOf<PresentationNode>()
     val controls = PresentationControlFactories()
+    val queries = RuntimePresentationQueries(binding.nativeTypes)
+    private val contextInputs = linkedMapOf<ExpressionBindingId, skirout.editor.v1.presentation.PresentationContextInput>()
     private var nextNode = 0
     private var nextBinding = 0
     private var activeTarget: MutableList<PresentationNode> = nodes
@@ -41,7 +43,7 @@ internal class PresentationBuildState(
     private val expressionTypes =
         linkedMapOf(
             CONFIGURED_VALUE to type.type,
-            ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Scalar(com.typewritermc.types.ScalarKind.Text),
+            ExpressionBindingId("presentation.subject.identifier") to TypeTemplate.Named(com.typewritermc.types.ResourceIdDefinition.id),
             ExpressionBindingId("presentation.context.selection_count") to
                 TypeTemplate.Scalar(
                     com.typewritermc.types.ScalarKind
@@ -93,11 +95,14 @@ internal class PresentationBuildState(
     }
 
     fun resourceType(native: KClass<*>): TypeTemplate.Named =
-        requireNotNull(binding.resourceTypes[native]) {
+        requireNotNull(binding.nativeTypes[native]) {
             "No authored resource type is registered for ${native.qualifiedName}."
         }
 
-    fun result(layout: PresentationNode): PresentationBuildResult =
+    fun result(
+        layout: PresentationNode,
+        appearance: skirout.editor.v1.presentation.ResultAppearance? = null,
+    ): PresentationBuildResult =
         PresentationBuildResult(
             layout = layout,
             dependencies =
@@ -107,8 +112,37 @@ internal class PresentationBuildState(
                     conversions = emptyList(),
                     capabilities = capabilities,
                     collections = collections.values,
+                    contextInputs = contextInputs.values,
                 ),
+            resultAppearance = appearance,
         )
+
+    fun <Value : Any> readContext(
+        key: PresentationContextKey<Value>,
+    ): com.typewritermc.expression.Expr<Value, com.typewritermc.expression.MayBeMissing> {
+        val template = requireNotNull(binding.nativeTypes[key.valueClass]) { "Caller input type is not registered." }
+        require(template.arguments.isEmpty()) { "Caller inputs require a closed registered type." }
+        val use = TypeUse.Named(template.definition)
+        val declaration =
+            skirout.editor.v1.presentation.PresentationContextInput(
+                bindingId = key.binding.wire(),
+                valueType = SkirTypeCodec.encode(use).getOrThrow(),
+            )
+        val previous = contextInputs[key.binding]
+        require(previous == null || previous == declaration) { "Caller input types conflict." }
+        require(previous != null || !expressionTypes.containsKey(key.binding)) { "Caller input shadows a binding." }
+        type(use)
+        contextInputs.putIfAbsent(key.binding, declaration)
+        expressionTypes[key.binding] = template
+        return com.typewritermc.expression.Expr(ExpressionNode.Read(key.binding, com.typewritermc.authoring.ValuePath()))
+    }
+
+    fun captureResult(content: (PresentationBuildScope) -> Unit): CapturedResultPresentation {
+        val target = mutableListOf<PresentationNode>()
+        val result = ResultPresentationDraft(target)
+        withTarget(target) { content(scope(target = target, result = result)) }
+        return result.finish()
+    }
 
     fun bindingId(purpose: String): ExpressionBindingId = ExpressionBindingId("presentation.$purpose.${nextBinding++}")
 
@@ -130,9 +164,10 @@ internal class PresentationBuildState(
         axis: PresentationAxisNodeList? = null,
         checked: CheckedPresentationTemplate = type,
         base: BindingRef = BindingRef(path = WireValuePath(segments = emptyList()), bindingId = CONFIGURED_VALUE.wire()),
+        result: ResultPresentationDraft? = null,
     ): RuntimePresentationBuildScope {
         if (base.path.segments.isEmpty()) expressionTypes[ExpressionBindingId(base.bindingId.value)] = checked.type
-        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base), target, checked, base)
+        return RuntimePresentationBuildScope(this, RuntimeLayout(this, target, axis, checked, base, result), target, checked, base)
     }
 
     fun node(
@@ -159,6 +194,7 @@ internal class PresentationBuildState(
                                 spacing = 0.0,
                                 mainAxisAlignment = WireMainAxisAlignment.START,
                                 crossAxisAlignment = WireCrossAxisAlignment.START,
+                                clipOverflow = false,
                             ),
                     ),
                 ),
@@ -177,6 +213,7 @@ internal class PresentationBuildState(
                 spacing = spacing,
                 mainAxisAlignment = main.wire(),
                 crossAxisAlignment = cross.wire(),
+                clipOverflow = false,
             )
         val element =
             if (row) {

@@ -46,6 +46,8 @@ void main() {
       ),
     );
     final material = skir.PresentationMaterial(
+      resultAppearance: null,
+
       provider: original.provider,
       target: original.target,
       role: original.role,
@@ -85,6 +87,8 @@ void main() {
       final original = fixture.catalog.snapshot.presentationMaterials.first;
       final configured = skir.ExpressionBindingId(value: "configured_value");
       final material = skir.PresentationMaterial(
+        resultAppearance: null,
+
         provider: original.provider,
         target: original.target,
         role: original.role,
@@ -442,6 +446,8 @@ void main() {
         presentationMaterials: [
           for (final descriptor in descriptors)
             skir.PresentationMaterial(
+              resultAppearance: null,
+
               provider: descriptor.id,
               target: descriptor.target,
               role: skir.PresentationRole.editor,
@@ -592,6 +598,8 @@ void main() {
         presentationMaterials: [
           ...original.presentationMaterials,
           skir.PresentationMaterial(
+            resultAppearance: null,
+
             provider: tie,
             target: target,
             role: skir.PresentationRole.editor,
@@ -762,6 +770,8 @@ _patternCatalog({required bool repeated}) {
     presentationMaterials: [
       for (final descriptor in descriptors)
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: descriptor.id,
           target: descriptor.target,
           role: skir.PresentationRole.editor,
@@ -955,6 +965,8 @@ _catalog() {
         (recordPresentation, recordTarget),
       ])
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: entry.$1,
           target: entry.$2,
           role: skir.PresentationRole.editor,

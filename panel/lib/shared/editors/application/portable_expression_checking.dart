@@ -7,13 +7,21 @@ import "package:typewriter_panel/typewriter_panel.dart";
 List<String> checkPortableExpression(
   skir.ExpressionNode body, {
   required Map<skir.ExpressionBindingId, skir.ExpressionType> bindings,
-  required skir.ExpressionType expectedOutput,
+  skir.ExpressionType? expectedOutput,
   skir.ExpressionType? Function(skir.ExpressionType, skir.ValuePath)?
   resolvePath,
   skir.TypeUse Function(skir.TypeUse)? normalizeType,
   skir.TypeUse? Function(skir.TypeUse)? resolveCollectionItem,
   void Function(skir.ExpressionType?)? onInferred,
   bool allowResultNumericWidth = false,
+  skir.ExpressionType? Function(
+    skir.ExpressionCall,
+    List<skir.ExpressionType>,
+    Map<skir.ExpressionBindingId, skir.ExpressionType>,
+    List<int>,
+  )?
+  resolveQuery,
+  skir.ExpressionType? Function(skir.ExpressionRead)? resolveBinding,
 }) {
   final errors = <String>[];
   final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
@@ -37,7 +45,7 @@ List<String> checkPortableExpression(
     return result;
   }
 
-  String? family(skir.TypeUse use) => switch (use) {
+  String? family(skir.TypeUse use) => switch (normalizeType?.call(use) ?? use) {
     skir.TypeUse_scalarWrapper(value: skir.ScalarKind_integerWrapper()) =>
       "integer",
     skir.TypeUse_scalarWrapper(value: skir.ScalarKind_floatWrapper()) =>
@@ -49,6 +57,8 @@ List<String> checkPortableExpression(
   };
   bool matches(skir.ExpressionType actual, skir.ExpressionType expected) =>
       actual.value == expected.value ||
+      (normalizeType != null &&
+          normalizeType(actual.value) == normalizeType(expected.value)) ||
       ((literalTypes.contains(actual) || literalTypes.contains(expected)) &&
           family(actual.value) != null &&
           family(actual.value) == family(expected.value));
@@ -89,21 +99,29 @@ List<String> checkPortableExpression(
     return null;
   }
 
+  bool emptyCollection(skir.ExpressionNode node) => switch (node) {
+    skir.ExpressionNode_literalWrapper(
+      value: skir.DataValue_listValueWrapper(:final value),
+    ) =>
+      value.items.isEmpty,
+    skir.ExpressionNode_literalWrapper(
+      value: skir.DataValue_setValueWrapper(:final value),
+    ) =>
+      value.items.isEmpty,
+    _ => false,
+  };
+
   late skir.ExpressionType? Function(
     skir.ExpressionNode,
     Map<skir.ExpressionBindingId, skir.ExpressionType>,
+    List<int>,
   )
   infer;
-  infer = (node, scope) {
+  infer = (node, scope, occurrence) {
     switch (node) {
       case skir.ExpressionNode_literalWrapper(:final value):
         if (value case skir.DataValue_namedWrapper(:final value)) {
-          return type(
-            normalizeType?.call(skir.TypeUse.wrapNamed(value.actualType)) ??
-                skir.TypeUse.wrapNamed(value.actualType),
-            false,
-            true,
-          );
+          return type(skir.TypeUse.wrapNamed(value.actualType), false, true);
         }
         final items = switch (value) {
           skir.DataValue_listValueWrapper(:final value) => value.items.map(
@@ -117,7 +135,11 @@ List<String> checkPortableExpression(
         if (items != null) {
           final actual = items
               .map(
-                (item) => infer(skir.ExpressionNode.wrapLiteral(item), scope),
+                (item) => infer(
+                  skir.ExpressionNode.wrapLiteral(item),
+                  scope,
+                  occurrence,
+                ),
               )
               .toList();
           if (actual.isEmpty || actual.any((item) => item == null)) return null;
@@ -142,31 +164,27 @@ List<String> checkPortableExpression(
             skir.TypeUse.wrapScalar(skir.ScalarKind.bytes),
           ),
           final value when value == skir.DataValue.unfilled => type(
-            expectedOutput.value,
+            expectedOutput?.value ?? text,
             true,
           ),
           _ => null,
         };
       case skir.ExpressionNode_readWrapper(:final value):
         final source = scope[value.binding];
+        final resolvedBinding = resolveBinding?.call(value);
+        if (resolvedBinding != null) return resolvedBinding;
         if (source == null) {
           errors.add("unknown_expression_binding");
           return null;
         }
         if (value.path.segments.isEmpty) {
-          return type(
-            normalizeType?.call(source.value) ?? source.value,
-            source.mayBeMissing,
-          );
+          return type(source.value, source.mayBeMissing);
         }
         final resolved = resolvePath?.call(source, value.path);
         if (resolved == null) errors.add("invalid_expression_path");
         return resolved == null
             ? null
-            : type(
-                normalizeType?.call(resolved.value) ?? resolved.value,
-                resolved.mayBeMissing,
-              );
+            : type(resolved.value, resolved.mayBeMissing);
       case skir.ExpressionNode_callWrapper(:final value):
         final id = value.operation.value;
         if (!portableOperationAcceptsArity(id, value.arguments.length)) {
@@ -177,11 +195,49 @@ List<String> checkPortableExpression(
           );
           return null;
         }
-        final arguments = value.arguments
-            .map((node) => infer(node, scope))
-            .toList();
+        final arguments = [
+          for (final (index, argument) in value.arguments.indexed)
+            infer(argument, scope, [...occurrence, index]),
+        ];
         if (arguments.any((argument) => argument == null)) return null;
-        final actual = arguments.cast<skir.ExpressionType>();
+        final nominal = arguments.cast<skir.ExpressionType>();
+        if (CanonicalQueryOperation.fromId(id) != null) {
+          final query = resolveQuery?.call(value, nominal, scope, occurrence);
+          if (query == null) errors.add("invalid_canonical_query");
+          return query;
+        }
+        if (id == "typewriter.record.field") {
+          if (nominal.length != 2) return null;
+          if (value.arguments.elementAt(1)
+              case skir.ExpressionNode_literalWrapper(
+                value: skir.DataValue_stringValueWrapper(value: final field),
+              )) {
+            final result = resolvePath?.call(
+              nominal[0],
+              skir.ValuePath(
+                segments: [skir.PathSegment.createField(name: field)],
+              ),
+            );
+            if (result == null) errors.add("invalid_expression_field");
+            return result;
+          }
+          errors.add("dynamic_expression_field_type");
+          return null;
+        }
+        if (id == "typewriter.link.target") {
+          return type(
+            skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+            nominal.first.mayBeMissing,
+          );
+        }
+        final actual = [
+          for (final value in nominal)
+            type(
+              normalizeType?.call(value.value) ?? value.value,
+              value.mayBeMissing,
+              literalTypes.contains(value),
+            ),
+        ];
         final missing = actual.any((argument) => argument.mayBeMissing);
         bool inputs(List<skir.TypeUse?> expected) {
           if (actual.length != expected.length) {
@@ -272,6 +328,7 @@ List<String> checkPortableExpression(
           return type(text, missing);
         }
         if ({
+          "typewriter.text.value",
           "typewriter.text.trim",
           "typewriter.text.lower",
           "typewriter.text.upper",
@@ -286,6 +343,10 @@ List<String> checkPortableExpression(
         }.contains(id)) {
           inputs([text, text, text]);
           return type(text, missing);
+        }
+        if (id == "typewriter.color.parse") {
+          inputs([text]);
+          return type(skir.TypeUse.wrapNamed(expressionColorUse), true);
         }
         if (id == "typewriter.text.interpolate") return type(text, missing);
         if (id == "typewriter.text.length") {
@@ -358,26 +419,6 @@ List<String> checkPortableExpression(
           inputs([null]);
           return type(boolean, missing);
         }
-        if (id == "typewriter.record.field") {
-          if (!inputs([null, text])) return null;
-          final name = value.arguments.elementAt(1);
-          if (name case skir.ExpressionNode_literalWrapper(
-            value: skir.DataValue_stringValueWrapper(:final value),
-          )) {
-            return resolvePath?.call(
-              actual[0],
-              skir.ValuePath(
-                segments: [skir.PathSegment.createField(name: value)],
-              ),
-            );
-          }
-          errors.add("dynamic_expression_field_type");
-          return null;
-        }
-        if (id == "typewriter.link.target") {
-          inputs([null]);
-          return type(text, missing);
-        }
         if (id == "typewriter.collection.size") {
           inputs([null]);
           if (actual.isNotEmpty && itemType(actual.first) == null) {
@@ -443,8 +484,8 @@ List<String> checkPortableExpression(
         return null;
       case skir.ExpressionNode_andWrapper(:final value):
       case skir.ExpressionNode_orWrapper(:final value):
-        final left = infer(value.left, scope);
-        final right = infer(value.right, scope);
+        final left = infer(value.left, scope, [...occurrence, 0]);
+        final right = infer(value.right, scope, [...occurrence, 1]);
         if (left?.value != boolean || right?.value != boolean) {
           errors.add("invalid_boolean_operand");
         }
@@ -453,12 +494,28 @@ List<String> checkPortableExpression(
           (left?.mayBeMissing ?? true) || (right?.mayBeMissing ?? true),
         );
       case skir.ExpressionNode_conditionalWrapper(:final value):
-        final test = infer(value.test, scope);
+        final test = infer(value.test, scope, [...occurrence, 0]);
         if (test?.value != boolean) {
           errors.add("invalid_boolean_operand");
         }
-        final yes = infer(value.yes, scope);
-        final no = infer(value.no, scope);
+        var yes = emptyCollection(value.yes)
+            ? null
+            : infer(value.yes, scope, [...occurrence, 1]);
+        var no = emptyCollection(value.no)
+            ? null
+            : infer(value.no, scope, [...occurrence, 2]);
+        if (yes == null &&
+            no != null &&
+            emptyCollection(value.yes) &&
+            itemType(no) != null) {
+          yes = type(no.value, false, true);
+        }
+        if (no == null &&
+            yes != null &&
+            emptyCollection(value.no) &&
+            itemType(yes) != null) {
+          no = type(yes.value, false, true);
+        }
         if (yes == null || no == null) return null;
         if (!matches(yes, no)) errors.add("incompatible_expression_types");
         return type(
@@ -469,8 +526,13 @@ List<String> checkPortableExpression(
           literalTypes.contains(yes) && literalTypes.contains(no),
         );
       case skir.ExpressionNode_orElseWrapper(:final value):
-        final input = infer(value.input, scope);
-        final fallback = infer(value.fallback, scope);
+        final input = infer(value.input, scope, [...occurrence, 0]);
+        final fallback =
+            input != null &&
+                emptyCollection(value.fallback) &&
+                itemType(input) != null
+            ? type(input.value, false, true)
+            : infer(value.fallback, scope, [...occurrence, 1]);
         if (input == null || fallback == null) return null;
         if (!matches(input, fallback)) {
           errors.add("incompatible_expression_types");
@@ -483,7 +545,7 @@ List<String> checkPortableExpression(
           literalTypes.contains(input) && literalTypes.contains(fallback),
         );
       case skir.ExpressionNode_collectionWrapper(:final value):
-        final input = infer(value.input, scope);
+        final input = infer(value.input, scope, [...occurrence, 0]);
         if (input == null) return null;
         final item = itemType(input);
         if (item == null) {
@@ -494,6 +556,9 @@ List<String> checkPortableExpression(
           scope,
         );
         for (final binding in value.bindings) {
+          if (binding.value.startsWith("context:")) {
+            errors.add("reserved_context_binding");
+          }
           if (local.containsKey(binding)) {
             errors.add("duplicate_expression_binding");
           }
@@ -512,10 +577,16 @@ List<String> checkPortableExpression(
           errors.add("invalid_expression_collection_shape");
           return null;
         }
-        final body = value.body == null ? null : infer(value.body!, local);
-        final arguments = value.arguments
-            .map((argument) => infer(argument, scope))
-            .toList();
+        final body = value.body == null
+            ? null
+            : infer(value.body!, local, [
+                ...occurrence,
+                value.arguments.length + 1,
+              ]);
+        final arguments = [
+          for (final (index, argument) in value.arguments.indexed)
+            infer(argument, scope, [...occurrence, index + 1]),
+        ];
         if ({
               "typewriter.collection.any",
               "typewriter.collection.all",
@@ -567,7 +638,7 @@ List<String> checkPortableExpression(
         if (id == "typewriter.collection.fold") {
           return value.arguments.isEmpty
               ? null
-              : infer(value.arguments.first, scope);
+              : infer(value.arguments.first, scope, [...occurrence, 1]);
         }
         return input;
       default:
@@ -575,11 +646,11 @@ List<String> checkPortableExpression(
         return null;
     }
   };
-  final result = infer(body, Map.of(bindings));
+  final result = infer(body, Map.of(bindings), const []);
   onInferred?.call(result);
   if (result == null) {
     errors.add("expression_type_inference_failed");
-  } else {
+  } else if (expectedOutput != null) {
     if (!matches(result, expectedOutput) &&
         !(allowResultNumericWidth &&
             family(result.value) != null &&

@@ -68,6 +68,7 @@ data class OwnedTypeDeclaration(
     val origin: ProviderOrigin,
     val definition: TypeDefinition,
     val display: TypeDisplay? = null,
+    val nativeClass: kotlin.reflect.KClass<*>? = null,
 )
 
 data class CatalogAssemblyContext(
@@ -111,10 +112,23 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 origins = owned.map { DeclarationOrigin(it.origin.owner) },
             )
         }
+    val reservedDeclarations =
+        assembledDeclarations.filter {
+            (it.definition.id.type as? com.typewritermc.types.TypeId.Qualified)?.namespace == "typewriter.read"
+        }
+    val reservedIdentities = reservedDeclarations.map { it.definition.id }.toSet()
+    val reservedDiagnostics =
+        reservedDeclarations.map { owned ->
+            DeclarationDiagnostic(
+                affected = owned.definition.id,
+                code = "reserved_intrinsic_type_identity",
+                origins = listOf(DeclarationOrigin(owned.origin.owner)),
+            )
+        }
     val symbolicDiagnostics =
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
     val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
-    val structural = DefaultCheckedCatalog(context.generation, definitions)
+    val structural = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in reservedIdentities })
     val resourceDefinitions = (resources + context.resources).distinctBy(AuthoringResourceDefinition::id)
     val resourceFamilyDiagnostics =
         definitions
@@ -140,6 +154,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val materialCollection =
         collectPresentationMaterials(
             presentations,
+            assembledDeclarations,
             nativeBindings,
             definitionIndex,
             structural,
@@ -154,7 +169,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         )
     val directFailures =
         collectionResults.mapNotNull(ConfigurationCollectionResult::failure) +
-            duplicateDiagnostics + symbolicDiagnostics + ruleDiagnostics +
+            duplicateDiagnostics + reservedDiagnostics + symbolicDiagnostics + ruleDiagnostics +
             materialCollection.failures + presentationDiagnostics + resourceFamilyDiagnostics
     val unavailable = propagateUnavailableDefinitions(directFailures.map(DeclarationDiagnostic::affected).toSet(), definitions)
     val checked = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in unavailable })
@@ -230,6 +245,7 @@ private data class PresentationMaterialCollection(
 
 private fun collectPresentationMaterials(
     presentations: List<OwnedPresentation>,
+    declarations: List<OwnedTypeDeclaration>,
     nativeBindings: List<OwnedNativeBinding>,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
@@ -237,13 +253,22 @@ private fun collectPresentationMaterials(
 ): PresentationMaterialCollection {
     val materials = mutableListOf<PresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
-    val resourceTypes =
-        nativeBindings
-            .mapNotNull { owned ->
-                val native = owned.factory.nativeClass ?: return@mapNotNull null
-                val definition = definitions[owned.factory.definition] ?: return@mapNotNull null
+    val nativeTypes =
+        (
+            declarations.mapNotNull { owned ->
+                val native = owned.nativeClass ?: return@mapNotNull null
+                val definition = definitions[owned.definition.id] ?: return@mapNotNull null
+                if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
                 native to TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
-            }.groupBy(Pair<kotlin.reflect.KClass<*>, TypeTemplate.Named>::first)
+            } +
+                nativeBindings
+                    .mapNotNull { owned ->
+                        val native = owned.factory.nativeClass ?: return@mapNotNull null
+                        val definition = definitions[owned.factory.definition] ?: return@mapNotNull null
+                        if (catalog.declaration(definition.id) !is Resolution.Ready) return@mapNotNull null
+                        native to TypeTemplate.Named(definition.id, definition.parameters.map { TypeTemplate.Parameter(it.key) })
+                    }
+        ).groupBy(Pair<kotlin.reflect.KClass<*>, TypeTemplate.Named>::first)
             .mapNotNull { (native, declarations) ->
                 declarations
                     .map { it.second }
@@ -266,7 +291,13 @@ private fun collectPresentationMaterials(
             val template = subject.presentationTemplate(definitions, catalog)
             owned.descriptor.roles.sortedBy { it.ordinal }.forEach { role ->
                 try {
-                    val result = owned.provider.build(PresentationBuildBinding(template, role, resourceTypes))
+                    val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes))
+                    require(
+                        result.resultAppearance == null || role == com.typewritermc.types.PresentationRole.AUTHORING_RESULT ||
+                            role == com.typewritermc.types.PresentationRole.REFERENCE_OPTION,
+                    ) {
+                        "Result appearance requires an authoring result or reference option role."
+                    }
                     if (result.dependencies.validCollections(subject, definitions, catalog, resources)) {
                         materials +=
                             PresentationMaterial(
@@ -276,6 +307,7 @@ private fun collectPresentationMaterials(
                                 role = role,
                                 layout = result.layout,
                                 dependencies = result.dependencies,
+                                resultAppearance = result.resultAppearance,
                             )
                     } else {
                         val affected = (subject as? TypeTemplate.Named)?.definition
@@ -313,6 +345,14 @@ private fun skirout.editor.v1.presentation.PresentationDependencies.validCollect
     catalog: CheckedCatalog,
     resources: List<AuthoringResourceDefinition>,
 ): Boolean {
+    if (contextInputs.map { it.bindingId }.distinct().size != contextInputs.size) return false
+    if (!contextInputs.all { input ->
+            input.bindingId.value.startsWith("context:") &&
+                (SkirTypeCodec.decode(input.valueType).valueOrNull()?.let { catalog.resolve(it) } is Resolution.Ready)
+        }
+    ) {
+        return false
+    }
     val parameters = subject.parameterKeys()
     val parameterBounds =
         parameters.associateWith { key ->

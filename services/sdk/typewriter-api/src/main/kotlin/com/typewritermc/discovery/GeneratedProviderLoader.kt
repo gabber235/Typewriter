@@ -441,7 +441,7 @@ class GeneratedProviderLoader {
             when (loadedProvider.entry.kind) {
                 GeneratedProviderKind.Type -> {
                     val provider = loadedProvider.require<GeneratedTypeProvider>()
-                    declarations += OwnedTypeDeclaration(origin, provider.definition, provider.display)
+                    declarations += OwnedTypeDeclaration(origin, provider.definition, provider.display, provider.nativeClass)
                 }
 
                 GeneratedProviderKind.NativeBinding -> {

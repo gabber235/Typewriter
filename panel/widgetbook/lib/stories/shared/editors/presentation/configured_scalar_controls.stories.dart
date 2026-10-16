@@ -299,6 +299,8 @@ BoundPresentationHost _scalarHost({
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 16,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.stretch,

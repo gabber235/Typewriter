@@ -36,16 +36,8 @@ Widget primarySearchButtonStory({
             ],
           ),
           rowRenderers: {
-            authoringResourceSearchResultType.rowRendererId: (context) =>
-                AuthoringSearchResultItem(
-                  payload:
-                      context.result.payload as AuthoringSearchResultPayload,
-                  focused: context.focused,
-                  selected: context.selected,
-                  loading: context.loading,
-                  onTap: context.onTap,
-                  shortcutActivator: context.shortcutActivator,
-                ),
+            authoringResourceSearchResultType.rowRendererId:
+                buildAuthoringResourceSearchResultItem,
           },
         ),
       ),

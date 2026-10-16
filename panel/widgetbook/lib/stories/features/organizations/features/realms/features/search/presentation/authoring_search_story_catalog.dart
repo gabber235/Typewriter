@@ -30,6 +30,31 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
         target: target,
         role: skir.PresentationRole.authoringResult,
         layout: _resultLayout(entry.key),
+        resultAppearance: skir.ResultAppearance(
+          accent: null,
+
+          style: skir.ResultStyle.card,
+          kindLabel: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(entry.key),
+          ),
+          leading: skir.PresentationNode(
+            nodeId: "search.${entry.key}.leading",
+            header: null,
+            properties: skir.PresentationProperties.defaultInstance,
+            element: skir.PresentationElement.wrapIcon(
+              (skir.IconContent.mutable()
+                    ..name = skir.ExpressionNode.wrapLiteral(
+                      skir.DataValue.wrapStringValue(switch (entry.key) {
+                        "book" => "material-symbols:book",
+                        "tag" => "fa6-solid:tag",
+                        "page" => "fa6-solid:file-lines",
+                        _ => "fa6-solid:cube",
+                      }),
+                    ))
+                  .toFrozen(),
+            ),
+          ),
+        ),
         dependencies: skir.PresentationDependencies.defaultInstance,
         subject: skir.TypeTemplate.createNamed(
           definition: entry.value,
@@ -126,6 +151,8 @@ skir.PresentationNode _resultLayout(String kind) => skir.PresentationNode(
         skir.AxisChild.wrapFixed(_text("$kind.summary", "summary")),
       ],
       layout: skir.AxisChildrenLayout(
+        clipOverflow: false,
+
         spacing: 2,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.start,

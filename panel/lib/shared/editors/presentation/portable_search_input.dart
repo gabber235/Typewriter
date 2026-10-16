@@ -80,6 +80,7 @@ final class PortableSearchInput extends HookWidget {
         history,
         control,
         searchScope.bindings,
+        searchScope.queries,
         host,
         searchScope.material,
         catalog,
@@ -309,7 +310,15 @@ final class PortableSearchInput extends HookWidget {
       return PortablePresentationNodeRenderer(
         node: summary,
         scope: scope
-            .withValues({control.summaryBindingId: current})
+            .withValues(
+              {control.summaryBindingId: current},
+              schemas: {
+                if (scope.expectedType(control.control.binding) case final use?)
+                  control.summaryBindingId: CompletePortablePresentationBinding(
+                    use,
+                  ),
+              },
+            )
             .withReadOnly(true),
       );
     }
@@ -583,43 +592,34 @@ final class _PortableSearchSurface extends ConsumerWidget {
                             false
                       : current == selectedValue;
                   final result = switch (payload) {
-                    PortableMappedSearchPayload(:final mapping) => ListTile(
-                      dense: true,
-                      minTileHeight: 44,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: context.spacing.space3,
-                      ),
-                      selected: selected || row.focused,
-                      selectedTileColor: context.theme.colorScheme.primary
-                          .withValues(alpha: 0.10),
-                      title: PortablePresentationNodeRenderer(
+                    PortableMappedSearchPayload(:final mapping) =>
+                      PortableResultContent(
                         node: mapping.presentation,
-                        scope: picker
-                            .resultScope(row.result, scope)
-                            .withReadOnly(true),
+                        appearance: mapping.resultAppearance,
+                        scope: picker.resultScope(row.result, scope),
+                        row: row.copyWith(
+                          selected: selected,
+                          onTap: controller.isBusy
+                              ? null
+                              : () => controller.activate(row.result),
+                        ),
+                        fallbackStyle: SearchResultDensity.compact,
+                        fallbackKindLabel: "",
                       ),
-                      onTap: controller.isBusy
-                          ? null
-                          : () => controller.activate(row.result),
-                    ),
-                    PortableCustomSearchPayload() => ListTile(
-                      dense: true,
-                      minTileHeight: 44,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: context.spacing.space3,
+                    PortableCustomSearchPayload() => SearchResultRow(
+                      row: row.copyWith(
+                        selected: selected,
+                        onTap: controller.isBusy
+                            ? null
+                            : () => controller.activate(row.result),
                       ),
-                      selected: selected || row.focused,
-                      selectedTileColor: context.theme.colorScheme.primary
-                          .withValues(alpha: 0.10),
-                      title: Text(
+                      density: SearchResultDensity.compact,
+                      body: Text(
                         row.result.title ?? "Use custom value",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: const Text("Use this custom value"),
-                      onTap: controller.isBusy
-                          ? null
-                          : () => controller.activate(row.result),
+                      footer: const Text("Use this custom value"),
                     ),
                   };
                   return _PortableSearchResult(

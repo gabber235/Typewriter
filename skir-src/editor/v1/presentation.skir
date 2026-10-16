@@ -164,6 +164,7 @@ struct AxisChildrenLayout(810800018) {
   spacing: float64 = 0;
   main_axis_alignment: MainAxisAlignment = 1;
   cross_axis_alignment: CrossAxisAlignment = 2;
+  clip_overflow: bool = 3;
 }
 
 enum FlexFit(810800019) {
@@ -831,6 +832,7 @@ struct SearchResultMapping(810800114) {
   selected_value: ExpressionNode = 2;
   presentation: PresentationNode = 3;
   label: ExpressionNode? = 4;
+  result_appearance: ResultAppearance? = 5;
 }
 
 struct HttpQueryParameter(810800115) {
@@ -1092,6 +1094,7 @@ struct PresentationDependencies(810800142) {
   conversions: [ConversionId] = 2;
   capabilities: [CapabilityId] = 3;
   collections: [PresentationCollectionDefinition|source_id] = 4;
+  context_inputs: [PresentationContextInput] = 5;
 }
 
 struct PresentationCollectionRelationDefinition(810800143) {
@@ -1718,4 +1721,22 @@ struct DividerAppearance(810800233) {
   space: ExpressionNode? = 2;
   indent: ExpressionNode? = 3;
   end_indent: ExpressionNode? = 4;
+}
+
+// Native result chrome surrounds ordinary portable body content.
+enum ResultStyle(810800234) {
+  compact = 1;
+  card = 2;
+}
+
+struct ResultAppearance(810800235) {
+  style: ResultStyle? = 0;
+  accent: ExpressionNode? = 1;
+  leading: PresentationNode? = 2;
+  kind_label: ExpressionNode? = 3;
+}
+
+struct PresentationContextInput(810800236) {
+  binding_id: ExpressionBindingId = 0;
+  value_type: TypeUse = 1;
 }

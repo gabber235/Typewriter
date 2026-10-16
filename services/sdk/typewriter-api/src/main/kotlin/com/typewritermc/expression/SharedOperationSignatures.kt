@@ -8,6 +8,7 @@ import com.typewritermc.types.TypeUse
 object SharedOperationSignatures {
     val supportedIds: Set<String> =
         setOf(
+            "typewriter.text.value",
             "typewriter.text.trim",
             "typewriter.text.lower",
             "typewriter.text.upper",
@@ -38,7 +39,9 @@ object SharedOperationSignatures {
         val types = inputs.map(ExpressionType::value)
         val result =
             when (id.value) {
-                "typewriter.text.trim", "typewriter.text.lower", "typewriter.text.upper", "typewriter.text.title" -> {
+                "typewriter.text.value", "typewriter.text.trim", "typewriter.text.lower",
+                "typewriter.text.upper", "typewriter.text.title",
+                -> {
                     text.takeIf {
                         types ==
                             listOf(text)

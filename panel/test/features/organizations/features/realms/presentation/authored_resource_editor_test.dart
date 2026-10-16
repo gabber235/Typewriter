@@ -517,6 +517,191 @@ void main() {
     },
   );
 
+  testWidgets(
+    "embedded page resources admit missing caller inputs with declared types",
+    (tester) async {
+      final page = _emptyPageGraphFixture();
+      final child = _fixture();
+      final pageType = page.catalog.snapshot.types.first.definition.id;
+      final childType = child.catalog.snapshot.types.first.definition.id;
+      final relation = skir.RelationContract(
+        id: skir.RelationId(value: "test.page.elements"),
+        first: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.page.elements.page"),
+          slot: skir.EndpointSlot.first,
+          resource: skir.NamedTypeTemplate(
+            definition: pageType,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.one,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        second: skir.EndpointDefinition(
+          id: skir.EndpointId(value: "test.page.elements.child"),
+          slot: skir.EndpointSlot.second,
+          resource: skir.NamedTypeTemplate(
+            definition: childType,
+            arguments: const [],
+          ),
+          cardinality: skir.EndpointCardinality.many,
+          onDelete: skir.RelationDeletePolicy.clear,
+        ),
+        families: const [],
+      );
+      final caller = skir.ExpressionBindingId(
+        value: "context:test.page.caller",
+      );
+      final callerType = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
+      final witness = canonicalReadModels.project(
+        skir.TypeUse.createNamed(definition: childType, arguments: const []),
+        skir.TypeUse.serializer.typeDescriptor,
+        const [],
+        () {},
+        (_) {},
+      );
+      final fallback = skir.ExpressionNode.createOrElse(
+        input: skir.ExpressionNode.createCall(
+          operation: skir.OperationId(value: "typewriter.record.field"),
+          arguments: [
+            skir.ExpressionNode.createCall(
+              operation: skir.OperationId(value: "typewriter.resource.value"),
+              arguments: [
+                skir.ExpressionNode.createRead(
+                  binding: caller,
+                  path: editorRootPath,
+                ),
+                skir.ExpressionNode.wrapLiteral(witness),
+              ],
+            ),
+            skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("title"),
+            ),
+          ],
+        ),
+        fallback: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("No caller supplied"),
+        ),
+      );
+      final embeddedMaterials = child.catalog.snapshot.presentationMaterials
+          .map((material) {
+            if (material.role != skir.PresentationRole.graphNode) {
+              return material;
+            }
+            final text = skir.TextContent.defaultInstance.toMutable()
+              ..value = fallback;
+            final dependencies = material.dependencies.toMutable()
+              ..contextInputs = [
+                skir.PresentationContextInput(
+                  bindingId: caller,
+                  valueType: callerType,
+                ),
+              ];
+            return (material.toMutable()
+                  ..layout = skir.PresentationNode(
+                    nodeId: "embedded.caller.fallback",
+                    properties: skir.PresentationProperties.defaultInstance,
+                    header: null,
+                    element: skir.PresentationElement.wrapText(text.toFrozen()),
+                  )
+                  ..dependencies = dependencies.toFrozen())
+                .toFrozen();
+          })
+          .toList();
+      final wire = page.catalog.snapshot.toMutable()
+        ..types = [
+          ...page.catalog.snapshot.types,
+          ...child.catalog.snapshot.types,
+          skir.PublishedType(
+            definition: skir.TypeDefinition(
+              id: frameworkResourceIdUse.definition,
+              parameters: const [],
+              representation: skir.RepresentationTemplate.createScalar(
+                kind: skir.ScalarKind.text,
+              ),
+              parents: const [],
+            ),
+            status: skir.DeclarationStatus.ready,
+            display: null,
+            effectiveFields: const [],
+            ancestorTemplates: const [],
+          ),
+        ]
+        ..presentations = [
+          ...page.catalog.snapshot.presentations,
+          ...child.catalog.snapshot.presentations,
+        ]
+        ..presentationMaterials = [
+          ...page.catalog.snapshot.presentationMaterials,
+          ...embeddedMaterials,
+        ]
+        ..configuration = child.catalog.snapshot.configuration
+        ..relations = [relation];
+      final document = AuthoringEdit(
+        generation: page.catalog.snapshot.generation,
+        catalog: CheckedEditorCatalog(wire.toFrozen()),
+        resources: [
+          ...page.draft.toDocument().entries.values,
+          ...child.draft.toDocument().entries.values,
+        ],
+        links: [
+          skir.LinkProjection(
+            contract: relation.id,
+            first: page.resource,
+            second: child.resource,
+            firstLocation: editorRootPath.field("elements"),
+            secondLocation: null,
+          ),
+        ],
+      ).toDocument();
+      final unbound = document.catalog.evaluateExpression(
+        fallback,
+        bindings: const {},
+        budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
+        queries: PortableExpressionQueries(
+          catalog: document.catalog,
+          authored: document,
+        ),
+      );
+      expect(
+        unbound,
+        isA<PortableExpressionFailed>().having(
+          (failure) => failure.code,
+          "failure code",
+          "unknown_expression_binding",
+        ),
+      );
+      await tester.pumpTestApp(
+        child: Scaffold(
+          body: AuthoredResourceEditor(
+            resource: page.resource,
+            document: document,
+            role: skir.PresentationRole.editor,
+            budget: skir.EvaluationBudget(
+              maxSteps: 1000,
+              maxCollectionItems: 100,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(Graph), findsOneWidget);
+      expect(find.text("No caller supplied"), findsOneWidget);
+      final embedded = tester.widget<PortablePresentationNodeRenderer>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PortablePresentationNodeRenderer &&
+              widget.node.nodeId == "embedded.caller.fallback",
+        ),
+      );
+      expect(
+        embedded.scope.bindings[caller]?.schema,
+        CompletePortablePresentationBinding(callerType),
+      );
+      expect(embedded.scope.bindings[caller]?.value, skir.DataValue.unfilled);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets("numeric clearing preserves Unfilled and repair", (tester) async {
     final fixture = _numericFixture(
       generation: "catalog:1",
@@ -763,6 +948,8 @@ skir.PresentationNode _bookSections({required bool showTitleEditor}) {
     element: skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 12,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.stretch,
@@ -948,6 +1135,8 @@ _emptyPageGraphFixture() {
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.editor,
@@ -984,6 +1173,8 @@ _emptyPageGraphFixture() {
                   ),
                 ],
                 layout: skir.AxisChildrenLayout(
+                  clipOverflow: false,
+
                   spacing: 0,
                   mainAxisAlignment: skir.MainAxisAlignment.start,
                   crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -1116,6 +1307,8 @@ _numericFixture({
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.inspector,
@@ -1371,6 +1564,8 @@ _fixture({
       skir.ChildrenElement.createColumn(
         children: [skir.AxisChild.wrapFixed(graphLayout)],
         layout: skir.AxisChildrenLayout(
+          clipOverflow: false,
+
           spacing: 0,
           mainAxisAlignment: skir.MainAxisAlignment.start,
           crossAxisAlignment: skir.CrossAxisAlignment.start,
@@ -1448,6 +1643,8 @@ _fixture({
       ],
       presentationMaterials: [
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.editor,
@@ -1459,6 +1656,8 @@ _fixture({
           ),
         ),
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.inspector,
@@ -1483,6 +1682,8 @@ _fixture({
           ),
         ),
         skir.PresentationMaterial(
+          resultAppearance: null,
+
           provider: presentationId,
           target: target,
           role: skir.PresentationRole.graphNode,

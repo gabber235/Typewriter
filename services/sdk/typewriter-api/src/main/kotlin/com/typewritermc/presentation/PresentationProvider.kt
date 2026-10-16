@@ -14,6 +14,7 @@ interface PresentationProvider {
 data class PresentationBuildResult(
     val layout: PresentationNode,
     val dependencies: PresentationDependencies,
+    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance? = null,
 )
 
 interface PresentationRuntime {

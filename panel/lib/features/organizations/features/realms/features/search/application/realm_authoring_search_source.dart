@@ -2,21 +2,46 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "realm_authoring_search_source.freezed.dart";
+
 const authoringResourceSearchResultType = SearchResultType(
   id: "authoring.resource",
   rowRendererId: "authored.presentation.subject",
   label: "Resource",
 );
 
-final class AuthoringSearchResultPayload {
-  const AuthoringSearchResultPayload({
-    required this.hit,
-    required this.catalog,
-  });
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class AuthoringSearchResultPayload
+    with _$AuthoringSearchResultPayload {
+  factory AuthoringSearchResultPayload({
+    required skir.AuthoringSearchHit hit,
+    required AuthoringDocument document,
+    required ResourceIssues issues,
+    Map<skir.ExpressionBindingId, PortableExpressionBinding>
+        presentationContext =
+        const {},
+  }) => AuthoringSearchResultPayload._value(
+    hit: hit,
+    document: document,
+    issues: issues,
+    presentationContext: Map.unmodifiable(presentationContext),
+  );
 
-  final skir.AuthoringSearchHit hit;
-  final CheckedEditorCatalog catalog;
+  const AuthoringSearchResultPayload._();
 
+  const factory AuthoringSearchResultPayload._value({
+    required skir.AuthoringSearchHit hit,
+    required AuthoringDocument document,
+    required ResourceIssues issues,
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding>
+    presentationContext,
+  }) = _AuthoringSearchResultPayload;
+
+  CheckedEditorCatalog get catalog => document.catalog;
   skir.ResourceId get id => hit.resource;
   skir.ResourceDefinitionId get definition => hit.definition;
   skir.PresentationSubject get subject => hit.subject;
@@ -39,7 +64,10 @@ final class RealmAuthoringSearchSource implements SearchSource {
     this.target,
     this.contexts = const [],
     this.definitionFilter,
-  });
+    Map<skir.ExpressionBindingId, PortableExpressionBinding>
+        presentationContext =
+        const {},
+  }) : presentationContext = Map.unmodifiable(presentationContext);
 
   final Ref ref;
   final skir.RecordId organizationId;
@@ -48,6 +76,8 @@ final class RealmAuthoringSearchSource implements SearchSource {
   final skir.NamedTypeUse? target;
   final List<skir.ResourceId> contexts;
   final Set<skir.ResourceDefinitionId>? definitionFilter;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
+  presentationContext;
 
   final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
     sync: true,
@@ -147,9 +177,11 @@ final class RealmAuthoringSearchSource implements SearchSource {
           _publishError(const ["The Realm editor catalog changed"]);
           return;
         }
+        final document = working!;
+        final issues = ResourceIssues.evaluate(document: document);
         final payloads = [
           for (final hit in value.hits)
-            if (working?.entry(hit.resource) != null)
+            if (document.entry(hit.resource) != null)
               AuthoringSearchResultPayload(
                 hit: skir.AuthoringSearchHit(
                   resource: hit.resource,
@@ -157,12 +189,14 @@ final class RealmAuthoringSearchSource implements SearchSource {
                   subject: skir.PresentationSubject(
                     resource: hit.resource,
                     definition: hit.definition,
-                    content: working!.resource(hit.resource)!,
+                    content: document.resource(hit.resource)!,
                     descriptor: skir.DataValue.unfilled,
                   ),
                   context: hit.context,
                 ),
-                catalog: working.catalog,
+                document: document,
+                issues: issues,
+                presentationContext: presentationContext,
               ),
         ];
         _snapshots.add(

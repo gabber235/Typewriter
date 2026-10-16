@@ -2817,6 +2817,7 @@ sealed interface PresentationMaterial_OrMutable {
     val layout: skirout.editor.v1.presentation.PresentationNode_OrMutable;
     val dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable;
     val subject: skirout.editor.v1.type_catalog.TypeTemplate;
+    val resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?;
 
     fun toFrozen(): skirout.editor.v1.catalog.PresentationMaterial;
 }
@@ -2830,6 +2831,7 @@ class PresentationMaterial private constructor(
     override val layout: skirout.editor.v1.presentation.PresentationNode,
     override val dependencies: skirout.editor.v1.presentation.PresentationDependencies,
     override val subject: skirout.editor.v1.type_catalog.TypeTemplate,
+    override val resultAppearance: skirout.editor.v1.presentation.ResultAppearance?,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
         null,
 ): skirout.editor.v1.catalog.PresentationMaterial_OrMutable {
@@ -2842,6 +2844,7 @@ class PresentationMaterial private constructor(
         layout: skirout.editor.v1.presentation.PresentationNode_OrMutable,
         dependencies: skirout.editor.v1.presentation.PresentationDependencies_OrMutable,
         subject: skirout.editor.v1.type_catalog.TypeTemplate,
+        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable?,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
             null,
     ): this(
@@ -2851,6 +2854,7 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
+        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         _unrecognizedFields,
     ) {}
 
@@ -2865,6 +2869,7 @@ class PresentationMaterial private constructor(
         layout = this.layout,
         dependencies = this.dependencies,
         subject = this.subject,
+        resultAppearance = this.resultAppearance,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -2883,6 +2888,8 @@ class PresentationMaterial private constructor(
             this.dependencies,
         subject: skirout.editor.v1.type_catalog.TypeTemplate =
             this.subject,
+        resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
+            this.resultAppearance,
     ) = skirout.editor.v1.catalog.PresentationMaterial(
         provider.toFrozen(),
         target,
@@ -2890,6 +2897,7 @@ class PresentationMaterial private constructor(
         layout.toFrozen(),
         dependencies.toFrozen(),
         subject,
+        if (resultAppearance != null) resultAppearance.toFrozen() else null,
         this._unrecognizedFields,
     );
 
@@ -2897,11 +2905,11 @@ class PresentationMaterial private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject);
+        return this === other || (other is skirout.editor.v1.catalog.PresentationMaterial && this.provider == other.provider && this.target == other.target && this.role == other.role && this.layout == other.layout && this.dependencies == other.dependencies && this.subject == other.subject && this.resultAppearance == other.resultAppearance);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.provider, this.target, this.role, this.layout, this.dependencies, this.subject, this.resultAppearance).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -2927,6 +2935,8 @@ class PresentationMaterial private constructor(
             skirout.editor.v1.presentation.PresentationDependencies.partial(),
         override var subject: skirout.editor.v1.type_catalog.TypeTemplate =
             skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+        override var resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
+            null,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PresentationMaterial>? =
             null,
     ): skirout.editor.v1.catalog.PresentationMaterial_OrMutable {
@@ -2938,6 +2948,7 @@ class PresentationMaterial private constructor(
             layout = this.layout,
             dependencies = this.dependencies,
             subject = this.subject,
+            resultAppearance = this.resultAppearance,
             _unrecognizedFields = this._unrecognizedFields,
         );
 
@@ -2999,6 +3010,7 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationNode.partial(),
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+                null,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -3024,6 +3036,8 @@ class PresentationMaterial private constructor(
                 skirout.editor.v1.presentation.PresentationDependencies.partial(),
             subject: skirout.editor.v1.type_catalog.TypeTemplate =
                 skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
+            resultAppearance: skirout.editor.v1.presentation.ResultAppearance_OrMutable? =
+                null,
         ) = skirout.editor.v1.catalog.PresentationMaterial(
             provider = provider,
             target = target,
@@ -3031,6 +3045,7 @@ class PresentationMaterial private constructor(
             layout = layout,
             dependencies = dependencies,
             subject = subject,
+            resultAppearance = resultAppearance,
             _unrecognizedFields = null,
         );
 
@@ -8104,6 +8119,17 @@ private object _SerializerRegistry {
             "",
             { it.subject },
             { mut, v -> mut.subject = v },
+        );
+        PresentationMaterialSerializerImpl.addField(
+            "result_appearance",
+            "resultAppearance",
+            6,
+            build.skir.Serializers.optional(
+                skirout.editor.v1.presentation.ResultAppearance.serializer,
+            ),
+            "",
+            { it.resultAppearance },
+            { mut, v -> mut.resultAppearance = v },
         );
         PresentationMaterialSerializerImpl.finalizeStruct();
 

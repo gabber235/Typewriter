@@ -7,8 +7,9 @@ part "portable_named_control.freezed.dart";
 typedef PortableBindingSetter =
     FutureOr<PortablePresentationWriteResult> Function(
       skir.BindingRef reference,
-      skir.DataValue value,
-    );
+      skir.DataValue value, {
+      Iterable<PortableExpressionRead> reads,
+    });
 
 typedef PortableNamedPayloadBuilder = Widget Function(
   BuildContext context,
@@ -43,10 +44,12 @@ abstract class PortableNamedPayload with _$PortableNamedPayload {
       );
 
   FutureOr<PortablePresentationWriteResult> replace(
-    skir.DataValue replacement,
-  ) => setBinding(
+    skir.DataValue replacement, {
+    Iterable<PortableExpressionRead> reads = const [],
+  }) => setBinding(
     reference,
     skir.DataValue.createNamed(actualType: actualType, payload: replacement),
+    reads: reads,
   );
 }
 

@@ -17,29 +17,66 @@ internal class RuntimeLayout(
     private val axis: PresentationAxisNodeList?,
     private val checked: CheckedPresentationTemplate,
     private val base: BindingRef,
+    private val result: ResultPresentationDraft? = null,
 ) : AxisLayout,
+    PresentationQueries by state.queries,
     PresentationContent by RuntimePresentationContent(state, target),
     PresentationData by RuntimePresentationData(state, target, checked),
     PresentationInteractions by RuntimePresentationInteractions(state, target) {
     override val role get() = state.role
-    override val subject =
-        PresentationSubjectExpressions(
-            Expr(
-                ExpressionNode.Read(
-                    com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
-                    com.typewritermc.authoring.ValuePath(),
+    override val subject: PresentationSubjectExpressions
+        get() {
+            state.type(com.typewritermc.types.ResourceIdDefinition.use)
+            return PresentationSubjectExpressions(
+                Expr(
+                    ExpressionNode.Read(
+                        com.typewritermc.expression.ExpressionBindingId("presentation.subject.identifier"),
+                        com.typewritermc.authoring.ValuePath(),
+                    ),
                 ),
-            ),
-        )
-    override val context =
-        PresentationContextExpressions(
-            Expr(
-                ExpressionNode.Read(
-                    com.typewritermc.expression.ExpressionBindingId("presentation.context.selection_count"),
-                    com.typewritermc.authoring.ValuePath(),
+            )
+        }
+    override val context = RuntimePresentationContext(state)
+
+    override fun searchResult(body: SearchResultLayout.() -> Unit) {
+        val owner = requireNotNull(result) { "A result appearance requires a result presentation boundary." }
+        check(
+            state.currentTarget === owner.target && target === owner.target,
+        ) { "A result appearance cannot capture a nested layout scope." }
+        val nodes = mutableListOf<PresentationNode>()
+        val builder = RuntimeSearchResultLayout(state, state.scope(nodes))
+        state.withTarget(nodes) { builder.body() }
+        owner.declare(builder.build())
+        target.addAll(nodes)
+    }
+
+    override fun clippedRow(
+        spacing: Double,
+        body: Layout.() -> Unit,
+    ) {
+        require(spacing.isFinite() && spacing >= 0) { "Row spacing must be finite and nonnegative." }
+        val children = mutableListOf<PresentationNode>()
+        state.withTarget(children) { state.scope(children).body() }
+        target +=
+            state.node(
+                PresentationElement.ChildrenWrapper(
+                    ChildrenElement.createRow(
+                        children =
+                            children.map {
+                                skirout.editor.v1.presentation.AxisChild
+                                    .FixedWrapper(it)
+                            },
+                        layout =
+                            skirout.editor.v1.presentation.AxisChildrenLayout(
+                                spacing = spacing,
+                                mainAxisAlignment = WireMainAxisAlignment.START,
+                                crossAxisAlignment = WireCrossAxisAlignment.CENTER,
+                                clipOverflow = true,
+                            ),
+                    ),
                 ),
-            ),
-        )
+            )
+    }
 
     override fun row(
         spacing: Double,

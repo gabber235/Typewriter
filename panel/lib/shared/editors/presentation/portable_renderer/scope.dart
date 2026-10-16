@@ -24,6 +24,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     watchSearch,
     ValueChanged<String>? reportStatus,
     CheckedEditorCatalog? catalog,
+    PortableExpressionQueries? queries,
+    ResourceDiagnosticReader resourceDiagnostics = noResourceDiagnostics,
     skir.ResourceId? resource,
     String? searchHistoryNamespace,
     ValueChanged<skir.ResourceId>? openResource,
@@ -47,6 +49,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     watchSearch: watchSearch,
     reportStatus: reportStatus,
     catalog: catalog,
+    queries: queries,
+    resourceDiagnostics: resourceDiagnostics,
     resource: resource,
     searchHistoryNamespace: searchHistoryNamespace,
     openResource: openResource,
@@ -75,6 +79,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     watchSearch,
     required ValueChanged<String>? reportStatus,
     required CheckedEditorCatalog? catalog,
+    required PortableExpressionQueries? queries,
+    required ResourceDiagnosticReader resourceDiagnostics,
     required skir.ResourceId? resource,
     required String? searchHistoryNamespace,
     required ValueChanged<skir.ResourceId>? openResource,
@@ -102,6 +108,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       authoredIndex: AuthoredPresentationIndex.build(
         layout,
         aliases,
+        additionalLayouts: [
+          if (layout == material?.layout &&
+              material?.resultAppearance?.leading != null)
+            material!.resultAppearance!.leading!,
+        ],
         sources: {
           for (final source
               in material?.dependencies.collections ??
@@ -139,15 +150,50 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   PortableInvocationContext get invocation => PortableInvocationContext(
     bindings: bindings,
     catalogGeneration:
-        (catalog ?? host?.document.catalog)?.snapshot.generation ??
+        (queries?.catalog ?? catalog ?? host?.document.catalog)
+            ?.snapshot
+            .generation ??
         (throw StateError("Portable invocation has no checked catalog")),
+    queries: queries,
+    resourceDiagnostics: resourceDiagnostics,
   );
 
-  PortableExpressionResult evaluate(skir.ExpressionNode node) =>
-      PortableExpressionEvaluator.located(
+  PortableExpressionResult evaluate(skir.ExpressionNode expression) {
+    final checked = queries?.catalog ?? catalog ?? host?.document.catalog;
+    if (checked == null) {
+      return PortableExpressionEvaluator.located(
         bindings,
         budget: budget,
-      ).evaluate(node);
+      ).evaluate(expression);
+    }
+    return checked.evaluateExpression(
+      expression,
+      bindings: bindings,
+      budget: budget,
+      queries: queries,
+    );
+  }
+
+  /// Resolves declared expression typing without inspecting its runtime value.
+  PortablePresentationBindingSchema? expressionSchema(
+    skir.ExpressionNode expression,
+  ) {
+    if (expression case skir.ExpressionNode_readWrapper(:final value)
+        when value.path.segments.isEmpty) {
+      final declared = bindings[value.binding]?.schema;
+      if (declared != null) return declared;
+    }
+    final checked = queries?.catalog ?? catalog ?? host?.document.catalog;
+    if (checked == null) return null;
+    return switch (checked.expressionPrograms.program(
+      expression,
+      lexicalTypes: bindings.lexicalSchemas,
+    )) {
+      CheckedExpressionReady(:final program) =>
+        CompletePortablePresentationBinding(program.result.value),
+      _ => null,
+    };
+  }
 
   skir.DataValue? read(skir.BindingRef reference) {
     return host?.read(reference, context: invocation);
@@ -256,8 +302,9 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
 
   Future<PortablePresentationWriteResult> apply(
     skir.BindingRef reference,
-    skir.DataValue value,
-  ) async {
+    skir.DataValue value, {
+    Iterable<PortableExpressionRead> reads = const [],
+  }) async {
     final target = host;
     if (!enabled || readOnly || target == null) {
       return PortablePresentationWriteResult.rejected([
@@ -271,8 +318,12 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     }
     final writer = projectedWriters[reference.bindingId];
     return writer == null
-        ? target.write(reference, value, context: invocation)
-        : await writer(reference, value);
+        ? target.write(
+            reference,
+            value,
+            context: invocation.withExpressionReads(reads),
+          )
+        : await writer(reference, value, reads: reads);
   }
 
   void writePayload(skir.BindingRef reference, skir.DataValue payload) {
@@ -373,13 +424,29 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     final configured = skir.ExpressionBindingId(value: "configured_value");
     FutureOr<PortablePresentationWriteResult> writeConfigured(
       skir.BindingRef reference,
-      skir.DataValue value,
-    ) {
+      skir.DataValue value, {
+      Iterable<PortableExpressionRead> reads = const [],
+    }) {
+      var replacement = value;
+      if (reference.path.segments.isEmpty &&
+          value is skir.DataValue_namedWrapper) {
+        if (value.value.actualType != payload.actualType) {
+          return PortablePresentationWriteResult.rejected([
+            PortablePresentationDiagnostic(
+              code: "invalid_type",
+              message: "The named payload cannot change its type",
+              severity: skir.DiagnosticSeverity.error,
+              targets: [diagnosticTarget(reference)],
+            ),
+          ]);
+        }
+        replacement = value.value.payload;
+      }
       final replaced = reference.path.segments.isEmpty
-          ? PortablePathValue(value)
-          : payload.value.replaceAt(reference.path, value);
+          ? PortablePathValue(replacement)
+          : payload.value.replaceAt(reference.path, replacement);
       if (replaced case PortablePathValue(:final value)) {
-        return payload.replace(value);
+        return payload.replace(value, reads: reads);
       }
       return PortablePresentationWriteResult.rejected([
         PortablePresentationDiagnostic(
@@ -395,8 +462,14 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       bindings: {
         ...bindings.withSubjectAt(payload.location),
         configured: PortableExpressionBinding(
-          value: payload.value,
+          value: skir.DataValue.createNamed(
+            actualType: payload.actualType,
+            payload: payload.value,
+          ),
           location: payload.location,
+          schema: CompletePortablePresentationBinding(
+            skir.TypeUse.wrapNamed(payload.actualType),
+          ),
         ),
       },
       projectedWriters: {...projectedWriters, configured: writeConfigured},
@@ -444,20 +517,25 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     final originalWriter = projectedWriters[reference.bindingId];
     final nextWriters = {...projectedWriters}..remove(id);
     if (originalWriter != null || source.location == null) {
-      nextWriters[id] = (nestedReference, replacement) {
-        final original = skir.BindingRef(
-          bindingId: reference.bindingId,
-          path: skir.ValuePath(
-            segments: [
-              ...reference.path.segments,
-              ...nestedReference.path.segments,
-            ],
-          ),
-        );
-        return originalWriter == null
-            ? apply(original, replacement)
-            : originalWriter(original, replacement);
-      };
+      nextWriters[id] =
+          (
+            nestedReference,
+            replacement, {
+            reads = const <PortableExpressionRead>[],
+          }) {
+            final original = skir.BindingRef(
+              bindingId: reference.bindingId,
+              path: skir.ValuePath(
+                segments: [
+                  ...reference.path.segments,
+                  ...nestedReference.path.segments,
+                ],
+              ),
+            );
+            return originalWriter == null
+                ? apply(original, replacement, reads: reads)
+                : originalWriter(original, replacement, reads: reads);
+          };
     }
     return copyWith(
       bindings: {
@@ -467,10 +545,18 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
         id: PortableExpressionBinding(
           value: value,
           location: location,
-          schema: switch (expectedType(reference)) {
-            final use? => CompletePortablePresentationBinding(use),
-            null => null,
-          },
+          schema: reference.path.segments.isEmpty
+              ? source.schema
+              : expressionSchema(
+                      skir.ExpressionNode.createRead(
+                        binding: reference.bindingId,
+                        path: reference.path,
+                      ),
+                    ) ??
+                    switch (expectedType(reference)) {
+                      final use? => CompletePortablePresentationBinding(use),
+                      null => null,
+                    },
         ),
       },
       projectedWriters: nextWriters,
@@ -488,22 +574,29 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
 
   PortablePresentationScope withValues(
     Map<skir.ExpressionBindingId, skir.DataValue> values, {
+    Map<skir.ExpressionBindingId, PortablePresentationBindingSchema> schemas =
+        const {},
     String? authoredOrigin,
-  }) => copyWith(
-    bindings: {
-      ...bindings,
-      for (final entry in values.entries)
-        entry.key: PortableExpressionBinding(value: entry.value),
-    },
-    authoredAliases: {
-      ...authoredAliases,
-      for (final entry in values.entries)
-        entry.key: AuthoredBindingAddress(
-          root: AuthoredBindingRoot.local(entry.key, origin: authoredOrigin),
-          path: const [],
-        ),
-    },
-  );
+  }) {
+    return copyWith(
+      bindings: Map.unmodifiable({
+        ...bindings,
+        for (final entry in values.entries)
+          entry.key: PortableExpressionBinding(
+            value: entry.value,
+            schema: schemas[entry.key] ?? bindings[entry.key]?.schema,
+          ),
+      }),
+      authoredAliases: Map.unmodifiable({
+        ...authoredAliases,
+        for (final entry in values.entries)
+          entry.key: AuthoredBindingAddress(
+            root: AuthoredBindingRoot.local(entry.key, origin: authoredOrigin),
+            path: const [],
+          ),
+      }),
+    );
+  }
 
   PortablePresentationScope withSlotBuilders(
     Map<String, PortableSlotBuilder> values,
@@ -514,7 +607,13 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   ) => copyWith(activePresentations: {...activePresentations, presentation});
 
   PortablePresentationScope withMaterial(skir.PresentationMaterial value) =>
-      copyWith(material: value).withAuthoredLayout(value.layout);
+      copyWith(
+        material: value,
+        bindings: bindings.withContextImports(
+          catalog: queries?.catalog ?? catalog!,
+          imports: value.dependencies.contextInputs,
+        ),
+      ).withAuthoredLayout(value.layout);
 }
 
 extension _PortableBackendSourceLifetime on Listenable {
@@ -557,8 +656,7 @@ extension _PresentationSubjectBindings
       if (entry.key != presentationSubjectIdentifierBindingId)
         entry.key: entry.value,
     if (location case final subject? when subject.path.segments.isEmpty)
-      presentationSubjectIdentifierBindingId: PortableExpressionBinding(
-        value: skir.DataValue.wrapStringValue(subject.resource.value),
-      ),
+      presentationSubjectIdentifierBindingId: subject.resource
+          .toExpressionBinding(),
   };
 }

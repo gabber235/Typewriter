@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.basic.entries.sequence.events
 
+import com.typewritermc.types.text
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
@@ -35,7 +36,7 @@ object PlayerMessageContainsTextEventEntryInspector : PlayerMessageContainsTextE
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed event")),
             color = literal(Color.parseRgb(requireNotNull(PlayerMessageContainsTextEventEntryDefinition.display?.color))),
-            identifier = subject.identifier,
+            identifier = subject.identifier.text,
         )
         name {
             label("name")

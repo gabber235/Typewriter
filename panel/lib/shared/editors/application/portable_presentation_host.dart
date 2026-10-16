@@ -4,6 +4,14 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "portable_presentation_host.freezed.dart";
 
+/// Resolves resource findings from the same observation used for display.
+typedef ResourceDiagnosticReader =
+    List<PortablePresentationDiagnostic> Function(skir.ResourceId);
+
+List<PortablePresentationDiagnostic> noResourceDiagnostics(
+  skir.ResourceId id,
+) => const [];
+
 /// One value exposed to a portable presentation.
 ///
 /// The binding carries its exact checked type and current value. An editable
@@ -48,6 +56,8 @@ abstract class PortablePresentationDocument
     required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
     required skir.EvaluationBudget budget,
+    PortableExpressionQueries? queries,
+    ResourceDiagnosticReader resourceDiagnostics = noResourceDiagnostics,
     List<PortablePresentationDiagnostic> diagnostics = const [],
     PortableDiagnosticFallback diagnosticFallback =
         PortableDiagnosticFallback.presentation,
@@ -56,6 +66,11 @@ abstract class PortablePresentationDocument
     Set<skir.PresentationId> activePresentations = const {},
     Map<String, skir.PresentationNode> slots = const {},
   }) {
+    if (queries != null && !identical(queries.catalog, catalog)) {
+      throw ArgumentError(
+        "Presentation and query catalogs must have the same owner",
+      );
+    }
     for (final value in bindings.values) {
       if (value.schema case PartialPortablePresentationBinding(:final selection)
           when selection is! skir.TypeSelection_pendingWrapper) {
@@ -71,6 +86,8 @@ abstract class PortablePresentationDocument
       root: root,
       bindings: Map.unmodifiable(bindings),
       budget: budget,
+      queries: queries,
+      resourceDiagnostics: resourceDiagnostics,
       diagnostics: List.unmodifiable(diagnostics),
       diagnosticFallback: diagnosticFallback,
       role: role,
@@ -88,6 +105,8 @@ abstract class PortablePresentationDocument
     required Map<skir.ExpressionBindingId, PortablePresentationBinding>
     bindings,
     required skir.EvaluationBudget budget,
+    required PortableExpressionQueries? queries,
+    required ResourceDiagnosticReader resourceDiagnostics,
     required List<PortablePresentationDiagnostic> diagnostics,
     required PortableDiagnosticFallback diagnosticFallback,
     required skir.PresentationRole? role,
@@ -97,14 +116,41 @@ abstract class PortablePresentationDocument
   }) = _PortablePresentationDocument;
 }
 
-final class PortableInvocationContext {
-  PortableInvocationContext({
+@Freezed(
+  copyWith: false,
+  map: FreezedMapOptions.none,
+  when: FreezedWhenOptions.none,
+)
+abstract class PortableInvocationContext with _$PortableInvocationContext {
+  factory PortableInvocationContext({
     required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
-    required this.catalogGeneration,
-  }) : bindings = Map.unmodifiable(bindings);
+    required skir.CatalogGeneration catalogGeneration,
+    PortableExpressionQueries? queries,
+    ResourceDiagnosticReader resourceDiagnostics = noResourceDiagnostics,
+    Iterable<PortableExpressionRead> expressionReads = const [],
+  }) {
+    if (queries != null &&
+        queries.catalog.snapshot.generation != catalogGeneration) {
+      throw StateError("Invocation and query catalog generations differ");
+    }
+    return PortableInvocationContext._value(
+      bindings: Map.unmodifiable(bindings),
+      catalogGeneration: catalogGeneration,
+      queries: queries,
+      resourceDiagnostics: resourceDiagnostics,
+      expressionReads: List.unmodifiable(expressionReads),
+    );
+  }
 
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings;
-  final skir.CatalogGeneration catalogGeneration;
+  const PortableInvocationContext._();
+
+  const factory PortableInvocationContext._value({
+    required Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings,
+    required skir.CatalogGeneration catalogGeneration,
+    required PortableExpressionQueries? queries,
+    required ResourceDiagnosticReader resourceDiagnostics,
+    required List<PortableExpressionRead> expressionReads,
+  }) = _PortableInvocationContext;
 
   skir.DataValue? read(
     skir.BindingRef reference,
@@ -140,12 +186,25 @@ final class PortableInvocationContext {
       current != null &&
       read(reference, generation) == current;
 
+  PortableInvocationContext withExpressionReads(
+    Iterable<PortableExpressionRead> reads,
+  ) => PortableInvocationContext(
+    bindings: bindings,
+    catalogGeneration: catalogGeneration,
+    queries: queries,
+    resourceDiagnostics: resourceDiagnostics,
+    expressionReads: [...expressionReads, ...reads],
+  );
+
   PortableInvocationContext withBinding(
     skir.ExpressionBindingId id,
     PortableExpressionBinding binding,
   ) => PortableInvocationContext(
     bindings: {...bindings, id: binding},
     catalogGeneration: catalogGeneration,
+    queries: queries,
+    resourceDiagnostics: resourceDiagnostics,
+    expressionReads: expressionReads,
   );
 
   PortableInvocationContext withBindings(
@@ -153,6 +212,9 @@ final class PortableInvocationContext {
   ) => PortableInvocationContext(
     bindings: {...bindings, ...values},
     catalogGeneration: catalogGeneration,
+    queries: queries,
+    resourceDiagnostics: resourceDiagnostics,
+    expressionReads: expressionReads,
   );
 }
 
@@ -263,6 +325,7 @@ abstract class PortableCollectionRowProjection
     required skir.DataValue key,
     required String canonicalKey,
     required bool selectable,
+    PortablePresentationBindingSchema? schema,
   }) = _PortableCollectionRowProjection;
 }
 
@@ -489,15 +552,20 @@ abstract interface class PortablePageHost {
 }
 
 extension PortablePresentationRootInvocation on PortablePresentationHost {
-  PortableInvocationContext get rootInvocation => PortableInvocationContext(
-    bindings: {
-      for (final entry in document.bindings.entries)
-        entry.key: PortableExpressionBinding(
-          value: entry.value.value,
-          location: entry.value.location,
-          schema: entry.value.schema,
-        ),
-    },
-    catalogGeneration: document.catalog.snapshot.generation,
-  );
+  PortableInvocationContext get rootInvocation {
+    final observation = document;
+    return PortableInvocationContext(
+      bindings: {
+        for (final entry in observation.bindings.entries)
+          entry.key: PortableExpressionBinding(
+            value: entry.value.value,
+            location: entry.value.location,
+            schema: entry.value.schema,
+          ),
+      },
+      catalogGeneration: observation.catalog.snapshot.generation,
+      queries: observation.queries,
+      resourceDiagnostics: observation.resourceDiagnostics,
+    );
+  }
 }

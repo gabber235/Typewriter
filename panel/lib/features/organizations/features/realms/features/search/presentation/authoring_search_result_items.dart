@@ -2,111 +2,150 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Keeps search selection, activation, and keyboard behavior in Flutter while
-/// the Realm supplied authoring role owns the visual body.
-class AuthoringSearchResultItem extends StatelessWidget {
-  const AuthoringSearchResultItem({
-    required this.payload,
-    required this.selected,
-    required this.focused,
-    required this.loading,
-    required this.onTap,
-    required this.shortcutActivator,
+Widget buildAuthoringResourceSearchResultItem(SearchResultRowContext row) {
+  final payload = row.result.payload;
+  if (payload is! AuthoringSearchResultPayload) {
+    return MissingSearchResultRendererRow(result: row.result);
+  }
+  return AuthoredResourceSearchResult(
+    key: ValueKey(row.result.id),
+    document: payload.document,
+    issues: payload.issues,
+    presentationContext: payload.presentationContext,
+    resource: payload.id,
+    row: row,
+    role: skir.PresentationRole.authoringResult,
+    fallbackLabel: payload.title,
+  );
+}
+
+final class AuthoredResourceSearchResult extends HookWidget {
+  const AuthoredResourceSearchResult({
+    required this.document,
+    required this.issues,
+    required this.resource,
+    required this.row,
+    required this.role,
+    required this.fallbackLabel,
+    this.presentationContext = const {},
+    this.footer,
+    this.kindLabelOverride,
     super.key,
   });
 
-  final AuthoringSearchResultPayload payload;
-  final bool selected;
-  final bool focused;
-  final bool loading;
-  final VoidCallback? onTap;
-  final ShortcutActivator? shortcutActivator;
+  final AuthoringDocument document;
+  final ResourceIssues issues;
+  final Map<skir.ExpressionBindingId, PortableExpressionBinding>
+  presentationContext;
+  final skir.ResourceId resource;
+  final SearchResultRowContext row;
+  final skir.PresentationRole role;
+  final String fallbackLabel;
+  final Widget? footer;
+  final String? kindLabelOverride;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    final presentation = payload.catalog.selectPresentation(
-      payload.configuration,
-      skir.PresentationRole.authoringResult,
-    );
-    return SearchResultCard(
-      color: color,
-      prefix: loading
-          ? SearchResultIconTile(
-              color: color,
-              onColor: color.on(context),
-              icon: const SizedBox.shrink(),
-              focused: focused,
-              loading: true,
-            )
-          : null,
-      selected: selected,
-      focused: focused,
-      onTap: onTap,
-      content: IgnorePointer(
-        child: _AuthoringResultPresentation(
-          payload: payload,
-          selection: presentation,
-        ),
-      ),
-      suffix: SearchResultSuffix(
-        label: payload.catalog.typeSelectionName(payload.configuration),
-        shortcutActivator: shortcutActivator,
-        selected: selected,
-      ),
-    );
-  }
-}
-
-final class _AuthoringResultPresentation extends HookWidget {
-  const _AuthoringResultPresentation({
-    required this.payload,
-    required this.selection,
-  });
-
-  final AuthoringSearchResultPayload payload;
-  final EditorPresentationSelection selection;
-
-  @override
-  Widget build(BuildContext context) {
-    final operations = useMemoized(PortableOperationResults.new);
-    useEffect(() => operations.dispose, [operations]);
-    return switch (selection) {
-      SelectedEditorPresentation(:final material) =>
-        PortablePresentationNodeRenderer(
-          node: material.layout,
-          scope: PortablePresentationScope(
-            operations: operations,
-            bindings: {
-              configuredValueBindingId: PortableExpressionBinding(
-                value: skir.DataValue.createRecord(
-                  fields: payload.subject.content.fields,
-                ),
-                location: skir.ValueLocation(
-                  resource: payload.id,
-                  path: skir.ValuePath(segments: const []),
-                ),
-              ),
-            },
-            budget: skir.EvaluationBudget(
-              maxSteps: 10000,
-              maxCollectionItems: 10000,
-            ),
-            readOnly: true,
-            enabled: false,
-            catalog: payload.catalog,
-            resource: payload.id,
-            role: material.role,
-            activePresentations: {material.provider},
-          ),
-        ),
-      MissingEditorPresentation() => Text(payload.title),
-      ConflictingEditorPresentation() => const Text(
-        "The search result presentation is ambiguous",
-      ),
-      UnavailableEditorPresentation() => const Text(
-        "The search result presentation is unavailable",
-      ),
+    final source = document;
+    final record = source.resource(resource);
+    final selection = record == null
+        ? null
+        : source.catalog.selectPresentation(record.configuration, role);
+    final selected = switch (selection) {
+      final SelectedEditorPresentation value => value,
+      _ => null,
     };
+    final budget = useMemoized(
+      () => skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 10000),
+    );
+    final capabilities = const PortablePresentationCapabilities();
+    final host = useMemoized(
+      () => selected == null
+          ? null
+          : AuthoredPresentationHost(
+              resource: resource,
+              source: source,
+              material: selected.material,
+              role: selected.resolvedRole,
+              budget: budget,
+              capabilities: capabilities,
+              readOnly: true,
+              issues: issues,
+            ),
+      [resource, source.generation, selected?.material, selected?.resolvedRole],
+    );
+    useEffect(() => host?.dispose, [host]);
+    host?.update(
+      source: source,
+      capabilities: capabilities,
+      available: true,
+      readOnly: true,
+      issues: issues,
+    );
+    final display = record == null
+        ? null
+        : source.catalog.selectionDisplay(record.configuration);
+    final icon = display?.icon.trim();
+    final leading = icon == null || icon.isEmpty
+        ? const Icon(Icons.link)
+        : Icones(icon);
+    final label = record == null
+        ? "resource"
+        : source.catalog.typeSelectionName(record.configuration);
+    if (host == null || selected == null) {
+      return SearchResultRow(
+        row: row,
+        density: SearchResultDensity.card,
+        accent: display?.searchResultAccent,
+        leading: leading,
+        kindLabel: kindLabelOverride ?? label,
+        footer: footer,
+        body: Text(switch (selection) {
+          ConflictingEditorPresentation() =>
+            "The search result presentation is ambiguous",
+          UnavailableEditorPresentation() =>
+            "The search result presentation is unavailable",
+          _ => fallbackLabel,
+        }),
+      );
+    }
+    final body = PortablePresentationRenderer(
+      contextBindings: presentationContext,
+      key: ObjectKey(host),
+      host: host,
+      contentBuilder: (node, scope) => PortableResultContent(
+        node: node,
+        appearance: selected.material.resultAppearance,
+        scope: scope.copyWith(resource: resource),
+        row: row,
+        fallbackStyle: SearchResultDensity.card,
+        fallbackKindLabel: label,
+        fallbackAccent: display?.searchResultAccent,
+        kindLabelOverride: kindLabelOverride,
+        fallbackLeading: leading,
+        footer: footer,
+      ),
+      errorBuilder: (message) => SearchResultRow(
+        row: row,
+        density: SearchResultDensity.card,
+        accent: display?.searchResultAccent,
+        leading: leading,
+        kindLabel: kindLabelOverride ?? label,
+        footer: footer,
+        body: Text(message),
+      ),
+    );
+    return body;
   }
 }
+
+Map<skir.ExpressionBindingId, PortableExpressionBinding> libraryOriginBindings(
+  skir.ResourceId? origin,
+) => origin == null
+    ? const {}
+    : {
+        skir.ExpressionBindingId(
+          value: "context:typewriter.library.active_resource",
+        ): origin
+            .toExpressionBinding(),
+      };

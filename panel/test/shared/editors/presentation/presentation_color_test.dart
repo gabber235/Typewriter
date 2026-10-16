@@ -109,6 +109,8 @@ void main() {
         skir.PresentationElement.wrapChildren(
           skir.ChildrenElement.createRow(
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 12,
               mainAxisAlignment: skir.MainAxisAlignment.center,
               crossAxisAlignment: skir.CrossAxisAlignment.center,
@@ -433,6 +435,8 @@ skir.PresentationNode _column(String id, skir.PresentationNode child) => _node(
   skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createColumn(
       layout: skir.AxisChildrenLayout(
+        clipOverflow: false,
+
         spacing: 0,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,

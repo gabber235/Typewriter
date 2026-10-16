@@ -95,7 +95,7 @@ internal class RuntimePresentationContent(
                     fontSlant = null,
                     fontWidth = null,
                     textAlignment = null,
-                    lineHeight = null,
+                    lineHeight = style.lineHeight?.let(::expression),
                     letterSpacing = null,
                     decoration = null,
                     semanticLabel = null,

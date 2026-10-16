@@ -1,9 +1,14 @@
 package com.typewritermc.library
 
 import com.typewritermc.authoring.PlacementSdkProvider
+import com.typewritermc.expression.color
+import com.typewritermc.expression.display
+import com.typewritermc.expression.icon
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.map
+import com.typewritermc.expression.name
 import com.typewritermc.expression.orElse
+import com.typewritermc.expression.parseColor
 import com.typewritermc.expression.target
 import com.typewritermc.expression.trim
 import com.typewritermc.presentation.ContainerStyle
@@ -20,12 +25,17 @@ import com.typewritermc.presentation.asPresentationColor
 import com.typewritermc.presentation.literalColor
 import com.typewritermc.presentation.monochromeOn
 import com.typewritermc.presentation.on
+import com.typewritermc.presentation.resource
 import com.typewritermc.presentation.resourceHeading
+import com.typewritermc.presentation.resourceSearchResult
+import com.typewritermc.presentation.searchChip
+import com.typewritermc.presentation.searchDescription
 import com.typewritermc.presentation.stateColor
 import com.typewritermc.presentation.themeColor
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.PresentationRole
+import com.typewritermc.types.text
 
 object TagInspectorPresentation : TagPresentation {
     override val roles = setOf(PresentationRole.INSPECTOR)
@@ -36,7 +46,7 @@ object TagInspectorPresentation : TagPresentation {
             resourceHeading(
                 title = expressions.name.orIfBlank("Unnamed tag"),
                 color = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
-                identifier = subject.identifier,
+                identifier = subject.identifier.text,
             )
             inspectorSection("name", "Name", input = name.input) {
                 name { textInput { onComplete { value.trim() } } }
@@ -69,7 +79,7 @@ object TagGraphNodePresentation : TagPresentation {
 }
 
 object TagReferencePresentation : TagPresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_SUMMARY, PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+    override val roles = setOf(PresentationRole.REFERENCE_SUMMARY)
 
     override fun TagPresentationScope.present() {
         librarySubjectLayout(expressions.name.orIfBlank("Unnamed tag")) {
@@ -120,7 +130,7 @@ object PageInspectorPresentation : PagePresentation {
             resourceHeading(
                 title = expressions.name.orIfBlank("Unnamed page"),
                 color = literal(Color(0xff607d8bu)),
-                identifier = subject.identifier,
+                identifier = subject.identifier.text,
             )
             inspectorSection("book", "Book", input = book.input) {
                 book { linkInput() }
@@ -145,15 +155,55 @@ object PageReferencePresentation : PagePresentation {
     override val roles =
         setOf(
             PresentationRole.REFERENCE_SUMMARY,
-            PresentationRole.REFERENCE_OPTION,
             PresentationRole.PAGE_TILE,
             PresentationRole.CATALOG_OPTION,
-            PresentationRole.AUTHORING_RESULT,
         )
 
     override fun PagePresentationScope.present() {
         librarySubjectLayout(expressions.name.orIfBlank("Unnamed page")) {
             icon(literal("material-symbols:description"))
         }
+    }
+}
+
+object TagSearchPresentation : TagPresentation {
+    override val roles = setOf(PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+
+    override fun TagPresentationScope.present() {
+        resourceSearchResult(
+            title = expressions.name.orIfBlank("Unnamed tag"),
+            accent = expressions.color.orElse(literal(Color(0xff9e9e9eu))),
+            kind = literal("tag"),
+            icon = { icon(literal("fa6-solid:tag")) },
+        )
+    }
+}
+
+object PageSearchPresentation : PagePresentation {
+    override val roles = setOf(PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+
+    override fun PagePresentationScope.present() {
+        val page = subject.resource<Page>()
+        val display = page.type.display
+        val origin = context.read(LibraryContext.activeResource)
+        val color = display.color.parseColor().orElse(literal(Color(0xff607d8bu)))
+        resourceSearchResult(
+            title = page.fields.name.orIfBlank("Unnamed page"),
+            accent = color,
+            kind = literal("page"),
+            icon = { icon(display.icon.orIfBlank("fa6-solid:file-lines")) },
+            details = {
+                clippedRow(spacing = 8.0) {
+                    searchDescription(display.name.orIfBlank("Page"))
+                    pageLocation(
+                        page = page,
+                        active = origin,
+                        includePage = literal(false),
+                        part = { searchChip(it, color.asPresentationColor()) },
+                        separator = { icon(literal("material-symbols:chevron-right-rounded")) },
+                    )
+                }
+            },
+        )
     }
 }

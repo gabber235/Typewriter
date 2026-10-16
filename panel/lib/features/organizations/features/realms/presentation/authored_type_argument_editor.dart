@@ -336,7 +336,7 @@ final class _AuthoredTypeSearchResultItem extends StatelessWidget {
   final skir.TypeDisplay? display;
   final bool selected;
   final bool focused;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final ShortcutActivator? shortcutActivator;
 
   @override

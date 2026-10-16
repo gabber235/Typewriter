@@ -131,6 +131,8 @@ void main() {
                 ),
             ],
             layout: skir.AxisChildrenLayout(
+              clipOverflow: false,
+
               spacing: 12,
               mainAxisAlignment: skir.MainAxisAlignment.start,
               crossAxisAlignment: skir.CrossAxisAlignment.stretch,

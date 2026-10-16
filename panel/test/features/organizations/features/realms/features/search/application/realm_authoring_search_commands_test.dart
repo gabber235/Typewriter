@@ -116,6 +116,17 @@ AuthoringSearchResultPayload _payload({
       ),
     ],
   );
+  final document = AuthoringDocument(
+    catalog: catalog,
+    entries: {
+      resource: skir.AuthoringResource(
+        id: resource,
+        definition: definition,
+        content: content,
+      ),
+    },
+    links: const [],
+  );
   return AuthoringSearchResultPayload(
     hit: skir.AuthoringSearchHit(
       resource: resource,
@@ -131,6 +142,7 @@ AuthoringSearchResultPayload _payload({
         payload: skir.DataValue.wrapStringValue("library"),
       ),
     ),
-    catalog: catalog,
+    document: document,
+    issues: ResourceIssues.evaluate(document: document),
   );
 }

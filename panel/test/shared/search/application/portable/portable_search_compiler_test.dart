@@ -1,9 +1,121 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:http/testing.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  test(
+    "HTTP context survives mapping into the typed row presentation",
+    () async {
+      final origin = skir.ExpressionBindingId(value: "response.origin");
+      final row = skir.ExpressionNode.createRead(
+        binding: _rowBinding,
+        path: editorRootPath,
+      );
+      final fixture = _fixture(
+        provider: skir.SearchProvider.createHttpJson(
+          uri: _literal("https://example.test/choices"),
+          parameters: const [],
+          resultPath: r"$.results[*]",
+          resultType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          result: skir.SearchResultMapping(
+            bindingId: _rowBinding,
+            key: row,
+            selectedValue: row,
+            label: row,
+            resultAppearance: null,
+            presentation: skir.PresentationNode.defaultInstance,
+          ),
+          contextBindings: [
+            skir.HttpJsonContextBinding(
+              bindingId: origin,
+              path: r"$.origin",
+              valueType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+            ),
+          ],
+          selectors: const [],
+          timeoutMilliseconds: 1000,
+        ),
+      );
+      final client = MockClient(
+        (_) async => Response(
+          '{"origin":"Marketplace","results":["Remote choice"]}',
+          200,
+        ),
+      );
+      addTearDown(client.close);
+      final binding = fixture.bind(http: client);
+      final result = await _firstResult(binding.source);
+      final payload = result.payload as PortableMappedSearchPayload;
+      final text = CompletePortablePresentationBinding(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+      );
+      expect(payload.sourceSchema, text);
+      expect(payload.contextBindings[origin]?.schema, text);
+      final operations = PortableOperationResults();
+      final scope = binding.resultScope(
+        result,
+        PortablePresentationScope(
+          bindings: const {},
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          operations: operations,
+          catalog: fixture.catalog,
+        ),
+      );
+      expect(scope.bindings[origin]?.value.authoredString, "Marketplace");
+      expect(
+        scope.bindings[_rowBinding]?.value.authoredString,
+        "Remote choice",
+      );
+      await Future<void>.delayed(Duration.zero);
+      operations.dispose();
+      binding.source.dispose();
+      binding.dispose();
+    },
+  );
+
+  test(
+    "mapped rows retain declared lexical schemas and captured query values",
+    () async {
+      final fixture = _fixture();
+      final binding = fixture.bind();
+      final result = await _firstResult(binding.source);
+      final payload = result.payload as PortableMappedSearchPayload;
+      final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
+      expect(payload.sourceSchema, CompletePortablePresentationBinding(text));
+      expect(
+        payload.contextBindings[_rowContextBinding],
+        same(fixture.invocation.bindings[_rowContextBinding]),
+      );
+      final operations = PortableOperationResults();
+      final scope = binding.resultScope(
+        result,
+        PortablePresentationScope(
+          bindings: const {},
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          operations: operations,
+          catalog: fixture.catalog,
+        ),
+      );
+      expect(
+        scope.bindings[_rowBinding]?.schema,
+        CompletePortablePresentationBinding(text),
+      );
+      expect(
+        scope.bindings[fixture.control.queryBindingId]?.schema,
+        CompletePortablePresentationBinding(text),
+      );
+      expect(
+        scope.bindings[_rowContextBinding],
+        same(fixture.invocation.bindings[_rowContextBinding]),
+      );
+      operations.dispose();
+      binding.source.dispose();
+      binding.dispose();
+    },
+  );
+
   test(
     "selection uses the exact row invocation captured by its environment",
     () async {
@@ -323,18 +435,19 @@ final class _SearchFixture {
   final SearchHistoryStorage storage;
   final String historyNamespace;
 
-  PortableSearchBinding bind() => const PortableSearchCompiler().bindControl(
-    control: control,
-    environment: PortableSearchEnvironment(
-      catalog: catalog,
-      budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
-      context: invocation,
-      http: Client(),
-      historyStorage: storage,
-      historyNamespace: historyNamespace,
-    ),
-    host: host,
-  );
+  PortableSearchBinding bind({Client? http}) =>
+      const PortableSearchCompiler().bindControl(
+        control: control,
+        environment: PortableSearchEnvironment(
+          catalog: catalog,
+          budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
+          context: invocation,
+          http: http ?? Client(),
+          historyStorage: storage,
+          historyNamespace: historyNamespace,
+        ),
+        host: host,
+      );
 }
 
 _SearchFixture _fixture({
@@ -355,6 +468,8 @@ _SearchFixture _fixture({
     path: skir.ValuePath(segments: const []),
   );
   final mapping = skir.SearchResultMapping(
+    resultAppearance: null,
+
     bindingId: _rowBinding,
     key: rowRead,
     selectedValue: selected == null
@@ -394,6 +509,9 @@ _SearchFixture _fixture({
     invocation: PortableInvocationContext(
       bindings: {
         _rowContextBinding: PortableExpressionBinding(
+          schema: CompletePortablePresentationBinding(
+            skir.TypeUse.wrapScalar(skir.ScalarKind.text),
+          ),
           value: skir.DataValue.wrapStringValue(rowValue),
         ),
       },
@@ -460,6 +578,8 @@ skir.SearchProvider _staticProvider(
     result:
         mapping ??
         skir.SearchResultMapping(
+          resultAppearance: null,
+
           bindingId: _rowBinding,
           key: rowRead,
           selectedValue: rowRead,

@@ -8,6 +8,7 @@ import { ExpressionNode } from "editor/v1/expression.skir";
 import {
   PresentationDependencies,
   PresentationNode,
+  ResultAppearance,
 } from "editor/v1/presentation.skir";
 import {
   AuthoringRecord,
@@ -169,6 +170,7 @@ struct PresentationMaterial(810900019) {
   layout: PresentationNode = 3;
   dependencies: PresentationDependencies = 4;
   subject: TypeTemplate = 5;
+  result_appearance: ResultAppearance? = 6;
 }
 
 struct RoleFallback(810900020) {

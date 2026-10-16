@@ -41,6 +41,8 @@ const val GENERATED_PROVIDER_INDEX_PATH: String = "META-INF/typewriter/generated
 
 interface GeneratedTypeProvider {
     val definition: TypeDefinition
+    val nativeClass: KClass<*>?
+        get() = null
     val display: TypeDisplay?
         get() = null
 }

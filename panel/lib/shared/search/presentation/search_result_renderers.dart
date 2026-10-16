@@ -15,7 +15,7 @@ abstract class SearchResultRowContext with _$SearchResultRowContext {
     required bool selected,
     required bool focused,
     required bool loading,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
     ShortcutActivator? shortcutActivator,
   }) = _SearchResultRowContext;
 }

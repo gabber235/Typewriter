@@ -165,6 +165,8 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
           }) => PortablePresentationScope(
             bindings: bindings,
             budget: document.budget,
+            queries: document.queries,
+            resourceDiagnostics: document.resourceDiagnostics,
             enabled: host.enabled,
             readOnly: host.readOnly,
             watchSearch: capabilities.watchSearch,

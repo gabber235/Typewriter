@@ -180,6 +180,8 @@ final _root = skir.PresentationNode(
         ),
       ],
       layout: skir.AxisChildrenLayout(
+        clipOverflow: false,
+
         spacing: 16,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,

@@ -1,5 +1,6 @@
 package com.typewritermc.extensions.basic.entries.sequence.actions
 
+import com.typewritermc.types.text
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
 import com.typewritermc.engine.pages.SequencePage
@@ -34,7 +35,7 @@ object SimpleMessageActionEntryInspector : SimpleMessageActionEntryPresentation 
         resourceHeading(
             title = expressions.name.orElse(literal("Unnamed action")),
             color = literal(Color.parseRgb(requireNotNull(SimpleMessageActionEntryDefinition.display?.color))),
-            identifier = subject.identifier,
+            identifier = subject.identifier.text,
         )
         name {
             label("name")

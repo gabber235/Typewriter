@@ -665,6 +665,7 @@ private fun exportFrameworkControlFixture(
                 origin(entry.providerClass.substringAfterLast('.')),
                 provider.definition,
                 provider.display,
+                provider.nativeClass,
             )
         }
     val presentations =

@@ -205,6 +205,19 @@ fun <T> portableExpression(node: ExpressionNode): Expr<T, MayBeMissing> = Expr(n
 
 fun literal(value: String): Expr<String, Handled> = Expr(ExpressionNode.Literal(DataValue.StringValue(value)))
 
+fun literal(value: ResourceId): Expr<ResourceId, Handled> =
+    Expr(ExpressionNode.Literal(DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(value.value))))
+
+fun <M : MissingPolicy> Expr<*, M>.isNull(): Expr<Boolean, M> =
+    Expr(ExpressionNode.Call(OperationId("typewriter.value.is_null"), listOf(node)))
+
+/** Exposes a checked nominal string representation without changing its text. */
+fun <M : MissingPolicy> textRepresentation(value: Expr<*, M>): Expr<String, M> =
+    Expr(ExpressionNode.Call(OperationId("typewriter.text.value"), listOf(value.node)))
+
+fun <M : MissingPolicy> Expr<String, M>.parseColor(): Expr<com.typewritermc.types.Color, MayBeMissing> =
+    Expr(ExpressionNode.Call(OperationId("typewriter.color.parse"), listOf(node)))
+
 fun literal(value: Boolean): Expr<Boolean, Handled> = Expr(ExpressionNode.Literal(DataValue.Boolean(value)))
 
 fun literal(value: Int): Expr<Int, Handled> = Expr(ExpressionNode.Literal(DataValue.Integer(value.toBigInteger())))
