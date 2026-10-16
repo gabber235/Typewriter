@@ -185,6 +185,36 @@ class PortableDiagnosticSource extends StatelessWidget {
   }
 }
 
+/// Owns diagnostic anchors for a passive copy rendered outside its editor.
+/// Observes existing operation results without retiring or disposing them.
+class PortableDiagnosticPreview extends HookWidget {
+  const PortableDiagnosticPreview({
+    required this.operations,
+    required this.child,
+    super.key,
+  });
+
+  final PortableOperationResults operations;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tree = useMemoized(PortableDiagnosticTree.new);
+    useEffect(() => tree.dispose, [tree]);
+    useListenable(tree);
+    useListenable(operations);
+    return PortableDiagnosticScope(
+      tree: tree,
+      placement: PortableDiagnosticPlacement.route(
+        diagnostics: const [],
+        outcomes: operations.value.outcomes.values,
+        presentation: tree.snapshot,
+      ),
+      child: child,
+    );
+  }
+}
+
 /// Owns presentation membership for either public renderer entry point.
 /// Operation results stay with the caller and are never recreated by scope copies.
 class _PortableDiagnosticBoundary extends HookWidget {

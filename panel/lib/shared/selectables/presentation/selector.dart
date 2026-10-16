@@ -60,6 +60,7 @@ class Selector extends HookConsumerWidget {
     required this.focusNode,
     this.onFocusChange,
     this.onDoubleTap,
+    this.shortcuts = const {},
     super.key,
   });
 
@@ -80,6 +81,10 @@ class Selector extends HookConsumerWidget {
 
   /// Optional callback for a double tap without changing selection semantics.
   final VoidCallback? onDoubleTap;
+
+  /// Item specific intents that take precedence over closed menu traversal.
+  /// Descendant controls and an open menu retain their closer shortcut scopes.
+  final Map<ShortcutActivator, Intent> shortcuts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -192,9 +197,31 @@ class Selector extends HookConsumerWidget {
             id: selectableId,
             child: FocusableActionDetector(
               focusNode: focusNode,
+              shortcuts: {
+                ...shortcuts,
+                const SingleActivator(LogicalKeyboardKey.contextMenu):
+                    const SelectorContextMenuIntent(),
+                const SingleActivator(LogicalKeyboardKey.f10, shift: true):
+                    const SelectorContextMenuIntent(),
+              },
               onShowHoverHighlight: (hover) => isHovered.value = hover,
               mouseCursor: SystemMouseCursors.click,
               actions: {
+                SelectorContextMenuIntent:
+                    CallbackAction<SelectorContextMenuIntent>(
+                      onInvoke: (_) {
+                        final anchor = anchorKey.currentContext
+                            ?.findRenderObject();
+                        if (anchor is RenderBox && anchor.attached) {
+                          activateContext(
+                            anchor.localToGlobal(
+                              anchor.size.center(Offset.zero),
+                            ),
+                          );
+                        }
+                        return null;
+                      },
+                    ),
                 ActivateIntent: CallbackAction(
                   onInvoke: (_) {
                     Actions.maybeInvoke(
@@ -280,4 +307,9 @@ class SelectedSelectorIntent extends Intent {
 
   /// Whether the activation originated from Flutter's activate intent.
   final bool throughActivateIntent;
+}
+
+/// Opens the focused selectable's menu through its existing context action path.
+class SelectorContextMenuIntent extends Intent {
+  const SelectorContextMenuIntent();
 }

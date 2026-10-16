@@ -115,6 +115,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
       SelectedEditorPresentation() => _renderSelected(
         host!,
         capabilities,
+        authoringScope: scope,
         searchHistoryNamespace: workScope.searchHistoryNamespace,
       ),
       MissingEditorPresentation() => _diagnostic(
@@ -148,6 +149,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
   Widget _renderSelected(
     AuthoredPresentationHost host,
     PortablePresentationCapabilities capabilities, {
+    required AuthoringScope? authoringScope,
     required String? searchHistoryNamespace,
   }) {
     final renderer = PortablePresentationRenderer(
@@ -183,7 +185,13 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
             host: host,
           ),
     );
-    return renderer;
+    if (authoringScope == null) return renderer;
+    return AuthoredPageInteractions(
+      authoringScope: authoringScope,
+      binding: edit,
+      prepareValue: prepareValue,
+      child: renderer,
+    );
   }
 }
 

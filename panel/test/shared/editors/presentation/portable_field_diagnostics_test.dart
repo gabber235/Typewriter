@@ -6,6 +6,74 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("preview diagnostics leave source anchors and outcomes intact", (
+    tester,
+  ) async {
+    final operations = PortableOperationResults();
+    final sourceTree = PortableDiagnosticTree();
+    addTearDown(operations.dispose);
+    addTearDown(sourceTree.dispose);
+    final sourceDiagnostic = _diagnostic([_title], message: "Resource finding");
+    final operationDiagnostic = _diagnostic([_title], message: "Rejected edit");
+    final key = PortableOperationKey.write(_title);
+    await operations.run(
+      key: key,
+      input: PortableDiagnosticObservation(
+        target: _title,
+        value: skir.DataValue.wrapStringValue("editor value"),
+      ),
+      operation: () =>
+          PortablePresentationWriteResult.rejected([operationDiagnostic]),
+    );
+    await tester.pumpTestApp(
+      child: PortableDiagnosticScope(
+        tree: sourceTree,
+        placement: const PortableDiagnosticPlacement(),
+        child: PortableDiagnosticPreview(
+          operations: operations,
+          child: PortableDiagnosticSource(
+            diagnostics: [sourceDiagnostic],
+            diagnosticFallback: PortableDiagnosticFallback.resource,
+            observations: [
+              PortableDiagnosticObservation(
+                target: _title,
+                value: skir.DataValue.wrapStringValue("preview value"),
+              ),
+            ],
+            child: PortableDiagnosticAnchor(
+              node: _control(_title),
+              builder: (context, summary, owner) => Column(
+                children: [
+                  for (final diagnostic in summary.direct)
+                    Text(diagnostic.message),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(sourceDiagnostic.message), findsOneWidget);
+    expect(find.text(operationDiagnostic.message), findsOneWidget);
+    expect(sourceTree.snapshot.nodes, isEmpty);
+    expect(operations.value.outcomes.keys, [key]);
+    final later = _diagnostic([_title], message: "Updated rejection");
+    await operations.run(
+      key: key,
+      operation: () => PortablePresentationWriteResult.rejected([later]),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(later.message), findsOneWidget);
+    expect(find.text(operationDiagnostic.message), findsNothing);
+    await tester.pumpTestApp(child: const SizedBox());
+    await tester.pumpAndSettle();
+    expect(sourceTree.snapshot.nodes, isEmpty);
+    expect(operations.value.outcomes.values.single.diagnostics, [later]);
+    operations.reportStatus("Still owned by the editor");
+    expect(operations.value.outcomes, hasLength(2));
+  });
+
   for (final entry in ["renderer", "node", "search"]) {
     for (final fallback in PortableDiagnosticFallback.values) {
       testWidgets("$entry preserves $fallback ownership for absent fields", (
@@ -837,10 +905,11 @@ final _count = PortableDiagnosticTarget.binding(
 );
 
 PortablePresentationDiagnostic _diagnostic(
-  List<PortableDiagnosticTarget> targets,
-) => PortablePresentationDiagnostic(
+  List<PortableDiagnosticTarget> targets, {
+  String message = "The value is invalid",
+}) => PortablePresentationDiagnostic(
   code: "invalid_value",
-  message: "The value is invalid",
+  message: message,
   severity: skir.DiagnosticSeverity.error,
   targets: targets,
 );

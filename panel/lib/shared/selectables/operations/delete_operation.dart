@@ -15,7 +15,11 @@ class DeleteSelectionCapability extends SelectionCapability {
 /// Successful callbacks are committed independently. Failed callbacks remain
 /// selected and are reported together after the batch completes.
 class DeleteOperation extends IntentShortcutOperation {
-  const DeleteOperation();
+  const DeleteOperation({this.canMutate});
+
+  /// Reads the invoking surface's current mutation access, including after
+  /// confirmation. Ordinary application operations use their capability access.
+  final bool Function()? canMutate;
 
   @override
   String get name => "Delete";
@@ -28,10 +32,12 @@ class DeleteOperation extends IntentShortcutOperation {
 
   @override
   bool canExecuteOn(List<Selectable> selection) =>
+      (canMutate?.call() ?? true) &&
       selection.allHaveCapability<DeleteSelectionCapability>();
 
   @override
   FutureOr<void> executeOn(WidgetRef ref) async {
+    if (!(canMutate?.call() ?? true)) return;
     final selection = ref.read(selectedProvider).requireValue;
 
     final context = ref.context;
@@ -47,7 +53,9 @@ class DeleteOperation extends IntentShortcutOperation {
       confirmColor: backgroundColor,
       onConfirmColor: foregroundColor,
     );
-    if (!confirmed) return;
+    if (!confirmed || !ref.context.mounted || !(canMutate?.call() ?? true)) {
+      return;
+    }
 
     final callbacks = <(Selectable, Future<void> Function())>[];
     for (final (s, op)

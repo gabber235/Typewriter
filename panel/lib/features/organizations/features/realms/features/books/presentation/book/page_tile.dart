@@ -81,7 +81,7 @@ class _PageTile extends HookConsumerWidget {
           issueState?.value?.unavailable == true,
     );
 
-    return LayoutBuilder(
+    final tile = LayoutBuilder(
       builder: (context, constraints) {
         return DragTarget<PageDrag>(
           onWillAcceptWithDetails: (details) => details.data.pageId != pageId,
@@ -208,5 +208,6 @@ class _PageTile extends HookConsumerWidget {
         );
       },
     );
+    return ResourcePageDropTarget(page: pageId, child: tile);
   }
 }

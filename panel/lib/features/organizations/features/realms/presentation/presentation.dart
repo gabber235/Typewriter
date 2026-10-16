@@ -1,5 +1,6 @@
 library;
 
+export "authored_page_graph_node.dart";
 export "authored_resource_editor.dart";
 export "authored_resource_inspection.dart";
 export "authored_type_argument_editor.dart";
@@ -12,4 +13,5 @@ export "realm_navigation_boundary.dart";
 export "realm_selector.dart";
 export "realm_suspension.dart";
 export "resource_issue_badge.dart";
+export "resource_page_drop_target.dart";
 export "route.dart";

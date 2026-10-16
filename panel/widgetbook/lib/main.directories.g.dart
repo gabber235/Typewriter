@@ -54,6 +54,8 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_inheritance_presentation_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/features/tags/presentation/tag_node.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_features_tags_presentation_tag_node_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_page_graph_node.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_page_graph_node_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_presentation_renderer.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_resource_editor.stories.dart'
@@ -593,6 +595,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                   _widgetbook.WidgetbookFolder(
                     name: 'presentation',
                     children: [
+                      _widgetbook.WidgetbookComponent(
+                        name: 'AuthoredPageGraphNode',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Owned entry nodes',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_authored_page_graph_node_stories
+                                    .authoredPageGraphNodeStory,
+                          ),
+                        ],
+                      ),
                       _widgetbook.WidgetbookComponent(
                         name: 'AuthoredResourceEditor',
                         useCases: [
