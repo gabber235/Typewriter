@@ -46,6 +46,7 @@ void main() {
 }
 
 skir.AuthoringState _state() => skir.AuthoringState(
+  confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
   generation: skir.CatalogGeneration(value: "catalog"),
   resources: [
     skir.AuthoringResource(

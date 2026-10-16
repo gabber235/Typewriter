@@ -66,6 +66,8 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
   }
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:widgetbook.search"),
       types: [
         for (final definition in definitions.values)

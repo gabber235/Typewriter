@@ -20,6 +20,7 @@ void main() {
     final generation = skir.CatalogGeneration(value: "catalog:7");
     final resource = skir.ResourceId(value: "book:1");
     final snapshot = skir.AuthoringState(
+      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
       generation: generation,
       resources: [
         skir.AuthoringResource(
@@ -46,6 +47,7 @@ void main() {
 
   test("a catalog from another generation cannot form an authored draft", () {
     final snapshot = skir.AuthoringState(
+      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
       generation: skir.CatalogGeneration(value: "catalog:7"),
       resources: const [],
       links: const [],
@@ -65,6 +67,8 @@ void main() {
 skir.EditorCatalogWireSnapshot _catalog({
   required skir.CatalogGeneration generation,
 }) => skir.EditorCatalogWireSnapshot(
+  resourceOperations: const [],
+  resourceOperationContributions: const [],
   generation: generation,
   types: const [],
   relations: const [],

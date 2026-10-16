@@ -595,6 +595,8 @@ skir.ExpressionNode _literal(String value) =>
 
 skir.EditorCatalogWireSnapshot _catalog(skir.CatalogGeneration generation) =>
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: const [],
       relations: const [],

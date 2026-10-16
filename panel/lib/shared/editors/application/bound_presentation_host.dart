@@ -198,6 +198,16 @@ final class BoundPresentationHost extends ChangeNotifier
     skir.EditorAction editorAction, {
     required PortableInvocationContext context,
   }) async {
+    if (editorAction is skir.EditorAction_navigateWrapper ||
+        editorAction is skir.EditorAction_authoringWrapper) {
+      final invoke = capabilities.resourceAction;
+      if (!enabled ||
+          invoke == null ||
+          editorAction is skir.EditorAction_authoringWrapper && readOnly) {
+        return _reject("This resource action is unavailable");
+      }
+      return invoke(editorAction, context);
+    }
     if (!enabled || readOnly) {
       return _reject("This presentation is read only");
     }

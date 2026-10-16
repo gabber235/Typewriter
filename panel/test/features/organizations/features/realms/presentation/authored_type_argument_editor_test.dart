@@ -347,6 +347,8 @@ _concreteResourceFixture() {
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceOperations: const [],
+        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:resources"),
         types: [
           published(page, abstract: true),
@@ -434,6 +436,8 @@ _fixture({
   return (
     catalog: CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceOperations: const [],
+        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:1"),
         types: [
           published(

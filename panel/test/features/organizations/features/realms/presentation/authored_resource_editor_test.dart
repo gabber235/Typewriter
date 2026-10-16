@@ -1075,6 +1075,8 @@ _emptyPageGraphFixture() {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(
@@ -1252,6 +1254,8 @@ _numericFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: catalogGeneration,
       types: [
         skir.PublishedType(
@@ -1578,6 +1582,8 @@ _fixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: [
         if (namedText != null)

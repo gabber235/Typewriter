@@ -5,9 +5,13 @@ final class TagAuthoringNavigationAdapter
   const TagAuthoringNavigationAdapter();
 
   @override
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) async {
-    await reveal(ref, resource);
-    if (!ref.mounted) return;
+  Future<void> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) async {
+    await reveal(ref, resource, isCurrent: isCurrent);
+    if (!ref.mounted || !(isCurrent?.call() ?? true)) return;
     ref.read(selectionProvider.notifier).select(resource);
   }
 

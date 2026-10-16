@@ -7,9 +7,16 @@ final class BookAuthoringNavigationAdapter
   const BookAuthoringNavigationAdapter();
 
   @override
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) => ref
+  Future<void> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) => ref
       .read(appRouterProvider)
-      .navigate(resource._bookRoute(bookId: resource.resourceId));
+      .navigate(
+        resource._bookRoute(bookId: resource.resourceId),
+        isCurrent: isCurrent,
+      );
 
   @override
   Future<void> reveal(
@@ -37,8 +44,11 @@ final class PageAuthoringNavigationAdapter
   const PageAuthoringNavigationAdapter();
 
   @override
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) =>
-      _navigate(ref, resource);
+  Future<void> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) => _navigate(ref, resource, isCurrent: isCurrent);
 
   Future<void> _navigate(
     Ref ref,
@@ -68,9 +78,13 @@ final class PageElementAuthoringNavigationAdapter
   const PageElementAuthoringNavigationAdapter();
 
   @override
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource) async {
-    await reveal(ref, resource);
-    if (!ref.mounted) return;
+  Future<void> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) async {
+    await reveal(ref, resource, isCurrent: isCurrent);
+    if (!ref.mounted || !(isCurrent?.call() ?? true)) return;
     ref.read(selectionProvider.notifier).selectAll([resource]);
   }
 

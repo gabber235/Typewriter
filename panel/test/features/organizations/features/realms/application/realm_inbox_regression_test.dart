@@ -733,6 +733,9 @@ Future<RealmInboxState> _inbox({
       ).overrideWithValue(
         AuthoringSessionState(
           snapshot: skir.AuthoringState(
+            confirmedObservation: skir.AuthoringObservationId(
+              value: "fixture:saved",
+            ),
             generation: document.catalog.snapshot.generation,
             resources: const [],
             links: const [],

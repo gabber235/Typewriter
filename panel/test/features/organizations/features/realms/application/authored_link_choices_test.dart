@@ -770,6 +770,8 @@ _fixture({
   );
   final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: generation,
     types: [
       if (abstractWrapper)
@@ -983,6 +985,7 @@ _fixture({
         ],
       );
   final authored = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
     resources: [
       skir.AuthoringResource(

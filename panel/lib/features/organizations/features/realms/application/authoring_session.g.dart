@@ -58,7 +58,7 @@ final class AuthoringSessionProvider
   }
 }
 
-String _$authoringSessionHash() => r'7336eb0abed3f34a4315bdd2fb3476fce89894db';
+String _$authoringSessionHash() => r'0526646e73e9951f1f2c0bf23abafd9ef2e3e386';
 
 final class AuthoringSessionFamily extends $Family
     with

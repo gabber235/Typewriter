@@ -7,6 +7,8 @@ final realmFixtureGeneration = skir.CatalogGeneration(value: "fixture");
 skir.EditorCatalogWireSnapshot receivedEditorCatalogWireSnapshot({
   skir.CatalogGeneration? generation,
 }) => skir.EditorCatalogWireSnapshot(
+  resourceOperations: const [],
+  resourceOperationContributions: const [],
   generation: generation ?? realmFixtureGeneration,
   types: const [],
   relations: const [],

@@ -37,15 +37,7 @@ class BookWidget extends HookConsumerWidget {
     return Selector(
       selectableId: selectableId,
       focusNode: focusNode,
-      onDoubleTap: () => ref
-          .read(appRouterProvider)
-          .navigate(
-            BookRoute(
-              organizationId: scope.organizationId.id,
-              realmId: scope.realmId.id,
-              bookId: id.id,
-            ),
-          ),
+      onDoubleTap: () => invokeResourcePrimary(ref, selectableId),
       builder: (isSelected, isFocused, isHovered) {
         final book = Surface(
           color: Theme.of(context).colorScheme.surface,

@@ -125,6 +125,21 @@ void _contract<S, E>(
     void stage(String value) =>
         owner.stage(id, change(owner.document, value)).requireAccepted();
 
+    test("failed independent operations release their empty group", () {
+      final independent = owner.createGroup(label: "Resource operation");
+      expect(owner.disposeEmptyGroup(independent), isTrue);
+      expect(owner.disposeEmptyGroup(independent), isFalse);
+      expect(() => owner.group(independent), throwsStateError);
+      expect(read(owner.document), read(boundary.current));
+    });
+
+    test("group cleanup cannot discard an admitted operation", () {
+      stage("Draft");
+      expect(owner.disposeEmptyGroup(id), isFalse);
+      expect(read(owner.document), "Draft");
+      expect(control.state.hasWork, isTrue);
+    });
+
     test("an acknowledged save remains active while refreshing and retains later edits", () async {
       final reply = boundary.reply = Completer();
       final observation = boundary.refreshReply = Completer();

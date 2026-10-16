@@ -109,11 +109,15 @@ class PortableLocationTarget extends HookWidget {
     required this.location,
     required this.child,
     this.onFocusChange,
+    this.focusWhenEmpty = false,
     super.key,
   });
   final ValueChanged<bool>? onFocusChange;
   final skir.ValueLocation? location;
   final Widget child;
+
+  /// Lets an inspection root receive focus when all controls are read only.
+  final bool focusWhenEmpty;
   @override
   Widget build(BuildContext context) {
     final scope = PortableLocationRevealScope.maybeOf(context);
@@ -123,7 +127,7 @@ class PortableLocationTarget extends HookWidget {
       () => FocusNode(
         debugLabel: "Authored location",
         skipTraversal: true,
-        canRequestFocus: false,
+        canRequestFocus: focusWhenEmpty,
       ),
     );
     useEffect(() => focus.dispose, [focus]);
@@ -141,13 +145,17 @@ class PortableLocationTarget extends HookWidget {
           ),
         );
         final target = focus.traversalDescendants.firstOrNull;
-        if (target != null) target.requestFocus();
+        if (target != null) {
+          target.requestFocus();
+        } else if (focusWhenEmpty) {
+          focus.requestFocus();
+        }
       }, scope?.presentation);
       return () => controller._targets.remove(identity);
-    }, [controller, location, scope?.presentation]);
+    }, [controller, location, scope?.presentation, focusWhenEmpty]);
     return Focus(
       focusNode: focus,
-      canRequestFocus: false,
+      canRequestFocus: focusWhenEmpty,
       onFocusChange: onFocusChange,
       child: child,
     );

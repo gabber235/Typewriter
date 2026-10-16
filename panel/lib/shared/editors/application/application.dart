@@ -24,4 +24,5 @@ export "portable_value_tree.dart";
 export "presentation_binding_ids.dart";
 export "presentation_expression_checking.dart";
 export "reference_resources.dart";
+export "resource_action_dispatcher.dart";
 export "trusted_local_editor_catalog.dart";

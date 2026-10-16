@@ -417,10 +417,7 @@ class InspectorOperations extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(inspectedSelectionProvider).value ?? [];
-    final operations = availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
-      selected,
-    );
+    final operations = selectionOperationsFor(ref, context, selected);
 
     if (operations.isEmpty) return const SizedBox.shrink();
 

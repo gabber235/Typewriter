@@ -22,6 +22,8 @@ EditorDocument recordEditorDocument(
   ];
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "fixture"),
       types: [
         skir.PublishedType(

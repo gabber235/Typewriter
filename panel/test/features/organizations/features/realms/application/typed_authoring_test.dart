@@ -18,6 +18,9 @@ void main() {
         ],
       );
       final snapshot = skir.AuthoringState(
+        confirmedObservation: skir.AuthoringObservationId(
+          value: "fixture:saved",
+        ),
         generation: skir.CatalogGeneration(value: "catalog:1"),
         resources: [
           skir.AuthoringResource(

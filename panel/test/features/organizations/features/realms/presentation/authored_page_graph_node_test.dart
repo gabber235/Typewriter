@@ -256,9 +256,11 @@ void main() {
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
-      expect(find.text(fixture.destination.value), findsOneWidget);
-      Focus.of(tester.element(find.text(fixture.destination.value)))
-          .requestFocus();
+      await tester.enterText(
+        find.byType(TextField).first,
+        fixture.destination.value,
+      );
+      Focus.of(tester.element(find.text("Submit"))).requestFocus();
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       await tester.pumpAndSettle();
@@ -305,7 +307,7 @@ void main() {
     },
   );
 
-  testWidgets("keyboard Link with uses the reference field chooser", (
+  testWidgets("keyboard Link with submits typed transient target input", (
     tester,
   ) async {
     final fixture = AuthoredGraphFixture();
@@ -320,11 +322,8 @@ void main() {
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
-    Focus.of(tester.element(find.text(fixture.target.value))).requestFocus();
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
-    Focus.of(tester.element(find.text("triggers"))).requestFocus();
+    await tester.enterText(find.byType(TextField).first, fixture.target.value);
+    Focus.of(tester.element(find.text("Submit"))).requestFocus();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
@@ -376,7 +375,9 @@ Future<void> _pump(
       ...authoringFixtureOverrides(
         scope: fixture.scope,
         transport: fixture.transport,
+        commands: fixture.commands,
       ),
+      realmEditingProvider.overrideWith((ref, scope) => fixture.workspace),
     ],
     child: SizedBox(
       width: 900,

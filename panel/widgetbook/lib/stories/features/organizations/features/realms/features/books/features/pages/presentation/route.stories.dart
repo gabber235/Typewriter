@@ -250,6 +250,8 @@ _PageFixture _pageFixture() {
     _inspector(cueType, "cue.inspector"),
   ];
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: generation,
     types: [
       _published(pageType, pageFields),
@@ -386,6 +388,7 @@ _PageFixture _pageFixture() {
   ];
   final draft = AuthoringEdit.fromState(
     skir.AuthoringState(
+      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
       generation: generation,
       resources: resources,
       links: links,

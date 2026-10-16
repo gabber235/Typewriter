@@ -1432,6 +1432,8 @@ _parentFixture({
       ? skir.TypeTemplate.createNullable(value: styleTemplate)
       : styleTemplate;
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: generation),
     types: [
       skir.PublishedType(
@@ -1644,6 +1646,7 @@ _parentFixture({
   );
   final resource = skir.ResourceId(value: "resource:parent");
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: catalogSnapshot.generation,
     resources: [
       skir.AuthoringResource(
@@ -1803,6 +1806,8 @@ _pageCreationFixture({bool ambiguous = false}) {
   final generation = skir.CatalogGeneration(value: "catalog:page creation");
   final pageResource = skir.ResourceDefinitionId(value: "typewriter.page");
   final snapshot = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: generation,
     types: [
       published(
@@ -1980,6 +1985,7 @@ _pageCreationFixture({bool ambiguous = false}) {
     ],
   );
   final authored = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
     resources: [
       skir.AuthoringResource(
@@ -2073,6 +2079,7 @@ _relationFixture({
     ],
   );
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: fixture.snapshot.generation,
     resources: [
       skir.AuthoringResource(
@@ -2124,6 +2131,8 @@ _relationFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: fixture.snapshot.generation,
       types: const [],
       relations: [
@@ -2240,6 +2249,8 @@ _collectionRepairFixture() {
     ancestorTemplates: const [],
   );
   final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:collection-repair"),
     types: [
       published(
@@ -2344,6 +2355,7 @@ _collectionRepairFixture() {
   );
   final resource = skir.ResourceId(value: "resource:collection-repair");
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: catalogSnapshot.generation,
     resources: [
       skir.AuthoringResource(
@@ -2442,6 +2454,7 @@ _fixture() {
   );
   final absent = skir.InputToken(value: "absent");
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: skir.CatalogGeneration(value: "catalog:1"),
     resources: [
       skir.AuthoringResource(

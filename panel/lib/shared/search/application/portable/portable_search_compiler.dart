@@ -1358,6 +1358,7 @@ final class _PortableRealmSearchSource extends _PortableLeafSearchSource {
       payload: payload.value,
       resultType: definition.resultType.portableTemplate,
       query: context.realmQuery,
+      operationContext: null,
     );
     emit(SearchSourceSnapshot.loading());
     late final StreamSubscription<skir.RealmPresentationSearchUpdate> owned;
@@ -1402,6 +1403,13 @@ final class _PortableRealmSearchSource extends _PortableLeafSearchSource {
                 providerPath,
                 value.diagnostics.firstOrNull?.message ??
                     "Realm search is unavailable",
+              ),
+            );
+          case skir.RealmPresentationSearchUpdate_staleObservationWrapper():
+            emit(
+              _searchError(
+                providerPath,
+                "Saved resources changed. Review the operation input",
               ),
             );
           case skir.RealmPresentationSearchUpdate_unknown():

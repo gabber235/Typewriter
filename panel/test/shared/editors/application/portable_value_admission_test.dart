@@ -243,6 +243,8 @@ void main() {
 CheckedEditorCatalog _catalog(List<skir.PublishedType> published) =>
     CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceOperations: const [],
+        resourceOperationContributions: const [],
         generation: skir.CatalogGeneration(value: "catalog:admission"),
         types: published,
         relations: const [],

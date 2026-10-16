@@ -68,6 +68,10 @@ import 'package:widgetbook_workspace/stories/features/organizations/features/rea
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_realm_selector_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_issue_badge.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_button.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories;
+import 'package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart'
+    as _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_drop_target_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/features/services/presentation/route.stories.dart'
     as _widgetbook_workspace_stories_features_organizations_features_services_presentation_route_stories;
 import 'package:widgetbook_workspace/stories/features/organizations/presentation/organization_icon.stories.dart'
@@ -779,6 +783,28 @@ final directories = <_widgetbook.WidgetbookNode>[
                             builder:
                                 _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_issue_badge_stories
                                     .resourceIssueBadgeStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceOperationButton',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Availability and labels',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_button_stories
+                                    .resourceOperationButtonStory,
+                          ),
+                        ],
+                      ),
+                      _widgetbook.WidgetbookComponent(
+                        name: 'ResourceOperationDropTarget',
+                        useCases: [
+                          _widgetbook.WidgetbookUseCase(
+                            name: 'Remote hover feedback',
+                            builder:
+                                _widgetbook_workspace_stories_features_organizations_features_realms_presentation_resource_operation_drop_target_stories
+                                    .resourceOperationDropTargetStory,
                           ),
                         ],
                       ),

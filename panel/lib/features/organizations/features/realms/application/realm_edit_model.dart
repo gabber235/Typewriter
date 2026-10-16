@@ -8,6 +8,16 @@ part "authoring_edit.dart";
 part "authoring_facts.dart";
 part "authoring_conflict_review.dart";
 
+/// An atomic pair of saved facts and the working overlay sent for preparation.
+@freezed
+abstract class OperationWorkspaceCapture with _$OperationWorkspaceCapture {
+  const factory OperationWorkspaceCapture({
+    required AuthoringDocument document,
+    required skir.OperationWorkingContext context,
+    required int revision,
+  }) = _OperationWorkspaceCapture;
+}
+
 /// Retains local intent, its preceding state witnesses, and initialization findings.
 @freezed
 abstract class RealmPreparedEdit with _$RealmPreparedEdit {
@@ -69,7 +79,9 @@ final class RealmEditModel
       }
       branch.requireValid();
       branch._initializationFindings.addAll(edit.findings);
-      final observation = branch.toDocument();
+      final observation = branch.toDocument().copyWith(
+        confirmedObservation: onto.confirmedObservation,
+      );
       final effect =
           !const DeepCollectionEquality().equals(
             onto.entries,

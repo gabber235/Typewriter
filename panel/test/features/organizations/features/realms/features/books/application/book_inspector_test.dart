@@ -6,7 +6,7 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test(
-    "Book selection opens and deletes through shared capabilities",
+    "Book selection keeps inspection separate from resource operation policy",
     () async {
       final book = Book(
         bookId: skir.ResourceId(value: "book:test"),
@@ -23,9 +23,7 @@ void main() {
         initial: document,
       );
       addTearDown(workspace.dispose);
-      var opened = false;
       final selection = AuthoringSelectableResource(
-        onOpen: () => opened = true,
         id: AuthoringResourceIdentifier(
           organizationId: skir.recordId("organization:test"),
           realmId: skir.recordId("realm:test"),
@@ -42,15 +40,8 @@ void main() {
 
       expect(inspection.body, isA<AuthoredResourceInspection>());
       expect(inspection.host, isNull);
-      final open = selection.capabilities.whereType<OpenSelectionCapability>();
-      final delete = selection.capabilities
-          .whereType<DeleteSelectionCapability>();
-      expect(open, hasLength(1));
-      expect(delete, hasLength(1));
-      await open.single.onOpen();
-      await delete.single.onDelete();
-      expect(opened, isTrue);
-      expect(workspace.document.entry(book.bookId), isNull);
+      expect(selection.capabilities, isEmpty);
+      expect(workspace.document.entry(book.bookId), isNotNull);
     },
   );
 }

@@ -291,7 +291,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
             fallback: true,
           );
           final enabled =
-              scope.canExecuteAction &&
+              scope.canExecuteActionFor(value.action) &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
           final tooltip = switch (enabledResult) {
@@ -355,7 +355,7 @@ final class _AuthoredPresentationHeader extends HookWidget {
             fallback: true,
           );
           final enabled =
-              scope.canExecuteAction &&
+              scope.canExecuteActionFor(value.action) &&
               enabledResult is _ResolvedValue<bool> &&
               enabledResult.value;
           final checkbox = Shortcuts(

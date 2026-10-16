@@ -49,6 +49,8 @@ final _colorField = _effectiveField(
 );
 final _recordCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(

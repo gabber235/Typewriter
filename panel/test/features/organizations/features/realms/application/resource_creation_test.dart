@@ -181,6 +181,8 @@ _CreationFixture _fixture() {
     value: "test.generic_resource",
   );
   final wire = skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: generation,
     types: [
       skir.PublishedType(
@@ -230,6 +232,7 @@ _CreationFixture _fixture() {
     ],
   );
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
     resources: const [],
     links: const [],

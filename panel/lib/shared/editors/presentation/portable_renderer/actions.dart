@@ -3,7 +3,7 @@ part of "../portable_presentation_renderer.dart";
 extension _PortableScopeActions on PortablePresentationScope {
   Future<void> executeAction(skir.EditorAction editorAction) async {
     final target = host;
-    if (!canExecuteAction || target == null) return;
+    if (!canExecuteActionFor(editorAction) || target == null) return;
     final context = invocation;
     final source = sourceAction(editorAction);
     await operations.run(
@@ -157,7 +157,7 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
       variant: button.appearance?.variant ?? skir.ButtonVariant.filled,
       states: states,
       style: style,
-      onPressed: childScope.canExecuteAction
+      onPressed: childScope.canExecuteActionFor(button.action)
           ? () => unawaited(childScope.executeAction(button.action))
           : null,
       child: content,
@@ -180,7 +180,7 @@ extension _PortableActionRendering on PortablePresentationNodeRenderer {
       size: resolved.iconSize,
       color: resolved.iconColor,
     );
-    final callback = childScope.canExecuteAction
+    final callback = childScope.canExecuteActionFor(button.action)
         ? () => unawaited(childScope.executeAction(button.action))
         : null;
     return switch (button.appearance?.variant) {
@@ -492,7 +492,7 @@ extension _ConfiguredMenuItemRendering on skir.MenuItem {
                   return _diagnostic(message);
                 }
                 final enabled =
-                    scope.canExecuteAction &&
+                    scope.canExecuteActionFor(callback) &&
                     (condition as _ResolvedValue<bool>).value;
                 return MenuItemButton(
                   statesController: states,

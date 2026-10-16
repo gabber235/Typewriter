@@ -238,6 +238,11 @@ abstract class PortablePresentationCapabilities
     watchSearch,
     Future<void> Function()? reload,
     ValueChanged<skir.ResourceId>? openResource,
+    Future<PortablePresentationWriteResult> Function(
+      skir.EditorAction action,
+      PortableInvocationContext context,
+    )?
+    resourceAction,
     Future<skir.PreparedValue> Function(skir.ValuePreparationRequest request)?
     prepareValue,
   }) = _PortablePresentationCapabilities;

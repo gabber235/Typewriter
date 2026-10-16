@@ -315,6 +315,8 @@ void main() {
       revision: 1,
     );
     final catalogSnapshot = skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:http"),
       types: [
         skir.PublishedType(
@@ -669,6 +671,8 @@ final class _TrackingClient extends MockClient {
 
 skir.EditorCatalogWireSnapshot _emptyCatalog(String generation) =>
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: generation),
       types: const [],
       relations: const [],

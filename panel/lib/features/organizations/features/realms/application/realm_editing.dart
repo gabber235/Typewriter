@@ -22,6 +22,41 @@ final class RealmEditing implements Listenable {
   AuthoringDocument get document => workspace.document;
   bool get hasPendingWork => workspace.hasPendingWork;
   bool get isPreparing => workspace.isPreparing;
+
+  /// Captures both sides without awaiting, so an autosave cannot split the pair.
+  OperationWorkspaceCapture captureOperationContext() {
+    final confirmed = workspace.confirmed;
+    final working = workspace.document;
+    final observation = confirmed.confirmedObservation;
+    if (observation == null || observation.value.isEmpty) {
+      throw StateError("The saved authoring observation is unavailable");
+    }
+    if (working.generation != confirmed.generation) {
+      throw StateError("The editor catalog changed");
+    }
+    return OperationWorkspaceCapture(
+      document: working,
+      revision: workspace.revision,
+      context: skir.OperationWorkingContext(
+        confirmedObservation: observation,
+        overlay: skir.OperationWorkingOverlay(
+          upserts: [
+            for (final entry in working.entries.entries)
+              if (confirmed.resource(entry.key) != entry.value.content)
+                skir.OperationResourceUpsert(
+                  resource: entry.key,
+                  content: entry.value.content,
+                ),
+          ],
+          removals: [
+            for (final id in confirmed.entries.keys)
+              if (!working.entries.containsKey(id)) id,
+          ],
+        ),
+      ),
+    );
+  }
+
   RealmEditingBinding attach(
     skir.ResourceId resource, {
     EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
@@ -141,6 +176,7 @@ final class RealmEditing implements Listenable {
   Future<void> save(EditGroupId id) => workspace.save(id);
   Future<void> retry(EditGroupId id) => workspace.retry(id);
   bool discard(EditGroupId id) => workspace.discard(id);
+  bool disposeEmptyGroup(EditGroupId id) => workspace.disposeEmptyGroup(id);
   bool canSave(EditGroupId id) => workspace.canSave(id);
   bool canRetry(EditGroupId id) => workspace.canRetry(id);
   bool canDiscard(EditGroupId id) => workspace.canDiscard(id);

@@ -117,6 +117,40 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       );
     }
 
+    void resourceAction(
+      skir.EditorAction? action,
+      Map<skir.ExpressionBindingId, skir.ExpressionType> env,
+    ) {
+      switch (action) {
+        case skir.EditorAction_navigateWrapper(:final value):
+          check(value.resource, text, env, missing: false);
+        case skir.EditorAction_authoringWrapper(:final value):
+          final selected =
+              env[skir.ExpressionBindingId(value: "context:selection")];
+          if (selected == null) {
+            errors.add("missing_resource_action_context");
+          } else {
+            check(value.targets, selected.value, env, missing: false);
+          }
+          final capability = snapshot.capabilities
+              .whereType<skir.CapabilityDefinition_authoringWrapper>()
+              .map((item) => item.value)
+              .where((item) => item.capabilityId == value.capability)
+              .firstOrNull;
+          if (capability == null) {
+            errors.add("missing_authoring_capability");
+          } else if (value.initialInput != null) {
+            if (capability.input == null) {
+              errors.add("unexpected_authoring_input");
+            } else {
+              check(value.initialInput, capability.input!.type, env);
+            }
+          }
+        default:
+          break;
+      }
+    }
+
     void number(
       skir.ExpressionNode? body,
       Map<skir.ExpressionBindingId, skir.ExpressionType> env,
@@ -500,6 +534,16 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         alias(id);
       }
       check(node.properties.enabledIf, boolean, env);
+      for (final item in node.header?.items ?? const <skir.HeaderItem>[]) {
+        switch (item) {
+          case skir.HeaderItem_buttonWrapper(:final value):
+            resourceAction(value.action, env);
+          case skir.HeaderItem_booleanToggleWrapper(:final value):
+            resourceAction(value.action, env);
+          default:
+            break;
+        }
+      }
       final control = node.boundControl;
       final candidate = control == null
           ? null
@@ -792,9 +836,11 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
             number(expression, env);
           }
         case skir.PresentationElement_buttonWrapper(:final value):
+          resourceAction(value.action, env);
           check(value.label, text, env);
           actionAppearance(value.appearance, env);
         case skir.PresentationElement_iconButtonWrapper(:final value):
+          resourceAction(value.action, env);
           check(value.semanticLabel, text, env);
           actionAppearance(value.appearance, env);
         case skir.PresentationElement_menuWrapper(:final value):
@@ -805,6 +851,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
             if (!item.separator && item.action == null) {
               errors.add("missing_menu_item_action");
             }
+            resourceAction(item.action, env);
             check(item.label, text, env);
             check(item.description, text, env);
             check(item.enabledIf, boolean, env);

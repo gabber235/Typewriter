@@ -105,10 +105,8 @@ void main() {
 
     expect(inspection.body, isA<AuthoredResourceInspection>());
     expect(inspection.host, isNull);
-    expect(selection.capabilities.single, isA<DeleteSelectionCapability>());
-    await (selection.capabilities.single as DeleteSelectionCapability)
-        .onDelete();
-    expect(workspace.document.entry(tag.tagId), isNull);
+    expect(selection.capabilities, isEmpty);
+    expect(workspace.document.entry(tag.tagId), isNotNull);
   });
 }
 

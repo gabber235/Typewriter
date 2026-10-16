@@ -21,8 +21,9 @@ class SelectionOperationShortcuts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedProvider).value;
-    final operations = availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
+    final operations = selectionOperationsFor(
+      ref,
+      context,
       selected,
     ).whereType<ShortcutableOperation>();
 

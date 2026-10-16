@@ -213,6 +213,7 @@ AuthoringSessionState _state() {
   return AuthoringSessionState(
     catalog: receivedCheckedEditorCatalog(generation: generation),
     snapshot: skir.AuthoringState(
+      confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
       generation: generation,
       resources: const [],
       links: const [],

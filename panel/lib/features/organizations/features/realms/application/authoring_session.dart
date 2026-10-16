@@ -258,6 +258,21 @@ class AuthoringSession extends _$AuthoringSession {
     );
   }
 
+  NatsResourceOperationTransport get _resourceOperations =>
+      NatsResourceOperationTransport(
+        ref: ref,
+        organizationId: _organizationId,
+        realmId: _realmId,
+      );
+
+  Future<skir.ResolveResourceOperationsResult> resolveResourceOperations(
+    skir.ResolveResourceOperationsRequest request,
+  ) => _resourceOperations.resolve(request);
+
+  Future<skir.AuthoringActionResult> prepareAuthoringAction(
+    skir.PrepareAuthoringActionRequest request,
+  ) => _resourceOperations.prepare(request);
+
   Future<skir.PreparedEditResult> prepareTypeArguments(
     skir.TypeArgumentChangePreview preview,
   ) => _repository.prepareTypeArgumentChange(preview);

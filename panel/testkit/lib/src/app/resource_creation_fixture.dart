@@ -260,6 +260,8 @@ final class ResourceCreationFixture {
   AuthoringDocument document({bool existing = false}) {
     final catalog = CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceOperations: const [],
+        resourceOperationContributions: const [],
         generation: generation,
         types: _types,
         relations: _relations,

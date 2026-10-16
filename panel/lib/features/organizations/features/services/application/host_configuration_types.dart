@@ -82,6 +82,8 @@ skir.PublishedType _draftPublished(
 );
 
 final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
+  resourceOperations: const [],
+  resourceOperationContributions: const [],
   generation: skir.CatalogGeneration(value: "panel.host.configuration"),
   types: [
     _draftPublished(

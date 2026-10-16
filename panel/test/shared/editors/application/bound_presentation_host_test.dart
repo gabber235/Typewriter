@@ -531,6 +531,8 @@ skir.PublishedType _publishedType(
 CheckedEditorCatalog _checkedCatalog(List<skir.PublishedType> published) =>
     CheckedEditorCatalog(
       skir.EditorCatalogWireSnapshot(
+        resourceOperations: const [],
+        resourceOperationContributions: const [],
         generation: _hostCatalogGeneration,
         types: published,
         relations: const [],

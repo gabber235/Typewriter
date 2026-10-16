@@ -5,7 +5,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 part "authoring_resource_navigation.g.dart";
 
 abstract interface class AuthoringResourceNavigationAdapter {
-  Future<void> open(Ref ref, AuthoringResourceIdentifier resource);
+  Future<void> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  });
 
   /// Navigates to the surface that can edit the resource.
   Future<void> reveal(
@@ -43,10 +47,14 @@ final class AuthoringResourceNavigationRegistry {
     return handler == null ? null : _adapters[handler];
   }
 
-  Future<bool> open(Ref ref, AuthoringResourceIdentifier resource) async {
+  Future<bool> open(
+    Ref ref,
+    AuthoringResourceIdentifier resource, {
+    bool Function()? isCurrent,
+  }) async {
     final adapter = _resolve(ref, resource);
-    if (adapter == null) return false;
-    await adapter.open(ref, resource);
+    if (adapter == null || !(isCurrent?.call() ?? true)) return false;
+    await adapter.open(ref, resource, isCurrent: isCurrent);
     return true;
   }
 
@@ -69,7 +77,7 @@ final class AuthoringResourceNavigationRegistry {
     ref.read(selectionProvider.notifier).selectAll([resource]);
     ref
         .read(realmLocationRevealProvider(scope))
-        .request(location, presentation: presentation);
+        .request(location, presentation: presentation, isCurrent: isCurrent);
     return true;
   }
 }
@@ -174,3 +182,81 @@ extension ResourceCreationAction on ResourceCreationSession {
     return resource;
   }
 }
+
+/// Bridges widget invocation lifetimes to the provider owned routing adapters.
+final class ResourceOperationNavigation {
+  const ResourceOperationNavigation(this.ref);
+  final Ref ref;
+
+  /// Returns to the nearest surviving owner when the displayed route disappears.
+  Future<void> recoverRemovedRoute(
+    AuthoringScope scope,
+    AuthoringDocument before,
+    AuthoringDocument after, {
+    required bool Function() isCurrent,
+  }) async {
+    final routed = ref.read(pageIdProvider) ?? ref.read(bookIdProvider);
+    if (routed == null || after.entry(routed) != null || !isCurrent()) return;
+    final registry = ref.read(authoringResourceNavigationRegistryProvider);
+    for (final owner in before.relations.ownerPath(routed).owners) {
+      if (after.entry(owner) == null) continue;
+      if (await registry.open(
+        ref,
+        AuthoringResourceIdentifier.inScope(scope, owner),
+        isCurrent: isCurrent,
+      )) {
+        return;
+      }
+      if (!isCurrent()) return;
+    }
+    await ref
+        .read(appRouterProvider)
+        .navigate(
+          realmNavigationRoute(scope.organizationId, scope.realmId),
+          isCurrent: isCurrent,
+        );
+  }
+
+  Future<void> navigate(
+    AuthoringScope scope,
+    skir.ResourceId resource,
+    skir.ResourceNavigationMode mode, {
+    required bool Function() isCurrent,
+  }) async {
+    final registry = ref.read(authoringResourceNavigationRegistryProvider);
+    final id = AuthoringResourceIdentifier.inScope(scope, resource);
+    if (mode == skir.ResourceNavigationMode.open) {
+      await registry.open(ref, id, isCurrent: isCurrent);
+    } else if (mode == skir.ResourceNavigationMode.edit) {
+      if (!isCurrent() ||
+          ref
+                  .read(workingAuthoringDocumentProvider(scope))
+                  .value
+                  ?.entry(resource) ==
+              null) {
+        return;
+      }
+      ref.read(selectionProvider.notifier).selectAll([id]);
+      ref
+          .read(realmLocationRevealProvider(scope))
+          .request(
+            skir.ValueLocation(resource: resource, path: editorRootPath),
+            presentation: skir.PresentationRole.inspector,
+            isCurrent: isCurrent,
+          );
+    } else if (mode == skir.ResourceNavigationMode.reveal) {
+      await registry.reveal(
+        ref,
+        scope,
+        skir.ValueLocation(resource: resource, path: editorRootPath),
+        isCurrent: isCurrent,
+      );
+    } else {
+      throw StateError("The navigation mode is unavailable");
+    }
+  }
+}
+
+@riverpod
+ResourceOperationNavigation resourceOperationNavigation(Ref ref) =>
+    ResourceOperationNavigation(ref);

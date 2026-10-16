@@ -94,14 +94,26 @@ class Selector extends HookConsumerWidget {
     final controller = useMenuController();
     final anchorKey = useGlobalKey();
     final pendingContextPosition = useState<Offset?>(null);
+    final contextTargets = useState<List<SelectableIdentifier>?>(null);
     final selection = ref.watch(selectionProvider);
     final selected = ref.watch(selectedProvider);
 
     final registeredOperations = SelectionOperationsRoot.of(context);
-    final operations = availableSelectionOperations(
-      registeredOperations,
-      selected.value,
-    );
+    final captured = contextTargets.value;
+    final resources = captured
+        ?.whereType<AuthoringResourceIdentifier>()
+        .toList();
+    final operations =
+        resources != null &&
+            resources.isNotEmpty &&
+            resources.length == captured!.length &&
+            resources.every((item) => item.scope == resources.first.scope)
+        ? resourceSelectionOperationsFor(
+            ref,
+            resources.first.scope,
+            resources.map((item) => item.resourceId),
+          )
+        : selectionOperationsFor(ref, context, selected.value);
 
     useFocusedChange(focusNode, ({required hasFocus}) {
       isFocused.value = hasFocus;
@@ -114,6 +126,7 @@ class Selector extends HookConsumerWidget {
       if (!ref.read(selectionProvider).contains(selectableId)) {
         ref.read(selectionProvider.notifier).selectAll([selectableId]);
       }
+      contextTargets.value = List.of(ref.read(selectionProvider));
       focusNode.requestFocus();
       pendingContextPosition.value = globalPosition;
     }
@@ -159,6 +172,7 @@ class Selector extends HookConsumerWidget {
       child: ContextMenuRegion(
         key: anchorKey,
         childFocusNode: focusNode,
+        onClose: () => contextTargets.value = null,
         items: [
           if (operations.isNotEmpty)
             MenuItem.section(

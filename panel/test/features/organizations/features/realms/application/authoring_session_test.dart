@@ -249,6 +249,7 @@ skir.AuthoringState _snapshot(
     ],
   );
   return skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation ?? _generation,
     resources: [
       skir.AuthoringResource(
@@ -289,6 +290,8 @@ Uint8List _catalogResponse({skir.CatalogGeneration? generation}) {
 
 skir.EditorCatalogWireSnapshot _catalog({skir.CatalogGeneration? generation}) =>
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation ?? _generation,
       types: const [],
       relations: const [],

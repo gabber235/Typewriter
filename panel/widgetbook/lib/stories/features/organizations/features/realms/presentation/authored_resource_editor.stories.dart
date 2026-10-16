@@ -212,6 +212,8 @@ _fixture({bool unfilled = false}) {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: [
         skir.PublishedType(

@@ -297,6 +297,8 @@ void main() {
       final generation = skir.CatalogGeneration(value: "catalog:named");
       final checked = CheckedEditorCatalog(
         skir.EditorCatalogWireSnapshot(
+          resourceOperations: const [],
+          resourceOperationContributions: const [],
           generation: generation,
           types: [
             skir.PublishedType(
@@ -365,6 +367,9 @@ void main() {
         ),
       );
       final snapshot = skir.AuthoringState(
+        confirmedObservation: skir.AuthoringObservationId(
+          value: "fixture:saved",
+        ),
         generation: generation,
         resources: [
           skir.AuthoringResource(

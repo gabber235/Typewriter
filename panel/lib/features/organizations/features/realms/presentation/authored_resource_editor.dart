@@ -68,6 +68,62 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
       reload: reload,
       openResource: openResource,
       prepareValue: prepareValue,
+      resourceAction: scope == null
+          ? null
+          : (action, invocation) async {
+              final selected = ref
+                  .read(selectionProvider)
+                  .whereType<AuthoringResourceIdentifier>()
+                  .where((item) => item.scope == scope)
+                  .map((item) => item.resourceId)
+                  .toList();
+              final targets = selected.contains(resource)
+                  ? selected
+                  : [resource];
+              final runner = ResourceOperationRunner(
+                ref: ref,
+                context: context,
+                scope: scope,
+                workspace:
+                    edit?.workspace ?? ref.read(realmEditingProvider(scope)),
+                commands: ref.read(authoredResourceCommandsProvider(scope)),
+                invocation: captureResourceOperationInvocation(
+                  document: observation,
+                  targets: targets,
+                ),
+                label: "Resource action",
+                canMutate: () =>
+                    context.mounted &&
+                    enabled &&
+                    !readOnly &&
+                    edit != null &&
+                    !edit!.blocked,
+              );
+              try {
+                await ResourceActionDispatcher(
+                  catalog: catalog,
+                  context: invocation.withBindings(
+                    resourceActionContext(observation, targets).bindings,
+                  ),
+                  isCurrent: () => runner.isCurrent,
+                  navigate: runner.navigate,
+                  invokeCommand: runner.invokeCommand,
+                  reload: runner.reload,
+                  prepare: runner.prepare,
+                ).dispatch(action);
+                return const PortablePresentationWriteApplied();
+              } on Object catch (error) {
+                return PortablePresentationWriteResult.rejected([
+                  PortablePresentationDiagnostic(
+                    code: "resource_action_failed",
+                    message: error.toString(),
+                    severity: skir.DiagnosticSeverity.error,
+                  ),
+                ]);
+              } finally {
+                runner.dispose();
+              }
+            },
     );
     final host = useMemoized(
       () => selected is SelectedEditorPresentation
@@ -137,6 +193,7 @@ final class AuthoredResourceEditor extends HookConsumerWidget {
       presentation: role,
       controller: ref.watch(realmLocationRevealProvider(scope)),
       child: PortableLocationTarget(
+        focusWhenEmpty: role == skir.PresentationRole.inspector,
         location: skir.ValueLocation(
           resource: resource,
           path: skir.ValuePath(segments: const []),

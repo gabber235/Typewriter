@@ -81,6 +81,24 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return id;
   }
 
+  /// Releases a group that never acquired work or an active interaction.
+  /// Failed preparation can allocate a group without publishing an edit.
+  bool disposeEmptyGroup(EditGroupId id) {
+    final group = _groups[id];
+    if (group == null ||
+        group.frozen.isNotEmpty ||
+        _operations.any((operation) => operation.group == id) ||
+        _interactions.values.any((interaction) => interaction.group == id)) {
+      return false;
+    }
+    _tasks.remove(id)?.cancel();
+    _requested.remove(id);
+    _forms.removeWhere((_, value) => value == id);
+    _groups.remove(id);
+    _rebuild();
+    return true;
+  }
+
   EditGroupControl<S, E> group(EditGroupId id) {
     if (!_groups.containsKey(id)) {
       throw StateError("The editing group is unavailable");
@@ -136,7 +154,26 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       document,
       replay.observation,
     );
-    if (_dependencies(
+    if (owner.commits == EditCommitAdmission.requiredDependencies) {
+      try {
+        final required = _requiredOperationClosure(operation);
+        final previousOwners = <EditGroupId>{};
+        for (var index = 0; index < _operations.length; index++) {
+          final previous = _operations[index];
+          if (required.contains(previous.id) && previous.group != id) {
+            previousOwners.add(previous.group);
+            _operations[index] = _EditOperation.reowned(previous, id);
+          }
+        }
+        for (final previous in previousOwners) {
+          if (_operations.any((item) => item.group == previous)) continue;
+          _tasks.remove(previous)?.cancel();
+          _requested.remove(previous);
+        }
+      } on EditPreparationFailure catch (failure) {
+        return EditStageResult.rejected(failure.message, failure);
+      }
+    } else if (_dependencies(
       operation,
       _operations,
     ).any((dependency) => _dependsOn(dependency, id, {}))) {
@@ -180,6 +217,67 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       _preparations--;
       _notify();
     }
+  }
+
+  Set<int> _requiredOperationClosure(_EditOperation<S, E> operation) {
+    final required = <int>{};
+    void include(_EditOperation<S, E> current, int before) {
+      for (final fact in model.reads(current.edit)) {
+        if (fact.matches(confirmed)) continue;
+        for (var index = before - 1; index >= 0; index--) {
+          final predecessor = _operations[index];
+          if (!fact.differs(predecessor.before, predecessor.after)) continue;
+          if (required.add(predecessor.id)) include(predecessor, index);
+        }
+      }
+    }
+
+    include(operation, _operations.length);
+    // An existing operation group retains its own complete pending prefix.
+    for (final (index, predecessor) in _operations.indexed) {
+      if (predecessor.group == operation.group &&
+          required.add(predecessor.id)) {
+        include(predecessor, index);
+      }
+    }
+    var proposed = confirmed;
+    for (final predecessor in _operations.where(
+      (item) => required.contains(item.id),
+    )) {
+      final owner = _groups[predecessor.group]!;
+      if (owner.phase.blocked ||
+          owner.phase.submitted ||
+          owner.frozen.isNotEmpty ||
+          _gated(predecessor)) {
+        throw const EditPreparationFailure(
+          "Required draft work is blocked or still being edited. Finish or resolve it first",
+        );
+      }
+      final replay = model.replay(proposed, predecessor.edit);
+      if (replay.kind != EditReplayKind.applicable &&
+          replay.kind != EditReplayKind.satisfied) {
+        throw EditPreparationFailure(
+          replay.diagnostics.firstOrNull?.message ??
+              "Required draft facts changed",
+          replay.diagnostics,
+        );
+      }
+      proposed = replay.observation;
+    }
+    final replay = model.replay(proposed, operation.edit);
+    if (replay.kind != EditReplayKind.applicable &&
+        replay.kind != EditReplayKind.satisfied) {
+      throw EditPreparationFailure(
+        replay.diagnostics.firstOrNull?.message ??
+            "Required draft facts changed",
+        replay.diagnostics,
+      );
+    }
+    final diagnostics = model.validateCommit(replay.observation);
+    if (diagnostics.isNotEmpty) {
+      throw EditPreparationFailure(diagnostics.first.message, diagnostics);
+    }
+    return required;
   }
 
   Set<EditGroupId> _dependencies(
@@ -687,7 +785,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return _interactions.values.any(
       (interaction) =>
           interaction.group == operation.group &&
-          (group.commits == EditCommitAdmission.completeGroup ||
+          (group.commits != EditCommitAdmission.applicableOperations ||
               model.overlaps(operation.edit, interaction.key)),
     );
   }
@@ -705,7 +803,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         proposed = replay.observation;
         found = true;
       } else if (replay.kind != EditReplayKind.satisfied &&
-          _groups[id]!.commits == EditCommitAdmission.completeGroup) {
+          _groups[id]!.commits != EditCommitAdmission.applicableOperations) {
         return false;
       }
     }
@@ -1143,6 +1241,12 @@ final class _EditOperation<S, E> {
       before = other.before,
       after = other.after,
       original = other.original;
+  _EditOperation.reowned(_EditOperation<S, E> other, this.group)
+    : id = other.id,
+      edit = other.edit,
+      original = other.original,
+      before = other.before,
+      after = other.after;
   final int id;
   final EditGroupId group;
   E edit;

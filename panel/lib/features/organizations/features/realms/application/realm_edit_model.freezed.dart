@@ -13,6 +13,294 @@ part of 'realm_edit_model.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$OperationWorkspaceCapture {
+
+ AuthoringDocument get document; skir.OperationWorkingContext get context; int get revision;
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$OperationWorkspaceCaptureCopyWith<OperationWorkspaceCapture> get copyWith => _$OperationWorkspaceCaptureCopyWithImpl<OperationWorkspaceCapture>(this as OperationWorkspaceCapture, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as OperationWorkspaceCapture;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is OperationWorkspaceCapture&&(identical(other.document, _this.document) || other.document == _this.document)&&(identical(other.context, _this.context) || other.context == _this.context)&&(identical(other.revision, _this.revision) || other.revision == _this.revision));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as OperationWorkspaceCapture;
+  return Object.hash(runtimeType,_this.document,_this.context,_this.revision);
+}
+
+@override
+String toString() {
+  final _this = this as OperationWorkspaceCapture;
+  return 'OperationWorkspaceCapture(document: ${_this.document}, context: ${_this.context}, revision: ${_this.revision})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $OperationWorkspaceCaptureCopyWith<$Res>  {
+  factory $OperationWorkspaceCaptureCopyWith(OperationWorkspaceCapture value, $Res Function(OperationWorkspaceCapture) _then) = _$OperationWorkspaceCaptureCopyWithImpl;
+@useResult
+$Res call({
+ AuthoringDocument document, skir.OperationWorkingContext context, int revision
+});
+
+
+$AuthoringDocumentCopyWith<$Res> get document;
+
+}
+/// @nodoc
+class _$OperationWorkspaceCaptureCopyWithImpl<$Res>
+    implements $OperationWorkspaceCaptureCopyWith<$Res> {
+  _$OperationWorkspaceCaptureCopyWithImpl(this._self, this._then);
+
+  final OperationWorkspaceCapture _self;
+  final $Res Function(OperationWorkspaceCapture) _then;
+
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? document = null,Object? context = null,Object? revision = null,}) {
+  return _then(OperationWorkspaceCapture(
+document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
+as skir.OperationWorkingContext,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get document {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.document, (value) {
+    return _then(_self.copyWith(document: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [OperationWorkspaceCapture].
+extension OperationWorkspaceCapturePatterns on OperationWorkspaceCapture {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _OperationWorkspaceCapture value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _OperationWorkspaceCapture value)  $default,){
+final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _OperationWorkspaceCapture value)?  $default,){
+final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AuthoringDocument document,  skir.OperationWorkingContext context,  int revision)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture() when $default != null:
+return $default(_that.document,_that.context,_that.revision);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AuthoringDocument document,  skir.OperationWorkingContext context,  int revision)  $default,) {final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture():
+return $default(_that.document,_that.context,_that.revision);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AuthoringDocument document,  skir.OperationWorkingContext context,  int revision)?  $default,) {final _that = this;
+switch (_that) {
+case _OperationWorkspaceCapture() when $default != null:
+return $default(_that.document,_that.context,_that.revision);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _OperationWorkspaceCapture implements OperationWorkspaceCapture {
+  const _OperationWorkspaceCapture({required this.document, required this.context, required this.revision});
+
+
+@override final  AuthoringDocument document;
+@override final  skir.OperationWorkingContext context;
+@override final  int revision;
+
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$OperationWorkspaceCaptureCopyWith<_OperationWorkspaceCapture> get copyWith => __$OperationWorkspaceCaptureCopyWithImpl<_OperationWorkspaceCapture>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _OperationWorkspaceCapture&&(identical(other.document, document) || other.document == document)&&(identical(other.context, context) || other.context == context)&&(identical(other.revision, revision) || other.revision == revision));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,document,context,revision);
+}
+
+@override
+String toString() {
+    return 'OperationWorkspaceCapture(document: $document, context: $context, revision: $revision)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$OperationWorkspaceCaptureCopyWith<$Res> implements $OperationWorkspaceCaptureCopyWith<$Res> {
+  factory _$OperationWorkspaceCaptureCopyWith(_OperationWorkspaceCapture value, $Res Function(_OperationWorkspaceCapture) _then) = __$OperationWorkspaceCaptureCopyWithImpl;
+@override @useResult
+$Res call({
+ AuthoringDocument document, skir.OperationWorkingContext context, int revision
+});
+
+
+@override $AuthoringDocumentCopyWith<$Res> get document;
+
+}
+/// @nodoc
+class __$OperationWorkspaceCaptureCopyWithImpl<$Res>
+    implements _$OperationWorkspaceCaptureCopyWith<$Res> {
+  __$OperationWorkspaceCaptureCopyWithImpl(this._self, this._then);
+
+  final _OperationWorkspaceCapture _self;
+  final $Res Function(_OperationWorkspaceCapture) _then;
+
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? document = null,Object? context = null,Object? revision = null,}) {
+  return _then(_OperationWorkspaceCapture(
+document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
+as AuthoringDocument,context: null == context ? _self.context : context // ignore: cast_nullable_to_non_nullable
+as skir.OperationWorkingContext,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+/// Create a copy of OperationWorkspaceCapture
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuthoringDocumentCopyWith<$Res> get document {
+
+  return $AuthoringDocumentCopyWith<$Res>(_self.document, (value) {
+    return _then(_self.copyWith(document: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$RealmPreparedEdit {
 
  skir.PreparedEdit get request; List<LocatedInitializationFinding> get findings;
@@ -1207,7 +1495,7 @@ as List<EditorDiagnostic>,
 /// @nodoc
 mixin _$AuthoringDocument {
 
- CheckedEditorCatalog get catalog; Map<skir.ResourceId, skir.AuthoringResource> get entries; List<skir.LinkProjection> get links; int get revision; List<LocatedInitializationFinding> get initializationFindings;
+ CheckedEditorCatalog get catalog; Map<skir.ResourceId, skir.AuthoringResource> get entries; List<skir.LinkProjection> get links; int get revision; skir.AuthoringObservationId? get confirmedObservation; List<LocatedInitializationFinding> get initializationFindings;
 /// Create a copy of AuthoringDocument
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1219,20 +1507,20 @@ $AuthoringDocumentCopyWith<AuthoringDocument> get copyWith => _$AuthoringDocumen
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoringDocument;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&const DeepCollectionEquality().equals(other.links, _this.links)&&(identical(other.revision, _this.revision) || other.revision == _this.revision)&&const DeepCollectionEquality().equals(other.initializationFindings, _this.initializationFindings));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringDocument&&(identical(other.catalog, _this.catalog) || other.catalog == _this.catalog)&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&const DeepCollectionEquality().equals(other.links, _this.links)&&(identical(other.revision, _this.revision) || other.revision == _this.revision)&&(identical(other.confirmedObservation, _this.confirmedObservation) || other.confirmedObservation == _this.confirmedObservation)&&const DeepCollectionEquality().equals(other.initializationFindings, _this.initializationFindings));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoringDocument;
-  return Object.hash(runtimeType,_this.catalog,const DeepCollectionEquality().hash(_this.entries),const DeepCollectionEquality().hash(_this.links),_this.revision,const DeepCollectionEquality().hash(_this.initializationFindings));
+  return Object.hash(runtimeType,_this.catalog,const DeepCollectionEquality().hash(_this.entries),const DeepCollectionEquality().hash(_this.links),_this.revision,_this.confirmedObservation,const DeepCollectionEquality().hash(_this.initializationFindings));
 }
 
 @override
 String toString() {
   final _this = this as AuthoringDocument;
-  return 'AuthoringDocument(catalog: ${_this.catalog}, entries: ${_this.entries}, links: ${_this.links}, revision: ${_this.revision}, initializationFindings: ${_this.initializationFindings})';
+  return 'AuthoringDocument(catalog: ${_this.catalog}, entries: ${_this.entries}, links: ${_this.links}, revision: ${_this.revision}, confirmedObservation: ${_this.confirmedObservation}, initializationFindings: ${_this.initializationFindings})';
 }
 
 
@@ -1243,7 +1531,7 @@ abstract mixin class $AuthoringDocumentCopyWith<$Res>  {
   factory $AuthoringDocumentCopyWith(AuthoringDocument value, $Res Function(AuthoringDocument) _then) = _$AuthoringDocumentCopyWithImpl;
 @useResult
 $Res call({
- CheckedEditorCatalog catalog, Map<skir.ResourceId, skir.AuthoringResource> entries, List<skir.LinkProjection> links, int revision, List<LocatedInitializationFinding> initializationFindings
+ CheckedEditorCatalog catalog, Map<skir.ResourceId, skir.AuthoringResource> entries, List<skir.LinkProjection> links, int revision, skir.AuthoringObservationId? confirmedObservation, List<LocatedInitializationFinding> initializationFindings
 });
 
 
@@ -1260,13 +1548,14 @@ class _$AuthoringDocumentCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringDocument
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? initializationFindings = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? confirmedObservation = freezed,Object? initializationFindings = null,}) {
   return _then(AuthoringDocument(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as CheckedEditorCatalog,entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, skir.AuthoringResource>,links: null == links ? _self.links : links // ignore: cast_nullable_to_non_nullable
 as List<skir.LinkProjection>,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
-as int,initializationFindings: null == initializationFindings ? _self.initializationFindings : initializationFindings // ignore: cast_nullable_to_non_nullable
+as int,confirmedObservation: freezed == confirmedObservation ? _self.confirmedObservation : confirmedObservation // ignore: cast_nullable_to_non_nullable
+as skir.AuthoringObservationId?,initializationFindings: null == initializationFindings ? _self.initializationFindings : initializationFindings // ignore: cast_nullable_to_non_nullable
 as List<LocatedInitializationFinding>,
   ));
 }
@@ -1352,10 +1641,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  List<LocatedInitializationFinding> initializationFindings)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  skir.AuthoringObservationId? confirmedObservation,  List<LocatedInitializationFinding> initializationFindings)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringDocument() when $default != null:
-return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.initializationFindings);case _:
+return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.confirmedObservation,_that.initializationFindings);case _:
   return orElse();
 
 }
@@ -1373,10 +1662,10 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.ini
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  List<LocatedInitializationFinding> initializationFindings)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  skir.AuthoringObservationId? confirmedObservation,  List<LocatedInitializationFinding> initializationFindings)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringDocument():
-return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.initializationFindings);case _:
+return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.confirmedObservation,_that.initializationFindings);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1393,10 +1682,10 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.ini
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  List<LocatedInitializationFinding> initializationFindings)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CheckedEditorCatalog catalog,  Map<skir.ResourceId, skir.AuthoringResource> entries,  List<skir.LinkProjection> links,  int revision,  skir.AuthoringObservationId? confirmedObservation,  List<LocatedInitializationFinding> initializationFindings)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringDocument() when $default != null:
-return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.initializationFindings);case _:
+return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.confirmedObservation,_that.initializationFindings);case _:
   return null;
 
 }
@@ -1408,7 +1697,7 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.ini
 
 
 class _AuthoringDocument extends AuthoringDocument {
-  const _AuthoringDocument({required this.catalog, required  Map<skir.ResourceId, skir.AuthoringResource> entries, required  List<skir.LinkProjection> links, this.revision = 0,  List<LocatedInitializationFinding> initializationFindings = const []}): _entries = entries,_links = links,_initializationFindings = initializationFindings,super._();
+  const _AuthoringDocument({required this.catalog, required  Map<skir.ResourceId, skir.AuthoringResource> entries, required  List<skir.LinkProjection> links, this.revision = 0, this.confirmedObservation,  List<LocatedInitializationFinding> initializationFindings = const []}): _entries = entries,_links = links,_initializationFindings = initializationFindings,super._();
 
 
 @override final  CheckedEditorCatalog catalog;
@@ -1427,6 +1716,7 @@ class _AuthoringDocument extends AuthoringDocument {
 }
 
 @override@JsonKey() final  int revision;
+@override final  skir.AuthoringObservationId? confirmedObservation;
  final  List<LocatedInitializationFinding> _initializationFindings;
 @override@JsonKey() List<LocatedInitializationFinding> get initializationFindings {
   if (_initializationFindings is EqualUnmodifiableListView) return _initializationFindings;
@@ -1445,18 +1735,18 @@ _$AuthoringDocumentCopyWith<_AuthoringDocument> get copyWith => __$AuthoringDocu
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&const DeepCollectionEquality().equals(other.entries, _entries)&&const DeepCollectionEquality().equals(other.links, _links)&&(identical(other.revision, revision) || other.revision == revision)&&const DeepCollectionEquality().equals(other.initializationFindings, _initializationFindings));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringDocument&&(identical(other.catalog, catalog) || other.catalog == catalog)&&const DeepCollectionEquality().equals(other.entries, _entries)&&const DeepCollectionEquality().equals(other.links, _links)&&(identical(other.revision, revision) || other.revision == revision)&&(identical(other.confirmedObservation, confirmedObservation) || other.confirmedObservation == confirmedObservation)&&const DeepCollectionEquality().equals(other.initializationFindings, _initializationFindings));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,catalog,const DeepCollectionEquality().hash(_entries),const DeepCollectionEquality().hash(_links),revision,const DeepCollectionEquality().hash(_initializationFindings));
+    return Object.hash(runtimeType,catalog,const DeepCollectionEquality().hash(_entries),const DeepCollectionEquality().hash(_links),revision,confirmedObservation,const DeepCollectionEquality().hash(_initializationFindings));
 }
 
 @override
 String toString() {
-    return 'AuthoringDocument(catalog: $catalog, entries: $entries, links: $links, revision: $revision, initializationFindings: $initializationFindings)';
+    return 'AuthoringDocument(catalog: $catalog, entries: $entries, links: $links, revision: $revision, confirmedObservation: $confirmedObservation, initializationFindings: $initializationFindings)';
 }
 
 
@@ -1467,7 +1757,7 @@ abstract mixin class _$AuthoringDocumentCopyWith<$Res> implements $AuthoringDocu
   factory _$AuthoringDocumentCopyWith(_AuthoringDocument value, $Res Function(_AuthoringDocument) _then) = __$AuthoringDocumentCopyWithImpl;
 @override @useResult
 $Res call({
- CheckedEditorCatalog catalog, Map<skir.ResourceId, skir.AuthoringResource> entries, List<skir.LinkProjection> links, int revision, List<LocatedInitializationFinding> initializationFindings
+ CheckedEditorCatalog catalog, Map<skir.ResourceId, skir.AuthoringResource> entries, List<skir.LinkProjection> links, int revision, skir.AuthoringObservationId? confirmedObservation, List<LocatedInitializationFinding> initializationFindings
 });
 
 
@@ -1484,13 +1774,14 @@ class __$AuthoringDocumentCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringDocument
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? initializationFindings = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? confirmedObservation = freezed,Object? initializationFindings = null,}) {
   return _then(_AuthoringDocument(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
 as CheckedEditorCatalog,entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, skir.AuthoringResource>,links: null == links ? _self._links : links // ignore: cast_nullable_to_non_nullable
 as List<skir.LinkProjection>,revision: null == revision ? _self.revision : revision // ignore: cast_nullable_to_non_nullable
-as int,initializationFindings: null == initializationFindings ? _self._initializationFindings : initializationFindings // ignore: cast_nullable_to_non_nullable
+as int,confirmedObservation: freezed == confirmedObservation ? _self.confirmedObservation : confirmedObservation // ignore: cast_nullable_to_non_nullable
+as skir.AuthoringObservationId?,initializationFindings: null == initializationFindings ? _self._initializationFindings : initializationFindings // ignore: cast_nullable_to_non_nullable
 as List<LocatedInitializationFinding>,
   ));
 }

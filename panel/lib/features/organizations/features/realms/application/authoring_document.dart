@@ -13,6 +13,7 @@ abstract class AuthoringDocument
     required Map<skir.ResourceId, skir.AuthoringResource> entries,
     required List<skir.LinkProjection> links,
     @Default(0) int revision,
+    skir.AuthoringObservationId? confirmedObservation,
     @Default([]) List<LocatedInitializationFinding> initializationFindings,
   }) = _AuthoringDocument;
 
@@ -27,6 +28,7 @@ abstract class AuthoringDocument
     }
     return AuthoringDocument(
       catalog: catalog,
+      confirmedObservation: state.confirmedObservation,
       entries: Map.unmodifiable({
         for (final entry in state.resources) entry.id: entry,
       }),

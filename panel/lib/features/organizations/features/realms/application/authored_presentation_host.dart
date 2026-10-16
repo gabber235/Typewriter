@@ -244,6 +244,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.EditorAction editorAction, {
     required PortableInvocationContext context,
   }) async {
+    if (editorAction is skir.EditorAction_navigateWrapper ||
+        editorAction is skir.EditorAction_authoringWrapper) {
+      if (!enabled ||
+          context.catalogGeneration != authored.generation ||
+          editorAction is skir.EditorAction_authoringWrapper &&
+              (readOnly || edit == null)) {
+        return _reject("This resource action is unavailable");
+      }
+      final invoke = capabilities.resourceAction;
+      return invoke == null
+          ? _reject("Resource actions are unavailable")
+          : await invoke(editorAction, context);
+    }
     if (!enabled || readOnly || edit == null) {
       return _reject("This presentation is read only");
     }
@@ -259,6 +272,10 @@ final class AuthoredPresentationHost extends ChangeNotifier
         skir.EditorAction_realmWrapper(:final value) => await _executeRealm(
           value,
           context,
+        ),
+        skir.EditorAction_navigateWrapper() ||
+        skir.EditorAction_authoringWrapper() => _reject(
+          "Resource actions are unavailable",
         ),
         skir.EditorAction_unknown() => _reject(
           "This editor action is unavailable",
@@ -1359,23 +1376,18 @@ final class AuthoredPresentationHost extends ChangeNotifier
     skir.RealmEditorAction realm,
     PortableInvocationContext context,
   ) async {
-    switch (realm) {
-      case skir.RealmEditorAction_reloadWrapper():
-        final reload = capabilities.reload;
-        if (reload == null) {
-          return _reject("Reload is unavailable");
+    await executePortableRealmAction(
+      realm,
+      evaluate: (expression) {
+        final payload = _evaluate(expression, context);
+        if (payload == null) {
+          throw StateError("The Realm action payload is unavailable");
         }
-        await reload();
-      case skir.RealmEditorAction_commandWrapper(:final value):
-        final invoke = capabilities.invokeCommand;
-        final payload = _evaluate(value.payload, context);
-        if (invoke == null || payload == null) {
-          return _reject("Realm commands are unavailable");
-        }
-        await invoke(value.capabilityId, payload.value);
-      case skir.RealmEditorAction_unknown():
-        return _reject("This Realm editor action is unavailable");
-    }
+        return payload.value;
+      },
+      invokeCommand: capabilities.invokeCommand,
+      reload: capabilities.reload,
+    );
     return const PortablePresentationWriteApplied();
   }
 

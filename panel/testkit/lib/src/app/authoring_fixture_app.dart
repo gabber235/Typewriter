@@ -12,12 +12,15 @@ final class AuthoringFixtureApp extends StatefulWidget {
     required this.child,
     this.scenario,
     this.state,
+    this.createCommands,
     this.overrides = const [],
     super.key,
   });
   final AuthoringDocument Function() createDocument;
   final Object? scenario;
   final DisplayState? state;
+  final AuthoredResourceCommands Function(Ref, ScriptedAuthoringTransport)?
+  createCommands;
   final List<Override> overrides;
   final Widget child;
   @override
@@ -67,7 +70,10 @@ final class _AuthoringFixtureAppState extends State<AuthoringFixtureApp> {
     key: ValueKey(_revision),
     overrides: [
       ...widget.overrides,
-      ...authoringFixtureOverrides(transport: _transport),
+      ...authoringFixtureOverrides(
+        transport: _transport,
+        commandsFactory: widget.createCommands,
+      ),
     ],
     child: widget.child,
   );

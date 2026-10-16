@@ -461,6 +461,11 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
 
   bool get canExecuteAction => enabled && !readOnly && host != null;
 
+  bool canExecuteActionFor(skir.EditorAction action) =>
+      action is skir.EditorAction_navigateWrapper
+      ? enabled && host?.capabilities.resourceAction != null
+      : canExecuteAction;
+
   PortablePresentationScope withReadOnly(bool value) =>
       copyWith(readOnly: readOnly || value);
 

@@ -70,6 +70,8 @@ AuthoringSearchResultPayload _payload({
 }) {
   final catalog = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         skir.PublishedType(

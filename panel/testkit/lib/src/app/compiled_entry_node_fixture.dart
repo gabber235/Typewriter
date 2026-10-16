@@ -149,6 +149,9 @@ AuthoringDocument compiledEntryNodeDocument({
   );
   final nodes = [compiledEntryFirstId, compiledEntrySecondId];
   return AuthoringDocument(
+    confirmedObservation: skir.AuthoringObservationId(
+      value: "compiled-entry:saved",
+    ),
     catalog: catalog,
     entries: {
       compiledEntryBookId: resource(compiledEntryBookId, bookType, {

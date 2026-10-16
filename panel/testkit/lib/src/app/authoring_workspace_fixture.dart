@@ -75,6 +75,8 @@ List<Override> authoringFixtureOverrides({
   ScriptedAuthoringTransport? transport,
   AsyncValue<AuthoringDocument>? observation,
   AuthoredResourceCommands? commands,
+  AuthoredResourceCommands Function(Ref, ScriptedAuthoringTransport)?
+  commandsFactory,
   void Function(skir.PreparedEdit edit)? onRequest,
 }) {
   final source =
@@ -133,7 +135,10 @@ List<Override> authoringFixtureOverrides({
       (ref, scope) => scripted.persistence,
     ),
     authoredResourceCommandsProvider.overrideWith(
-      (ref, scope) => commands ?? fixtureAuthoringCommands(scripted),
+      (ref, scope) =>
+          commandsFactory?.call(ref, scripted) ??
+          commands ??
+          fixtureAuthoringCommands(scripted),
     ),
   ];
 }
@@ -141,6 +146,14 @@ List<Override> authoringFixtureOverrides({
 AuthoredResourceCommands fixtureAuthoringCommands(
   ScriptedAuthoringTransport transport, {
   Future<skir.PreparationStep> Function(skir.PreparationOperation)? prepareStep,
+  Future<skir.ResolveResourceOperationsResult> Function(
+    skir.ResolveResourceOperationsRequest,
+  )?
+  resolveResourceOperations,
+  Future<skir.AuthoringActionResult> Function(
+    skir.PrepareAuthoringActionRequest,
+  )?
+  prepareAuthoringAction,
 }) => AuthoredResourceCommands(
   previewTypeArguments: ({required resource, required requested}) async =>
       throw StateError("No type preview reply was scripted"),
@@ -157,6 +170,18 @@ AuthoredResourceCommands fixtureAuthoringCommands(
       throw StateError("No resource search reply was scripted"),
   watchSearch: (_) => Stream.error(StateError("No search reply was scripted")),
   reload: () async {},
+  resolveResourceOperations:
+      resolveResourceOperations ??
+      (_) async => skir.ResolveResourceOperationsResult.wrapResolved(
+        skir.ResolvedResourceOperations(
+          operations: const [],
+          primaryOperation: null,
+        ),
+      ),
+  prepareAuthoringAction:
+      prepareAuthoringAction ??
+      (_) async =>
+          throw StateError("No authoring preparation reply was scripted"),
 );
 
 skir.PreparedValue _fixturePrepareValue(
@@ -168,6 +193,32 @@ skir.PreparedValue _fixturePrepareValue(
     throw StateError("The fixture catalog changed");
   }
   final defaults = transport.observation.requireValue;
+  if (request.target case skir.PreparationTarget_valueWrapper(:final value)) {
+    final named = catalog.namedUse(value);
+    final prepared = named == null
+        ? defaults.defaultValue(value)
+        : skir.DataValue.createNamed(
+            actualType: named,
+            payload: skir.DataValue.createRecord(
+              fields: [
+                for (final field in catalog.fields(
+                  skir.TypeSelection.wrapComplete(named),
+                ))
+                  skir.FieldValue(
+                    name: field.template.key,
+                    value: defaults.defaultValue(field.type),
+                  ),
+              ],
+            ),
+          );
+    return skir.PreparedValue(
+      content: skir.PreparedContent.wrapValue(
+        request.suppliedValue ?? prepared,
+      ),
+      findings: const [],
+    );
+  }
+
   return skir.PreparedValue(
     content: skir.PreparedContent.wrapRecord(
       skir.AuthoringRecord(
@@ -442,6 +493,7 @@ AuthoringDocument fixtureAuthoringDocument({
     });
   }
   return AuthoringDocument(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     catalog: catalog ?? authoringFixtureCatalog(),
     entries: entries,
     links: projections,
@@ -676,6 +728,8 @@ CheckedEditorCatalog authoringFixtureCatalog({
   }
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation:
           generation ??
           skir.CatalogGeneration(value: realmFixtureGeneration.value),

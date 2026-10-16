@@ -14,6 +14,7 @@ class ContextMenuRegion extends HookWidget {
     this.enableGestures = true,
     this.controller,
     this.childFocusNode,
+    this.onClose,
     this.child,
     this.builder,
     super.key,
@@ -27,6 +28,7 @@ class ContextMenuRegion extends HookWidget {
 
   final MenuController? controller;
   final FocusNode? childFocusNode;
+  final VoidCallback? onClose;
 
   final Widget? child;
   final Widget Function(BuildContext, MenuController, Widget?)? builder;
@@ -37,7 +39,7 @@ class ContextMenuRegion extends HookWidget {
 
     final controller = this.controller ?? useMenuController();
 
-    final menu = MenuAnchor(
+    final anchor = MenuAnchor(
       menuChildren: [
         for (final (index, item) in items.indexed)
           _buildMenuItem(
@@ -48,9 +50,30 @@ class ContextMenuRegion extends HookWidget {
           ),
       ],
       controller: controller,
+      onClose: onClose,
       childFocusNode: childFocusNode,
       builder: builder,
       child: child,
+    );
+
+    final menu = Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.contextMenu):
+            SelectorContextMenuIntent(),
+        SingleActivator(LogicalKeyboardKey.f10, shift: true):
+            SelectorContextMenuIntent(),
+      },
+      child: Actions(
+        actions: {
+          SelectorContextMenuIntent: CallbackAction<SelectorContextMenuIntent>(
+            onInvoke: (_) {
+              controller.open();
+              return null;
+            },
+          ),
+        },
+        child: anchor,
+      ),
     );
 
     if (enableGestures) {

@@ -1970,6 +1970,8 @@ _linkCollectionFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:links"),
       types: [
         skir.PublishedType(
@@ -2615,6 +2617,8 @@ CheckedEditorCatalog _collectionCatalog() {
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         published(
@@ -2762,6 +2766,8 @@ final _polymorphicNode = _node(
 );
 final _polymorphicCatalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "test"),
     types: [
       skir.PublishedType(

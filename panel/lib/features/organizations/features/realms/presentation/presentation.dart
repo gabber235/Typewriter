@@ -13,5 +13,7 @@ export "realm_navigation_boundary.dart";
 export "realm_selector.dart";
 export "realm_suspension.dart";
 export "resource_issue_badge.dart";
+export "resource_operation_button.dart";
+export "resource_operation_drop_target.dart";
 export "resource_page_drop_target.dart";
 export "route.dart";

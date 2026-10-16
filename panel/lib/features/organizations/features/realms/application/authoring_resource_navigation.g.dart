@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'authoring_resource_navigation.dart';
 
@@ -6,7 +6,7 @@ part of 'authoring_resource_navigation.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(authoringResourceNavigationRegistry)
@@ -150,3 +150,52 @@ final class RealmLocationRevealFamily extends $Family
   @override
   String toString() => r'realmLocationRevealProvider';
 }
+
+@ProviderFor(resourceOperationNavigation)
+final resourceOperationNavigationProvider =
+    ResourceOperationNavigationProvider._();
+
+final class ResourceOperationNavigationProvider
+    extends
+        $FunctionalProvider<
+          ResourceOperationNavigation,
+          ResourceOperationNavigation,
+          ResourceOperationNavigation
+        >
+    with $Provider<ResourceOperationNavigation> {
+  ResourceOperationNavigationProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'resourceOperationNavigationProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$resourceOperationNavigationHash();
+
+  @$internal
+  @override
+  $ProviderElement<ResourceOperationNavigation> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ResourceOperationNavigation create(Ref ref) {
+    return resourceOperationNavigation(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResourceOperationNavigation value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResourceOperationNavigation>(value),
+    );
+  }
+}
+
+String _$resourceOperationNavigationHash() =>
+    r'b38133298af2033d336ff084812d6feac3d15b84';

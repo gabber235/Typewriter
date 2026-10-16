@@ -78,7 +78,7 @@ final class AuthoredResourceCommandsProvider
 }
 
 String _$authoredResourceCommandsHash() =>
-    r'71d69ecbfd8fcbe5ec7905a28579611987cc6ef7';
+    r'326b2e1db947e1931606c2c21b7b4a5c57e57047';
 
 /// External capabilities. Working value edits belong to the workspace.
 

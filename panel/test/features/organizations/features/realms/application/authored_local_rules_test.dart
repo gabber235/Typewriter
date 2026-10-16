@@ -440,6 +440,8 @@ _nestedRuleFixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: [
         _publishedRecord(

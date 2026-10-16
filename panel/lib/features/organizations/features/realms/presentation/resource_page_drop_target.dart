@@ -54,41 +54,22 @@ class _ResourcePageDropTargetState
       return identical(currentWorkspace, workspace);
     }
 
-    final command = AuthoredPageResourceCommands(
-      workspace: workspace,
+    return ResourceOperationDropTarget(
       scope: scope,
-      canMutate: current,
-    );
-    return DragTarget<AuthoringResourceDragGroup>(
-      onWillAcceptWithDetails: (details) =>
-          current() && command.plan(details.data, widget.page) == null,
-      onAcceptWithDetails: (details) async {
-        final destination = widget.page;
-        final result = await moveAuthoredResourcesToPage(
-          context: context,
-          command: command,
-          group: details.data,
-          destination: destination,
-          isCurrent: () => mounted && widget.page == destination && current(),
-        );
-        if (!context.mounted) return;
-        result.report(context);
-        if (result is EditStaged) {
-          ref
-              .read(selectionProvider.notifier)
-              .unselectAll(details.data.memberships.keys.toList());
-          FocusScope.of(context).requestFocus();
-        }
+      operationLocalId: "moveToPage",
+      suppliedFields: {
+        "destination": skir.DataValue.wrapStringValue(widget.page.value),
       },
+      canMutate: current,
       builder: (context, accepted, rejected) => Semantics(
-        label: accepted.isNotEmpty ? "Move entries to this page" : null,
+        label: accepted ? "Move entries to this page" : null,
         child: DecoratedBox(
           position: DecorationPosition.foreground,
           decoration: BoxDecoration(
-            border: accepted.isNotEmpty || rejected.isNotEmpty
+            border: accepted || rejected
                 ? Border.all(
                     width: 2,
-                    color: accepted.isNotEmpty
+                    color: accepted
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.error,
                   )

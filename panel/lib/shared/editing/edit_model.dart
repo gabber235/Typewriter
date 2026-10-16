@@ -214,8 +214,15 @@ extension EditStagePresentation on EditStageResult {
   }
 }
 
-/// Controls whether one invalid operation blocks its complete group.
-enum EditCommitAdmission { completeGroup, applicableOperations }
+/// Controls the journal operations admitted to one atomic submission.
+enum EditCommitAdmission {
+  completeGroup,
+  applicableOperations,
+
+  /// Resource operations consume the precise prior draft operations they read.
+  /// Unrelated journal work retains its original group and save policy.
+  requiredDependencies,
+}
 
 /// An expected preparation rejection, retaining diagnostics for all consumers.
 final class EditPreparationFailure implements Exception {

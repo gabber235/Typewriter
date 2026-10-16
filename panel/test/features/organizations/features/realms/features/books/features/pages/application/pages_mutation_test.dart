@@ -54,6 +54,7 @@ void main() {
             bookIdProvider.overrideWith((ref) => _book),
             pageIdProvider.overrideWith((ref) => null),
             ...authoringFixtureOverrides(
+              commandsFactory: _pageOperationCommands,
               document: fixtureAuthoringDocument(
                 books: [
                   Book(
@@ -89,14 +90,14 @@ void main() {
           await tester.pump();
           if (ref
               .read(actionShortcutsProvider)
-              .containsKey("book_sidebar_page_edit")) {
+              .containsKey("resource_operation_edit")) {
             break;
           }
         }
         expect(
           ref
               .read(actionShortcutsProvider)
-              .containsKey("book_sidebar_page_edit"),
+              .containsKey("resource_operation_edit"),
           isTrue,
         );
         await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
@@ -304,6 +305,7 @@ AuthoringSessionState _state({
 }) => AuthoringSessionState(
   catalog: receivedCheckedEditorCatalog(generation: _generation),
   snapshot: skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: _generation,
     resources: [
       _resource(
@@ -356,3 +358,44 @@ final _organization = skir.recordId("organization:test");
 final _realm = skir.recordId("realm:test");
 
 final _book = skir.ResourceId(value: "book:test");
+
+AuthoredResourceCommands _pageOperationCommands(
+  Ref ref,
+  ScriptedAuthoringTransport transport,
+) {
+  return fixtureAuthoringCommands(
+    transport,
+    resolveResourceOperations: (_) async =>
+        skir.ResolveResourceOperationsResult.createResolved(
+          primaryOperation:
+              (resourceDeleteOperationId.toMutable()..local = "edit")
+                  .toFrozen(),
+          operations: [
+            skir.ResolvedResourceOperation(
+              availability: skir.OperationAvailability.enabled,
+              definition: skir.ResourceOperationDefinition(
+                id: (resourceDeleteOperationId.toMutable()..local = "edit")
+                    .toFrozen(),
+                targets: skir.OperationTargets.contributedSingle,
+                presentation: skir.OperationPresentation(
+                  label: "Edit",
+                  description: "Inspect this page",
+                  icon: "",
+                  group: skir.OperationGroup.edit,
+                  order: 0,
+                  tone: skir.HeaderActionTone.neutral,
+                  confirmation: null,
+                ),
+                action: skir.EditorAction.createNavigate(
+                  resource: skir.ExpressionNode.createRead(
+                    binding: skir.ExpressionBindingId(value: "context:subject"),
+                    path: editorRootPath,
+                  ),
+                  mode: skir.ResourceNavigationMode.edit,
+                ),
+              ),
+            ),
+          ],
+        ),
+  );
+}

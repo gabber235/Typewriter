@@ -24,6 +24,8 @@ AuthoredResourceCommands authoredResourceCommands(
       return session.prepareTypeArguments(preview);
     },
     prepareValue: session.prepareValue,
+    resolveResourceOperations: session.resolveResourceOperations,
+    prepareAuthoringAction: session.prepareAuthoringAction,
     prepareStep: session.prepareStep,
     invokeCommand: session.invokeCommand,
     watchSearch: session.watchPresentationSearch,
@@ -42,6 +44,8 @@ final class AuthoredResourceCommands {
     required this.watchSearch,
     required this.search,
     required this.reload,
+    this.resolveResourceOperations = _operationsUnavailable,
+    this.prepareAuthoringAction = _preparationUnavailable,
   });
 
   final Future<skir.TypePreviewResult> Function({
@@ -74,5 +78,21 @@ final class AuthoredResourceCommands {
     skir.SearchAuthoringRequest request,
   )
   search;
+  final Future<skir.ResolveResourceOperationsResult> Function(
+    skir.ResolveResourceOperationsRequest request,
+  )
+  resolveResourceOperations;
+  final Future<skir.AuthoringActionResult> Function(
+    skir.PrepareAuthoringActionRequest request,
+  )
+  prepareAuthoringAction;
   final Future<void> Function() reload;
+
+  static Future<skir.ResolveResourceOperationsResult> _operationsUnavailable(
+    skir.ResolveResourceOperationsRequest request,
+  ) async => throw StateError("Resource operations are unavailable");
+
+  static Future<skir.AuthoringActionResult> _preparationUnavailable(
+    skir.PrepareAuthoringActionRequest request,
+  ) async => throw StateError("Authoring preparation is unavailable");
 }

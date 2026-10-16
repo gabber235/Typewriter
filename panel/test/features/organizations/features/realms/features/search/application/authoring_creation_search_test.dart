@@ -51,23 +51,31 @@ void main() {
       final section =
           fixture.controller.snapshot.nodes.single as SearchSectionNode;
       final option =
-          section.children.whereType<SearchResultNode>().singleWhere(
-                (node) =>
-                    (node.result.payload as AuthoringCreationOption)
-                        .definition
-                        .value ==
-                    "test.book",
-              ).result.payload
+          section.children
+                  .whereType<SearchResultNode>()
+                  .singleWhere(
+                    (node) =>
+                        (node.result.payload as AuthoringCreationOption)
+                            .definition
+                            .value ==
+                        "test.book",
+                  )
+                  .result
+                  .payload
               as AuthoringCreationOption;
       expect(section.children, hasLength(2));
       final entryOption =
-          section.children.whereType<SearchResultNode>().singleWhere(
-                (node) =>
-                    (node.result.payload as AuthoringCreationOption)
-                        .definition
-                        .value ==
-                    "test.entry",
-              ).result.payload
+          section.children
+                  .whereType<SearchResultNode>()
+                  .singleWhere(
+                    (node) =>
+                        (node.result.payload as AuthoringCreationOption)
+                            .definition
+                            .value ==
+                        "test.entry",
+                  )
+                  .result
+                  .payload
               as AuthoringCreationOption;
       expect(
         entryOption.configuration,
@@ -222,6 +230,8 @@ CheckedEditorCatalog _catalog({
   );
   return CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: "catalog:test"),
       types: [
         _published(

@@ -64,17 +64,8 @@ abstract class AuthoringResourceIdentifier extends SelectableIdentifier
         resource: resource,
         workspace: workspace,
         commands: commands,
-        onOpen: resource.definition == coreTagResourceDefinition
-            ? null
-            : _openCapability(ref),
       ),
     );
-  }
-
-  VoidCallback? _openCapability(Ref ref) {
-    final registry = ref.read(authoringResourceNavigationRegistryProvider);
-    if (!registry.canOpen(ref, this)) return null;
-    return () => unawaited(registry.open(ref, this));
   }
 }
 
@@ -85,7 +76,6 @@ final class AuthoringSelectableResource
     required this.resource,
     required this.workspace,
     required this.commands,
-    this.onOpen,
   });
 
   @override
@@ -93,7 +83,6 @@ final class AuthoringSelectableResource
   final skir.AuthoringResource resource;
   final RealmEditing workspace;
   final AuthoredResourceCommands commands;
-  final VoidCallback? onOpen;
 
   @override
   String get name => switch (resource.definition) {
@@ -118,27 +107,8 @@ final class AuthoringSelectableResource
     },
   };
 
-  String get deletionLabel => switch (resource.definition) {
-    final definition when definition == coreBookResourceDefinition =>
-      "Delete book",
-    final definition when definition == coreTagResourceDefinition =>
-      "Delete tag",
-    _ => "Delete resource",
-  };
-
   @override
-  List<SelectionCapability> get capabilities => [
-    if (onOpen case final open?)
-      OpenSelectionCapability(onOpen: open, allowMultiSelect: false),
-    DeleteSelectionCapability(
-      onDelete: () async => workspace
-          .edit(
-            label: deletionLabel,
-            apply: (edit) => edit.delete(id.resourceId),
-          )
-          .requireAccepted(),
-    ),
-  ];
+  List<SelectionCapability> get capabilities => const [];
 
   @override
   InspectionContent buildInspection(InspectionBindingScope owners) =>

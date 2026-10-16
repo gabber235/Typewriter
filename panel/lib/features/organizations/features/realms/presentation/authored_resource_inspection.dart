@@ -195,50 +195,12 @@ final class _AuthoredResourceInspectionState
       capabilityId: capabilityId,
       payload: payload,
     );
-    if (!mounted) return;
-    switch (result) {
-      case skir.CommandResult_successWrapper(:final value):
-        for (final instruction in value.instructions) {
-          switch (instruction) {
-            case skir.PanelInstruction_invalidateResourceWrapper():
-              await widget.commands.reload();
-              if (!mounted) return;
-            case skir.PanelInstruction_openResourceWrapper(:final value):
-              final id = value.resource.identity.authoredString;
-              if (id != null) {
-                widget.openResource?.call(skir.ResourceId(value: id));
-              } else {
-                _binding.reportStatus(
-                  "The command returned an invalid resource identity",
-                );
-              }
-            case skir.PanelInstruction_notifyWrapper(:final value):
-              _binding.reportStatus(value.message);
-            case skir.PanelInstruction_unknown():
-              _binding.reportStatus(
-                "The command returned an unknown instruction",
-              );
-          }
-        }
-      case skir.CommandResult_invalidWrapper(:final value):
-        _binding.reportStatus(
-          value.diagnostics.map((item) => item.message).join("\n"),
-        );
-      case skir.CommandResult_unavailableWrapper(:final value):
-        _binding.reportStatus(
-          value.diagnostics.map((item) => item.message).join("\n"),
-        );
-      case skir.CommandResult_permissionDeniedWrapper(:final value):
-        _binding.reportStatus(value.message);
-      case skir.CommandResult_staleGenerationWrapper():
-        await widget.commands.reload();
-        if (mounted) {
-          _binding.reportStatus(
-            "The editor catalog changed. Review the refreshed form",
-          );
-        }
-      case skir.CommandResult_unknown():
-        _binding.reportStatus("The command result is unavailable");
-    }
+    await handleRealmCommandResult(
+      result,
+      isCurrent: () => mounted,
+      reload: widget.commands.reload,
+      openResource: (resource) => widget.openResource?.call(resource),
+      reportStatus: _binding.reportStatus,
+    );
   }
 }

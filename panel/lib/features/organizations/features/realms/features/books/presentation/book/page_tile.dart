@@ -14,43 +14,13 @@ class _PageTile extends HookConsumerWidget {
   String get name => page.name;
   String get chapter => page.chapter;
 
-  List<MenuItem> _contextMenuItems(WidgetRef ref) => [
-    MenuItem(
-      label: "Edit",
-      icon: Icones(Mingcute.pencil_fill),
-      onPressed: () => ref.inspectPage(pageId),
-    ),
-    MenuItem.divider(),
-    MenuItem(
-      label: "Delete",
-      icon: Icones(MaterialSymbols.delete_forever_rounded),
-      color: ref.context.colors.danger,
-      onPressed: () => showPageDeletionDialogue(ref, pageId, name),
-    ),
-  ];
-
-  List<ActionShortcut> _shortcuts(WidgetRef ref) => [
-    ActionShortcut.intent(
-      id: "book_sidebar_page_edit",
-      label: "Edit",
-      description: "Edit the page in the inspector",
-      intent: PrimaryActionIntent,
-      priority: 1,
-      onInvoke: (_) => ref.inspectPage(pageId),
-    ),
-    ActionShortcut(
-      id: "book_sidebar_page_delete",
-      label: "Delete",
-      description: "Delete the page",
-      activators: shortcutsFor(DeleteIntent),
-      priority: 1,
-      onInvoke: (_) => showPageDeletionDialogue(ref, pageId, name),
-    ),
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isSelected = ref.watch(pageIdProvider.select((e) => e == pageId));
+    final authoringScope = ref.watch(selectedAuthoringScopeProvider);
+    final operations = authoringScope == null
+        ? <SelectionOperation>[]
+        : resourceSelectionOperationsFor(ref, authoringScope, [pageId]);
     final scope = ref.watch(selectedAuthoringScopeProvider);
     final issueState = scope == null
         ? null
@@ -114,9 +84,15 @@ class _PageTile extends HookConsumerWidget {
             final isRejecting = rejectedData.isNotEmpty;
 
             return ManagedActionSet(
-              shortcuts: _shortcuts(ref),
+              shortcuts: [
+                for (final operation
+                    in operations.whereType<ShortcutableOperation>())
+                  operation.shortcut,
+              ],
               child: ContextMenuRegion(
-                items: _contextMenuItems(ref),
+                items: [
+                  for (final operation in operations) operation.menuItem(ref),
+                ],
                 child: AnimatedSize(
                   duration: 150.ms,
                   curve: Curves.easeOutCubic,

@@ -590,6 +590,8 @@ _nestedMaterialFixture() {
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: original.generation,
       types: original.types,
       relations: original.relations,
@@ -703,6 +705,8 @@ _fixture({
   );
   final checked = CheckedEditorCatalog(
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: generation,
       types: [
         published,
@@ -750,6 +754,7 @@ _fixture({
   final one = skir.ResourceId(value: "tag:one");
   final two = skir.ResourceId(value: "tag:two");
   final snapshot = skir.AuthoringState(
+    confirmedObservation: skir.AuthoringObservationId(value: "fixture:saved"),
     generation: generation,
     resources: graph == null
         ? [

@@ -199,6 +199,8 @@ void main() {
 
 skir.EditorCatalogWireSnapshot _snapshot(String generation) =>
     skir.EditorCatalogWireSnapshot(
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
       generation: skir.CatalogGeneration(value: generation),
       types: const [],
       relations: const [],
@@ -220,6 +222,8 @@ skir.EditorCatalogWireSnapshot _largeSnapshot() {
       _publishedType(typeIndex),
   ];
   return skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
     generation: skir.CatalogGeneration(value: "catalog:large"),
     types: types,
     relations: const [],
