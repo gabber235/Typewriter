@@ -710,3 +710,27 @@ extension ResolvedReferenceEditing on PortableAuthoringEdit {
     );
   }
 }
+
+/// Resolves the counterpart request shared by field and resource link commands.
+Future<skir.CounterpartChoice?> preparePortableLinkCounterpart({
+  required skir.CatalogGeneration generation,
+  required PortableLinkCounterpartRequest counterpart,
+  required Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
+  prepareValue,
+}) async => switch (counterpart) {
+  PortableExistingCounterpart(:final occurrence) =>
+    skir.CounterpartChoice.wrapExisting(occurrence),
+  PortableCreatedCounterpart(:final slot) => skir.CounterpartChoice.createNew(
+    containing: slot.containing,
+    prepared:
+        await (prepareValue ??
+            (throw StateError("Creation preparation is unavailable")))(
+          skir.ValuePreparationRequest(
+            catalog: generation,
+            target: skir.PreparationTarget.wrapRecord(slot.selection),
+            suppliedValue: skir.DataValue.createRecord(fields: const []),
+          ),
+        ),
+  ),
+  _ => null,
+};

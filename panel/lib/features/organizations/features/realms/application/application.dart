@@ -15,10 +15,13 @@ library;
 
 export "authored_capability_transport.dart";
 export "authored_local_rules.dart";
+export "authored_page_resource_commands.dart";
 export "authored_presentation_host.dart";
 export "authored_resource_commands.dart";
+export "authored_resource_link_commands.dart";
 export "authoring_placement.dart";
 export "authoring_relation_index.dart";
+export "authoring_resource_drag.dart";
 export "authoring_resource_mutation.dart";
 export "authoring_resource_navigation.dart";
 export "authoring_selectable_resource.dart";

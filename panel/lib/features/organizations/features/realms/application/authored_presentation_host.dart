@@ -527,30 +527,16 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (context.catalogGeneration != authored.generation) {
       return _reject("The editor catalog changed");
     }
-    final preparation = switch (counterpart) {
-      PortableCreatedCounterpart(:final slot) => _counterpartPreparation(
-        plan.source.id.location,
-        target.resource,
-        slot,
-      ),
-      _ => null,
-    };
     final result = await binding.prepare(
       label: "Change link",
       from: authored,
       apply: (operation) async {
         operation.expect(plan.source.id.location);
-        final choice = switch (counterpart) {
-          PortableAutomaticCounterpart() ||
-          PortableCollectionCounterpart() => null,
-          PortableExistingCounterpart(:final occurrence) =>
-            skir.CounterpartChoice.wrapExisting(occurrence),
-          PortableCreatedCounterpart(:final slot) =>
-            skir.CounterpartChoice.createNew(
-              containing: slot.containing,
-              prepared: await preparation!(),
-            ),
-        };
+        final choice = await preparePortableLinkCounterpart(
+          generation: operation.generation,
+          counterpart: counterpart,
+          prepareValue: prepareValue,
+        );
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
         }
@@ -572,23 +558,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
       EditStageRejected(:final message) => _reject(message),
       _ => const PortablePresentationWriteApplied(),
     };
-  }
-
-  Future<skir.PreparedValue> Function() _counterpartPreparation(
-    skir.ValueLocation source,
-    skir.ResourceId target,
-    PortableNewCounterpartChoice slot,
-  ) {
-    final prepare = prepareValue;
-    if (prepare == null) {
-      throw StateError("Creation preparation is unavailable");
-    }
-    final request = skir.ValuePreparationRequest(
-      catalog: authored.generation,
-      target: skir.PreparationTarget.wrapRecord(slot.selection),
-      suppliedValue: skir.DataValue.createRecord(fields: const []),
-    );
-    return () => prepare(request);
   }
 
   @override
