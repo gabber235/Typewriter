@@ -34,6 +34,10 @@ Future<T?> showAuthoredTypeSearch<T extends Object>(
   required String Function(T candidate) id,
   required String Function(T candidate) label,
   skir.TypeDisplay? Function(T candidate)? display,
+  String initialQuery = "",
+  ValueChanged<String>? onQueryChanged,
+  VoidCallback? onBack,
+  Future<void>? cancelled,
 }) {
   final values = List<T>.unmodifiable(candidates);
   final identities = <String>{};
@@ -58,6 +62,7 @@ Future<T?> showAuthoredTypeSearch<T extends Object>(
     context,
     (_, _) => SearchContribution(
       session: SearchSession(
+        initialQuery: initialQuery,
         source: _AuthoredTypeSearchSource(
           candidates: values,
           id: id,
@@ -76,6 +81,9 @@ Future<T?> showAuthoredTypeSearch<T extends Object>(
       ),
     ),
     searchHint: searchHint,
+    onBack: onBack,
+    onQueryChanged: onQueryChanged,
+    cancelled: cancelled,
     rowRenderers: {
       _authoredTypeSearchResultType.rowRendererId: (row) {
         final candidate = row.result.payload as T;
@@ -214,6 +222,10 @@ Future<skir.TypeSelection?> showCreationConcreteTypePicker(
   BuildContext context, {
   required skir.TypeSelection expected,
   required CheckedEditorCatalog catalog,
+  String initialQuery = "",
+  ValueChanged<String>? onQueryChanged,
+  VoidCallback? onBack,
+  Future<void>? cancelled,
 }) {
   final candidates = catalog.concreteRecordSelections(expected)
     ..sort(
@@ -225,6 +237,10 @@ Future<skir.TypeSelection?> showCreationConcreteTypePicker(
   return showAuthoredTypeSearch(
     context,
     searchHint: "Search resource types",
+    initialQuery: initialQuery,
+    onQueryChanged: onQueryChanged,
+    onBack: onBack,
+    cancelled: cancelled,
     candidates: candidates,
     id: _selectionSearchId,
     label: catalog.typeSelectionName,

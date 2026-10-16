@@ -5414,6 +5414,1069 @@ final class PreparedValue_mutable implements PreparedValue_orMutable {
         .._u = this._u;
 }
 
+// struct RequiredInput
+
+sealed class RequiredInput_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
+  _lib_editor_v1_type_catalog.TypeUse get expected;
+
+  RequiredInput toFrozen();
+}
+
+/// Deeply immutable.
+final class RequiredInput implements RequiredInput_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath path;
+  @_core.override
+  final _lib_editor_v1_type_catalog.TypeUse expected;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory RequiredInput({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required _lib_editor_v1_type_catalog.TypeUse expected,
+  }) => RequiredInput._(path.toFrozen(), expected);
+
+  RequiredInput._(this.path, this.expected);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = RequiredInput._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static RequiredInput_mutable mutable() => RequiredInput_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.TypeUse.unknown,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  RequiredInput toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  RequiredInput_mutable toMutable() =>
+      RequiredInput_mutable._(this.path, this.expected);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! RequiredInput) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.path, this.expected];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `RequiredInput` instances.
+  static _skir.StructSerializer<RequiredInput, RequiredInput_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "path",
+        "path",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.path,
+        (it, v) => it.path = v,
+      );
+      _serializerBuilder.addField(
+        "expected",
+        "expected",
+        1,
+        _lib_editor_v1_type_catalog.TypeUse.serializer,
+        "",
+        (it) => it.expected,
+        (it, v) => it.expected = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:RequiredInput",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (RequiredInput_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [RequiredInput].
+final class RequiredInput_mutable implements RequiredInput_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable path;
+  _lib_editor_v1_type_catalog.TypeUse expected;
+  _skir.internal__UnrecognizedFields? _u;
+
+  RequiredInput_mutable._(this.path, this.expected);
+
+  /// If the value of [path] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
+    final value = this.path;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.path = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  RequiredInput toFrozen() =>
+      RequiredInput(path: this.path, expected: this.expected).._u = this._u;
+}
+
+// struct PreparationDraft
+
+sealed class PreparationDraft_orMutable {
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
+  PreparationTarget get target;
+  PreparedContent get content;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+  get pendingDefaults;
+  _core.Iterable<RequiredInput_orMutable> get requiredInputs;
+  _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
+  get findings;
+
+  PreparationDraft toFrozen();
+}
+
+/// Deeply immutable.
+final class PreparationDraft implements PreparationDraft_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.CatalogGeneration catalog;
+  @_core.override
+  final PreparationTarget target;
+  @_core.override
+  final PreparedContent content;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_type_catalog.ValuePath> pendingDefaults;
+  @_core.override
+  final _core.Iterable<RequiredInput> requiredInputs;
+  @_core.override
+  final _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic>
+  findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PreparationDraft({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required PreparedContent content,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+    pendingDefaults,
+    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PreparationDraft._(
+    catalog.toFrozen(),
+    target,
+    content,
+    _skir.internal__frozenMappedCopy(pendingDefaults, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(requiredInputs, (it) => it.toFrozen()),
+    _skir.internal__frozenMappedCopy(findings, (it) => it.toFrozen()),
+  );
+
+  PreparationDraft._(
+    this.catalog,
+    this.target,
+    this.content,
+    this.pendingDefaults,
+    this.requiredInputs,
+    this.findings,
+  );
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PreparationDraft._(
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    PreparationTarget.unknown,
+    PreparedContent.unknown,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PreparationDraft_mutable mutable() => PreparationDraft_mutable._(
+    _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
+    PreparationTarget.unknown,
+    PreparedContent.unknown,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PreparationDraft toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PreparationDraft_mutable toMutable() => PreparationDraft_mutable._(
+    this.catalog,
+    this.target,
+    this.content,
+    this.pendingDefaults,
+    this.requiredInputs,
+    this.findings,
+  );
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PreparationDraft) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [
+    this.catalog,
+    this.target,
+    this.content,
+    this.pendingDefaults,
+    this.requiredInputs,
+    this.findings,
+  ];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PreparationDraft` instances.
+  static _skir.StructSerializer<PreparationDraft, PreparationDraft_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "catalog",
+        "catalog",
+        0,
+        _lib_editor_v1_type_catalog.CatalogGeneration.serializer,
+        "",
+        (it) => it.catalog,
+        (it, v) => it.catalog = v,
+      );
+      _serializerBuilder.addField(
+        "target",
+        "target",
+        1,
+        PreparationTarget.serializer,
+        "",
+        (it) => it.target,
+        (it, v) => it.target = v,
+      );
+      _serializerBuilder.addField(
+        "content",
+        "content",
+        2,
+        PreparedContent.serializer,
+        "",
+        (it) => it.content,
+        (it, v) => it.content = v,
+      );
+      _serializerBuilder.addField(
+        "pending_defaults",
+        "pendingDefaults",
+        3,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_type_catalog.ValuePath.serializer,
+        ),
+        "",
+        (it) => it.pendingDefaults,
+        (it, v) => it.pendingDefaults = v,
+      );
+      _serializerBuilder.addField(
+        "required_inputs",
+        "requiredInputs",
+        4,
+        _skir.Serializers.iterable(RequiredInput.serializer),
+        "",
+        (it) => it.requiredInputs,
+        (it, v) => it.requiredInputs = v,
+      );
+      _serializerBuilder.addField(
+        "findings",
+        "findings",
+        5,
+        _skir.Serializers.iterable(
+          _lib_editor_v1_diagnostic.InitializationDiagnostic.serializer,
+        ),
+        "",
+        (it) => it.findings,
+        (it, v) => it.findings = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:PreparationDraft",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PreparationDraft_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PreparationDraft].
+final class PreparationDraft_mutable implements PreparationDraft_orMutable {
+  _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
+  PreparationTarget target;
+  PreparedContent content;
+  _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+  pendingDefaults;
+  _core.Iterable<RequiredInput_orMutable> requiredInputs;
+  _core.Iterable<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
+  findings;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PreparationDraft_mutable._(
+    this.catalog,
+    this.target,
+    this.content,
+    this.pendingDefaults,
+    this.requiredInputs,
+    this.findings,
+  );
+
+  /// If the value of [catalog] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
+  _lib_editor_v1_type_catalog.CatalogGeneration_mutable get mutableCatalog {
+    final value = this.catalog;
+    if (value is _lib_editor_v1_type_catalog.CatalogGeneration_mutable) {
+      return value;
+    } else {
+      return this.catalog =
+          (value as _lib_editor_v1_type_catalog.CatalogGeneration).toMutable();
+    }
+  }
+
+  /// If the value of [pendingDefaults] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [pendingDefaults] and returns it.
+  _core.List<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+  get mutablePendingDefaults {
+    final value = this.pendingDefaults;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_type_catalog.ValuePath_orMutable
+        >) {
+      return value;
+    } else {
+      return this.pendingDefaults = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [requiredInputs] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [requiredInputs] and returns it.
+  _core.List<RequiredInput_orMutable> get mutableRequiredInputs {
+    final value = this.requiredInputs;
+    if (value is _skir.internal__MutableList<RequiredInput_orMutable>) {
+      return value;
+    } else {
+      return this.requiredInputs = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// If the value of [findings] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
+  _core.List<_lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable>
+  get mutableFindings {
+    final value = this.findings;
+    if (value
+        is _skir.internal__MutableList<
+          _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+        >) {
+      return value;
+    } else {
+      return this.findings = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PreparationDraft toFrozen() => PreparationDraft(
+    catalog: this.catalog,
+    target: this.target,
+    content: this.content,
+    pendingDefaults: this.pendingDefaults,
+    requiredInputs: this.requiredInputs,
+    findings: this.findings,
+  ).._u = this._u;
+}
+
+// struct InputAnswer
+
+sealed class InputAnswer_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable get path;
+  _lib_editor_v1_type_catalog.DataValue get value;
+
+  InputAnswer toFrozen();
+}
+
+/// Deeply immutable.
+final class InputAnswer implements InputAnswer_orMutable {
+  @_core.override
+  final _lib_editor_v1_type_catalog.ValuePath path;
+  @_core.override
+  final _lib_editor_v1_type_catalog.DataValue value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory InputAnswer({
+    required _lib_editor_v1_type_catalog.ValuePath_orMutable path,
+    required _lib_editor_v1_type_catalog.DataValue value,
+  }) => InputAnswer._(path.toFrozen(), value);
+
+  InputAnswer._(this.path, this.value);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = InputAnswer._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static InputAnswer_mutable mutable() => InputAnswer_mutable._(
+    _lib_editor_v1_type_catalog.ValuePath.defaultInstance,
+    _lib_editor_v1_type_catalog.DataValue.unknown,
+  );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  InputAnswer toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  InputAnswer_mutable toMutable() =>
+      InputAnswer_mutable._(this.path, this.value);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! InputAnswer) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.path, this.value];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `InputAnswer` instances.
+  static _skir.StructSerializer<InputAnswer, InputAnswer_mutable>
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "path",
+        "path",
+        0,
+        _lib_editor_v1_type_catalog.ValuePath.serializer,
+        "",
+        (it) => it.path,
+        (it, v) => it.path = v,
+      );
+      _serializerBuilder.addField(
+        "value",
+        "value",
+        1,
+        _lib_editor_v1_type_catalog.DataValue.serializer,
+        "",
+        (it) => it.value,
+        (it, v) => it.value = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:InputAnswer",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (InputAnswer_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [InputAnswer].
+final class InputAnswer_mutable implements InputAnswer_orMutable {
+  _lib_editor_v1_type_catalog.ValuePath_orMutable path;
+  _lib_editor_v1_type_catalog.DataValue value;
+  _skir.internal__UnrecognizedFields? _u;
+
+  InputAnswer_mutable._(this.path, this.value);
+
+  /// If the value of [path] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+  _lib_editor_v1_type_catalog.ValuePath_mutable get mutablePath {
+    final value = this.path;
+    if (value is _lib_editor_v1_type_catalog.ValuePath_mutable) {
+      return value;
+    } else {
+      return this.path = (value as _lib_editor_v1_type_catalog.ValuePath)
+          .toMutable();
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  InputAnswer toFrozen() =>
+      InputAnswer(path: this.path, value: this.value).._u = this._u;
+}
+
+// struct PreparationOperation.Resume
+
+sealed class PreparationOperation_Resume_orMutable {
+  PreparationDraft_orMutable get draft;
+  _core.Iterable<InputAnswer_orMutable> get answers;
+
+  PreparationOperation_Resume toFrozen();
+}
+
+/// Deeply immutable.
+final class PreparationOperation_Resume
+    implements PreparationOperation_Resume_orMutable {
+  @_core.override
+  final PreparationDraft draft;
+  @_core.override
+  final _core.Iterable<InputAnswer> answers;
+  _skir.internal__UnrecognizedFields? _u;
+
+  factory PreparationOperation_Resume({
+    required PreparationDraft_orMutable draft,
+    required _core.Iterable<InputAnswer_orMutable> answers,
+  }) => PreparationOperation_Resume._(
+    draft.toFrozen(),
+    _skir.internal__frozenMappedCopy(answers, (it) => it.toFrozen()),
+  );
+
+  PreparationOperation_Resume._(this.draft, this.answers);
+
+  /// Default instance with all fields set to their default values.
+  static final defaultInstance = PreparationOperation_Resume._(
+    PreparationDraft.defaultInstance,
+    _skir.KeyedIterable.empty,
+  );
+
+  /// Returns a new mutable instance.
+  /// Fields are initialized to their default values.
+  static PreparationOperation_Resume_mutable mutable() =>
+      PreparationOperation_Resume_mutable._(
+        PreparationDraft.defaultInstance,
+        _skir.KeyedIterable.empty,
+      );
+
+  /// Returns this instance (no operation).
+  @_core.Deprecated("This instance is already frozen.")
+  @_core.override
+  PreparationOperation_Resume toFrozen() => this;
+
+  /// Returns a mutable shallow copy of this instance.
+  PreparationOperation_Resume_mutable toMutable() =>
+      PreparationOperation_Resume_mutable._(this.draft, this.answers);
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (_core.identical(this, other)) return true;
+    if (other is! PreparationOperation_Resume) return false;
+    return _skir.internal__listEquality.equals(
+      _equality_proxy,
+      other._equality_proxy,
+    );
+  }
+
+  @_core.override
+  _core.int get hashCode => _skir.internal__listEquality.hash(_equality_proxy);
+
+  _core.List get _equality_proxy => [this.draft, this.answers];
+
+  @_core.override
+  _core.String toString() => _skir.internal__stringify(this, serializer);
+
+  /// Serializer for `PreparationOperation_Resume` instances.
+  static _skir.StructSerializer<
+    PreparationOperation_Resume,
+    PreparationOperation_Resume_mutable
+  >
+  get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addField(
+        "draft",
+        "draft",
+        0,
+        PreparationDraft.serializer,
+        "",
+        (it) => it.draft,
+        (it, v) => it.draft = v,
+      );
+      _serializerBuilder.addField(
+        "answers",
+        "answers",
+        1,
+        _skir.Serializers.iterable(InputAnswer.serializer),
+        "",
+        (it) => it.answers,
+        (it, v) => it.answers = v,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
+    recordId: "editor/v1/catalog.skir:PreparationOperation.Resume",
+    doc: "",
+    defaultInstance: defaultInstance,
+    newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
+    toFrozen: (PreparationOperation_Resume_mutable it) => it.toFrozen(),
+    getUnrecognizedFields: (it) => it._u,
+    setUnrecognizedFields: (it, u) => it._u = u,
+  );
+}
+
+/// Mutable version of [PreparationOperation_Resume].
+final class PreparationOperation_Resume_mutable
+    implements PreparationOperation_Resume_orMutable {
+  PreparationDraft_orMutable draft;
+  _core.Iterable<InputAnswer_orMutable> answers;
+  _skir.internal__UnrecognizedFields? _u;
+
+  PreparationOperation_Resume_mutable._(this.draft, this.answers);
+
+  /// If the value of [draft] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [draft] and returns it.
+  PreparationDraft_mutable get mutableDraft {
+    final value = this.draft;
+    if (value is PreparationDraft_mutable) {
+      return value;
+    } else {
+      return this.draft = (value as PreparationDraft).toMutable();
+    }
+  }
+
+  /// If the value of [answers] is already mutable, returns it as is.
+  /// Otherwise, makes a mutable copy, assigns it back to [answers] and returns it.
+  _core.List<InputAnswer_orMutable> get mutableAnswers {
+    final value = this.answers;
+    if (value is _skir.internal__MutableList<InputAnswer_orMutable>) {
+      return value;
+    } else {
+      return this.answers = _skir.internal__MutableList([...value]);
+    }
+  }
+
+  /// Returns a deeply immutable copy of this instance.
+  @_core.override
+  PreparationOperation_Resume toFrozen() =>
+      PreparationOperation_Resume(draft: this.draft, answers: this.answers)
+        .._u = this._u;
+}
+
+// enum PreparationOperation
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PreparationOperation_unknown(): { ... }
+///     case PreparationOperation_start(:var value): { ... }
+///     case PreparationOperation_resume(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PreparationOperation {
+  /// Constant indicating an unknown `PreparationOperation`.
+  /// Default value for fields of type `PreparationOperation`.
+  static const PreparationOperation unknown =
+      PreparationOperation_unknown._instance;
+
+  /// Create a 'start' variant wrapping around the given value.
+  factory PreparationOperation.wrapStart(ValuePreparationRequest value) =>
+      PreparationOperation_startWrapper._(value);
+
+  /// Same as `wrapStart(ValuePreparationRequest(...))`.
+  factory PreparationOperation.createStart({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required _lib_editor_v1_type_catalog.DataValue? suppliedValue,
+  }) => PreparationOperation.wrapStart(
+    ValuePreparationRequest(
+      catalog: catalog,
+      target: target,
+      suppliedValue: suppliedValue,
+    ),
+  );
+
+  /// Create a 'resume' variant wrapping around the given value.
+  factory PreparationOperation.wrapResume(PreparationOperation_Resume value) =>
+      PreparationOperation_resumeWrapper._(value);
+
+  /// Same as `wrapResume(PreparationOperation_Resume(...))`.
+  factory PreparationOperation.createResume({
+    required PreparationDraft_orMutable draft,
+    required _core.Iterable<InputAnswer_orMutable> answers,
+  }) => PreparationOperation.wrapResume(
+    PreparationOperation_Resume(draft: draft, answers: answers),
+  );
+
+  /// Returns the kind of variant held by this PreparationOperation.
+  PreparationOperation_kind get kind;
+
+  /// Serializer for `PreparationOperation` instances.
+  static _skir.EnumSerializer<PreparationOperation> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "start",
+        "wrapStart",
+        ValuePreparationRequest.serializer,
+        "",
+        PreparationOperation_startWrapper._,
+        (it) => it.value,
+        ordinal: PreparationOperation_kind.startWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "resume",
+        "wrapResume",
+        PreparationOperation_Resume.serializer,
+        "",
+        PreparationOperation_resumeWrapper._,
+        (it) => it.value,
+        ordinal: PreparationOperation_kind.resumeWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:PreparationOperation",
+        doc: "",
+        unknownInstance: PreparationOperation_unknown._instance,
+        enumInstance: PreparationOperation.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PreparationOperation_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PreparationOperation`.
+enum PreparationOperation_kind {
+  unknown(0),
+  startWrapper(1),
+  resumeWrapper(2);
+
+  final _core.int _ordinal;
+
+  const PreparationOperation_kind(this._ordinal);
+}
+
+final class PreparationOperation_unknown implements PreparationOperation {
+  static const _instance = PreparationOperation_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PreparationOperation_unknown._() : _u = null;
+  PreparationOperation_unknown._unrecognized(this._u);
+
+  @_core.override
+  PreparationOperation_kind get kind => PreparationOperation_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PreparationOperation_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationOperation.serializer);
+}
+
+sealed class _PreparationOperation_wrapper implements PreparationOperation {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PreparationOperation_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationOperation.serializer);
+}
+
+final class PreparationOperation_startWrapper
+    extends _PreparationOperation_wrapper {
+  final ValuePreparationRequest value;
+
+  PreparationOperation_startWrapper._(this.value);
+
+  @_core.override
+  PreparationOperation_kind get kind => PreparationOperation_kind.startWrapper;
+}
+
+final class PreparationOperation_resumeWrapper
+    extends _PreparationOperation_wrapper {
+  final PreparationOperation_Resume value;
+
+  PreparationOperation_resumeWrapper._(this.value);
+
+  @_core.override
+  PreparationOperation_kind get kind => PreparationOperation_kind.resumeWrapper;
+}
+
+// enum PreparationStep
+
+/// To switch on the variants:
+///   ```
+///   switch (e) {
+///     case PreparationStep_unknown(): { ... }
+///     case PreparationStep_ready(:var value): { ... }
+///     case PreparationStep_needsInput(:var value): { ... }
+///     case PreparationStep_unavailable(:var value): { ... }
+///   }
+///   ```
+///
+/// Deeply immutable.
+sealed class PreparationStep {
+  /// Constant indicating an unknown `PreparationStep`.
+  /// Default value for fields of type `PreparationStep`.
+  static const PreparationStep unknown = PreparationStep_unknown._instance;
+
+  /// Create a 'ready' variant wrapping around the given value.
+  factory PreparationStep.wrapReady(PreparedValue value) =>
+      PreparationStep_readyWrapper._(value);
+
+  /// Same as `wrapReady(PreparedValue(...))`.
+  factory PreparationStep.createReady({
+    required PreparedContent content,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PreparationStep.wrapReady(
+    PreparedValue(content: content, findings: findings),
+  );
+
+  /// Create a 'needs_input' variant wrapping around the given value.
+  factory PreparationStep.wrapNeedsInput(PreparationDraft value) =>
+      PreparationStep_needsInputWrapper._(value);
+
+  /// Same as `wrapNeedsInput(PreparationDraft(...))`.
+  factory PreparationStep.createNeedsInput({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required PreparedContent content,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+    pendingDefaults,
+    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PreparationStep.wrapNeedsInput(
+    PreparationDraft(
+      catalog: catalog,
+      target: target,
+      content: content,
+      pendingDefaults: pendingDefaults,
+      requiredInputs: requiredInputs,
+      findings: findings,
+    ),
+  );
+
+  /// Create a 'unavailable' variant wrapping around the given value.
+  factory PreparationStep.wrapUnavailable(PreparationDraft value) =>
+      PreparationStep_unavailableWrapper._(value);
+
+  /// Same as `wrapUnavailable(PreparationDraft(...))`.
+  factory PreparationStep.createUnavailable({
+    required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
+    required PreparationTarget target,
+    required PreparedContent content,
+    required _core.Iterable<_lib_editor_v1_type_catalog.ValuePath_orMutable>
+    pendingDefaults,
+    required _core.Iterable<RequiredInput_orMutable> requiredInputs,
+    required _core.Iterable<
+      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
+    >
+    findings,
+  }) => PreparationStep.wrapUnavailable(
+    PreparationDraft(
+      catalog: catalog,
+      target: target,
+      content: content,
+      pendingDefaults: pendingDefaults,
+      requiredInputs: requiredInputs,
+      findings: findings,
+    ),
+  );
+
+  /// Returns the kind of variant held by this PreparationStep.
+  PreparationStep_kind get kind;
+
+  /// Serializer for `PreparationStep` instances.
+  static _skir.EnumSerializer<PreparationStep> get serializer {
+    if (_serializerBuilder.mustInitialize()) {
+      _serializerBuilder.addWrapperVariant(
+        1,
+        "ready",
+        "wrapReady",
+        PreparedValue.serializer,
+        "",
+        PreparationStep_readyWrapper._,
+        (it) => it.value,
+        ordinal: PreparationStep_kind.readyWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        2,
+        "needs_input",
+        "wrapNeedsInput",
+        PreparationDraft.serializer,
+        "",
+        PreparationStep_needsInputWrapper._,
+        (it) => it.value,
+        ordinal: PreparationStep_kind.needsInputWrapper._ordinal,
+      );
+      _serializerBuilder.addWrapperVariant(
+        3,
+        "unavailable",
+        "wrapUnavailable",
+        PreparationDraft.serializer,
+        "",
+        PreparationStep_unavailableWrapper._,
+        (it) => it.value,
+        ordinal: PreparationStep_kind.unavailableWrapper._ordinal,
+      );
+      _serializerBuilder.finalize();
+    }
+    return _serializerBuilder.serializer;
+  }
+
+  static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
+      .create(
+        recordId: "editor/v1/catalog.skir:PreparationStep",
+        doc: "",
+        unknownInstance: PreparationStep_unknown._instance,
+        enumInstance: PreparationStep.unknown,
+        getOrdinal: (it) => it.kind._ordinal,
+        wrapUnrecognized: PreparationStep_unknown._unrecognized,
+        getUnrecognized: (it) => it._u,
+      );
+}
+
+/// The kind of variant held by a `PreparationStep`.
+enum PreparationStep_kind {
+  unknown(0),
+  readyWrapper(1),
+  needsInputWrapper(2),
+  unavailableWrapper(3);
+
+  final _core.int _ordinal;
+
+  const PreparationStep_kind(this._ordinal);
+}
+
+final class PreparationStep_unknown implements PreparationStep {
+  static const _instance = PreparationStep_unknown._();
+
+  final _skir.internal__UnrecognizedVariant? _u;
+
+  const PreparationStep_unknown._() : _u = null;
+  PreparationStep_unknown._unrecognized(this._u);
+
+  @_core.override
+  PreparationStep_kind get kind => PreparationStep_kind.unknown;
+  @_core.override
+  _core.bool operator ==(other) => other is PreparationStep_unknown;
+  @_core.override
+  _core.int get hashCode => 8118964;
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationStep.serializer);
+}
+
+sealed class _PreparationStep_wrapper implements PreparationStep {
+  _core.dynamic get value;
+
+  @_core.override
+  _core.bool operator ==(other) {
+    if (other is! _PreparationStep_wrapper) return false;
+    return kind == other.kind && value == other.value;
+  }
+
+  @_core.override
+  _core.int get hashCode => (kind._ordinal * 31) ^ value.hashCode;
+
+  @_core.override
+  _core.String toString() =>
+      _skir.internal__stringify(this, PreparationStep.serializer);
+}
+
+final class PreparationStep_readyWrapper extends _PreparationStep_wrapper {
+  final PreparedValue value;
+
+  PreparationStep_readyWrapper._(this.value);
+
+  @_core.override
+  PreparationStep_kind get kind => PreparationStep_kind.readyWrapper;
+}
+
+final class PreparationStep_needsInputWrapper extends _PreparationStep_wrapper {
+  final PreparationDraft value;
+
+  PreparationStep_needsInputWrapper._(this.value);
+
+  @_core.override
+  PreparationStep_kind get kind => PreparationStep_kind.needsInputWrapper;
+}
+
+final class PreparationStep_unavailableWrapper
+    extends _PreparationStep_wrapper {
+  final PreparationDraft value;
+
+  PreparationStep_unavailableWrapper._(this.value);
+
+  @_core.override
+  PreparationStep_kind get kind => PreparationStep_kind.unavailableWrapper;
+}
+
 // enum PrepareValueResult
 
 /// To switch on the variants:
@@ -5434,19 +6497,8 @@ sealed class PrepareValueResult {
       PrepareValueResult_unknown._instance;
 
   /// Create a 'prepared' variant wrapping around the given value.
-  factory PrepareValueResult.wrapPrepared(PreparedValue value) =>
+  factory PrepareValueResult.wrapPrepared(PreparationStep value) =>
       PrepareValueResult_preparedWrapper._(value);
-
-  /// Same as `wrapPrepared(PreparedValue(...))`.
-  factory PrepareValueResult.createPrepared({
-    required PreparedContent content,
-    required _core.Iterable<
-      _lib_editor_v1_diagnostic.InitializationDiagnostic_orMutable
-    >
-    findings,
-  }) => PrepareValueResult.wrapPrepared(
-    PreparedValue(content: content, findings: findings),
-  );
 
   /// Create a 'catalog_changed' variant wrapping around the given value.
   factory PrepareValueResult.wrapCatalogChanged(
@@ -5481,7 +6533,7 @@ sealed class PrepareValueResult {
         1,
         "prepared",
         "wrapPrepared",
-        PreparedValue.serializer,
+        PreparationStep.serializer,
         "",
         PrepareValueResult_preparedWrapper._,
         (it) => it.value,
@@ -5574,7 +6626,7 @@ sealed class _PrepareValueResult_wrapper implements PrepareValueResult {
 
 final class PrepareValueResult_preparedWrapper
     extends _PrepareValueResult_wrapper {
-  final PreparedValue value;
+  final PreparationStep value;
 
   PrepareValueResult_preparedWrapper._(this.value);
 
@@ -6238,11 +7290,11 @@ watchEditorCatalogMethod = _skir.Method(
   "",
 );
 
-final _skir.Method<ValuePreparationRequest, PrepareValueResult>
+final _skir.Method<PreparationOperation, PrepareValueResult>
 prepareValueMethod = _skir.Method(
   "PrepareValue",
   910003,
-  ValuePreparationRequest.serializer,
+  PreparationOperation.serializer,
   PrepareValueResult.serializer,
   "",
 );

@@ -81,9 +81,30 @@ final class NatsRealmEditorCatalogSource {
     skir.RecordId organizationId,
     skir.RecordId realmId,
     skir.ValuePreparationRequest request,
+  ) async => switch (await prepareStep(
+    organizationId,
+    realmId,
+    skir.PreparationOperation.wrapStart(request),
+  )) {
+    skir.PreparationStep_readyWrapper(:final value) => value,
+    skir.PreparationStep_needsInputWrapper(:final value) => skir.PreparedValue(
+      content: value.content,
+      findings: value.findings,
+    ),
+    skir.PreparationStep_unavailableWrapper(:final value) => skir.PreparedValue(
+      content: value.content,
+      findings: value.findings,
+    ),
+    skir.PreparationStep_unknown() => throw ApiException.internalServerError(),
+  };
+
+  Future<skir.PreparationStep> prepareStep(
+    skir.RecordId organizationId,
+    skir.RecordId realmId,
+    skir.PreparationOperation operation,
   ) async {
     final response = await ref.requestSkir(
-      request.operation(organizationId: organizationId, realmId: realmId),
+      operation.operation(organizationId: organizationId, realmId: realmId),
     );
     return switch (response) {
       skir.PrepareValueResult_preparedWrapper(:final value) => value,

@@ -101,7 +101,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                             DefaultInitializationRuntime(
                                 catalog.checked,
                                 catalog.nativeBindings,
-                            ).prepare(request)
+                            ).step(request)
                         },
                     engine =
                         StagedEngineImplementationSource(

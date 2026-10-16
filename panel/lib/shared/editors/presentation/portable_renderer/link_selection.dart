@@ -21,49 +21,23 @@ Future<void> _chooseLink({
     candidates: candidates,
     candidateDefinition: candidateDefinition,
   );
-  final decision = await showSearchModal<_AuthoredLinkDecision>(
+  final selected = await showReferencePicker<_AuthoredLinkChoice>(
     context,
-    (ref, modalContext) {
-      final source = _AuthoredLinkSearchSource(
-        choices,
-        candidatePolicy: control.candidatePolicy,
-        problem: switch (plans) {
-          PortableLinkPlanUnavailable(:final message) => message,
-          PortableLinkPlanReady() => null,
-        },
-      );
-      return SearchContribution(
-        session: SearchSession(
-          source: source,
-          interaction: SearchInteraction(
-            activation: SearchActivation.custom(
-              dependencies: const [],
-              evaluate: (_, result) {
-                final choice = result.payload as _AuthoredLinkChoice;
-                final reason = choice.disabledReason;
-                return reason == null
-                    ? const SearchActivationState.enabled()
-                    : SearchActivationState.disabled(reason);
-              },
-              activate: (_, result) async {
-                final choice = result.payload as _AuthoredLinkChoice;
-                try {
-                  final decision = await _resolveAuthoredLinkChoice(
-                    choice: choice,
-                  );
-                  return SearchActivationResult.complete(decision);
-                } on Object catch (error) {
-                  source.reportFailure(
-                    "The counterpart could not be prepared: $error",
-                  );
-                  return const SearchActivationResult.keepOpen();
-                }
-              },
-            ),
-            selectionMode: SearchSelectionMode.single,
-          ),
+    candidates: [
+      for (final choice in choices)
+        ReferencePickerCandidate(
+          id: choice.id,
+          value: choice,
+          label: choice.label,
+          description: "${choice.typeLabel}. ${choice.subtitle}",
+          searchText: choice.searchText,
+          disabledReason: choice.disabledReason,
         ),
-      );
+    ],
+    candidatePolicy: control.candidatePolicy,
+    problem: switch (plans) {
+      PortableLinkPlanUnavailable(:final message) => message,
+      PortableLinkPlanReady() => null,
     },
     searchHint:
         _entryPlaceholder(control.inputContent, scope) ??
@@ -96,12 +70,10 @@ Future<void> _chooseLink({
           ? null
           : _presentationInsets(control.popup!.padding),
     ),
-    rowRenderers: {
-      _authoredLinkChoiceResultType.rowRendererId:
-          _buildAuthoredLinkChoiceResult,
-    },
+    rowBuilder: _buildAuthoredLinkChoiceResult,
   );
-  if (decision == null) return;
+  if (selected == null || !context.mounted) return;
+  final decision = await _resolveAuthoredLinkChoice(choice: selected);
   final reference = control.control.binding;
   final address = scope.diagnosticTarget(reference);
   await scope.operations.run(
@@ -119,58 +91,42 @@ Future<void> _chooseLink({
   );
 }
 
-final class _AuthoredLinkDecision {
-  const _AuthoredLinkDecision({
-    required this.plan,
-    required this.target,
-    required this.counterpart,
-  });
-
-  final PortableLinkPlan plan;
-  final PortableLinkTargetChoice target;
-  final PortableLinkCounterpartRequest counterpart;
+@freezed
+abstract class _AuthoredLinkDecision with _$AuthoredLinkDecision {
+  const factory _AuthoredLinkDecision({
+    required PortableLinkPlan plan,
+    required PortableLinkTargetChoice target,
+    required PortableLinkCounterpartRequest counterpart,
+  }) = __AuthoredLinkDecision;
 }
 
-const _authoredLinkChoiceResultType = SearchResultType(
-  id: "authoring.link.choice",
-  rowRendererId: "authoring.link.choice",
-  label: "Linked resource",
-);
+enum _AuthoredLinkChoiceKind {
+  automatic,
+  existing,
+  append,
+  create,
+  unavailable,
+}
 
-enum _AuthoredLinkChoiceKind { automatic, existing, create, unavailable }
-
-final class _AuthoredLinkChoice {
-  const _AuthoredLinkChoice({
-    required this.id,
-    required this.widgetKey,
-    required this.plan,
-    required this.target,
-    required this.kind,
-    required this.label,
-    required this.typeLabel,
-    required this.subtitle,
-    required this.searchText,
-    this.row,
-    this.definition,
-    this.occurrence,
-    this.slot,
-    this.disabledReason,
-  });
-
-  final String id;
-  final String widgetKey;
-  final PortableLinkPlan plan;
-  final PortableLinkTargetChoice target;
-  final _AuthoredLinkChoiceKind kind;
-  final String label;
-  final String typeLabel;
-  final String subtitle;
-  final String searchText;
-  final _AuthoredCollectionRow? row;
-  final skir.PresentationCollectionDefinition? definition;
-  final skir.LinkOccurrence? occurrence;
-  final PortableNewCounterpartChoice? slot;
-  final String? disabledReason;
+@freezed
+abstract class _AuthoredLinkChoice with _$AuthoredLinkChoice {
+  const factory _AuthoredLinkChoice({
+    required String id,
+    required String widgetKey,
+    required PortableLinkPlan plan,
+    required PortableLinkTargetChoice target,
+    required _AuthoredLinkChoiceKind kind,
+    required String label,
+    required String typeLabel,
+    required String subtitle,
+    required String searchText,
+    _AuthoredCollectionRow? row,
+    skir.PresentationCollectionDefinition? definition,
+    skir.LinkOccurrence? occurrence,
+    PortableNewCounterpartChoice? slot,
+    skir.ValueLocation? collection,
+    String? disabledReason,
+  }) = __AuthoredLinkChoice;
 }
 
 List<_AuthoredLinkChoice> _authoredLinkChoices({
@@ -247,6 +203,25 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
           ),
         );
       }
+      for (final collection in target.collections) {
+        final path = _pathLabel(collection.path);
+        choices.add(
+          _AuthoredLinkChoice(
+            id: "$planId:${target.resource.value}:append:$path",
+            widgetKey: "link.target.${target.resource.value}.append.$path",
+            plan: plan,
+            target: target,
+            kind: _AuthoredLinkChoiceKind.append,
+            label: label,
+            typeLabel: typeLabel,
+            subtitle: "Add counterpart to $path",
+            searchText: "$targetSearchText add counterpart $path",
+            row: row,
+            definition: candidateDefinition,
+            collection: collection,
+          ),
+        );
+      }
       for (final slot in target.creatable) {
         final path = _pathLabel(slot.containing.path);
         choices.add(
@@ -273,7 +248,8 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
       }
       if (!target.automaticCounterpart &&
           target.existing.isEmpty &&
-          target.creatable.isEmpty) {
+          target.creatable.isEmpty &&
+          target.collections.isEmpty) {
         choices.add(
           _AuthoredLinkChoice(
             id: "$planId:${target.resource.value}:unavailable",
@@ -283,123 +259,20 @@ List<_AuthoredLinkChoice> _authoredLinkChoices({
             kind: _AuthoredLinkChoiceKind.unavailable,
             label: label,
             typeLabel: typeLabel,
-            subtitle: "Choose or create a counterpart location first",
+            subtitle:
+                target.disabledReason ??
+                "Choose or create a counterpart location first",
             searchText: targetSearchText,
             row: row,
             definition: candidateDefinition,
-            disabledReason: "No counterpart location is available",
+            disabledReason:
+                target.disabledReason ?? "No counterpart location is available",
           ),
         );
       }
     }
   }
   return choices;
-}
-
-final class _AuthoredLinkSearchSource implements SearchSource {
-  _AuthoredLinkSearchSource(
-    this.choices, {
-    required this.candidatePolicy,
-    required this.problem,
-  });
-
-  final List<_AuthoredLinkChoice> choices;
-  final skir.LinkCandidatePolicyId? candidatePolicy;
-  final String? problem;
-  final _snapshots = StreamController<SearchSourceSnapshot>.broadcast(
-    sync: true,
-  );
-  SearchQueryContext _query = SearchQueryContext.empty;
-  String? _failure;
-  bool _disposed = false;
-
-  @override
-  Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
-
-  @override
-  List<QuerySelectorDefinition> get selectors => const [];
-
-  @override
-  void initialize(SearchQueryContext context) => search(context);
-
-  @override
-  void search(SearchQueryContext context) {
-    _query = context;
-    _failure = null;
-    _publish();
-  }
-
-  void reportFailure(String message) {
-    _failure = message;
-    _publish();
-  }
-
-  void _publish() {
-    if (_disposed) return;
-    final term = _query.normalizedQuery.trim().toLowerCase();
-    final matches = choices
-        .where((choice) => term.isEmpty || choice.searchText.contains(term))
-        .toList(growable: false);
-    final failure = _failure ?? problem;
-    _snapshots.add(
-      SearchSourceSnapshot(
-        status: failure == null
-            ? SearchSourceStatus.ready
-            : SearchSourceStatus.error,
-        nodes: [
-          if (matches.isNotEmpty)
-            SearchNode.section(
-              id: "authoring.link.choices",
-              title: "Available resources",
-              children: [
-                for (final choice in matches)
-                  SearchNode.result(
-                    result: SearchResult(
-                      id: choice.id,
-                      type: _authoredLinkChoiceResultType,
-                      payload: choice,
-                      title: choice.label,
-                      subtitle: "${choice.typeLabel}. ${choice.subtitle}",
-                    ),
-                  ),
-              ],
-            ),
-        ],
-        errorSummaries: [
-          if (failure != null)
-            SearchErrorSummary(
-              id: "authoring.link.prepare",
-              message: failure,
-              severity: SearchErrorSeverity.error,
-              sourceLabel: "Linked resource",
-            ),
-        ],
-        guidance: [
-          if (candidatePolicy case final policy?)
-            SearchGuidance(
-              id: "authoring.link.candidate_policy",
-              title: "Candidate policy",
-              description: policy.value,
-              visibility: SearchGuidanceVisibility.always,
-            ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Future<SearchPreviewRequestResult> preview(
-    SearchPreviewRequest request,
-  ) async => const SearchPreviewRequestResult.error(
-    message: "Linked resources do not provide a separate preview",
-  );
-
-  @override
-  void dispose() {
-    if (_disposed) return;
-    _disposed = true;
-    unawaited(_snapshots.close());
-  }
 }
 
 Widget _buildAuthoredLinkChoiceResult(SearchResultRowContext context) {
@@ -422,6 +295,7 @@ Widget _buildAuthoredLinkChoiceResult(SearchResultRowContext context) {
           icon: Icon(switch (choice.kind) {
             _AuthoredLinkChoiceKind.automatic => Icons.link,
             _AuthoredLinkChoiceKind.existing => Icons.link_outlined,
+            _AuthoredLinkChoiceKind.append ||
             _AuthoredLinkChoiceKind.create => Icons.add_link,
             _AuthoredLinkChoiceKind.unavailable => Icons.link_off,
           }),
@@ -446,6 +320,7 @@ Widget _buildAuthoredLinkChoiceResult(SearchResultRowContext context) {
           label: switch (choice.kind) {
             _AuthoredLinkChoiceKind.automatic => "automatic",
             _AuthoredLinkChoiceKind.existing => "existing",
+            _AuthoredLinkChoiceKind.append => "append",
             _AuthoredLinkChoiceKind.create => "create",
             _AuthoredLinkChoiceKind.unavailable => "unavailable",
           },
@@ -472,6 +347,12 @@ Future<_AuthoredLinkDecision> _resolveAuthoredLinkChoice({
         plan: choice.plan,
         target: choice.target,
         counterpart: PortableExistingCounterpart(choice.occurrence!),
+      );
+    case _AuthoredLinkChoiceKind.append:
+      return _AuthoredLinkDecision(
+        plan: choice.plan,
+        target: choice.target,
+        counterpart: PortableCollectionCounterpart(choice.collection!),
       );
     case _AuthoredLinkChoiceKind.create:
       final slot = choice.slot;

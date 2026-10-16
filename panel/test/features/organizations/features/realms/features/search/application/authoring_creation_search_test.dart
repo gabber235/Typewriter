@@ -39,7 +39,7 @@ void main() {
   });
 
   test(
-    "creation search excludes resources owned by another resource",
+    "creation search includes concrete resources with required relationships",
     () async {
       final fixture = _fixture();
       addTearDown(fixture.container.dispose);
@@ -51,8 +51,31 @@ void main() {
       final section =
           fixture.controller.snapshot.nodes.single as SearchSectionNode;
       final option =
-          (section.children.single as SearchResultNode).result.payload
+          section.children.whereType<SearchResultNode>().singleWhere(
+                (node) =>
+                    (node.result.payload as AuthoringCreationOption)
+                        .definition
+                        .value ==
+                    "test.book",
+              ).result.payload
               as AuthoringCreationOption;
+      expect(section.children, hasLength(2));
+      final entryOption =
+          section.children.whereType<SearchResultNode>().singleWhere(
+                (node) =>
+                    (node.result.payload as AuthoringCreationOption)
+                        .definition
+                        .value ==
+                    "test.entry",
+              ).result.payload
+              as AuthoringCreationOption;
+      expect(
+        entryOption.configuration,
+        skir.TypeSelection.createComplete(
+          definition: _definition("SimpleMessage"),
+          arguments: const [],
+        ),
+      );
       expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
       expect(option.label, "Quest Book");
       expect(option.display?.description, "A reusable quest collection");
@@ -68,7 +91,7 @@ void main() {
     },
   );
 
-  test("creation search respects reversed ownership endpoints", () async {
+  test("creation search does not depend on ownership endpoint order", () async {
     final fixture = _fixture(reversedOwnership: true);
     addTearDown(fixture.container.dispose);
     addTearDown(fixture.subscription.close);
@@ -77,10 +100,13 @@ void main() {
 
     final section =
         fixture.controller.snapshot.nodes.single as SearchSectionNode;
-    final option =
-        (section.children.single as SearchResultNode).result.payload
-            as AuthoringCreationOption;
-    expect(option.definition, skir.ResourceDefinitionId(value: "test.book"));
+    expect(
+      section.children.whereType<SearchResultNode>().map(
+        (node) =>
+            (node.result.payload as AuthoringCreationOption).definition.value,
+      ),
+      containsAll(["test.book", "test.entry"]),
+    );
   });
 
   test("creation search filters by the resource label", () async {
@@ -95,6 +121,38 @@ void main() {
 
     expect(fixture.controller.snapshot.nodes, isEmpty);
   });
+
+  test(
+    "type and text filters apply before the creation result limit",
+    () async {
+      final fixture = _fixture(manyEntries: true);
+      addTearDown(fixture.container.dispose);
+      addTearDown(fixture.subscription.close);
+      addTearDown(fixture.controller.dispose);
+      await pumpEventQueue();
+      expect(
+        (fixture.controller.snapshot.nodes.single as SearchSectionNode)
+            .children,
+        hasLength(20),
+      );
+      fixture.controller.updateQuery("type:Entry ZMessage");
+      await pumpEventQueue();
+      final section =
+          fixture.controller.snapshot.nodes.single as SearchSectionNode;
+      final option =
+          (section.children.single as SearchResultNode).result.payload
+              as AuthoringCreationOption;
+      expect(option.label, "ZMessage");
+      expect(option.definition.value, "test.entry");
+      expect(
+        option.configuration,
+        skir.TypeSelection.createComplete(
+          definition: _definition("ZMessage"),
+          arguments: const [],
+        ),
+      );
+    },
+  );
 }
 
 ({
@@ -102,7 +160,7 @@ void main() {
   ProviderSubscription<AsyncValue<AuthoringDocument>> subscription,
   SourceController controller,
 })
-_fixture({bool reversedOwnership = false}) {
+_fixture({bool reversedOwnership = false, bool manyEntries = false}) {
   final organization = skir.RecordId(
     table: "organization",
     key: skir.RecordIdKey.wrapString("test"),
@@ -116,7 +174,10 @@ _fixture({bool reversedOwnership = false}) {
       organizationIdProvider.overrideWithValue(organization),
       realmIdProvider.overrideWithValue(realm),
       ...authoringFixtureOverrides(
-        catalog: _catalog(reversedOwnership: reversedOwnership),
+        catalog: _catalog(
+          reversedOwnership: reversedOwnership,
+          manyEntries: manyEntries,
+        ),
       ),
     ],
   );
@@ -135,7 +196,10 @@ _fixture({bool reversedOwnership = false}) {
   );
 }
 
-CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
+CheckedEditorCatalog _catalog({
+  bool reversedOwnership = false,
+  bool manyEntries = false,
+}) {
   final book = _definition("Book");
   final entry = _definition("Entry");
   final owner = skir.EndpointDefinition(
@@ -169,7 +233,13 @@ CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
             color: "#3F51B5",
           ),
         ),
-        _published(entry),
+        _published(entry, abstract: true),
+        _published(_definition("SimpleMessage"), parent: entry),
+        if (manyEntries) ...[
+          for (var index = 0; index < 25; index++)
+            _published(_definition("Entry$index"), parent: entry),
+          _published(_definition("ZMessage"), parent: entry),
+        ],
       ],
       relations: [
         skir.RelationContract(
@@ -207,19 +277,27 @@ CheckedEditorCatalog _catalog({bool reversedOwnership = false}) {
 skir.PublishedType _published(
   skir.TypeDefinitionId id, {
   skir.TypeDisplay? display,
+  bool abstract = false,
+  skir.TypeDefinitionId? parent,
 }) => skir.PublishedType(
   definition: skir.TypeDefinition(
     id: id,
     parameters: const [],
     representation: skir.RepresentationTemplate.createRecord(
       fields: const [],
-      abstract_: false,
+      abstract_: abstract,
     ),
-    parents: const [],
+    parents: [
+      if (parent != null)
+        skir.NamedTypeTemplate(definition: parent, arguments: const []),
+    ],
   ),
   status: skir.DeclarationStatus.ready,
   effectiveFields: const [],
-  ancestorTemplates: const [],
+  ancestorTemplates: [
+    if (parent != null)
+      skir.NamedTypeTemplate(definition: parent, arguments: const []),
+  ],
   display: display,
 );
 

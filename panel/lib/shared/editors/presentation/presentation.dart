@@ -9,4 +9,5 @@ export "portable_presentation_expressions.dart";
 export "portable_presentation_renderer.dart";
 export "presentation_color.dart";
 export "presentation_environment.dart";
+export "reference_picker.dart";
 export "timeline/timeline.dart";

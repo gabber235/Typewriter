@@ -1956,6 +1956,423 @@ as PortableDiagnosticFallback,
 }
 
 /// @nodoc
+mixin _$PortableLinkCounterpartRequest {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableLinkCounterpartRequest);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortableLinkCounterpartRequest()';
+}
+
+
+}
+
+/// @nodoc
+class $PortableLinkCounterpartRequestCopyWith<$Res>  {
+$PortableLinkCounterpartRequestCopyWith(PortableLinkCounterpartRequest _, $Res Function(PortableLinkCounterpartRequest) __);
+}
+
+
+/// Adds pattern matching related methods to [PortableLinkCounterpartRequest].
+extension PortableLinkCounterpartRequestPatterns on PortableLinkCounterpartRequest {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PortableAutomaticCounterpart value)?  automatic,TResult Function( PortableExistingCounterpart value)?  existing,TResult Function( PortableCreatedCounterpart value)?  created,TResult Function( PortableCollectionCounterpart value)?  collection,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart() when automatic != null:
+return automatic(_that);case PortableExistingCounterpart() when existing != null:
+return existing(_that);case PortableCreatedCounterpart() when created != null:
+return created(_that);case PortableCollectionCounterpart() when collection != null:
+return collection(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PortableAutomaticCounterpart value)  automatic,required TResult Function( PortableExistingCounterpart value)  existing,required TResult Function( PortableCreatedCounterpart value)  created,required TResult Function( PortableCollectionCounterpart value)  collection,}){
+final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart():
+return automatic(_that);case PortableExistingCounterpart():
+return existing(_that);case PortableCreatedCounterpart():
+return created(_that);case PortableCollectionCounterpart():
+return collection(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PortableAutomaticCounterpart value)?  automatic,TResult? Function( PortableExistingCounterpart value)?  existing,TResult? Function( PortableCreatedCounterpart value)?  created,TResult? Function( PortableCollectionCounterpart value)?  collection,}){
+final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart() when automatic != null:
+return automatic(_that);case PortableExistingCounterpart() when existing != null:
+return existing(_that);case PortableCreatedCounterpart() when created != null:
+return created(_that);case PortableCollectionCounterpart() when collection != null:
+return collection(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  automatic,TResult Function( skir.LinkOccurrence occurrence)?  existing,TResult Function( PortableNewCounterpartChoice slot)?  created,TResult Function( skir.ValueLocation containing)?  collection,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart() when automatic != null:
+return automatic();case PortableExistingCounterpart() when existing != null:
+return existing(_that.occurrence);case PortableCreatedCounterpart() when created != null:
+return created(_that.slot);case PortableCollectionCounterpart() when collection != null:
+return collection(_that.containing);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  automatic,required TResult Function( skir.LinkOccurrence occurrence)  existing,required TResult Function( PortableNewCounterpartChoice slot)  created,required TResult Function( skir.ValueLocation containing)  collection,}) {final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart():
+return automatic();case PortableExistingCounterpart():
+return existing(_that.occurrence);case PortableCreatedCounterpart():
+return created(_that.slot);case PortableCollectionCounterpart():
+return collection(_that.containing);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  automatic,TResult? Function( skir.LinkOccurrence occurrence)?  existing,TResult? Function( PortableNewCounterpartChoice slot)?  created,TResult? Function( skir.ValueLocation containing)?  collection,}) {final _that = this;
+switch (_that) {
+case PortableAutomaticCounterpart() when automatic != null:
+return automatic();case PortableExistingCounterpart() when existing != null:
+return existing(_that.occurrence);case PortableCreatedCounterpart() when created != null:
+return created(_that.slot);case PortableCollectionCounterpart() when collection != null:
+return collection(_that.containing);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class PortableAutomaticCounterpart implements PortableLinkCounterpartRequest {
+  const PortableAutomaticCounterpart();
+
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableAutomaticCounterpart);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortableLinkCounterpartRequest.automatic()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class PortableExistingCounterpart implements PortableLinkCounterpartRequest {
+  const PortableExistingCounterpart(this.occurrence);
+
+
+ final  skir.LinkOccurrence occurrence;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExistingCounterpartCopyWith<PortableExistingCounterpart> get copyWith => _$PortableExistingCounterpartCopyWithImpl<PortableExistingCounterpart>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExistingCounterpart&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,occurrence);
+}
+
+@override
+String toString() {
+    return 'PortableLinkCounterpartRequest.existing(occurrence: $occurrence)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExistingCounterpartCopyWith<$Res> implements $PortableLinkCounterpartRequestCopyWith<$Res> {
+  factory $PortableExistingCounterpartCopyWith(PortableExistingCounterpart value, $Res Function(PortableExistingCounterpart) _then) = _$PortableExistingCounterpartCopyWithImpl;
+@useResult
+$Res call({
+ skir.LinkOccurrence occurrence
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableExistingCounterpartCopyWithImpl<$Res>
+    implements $PortableExistingCounterpartCopyWith<$Res> {
+  _$PortableExistingCounterpartCopyWithImpl(this._self, this._then);
+
+  final PortableExistingCounterpart _self;
+  final $Res Function(PortableExistingCounterpart) _then;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? occurrence = null,}) {
+  return _then(PortableExistingCounterpart(
+null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
+as skir.LinkOccurrence,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class PortableCreatedCounterpart implements PortableLinkCounterpartRequest {
+  const PortableCreatedCounterpart(this.slot);
+
+
+ final  PortableNewCounterpartChoice slot;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableCreatedCounterpartCopyWith<PortableCreatedCounterpart> get copyWith => _$PortableCreatedCounterpartCopyWithImpl<PortableCreatedCounterpart>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableCreatedCounterpart&&(identical(other.slot, slot) || other.slot == slot));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,slot);
+}
+
+@override
+String toString() {
+    return 'PortableLinkCounterpartRequest.created(slot: $slot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableCreatedCounterpartCopyWith<$Res> implements $PortableLinkCounterpartRequestCopyWith<$Res> {
+  factory $PortableCreatedCounterpartCopyWith(PortableCreatedCounterpart value, $Res Function(PortableCreatedCounterpart) _then) = _$PortableCreatedCounterpartCopyWithImpl;
+@useResult
+$Res call({
+ PortableNewCounterpartChoice slot
+});
+
+
+$PortableNewCounterpartChoiceCopyWith<$Res> get slot;
+
+}
+/// @nodoc
+class _$PortableCreatedCounterpartCopyWithImpl<$Res>
+    implements $PortableCreatedCounterpartCopyWith<$Res> {
+  _$PortableCreatedCounterpartCopyWithImpl(this._self, this._then);
+
+  final PortableCreatedCounterpart _self;
+  final $Res Function(PortableCreatedCounterpart) _then;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? slot = null,}) {
+  return _then(PortableCreatedCounterpart(
+null == slot ? _self.slot : slot // ignore: cast_nullable_to_non_nullable
+as PortableNewCounterpartChoice,
+  ));
+}
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableNewCounterpartChoiceCopyWith<$Res> get slot {
+
+  return $PortableNewCounterpartChoiceCopyWith<$Res>(_self.slot, (value) {
+    return _then(_self.copyWith(slot: value));
+  });
+}
+}
+
+/// @nodoc
+
+
+class PortableCollectionCounterpart implements PortableLinkCounterpartRequest {
+  const PortableCollectionCounterpart(this.containing);
+
+
+ final  skir.ValueLocation containing;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableCollectionCounterpartCopyWith<PortableCollectionCounterpart> get copyWith => _$PortableCollectionCounterpartCopyWithImpl<PortableCollectionCounterpart>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableCollectionCounterpart&&(identical(other.containing, containing) || other.containing == containing));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,containing);
+}
+
+@override
+String toString() {
+    return 'PortableLinkCounterpartRequest.collection(containing: $containing)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableCollectionCounterpartCopyWith<$Res> implements $PortableLinkCounterpartRequestCopyWith<$Res> {
+  factory $PortableCollectionCounterpartCopyWith(PortableCollectionCounterpart value, $Res Function(PortableCollectionCounterpart) _then) = _$PortableCollectionCounterpartCopyWithImpl;
+@useResult
+$Res call({
+ skir.ValueLocation containing
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableCollectionCounterpartCopyWithImpl<$Res>
+    implements $PortableCollectionCounterpartCopyWith<$Res> {
+  _$PortableCollectionCounterpartCopyWithImpl(this._self, this._then);
+
+  final PortableCollectionCounterpart _self;
+  final $Res Function(PortableCollectionCounterpart) _then;
+
+/// Create a copy of PortableLinkCounterpartRequest
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? containing = null,}) {
+  return _then(PortableCollectionCounterpart(
+null == containing ? _self.containing : containing // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PortablePageGraphPlacement {
 
  int get x; int get y; int get width; int get height;

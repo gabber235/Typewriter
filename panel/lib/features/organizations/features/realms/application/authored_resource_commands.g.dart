@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'authored_resource_commands.dart';
 
@@ -6,7 +6,7 @@ part of 'authored_resource_commands.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// External capabilities. Working value edits belong to the workspace.
 
@@ -78,7 +78,7 @@ final class AuthoredResourceCommandsProvider
 }
 
 String _$authoredResourceCommandsHash() =>
-    r'cc06152a68a6d7922bc18702c75455184cb113ad';
+    r'71d69ecbfd8fcbe5ec7905a28579611987cc6ef7';
 
 /// External capabilities. Working value edits belong to the workspace.
 

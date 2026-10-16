@@ -1,6 +1,7 @@
 package com.typewritermc.extensions.conformance
 
 import com.typewritermc.authoring.GraphPlacement
+import com.typewritermc.library.PageElements
 import com.typewritermc.types.Many
 import com.typewritermc.types.One
 import com.typewritermc.types.Ref
@@ -20,9 +21,10 @@ import com.typewritermc.types.TypewriterType
     color = "#536DFE",
 )
 data class SyntheticPageReferenceEntry(
+    override val page: Ref<PageElements.Element, SyntheticPage>,
     override val name: String,
     override val placement: GraphPlacement,
-    val page: Ref<SyntheticPageReferences.Entry, SyntheticPage>,
+    val referencedPage: Ref<SyntheticPageReferences.Entry, SyntheticPage>,
 ) : ConformanceEntry
 
 @ReferenceContract(SYNTHETIC_PAGE_REFERENCES_RELATION_ID)

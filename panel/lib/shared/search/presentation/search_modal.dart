@@ -5,7 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The supplied [source] is initialized when the route creates its controller
 /// and disposed when that controller is disposed. Renderer maps translate
 /// source result and preview type identifiers into widgets. The returned
-/// future completes when the route is removed.
+/// future completes when the route is removed. [onBack] enables a previous
+/// question button that closes this route before invoking the callback.
+/// [cancelled] removes this exact route when its owning operation ends.
 Future<T?> showSearchModal<T>(
   BuildContext context,
   SearchContributionBuilder<T> contributionBuilder, {
@@ -15,43 +17,56 @@ Future<T?> showSearchModal<T>(
   TextStyle? queryStyle,
   TextAlign queryAlignment = TextAlign.start,
   bool useDefaultQueryIcon = true,
+  VoidCallback? onBack,
+  ValueChanged<String>? onQueryChanged,
+  Future<void>? cancelled,
   Map<String, SearchResultRowBuilder> rowRenderers = const {},
   Map<String, SearchResultPreviewBuilder> previewRenderers = const {},
 }) {
-  return Navigator.of(context).push(
-    _PopupRoute(
-      themes: InheritedTheme.capture(
-        from: context,
-        to: Navigator.of(context).context,
-      ),
-      barrierColor:
-          DialogTheme.of(context).barrierColor ??
-          Theme.of(context).dialogTheme.barrierColor ??
-          context.colors.scrim,
-      traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
-      child: UncontrolledProviderScope(
-        container: ProviderScope.containerOf(context),
-        child: SelectionOperationsRoot(
-          operations: SelectionOperationsRoot.of(context),
-          child: GlobalModeShortcut(
-            child: GlobalOperationShortcuts(
-              child: SearchModal(
-                contributionBuilder: contributionBuilder,
-                searchHint: searchHint,
-                surfaceStyle: surfaceStyle,
-                queryDecoration: queryDecoration,
-                queryStyle: queryStyle,
-                queryAlignment: queryAlignment,
-                useDefaultQueryIcon: useDefaultQueryIcon,
-                rowRenderers: rowRenderers,
-                previewRenderers: previewRenderers,
-              ),
+  final navigator = Navigator.of(context);
+  final route = _PopupRoute<T>(
+    themes: InheritedTheme.capture(
+      from: context,
+      to: Navigator.of(context).context,
+    ),
+    barrierColor:
+        DialogTheme.of(context).barrierColor ??
+        Theme.of(context).dialogTheme.barrierColor ??
+        context.colors.scrim,
+    traversalEdgeBehavior: TraversalEdgeBehavior.closedLoop,
+    child: UncontrolledProviderScope(
+      container: ProviderScope.containerOf(context),
+      child: SelectionOperationsRoot(
+        operations: SelectionOperationsRoot.of(context),
+        child: GlobalModeShortcut(
+          child: GlobalOperationShortcuts(
+            child: SearchModal(
+              contributionBuilder: contributionBuilder,
+              onBack: onBack,
+              onQueryChanged: onQueryChanged,
+              searchHint: searchHint,
+              surfaceStyle: surfaceStyle,
+              queryDecoration: queryDecoration,
+              queryStyle: queryStyle,
+              queryAlignment: queryAlignment,
+              useDefaultQueryIcon: useDefaultQueryIcon,
+              rowRenderers: rowRenderers,
+              previewRenderers: previewRenderers,
             ),
           ),
         ),
       ),
     ),
   );
+  final completed = navigator.push(route);
+  if (cancelled != null) {
+    unawaited(
+      cancelled.then((_) {
+        if (route.isActive) navigator.removeRoute(route);
+      }),
+    );
+  }
+  return completed;
 }
 
 /// Connects modal configuration to a route local [SearchController].
@@ -63,6 +78,8 @@ class SearchModal<T> extends HookWidget {
   const SearchModal({
     required this.contributionBuilder,
     this.searchHint = "Search",
+    this.onBack,
+    this.onQueryChanged,
     this.surfaceStyle,
     this.queryDecoration,
     this.queryStyle,
@@ -74,6 +91,8 @@ class SearchModal<T> extends HookWidget {
   });
 
   final SearchContributionBuilder<T> contributionBuilder;
+  final VoidCallback? onBack;
+  final ValueChanged<String>? onQueryChanged;
   final SearchSurfaceStyle? surfaceStyle;
   final InputDecoration? queryDecoration;
   final TextStyle? queryStyle;
@@ -95,7 +114,7 @@ class SearchModal<T> extends HookWidget {
           ref,
           context,
         );
-        return SearchController(
+        final controller = SearchController(
           session: session,
           baseSelectors: baseSelectors,
           prompts: _BuildContextSearchPromptHost(context),
@@ -103,11 +122,40 @@ class SearchModal<T> extends HookWidget {
           onCloseRequested: () => Navigator.of(context).maybePop(),
           onCompleted: (value) => Navigator.of(context).pop(value),
         );
+        if (onQueryChanged != null) {
+          controller.addListener(() => onQueryChanged!(controller.query));
+        }
+        return controller;
       },
       child: SearchBody(
         searchHint: searchHint,
         surfaceStyle: surfaceStyle,
         queryDecoration: queryDecoration,
+        frameBuilder: onBack == null
+            ? SearchFrame.new
+            : ({
+                required queryBar,
+                required searchResults,
+                actionBar,
+                preview,
+              }) => SearchFrame(
+                queryBar: Row(
+                  children: [
+                    Builder(
+                      builder: (context) => BackButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onBack!();
+                        },
+                      ),
+                    ),
+                    Expanded(child: queryBar),
+                  ],
+                ),
+                searchResults: searchResults,
+                actionBar: actionBar,
+                preview: preview,
+              ),
         queryStyle: queryStyle,
         queryAlignment: queryAlignment,
         useDefaultQueryIcon: useDefaultQueryIcon,

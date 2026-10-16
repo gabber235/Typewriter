@@ -29,6 +29,7 @@ import {
   TypeSelection,
   TypeTemplate,
   TypeUse,
+  ValuePath,
 } from "editor/v1/type_catalog.skir";
 import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
@@ -243,13 +244,46 @@ struct PreparedValue(810900031) {
   findings: [InitializationDiagnostic] = 1;
 }
 
-enum PrepareValueResult(810900032) {
-  prepared: PreparedValue = 1;
+struct RequiredInput(810900032) {
+  path: ValuePath = 0;
+  expected: TypeUse = 1;
+}
+
+struct PreparationDraft(810900033) {
+  catalog: CatalogGeneration = 0;
+  target: PreparationTarget = 1;
+  content: PreparedContent = 2;
+  pending_defaults: [ValuePath] = 3;
+  required_inputs: [RequiredInput] = 4;
+  findings: [InitializationDiagnostic] = 5;
+}
+
+struct InputAnswer(810900034) {
+  path: ValuePath = 0;
+  value: DataValue = 1;
+}
+
+enum PreparationOperation(810900035) {
+  start: ValuePreparationRequest = 1;
+  resume: struct {
+    draft: PreparationDraft = 0;
+    answers: [InputAnswer] = 1;
+  } = 2;
+}
+
+enum PreparationStep(810900036) {
+  ready: PreparedValue = 1;
+  needs_input: PreparationDraft = 2;
+  unavailable: PreparationDraft = 3;
+}
+
+enum PrepareValueResult(810900037) {
+  prepared: PreparationStep = 1;
   catalog_changed: CatalogGeneration = 2;
   internal_error: InternalError = 3;
 }
 
-struct EndpointBindingTemplate(810900033) {
+struct EndpointBindingTemplate(810900038) {
   endpoint: EndpointId = 0;
   containing_resource: NamedTypeTemplate = 1;
   value_owner: TypeDefinitionId = 2;
@@ -258,12 +292,12 @@ struct EndpointBindingTemplate(810900033) {
   contains_collection: bool = 5;
 }
 
-struct TypeRecommendation(810900034) {
+struct TypeRecommendation(810900039) {
   type: NamedTypeUse = 0;
   occurrences: int64 = 1;
 }
 
-enum AuthoringNavigationHandler(810900035) {
+enum AuthoringNavigationHandler(810900040) {
   generic = 1;
   book = 2;
   page = 3;
@@ -280,5 +314,5 @@ method WatchEditorCatalog(
 ): CatalogInvalidated = 910002;
 
 method PrepareValue(
-  ValuePreparationRequest
+  PreparationOperation
 ): PrepareValueResult = 910003;

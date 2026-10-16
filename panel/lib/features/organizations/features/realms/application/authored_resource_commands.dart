@@ -24,6 +24,7 @@ AuthoredResourceCommands authoredResourceCommands(
       return session.prepareTypeArguments(preview);
     },
     prepareValue: session.prepareValue,
+    prepareStep: session.prepareStep,
     invokeCommand: session.invokeCommand,
     watchSearch: session.watchPresentationSearch,
     search: session.search,
@@ -36,6 +37,7 @@ final class AuthoredResourceCommands {
     required this.previewTypeArguments,
     required this.prepareTypeArguments,
     required this.prepareValue,
+    required this.prepareStep,
     required this.invokeCommand,
     required this.watchSearch,
     required this.search,
@@ -51,6 +53,10 @@ final class AuthoredResourceCommands {
     skir.TypeArgumentChangePreview preview,
   )
   prepareTypeArguments;
+  final Future<skir.PreparationStep> Function(
+    skir.PreparationOperation operation,
+  )
+  prepareStep;
   final Future<skir.PreparedValue> Function(
     skir.ValuePreparationRequest request,
   )

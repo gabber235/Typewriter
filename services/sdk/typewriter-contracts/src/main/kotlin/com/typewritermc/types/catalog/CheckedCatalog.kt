@@ -349,31 +349,77 @@ class DefaultCheckedCatalog(
             }
         }
 
-    private fun resolveNamed(candidate: TypeUse.Named): Resolution<CheckedType> {
+    /** Validates declaration applications without expanding the fields of referenced records. */
+    private fun validateApplication(
+        candidate: TypeUse.Named,
+        visiting: MutableSet<TypeUse.Named> = linkedSetOf(),
+    ): Resolution<Map<ParameterKey, TypeUse>> {
+        candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
         val status = definition(candidate.definition)
         if (status is DeclarationStatus.Unavailable) return Resolution.Invalid(status.reasons)
         val definition = definitions.getValue(candidate.definition).single()
-        if (candidate.arguments.size != definition.parameters.size) {
-            return invalid(candidate.definition, "argument_arity")
+        if (candidate.arguments.size != definition.parameters.size) return invalid(candidate.definition, "argument_arity")
+        if (!visiting.add(candidate)) return invalid(candidate.definition, "recursive_type_resolution")
+        try {
+            candidate.arguments.forEach { argument ->
+                val validation = validateTypeApplication(argument, visiting)
+                if (validation is Resolution.Invalid) return validation
+            }
+            val bindings =
+                definition.parameters
+                    .map(TypeParameter::key)
+                    .zip(candidate.arguments)
+                    .toMap()
+            for (parameter in definition.parameters) {
+                val actual = bindings.getValue(parameter.key)
+                for (bound in parameter.bounds) {
+                    val applied = bound.apply(bindings)
+                    if (applied is Resolution.Invalid) return applied
+                    applied as Resolution.Ready
+                    val validation = validateTypeApplication(applied.value, visiting)
+                    if (validation is Resolution.Invalid) return validation
+                    if (!isTemplateReadableAs(actual.toTemplate(), applied.value.toTemplate(), emptyMap())) {
+                        return invalid(candidate.definition, "argument_bound")
+                    }
+                }
+            }
+            for (parent in definition.parents) {
+                val applied = parent.apply(bindings)
+                if (applied is Resolution.Invalid) return applied
+                val validation = validateTypeApplication((applied as Resolution.Ready).value, visiting)
+                if (validation is Resolution.Invalid) return validation
+            }
+            return Resolution.Ready(bindings)
+        } finally {
+            visiting.remove(candidate)
         }
+    }
+
+    private fun validateTypeApplication(
+        candidate: TypeUse,
+        visiting: MutableSet<TypeUse.Named> = linkedSetOf(),
+    ): Resolution<Unit> {
+        candidate.typeDepthFailure()?.let { return invalid(it, "type_depth_limit") }
+        return when (candidate) {
+            is TypeUse.Scalar -> Resolution.Ready(Unit)
+            is TypeUse.Nullable -> validateTypeApplication(candidate.value, visiting)
+            is TypeUse.Named -> validateApplication(candidate, visiting).map { Unit }
+        }
+    }
+
+    private fun resolveNamed(candidate: TypeUse.Named): Resolution<CheckedType> {
+        val application = validateApplication(candidate)
+        if (application is Resolution.Invalid) return application
+        val bindings = (application as Resolution.Ready).value
+        val definition = definitions.getValue(candidate.definition).single()
         val invalidArgument = candidate.arguments.firstNotNullOfOrNull { (resolve(it) as? Resolution.Invalid)?.diagnostics }
         if (invalidArgument != null) return Resolution.Invalid(invalidArgument)
-        val bindings =
-            definition.parameters
-                .map(TypeParameter::key)
-                .zip(candidate.arguments)
-                .toMap()
-        val resolvedArguments = candidate.arguments.associateWith { resolve(it) as Resolution.Ready }
         for (parameter in definition.parameters) {
-            val actual = bindings.getValue(parameter.key)
             for (bound in parameter.bounds) {
                 val applied = bound.apply(bindings)
                 if (applied is Resolution.Invalid) return applied
                 applied as Resolution.Ready
                 if (resolve(applied.value) !is Resolution.Ready) return invalid(candidate.definition, "argument_bound")
-                if (!isResolvedReadableAs(actual, applied.value, resolvedArguments.getValue(actual).value.schema)) {
-                    return invalid(candidate.definition, "argument_bound")
-                }
             }
         }
 
@@ -521,7 +567,15 @@ class DefaultCheckedCatalog(
             if (inheritedOwners.isNotEmpty() && !field.overrides.containsAll(inheritedOwners)) {
                 return invalid(affected, "missing_field_override")
             }
-            if (inheritedFields.any { !isReadableAs(applied.value, it.type) }) {
+            if (inheritedFields.isNotEmpty() &&
+                (
+                    validateTypeApplication(applied.value) is Resolution.Invalid ||
+                        inheritedFields.any {
+                            validateTypeApplication(it.type) is Resolution.Invalid ||
+                                !isTemplateReadableAs(applied.value.toTemplate(), it.type.toTemplate(), emptyMap())
+                        }
+                )
+            ) {
                 return invalid(affected, "invalid_field_narrowing")
             }
             merged[field.owner.name] =

@@ -262,6 +262,12 @@ class AuthoringSession extends _$AuthoringSession {
     skir.TypeArgumentChangePreview preview,
   ) => _repository.prepareTypeArgumentChange(preview);
 
+  Future<skir.PreparationStep> prepareStep(
+    skir.PreparationOperation operation,
+  ) =>
+      NatsRealmEditorCatalogSource(ref)
+          .prepareStep(_organizationId, _realmId, operation);
+
   Future<skir.PreparedValue> prepareValue(
     skir.ValuePreparationRequest request,
   ) =>

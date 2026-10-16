@@ -111,35 +111,110 @@ sealed class Placement with _$Placement {
   }
 }
 
-Placement decodePlacement(skir.DataValue value) {
-  final named = value is skir.DataValue_namedWrapper ? value.value : null;
-  final fields = named?.payload.authoredRecord?.fields;
-  if (named == null || fields == null) {
-    throw ArgumentError("Placement must be polymorphic record data");
-  }
-  int number(String key) => fields
-      .singleWhere((field) => field.name == key)
-      .value
-      .authoredInteger!
-      .toInt();
-  return switch (named.actualType.definition) {
-    final type when type == placementTypeRefs.graph => GraphPlacement(
-      x: number("x"),
-      y: number("y"),
-      width: number("width"),
-      height: number("height"),
-    ),
-    final type when type == placementTypeRefs.timelineEntry =>
-      TimelineEntryPlacement(trackIndex: number("trackIndex")),
-    final type when type == placementTypeRefs.timelineSegment =>
-      TimelineSegmentPlacement(
-        startFrame: number("startFrame"),
-        endFrame: number("endFrame"),
+extension AuthoredPlacementDecoding on skir.DataValue {
+  Placement toPlacement() {
+    final value = this;
+    final named = value is skir.DataValue_namedWrapper ? value.value : null;
+    final fields = named?.payload.authoredRecord?.fields;
+    if (named == null || fields == null) {
+      throw ArgumentError("Placement must be polymorphic record data");
+    }
+    int number(String key) => fields
+        .singleWhere((field) => field.name == key)
+        .value
+        .authoredInteger!
+        .toInt();
+    return switch (named.actualType.definition) {
+      final type when type == placementTypeRefs.graph => GraphPlacement(
+        x: number("x"),
+        y: number("y"),
+        width: number("width"),
+        height: number("height"),
       ),
-    final type when type == placementTypeRefs.timelineKeyframe =>
-      TimelineKeyframePlacement(frame: number("frame")),
-    _ => throw ArgumentError(
-      "Unknown placement concrete type ${named.actualType.definition}",
-    ),
-  };
+      final type when type == placementTypeRefs.timelineEntry =>
+        TimelineEntryPlacement(trackIndex: number("trackIndex")),
+      final type when type == placementTypeRefs.timelineSegment =>
+        TimelineSegmentPlacement(
+          startFrame: number("startFrame"),
+          endFrame: number("endFrame"),
+        ),
+      final type when type == placementTypeRefs.timelineKeyframe =>
+        TimelineKeyframePlacement(frame: number("frame")),
+      _ => throw ArgumentError(
+        "Unknown placement concrete type ${named.actualType.definition}",
+      ),
+    };
+  }
+}
+
+extension GraphPlacementGeometry on GraphPlacement {
+  GraphGridRect get gridRect =>
+      GraphGridRect(x: x, y: y, width: width, height: height);
+}
+
+extension AuthoredGraphPlacement on skir.AuthoringRecord {
+  GraphGridRect? get graphGridRect {
+    final placement = authoredField("placement");
+    if (placement?.authoredActualType?.definition != graphPlacementTypeRef) {
+      return null;
+    }
+    final values = [
+      for (final name in ["x", "y", "width", "height"])
+        placement?.authoredField(name)?.authoredInteger?.toInt(),
+    ];
+    if (values.any((value) => value == null) ||
+        values[2]! <= 0 ||
+        values[3]! <= 0) {
+      return null;
+    }
+    return (placement!.toPlacement() as GraphPlacement).gridRect;
+  }
+}
+
+extension CreatedResourcePlacement on AuthoringEdit {
+  void placeCreatedResource(ResourceCreationRequest request) {
+    if (request.supplied.any((field) => field.name == "placement")) return;
+    final original = resource(request.id)?.graphGridRect;
+    if (original == null) return;
+    final document = toDocument();
+    final relations = document.relations;
+    final parents = relations.parents[request.id] ?? const <skir.ResourceId>[];
+    if (parents.length > 1) {
+      throw StateError("The created resource has multiple owners");
+    }
+    final siblings = parents.isEmpty
+        ? document.entries.values
+              .where((entry) => entry.definition == request.definition)
+              .map((entry) => entry.id)
+        : relations.children[parents.single] ?? const <skir.ResourceId>[];
+    final rect = const GraphIncrementalPlacer()
+        .placeGroup(
+          obstacles: [
+            for (final id in siblings)
+              if (id != request.id) ?resource(id)?.graphGridRect,
+          ],
+          group: [original],
+          anchor: original.center,
+        )
+        .single;
+    for (final field in [("x", rect.x), ("y", rect.y)]) {
+      final location = skir.ValueLocation(
+        resource: request.id,
+        path: elementPlacementPath.field(field.$1),
+      );
+      final current = read(location);
+      if (current is! PortablePathValue<skir.DataValue>) {
+        throw StateError("The resource placement is unavailable");
+      }
+      final result = set(
+        location,
+        current.value.withAuthoredPayload(
+          skir.DataValue.wrapInteger(field.$2.toString()),
+        ),
+      );
+      if (result case PortablePathUnavailable(:final message)) {
+        throw EditPreparationFailure(message);
+      }
+    }
+  }
 }

@@ -4,12 +4,16 @@ import com.typewritermc.authoring.Placement
 import com.typewritermc.authoring.TimelineCuePlacement
 import com.typewritermc.authoring.TimelineKeyframePlacement
 import com.typewritermc.authoring.TimelineSegmentPlacement
+import com.typewritermc.library.Page
+import com.typewritermc.library.PageElements
+import com.typewritermc.types.Ref
 import com.typewritermc.types.Resource
 import com.typewritermc.types.TypewriterRecordContract
 
 /** Base contract for authored instances that can be referenced by other content. */
 @TypewriterRecordContract
 interface Element : Resource {
+    val page: Ref<PageElements.Element, Page>
     val name: String
     val placement: Placement
 }

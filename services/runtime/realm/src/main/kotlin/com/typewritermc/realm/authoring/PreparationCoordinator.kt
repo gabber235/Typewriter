@@ -1,15 +1,15 @@
 package com.typewritermc.realm.authoring
 
-import com.typewritermc.authoring.InitializationRequest
 import com.typewritermc.authoring.InitializationRuntime
-import com.typewritermc.authoring.PreparedValue
+import com.typewritermc.authoring.PreparationOperation
+import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.checking.CatalogGeneration
 
 internal fun interface PreparationEvaluator {
     suspend fun evaluate(
-        request: InitializationRequest,
+        operation: PreparationOperation,
         catalog: AuthoringCatalogLease,
-    ): PreparedValue
+    ): PreparationStep
 }
 
 internal class PreparationCatalogChanged(
@@ -21,11 +21,16 @@ internal class PreparationCoordinator(
     private val catalog: () -> AuthoringCatalogLease,
     private val evaluator: PreparationEvaluator,
 ) : InitializationRuntime {
-    override suspend fun prepare(request: InitializationRequest): PreparedValue {
+    override suspend fun step(operation: PreparationOperation): PreparationStep {
         val active = catalog()
         return try {
-            if (request.catalog != active.generation) throw PreparationCatalogChanged(active.generation)
-            evaluator.evaluate(request, active)
+            val generation =
+                when (operation) {
+                    is PreparationOperation.Start -> operation.request.catalog
+                    is PreparationOperation.Resume -> operation.draft.catalog
+                }
+            if (generation != active.generation) throw PreparationCatalogChanged(active.generation)
+            evaluator.evaluate(operation, active)
         } finally {
             active.close()
         }

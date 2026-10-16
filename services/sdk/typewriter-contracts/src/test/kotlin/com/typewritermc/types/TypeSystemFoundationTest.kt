@@ -275,6 +275,117 @@ val TypeSystemFoundationTest by testSuite {
             TypeUse.Named(list.id, listOf(TypeUse.Named(tree.id, listOf(TEXT))))
     }
 
+    test("field narrowing retains direct and inherited generic argument bounds") {
+        val resource = resourceDefinition()
+        val variable = variableDefinition(resource.id)
+        val parent = recordDefinition("bound_parent", field("bound_parent", "payload", TypeTemplate.Named(resource.id)))
+        val invalidParent =
+            TypeDefinition(
+                id("invalid_bound_parent"),
+                representation = RepresentationTemplate.Record(emptyList()),
+                parents = listOf(TypeTemplate.Named(variable.id, listOf(TEXT_TEMPLATE))),
+            )
+        listOf(TypeTemplate.Named(variable.id, listOf(TEXT_TEMPLATE)), TypeTemplate.Named(invalidParent.id)).forEach { invalidType ->
+            val child =
+                TypeDefinition(
+                    id("bound_child"),
+                    representation =
+                        RepresentationTemplate.Record(
+                            listOf(
+                                FieldDeclaration(
+                                    FieldOwner(id("bound_child"), "payload"),
+                                    invalidType,
+                                    overrides = listOf(FieldOwner(parent.id, "payload")),
+                                ),
+                            ),
+                        ),
+                    parents = listOf(TypeTemplate.Named(parent.id)),
+                )
+            val resolved = catalog(resource, variable, parent, invalidParent, child).resolve(TypeUse.Named(child.id))
+            (resolved is Resolution.Invalid) shouldBe true
+            (resolved as Resolution.Invalid).diagnostics.map { it.code } shouldContainExactly listOf("invalid_field_narrowing")
+        }
+    }
+
+    test("mutually narrowed page and entry references resolve in either lookup order") {
+        val page = id("mutual_page")
+        val element = id("mutual_element")
+        val sequencePage = id("mutual_sequence_page")
+        val sequenceEntry = id("mutual_sequence_entry")
+        val pageLink = id("mutual_page_link")
+        val elementLink = id("mutual_element_link")
+        val list = listDefinition()
+
+        fun link(definition: TypeDefinitionId) =
+            TypeDefinition(
+                definition,
+                parameters = listOf(TypeParameter(ParameterKey(definition, 0), "T")),
+                representation =
+                    RepresentationTemplate.Link(
+                        EndpointId(definition.toString()),
+                        TypeTemplate.Parameter(ParameterKey(definition, 0)),
+                    ),
+            )
+
+        fun reference(
+            link: TypeDefinitionId,
+            target: TypeDefinitionId,
+        ) = TypeTemplate.Named(link, listOf(TypeTemplate.Named(target)))
+
+        fun elements(target: TypeDefinitionId) = TypeTemplate.Named(list.id, listOf(reference(elementLink, target)))
+
+        fun record(
+            definition: TypeDefinitionId,
+            name: String,
+            type: TypeTemplate,
+            parent: TypeDefinitionId? = null,
+        ) = TypeDefinition(
+            definition,
+            representation =
+                RepresentationTemplate.Record(
+                    listOf(
+                        FieldDeclaration(
+                            FieldOwner(definition, name),
+                            type,
+                            overrides = parent?.let { listOf(FieldOwner(it, name)) }.orEmpty(),
+                        ),
+                    ),
+                    abstract = parent == null,
+                ),
+            parents = parent?.let { listOf(TypeTemplate.Named(it)) }.orEmpty(),
+        )
+        val declarations =
+            listOf(
+                list,
+                link(pageLink),
+                link(elementLink),
+                record(page, "elements", elements(element)),
+                record(element, "page", reference(pageLink, page)),
+                record(sequencePage, "elements", elements(sequenceEntry), page),
+                record(sequenceEntry, "page", reference(pageLink, sequencePage), element),
+            )
+        val unrelatedEntry = record(id("mutual_unrelated_entry"), "page", reference(pageLink, element), element)
+        val invalid =
+            catalog(
+                *(declarations + unrelatedEntry).toTypedArray(),
+            ).resolve(TypeUse.Named(unrelatedEntry.id)) as Resolution.Invalid
+        invalid.diagnostics.map { it.code } shouldContainExactly listOf("invalid_field_narrowing")
+        listOf(listOf(sequencePage, sequenceEntry), listOf(sequenceEntry, sequencePage)).forEach { order ->
+            val checked = catalog(*declarations.toTypedArray())
+            order.forEach { definition -> (checked.resolve(TypeUse.Named(definition)) is Resolution.Ready) shouldBe true }
+            (checked.resolve(TypeUse.Named(sequencePage)) as Resolution.Ready)
+                .value.schema.fields
+                .single()
+                .type shouldBe
+                TypeUse.Named(list.id, listOf(TypeUse.Named(elementLink, listOf(TypeUse.Named(sequenceEntry)))))
+            (checked.resolve(TypeUse.Named(sequenceEntry)) as Resolution.Ready)
+                .value.schema.fields
+                .single()
+                .type shouldBe
+                TypeUse.Named(pageLink, listOf(TypeUse.Named(sequencePage)))
+        }
+    }
+
     test("deep authored values return a bounded admission diagnostic") {
         val list = listDefinition()
         val tree = treeDefinition(list.id)

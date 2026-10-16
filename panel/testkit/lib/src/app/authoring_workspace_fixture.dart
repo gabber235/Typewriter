@@ -139,40 +139,18 @@ List<Override> authoringFixtureOverrides({
 }
 
 AuthoredResourceCommands fixtureAuthoringCommands(
-  ScriptedAuthoringTransport transport,
-) => AuthoredResourceCommands(
+  ScriptedAuthoringTransport transport, {
+  Future<skir.PreparationStep> Function(skir.PreparationOperation)? prepareStep,
+}) => AuthoredResourceCommands(
   previewTypeArguments: ({required resource, required requested}) async =>
       throw StateError("No type preview reply was scripted"),
   prepareTypeArguments: (_) async =>
       throw StateError("No type preparation reply was scripted"),
-  prepareValue: (request) async {
-    final catalog = transport.observation.requireValue.catalog;
-    if (catalog.snapshot.generation != request.catalog) {
-      throw StateError("The fixture catalog changed");
-    }
-    final defaults = transport.observation.requireValue;
-    return skir.PreparedValue(
-      content: skir.PreparedContent.wrapRecord(
-        skir.AuthoringRecord(
-          configuration: request.recordSelection,
-          fields: [
-            for (final field in catalog.fields(request.recordSelection))
-              skir.FieldValue(
-                name: field.template.key,
-                value:
-                    request.recordSuppliedFields
-                        .firstWhereOrNull(
-                          (value) => value.name == field.template.key,
-                        )
-                        ?.value ??
-                    defaults.defaultValue(field.type),
-              ),
-          ],
-        ),
-      ),
-      findings: const [],
-    );
-  },
+  prepareValue: (request) async => _fixturePrepareValue(transport, request),
+  prepareStep:
+      prepareStep ??
+      (operation) async =>
+          fixturePreparationStep(transport.observation.requireValue, operation),
   invokeCommand: ({required capabilityId, required payload}) async =>
       throw StateError("No command reply was scripted"),
   search: (_) async =>
@@ -180,6 +158,141 @@ AuthoredResourceCommands fixtureAuthoringCommands(
   watchSearch: (_) => Stream.error(StateError("No search reply was scripted")),
   reload: () async {},
 );
+
+skir.PreparedValue _fixturePrepareValue(
+  ScriptedAuthoringTransport transport,
+  skir.ValuePreparationRequest request,
+) {
+  final catalog = transport.observation.requireValue.catalog;
+  if (catalog.snapshot.generation != request.catalog) {
+    throw StateError("The fixture catalog changed");
+  }
+  final defaults = transport.observation.requireValue;
+  return skir.PreparedValue(
+    content: skir.PreparedContent.wrapRecord(
+      skir.AuthoringRecord(
+        configuration: request.recordSelection,
+        fields: [
+          for (final field in catalog.fields(request.recordSelection))
+            skir.FieldValue(
+              name: field.template.key,
+              value:
+                  request.recordSuppliedFields
+                      .firstWhereOrNull(
+                        (value) => value.name == field.template.key,
+                      )
+                      ?.value ??
+                  defaults.defaultValue(field.type),
+            ),
+        ],
+      ),
+    ),
+    findings: const [],
+  );
+}
+
+/// Portable fixture initialization. Native constructor captures belong to Realm tests.
+skir.PreparationStep fixturePreparationStep(
+  AuthoringDocument document,
+  skir.PreparationOperation operation,
+) {
+  late skir.PreparationTarget target;
+  late skir.AuthoringRecord record;
+  switch (operation) {
+    case skir.PreparationOperation_startWrapper(:final value):
+      if (value.catalog != document.generation) {
+        throw StateError("The fixture catalog changed");
+      }
+      target = value.target;
+      record = skir.AuthoringRecord(
+        configuration: value.recordSelection,
+        fields: [
+          for (final field in document.catalog.fields(value.recordSelection))
+            skir.FieldValue(
+              name: field.template.key,
+              value:
+                  value.recordSuppliedFields
+                      .firstWhereOrNull(
+                        (input) => input.name == field.template.key,
+                      )
+                      ?.value ??
+                  document.defaultValue(field.type),
+            ),
+        ],
+      );
+    case skir.PreparationOperation_resumeWrapper(:final value):
+      if (value.draft.catalog != document.generation) {
+        throw StateError("The fixture catalog changed");
+      }
+      target = value.draft.target;
+      record = switch (value.draft.content) {
+        skir.PreparedContent_recordWrapper(:final value) => value,
+        _ => throw StateError("Fixture preparation requires record content"),
+      };
+      for (final answer in value.answers) {
+        record = switch (record.replaceAt(answer.path, answer.value)) {
+          PortablePathValue(:final value) => value,
+          PortablePathUnavailable(:final message) => throw StateError(message),
+        };
+      }
+    case skir.PreparationOperation_unknown():
+      throw StateError("Unknown fixture preparation operation");
+  }
+  final required = <skir.RequiredInput>[];
+  void visit(skir.DataValue value, skir.ValuePath path) {
+    if (value.authoredPayload == skir.DataValue.unfilled) {
+      final expected = document.catalog.valueTypeAt(record.configuration, path);
+      if (expected != null) {
+        required.add(skir.RequiredInput(path: path, expected: expected));
+      }
+      return;
+    }
+    for (final field
+        in value.authoredRecord?.fields ?? const <skir.FieldValue>[]) {
+      visit(
+        field.value,
+        skir.ValuePath(
+          segments: [
+            ...path.segments,
+            skir.PathSegment.createField(name: field.name),
+          ],
+        ),
+      );
+    }
+    for (final item in value.authoredItems ?? const <skir.ListItem>[]) {
+      visit(
+        item.value,
+        skir.ValuePath(
+          segments: [
+            ...path.segments,
+            skir.PathSegment.createItem(id: item.id),
+          ],
+        ),
+      );
+    }
+  }
+
+  visit(
+    skir.DataValue.createRecord(fields: record.fields),
+    skir.ValuePath(segments: const []),
+  );
+  final content = skir.PreparedContent.wrapRecord(record);
+  if (required.isEmpty) {
+    return skir.PreparationStep.wrapReady(
+      skir.PreparedValue(content: content, findings: const []),
+    );
+  }
+  return skir.PreparationStep.wrapNeedsInput(
+    skir.PreparationDraft(
+      catalog: document.generation,
+      target: target,
+      content: content,
+      pendingDefaults: const [],
+      requiredInputs: required,
+      findings: const [],
+    ),
+  );
+}
 
 AuthoringDocument fixtureAuthoringDocument({
   Iterable<Book> books = const [],

@@ -88,6 +88,8 @@ import 'package:widgetbook_workspace/stories/shared/editors/presentation/portabl
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_presentation_renderer_stories;
 import 'package:widgetbook_workspace/stories/shared/editors/presentation/portable_search_input.stories.dart'
     as _widgetbook_workspace_stories_shared_editors_presentation_portable_search_input_stories;
+import 'package:widgetbook_workspace/stories/shared/editors/presentation/reference_picker.stories.dart'
+    as _widgetbook_workspace_stories_shared_editors_presentation_reference_picker_stories;
 import 'package:widgetbook_workspace/stories/shared/graph/presentation/graph.stories.dart'
     as _widgetbook_workspace_stories_shared_graph_presentation_graph_stories;
 import 'package:widgetbook_workspace/stories/shared/graph/presentation/resizable_element.stories.dart'
@@ -1244,6 +1246,18 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_search_presentation_search_modal_stories
                             .searchModalDirectUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Reference choices',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_reference_picker_stories
+                            .referencePickerUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Required reference creation',
+                    builder:
+                        _widgetbook_workspace_stories_shared_editors_presentation_reference_picker_stories
+                            .resourceCreationFlowUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
                     name: 'Route',

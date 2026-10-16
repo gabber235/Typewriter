@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "resource_creation_operation.dart";
+part "resource_creation_questions.dart";
 part "resource_creation.freezed.dart";
 part "resource_creation.g.dart";
 
@@ -9,57 +11,25 @@ part "resource_creation.g.dart";
 ResourceCreationSession resourceCreation(Ref ref, AuthoringScope scope) =>
     ResourceCreationSession(ref, scope);
 
-final class ResourceCreationConnection {
-  const ResourceCreationConnection({
-    required this.source,
-    required this.endpoint,
-    required this.path,
-  });
-
-  factory ResourceCreationConnection.collection({
-    required skir.ResourceId source,
-    required skir.EndpointId endpoint,
-    required skir.ValuePath containing,
-    required skir.ItemId item,
-  }) => ResourceCreationConnection(
-    source: source,
-    endpoint: endpoint,
-    path: skir.ValuePath(
-      segments: [
-        ...containing.segments,
-        skir.PathSegment.createItem(id: item),
-      ],
-    ),
-  );
-
-  final skir.ResourceId source;
-  final skir.EndpointId endpoint;
-  final skir.ValuePath path;
-}
-
-final class ResourceCreationRequest {
-  ResourceCreationRequest({
-    required this.definition,
-    required this.configuration,
-    this.supplied = const [],
-    this.connections = const [],
+@freezed
+abstract class ResourceCreationRequest with _$ResourceCreationRequest {
+  factory ResourceCreationRequest({
+    required skir.ResourceDefinitionId definition,
+    required skir.TypeSelection configuration,
     skir.ResourceId? id,
-  }) : id = id ?? skir.newResourceId();
-
-  final skir.ResourceId id;
-  final skir.ResourceDefinitionId definition;
-  final skir.TypeSelection configuration;
-  final List<skir.FieldValue> supplied;
-  final List<ResourceCreationConnection> connections;
-
-  ResourceCreationRequest withConfiguration(skir.TypeSelection next) =>
-      ResourceCreationRequest(
-        id: id,
-        definition: definition,
-        configuration: next,
-        supplied: supplied,
-        connections: connections,
-      );
+    List<skir.FieldValue> supplied = const [],
+  }) => ResourceCreationRequest.data(
+    id: id ?? skir.newResourceId(),
+    definition: definition,
+    configuration: configuration,
+    supplied: supplied,
+  );
+  const factory ResourceCreationRequest.data({
+    required skir.ResourceId id,
+    required skir.ResourceDefinitionId definition,
+    required skir.TypeSelection configuration,
+    @Default([]) List<skir.FieldValue> supplied,
+  }) = _ResourceCreationRequest;
 }
 
 @freezed
@@ -88,31 +58,8 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
   }
 }
 
-extension AuthoringResourceCreation on AuthoringEdit {
-  void createPreparedResource({
-    required ResourceCreationRequest request,
-    required skir.PreparedValue prepared,
-  }) {
-    createPrepared(request.id, prepared, definition: request.definition);
-    for (final connection in request.connections) {
-      connect(
-        skir.LinkOccurrence(
-          id: skir.LinkOccurrenceId(
-            endpoint: connection.endpoint,
-            location: skir.ValueLocation(
-              resource: connection.source,
-              path: connection.path,
-            ),
-          ),
-          source: connection.source,
-          target: skir.LinkTarget(resource: request.id, opposite: null),
-        ),
-        request.id,
-      );
-    }
-  }
-}
-
+/// Coordinates one creation action without publishing its unfinished dependencies.
+/// Each invocation owns its draft; the shared provider holds no mutable session.
 final class ResourceCreationSession {
   const ResourceCreationSession(this.ref, this.scope);
 
@@ -122,59 +69,116 @@ final class ResourceCreationSession {
   Future<AuthoringResourceIdentifier?> create({
     required BuildContext context,
     required ResourceCreationRequest request,
+    CreationContext? creationContext,
   }) async {
     if (!context.mounted) return null;
-    final workspace = ref.read(realmEditingProvider(scope));
-    final commands = ref.read(authoredResourceCommandsProvider(scope));
-    AuthoringResourceIdentifier? created;
-    final outcome = await workspace.prepare(
-      label: "Create resource",
-      apply: (edit) async {
-        final checked = edit.catalog!;
-        var effectiveRequest = request;
-        if (checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
-          final selection = await showCreationConcreteTypePicker(
-            context,
-            expected: effectiveRequest.configuration,
-            catalog: checked,
-          );
-          if (selection == null || !context.mounted) return;
-          effectiveRequest = effectiveRequest.withConfiguration(selection);
-        }
-        if (!checked.isResourceDefinition(
-              effectiveRequest.configuration,
-              request.definition,
-            ) ||
-            checked.isAbstractRecordSelection(effectiveRequest.configuration)) {
-          throw StateError("The selected resource type is unavailable");
-        }
-        final initialization = skir.ValuePreparationRequest(
-          catalog: edit.generation,
-          target: skir.PreparationTarget.wrapRecord(
-            effectiveRequest.configuration,
-          ),
-          suppliedValue: skir.DataValue.createRecord(
-            fields: edit.creationInputs(effectiveRequest),
-          ),
-        );
-        final prepared = await commands.prepareValue(initialization);
-        if (!context.mounted) return;
-        edit.createPreparedResource(
-          request: effectiveRequest,
-          prepared: prepared,
-        );
-        created = AuthoringResourceIdentifier.inScope(
-          scope,
-          effectiveRequest.id,
-        );
-      },
-    );
-    if (created == null && !context.mounted) return null;
-    if (outcome case EditStageRejected(:final message, :final cause)) {
-      if (cause is Exception) throw cause;
-      if (cause is Error) throw cause;
-      throw StateError(message);
+    if (ref.read(selectedAuthoringScopeProvider) case final selected?
+        when selected != scope) {
+      return null;
     }
-    return created;
+    final editing = ref.listen(realmEditingProvider(scope), (_, _) {});
+    ProviderSubscription<AuthoredResourceCommands>? capabilities;
+    ProviderSubscription<AuthoringScope?>? scopeChanges;
+    RealmEditing? workspace;
+    VoidCallback? catalogChanged;
+    try {
+      capabilities = ref.listen(
+        authoredResourceCommandsProvider(scope),
+        (_, _) {},
+      );
+      final editingWorkspace = editing.read();
+      workspace = editingWorkspace;
+      final base = editingWorkspace.document;
+      final initialScope = ref.read(selectedAuthoringScopeProvider);
+      final operation = _ResourceCreationOperation(
+        base: base,
+        commands: capabilities.read(),
+        context: context,
+        isCurrent: () =>
+            ref.mounted &&
+            context.mounted &&
+            !editingWorkspace.workspace.closed &&
+            ref.read(selectedAuthoringScopeProvider) == initialScope &&
+            editingWorkspace.document.generation == base.generation,
+      );
+      scopeChanges = ref.listen(selectedAuthoringScopeProvider, (_, next) {
+        if (next != initialScope) operation.cancel();
+      });
+      catalogChanged = () {
+        if (editingWorkspace.workspace.closed ||
+            editingWorkspace.document.generation != base.generation) {
+          operation.cancel();
+        }
+      };
+      editingWorkspace.addListener(catalogChanged);
+      await operation.resolve(
+        request,
+        creationContext ??
+            CreationContext(
+              preferredResources: <skir.ResourceId>{
+                ...ref
+                    .read(selectionProvider)
+                    .whereType<AuthoringResourceIdentifier>()
+                    .where((resource) => resource.scope == scope)
+                    .map((resource) => resource.resourceId),
+                ?ref.read(pageIdProvider),
+                ?ref.read(bookIdProvider),
+              }.toList(),
+            ),
+      );
+      operation.requireReady();
+      final result = editingWorkspace.edit(
+        label:
+            "Create ${base.catalog.typeSelectionName(request.configuration)}",
+        apply: operation.apply,
+      );
+      return switch (result) {
+        EditStaged() => AuthoringResourceIdentifier.inScope(scope, request.id),
+        EditUnchanged() => throw StateError("Creation produced no changes"),
+        EditStageRejected(cause: _CreationCancelled()) => null,
+        EditStageRejected(cause: final cause?) => Error.throwWithStackTrace(
+          cause,
+          StackTrace.current,
+        ),
+        EditStageRejected(:final message, cause: null) => throw StateError(
+          message,
+        ),
+      };
+    } on _CreationCancelled {
+      return null;
+    } finally {
+      if (workspace != null && catalogChanged != null) {
+        workspace.removeListener(catalogChanged);
+      }
+      scopeChanges?.close();
+      capabilities?.close();
+      editing.close();
+    }
   }
+}
+
+final class _CreationCancelled implements Exception {
+  const _CreationCancelled();
+}
+
+@freezed
+abstract class _PendingCreation with _$PendingCreation {
+  const factory _PendingCreation({
+    required ResourceCreationRequest request,
+    required CreationContext context,
+    required skir.PreparationStep step,
+  }) = __PendingCreation;
+}
+
+extension on skir.PreparationStep {
+  skir.PreparedValue get materialized => switch (this) {
+    skir.PreparationStep_readyWrapper(:final value) => value,
+    skir.PreparationStep_needsInputWrapper(:final value) ||
+    skir.PreparationStep_unavailableWrapper(
+      :final value,
+    ) => skir.PreparedValue(content: value.content, findings: value.findings),
+    skir.PreparationStep_unknown() => throw StateError(
+      "Unknown preparation outcome",
+    ),
+  };
 }

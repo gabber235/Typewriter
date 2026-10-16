@@ -2,10 +2,12 @@ package com.typewritermc.extensions.basic.entries.sequence.events
 
 import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.engine.pages.SequenceEntry
+import com.typewritermc.engine.pages.SequencePage
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.expression.trim
 import com.typewritermc.extensions.basic.entries.sequence.SequenceTriggers
+import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.resourceHeading
 import com.typewritermc.types.Color
 import com.typewritermc.types.Ref
@@ -20,6 +22,7 @@ import com.typewritermc.types.TypewriterType
     color = Color.Hex.YELLOW,
 )
 class PlayerMessageContainsTextEventEntry(
+    override val page: Ref<PageElements.Element, SequencePage>,
     override val name: String,
     override val placement: GraphPlacement,
     val triggers: Set<Ref<SequenceTriggers.Entry, SequenceEntry>>,

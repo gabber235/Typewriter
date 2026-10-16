@@ -17,7 +17,6 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
   const factory AuthoringRelationIndex({
     required Map<skir.ResourceId, List<skir.ResourceId>> parents,
     required Map<skir.ResourceId, List<skir.ResourceId>> children,
-    required Set<skir.TypeDefinitionId> ownedDefinitions,
     required List<String> problems,
     required Map<skir.ResourceId, List<String>> resourceProblems,
   }) = _AuthoringRelationIndex;
@@ -26,7 +25,6 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
 
   factory AuthoringRelationIndex.fromDocument(AuthoringDocument document) {
     final childSlots = <skir.RelationId, skir.EndpointSlot>{};
-    final definitions = <skir.TypeDefinitionId>{};
     final problems = <String>[];
     final malformed = <skir.RelationId>{};
     final resourceProblems = <skir.ResourceId, List<String>>{};
@@ -57,11 +55,7 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
       childSlots[relation.id] = firstOwns
           ? skir.EndpointSlot.second
           : skir.EndpointSlot.first;
-      definitions.add(
-        firstOwns
-            ? relation.second.resource.definition
-            : relation.first.resource.definition,
-      );
+
     }
 
     final parents = <skir.ResourceId, Set<skir.ResourceId>>{};
@@ -103,7 +97,6 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
         for (final entry in children.entries)
           entry.key: List.unmodifiable(entry.value),
       },
-      ownedDefinitions: definitions,
       problems: problems,
       resourceProblems: {
         for (final entry in resourceProblems.entries)

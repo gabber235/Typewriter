@@ -2,58 +2,84 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-sealed class PortableLinkPlanResult {
-  const PortableLinkPlanResult();
+part "portable_link_choices.freezed.dart";
+
+@freezed
+sealed class PortableLinkPlanResult with _$PortableLinkPlanResult {
+  const factory PortableLinkPlanResult.ready(List<PortableLinkPlan> plans) =
+      PortableLinkPlanReady;
+  const factory PortableLinkPlanResult.unavailable(String message) =
+      PortableLinkPlanUnavailable;
 }
 
-final class PortableLinkPlanReady extends PortableLinkPlanResult {
-  const PortableLinkPlanReady(this.plans);
-
-  final List<PortableLinkPlan> plans;
+@freezed
+abstract class PortableLinkPlan with _$PortableLinkPlan {
+  const factory PortableLinkPlan({
+    required skir.LinkOccurrence source,
+    required skir.RelationContract relation,
+    required skir.EndpointDefinition opposite,
+    required skir.TypeUse targetType,
+    required List<PortableLinkTargetChoice> targets,
+  }) = _PortableLinkPlan;
 }
 
-final class PortableLinkPlanUnavailable extends PortableLinkPlanResult {
-  const PortableLinkPlanUnavailable(this.message);
-
-  final String message;
+@freezed
+abstract class PortableLinkTargetChoice with _$PortableLinkTargetChoice {
+  const factory PortableLinkTargetChoice({
+    required skir.ResourceId resource,
+    required bool automaticCounterpart,
+    required List<skir.LinkOccurrence> existing,
+    required List<PortableNewCounterpartChoice> creatable,
+    @Default([]) List<skir.ValueLocation> collections,
+    String? disabledReason,
+  }) = _PortableLinkTargetChoice;
 }
 
-final class PortableLinkPlan {
-  const PortableLinkPlan({
-    required this.source,
-    required this.relation,
-    required this.opposite,
-    required this.targets,
-  });
-
-  final skir.LinkOccurrence source;
-  final skir.RelationContract relation;
-  final skir.EndpointDefinition opposite;
-  final List<PortableLinkTargetChoice> targets;
+@freezed
+abstract class PortableNewCounterpartChoice
+    with _$PortableNewCounterpartChoice {
+  const factory PortableNewCounterpartChoice({
+    required skir.ValueLocation containing,
+    required skir.TypeSelection selection,
+  }) = _PortableNewCounterpartChoice;
 }
 
-final class PortableLinkTargetChoice {
-  const PortableLinkTargetChoice({
-    required this.resource,
-    required this.automaticCounterpart,
-    required this.existing,
-    required this.creatable,
-  });
-
-  final skir.ResourceId resource;
-  final bool automaticCounterpart;
-  final List<skir.LinkOccurrence> existing;
-  final List<PortableNewCounterpartChoice> creatable;
+@freezed
+abstract class ResolvedReference with _$ResolvedReference {
+  const factory ResolvedReference({
+    required skir.ConnectIntent connection,
+    @Default([]) List<ReferenceMaterialization> materializations,
+  }) = _ResolvedReference;
 }
 
-final class PortableNewCounterpartChoice {
-  const PortableNewCounterpartChoice({
-    required this.containing,
-    required this.selection,
-  });
+@freezed
+sealed class ReferenceMaterialization with _$ReferenceMaterialization {
+  const factory ReferenceMaterialization.value(skir.InsertIntent intent) =
+      ReferenceValueInsertion;
+  const factory ReferenceMaterialization.preparedItem({
+    required skir.ValueLocation at,
+    required skir.ItemId? after,
+    required skir.ItemId item,
+    required skir.ValuePreparationRequest request,
+    required skir.PreparedValue prepared,
+  }) = PreparedReferenceInsertion;
+  const factory ReferenceMaterialization.preparedRecord({
+    required skir.ValueLocation at,
+    required skir.ValuePreparationRequest request,
+    required skir.PreparedValue prepared,
+  }) = PreparedReferenceRecord;
+}
 
-  final skir.ValueLocation containing;
-  final skir.TypeSelection selection;
+@freezed
+sealed class ReferenceChoice with _$ReferenceChoice {
+  const factory ReferenceChoice.existing(ResolvedReference reference) =
+      ExistingReference;
+  const factory ReferenceChoice.createResource(
+    ResourceCreationTemplate template,
+  ) = NewResourceReference;
+  const factory ReferenceChoice.createCounterpart(
+    PortableNewCounterpartChoice slot,
+  ) = NewEmbeddedCounterpart;
 }
 
 void replacePortableLinkCollection({
@@ -124,11 +150,7 @@ void replacePortableLinkCollection({
         ),
       );
     } while (record.readAt(source.path) is PortablePathValue<skir.DataValue>);
-    final plans = portableLinkPlans(
-      draft: draft,
-      catalog: catalog,
-      source: source,
-    );
+    final plans = draft.linkPlans(catalog: catalog, source: source);
     final choices = switch (plans) {
       PortableLinkPlanReady(:final plans) => [
         for (final plan in plans)
@@ -140,7 +162,13 @@ void replacePortableLinkCollection({
     if (choices.length != 1) {
       throw StateError("The $field link target requires an explicit choice");
     }
-    draft.connect(choices.single.source, target);
+    final plan = choices.single;
+    final choice = plan.targets.singleWhere(
+      (choice) => choice.resource == target,
+    );
+    draft.applyResolvedReference(
+      draft.resolveReference(catalog: catalog, plan: plan, target: choice),
+    );
   }
 }
 
@@ -152,48 +180,55 @@ bool _sameResources(List<skir.ResourceId> first, List<skir.ResourceId> second) {
   return true;
 }
 
-PortableLinkPlanResult portableLinkPlans({
-  required PortableAuthoringView draft,
-  required CheckedEditorCatalog catalog,
-  required skir.ValueLocation source,
-}) {
-  final sourceRecord = draft.resource(source.resource);
-  if (sourceRecord == null) {
-    return const PortableLinkPlanUnavailable("The source resource is absent");
-  }
-  final current = switch (sourceRecord.readAt(source.path)) {
-    PortablePathValue(value: final value) => value.authoredLink,
-    PortablePathUnavailable() => null,
-  };
-  final bindings = current == null
-      ? catalog.endpointBindingsAt(sourceRecord.configuration, source.path)
-      : catalog
-            .endpointBindingsAt(sourceRecord.configuration, source.path)
-            .where((binding) => binding.template.endpoint == current.endpoint)
-            .toList(growable: false);
-  if (bindings.isEmpty) {
-    return const PortableLinkPlanUnavailable(
-      "The link endpoint is unavailable at this location",
-    );
-  }
-  final plans = <PortableLinkPlan>[];
-  for (final binding in bindings) {
+extension ReferencePlanning on PortableAuthoringView {
+  PortableLinkPlanResult linkPlans({
+    required CheckedEditorCatalog catalog,
+    required skir.ValueLocation source,
+  }) {
+    final sourceRecord = resource(source.resource);
+    if (sourceRecord == null) {
+      return const PortableLinkPlanUnavailable("The source resource is absent");
+    }
+    final current = switch (sourceRecord.readAt(source.path)) {
+      PortablePathValue(value: final value) => value.authoredLink,
+      PortablePathUnavailable() => null,
+    };
+    final reference = catalog.referenceTypeAt(sourceRecord, source.path);
+    if (reference == null ||
+        current != null && current.endpoint != reference.endpoint) {
+      return const PortableLinkPlanUnavailable(
+        "The link endpoint is unavailable at this location",
+      );
+    }
     final relation = catalog.snapshot.relations
         .where(
           (candidate) =>
-              candidate.first.id == binding.template.endpoint ||
-              candidate.second.id == binding.template.endpoint,
+              candidate.first.id == reference.endpoint ||
+              candidate.second.id == reference.endpoint,
         )
-        .firstOrNull;
-    if (relation == null) continue;
-    final opposite = relation.first.id == binding.template.endpoint
+        .singleOrNull;
+    if (relation == null) {
+      return const PortableLinkPlanUnavailable(
+        "The link relation is unavailable",
+      );
+    }
+    final sourceEndpoint = relation.first.id == reference.endpoint
+        ? relation.first
+        : relation.second;
+    final sourceType = catalog.applyTemplate(
+      skir.TypeTemplate.wrapNamed(sourceEndpoint.resource),
+      sourceRecord.configuration,
+    );
+    if (!catalog.selectionMatches(sourceRecord.configuration, sourceType)) {
+      return const PortableLinkPlanUnavailable(
+        "The relation endpoint does not accept this resource type",
+      );
+    }
+    final opposite = relation.first.id == reference.endpoint
         ? relation.second
         : relation.first;
     final sourceOccurrence = skir.LinkOccurrence(
-      id: skir.LinkOccurrenceId(
-        endpoint: binding.template.endpoint,
-        location: source,
-      ),
+      id: skir.LinkOccurrenceId(endpoint: reference.endpoint, location: source),
       source: source.resource,
       target:
           current?.target ??
@@ -203,11 +238,10 @@ PortableLinkPlanResult portableLinkPlans({
           ),
     );
     final targets = <PortableLinkTargetChoice>[];
-    for (final entry in draft.resources.entries) {
-      if (!_resourceMatches(
-        catalog,
+    for (final entry in resources.entries) {
+      if (!catalog.selectionMatches(
         entry.value.configuration,
-        binding.target,
+        reference.target,
       )) {
         continue;
       }
@@ -215,32 +249,68 @@ PortableLinkPlanResult portableLinkPlans({
           .endpointBindings(entry.value.configuration)
           .where((candidate) => candidate.template.endpoint == opposite.id)
           .toList(growable: false);
+      final compatibleBindings = oppositeBindings
+          .where(
+            (candidate) =>
+                candidate.isAvailable &&
+                catalog.selectionMatches(
+                  sourceRecord.configuration,
+                  candidate.target,
+                ),
+          )
+          .toList(growable: false);
       final direct =
-          oppositeBindings.length == 1 &&
+          compatibleBindings.length == 1 &&
           catalog
               .nominalDefinitions(entry.value.configuration)
-              .contains(oppositeBindings.single.template.valueOwner);
+              .contains(compatibleBindings.single.template.valueOwner);
       final existing = <skir.LinkOccurrence>[];
       final creatable = <PortableNewCounterpartChoice>[];
-      for (final oppositeBinding in oppositeBindings) {
-        for (final path in expandAuthoredPattern(
-          entry.value,
-          oppositeBinding.template.relativePath,
-        )) {
-          existing.add(
-            skir.LinkOccurrence(
-              id: skir.LinkOccurrenceId(
-                endpoint: opposite.id,
-                location: skir.ValueLocation(resource: entry.key, path: path),
-              ),
-              source: entry.key,
-              target: skir.LinkTarget(
-                resource: source.resource,
-                opposite: source.path,
+      final locations = catalog
+          .referenceLocations(entry.value)
+          .where((location) => location.endpoint == opposite.id)
+          .toList();
+      final collections = catalog
+          .referenceCollections(entry.value)
+          .where((location) => location.endpoint == opposite.id)
+          .toList();
+      final compatibleLocations = locations.where(
+        (location) => catalog.selectionMatches(
+          sourceRecord.configuration,
+          location.target,
+        ),
+      );
+      final compatibleCollections = collections.where(
+        (location) => catalog.selectionMatches(
+          sourceRecord.configuration,
+          location.target,
+        ),
+      );
+      for (final location in compatibleLocations) {
+        final previous = switch (entry.value.readAt(location.path)) {
+          PortablePathValue(value: final value) => value.authoredLink?.target,
+          PortablePathUnavailable() => null,
+        };
+        existing.add(
+          skir.LinkOccurrence(
+            id: skir.LinkOccurrenceId(
+              endpoint: opposite.id,
+              location: skir.ValueLocation(
+                resource: entry.key,
+                path: location.path,
               ),
             ),
-          );
-        }
+            source: entry.key,
+            target:
+                previous ??
+                skir.LinkTarget(
+                  resource: source.resource,
+                  opposite: source.path,
+                ),
+          ),
+        );
+      }
+      for (final oppositeBinding in compatibleBindings) {
         if (!direct) {
           creatable.addAll(
             _newCounterpartChoices(
@@ -252,45 +322,260 @@ PortableLinkPlanResult portableLinkPlans({
           );
         }
       }
+      final unfinishedForms = catalog
+          .unselectedReferenceForms(entry.value, opposite.id)
+          .toList();
       targets.add(
         PortableLinkTargetChoice(
           resource: entry.key,
-          automaticCounterpart: oppositeBindings.isEmpty || direct,
+          automaticCounterpart:
+              (oppositeBindings.isEmpty &&
+                  locations.isEmpty &&
+                  collections.isEmpty &&
+                  unfinishedForms.isEmpty) ||
+              direct,
+          collections: [
+            for (final location in compatibleCollections)
+              skir.ValueLocation(resource: entry.key, path: location.path),
+          ],
+          disabledReason:
+              unfinishedForms.isNotEmpty &&
+                  existing.isEmpty &&
+                  compatibleCollections.isEmpty &&
+                  creatable.isEmpty
+              ? "Select a form at ${unfinishedForms.first.segments.map((segment) => segment is skir.PathSegment_fieldWrapper ? segment.value.name : "item").join(" / ")} to expose its counterpart"
+              : (oppositeBindings.isNotEmpty ||
+                        locations.isNotEmpty ||
+                        collections.isNotEmpty) &&
+                    compatibleBindings.isEmpty &&
+                    compatibleLocations.isEmpty &&
+                    compatibleCollections.isEmpty
+              ? (oppositeBindings.any((binding) => !binding.isAvailable)
+                    ? "The opposite endpoint type is unavailable"
+                    : "The opposite endpoint does not accept this resource type")
+              : null,
           existing: List.unmodifiable(existing),
           creatable: List.unmodifiable(_distinctNewChoices(creatable)),
         ),
       );
     }
-    plans.add(
+    return PortableLinkPlanReady([
       PortableLinkPlan(
         source: sourceOccurrence,
         relation: relation,
         opposite: opposite,
+        targetType: reference.target,
         targets: List.unmodifiable(targets),
       ),
-    );
+    ]);
   }
-  if (plans.isEmpty) {
-    return const PortableLinkPlanUnavailable(
-      "The link relation is unavailable",
-    );
-  }
-  return PortableLinkPlanReady(List.unmodifiable(plans));
-}
 
-bool _resourceMatches(
-  CheckedEditorCatalog catalog,
-  skir.TypeSelection selection,
-  skir.TypeUse? expected,
-) {
-  if (expected == null) return false;
-  final actual = switch (selection) {
-    skir.TypeSelection_completeWrapper(:final value) => skir.TypeUse.wrapNamed(
-      value,
-    ),
-    _ => null,
-  };
-  return actual != null && catalog.isReadableAs(actual, expected);
+  /// Resolves an automatic or explicitly selected inverse to stable locations.
+  ResolvedReference resolveReference({
+    required CheckedEditorCatalog catalog,
+    required PortableLinkPlan plan,
+    required PortableLinkTargetChoice target,
+    skir.CounterpartChoice? counterpart,
+    skir.ValueLocation? collection,
+  }) {
+    if (target.disabledReason case final reason?) throw StateError(reason);
+    final materializations = <ReferenceMaterialization>[];
+    var resolved = counterpart;
+    if (resolved case skir.CounterpartChoice_newWrapper(:final value)) {
+      final targetRecord = resource(target.resource);
+      final sourceRecord = resource(plan.source.source);
+      if (targetRecord == null ||
+          sourceRecord == null ||
+          value.containing.resource != target.resource) {
+        throw StateError("The counterpart resources are unavailable");
+      }
+      final prepared = value.prepared;
+      final selection = prepared.recordContent.configuration;
+      final request = skir.ValuePreparationRequest(
+        catalog: generation,
+        target: skir.PreparationTarget.wrapRecord(selection),
+        suppliedValue: skir.DataValue.createRecord(fields: const []),
+      );
+      var embedded = value.containing;
+      final current = switch (read(value.containing)) {
+        PortablePathValue(value: final value) => value,
+        PortablePathUnavailable() => null,
+      };
+      final items = current?.authoredItems?.toList();
+      if (items != null) {
+        final item = skir.ItemId(value: "panel:reference:${const Uuid().v4()}");
+        materializations.add(
+          ReferenceMaterialization.preparedItem(
+            at: value.containing,
+            after: items.lastOrNull?.id,
+            item: item,
+            request: request,
+            prepared: prepared,
+          ),
+        );
+        embedded = skir.ValueLocation(
+          resource: target.resource,
+          path: skir.ValuePath(
+            segments: [
+              ...value.containing.path.segments,
+              skir.PathSegment.createItem(id: item),
+            ],
+          ),
+        );
+      } else {
+        materializations.add(
+          ReferenceMaterialization.preparedRecord(
+            at: value.containing,
+            request: request,
+            prepared: prepared,
+          ),
+        );
+      }
+      final paths = <skir.ValuePath>{
+        for (final reference in catalog.referenceLocations(
+          prepared.recordContent,
+        ))
+          if (reference.endpoint == plan.opposite.id &&
+              catalog.selectionMatches(
+                sourceRecord.configuration,
+                reference.target,
+              ))
+            skir.ValuePath(
+              segments: [...embedded.path.segments, ...reference.path.segments],
+            ),
+      };
+      if (paths.length != 1) {
+        throw StateError(
+          "The prepared counterpart requires an exact link location",
+        );
+      }
+      resolved = skir.CounterpartChoice.wrapExisting(
+        skir.LinkOccurrence(
+          id: skir.LinkOccurrenceId(
+            endpoint: plan.opposite.id,
+            location: skir.ValueLocation(
+              resource: target.resource,
+              path: paths.single,
+            ),
+          ),
+          source: target.resource,
+          target: skir.LinkTarget(
+            resource: plan.source.source,
+            opposite: plan.source.id.location.path,
+          ),
+        ),
+      );
+    }
+    if (resolved == null) {
+      final record = resource(target.resource);
+      if (record == null) {
+        throw StateError("The counterpart resource is unavailable");
+      }
+      final selectedCollection =
+          collection ??
+          (target.automaticCounterpart && target.collections.length == 1
+              ? target.collections.single
+              : null);
+      if (selectedCollection != null) {
+        if (!target.collections.contains(selectedCollection)) {
+          throw StateError("The counterpart collection is unavailable");
+        }
+        final matches = target.existing
+            .where(
+              (occurrence) =>
+                  occurrence.id.location.path.segments.length ==
+                      selectedCollection.path.segments.length + 1 &&
+                  skir.ValuePath(
+                        segments: occurrence.id.location.path.segments.take(
+                          selectedCollection.path.segments.length,
+                        ),
+                      ) ==
+                      selectedCollection.path &&
+                  occurrence.target.resource == plan.source.source &&
+                  occurrence.target.opposite == plan.source.id.location.path,
+            )
+            .toList(growable: false);
+        if (matches.length > 1) {
+          throw StateError("Choose the exact existing counterpart occurrence");
+        }
+        if (matches.length == 1) {
+          resolved = skir.CounterpartChoice.wrapExisting(matches.single);
+        } else {
+          final items = switch (read(selectedCollection)) {
+            PortablePathValue(value: final value) =>
+              value.authoredItems?.toList() ??
+                  (value.authoredPayload == skir.DataValue.unfilled
+                      ? <skir.ListItem>[]
+                      : null),
+            PortablePathUnavailable() => null,
+          };
+          if (items == null) {
+            throw StateError("The counterpart collection is unavailable");
+          }
+          final item = skir.ItemId(
+            value: "panel:reference:${const Uuid().v4()}",
+          );
+          materializations.add(
+            ReferenceMaterialization.value(
+              skir.InsertIntent(
+                at: selectedCollection,
+                after: items.lastOrNull?.id,
+                item: skir.ListItem(id: item, value: skir.DataValue.unfilled),
+              ),
+            ),
+          );
+          resolved = skir.CounterpartChoice.wrapExisting(
+            skir.LinkOccurrence(
+              id: skir.LinkOccurrenceId(
+                endpoint: plan.opposite.id,
+                location: skir.ValueLocation(
+                  resource: target.resource,
+                  path: skir.ValuePath(
+                    segments: [
+                      ...selectedCollection.path.segments,
+                      skir.PathSegment.createItem(id: item),
+                    ],
+                  ),
+                ),
+              ),
+              source: target.resource,
+              target: skir.LinkTarget(
+                resource: plan.source.source,
+                opposite: plan.source.id.location.path,
+              ),
+            ),
+          );
+        }
+      } else if (target.automaticCounterpart && target.existing.length == 1) {
+        final candidate = target.existing.single;
+        final previous = switch (read(candidate.id.location)) {
+          PortablePathValue(value: final value) => value.authoredLink?.target,
+          PortablePathUnavailable() => null,
+        };
+        if (previous != null &&
+            (previous.resource != plan.source.source ||
+                previous.opposite != null &&
+                    previous.opposite != plan.source.id.location.path)) {
+          throw StateError(
+            "The counterpart is already linked. Choose its location explicitly",
+          );
+        }
+        resolved = skir.CounterpartChoice.wrapExisting(candidate);
+      } else if (!target.automaticCounterpart ||
+          target.existing.isNotEmpty ||
+          target.collections.isNotEmpty) {
+        throw StateError("Choose the counterpart location explicitly");
+      }
+    }
+    return ResolvedReference(
+      connection: skir.ConnectIntent(
+        source: plan.source,
+        target: target.resource,
+        counterpart: resolved,
+      ),
+      materializations: materializations,
+    );
+  }
 }
 
 Iterable<PortableNewCounterpartChoice> _newCounterpartChoices({
@@ -386,5 +671,42 @@ Iterable<PortableNewCounterpartChoice> _distinctNewChoices(
   final seen = <skir.ValueLocation>{};
   for (final choice in choices) {
     if (seen.add(choice.containing)) yield choice;
+  }
+}
+
+extension ResolvedReferenceEditing on PortableAuthoringEdit {
+  void applyReferenceMaterialization(ReferenceMaterialization materialization) {
+    final result = switch (materialization) {
+      ReferenceValueInsertion(:final intent) => insert(
+        intent.at,
+        intent.after,
+        intent.item,
+      ),
+      PreparedReferenceInsertion(
+        :final at,
+        :final after,
+        :final item,
+        :final request,
+        :final prepared,
+      ) =>
+        insertPrepared(at, after, item, request, prepared),
+      PreparedReferenceRecord(:final at, :final request, :final prepared) =>
+        applyPreparedRecord(at, request, prepared),
+    };
+    if (result case PortablePathUnavailable(:final message)) {
+      throw EditPreparationFailure(message);
+    }
+  }
+
+  void applyResolvedReference(ResolvedReference reference) {
+    for (final materialization in reference.materializations) {
+      applyReferenceMaterialization(materialization);
+    }
+    final connection = reference.connection;
+    connect(
+      connection.source,
+      connection.target,
+      counterpart: connection.counterpart,
+    );
   }
 }

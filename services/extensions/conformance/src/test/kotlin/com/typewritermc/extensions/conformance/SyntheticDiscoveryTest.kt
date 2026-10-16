@@ -1,6 +1,7 @@
 package com.typewritermc.extensions.conformance
 
 import com.typewritermc.authoring.CompletenessResult
+import com.typewritermc.authoring.GraphPlacement
 import com.typewritermc.authoring.complete
 import com.typewritermc.capability.NotificationSeverity
 import com.typewritermc.capability.PanelInstruction
@@ -16,13 +17,19 @@ import com.typewritermc.discovery.CapabilityOwnerResolver
 import com.typewritermc.discovery.ContributionKey
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
+import com.typewritermc.discovery.GENERATED_PROVIDER_INDEX_PATH
+import com.typewritermc.discovery.GeneratedProviderIndex
+import com.typewritermc.discovery.GeneratedProviderIndexEntry
 import com.typewritermc.discovery.GeneratedProviderInstantiator
+import com.typewritermc.discovery.GeneratedProviderKind
+import com.typewritermc.discovery.GeneratedTypeProvider
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.discovery.RuntimeScope
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.library.PageElements
 import com.typewritermc.presentation.DefaultPresentationRuntime
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
@@ -31,14 +38,20 @@ import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.DeclaredTypeId
 import com.typewritermc.types.EndpointCardinality
 import com.typewritermc.types.FactoryNativeBindingRegistry
+import com.typewritermc.types.NativeBinding
+import com.typewritermc.types.NativeBindingFactory
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.RESOURCE_OWNERSHIP_FAMILY_ID
+import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationFamilyId
 import com.typewritermc.types.RepresentationTemplate
+import com.typewritermc.types.ResourceId
+import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
@@ -53,13 +66,14 @@ import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
 import java.math.BigInteger
+import java.util.Collections
 
 val SyntheticDiscoveryTest by testSuite {
     test("generates stable declarations for the entry and polymorphic message family") {
         SyntheticEntryDefinition.id shouldBe
             TypeDefinitionId(TypeId.Declared(DeclaredTypeId.parse("019d1c2a8f7b7cc18c2a4a7b2fd1e281")), 1)
         val entryFields = (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.Record).fields
-        entryFields.map { it.owner.name } shouldContainExactly listOf("name", "placement", "message", "cues")
+        entryFields.map { it.owner.name } shouldContainExactly listOf("page", "name", "placement", "message", "cues")
 
         (SyntheticMessageDefinition.definition.representation as RepresentationTemplate.Record).abstract shouldBe true
         LiteralMessageDefinition.definition.parents
@@ -74,11 +88,15 @@ val SyntheticDiscoveryTest by testSuite {
         SyntheticEntryCues.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
         SyntheticEntryCues.contract.first.cardinality shouldBe EndpointCardinality.One
         SyntheticEntryCues.contract.second.cardinality shouldBe EndpointCardinality.Many
-        SyntheticEntryEndpointBindings.bindings.single().let { binding ->
-            binding.valueOwner shouldBe SyntheticEntryDefinition.id
-            binding.target shouldBe TypeTemplate.Named(SyntheticSegmentDefinition.id)
-            binding.containsCollection shouldBe true
-        }
+        SyntheticEntryEndpointBindings.bindings
+            .single {
+                it.valueOwner == SyntheticEntryDefinition.id &&
+                    it.target == TypeTemplate.Named(SyntheticSegmentDefinition.id)
+            }.let { binding ->
+                binding.valueOwner shouldBe SyntheticEntryDefinition.id
+                binding.target shouldBe TypeTemplate.Named(SyntheticSegmentDefinition.id)
+                binding.containsCollection shouldBe true
+            }
 
         SyntheticSegmentKeyframes.contract.families shouldBe setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
     }
@@ -89,7 +107,7 @@ val SyntheticDiscoveryTest by testSuite {
         val checked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
 
         @Suppress("UNCHECKED_CAST")
-        val binding = bindings.bind(checked) as com.typewritermc.types.NativeBinding<RepeatedMessage>
+        val binding = bindings.bind(checked) as NativeBinding<RepeatedMessage>
         val source = RepeatedMessage("hello", 3)
 
         val encoded = binding.encode(source)
@@ -112,7 +130,7 @@ val SyntheticDiscoveryTest by testSuite {
         val pageField =
             (SyntheticPageReferenceEntryDefinition.definition.representation as RepresentationTemplate.Record)
                 .fields
-                .single { it.owner.name == "page" }
+                .single { it.owner.name == "referencedPage" }
                 .type as TypeTemplate.Named
 
         pageField.definition shouldBe
@@ -120,9 +138,54 @@ val SyntheticDiscoveryTest by testSuite {
                 TypeId.Qualified("relation", "com.typewritermc.extensions.conformance.SyntheticPageReferences.Entry"),
                 1,
             )
-        SyntheticPageReferenceEntryEndpointBindings.bindings.single().target shouldBe
+        SyntheticPageReferenceEntryEndpointBindings.bindings
+            .single {
+                it.endpoint == SyntheticPageReferences.contract.first.id
+            }.target shouldBe
             TypeTemplate.Named(SyntheticPageDefinition.id)
         SyntheticPageReferences.contract.second.resource shouldBe TypeTemplate.Named(com.typewritermc.library.PageDefinition.id)
+    }
+
+    test("containing page and ordinary referenced page retain separate native fields") {
+        val entries = generatedProviderEntries()
+        val catalog = presentationCatalog()
+        val factories =
+            entries
+                .filter { it.kind == GeneratedProviderKind.NativeBinding }
+                .map { generatedProviderInstance(it.providerClass) as NativeBindingFactory }
+                .distinctBy(NativeBindingFactory::provider)
+        val bindings = FactoryNativeBindingRegistry(catalog, factories)
+        val checked = (catalog.resolve(SyntheticPageReferenceEntryDefinition.use) as Resolution.Ready).value
+
+        @Suppress("UNCHECKED_CAST")
+        val binding = bindings.bind(checked) as NativeBinding<SyntheticPageReferenceEntry>
+        val source =
+            SyntheticPageReferenceEntry(
+                page = Ref(ResourceId("containing")),
+                name = "Reference",
+                placement = GraphPlacement(),
+                referencedPage = Ref(ResourceId("referenced")),
+            )
+        val encoded = binding.encode(source)
+        val fields = ((encoded as DataValue.Named).payload as DataValue.Record).fields
+        fields.keys shouldBe setOf("page", "name", "placement", "referencedPage")
+        val containing = (fields.getValue("page") as DataValue.Named).payload as DataValue.Link
+        val referenced = (fields.getValue("referencedPage") as DataValue.Named).payload as DataValue.Link
+        containing.endpoint shouldBe PageElements.contract.second.id
+        referenced.endpoint shouldBe SyntheticPageReferences.contract.first.id
+        containing.target.resource shouldBe ResourceId("containing")
+        referenced.target.resource shouldBe ResourceId("referenced")
+        binding.decode((checked.complete(encoded) as CompletenessResult.Complete).value) shouldBe source
+        checked.schema.fields
+            .single { it.key == "page" }
+            .type shouldBe
+            TypeUse.Named(
+                TypeDefinitionId(
+                    TypeId.Qualified("relation", "com.typewritermc.library.PageElements.Element"),
+                    1,
+                ),
+                listOf(SyntheticPageDefinition.use),
+            )
     }
 
     test("generated presentation composes concrete polymorphic controls with serialized paths") {
@@ -265,24 +328,33 @@ private fun messageBindings(catalog: DefaultCheckedCatalog) =
         listOf(LiteralMessageNativeBindingFactory, RepeatedMessageNativeBindingFactory),
     )
 
+private fun generatedProviderEntries(): List<GeneratedProviderIndexEntry> =
+    Collections
+        .list(
+            requireNotNull(
+                Thread.currentThread().contextClassLoader,
+            ).getResources(GENERATED_PROVIDER_INDEX_PATH),
+        ).flatMap { resource ->
+            resource.openStream().bufferedReader().use {
+                GeneratedProviderIndex
+                    .parse(it.readText())
+            }
+        }.distinct()
+
+private fun generatedProviderInstance(name: String): Any {
+    val type = Class.forName(name)
+    return type.fields.singleOrNull { it.name == "INSTANCE" }?.get(null) ?: type.getConstructor().newInstance()
+}
+
 private fun presentationCatalog(): DefaultCheckedCatalog {
-    val messageField =
-        (SyntheticEntryDefinition.definition.representation as RepresentationTemplate.Record)
-            .fields
-            .single { it.owner.name == "message" }
-    val entry =
-        TypeDefinition(
-            id = SyntheticEntryDefinition.id,
-            representation = RepresentationTemplate.Record(listOf(messageField)),
-        )
+    val definitions =
+        generatedProviderEntries()
+            .filter { it.kind == GeneratedProviderKind.Type }
+            .map { (generatedProviderInstance(it.providerClass) as GeneratedTypeProvider).definition }
+            .distinctBy(TypeDefinition::id)
     return DefaultCheckedCatalog(
         CatalogGeneration("conformance presentation"),
-        listOf(
-            entry,
-            SyntheticMessageDefinition.definition,
-            LiteralMessageDefinition.definition,
-            RepeatedMessageDefinition.definition,
-        ),
+        StandardTypes.definitions + definitions,
     )
 }
 

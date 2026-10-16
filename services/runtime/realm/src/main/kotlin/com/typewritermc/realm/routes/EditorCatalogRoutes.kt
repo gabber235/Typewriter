@@ -32,7 +32,7 @@ internal class EditorCatalogRoutes(
                 try {
                     val request = SkirAuthoringOperationCodec.decode(call.request).getOrThrow()
                     PrepareValueResult.PreparedWrapper(
-                        SkirAuthoringOperationCodec.encode(preparation.prepare(request)).getOrThrow(),
+                        SkirAuthoringOperationCodec.encode(preparation.step(request)).getOrThrow(),
                     )
                 } catch (changed: PreparationCatalogChanged) {
                     PrepareValueResult.createCatalogChanged(value = changed.actual.value)

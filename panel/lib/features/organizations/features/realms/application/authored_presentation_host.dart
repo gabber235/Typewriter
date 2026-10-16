@@ -466,11 +466,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     if (context.catalogGeneration != authored.generation) {
       return const PortableLinkPlanUnavailable("The editor catalog changed");
     }
-    return portableLinkPlans(
-      draft: authored,
-      catalog: authored.catalog,
-      source: source,
-    );
+    return authored.linkPlans(catalog: authored.catalog, source: source);
   }
 
   @override
@@ -504,7 +500,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
       apply: (operation) async {
         operation.expect(plan.source.id.location);
         final choice = switch (counterpart) {
-          PortableAutomaticCounterpart() => null,
+          PortableAutomaticCounterpart() ||
+          PortableCollectionCounterpart() => null,
           PortableExistingCounterpart(:final occurrence) =>
             skir.CounterpartChoice.wrapExisting(occurrence),
           PortableCreatedCounterpart(:final slot) =>
@@ -516,7 +513,18 @@ final class AuthoredPresentationHost extends ChangeNotifier
         if (_disposed || !enabled || readOnly) {
           throw StateError("The presentation closed during preparation");
         }
-        operation.connect(plan.source, target.resource, counterpart: choice);
+        operation.applyResolvedReference(
+          operation.resolveReference(
+            catalog: authored.catalog,
+            plan: plan,
+            target: target,
+            counterpart: choice,
+            collection: switch (counterpart) {
+              PortableCollectionCounterpart(:final containing) => containing,
+              _ => null,
+            },
+          ),
+        );
       },
     );
     return switch (result) {

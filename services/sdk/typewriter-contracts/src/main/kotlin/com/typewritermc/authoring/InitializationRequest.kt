@@ -53,6 +53,69 @@ data class InitializationDiagnostic(
     val relativePath: ValuePath? = null,
 )
 
+/** A caller owned continuation of initialization, retaining evaluated values and deferred defaults. */
+@Serializable
+data class PreparationDraft(
+    val catalog: CatalogGeneration,
+    val target: PreparationTarget,
+    val content: PreparedContent,
+    val pendingDefaults: Set<ValuePath>,
+    val requiredInputs: List<RequiredInput>,
+    val findings: List<InitializationDiagnostic>,
+)
+
+@Serializable
+data class RequiredInput(
+    val path: ValuePath,
+    val expected: com.typewritermc.types.TypeUse,
+)
+
+@Serializable
+data class InputAnswer(
+    val path: ValuePath,
+    val value: DataValue,
+)
+
+@Serializable
+sealed interface PreparationOperation {
+    @Serializable
+    data class Start(
+        val request: InitializationRequest,
+    ) : PreparationOperation
+
+    @Serializable
+    data class Resume(
+        val draft: PreparationDraft,
+        val answers: List<InputAnswer>,
+    ) : PreparationOperation
+}
+
+@Serializable
+sealed interface PreparationStep {
+    @Serializable
+    data class Ready(
+        val value: PreparedValue,
+    ) : PreparationStep
+
+    @Serializable
+    data class NeedsInput(
+        val draft: PreparationDraft,
+    ) : PreparationStep
+
+    @Serializable
+    data class Unavailable(
+        val draft: PreparationDraft,
+    ) : PreparationStep
+}
+
+/** Materializes unfinished editor values without starting an interactive creation flow. */
+fun PreparationStep.materialize(): PreparedValue =
+    when (this) {
+        is PreparationStep.Ready -> value
+        is PreparationStep.NeedsInput -> PreparedValue(draft.content, draft.findings)
+        is PreparationStep.Unavailable -> PreparedValue(draft.content, draft.findings)
+    }
+
 data class LocatedInitializationDiagnostic(
     val location: ValueLocation,
     val diagnostic: InitializationDiagnostic,

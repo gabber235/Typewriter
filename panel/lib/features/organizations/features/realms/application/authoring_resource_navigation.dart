@@ -162,9 +162,14 @@ extension ResourceCreationAction on ResourceCreationSession {
   Future<AuthoringResourceIdentifier?> createAndReveal({
     required BuildContext context,
     required ResourceCreationRequest request,
+    CreationContext? creationContext,
   }) async {
     final intent = beginNavigation();
-    final resource = await create(context: context, request: request);
+    final resource = await create(
+      context: context,
+      request: request,
+      creationContext: creationContext,
+    );
     if (resource != null) await intent.reveal(resource);
     return resource;
   }

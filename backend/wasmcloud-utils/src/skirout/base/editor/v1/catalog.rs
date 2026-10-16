@@ -1447,13 +1447,277 @@ impl PreparedValue {
 }
 
 // ==============================================================================
+// struct RequiredInput
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RequiredInput {
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub expected: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RequiredInput>>,
+}
+
+impl RequiredInput {
+    pub fn default_ref() -> &'static RequiredInput {
+        static D: std::sync::LazyLock<RequiredInput> =
+            std::sync::LazyLock::new(RequiredInput::default);
+        &D
+    }
+}
+
+impl RequiredInput {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RequiredInput> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RequiredInput>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "RequiredInput",
+                "",
+                |x: &RequiredInput| &x._unrecognized,
+                |x: &mut RequiredInput, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RequiredInput> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RequiredInput::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PreparationDraft
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PreparationDraft {
+    pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
+    pub target: PreparationTarget,
+    pub content: PreparedContent,
+    pub pending_defaults: Vec<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
+    pub required_inputs: Vec<RequiredInput>,
+    pub findings: Vec<crate::skirout::base::editor::v1::diagnostic::InitializationDiagnostic>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PreparationDraft>>,
+}
+
+impl PreparationDraft {
+    pub fn default_ref() -> &'static PreparationDraft {
+        static D: std::sync::LazyLock<PreparationDraft> =
+            std::sync::LazyLock::new(PreparationDraft::default);
+        &D
+    }
+}
+
+impl PreparationDraft {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PreparationDraft> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PreparationDraft>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "PreparationDraft",
+                "",
+                |x: &PreparationDraft| &x._unrecognized,
+                |x: &mut PreparationDraft, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreparationDraft> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(PreparationDraft::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct InputAnswer
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InputAnswer {
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    pub value: crate::skirout::base::editor::v1::type_catalog::DataValue,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InputAnswer>>,
+}
+
+impl InputAnswer {
+    pub fn default_ref() -> &'static InputAnswer {
+        static D: std::sync::LazyLock<InputAnswer> = std::sync::LazyLock::new(InputAnswer::default);
+        &D
+    }
+}
+
+impl InputAnswer {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InputAnswer> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InputAnswer>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "InputAnswer",
+                "",
+                |x: &InputAnswer| &x._unrecognized,
+                |x: &mut InputAnswer, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<InputAnswer> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(InputAnswer::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct PreparationOperation.Resume
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct PreparationOperation_Resume {
+    pub draft: PreparationDraft,
+    pub answers: Vec<InputAnswer>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PreparationOperation_Resume>>,
+}
+
+impl PreparationOperation_Resume {
+    pub fn default_ref() -> &'static PreparationOperation_Resume {
+        static D: std::sync::LazyLock<PreparationOperation_Resume> =
+            std::sync::LazyLock::new(PreparationOperation_Resume::default);
+        &D
+    }
+}
+
+impl PreparationOperation_Resume {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<PreparationOperation_Resume> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PreparationOperation_Resume>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/catalog.skir",
+                "PreparationOperation.Resume",
+                "",
+                |x: &PreparationOperation_Resume| &x._unrecognized,
+                |x: &mut PreparationOperation_Resume, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreparationOperation_Resume> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            PreparationOperation_Resume::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum PreparationOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PreparationOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparationOperation>>),
+    Start(Box<ValuePreparationRequest>),
+    Resume(Box<PreparationOperation_Resume>),
+}
+
+impl Default for PreparationOperation {
+    fn default() -> Self {
+        PreparationOperation::Unknown(None)
+    }
+}
+
+impl PreparationOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreparationOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PreparationOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PreparationOperation| match x {
+                    PreparationOperation::Unknown(_) => 0,
+                    PreparationOperation::Start(_) => 1,
+                    PreparationOperation::Resume(_) => 2,
+                },
+                |u| PreparationOperation::Unknown(Some(u)),
+                |x: &PreparationOperation| match x {
+                    PreparationOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/catalog.skir",
+                "PreparationOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreparationOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PreparationOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum PreparationStep
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum PreparationStep {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparationStep>>),
+    Ready(Box<PreparedValue>),
+    NeedsInput(Box<PreparationDraft>),
+    Unavailable(Box<PreparationDraft>),
+}
+
+impl Default for PreparationStep {
+    fn default() -> Self {
+        PreparationStep::Unknown(None)
+    }
+}
+
+impl PreparationStep {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<PreparationStep> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<PreparationStep>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &PreparationStep| match x {
+                    PreparationStep::Unknown(_) => 0,
+                    PreparationStep::Ready(_) => 1,
+                    PreparationStep::NeedsInput(_) => 2,
+                    PreparationStep::Unavailable(_) => 3,
+                },
+                |u| PreparationStep::Unknown(Some(u)),
+                |x: &PreparationStep| match x {
+                    PreparationStep::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/catalog.skir",
+                "PreparationStep",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<PreparationStep> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(PreparationStep::_adapter())
+    }
+}
+
+// ==============================================================================
 // enum PrepareValueResult
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PrepareValueResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PrepareValueResult>>),
-    Prepared(Box<PreparedValue>),
+    Prepared(Box<PreparationStep>),
     CatalogChanged(Box<crate::skirout::base::editor::v1::type_catalog::CatalogGeneration>),
     InternalError(Box<crate::skirout::base::kernel::v1::errors::InternalError>),
 }
@@ -2716,14 +2980,219 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RequiredInput> =
+                RequiredInput::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "path",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &RequiredInput| &x.path,
+                |x: &mut RequiredInput, v| x.path = v,
+            );
+            (*a).add_field(
+                "expected",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &RequiredInput| &x.expected,
+                |x: &mut RequiredInput, v| x.expected = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PreparationDraft> =
+                PreparationDraft::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "catalog",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CatalogGeneration::serializer(),
+                "",
+                |x: &PreparationDraft| &x.catalog,
+                |x: &mut PreparationDraft, v| x.catalog = v,
+            );
+            (*a).add_field(
+                "target",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PreparationTarget::_adapter(),
+                ),
+                "",
+                |x: &PreparationDraft| &x.target,
+                |x: &mut PreparationDraft, v| x.target = v,
+            );
+            (*a).add_field(
+                "content",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PreparedContent::_adapter(),
+                ),
+                "",
+                |x: &PreparationDraft| &x.content,
+                |x: &mut PreparationDraft, v| x.content = v,
+            );
+            (*a).add_field(
+                "pending_defaults",
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                ),
+                "",
+                |x: &PreparationDraft| &x.pending_defaults,
+                |x: &mut PreparationDraft, v| x.pending_defaults = v,
+            );
+            (*a).add_field(
+                "required_inputs",
+                4,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        RequiredInput::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PreparationDraft| &x.required_inputs,
+                |x: &mut PreparationDraft, v| x.required_inputs = v,
+            );
+            (*a).add_field("findings", 5, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::diagnostic::InitializationDiagnostic::serializer()), "", |x: &PreparationDraft| &x.findings, |x: &mut PreparationDraft, v| x.findings = v);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InputAnswer> =
+                InputAnswer::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "path",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &InputAnswer| &x.path,
+                |x: &mut InputAnswer, v| x.path = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &InputAnswer| &x.value,
+                |x: &mut InputAnswer, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<PreparationOperation_Resume> =
+                PreparationOperation_Resume::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "draft",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparationDraft::_adapter(),
+                ),
+                "",
+                |x: &PreparationOperation_Resume| &x.draft,
+                |x: &mut PreparationOperation_Resume, v| x.draft = v,
+            );
+            (*a).add_field(
+                "answers",
+                1,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        InputAnswer::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &PreparationOperation_Resume| &x.answers,
+                |x: &mut PreparationOperation_Resume, v| x.answers = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PreparationOperation> =
+                PreparationOperation::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "start",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ValuePreparationRequest::_adapter(),
+                ),
+                "",
+                |v| PreparationOperation::Start(Box::new(v)),
+                |x| match x {
+                    PreparationOperation::Start(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resume",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparationOperation_Resume::_adapter(),
+                ),
+                "",
+                |v| PreparationOperation::Resume(Box::new(v)),
+                |x| match x {
+                    PreparationOperation::Resume(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<PreparationStep> =
+                PreparationStep::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "ready",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparedValue::_adapter(),
+                ),
+                "",
+                |v| PreparationStep::Ready(Box::new(v)),
+                |x| match x {
+                    PreparationStep::Ready(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "needs_input",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparationDraft::_adapter(),
+                ),
+                "",
+                |v| PreparationStep::NeedsInput(Box::new(v)),
+                |x| match x {
+                    PreparationStep::NeedsInput(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unavailable",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    PreparationDraft::_adapter(),
+                ),
+                "",
+                |v| PreparationStep::Unavailable(Box::new(v)),
+                |x| match x {
+                    PreparationStep::Unavailable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<PrepareValueResult> =
                 PrepareValueResult::_adapter() as *const _ as *mut _;
             (*a).add_wrapper_variant(
                 "prepared",
                 1,
                 1,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    PreparedValue::_adapter(),
+                crate::skir_client::internal::enum_serializer_from_static(
+                    PreparationStep::_adapter(),
                 ),
                 "",
                 |v| PrepareValueResult::Prepared(Box::new(v)),
@@ -2890,13 +3359,13 @@ pub fn watch_editor_catalog_method()
 }
 
 pub fn prepare_value_method()
--> &'static crate::skir_client::Method<ValuePreparationRequest, PrepareValueResult> {
+-> &'static crate::skir_client::Method<PreparationOperation, PrepareValueResult> {
     static METHOD: std::sync::LazyLock<
-        crate::skir_client::Method<ValuePreparationRequest, PrepareValueResult>,
+        crate::skir_client::Method<PreparationOperation, PrepareValueResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "PrepareValue".to_string(),
         number: 910003_i64,
-        request_serializer: ValuePreparationRequest::serializer(),
+        request_serializer: PreparationOperation::serializer(),
         response_serializer: PrepareValueResult::serializer(),
         doc: "".to_string(),
     });

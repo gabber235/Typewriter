@@ -21,7 +21,9 @@ fun AppliedNativeArguments.requireOpaqueCompatibility(allowed: Set<Int>) {
 }
 
 interface InitializationRuntime {
-    suspend fun prepare(request: InitializationRequest): PreparedValue
+    suspend fun prepare(request: InitializationRequest): PreparedValue = step(PreparationOperation.Start(request)).materialize()
+
+    suspend fun step(operation: PreparationOperation): PreparationStep
 }
 
 suspend fun InitializationRequest.prepareWith(runtime: InitializationRuntime): PreparedValue = runtime.prepare(this)

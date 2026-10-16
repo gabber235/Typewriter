@@ -61,6 +61,7 @@ void main() {
       addTearDown(transport.dispose);
       final base = fixtureAuthoringCommands(transport);
       final commands = AuthoredResourceCommands(
+        prepareStep: (_) async => throw UnimplementedError(),
         previewTypeArguments: base.previewTypeArguments,
         prepareTypeArguments: base.prepareTypeArguments,
         prepareValue: base.prepareValue,
@@ -159,6 +160,7 @@ _fixture() {
   final requests = <skir.SearchAuthoringRequest>[];
   final transport = ScriptedAuthoringTransport(AsyncData(initial));
   final commands = AuthoredResourceCommands(
+    prepareStep: (_) async => throw UnimplementedError(),
     previewTypeArguments: ({required resource, required requested}) async =>
         throw UnimplementedError(),
     prepareTypeArguments: (_) async => throw UnimplementedError(),

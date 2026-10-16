@@ -7,185 +7,141 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
-  testWidgets(
-    "creation publishes an unfinished resource before server acknowledgement",
-    (tester) async {
-      final fixture = _fixture();
-      final document = AuthoringDocument.fromState(
-        fixture.snapshot,
-        catalog: fixture.catalog,
-      );
-      final transport = ScriptedAuthoringTransport(AsyncData(document));
-      addTearDown(transport.dispose);
-      skir.ValuePreparationRequest? preparedRequest;
-      AuthoringResourceIdentifier? created;
-      RealmEditing? workspace;
-      var ambientOrganization = fixture.organization;
-      var ambientRealm = fixture.realm;
-      final preparation = Completer<skir.PreparedValue>();
-      final commands = AuthoredResourceCommands(
-        previewTypeArguments: ({required resource, required requested}) async =>
-            throw UnimplementedError(),
-        prepareTypeArguments: (_) async => throw UnimplementedError(),
-        prepareValue: (request) async {
-          preparedRequest = request;
-          return preparation.future;
-        },
-        invokeCommand: ({required capabilityId, required payload}) async =>
-            throw UnimplementedError(),
-        watchSearch: (_) => const Stream.empty(),
-        search: (_) async => throw UnimplementedError(),
-        reload: () async {},
-      );
-      await tester.pumpTestApp(
-        overrides: [
-          organizationIdProvider.overrideWith((ref) => ambientOrganization),
-          realmIdProvider.overrideWith((ref) => ambientRealm),
-          ...authoringFixtureOverrides(
-            document: document,
-            transport: transport,
-            commands: commands,
-          ),
-        ],
-        child: Consumer(
-          builder: (context, ref, _) => Scaffold(
-            body: FilledButton(
-              onPressed: () async {
-                workspace = ref.readRealmEditing();
-                created = await ref
-                    .read(
-                      resourceCreationProvider(
-                        AuthoringScope(
-                          organizationId: fixture.organization,
-                          realmId: fixture.realm,
+  for (final cancellation in [
+    "none",
+    "realm",
+    "realm return",
+    "catalog",
+    "catalog return",
+    "wrong realm",
+    "dispose",
+  ]) {
+    testWidgets(
+      "creation completes atomically with $cancellation cancellation",
+      (tester) async {
+        final fixture = _fixture();
+        final document = AuthoringDocument.fromState(
+          fixture.snapshot,
+          catalog: fixture.catalog,
+        );
+        final transport = ScriptedAuthoringTransport(AsyncData(document));
+        addTearDown(transport.dispose);
+        final preparation = Completer<skir.PreparationStep>();
+        skir.PreparationOperation? operation;
+        AuthoringResourceIdentifier? created;
+        RealmEditing? workspace;
+        var ambientRealm = fixture.realm;
+        final commands = AuthoredResourceCommands(
+          previewTypeArguments: ({
+            required resource,
+            required requested,
+          }) async => throw UnimplementedError(),
+          prepareTypeArguments: (_) async => throw UnimplementedError(),
+          prepareValue: (_) async => throw UnimplementedError(),
+          prepareStep: (input) {
+            operation = input;
+            return preparation.future;
+          },
+          invokeCommand: ({required capabilityId, required payload}) async =>
+              throw UnimplementedError(),
+          watchSearch: (_) => const Stream.empty(),
+          search: (_) async => throw UnimplementedError(),
+          reload: () async {},
+        );
+        await tester.pumpTestApp(
+          overrides: [
+            organizationIdProvider.overrideWith((_) => fixture.organization),
+            realmIdProvider.overrideWith((_) => ambientRealm),
+            ...authoringFixtureOverrides(
+              document: document,
+              transport: transport,
+              commands: commands,
+            ),
+          ],
+          child: Consumer(
+            builder: (context, ref, _) => Scaffold(
+              body: FilledButton(
+                onPressed: () async {
+                  workspace = ref.readRealmEditing();
+                  created = await ref
+                      .read(
+                        resourceCreationProvider(
+                          AuthoringScope(
+                            organizationId: fixture.organization,
+                            realmId: fixture.realm,
+                          ),
                         ),
-                      ),
-                    )
-                    .create(context: context, request: fixture.request);
-              },
-              child: const Text("Create"),
+                      )
+                      .create(context: context, request: fixture.request);
+                },
+                child: const Text("Create"),
+              ),
             ),
           ),
-        ),
-      );
-      await tester.tap(find.text("Create"));
-      await tester.pump();
-      expect(find.byType(Dialog), findsNothing);
-      expect(preparedRequest?.recordSelection, fixture.pending);
-      ambientOrganization = skir.recordId("organization:other");
-      ambientRealm = skir.recordId("realm:other");
-      tester.container()
-        ..invalidate(organizationIdProvider)
-        ..invalidate(realmIdProvider);
-      await tester.pump();
-      preparation.complete(fixture.prepared);
-      await tester.pump();
-      expect(created?.resourceId, fixture.request.id);
-      expect(
-        created?.scope,
-        AuthoringScope(
-          organizationId: fixture.organization,
-          realmId: fixture.realm,
-        ),
-      );
-      expect(
-        workspace!.document.entry(fixture.request.id)?.definition,
-        fixture.request.definition,
-      );
-      expect(
-        workspace!.document.initializationFindings.single.diagnostic.code,
-        "dependent_unfilled",
-      );
-      expect(transport.requests, isEmpty);
-      await tester.pump(const Duration(milliseconds: 250));
-      await tester.pump();
-      expect(transport.requests, hasLength(1));
-      final intent =
-          transport.requests.single.edit.intents.single
-              as skir.EditIntent_createResourceWrapper;
-      expect(intent.value.record.configuration, fixture.pending);
-      expect(
-        (intent.value.record.configuration as skir.TypeSelection_pendingWrapper)
-            .value
-            .arguments,
-        [skir.ArgumentSelection.unfilled],
-      );
-      expect(
-        transport.observation.requireValue.entry(created!.resourceId),
-        isNull,
-      );
-      expect(
-        workspace!.document.initializationFindings.single.location.resource,
-        fixture.request.id,
-      );
-    },
-  );
-  testWidgets(
-    "closing the creation view during preparation cancels before staging",
-    (tester) async {
-      final fixture = _fixture();
-      final document = AuthoringDocument.fromState(
-        fixture.snapshot,
-        catalog: fixture.catalog,
-      );
-      final transport = ScriptedAuthoringTransport(AsyncData(document));
-      addTearDown(transport.dispose);
-      final preparation = Completer<skir.PreparedValue>();
-      final completed = Completer<AuthoringResourceIdentifier?>();
-      final visible = ValueNotifier(true);
-      addTearDown(visible.dispose);
-      RealmEditing? workspace;
-      final commands = AuthoredResourceCommands(
-        previewTypeArguments: ({required resource, required requested}) async =>
-            throw UnimplementedError(),
-        prepareTypeArguments: (_) async => throw UnimplementedError(),
-        prepareValue: (_) => preparation.future,
-        invokeCommand: ({required capabilityId, required payload}) async =>
-            throw UnimplementedError(),
-        watchSearch: (_) => const Stream.empty(),
-        search: (_) async => throw UnimplementedError(),
-        reload: () async {},
-      );
-      await tester.pumpTestApp(
-        overrides: authoringFixtureOverrides(
-          document: document,
-          transport: transport,
-          commands: commands,
-        ),
-        child: ValueListenableBuilder<bool>(
-          valueListenable: visible,
-          builder: (_, shown, _) => shown
-              ? Consumer(
-                  builder: (context, ref, _) => FilledButton(
-                    onPressed: () async {
-                      final scope = AuthoringScope(
-                        organizationId: fixture.organization,
-                        realmId: fixture.realm,
-                      );
-                      workspace = ref.read(realmEditingProvider(scope));
-                      completed.complete(
-                        await ref
-                            .read(resourceCreationProvider(scope))
-                            .create(context: context, request: fixture.request),
-                      );
-                    },
-                    child: const Text("Create"),
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-      );
-      await tester.tap(find.text("Create"));
-      await tester.pump();
-      visible.value = false;
-      await tester.pump();
-      preparation.complete(fixture.prepared);
-      await tester.pump();
-      expect(await completed.future, isNull);
-      expect(workspace!.document.resource(fixture.request.id), isNull);
-      expect(workspace!.hasPendingWork, isFalse);
-    },
-  );
+        );
+        if (cancellation == "wrong realm") {
+          ambientRealm = skir.recordId("realm:other");
+          tester.container().invalidate(realmIdProvider);
+          await tester.pump();
+        }
+        await tester.tap(find.text("Create"));
+        await tester.pump();
+        if (cancellation == "wrong realm") {
+          expect(operation, isNull);
+          expect(created, isNull);
+          expect(transport.requests, isEmpty);
+          return;
+        }
+        expect(operation, isA<skir.PreparationOperation_startWrapper>());
+        expect(workspace!.document.resource(fixture.request.id), isNull);
+        expect(transport.requests, isEmpty);
+        if (cancellation.startsWith("realm")) {
+          ambientRealm = skir.recordId("realm:other");
+          tester.container().invalidate(realmIdProvider);
+          await tester.pump();
+          if (cancellation == "realm return") {
+            ambientRealm = fixture.realm;
+            tester.container().invalidate(realmIdProvider);
+            await tester.pump();
+          }
+        } else if (cancellation.startsWith("catalog")) {
+          final changed = fixture.catalog.snapshot.toMutable()
+            ..generation = skir.CatalogGeneration(value: "catalog:changed");
+          workspace!.acceptConfirmed(
+            document.copyWith(
+              catalog: CheckedEditorCatalog(changed.toFrozen()),
+            ),
+          );
+          await tester.pump();
+          if (cancellation == "catalog return") {
+            workspace!.acceptConfirmed(document);
+            await tester.pump();
+          }
+        } else if (cancellation == "dispose") {
+          await tester.pumpWidget(const SizedBox());
+        }
+        preparation.complete(skir.PreparationStep.wrapReady(fixture.prepared));
+        await tester.pump();
+        if (cancellation == "none") {
+          expect(created?.resourceId, fixture.request.id);
+          expect(
+            workspace!.document.entry(fixture.request.id)?.definition,
+            fixture.request.definition,
+          );
+          expect(
+            workspace!.document.initializationFindings.single.diagnostic.code,
+            "preparation_detail",
+          );
+          await tester.pump(const Duration(seconds: 1));
+          expect(transport.requests, hasLength(1));
+          expect(transport.requests.single.edit.intents, hasLength(1));
+        } else {
+          expect(created, isNull);
+          expect(transport.requests, isEmpty);
+        }
+      },
+    );
+  }
 }
 
 final class _CreationFixture {
@@ -217,10 +173,9 @@ _CreationFixture _fixture() {
     ),
     revision: 1,
   );
-  final parameter = skir.ParameterKey(owner: definition, index: 0);
-  final pending = skir.TypeSelection.createPending(
+  final pending = skir.TypeSelection.createComplete(
     definition: definition,
-    arguments: [skir.ArgumentSelection.unfilled],
+    arguments: const [],
   );
   final resourceDefinition = skir.ResourceDefinitionId(
     value: "test.generic_resource",
@@ -231,9 +186,7 @@ _CreationFixture _fixture() {
       skir.PublishedType(
         definition: skir.TypeDefinition(
           id: definition,
-          parameters: [
-            skir.TypeParameter(key: parameter, name: "T", bounds: const []),
-          ],
+          parameters: const [],
           representation: skir.RepresentationTemplate.createRecord(
             fields: const [],
             abstract_: false,
@@ -270,8 +223,8 @@ _CreationFixture _fixture() {
     findings: [
       skir.InitializationDiagnostic(
         field: null,
-        code: "dependent_unfilled",
-        message: "The generic argument is unfinished",
+        code: "preparation_detail",
+        message: "A retained preparation finding",
         relativePath: skir.ValuePath(segments: const []),
       ),
     ],

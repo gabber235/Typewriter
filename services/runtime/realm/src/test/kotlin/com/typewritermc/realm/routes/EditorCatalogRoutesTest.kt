@@ -74,5 +74,6 @@ val EditorCatalogRoutesTest by testSuite {
 }
 
 private data object UnusedInitialization : InitializationRuntime {
-    override suspend fun prepare(request: InitializationRequest): PreparedValue = error("Not used")
+    override suspend fun step(operation: com.typewritermc.authoring.PreparationOperation): com.typewritermc.authoring.PreparationStep =
+        error("Not used")
 }

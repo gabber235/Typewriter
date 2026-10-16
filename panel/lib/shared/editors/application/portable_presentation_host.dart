@@ -312,25 +312,20 @@ abstract interface class PortableCollectionProjectionHost {
   });
 }
 
-sealed class PortableLinkCounterpartRequest {
-  const PortableLinkCounterpartRequest();
-}
-
-final class PortableAutomaticCounterpart
-    extends PortableLinkCounterpartRequest {
-  const PortableAutomaticCounterpart();
-}
-
-final class PortableExistingCounterpart extends PortableLinkCounterpartRequest {
-  const PortableExistingCounterpart(this.occurrence);
-
-  final skir.LinkOccurrence occurrence;
-}
-
-final class PortableCreatedCounterpart extends PortableLinkCounterpartRequest {
-  const PortableCreatedCounterpart(this.slot);
-
-  final PortableNewCounterpartChoice slot;
+@freezed
+sealed class PortableLinkCounterpartRequest
+    with _$PortableLinkCounterpartRequest {
+  const factory PortableLinkCounterpartRequest.automatic() =
+      PortableAutomaticCounterpart;
+  const factory PortableLinkCounterpartRequest.existing(
+    skir.LinkOccurrence occurrence,
+  ) = PortableExistingCounterpart;
+  const factory PortableLinkCounterpartRequest.created(
+    PortableNewCounterpartChoice slot,
+  ) = PortableCreatedCounterpart;
+  const factory PortableLinkCounterpartRequest.collection(
+    skir.ValueLocation containing,
+  ) = PortableCollectionCounterpart;
 }
 
 abstract interface class PortableLinkHost {

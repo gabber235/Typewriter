@@ -7,6 +7,357 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  test("concrete endpoint binding replaces the ancestor at the same path", () {
+    final fixture = _fixture();
+    final original = fixture.catalog.snapshot;
+    final base = _definition("Node");
+    final child = _definition("NarrowNode");
+    final node = original.types.singleWhere(
+      (type) => type.definition.id == base,
+    );
+    final ancestor = skir.NamedTypeTemplate(
+      definition: base,
+      arguments: const [],
+    );
+    final binding = original.endpointBindings.first;
+    final snapshot = original.toMutable()
+      ..types = [
+        ...original.types,
+        skir.PublishedType(
+          display: null,
+          definition: skir.TypeDefinition(
+            id: child,
+            parameters: const [],
+            representation: node.definition.representation,
+            parents: [ancestor],
+          ),
+          status: skir.DeclarationStatus.ready,
+          effectiveFields: node.effectiveFields,
+          ancestorTemplates: [ancestor],
+        ),
+      ]
+      ..endpointBindings = [
+        ...original.endpointBindings,
+        skir.EndpointBindingTemplate(
+          endpoint: binding.endpoint,
+          containingResource: skir.NamedTypeTemplate(
+            definition: child,
+            arguments: const [],
+          ),
+          valueOwner: child,
+          relativePath: binding.relativePath,
+          target: skir.TypeTemplate.createNamed(
+            definition: _definition("Wrapper"),
+            arguments: const [],
+          ),
+          containsCollection: false,
+        ),
+      ];
+    final catalog = CheckedEditorCatalog(snapshot.toFrozen());
+    final selected = catalog
+        .endpointBindings(catalog.beginSelection(child))
+        .where((candidate) => candidate.template.endpoint == binding.endpoint)
+        .toList();
+    expect(selected, hasLength(1));
+    expect(selected.single.template.containingResource.definition, child);
+    expect(
+      catalog.selectionMatches(
+        catalog.beginSelection(base),
+        selected.single.target,
+      ),
+      isFalse,
+    );
+  });
+
+  test("a selected abstract form supplies its own reference endpoint", () {
+    final fixture = _fixture(abstractWrapper: true);
+    final source = skir.ValueLocation(
+      resource: fixture.existingTarget,
+      path: fixture.nestedLinkPath,
+    );
+    final record = fixture.draft.resource(source.resource)!;
+    expect(
+      fixture.catalog.valueTypeAt(
+        record.configuration,
+        source.path,
+        value: skir.DataValue.createRecord(fields: record.fields),
+      ),
+      isNotNull,
+    );
+    final result = fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: source,
+    );
+    expect(result, isA<PortableLinkPlanReady>());
+    final plan = (result as PortableLinkPlanReady).plans.single;
+    expect(plan.source.id.endpoint.value, "test.target");
+    expect(
+      plan.targets.any((target) => target.resource == fixture.source.resource),
+      isTrue,
+    );
+  });
+
+  test("an unselected abstract counterpart requires a form choice", () {
+    final fixture = _fixture(abstractWrapper: true);
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (target) => target.resource == fixture.emptyTarget,
+    );
+    expect(target.automaticCounterpart, isFalse);
+    expect(target.existing, isEmpty);
+    expect(target.disabledReason, contains("Select a form at wrapper"));
+    expect(
+      () => fixture.draft.resolveReference(
+        catalog: fixture.catalog,
+        plan: plan,
+        target: target,
+      ),
+      throwsStateError,
+    );
+    expect(fixture.draft.links, isEmpty);
+  });
+
+  test("a selected abstract inverse retains its exact counterpart path", () {
+    final fixture = _fixture(abstractWrapper: true);
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (target) => target.resource == fixture.existingTarget,
+    );
+    expect(target.automaticCounterpart, isFalse);
+    expect(target.existing.single.id.location.path, fixture.nestedLinkPath);
+    final reference = fixture.draft.resolveReference(
+      catalog: fixture.catalog,
+      plan: plan,
+      target: target,
+      counterpart: skir.CounterpartChoice.wrapExisting(target.existing.single),
+    );
+    fixture.draft.applyResolvedReference(reference);
+    expect(fixture.draft.links.single.secondLocation, fixture.nestedLinkPath);
+    final locations = fixture.catalog
+        .referenceLocations(fixture.draft.resource(fixture.existingTarget)!)
+        .toList();
+    expect(
+      locations
+          .where((location) => location.endpoint.value == "test.target")
+          .single
+          .path,
+      fixture.nestedLinkPath,
+    );
+  });
+
+  test(
+    "an empty inverse collection in a selected form reserves an exact item",
+    () {
+      final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
+      final plan = (fixture.draft.linkPlans(
+        catalog: fixture.catalog,
+        source: fixture.source,
+      ) as PortableLinkPlanReady).plans.single;
+      final target = plan.targets.singleWhere(
+        (target) => target.resource == fixture.existingTarget,
+      );
+      expect(target.automaticCounterpart, isFalse);
+      expect(target.existing, isEmpty);
+      expect(target.collections.single.path, fixture.nestedLinkPath);
+      final reference = fixture.draft.resolveReference(
+        catalog: fixture.catalog,
+        plan: plan,
+        target: target,
+        collection: target.collections.single,
+      );
+      fixture.draft.applyResolvedReference(reference);
+      final opposite =
+          (reference.connection.counterpart!
+                  as skir.CounterpartChoice_existingWrapper)
+              .value;
+      expect(
+        fixture.draft.links.single.secondLocation,
+        opposite.id.location.path,
+      );
+      expect(
+        opposite.id.location.path.segments.length,
+        fixture.nestedLinkPath.segments.length + 1,
+      );
+    },
+  );
+
+  testWidgets("normal link collections use the selected concrete source form", (
+    tester,
+  ) async {
+    final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
+    final source = skir.ValueLocation(
+      resource: fixture.existingTarget,
+      path: fixture.nestedLinkPath,
+    );
+    final editing = _LinkWorkspace(fixture.draft, source.resource);
+    await tester.pumpWidget(
+      _linkControl(fixture, editing: editing, source: source),
+    );
+    await tester.tap(find.text("Add link"));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        ValueKey("link.target.${fixture.source.resource.value}.automatic"),
+      ),
+    );
+    await tester.pumpAndSettle();
+    unawaited(editing.binding.save());
+    await tester.pump();
+    final connection = editing.transport.requests.single.edit.intents
+        .whereType<skir.EditIntent_connectRelationWrapper>()
+        .single
+        .value;
+    expect(connection.source.id.endpoint.value, "test.target");
+    expect(connection.source.id.location.path.segments, hasLength(3));
+    expect(
+      editing.workspace.document.links.single.first,
+      fixture.source.resource,
+    );
+  });
+
+  testWidgets("normal link editing appends to an inverse in a selected form", (
+    tester,
+  ) async {
+    final fixture = _fixture(abstractWrapper: true, nestedCollection: true);
+    final editing = _LinkWorkspace(fixture.draft, fixture.source.resource);
+    await tester.pumpWidget(_linkControl(fixture, editing: editing));
+    await tester.tap(find.byTooltip("Choose linked resource"));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(
+        ValueKey(
+          "link.target.${fixture.existingTarget.value}.append.wrapper / back",
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    unawaited(editing.binding.save());
+    await tester.pump();
+    final intents = editing.transport.requests.single.edit.intents;
+    expect(intents.whereType<skir.EditIntent_insertWrapper>(), hasLength(1));
+    final connection = intents
+        .whereType<skir.EditIntent_connectRelationWrapper>()
+        .single
+        .value;
+    final inverse =
+        (connection.counterpart! as skir.CounterpartChoice_existingWrapper)
+            .value;
+    expect(
+      editing.workspace.document.links.single.secondLocation,
+      inverse.id.location.path,
+    );
+  });
+
+  test("opposite applied target rejects a forward compatible resource", () {
+    final fixture = _fixture(incompatibleInverse: true);
+    final result = fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    );
+    final plans = (result as PortableLinkPlanReady).plans;
+    expect(plans.single.targets, isNotEmpty);
+    for (final target in plans.single.targets) {
+      expect(target.automaticCounterpart, isFalse);
+      expect(target.existing, isEmpty);
+      expect(target.creatable, isEmpty);
+      expect(target.disabledReason, contains("does not accept"));
+    }
+  });
+
+  test("an unfinished direct inverse collection receives a reserved item", () {
+    final fixture = _fixture(directCollection: true);
+    fixture.draft.set(
+      skir.ValueLocation(
+        resource: fixture.existingTarget,
+        path: _fieldPath("wrapper"),
+      ),
+      skir.DataValue.unfilled,
+    );
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (candidate) => candidate.resource == fixture.existingTarget,
+    );
+    final reference = fixture.draft.resolveReference(
+      catalog: fixture.catalog,
+      plan: plan,
+      target: target,
+    );
+    fixture.draft.applyResolvedReference(reference);
+    expect(fixture.draft.links.single.secondLocation, isNotNull);
+    expect(reference.materializations, hasLength(1));
+  });
+
+  test("resolved collection inverse reserves one exact occurrence", () {
+    final fixture = _fixture(directCollection: true);
+    final plan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (target) => target.resource == fixture.emptyTarget,
+    );
+    final reference = fixture.draft.resolveReference(
+      catalog: fixture.catalog,
+      plan: plan,
+      target: target,
+    );
+    final insertion =
+        (reference.materializations.single as ReferenceValueInsertion).intent;
+    final opposite =
+        (reference.connection.counterpart!
+                as skir.CounterpartChoice_existingWrapper)
+            .value;
+    expect(
+      opposite.id.location.path.segments.last,
+      skir.PathSegment.createItem(id: insertion.item.id),
+    );
+    fixture.draft.applyResolvedReference(reference);
+    final items = fixture.draft
+        .resource(fixture.emptyTarget)!
+        .authoredField("wrapper")!
+        .authoredItems!
+        .toList();
+    expect(items.single.id, insertion.item.id);
+    expect(
+      items.single.value.authoredLink!.target.resource,
+      fixture.source.resource,
+    );
+    final staged = fixture.draft.intents
+        .whereType<skir.EditIntent_connectRelationWrapper>()
+        .single
+        .value;
+    expect(staged.counterpart, reference.connection.counterpart);
+    final repeatedPlan = (fixture.draft.linkPlans(
+      catalog: fixture.catalog,
+      source: fixture.source,
+    ) as PortableLinkPlanReady).plans.single;
+    final repeatedTarget = repeatedPlan.targets.singleWhere(
+      (choice) => choice.resource == fixture.emptyTarget,
+    );
+    final repeated = fixture.draft.resolveReference(
+      catalog: fixture.catalog,
+      plan: repeatedPlan,
+      target: repeatedTarget,
+    );
+    expect(repeated.materializations, isEmpty);
+    expect(
+      (repeated.connection.counterpart!
+              as skir.CounterpartChoice_existingWrapper)
+          .value
+          .id,
+      opposite.id,
+    );
+  });
+
   test("automatic counterpart resolution leaves nested identity to explicit choice", () {
     final fixture = _fixture();
     final result = fixture.catalog.resolveScalarCounterpart(
@@ -21,8 +372,7 @@ void main() {
   test("offers existing and new nested counterpart locations", () {
     final fixture = _fixture();
 
-    final result = portableLinkPlans(
-      draft: fixture.draft,
+    final result = fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
     );
@@ -49,8 +399,7 @@ void main() {
 
   test("stages a prepared nested counterpart and its reciprocal link", () {
     final fixture = _fixture();
-    final plan = (portableLinkPlans(
-      draft: fixture.draft,
+    final plan = (fixture.draft.linkPlans(
       catalog: fixture.catalog,
       source: fixture.source,
     ) as PortableLinkPlanReady).plans.single;
@@ -213,20 +562,28 @@ void main() {
     expect(request?.recordSelection, fixture.wrapperSelection);
     unawaited(editing.binding.save());
     await tester.pump();
-    final intent =
-        editing.transport.requests.single.edit.intents.single
-            as skir.EditIntent_connectRelationWrapper;
+    final intent = editing.transport.requests.single.edit.intents
+        .whereType<skir.EditIntent_connectRelationWrapper>()
+        .single;
     final counterpart = intent.value.counterpart;
-    expect(counterpart, isA<skir.CounterpartChoice_newWrapper>());
-    final created = (counterpart! as skir.CounterpartChoice_newWrapper).value;
-    expect(created.prepared, prepared);
+    expect(counterpart, isA<skir.CounterpartChoice_existingWrapper>());
+    final created =
+        (counterpart! as skir.CounterpartChoice_existingWrapper).value;
     expect(intent.value.target, fixture.emptyTarget);
     expect(
-      created.containing,
+      created.id.location,
       skir.ValueLocation(
         resource: fixture.emptyTarget,
-        path: _fieldPath("wrapper"),
+        path: fixture.nestedLinkPath,
       ),
+    );
+    expect(
+      editing.workspace.document
+          .resource(fixture.emptyTarget)!
+          .authoredField("wrapper")!
+          .authoredField("label")!
+          .authoredString,
+      "prepared",
     );
     expect(
       editing.workspace.document.links.single.secondLocation,
@@ -270,14 +627,16 @@ Widget _linkControl(
   })
   fixture, {
   required _LinkWorkspace editing,
+  skir.ValueLocation? source,
   Future<skir.PreparedValue> Function(skir.ValuePreparationRequest)?
   prepareValue,
 }) {
+  source ??= fixture.source;
   final root = skir.ExpressionBindingId(value: "configured_value");
-  final record = fixture.draft.resource(fixture.source.resource)!;
+  final record = fixture.draft.resource(source.resource)!;
   final budget = skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100);
   final host = AuthoredPresentationHost(
-    resource: fixture.source.resource,
+    resource: source.resource,
     source: editing.workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
     role: skir.PresentationRole.editor,
@@ -296,10 +655,7 @@ Widget _linkControl(
           element: skir.PresentationElement.wrapLinkInput(
             skir.LinkControl(
               control: skir.BoundControl(
-                binding: skir.BindingRef(
-                  bindingId: root,
-                  path: fixture.source.path,
-                ),
+                binding: skir.BindingRef(bindingId: root, path: source.path),
                 label: null,
                 description: null,
                 prefix: null,
@@ -324,7 +680,7 @@ Widget _linkControl(
             root: PortableExpressionBinding(
               value: skir.DataValue.createRecord(fields: record.fields),
               location: skir.ValueLocation(
-                resource: fixture.source.resource,
+                resource: source.resource,
                 path: skir.ValuePath(segments: const []),
               ),
             ),
@@ -348,12 +704,19 @@ Widget _linkControl(
   skir.NamedTypeUse wrapperUse,
   skir.TypeSelection wrapperSelection,
 })
-_fixture() {
+_fixture({
+  bool incompatibleInverse = false,
+  bool directCollection = false,
+  bool abstractWrapper = false,
+  bool nestedCollection = false,
+}) {
   final generation = skir.CatalogGeneration(value: "catalog:links");
   final node = _definition("Node");
   final wrapper = _definition("Wrapper");
+  final abstractForm = _definition("AbstractWrapper");
   final sourceLink = _definition("SourceLink");
   final targetLink = _definition("TargetLink");
+  final links = _definition("Links");
   final sourceEndpoint = skir.EndpointId(value: "test.source");
   final targetEndpoint = skir.EndpointId(value: "test.target");
   final nodeTemplate = skir.TypeTemplate.createNamed(
@@ -387,24 +750,53 @@ _fixture() {
     definition: definition,
     status: skir.DeclarationStatus.ready,
     effectiveFields: fields,
-    ancestorTemplates: const [],
+    ancestorTemplates: definition.parents,
   );
   final sourceLinkTemplate = skir.TypeTemplate.createNamed(
     definition: sourceLink,
     arguments: const [],
   );
   final wrapperTemplate = skir.TypeTemplate.createNamed(
-    definition: wrapper,
+    definition: abstractWrapper ? abstractForm : wrapper,
     arguments: const [],
   );
   final targetLinkTemplate = skir.TypeTemplate.createNamed(
     definition: targetLink,
     arguments: const [],
   );
+  final linksTemplate = skir.TypeTemplate.createNamed(
+    definition: links,
+    arguments: const [],
+  );
   final textTemplate = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
   final snapshot = skir.EditorCatalogWireSnapshot(
     generation: generation,
     types: [
+      if (abstractWrapper)
+        published(
+          skir.TypeDefinition(
+            id: abstractForm,
+            parameters: const [],
+            representation: skir.RepresentationTemplate.createRecord(
+              fields: const [],
+              abstract_: true,
+            ),
+            parents: const [],
+          ),
+          const [],
+        ),
+      published(
+        skir.TypeDefinition(
+          id: links,
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createSequence(
+            item: targetLinkTemplate,
+            kind: skir.CollectionKind.list,
+          ),
+          parents: const [],
+        ),
+        const [],
+      ),
       published(
         skir.TypeDefinition(
           id: node,
@@ -412,7 +804,10 @@ _fixture() {
           representation: skir.RepresentationTemplate.createRecord(
             fields: [
               declaration(sourceField, sourceLinkTemplate),
-              declaration(wrapperField, wrapperTemplate),
+              declaration(
+                wrapperField,
+                directCollection ? linksTemplate : wrapperTemplate,
+              ),
             ],
             abstract_: false,
           ),
@@ -428,7 +823,7 @@ _fixture() {
           skir.EffectiveFieldTemplate(
             key: "wrapper",
             owner: wrapperField,
-            type: wrapperTemplate,
+            type: directCollection ? linksTemplate : wrapperTemplate,
             rules: const [],
           ),
         ],
@@ -439,18 +834,28 @@ _fixture() {
           parameters: const [],
           representation: skir.RepresentationTemplate.createRecord(
             fields: [
-              declaration(backField, targetLinkTemplate),
+              declaration(
+                backField,
+                nestedCollection ? linksTemplate : targetLinkTemplate,
+              ),
               declaration(labelField, textTemplate),
             ],
             abstract_: false,
           ),
-          parents: const [],
+          parents: abstractWrapper
+              ? [
+                  skir.NamedTypeTemplate(
+                    definition: abstractForm,
+                    arguments: const [],
+                  ),
+                ]
+              : const [],
         ),
         [
           skir.EffectiveFieldTemplate(
             key: "back",
             owner: backField,
-            type: targetLinkTemplate,
+            type: nestedCollection ? linksTemplate : targetLinkTemplate,
             rules: const [],
           ),
           skir.EffectiveFieldTemplate(
@@ -471,7 +876,9 @@ _fixture() {
             parameters: const [],
             representation: skir.RepresentationTemplate.createLink(
               endpoint: link.$2,
-              target: nodeTemplate,
+              target: incompatibleInverse && link.$1 == targetLink
+                  ? wrapperTemplate
+                  : nodeTemplate,
             ),
             parents: const [],
           ),
@@ -488,7 +895,9 @@ _fixture() {
             definition: node,
             arguments: const [],
           ),
-          cardinality: skir.EndpointCardinality.one,
+          cardinality: (directCollection || nestedCollection)
+              ? skir.EndpointCardinality.many
+              : skir.EndpointCardinality.one,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
         second: skir.EndpointDefinition(
@@ -498,7 +907,9 @@ _fixture() {
             definition: node,
             arguments: const [],
           ),
-          cardinality: skir.EndpointCardinality.many,
+          cardinality: (directCollection || nestedCollection)
+              ? skir.EndpointCardinality.one
+              : skir.EndpointCardinality.many,
           onDelete: skir.RelationDeletePolicy.clear,
         ),
         families: const [],
@@ -524,22 +935,26 @@ _fixture() {
         target: nodeTemplate,
         containsCollection: false,
       ),
-      skir.EndpointBindingTemplate(
-        endpoint: targetEndpoint,
-        containingResource: skir.NamedTypeTemplate(
-          definition: node,
-          arguments: const [],
+      if (!abstractWrapper)
+        skir.EndpointBindingTemplate(
+          endpoint: targetEndpoint,
+          containingResource: skir.NamedTypeTemplate(
+            definition: node,
+            arguments: const [],
+          ),
+          valueOwner: directCollection ? node : wrapper,
+          relativePath: skir.RelativeFieldPattern(
+            segments: [
+              skir.FieldPatternSegment.createField(name: "wrapper"),
+              if (directCollection)
+                skir.FieldPatternSegment.items
+              else
+                skir.FieldPatternSegment.createField(name: "back"),
+            ],
+          ),
+          target: incompatibleInverse ? wrapperTemplate : nodeTemplate,
+          containsCollection: directCollection,
         ),
-        valueOwner: wrapper,
-        relativePath: skir.RelativeFieldPattern(
-          segments: [
-            skir.FieldPatternSegment.createField(name: "wrapper"),
-            skir.FieldPatternSegment.createField(name: "back"),
-          ],
-        ),
-        target: nodeTemplate,
-        containsCollection: false,
-      ),
     ],
     capabilities: const [],
     recommendations: const [],
@@ -553,7 +968,18 @@ _fixture() {
         configuration: skir.TypeSelection.wrapComplete(nodeUse),
         fields: [
           skir.FieldValue(name: "source", value: skir.DataValue.unfilled),
-          skir.FieldValue(name: "wrapper", value: wrapperValue),
+          skir.FieldValue(
+            name: "wrapper",
+            value: directCollection
+                ? skir.DataValue.createNamed(
+                    actualType: skir.NamedTypeUse(
+                      definition: links,
+                      arguments: const [],
+                    ),
+                    payload: skir.DataValue.createListValue(items: const []),
+                  )
+                : wrapperValue,
+          ),
         ],
       );
   final authored = skir.AuthoringState(
@@ -572,7 +998,20 @@ _fixture() {
             actualType: wrapperUse,
             payload: skir.DataValue.createRecord(
               fields: [
-                skir.FieldValue(name: "back", value: skir.DataValue.unfilled),
+                skir.FieldValue(
+                  name: "back",
+                  value: nestedCollection
+                      ? skir.DataValue.createNamed(
+                          actualType: skir.NamedTypeUse(
+                            definition: links,
+                            arguments: const [],
+                          ),
+                          payload: skir.DataValue.createListValue(
+                            items: const [],
+                          ),
+                        )
+                      : skir.DataValue.unfilled,
+                ),
                 skir.FieldValue(
                   name: "label",
                   value: skir.DataValue.wrapStringValue("existing"),

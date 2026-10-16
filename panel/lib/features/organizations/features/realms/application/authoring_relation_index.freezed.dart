@@ -288,7 +288,7 @@ as String?,
 /// @nodoc
 mixin _$AuthoringRelationIndex {
 
- Map<skir.ResourceId, List<skir.ResourceId>> get parents; Map<skir.ResourceId, List<skir.ResourceId>> get children; Set<skir.TypeDefinitionId> get ownedDefinitions; List<String> get problems; Map<skir.ResourceId, List<String>> get resourceProblems;
+ Map<skir.ResourceId, List<skir.ResourceId>> get parents; Map<skir.ResourceId, List<skir.ResourceId>> get children; List<String> get problems; Map<skir.ResourceId, List<String>> get resourceProblems;
 /// Create a copy of AuthoringRelationIndex
 /// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -300,20 +300,20 @@ $AuthoringRelationIndexCopyWith<AuthoringRelationIndex> get copyWith => _$Author
 @override
 bool operator ==(Object other) {
   final _this = this as AuthoringRelationIndex;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringRelationIndex&&const DeepCollectionEquality().equals(other.parents, _this.parents)&&const DeepCollectionEquality().equals(other.children, _this.children)&&const DeepCollectionEquality().equals(other.ownedDefinitions, _this.ownedDefinitions)&&const DeepCollectionEquality().equals(other.problems, _this.problems)&&const DeepCollectionEquality().equals(other.resourceProblems, _this.resourceProblems));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthoringRelationIndex&&const DeepCollectionEquality().equals(other.parents, _this.parents)&&const DeepCollectionEquality().equals(other.children, _this.children)&&const DeepCollectionEquality().equals(other.problems, _this.problems)&&const DeepCollectionEquality().equals(other.resourceProblems, _this.resourceProblems));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuthoringRelationIndex;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.parents),const DeepCollectionEquality().hash(_this.children),const DeepCollectionEquality().hash(_this.ownedDefinitions),const DeepCollectionEquality().hash(_this.problems),const DeepCollectionEquality().hash(_this.resourceProblems));
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.parents),const DeepCollectionEquality().hash(_this.children),const DeepCollectionEquality().hash(_this.problems),const DeepCollectionEquality().hash(_this.resourceProblems));
 }
 
 @override
 String toString() {
   final _this = this as AuthoringRelationIndex;
-  return 'AuthoringRelationIndex(parents: ${_this.parents}, children: ${_this.children}, ownedDefinitions: ${_this.ownedDefinitions}, problems: ${_this.problems}, resourceProblems: ${_this.resourceProblems})';
+  return 'AuthoringRelationIndex(parents: ${_this.parents}, children: ${_this.children}, problems: ${_this.problems}, resourceProblems: ${_this.resourceProblems})';
 }
 
 
@@ -324,7 +324,7 @@ abstract mixin class $AuthoringRelationIndexCopyWith<$Res>  {
   factory $AuthoringRelationIndexCopyWith(AuthoringRelationIndex value, $Res Function(AuthoringRelationIndex) _then) = _$AuthoringRelationIndexCopyWithImpl;
 @useResult
 $Res call({
- Map<skir.ResourceId, List<skir.ResourceId>> parents, Map<skir.ResourceId, List<skir.ResourceId>> children, Set<skir.TypeDefinitionId> ownedDefinitions, List<String> problems, Map<skir.ResourceId, List<String>> resourceProblems
+ Map<skir.ResourceId, List<skir.ResourceId>> parents, Map<skir.ResourceId, List<skir.ResourceId>> children, List<String> problems, Map<skir.ResourceId, List<String>> resourceProblems
 });
 
 
@@ -341,12 +341,11 @@ class _$AuthoringRelationIndexCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringRelationIndex
 /// with the given fields replaced by the non null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? parents = null,Object? children = null,Object? ownedDefinitions = null,Object? problems = null,Object? resourceProblems = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? parents = null,Object? children = null,Object? problems = null,Object? resourceProblems = null,}) {
   return _then(AuthoringRelationIndex(
 parents: null == parents ? _self.parents : parents // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, List<skir.ResourceId>>,children: null == children ? _self.children : children // ignore: cast_nullable_to_non_nullable
-as Map<skir.ResourceId, List<skir.ResourceId>>,ownedDefinitions: null == ownedDefinitions ? _self.ownedDefinitions : ownedDefinitions // ignore: cast_nullable_to_non_nullable
-as Set<skir.TypeDefinitionId>,problems: null == problems ? _self.problems : problems // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, List<skir.ResourceId>>,problems: null == problems ? _self.problems : problems // ignore: cast_nullable_to_non_nullable
 as List<String>,resourceProblems: null == resourceProblems ? _self.resourceProblems : resourceProblems // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, List<String>>,
   ));
@@ -433,10 +432,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  Set<skir.TypeDefinitionId> ownedDefinitions,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthoringRelationIndex() when $default != null:
-return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.problems,_that.resourceProblems);case _:
+return $default(_that.parents,_that.children,_that.problems,_that.resourceProblems);case _:
   return orElse();
 
 }
@@ -454,10 +453,10 @@ return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.proble
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  Set<skir.TypeDefinitionId> ownedDefinitions,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringRelationIndex():
-return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.problems,_that.resourceProblems);case _:
+return $default(_that.parents,_that.children,_that.problems,_that.resourceProblems);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -474,10 +473,10 @@ return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.proble
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  Set<skir.TypeDefinitionId> ownedDefinitions,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Map<skir.ResourceId, List<skir.ResourceId>> parents,  Map<skir.ResourceId, List<skir.ResourceId>> children,  List<String> problems,  Map<skir.ResourceId, List<String>> resourceProblems)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthoringRelationIndex() when $default != null:
-return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.problems,_that.resourceProblems);case _:
+return $default(_that.parents,_that.children,_that.problems,_that.resourceProblems);case _:
   return null;
 
 }
@@ -489,7 +488,7 @@ return $default(_that.parents,_that.children,_that.ownedDefinitions,_that.proble
 
 
 class _AuthoringRelationIndex extends AuthoringRelationIndex {
-  const _AuthoringRelationIndex({required  Map<skir.ResourceId, List<skir.ResourceId>> parents, required  Map<skir.ResourceId, List<skir.ResourceId>> children, required  Set<skir.TypeDefinitionId> ownedDefinitions, required  List<String> problems, required  Map<skir.ResourceId, List<String>> resourceProblems}): _parents = parents,_children = children,_ownedDefinitions = ownedDefinitions,_problems = problems,_resourceProblems = resourceProblems,super._();
+  const _AuthoringRelationIndex({required  Map<skir.ResourceId, List<skir.ResourceId>> parents, required  Map<skir.ResourceId, List<skir.ResourceId>> children, required  List<String> problems, required  Map<skir.ResourceId, List<String>> resourceProblems}): _parents = parents,_children = children,_problems = problems,_resourceProblems = resourceProblems,super._();
 
 
  final  Map<skir.ResourceId, List<skir.ResourceId>> _parents;
@@ -504,13 +503,6 @@ class _AuthoringRelationIndex extends AuthoringRelationIndex {
   if (_children is EqualUnmodifiableMapView) return _children;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableMapView(_children);
-}
-
- final  Set<skir.TypeDefinitionId> _ownedDefinitions;
-@override Set<skir.TypeDefinitionId> get ownedDefinitions {
-  if (_ownedDefinitions is EqualUnmodifiableSetView) return _ownedDefinitions;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableSetView(_ownedDefinitions);
 }
 
  final  List<String> _problems;
@@ -538,18 +530,18 @@ _$AuthoringRelationIndexCopyWith<_AuthoringRelationIndex> get copyWith => __$Aut
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringRelationIndex&&const DeepCollectionEquality().equals(other.parents, _parents)&&const DeepCollectionEquality().equals(other.children, _children)&&const DeepCollectionEquality().equals(other.ownedDefinitions, _ownedDefinitions)&&const DeepCollectionEquality().equals(other.problems, _problems)&&const DeepCollectionEquality().equals(other.resourceProblems, _resourceProblems));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoringRelationIndex&&const DeepCollectionEquality().equals(other.parents, _parents)&&const DeepCollectionEquality().equals(other.children, _children)&&const DeepCollectionEquality().equals(other.problems, _problems)&&const DeepCollectionEquality().equals(other.resourceProblems, _resourceProblems));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_parents),const DeepCollectionEquality().hash(_children),const DeepCollectionEquality().hash(_ownedDefinitions),const DeepCollectionEquality().hash(_problems),const DeepCollectionEquality().hash(_resourceProblems));
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_parents),const DeepCollectionEquality().hash(_children),const DeepCollectionEquality().hash(_problems),const DeepCollectionEquality().hash(_resourceProblems));
 }
 
 @override
 String toString() {
-    return 'AuthoringRelationIndex(parents: $parents, children: $children, ownedDefinitions: $ownedDefinitions, problems: $problems, resourceProblems: $resourceProblems)';
+    return 'AuthoringRelationIndex(parents: $parents, children: $children, problems: $problems, resourceProblems: $resourceProblems)';
 }
 
 
@@ -560,7 +552,7 @@ abstract mixin class _$AuthoringRelationIndexCopyWith<$Res> implements $Authorin
   factory _$AuthoringRelationIndexCopyWith(_AuthoringRelationIndex value, $Res Function(_AuthoringRelationIndex) _then) = __$AuthoringRelationIndexCopyWithImpl;
 @override @useResult
 $Res call({
- Map<skir.ResourceId, List<skir.ResourceId>> parents, Map<skir.ResourceId, List<skir.ResourceId>> children, Set<skir.TypeDefinitionId> ownedDefinitions, List<String> problems, Map<skir.ResourceId, List<String>> resourceProblems
+ Map<skir.ResourceId, List<skir.ResourceId>> parents, Map<skir.ResourceId, List<skir.ResourceId>> children, List<String> problems, Map<skir.ResourceId, List<String>> resourceProblems
 });
 
 
@@ -577,12 +569,11 @@ class __$AuthoringRelationIndexCopyWithImpl<$Res>
 
 /// Create a copy of AuthoringRelationIndex
 /// with the given fields replaced by the non null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? parents = null,Object? children = null,Object? ownedDefinitions = null,Object? problems = null,Object? resourceProblems = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? parents = null,Object? children = null,Object? problems = null,Object? resourceProblems = null,}) {
   return _then(_AuthoringRelationIndex(
 parents: null == parents ? _self._parents : parents // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, List<skir.ResourceId>>,children: null == children ? _self._children : children // ignore: cast_nullable_to_non_nullable
-as Map<skir.ResourceId, List<skir.ResourceId>>,ownedDefinitions: null == ownedDefinitions ? _self._ownedDefinitions : ownedDefinitions // ignore: cast_nullable_to_non_nullable
-as Set<skir.TypeDefinitionId>,problems: null == problems ? _self._problems : problems // ignore: cast_nullable_to_non_nullable
+as Map<skir.ResourceId, List<skir.ResourceId>>,problems: null == problems ? _self._problems : problems // ignore: cast_nullable_to_non_nullable
 as List<String>,resourceProblems: null == resourceProblems ? _self._resourceProblems : resourceProblems // ignore: cast_nullable_to_non_nullable
 as Map<skir.ResourceId, List<String>>,
   ));

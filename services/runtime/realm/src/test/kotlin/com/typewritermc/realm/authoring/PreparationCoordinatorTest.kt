@@ -3,6 +3,8 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.ArgumentSelection
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.InitializationRequest
+import com.typewritermc.authoring.PreparationOperation
+import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedValue
@@ -31,7 +33,7 @@ val PreparationCoordinatorTestSuite by testSuite {
                         PreparationEvaluator { _, _ ->
                             val value = evaluations.incrementAndGet()
                             release.await()
-                            prepared(value.toString())
+                            PreparationStep.Ready(prepared(value.toString()))
                         },
                 )
             val request = request()
@@ -50,9 +52,9 @@ val PreparationCoordinatorTestSuite by testSuite {
                     catalog = { TestCatalogLease(CATALOG) },
                     evaluator =
                         PreparationEvaluator { request, _ ->
-                            val supplied = (request.supplied as DataValue.Record).fields
+                            val supplied = ((request as PreparationOperation.Start).request.supplied as DataValue.Record).fields
                             val seed = supplied.getValue("seed") as DataValue.StringValue
-                            prepared(seed.value)
+                            PreparationStep.Ready(prepared(seed.value))
                         },
                 )
             assertEquals(prepared("first"), coordinator.prepare(request("first")))
@@ -65,7 +67,7 @@ val PreparationCoordinatorTestSuite by testSuite {
             val coordinator =
                 PreparationCoordinator(
                     catalog = { TestCatalogLease(generation) },
-                    evaluator = PreparationEvaluator { _, _ -> prepared("captured") },
+                    evaluator = PreparationEvaluator { _, _ -> PreparationStep.Ready(prepared("captured")) },
                 )
             val request = request()
             assertEquals(prepared("captured"), coordinator.prepare(request))

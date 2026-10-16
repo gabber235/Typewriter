@@ -61,6 +61,7 @@ data class RepeatedMessage(
 ) : SyntheticMessage
 
 interface ConformanceEntry : Entry {
+    override val page: Ref<PageElements.Element, SyntheticPage>
     override val placement: GraphPlacement
 }
 
@@ -73,6 +74,7 @@ interface ConformanceEntry : Entry {
     color = Color.Hex.PURPLE,
 )
 data class SyntheticEntry(
+    override val page: Ref<PageElements.Element, SyntheticPage>,
     override val name: String,
     override val placement: GraphPlacement,
     val message: SyntheticMessage,

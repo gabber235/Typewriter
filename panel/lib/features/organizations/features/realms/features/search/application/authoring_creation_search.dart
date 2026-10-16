@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "authoring_creation_search.freezed.dart";
+
 const authoringCreationSearchResultType = SearchResultType(
   id: "authoring.creation",
   rowRendererId: "authoring.creation",
@@ -12,18 +14,18 @@ const createAuthoringResourceCommandId = SearchCommandId(
   "authoring.resource.create",
 );
 
-final class AuthoringCreationOption {
-  const AuthoringCreationOption({
-    required this.definition,
-    required this.configuration,
-    required this.label,
-    this.display,
-  });
+@freezed
+abstract class AuthoringCreationOption with _$AuthoringCreationOption {
+  const factory AuthoringCreationOption({
+    required skir.ResourceDefinitionId definition,
+    required skir.TypeSelection configuration,
+    required String label,
+    skir.TypeDisplay? display,
+    @Default(SearchQueryContext.empty) SearchQueryContext query,
+    String? disabledReason,
+  }) = _AuthoringCreationOption;
 
-  final skir.ResourceDefinitionId definition;
-  final skir.TypeSelection configuration;
-  final String label;
-  final skir.TypeDisplay? display;
+  const AuthoringCreationOption._();
 
   String get id => "${definition.value}:$configuration";
 }
@@ -43,7 +45,7 @@ final class AuthoringCreationSearchSource implements SearchSource {
   Stream<SearchSourceSnapshot> get snapshots => _snapshots.stream;
 
   @override
-  List<QuerySelectorDefinition> get selectors => const [];
+  List<QuerySelectorDefinition> get selectors => authoringCreationSelectors;
 
   @override
   void initialize(SearchQueryContext context) {
@@ -68,24 +70,27 @@ final class AuthoringCreationSearchSource implements SearchSource {
       return;
     }
     final catalog = document.catalog;
-    final relations = document.relations;
     final term = _query.normalizedQuery.trim().toLowerCase();
     final options = <AuthoringCreationOption>[];
     for (final definition in catalog.snapshot.resourceDefinitions) {
-      final configuration = catalog.beginSelection(definition.root);
-      if (configuration == skir.TypeSelection.unknown) continue;
-      final applications = catalog.nominalDefinitions(configuration);
-      if (applications.any(relations.ownedDefinitions.contains)) continue;
-      final label = catalog.typeSelectionName(configuration);
-      if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
-      options.add(
-        AuthoringCreationOption(
-          definition: definition.id,
-          configuration: configuration,
-          label: label,
-          display: catalog.selectionDisplay(configuration),
-        ),
-      );
+      final root = catalog.beginSelection(definition.root);
+      for (final configuration in catalog.concreteRecordSelections(root)) {
+        if (!_query.matchesCreationType(catalog, configuration)) continue;
+        final label = catalog.typeSelectionName(configuration);
+        if (term.isNotEmpty && !label.toLowerCase().contains(term)) continue;
+        options.add(
+          AuthoringCreationOption(
+            definition: definition.id,
+            configuration: configuration,
+            label: label,
+            display: catalog.selectionDisplay(configuration),
+            query: _query,
+            disabledReason: configuration is skir.TypeSelection_completeWrapper
+                ? null
+                : "This type requires concrete type arguments",
+          ),
+        );
+      }
     }
     options.sort((left, right) => left.label.compareTo(right.label));
     _snapshots.add(
@@ -135,6 +140,9 @@ SearchCommand createAuthoringResourceCommand({
   id: createAuthoringResourceCommandId,
   presentation: const SearchCommandPresentation(label: "Create"),
   matcher: const SearchResultMatcher(authoringCreationSearchResultType),
+  evaluate: (option, _) => option.disabledReason == null
+      ? const SearchCommandState.enabled()
+      : SearchCommandState.disabled(option.disabledReason!),
   execute: (execution, option, target) async {
     final intent = ref.read(resourceCreationProvider(scope)).beginNavigation();
     final created = await execution.prompts.show(
@@ -145,6 +153,19 @@ SearchCommand createAuthoringResourceCommand({
             request: ResourceCreationRequest(
               definition: option.definition,
               configuration: option.configuration,
+            ),
+            creationContext: option.query.creationContext(
+              document: ref.read(realmEditingProvider(scope)).document,
+              configuration: option.configuration,
+              preferredResources: <skir.ResourceId>{
+                ...ref
+                    .read(selectionProvider)
+                    .whereType<AuthoringResourceIdentifier>()
+                    .where((resource) => resource.scope == scope)
+                    .map((resource) => resource.resourceId),
+                ?ref.read(pageIdProvider),
+                ?ref.read(bookIdProvider),
+              }.toList(),
             ),
           ),
     );

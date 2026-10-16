@@ -1426,7 +1426,7 @@ extension EditorCatalogWatchRouteNats
 }
 
 extension EditorValuePrepareRouteNats
-    on _lib_editor_v1_catalog.ValuePreparationRequest {
+    on _lib_editor_v1_catalog.PreparationOperation {
   SkirRouteOperation<_lib_editor_v1_catalog.PrepareValueResult> operation({
     required _skir.RecordId organizationId,
 

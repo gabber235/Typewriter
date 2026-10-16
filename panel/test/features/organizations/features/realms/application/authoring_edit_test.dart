@@ -119,17 +119,13 @@ void main() {
     final created = skir.ResourceId(value: "resource:created");
     final record = fixture.snapshot.resources.single.content;
     final staged = fixture.draft.fork()
-      ..createPreparedResource(
-        request: ResourceCreationRequest(
-          id: created,
-
-          definition: skir.ResourceDefinitionId(value: "test.resource"),
-          configuration: record.configuration,
-        ),
-        prepared: skir.PreparedValue(
+      ..createPrepared(
+        created,
+        skir.PreparedValue(
           content: skir.PreparedContent.wrapRecord(record),
           findings: const [],
         ),
+        definition: skir.ResourceDefinitionId(value: "test.resource"),
       );
 
     expect(staged.resource(created), record);
@@ -138,53 +134,13 @@ void main() {
     expect(fixture.draft.intents, isEmpty);
   });
 
-  test("creation prepares its typed reciprocal input without staging it", () {
+  test("shared reference planning preserves a private prepared resource", () {
     final fixture = _pageCreationFixture();
-    final request = ResourceCreationRequest(
-      id: fixture.page,
-      definition: fixture.pageResource,
-      configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-      connections: [
-        ResourceCreationConnection.collection(
-          source: fixture.book,
-          endpoint: fixture.bookEndpoint,
-          containing: _fieldPath("pages"),
-          item: skir.ItemId(value: "new:page"),
-        ),
-      ],
-    );
-    final inputs = fixture.draft.creationInputs(request);
-    expect(inputs, hasLength(1));
-    expect(inputs.single.name, "book");
-    expect(inputs.single.value, isA<skir.DataValue_namedWrapper>());
-    expect(inputs.single.value.authoredLink?.target.resource, fixture.book);
-    expect(
-      inputs.single.value.authoredLink?.target.opposite,
-      skir.ValuePath(
-        segments: [
-          skir.PathSegment.createField(name: "pages"),
-          skir.PathSegment.createItem(id: skir.ItemId(value: "new:page")),
-        ],
-      ),
-    );
-    expect(fixture.draft.resource(fixture.page), isNull);
-    expect(fixture.draft.intents, isEmpty);
-    expect(fixture.draft.expectations, isNotEmpty);
     final staged = fixture.draft.fork()
-      ..createPreparedResource(
-        request: request,
-        prepared: skir.PreparedValue(
-          content: skir.PreparedContent.wrapRecord(
-            skir.AuthoringRecord(
-              configuration: request.configuration,
-              fields: [
-                ...fixture.pageRecord.fields.where(
-                  (field) => field.name != "book",
-                ),
-                ...inputs,
-              ],
-            ),
-          ),
+      ..createPrepared(
+        fixture.page,
+        skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
           findings: [
             skir.InitializationDiagnostic(
               field: null,
@@ -194,7 +150,29 @@ void main() {
             ),
           ],
         ),
+        definition: fixture.pageResource,
       );
+    final before = staged.intents.toList();
+    final plan = (staged.linkPlans(
+      catalog: staged.catalog!,
+      source: skir.ValueLocation(
+        resource: fixture.page,
+        path: _fieldPath("book"),
+      ),
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (choice) => choice.resource == fixture.book,
+    );
+    final reference = staged.resolveReference(
+      catalog: staged.catalog!,
+      plan: plan,
+      target: target,
+    );
+    expect(reference.connection.target, fixture.book);
+    expect(reference.materializations.single, isA<ReferenceValueInsertion>());
+    expect(staged.intents, before);
+    expect(fixture.draft.resource(fixture.page), isNull);
+    expect(fixture.draft.intents, isEmpty);
     expect(
       staged.initializationFindings.single.evidence.appliesTo(
         staged.toDocument(),
@@ -202,32 +180,6 @@ void main() {
       isTrue,
     );
   });
-
-  test(
-    "a conflicting supplied reciprocal link is rejected before preparation",
-    () {
-      final fixture = _pageCreationFixture();
-      final request = ResourceCreationRequest(
-        id: fixture.page,
-        definition: fixture.pageResource,
-        configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-        supplied: [
-          skir.FieldValue(name: "book", value: skir.DataValue.unfilled),
-        ],
-        connections: [
-          ResourceCreationConnection.collection(
-            source: fixture.book,
-            endpoint: fixture.bookEndpoint,
-            containing: _fieldPath("pages"),
-            item: skir.ItemId(value: "new:page"),
-          ),
-        ],
-      );
-      expect(() => fixture.draft.creationInputs(request), throwsStateError);
-      expect(fixture.draft.resource(fixture.page), isNull);
-      expect(fixture.draft.intents, isEmpty);
-    },
-  );
 
   test("counterpart resolution distinguishes direct, ambiguous, collection and invalid", () {
     final fixture = _pageCreationFixture();
@@ -281,59 +233,83 @@ void main() {
     );
   });
 
-  test("ambiguous creation requires a choice before emitting any intent", () {
+  test("ambiguous inverse requires an explicit location without mutating", () {
     final fixture = _pageCreationFixture(ambiguous: true);
-    final request = ResourceCreationRequest(
-      id: fixture.page,
-      definition: fixture.pageResource,
-      configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-      connections: [
-        ResourceCreationConnection.collection(
-          source: fixture.book,
-          endpoint: fixture.bookEndpoint,
-          containing: _fieldPath("pages"),
-          item: skir.ItemId(value: "new:page"),
+    final staged = fixture.draft.fork()
+      ..createPrepared(
+        fixture.page,
+        skir.PreparedValue(
+          content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
+          findings: const [],
         ),
-      ],
+        definition: fixture.pageResource,
+      );
+    final source = skir.ValueLocation(
+      resource: fixture.book,
+      path: skir.ValuePath(
+        segments: [
+          skir.PathSegment.createField(name: "pages"),
+          skir.PathSegment.createItem(id: skir.ItemId(value: "new:page")),
+        ],
+      ),
     );
+    final plan = (staged.linkPlans(
+      catalog: staged.catalog!,
+      source: source,
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (choice) => choice.resource == fixture.page,
+    );
+    final before = staged.intents.toList();
     expect(
-      () => fixture.draft.creationInputs(request),
+      () => staged.resolveReference(
+        catalog: staged.catalog!,
+        plan: plan,
+        target: target,
+      ),
       throwsA(
         isA<StateError>().having(
           (error) => error.message,
           "actionable choice",
-          contains("Choose one explicitly"),
+          contains("explicitly"),
         ),
       ),
     );
+    expect(staged.intents, before);
     expect(fixture.draft.intents, isEmpty);
-    expect(fixture.draft.resource(fixture.page), isNull);
   });
 
   test("page creation inserts its book slot before connecting", () {
     final fixture = _pageCreationFixture();
-    final item = skir.ItemId(value: "page:item");
     final staged = fixture.draft.fork()
-      ..createPreparedResource(
-        request: ResourceCreationRequest(
-          id: fixture.page,
-
-          definition: fixture.pageResource,
-          configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-          connections: [
-            ResourceCreationConnection.collection(
-              source: fixture.book,
-              endpoint: fixture.bookEndpoint,
-              containing: _fieldPath("pages"),
-              item: item,
-            ),
-          ],
-        ),
-        prepared: skir.PreparedValue(
+      ..createPrepared(
+        fixture.page,
+        skir.PreparedValue(
           content: skir.PreparedContent.wrapRecord(fixture.pageRecord),
           findings: const [],
         ),
+        definition: fixture.pageResource,
       );
+    final plan = (staged.linkPlans(
+      catalog: staged.catalog!,
+      source: skir.ValueLocation(
+        resource: fixture.page,
+        path: _fieldPath("book"),
+      ),
+    ) as PortableLinkPlanReady).plans.single;
+    final target = plan.targets.singleWhere(
+      (choice) => choice.resource == fixture.book,
+    );
+    final reference = staged.resolveReference(
+      catalog: staged.catalog!,
+      plan: plan,
+      target: target,
+    );
+    final item = (reference.materializations.single as ReferenceValueInsertion)
+        .intent
+        .item
+        .id;
+    staged.applyResolvedReference(reference);
 
     expect(staged.intents, [
       isA<skir.EditIntent_createResourceWrapper>(),
@@ -388,43 +364,6 @@ void main() {
         ("value", pageBookLocation),
       }),
     );
-  });
-
-  test("page creation materializes an omitted direct reciprocal field", () {
-    final fixture = _pageCreationFixture();
-    final withoutBook = skir.AuthoringRecord(
-      configuration: fixture.pageRecord.configuration,
-      fields: fixture.pageRecord.fields.where((field) => field.name != "book"),
-    );
-    final staged = fixture.draft.fork()
-      ..createPreparedResource(
-        request: ResourceCreationRequest(
-          id: fixture.page,
-
-          definition: fixture.pageResource,
-          configuration: skir.TypeSelection.wrapComplete(fixture.sequenceUse),
-          connections: [
-            ResourceCreationConnection.collection(
-              source: fixture.book,
-              endpoint: fixture.bookEndpoint,
-              containing: _fieldPath("pages"),
-              item: skir.ItemId(value: "page:item"),
-            ),
-          ],
-        ),
-        prepared: skir.PreparedValue(
-          content: skir.PreparedContent.wrapRecord(withoutBook),
-          findings: const [],
-        ),
-      );
-
-    final pageBook = switch (staged.read(
-      skir.ValueLocation(resource: fixture.page, path: _fieldPath("book")),
-    )) {
-      PortablePathValue(value: final value) => value.authoredLink,
-      _ => null,
-    };
-    expect(pageBook?.target.resource, fixture.book);
   });
 
   test("commit rejection reports each located value problem", () {

@@ -4268,6 +4268,696 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 }
 
 /// @nodoc
+mixin _$AuthoredLinkDecision {
+
+ PortableLinkPlan get plan; PortableLinkTargetChoice get target; PortableLinkCounterpartRequest get counterpart;
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoredLinkDecisionCopyWith<_AuthoredLinkDecision> get copyWith => __$AuthoredLinkDecisionCopyWithImpl<_AuthoredLinkDecision>(this as _AuthoredLinkDecision, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _AuthoredLinkDecision;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredLinkDecision&&(identical(other.plan, _this.plan) || other.plan == _this.plan)&&(identical(other.target, _this.target) || other.target == _this.target)&&(identical(other.counterpart, _this.counterpart) || other.counterpart == _this.counterpart));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _AuthoredLinkDecision;
+  return Object.hash(runtimeType,_this.plan,_this.target,_this.counterpart);
+}
+
+@override
+String toString() {
+  final _this = this as _AuthoredLinkDecision;
+  return '_AuthoredLinkDecision(plan: ${_this.plan}, target: ${_this.target}, counterpart: ${_this.counterpart})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoredLinkDecisionCopyWith<$Res>  {
+  factory _$AuthoredLinkDecisionCopyWith(_AuthoredLinkDecision value, $Res Function(_AuthoredLinkDecision) _then) = __$AuthoredLinkDecisionCopyWithImpl;
+@useResult
+$Res call({
+ PortableLinkPlan plan, PortableLinkTargetChoice target, PortableLinkCounterpartRequest counterpart
+});
+
+
+$PortableLinkPlanCopyWith<$Res> get plan;$PortableLinkTargetChoiceCopyWith<$Res> get target;$PortableLinkCounterpartRequestCopyWith<$Res> get counterpart;
+
+}
+/// @nodoc
+class __$AuthoredLinkDecisionCopyWithImpl<$Res>
+    implements _$AuthoredLinkDecisionCopyWith<$Res> {
+  __$AuthoredLinkDecisionCopyWithImpl(this._self, this._then);
+
+  final _AuthoredLinkDecision _self;
+  final $Res Function(_AuthoredLinkDecision) _then;
+
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
+  return _then(_AuthoredLinkDecision(
+plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as PortableLinkPlan,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableLinkTargetChoice,counterpart: null == counterpart ? _self.counterpart : counterpart // ignore: cast_nullable_to_non_nullable
+as PortableLinkCounterpartRequest,
+  ));
+}
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkPlanCopyWith<$Res> get plan {
+
+  return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
+    return _then(_self.copyWith(plan: value));
+  });
+}/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkTargetChoiceCopyWith<$Res> get target {
+
+  return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
+
+  return $PortableLinkCounterpartRequestCopyWith<$Res>(_self.counterpart, (value) {
+    return _then(_self.copyWith(counterpart: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_AuthoredLinkDecision].
+extension _AuthoredLinkDecisionPatterns on _AuthoredLinkDecision {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __AuthoredLinkDecision value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __AuthoredLinkDecision value)  $default,){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __AuthoredLinkDecision value)?  $default,){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortableLinkPlan plan,  PortableLinkTargetChoice target,  PortableLinkCounterpartRequest counterpart)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision() when $default != null:
+return $default(_that.plan,_that.target,_that.counterpart);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortableLinkPlan plan,  PortableLinkTargetChoice target,  PortableLinkCounterpartRequest counterpart)  $default,) {final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision():
+return $default(_that.plan,_that.target,_that.counterpart);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortableLinkPlan plan,  PortableLinkTargetChoice target,  PortableLinkCounterpartRequest counterpart)?  $default,) {final _that = this;
+switch (_that) {
+case __AuthoredLinkDecision() when $default != null:
+return $default(_that.plan,_that.target,_that.counterpart);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __AuthoredLinkDecision implements _AuthoredLinkDecision {
+  const __AuthoredLinkDecision({required this.plan, required this.target, required this.counterpart});
+
+
+@override final  PortableLinkPlan plan;
+@override final  PortableLinkTargetChoice target;
+@override final  PortableLinkCounterpartRequest counterpart;
+
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_AuthoredLinkDecisionCopyWith<__AuthoredLinkDecision> get copyWith => __$_AuthoredLinkDecisionCopyWithImpl<__AuthoredLinkDecision>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __AuthoredLinkDecision&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.target, target) || other.target == target)&&(identical(other.counterpart, counterpart) || other.counterpart == counterpart));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,plan,target,counterpart);
+}
+
+@override
+String toString() {
+    return '_AuthoredLinkDecision(plan: $plan, target: $target, counterpart: $counterpart)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_AuthoredLinkDecisionCopyWith<$Res> implements _$AuthoredLinkDecisionCopyWith<$Res> {
+  factory _$_AuthoredLinkDecisionCopyWith(__AuthoredLinkDecision value, $Res Function(__AuthoredLinkDecision) _then) = __$_AuthoredLinkDecisionCopyWithImpl;
+@override @useResult
+$Res call({
+ PortableLinkPlan plan, PortableLinkTargetChoice target, PortableLinkCounterpartRequest counterpart
+});
+
+
+@override $PortableLinkPlanCopyWith<$Res> get plan;@override $PortableLinkTargetChoiceCopyWith<$Res> get target;@override $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart;
+
+}
+/// @nodoc
+class __$_AuthoredLinkDecisionCopyWithImpl<$Res>
+    implements _$_AuthoredLinkDecisionCopyWith<$Res> {
+  __$_AuthoredLinkDecisionCopyWithImpl(this._self, this._then);
+
+  final __AuthoredLinkDecision _self;
+  final $Res Function(__AuthoredLinkDecision) _then;
+
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
+  return _then(__AuthoredLinkDecision(
+plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as PortableLinkPlan,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableLinkTargetChoice,counterpart: null == counterpart ? _self.counterpart : counterpart // ignore: cast_nullable_to_non_nullable
+as PortableLinkCounterpartRequest,
+  ));
+}
+
+/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkPlanCopyWith<$Res> get plan {
+
+  return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
+    return _then(_self.copyWith(plan: value));
+  });
+}/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkTargetChoiceCopyWith<$Res> get target {
+
+  return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}/// Create a copy of _AuthoredLinkDecision
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
+
+  return $PortableLinkCounterpartRequestCopyWith<$Res>(_self.counterpart, (value) {
+    return _then(_self.copyWith(counterpart: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$AuthoredLinkChoice {
+
+ String get id; String get widgetKey; PortableLinkPlan get plan; PortableLinkTargetChoice get target; _AuthoredLinkChoiceKind get kind; String get label; String get typeLabel; String get subtitle; String get searchText; _AuthoredCollectionRow? get row; skir.PresentationCollectionDefinition? get definition; skir.LinkOccurrence? get occurrence; PortableNewCounterpartChoice? get slot; skir.ValueLocation? get collection; String? get disabledReason;
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$AuthoredLinkChoiceCopyWith<_AuthoredLinkChoice> get copyWith => __$AuthoredLinkChoiceCopyWithImpl<_AuthoredLinkChoice>(this as _AuthoredLinkChoice, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as _AuthoredLinkChoice;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthoredLinkChoice&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.widgetKey, _this.widgetKey) || other.widgetKey == _this.widgetKey)&&(identical(other.plan, _this.plan) || other.plan == _this.plan)&&(identical(other.target, _this.target) || other.target == _this.target)&&(identical(other.kind, _this.kind) || other.kind == _this.kind)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.typeLabel, _this.typeLabel) || other.typeLabel == _this.typeLabel)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.searchText, _this.searchText) || other.searchText == _this.searchText)&&(identical(other.row, _this.row) || other.row == _this.row)&&(identical(other.definition, _this.definition) || other.definition == _this.definition)&&(identical(other.occurrence, _this.occurrence) || other.occurrence == _this.occurrence)&&(identical(other.slot, _this.slot) || other.slot == _this.slot)&&(identical(other.collection, _this.collection) || other.collection == _this.collection)&&(identical(other.disabledReason, _this.disabledReason) || other.disabledReason == _this.disabledReason));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as _AuthoredLinkChoice;
+  return Object.hash(runtimeType,_this.id,_this.widgetKey,_this.plan,_this.target,_this.kind,_this.label,_this.typeLabel,_this.subtitle,_this.searchText,_this.row,_this.definition,_this.occurrence,_this.slot,_this.collection,_this.disabledReason);
+}
+
+@override
+String toString() {
+  final _this = this as _AuthoredLinkChoice;
+  return '_AuthoredLinkChoice(id: ${_this.id}, widgetKey: ${_this.widgetKey}, plan: ${_this.plan}, target: ${_this.target}, kind: ${_this.kind}, label: ${_this.label}, typeLabel: ${_this.typeLabel}, subtitle: ${_this.subtitle}, searchText: ${_this.searchText}, row: ${_this.row}, definition: ${_this.definition}, occurrence: ${_this.occurrence}, slot: ${_this.slot}, collection: ${_this.collection}, disabledReason: ${_this.disabledReason})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$AuthoredLinkChoiceCopyWith<$Res>  {
+  factory _$AuthoredLinkChoiceCopyWith(_AuthoredLinkChoice value, $Res Function(_AuthoredLinkChoice) _then) = __$AuthoredLinkChoiceCopyWithImpl;
+@useResult
+$Res call({
+ String id, String widgetKey, PortableLinkPlan plan, PortableLinkTargetChoice target, _AuthoredLinkChoiceKind kind, String label, String typeLabel, String subtitle, String searchText, _AuthoredCollectionRow? row, skir.PresentationCollectionDefinition? definition, skir.LinkOccurrence? occurrence, PortableNewCounterpartChoice? slot, skir.ValueLocation? collection, String? disabledReason
+});
+
+
+$PortableLinkPlanCopyWith<$Res> get plan;$PortableLinkTargetChoiceCopyWith<$Res> get target;$PortableNewCounterpartChoiceCopyWith<$Res>? get slot;
+
+}
+/// @nodoc
+class __$AuthoredLinkChoiceCopyWithImpl<$Res>
+    implements _$AuthoredLinkChoiceCopyWith<$Res> {
+  __$AuthoredLinkChoiceCopyWithImpl(this._self, this._then);
+
+  final _AuthoredLinkChoice _self;
+  final $Res Function(_AuthoredLinkChoice) _then;
+
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
+  return _then(_AuthoredLinkChoice(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,widgetKey: null == widgetKey ? _self.widgetKey : widgetKey // ignore: cast_nullable_to_non_nullable
+as String,plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as PortableLinkPlan,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableLinkTargetChoice,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as _AuthoredLinkChoiceKind,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,typeLabel: null == typeLabel ? _self.typeLabel : typeLabel // ignore: cast_nullable_to_non_nullable
+as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
+as String,searchText: null == searchText ? _self.searchText : searchText // ignore: cast_nullable_to_non_nullable
+as String,row: freezed == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as _AuthoredCollectionRow?,definition: freezed == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
+as skir.PresentationCollectionDefinition?,occurrence: freezed == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
+as skir.LinkOccurrence?,slot: freezed == slot ? _self.slot : slot // ignore: cast_nullable_to_non_nullable
+as PortableNewCounterpartChoice?,collection: freezed == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,disabledReason: freezed == disabledReason ? _self.disabledReason : disabledReason // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkPlanCopyWith<$Res> get plan {
+
+  return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
+    return _then(_self.copyWith(plan: value));
+  });
+}/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkTargetChoiceCopyWith<$Res> get target {
+
+  return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
+    if (_self.slot == null) {
+    return null;
+  }
+
+  return $PortableNewCounterpartChoiceCopyWith<$Res>(_self.slot!, (value) {
+    return _then(_self.copyWith(slot: value));
+  });
+}
+}
+
+
+/// Adds pattern matching related methods to [_AuthoredLinkChoice].
+extension _AuthoredLinkChoicePatterns on _AuthoredLinkChoice {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( __AuthoredLinkChoice value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( __AuthoredLinkChoice value)  $default,){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( __AuthoredLinkChoice value)?  $default,){
+final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String widgetKey,  PortableLinkPlan plan,  PortableLinkTargetChoice target,  _AuthoredLinkChoiceKind kind,  String label,  String typeLabel,  String subtitle,  String searchText,  _AuthoredCollectionRow? row,  skir.PresentationCollectionDefinition? definition,  skir.LinkOccurrence? occurrence,  PortableNewCounterpartChoice? slot,  skir.ValueLocation? collection,  String? disabledReason)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice() when $default != null:
+return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_that.label,_that.typeLabel,_that.subtitle,_that.searchText,_that.row,_that.definition,_that.occurrence,_that.slot,_that.collection,_that.disabledReason);case _:
+  return orElse();
+
+}
+}
+/// A method similar to a `switch`, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String widgetKey,  PortableLinkPlan plan,  PortableLinkTargetChoice target,  _AuthoredLinkChoiceKind kind,  String label,  String typeLabel,  String subtitle,  String searchText,  _AuthoredCollectionRow? row,  skir.PresentationCollectionDefinition? definition,  skir.LinkOccurrence? occurrence,  PortableNewCounterpartChoice? slot,  skir.ValueLocation? collection,  String? disabledReason)  $default,) {final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice():
+return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_that.label,_that.typeLabel,_that.subtitle,_that.searchText,_that.row,_that.definition,_that.occurrence,_that.slot,_that.collection,_that.disabledReason);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String widgetKey,  PortableLinkPlan plan,  PortableLinkTargetChoice target,  _AuthoredLinkChoiceKind kind,  String label,  String typeLabel,  String subtitle,  String searchText,  _AuthoredCollectionRow? row,  skir.PresentationCollectionDefinition? definition,  skir.LinkOccurrence? occurrence,  PortableNewCounterpartChoice? slot,  skir.ValueLocation? collection,  String? disabledReason)?  $default,) {final _that = this;
+switch (_that) {
+case __AuthoredLinkChoice() when $default != null:
+return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_that.label,_that.typeLabel,_that.subtitle,_that.searchText,_that.row,_that.definition,_that.occurrence,_that.slot,_that.collection,_that.disabledReason);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class __AuthoredLinkChoice implements _AuthoredLinkChoice {
+  const __AuthoredLinkChoice({required this.id, required this.widgetKey, required this.plan, required this.target, required this.kind, required this.label, required this.typeLabel, required this.subtitle, required this.searchText, this.row, this.definition, this.occurrence, this.slot, this.collection, this.disabledReason});
+
+
+@override final  String id;
+@override final  String widgetKey;
+@override final  PortableLinkPlan plan;
+@override final  PortableLinkTargetChoice target;
+@override final  _AuthoredLinkChoiceKind kind;
+@override final  String label;
+@override final  String typeLabel;
+@override final  String subtitle;
+@override final  String searchText;
+@override final  _AuthoredCollectionRow? row;
+@override final  skir.PresentationCollectionDefinition? definition;
+@override final  skir.LinkOccurrence? occurrence;
+@override final  PortableNewCounterpartChoice? slot;
+@override final  skir.ValueLocation? collection;
+@override final  String? disabledReason;
+
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$_AuthoredLinkChoiceCopyWith<__AuthoredLinkChoice> get copyWith => __$_AuthoredLinkChoiceCopyWithImpl<__AuthoredLinkChoice>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is __AuthoredLinkChoice&&(identical(other.id, id) || other.id == id)&&(identical(other.widgetKey, widgetKey) || other.widgetKey == widgetKey)&&(identical(other.plan, plan) || other.plan == plan)&&(identical(other.target, target) || other.target == target)&&(identical(other.kind, kind) || other.kind == kind)&&(identical(other.label, label) || other.label == label)&&(identical(other.typeLabel, typeLabel) || other.typeLabel == typeLabel)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.searchText, searchText) || other.searchText == searchText)&&(identical(other.row, row) || other.row == row)&&(identical(other.definition, definition) || other.definition == definition)&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence)&&(identical(other.slot, slot) || other.slot == slot)&&(identical(other.collection, collection) || other.collection == collection)&&(identical(other.disabledReason, disabledReason) || other.disabledReason == disabledReason));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,widgetKey,plan,target,kind,label,typeLabel,subtitle,searchText,row,definition,occurrence,slot,collection,disabledReason);
+}
+
+@override
+String toString() {
+    return '_AuthoredLinkChoice(id: $id, widgetKey: $widgetKey, plan: $plan, target: $target, kind: $kind, label: $label, typeLabel: $typeLabel, subtitle: $subtitle, searchText: $searchText, row: $row, definition: $definition, occurrence: $occurrence, slot: $slot, collection: $collection, disabledReason: $disabledReason)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$_AuthoredLinkChoiceCopyWith<$Res> implements _$AuthoredLinkChoiceCopyWith<$Res> {
+  factory _$_AuthoredLinkChoiceCopyWith(__AuthoredLinkChoice value, $Res Function(__AuthoredLinkChoice) _then) = __$_AuthoredLinkChoiceCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String widgetKey, PortableLinkPlan plan, PortableLinkTargetChoice target, _AuthoredLinkChoiceKind kind, String label, String typeLabel, String subtitle, String searchText, _AuthoredCollectionRow? row, skir.PresentationCollectionDefinition? definition, skir.LinkOccurrence? occurrence, PortableNewCounterpartChoice? slot, skir.ValueLocation? collection, String? disabledReason
+});
+
+
+@override $PortableLinkPlanCopyWith<$Res> get plan;@override $PortableLinkTargetChoiceCopyWith<$Res> get target;@override $PortableNewCounterpartChoiceCopyWith<$Res>? get slot;
+
+}
+/// @nodoc
+class __$_AuthoredLinkChoiceCopyWithImpl<$Res>
+    implements _$_AuthoredLinkChoiceCopyWith<$Res> {
+  __$_AuthoredLinkChoiceCopyWithImpl(this._self, this._then);
+
+  final __AuthoredLinkChoice _self;
+  final $Res Function(__AuthoredLinkChoice) _then;
+
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
+  return _then(__AuthoredLinkChoice(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,widgetKey: null == widgetKey ? _self.widgetKey : widgetKey // ignore: cast_nullable_to_non_nullable
+as String,plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
+as PortableLinkPlan,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
+as PortableLinkTargetChoice,kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
+as _AuthoredLinkChoiceKind,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,typeLabel: null == typeLabel ? _self.typeLabel : typeLabel // ignore: cast_nullable_to_non_nullable
+as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
+as String,searchText: null == searchText ? _self.searchText : searchText // ignore: cast_nullable_to_non_nullable
+as String,row: freezed == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
+as _AuthoredCollectionRow?,definition: freezed == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
+as skir.PresentationCollectionDefinition?,occurrence: freezed == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
+as skir.LinkOccurrence?,slot: freezed == slot ? _self.slot : slot // ignore: cast_nullable_to_non_nullable
+as PortableNewCounterpartChoice?,collection: freezed == collection ? _self.collection : collection // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,disabledReason: freezed == disabledReason ? _self.disabledReason : disabledReason // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkPlanCopyWith<$Res> get plan {
+
+  return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
+    return _then(_self.copyWith(plan: value));
+  });
+}/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableLinkTargetChoiceCopyWith<$Res> get target {
+
+  return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
+    return _then(_self.copyWith(target: value));
+  });
+}/// Create a copy of _AuthoredLinkChoice
+/// with the given fields replaced by the non null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
+    if (_self.slot == null) {
+    return null;
+  }
+
+  return $PortableNewCounterpartChoiceCopyWith<$Res>(_self.slot!, (value) {
+    return _then(_self.copyWith(slot: value));
+  });
+}
+}
+
+/// @nodoc
 mixin _$PortablePresentationScope {
 
  Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;

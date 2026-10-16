@@ -421,6 +421,146 @@ final class CheckedEditorCatalog {
     return current;
   }
 
+  ({skir.EndpointId endpoint, skir.TypeUse target})? referenceTypeAt(
+    skir.AuthoringRecord record,
+    skir.ValuePath path,
+  ) => _referenceForUse(
+    namedUse(
+      valueTypeAt(
+        record.configuration,
+        path,
+        value: skir.DataValue.createRecord(fields: record.fields),
+      ),
+    ),
+  );
+
+  ({skir.EndpointId endpoint, skir.TypeUse target})? _referenceForUse(
+    skir.NamedTypeUse? use,
+  ) {
+    if (use == null) return null;
+    final declaration = published(use.definition);
+    if (declaration?.status != skir.DeclarationStatus.ready) return null;
+    final representation = declaration?.definition.representation;
+    if (representation is! skir.RepresentationTemplate_linkWrapper) return null;
+    final target = applyTemplate(
+      representation.value.target,
+      skir.TypeSelection.wrapComplete(use),
+    );
+    return target == null
+        ? null
+        : (endpoint: representation.value.endpoint, target: target);
+  }
+
+  /// Exact reference paths in the authored value, including unfinished links.
+  Iterable<
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+  >
+  referenceLocations(skir.AuthoringRecord record) sync* {
+    for (final node in record._referenceValues) {
+      final reference = referenceTypeAt(record, node.path);
+      if (reference != null) {
+        yield (
+          path: node.path,
+          endpoint: reference.endpoint,
+          target: reference.target,
+        );
+      }
+    }
+  }
+
+  /// Existing collection containers whose item contract is a direct reference.
+  Iterable<
+    ({skir.ValuePath path, skir.EndpointId endpoint, skir.TypeUse target})
+  >
+  referenceCollections(skir.AuthoringRecord record) sync* {
+    for (final node in record._referenceValues) {
+      if (node.value.authoredItems == null &&
+          node.value.authoredPayload != skir.DataValue.unfilled) {
+        continue;
+      }
+      final type = valueTypeAt(
+        record.configuration,
+        node.path,
+        value: skir.DataValue.createRecord(fields: record.fields),
+      );
+      final reference = _referenceForUse(namedUse(collectionItemType(type)));
+      if (reference != null) {
+        yield (
+          path: node.path,
+          endpoint: reference.endpoint,
+          target: reference.target,
+        );
+      }
+    }
+  }
+
+  /// Unselected authored forms that could contain the requested counterpart.
+  Iterable<skir.ValuePath> unselectedReferenceForms(
+    skir.AuthoringRecord record,
+    skir.EndpointId endpoint,
+  ) sync* {
+    for (final node in record._referenceValues) {
+      final use = namedUse(
+        valueTypeAt(
+          record.configuration,
+          node.path,
+          value: skir.DataValue.createRecord(fields: record.fields),
+        ),
+      );
+      if (use == null) continue;
+      final selection = _selectionForUse(use, node.value);
+      if (selection == null || !isAbstractRecordSelection(selection)) continue;
+      if (_mayContainReference(skir.TypeUse.wrapNamed(use), endpoint, {})) {
+        yield node.path;
+      }
+    }
+  }
+
+  bool _mayContainReference(
+    skir.TypeUse? type,
+    skir.EndpointId endpoint,
+    Set<skir.NamedTypeUse> visited,
+  ) {
+    final use = namedUse(type);
+    if (use == null || visited.contains(use)) return false;
+    if (visited.length >= _maximumCheckedTypeDepth) return true;
+    final selection = skir.TypeSelection.wrapComplete(use);
+    final next = {...visited, use};
+    final representation = published(use.definition)?.definition.representation;
+    return switch (representation) {
+      skir.RepresentationTemplate_linkWrapper(:final value) =>
+        value.endpoint == endpoint,
+      skir.RepresentationTemplate_recordWrapper(:final value) =>
+        fields(selection).any(
+              (field) => _mayContainReference(field.type, endpoint, next),
+            ) ||
+            (value.abstract_ &&
+                concreteRecordSelections(selection).any(
+                  (candidate) => fields(candidate).any(
+                    (field) => _mayContainReference(field.type, endpoint, next),
+                  ),
+                )),
+      skir.RepresentationTemplate_sequenceWrapper(:final value) =>
+        _mayContainReference(
+          applyTemplate(value.item, selection),
+          endpoint,
+          next,
+        ),
+      skir.RepresentationTemplate_mappingWrapper(:final value) =>
+        _mayContainReference(
+              applyTemplate(value.key, selection),
+              endpoint,
+              next,
+            ) ||
+            _mayContainReference(
+              applyTemplate(value.value, selection),
+              endpoint,
+              next,
+            ),
+      _ => false,
+    };
+  }
+
   skir.TypeSelection? _selectionAtValue(
     skir.TypeSelection declared,
     skir.DataValue? value,
@@ -582,7 +722,7 @@ final class CheckedEditorCatalog {
     final nominal = nominalDefinitions(selection);
     final bindings = _bindings(selection, definition);
     final known = knownApplications(selection);
-    return [
+    final applied = <AppliedEndpointBinding>[
       for (final template in snapshot.endpointBindings)
         if (nominal.contains(template.containingResource.definition) &&
             _bindingMatchesKnownApplication(
@@ -599,6 +739,24 @@ final class CheckedEditorCatalog {
             target: _apply(template.target, bindings),
           ),
     ];
+    // A concrete declaration's binding carries its overridden field type.
+    // Ancestor bindings at the same occurrence must not widen that contract.
+    return applied
+        .where(
+          (candidate) => !applied.any(
+            (other) =>
+                other.template.endpoint == candidate.template.endpoint &&
+                other.template.relativePath ==
+                    candidate.template.relativePath &&
+                other.template.containingResource.definition !=
+                    candidate.template.containingResource.definition &&
+                _isNominalSubtype(
+                  other.template.containingResource.definition,
+                  candidate.template.containingResource.definition,
+                ),
+          ),
+        )
+        .toList(growable: false);
   }
 
   List<AppliedEndpointBinding> endpointBindingsAt(
@@ -761,6 +919,14 @@ final class CheckedEditorCatalog {
       arguments: arguments,
     );
   }
+
+  bool selectionMatches(skir.TypeSelection actual, skir.TypeUse? expected) =>
+      switch (actual) {
+        skir.TypeSelection_completeWrapper(:final value)
+            when expected != null =>
+          isReadableAs(skir.TypeUse.wrapNamed(value), expected),
+        _ => false,
+      };
 
   bool isReadableAs(skir.TypeUse actual, skir.TypeUse expected) =>
       _isReadableAs(actual, expected, 0);
@@ -1823,4 +1989,73 @@ final class TypeArgumentRejected extends TypeArgumentChoice {
   const TypeArgumentRejected(this.message);
 
   final String message;
+}
+
+extension _AuthoredReferenceValues on skir.AuthoringRecord {
+  Iterable<({skir.ValuePath path, skir.DataValue value})>
+  get _referenceValues sync* {
+    final pending = <(skir.DataValue, skir.ValuePath, int)>[
+      (
+        skir.DataValue.createRecord(fields: fields),
+        skir.ValuePath(segments: const []),
+        0,
+      ),
+    ];
+    final visited = <skir.ValuePath>{};
+    while (pending.isNotEmpty) {
+      final (value, path, depth) = pending.removeLast();
+      if (depth > _maximumCheckedTypeDepth) {
+        throw StateError("The authored value exceeded its depth limit");
+      }
+      if (path.segments.isNotEmpty && visited.add(path)) {
+        yield (path: path, value: value);
+      }
+      void add(skir.DataValue value, skir.PathSegment segment) => pending.add((
+        value,
+        skir.ValuePath(segments: [...path.segments, segment]),
+        depth + 1,
+      ));
+      switch (value) {
+        case skir.DataValue_namedWrapper(:final value):
+          pending.add((value.payload, path, depth + 1));
+        case skir.DataValue_recordWrapper(:final value):
+          for (final field in value.fields.toList().reversed) {
+            add(field.value, skir.PathSegment.createField(name: field.name));
+          }
+        case skir.DataValue_listValueWrapper(:final value):
+          for (final item in value.items.toList().reversed) {
+            add(item.value, skir.PathSegment.createItem(id: item.id));
+          }
+        case skir.DataValue_setValueWrapper(:final value):
+          for (final item in value.items.toList().reversed) {
+            add(item.value, skir.PathSegment.createItem(id: item.id));
+          }
+        case skir.DataValue_mapValueWrapper(:final value):
+          for (final row in value.rows.toList().reversed) {
+            final rowPath = skir.ValuePath(
+              segments: [
+                ...path.segments,
+                skir.PathSegment.createItem(id: row.id),
+              ],
+            );
+            pending
+              ..add((
+                row.value,
+                skir.ValuePath(
+                  segments: [...rowPath.segments, skir.PathSegment.mapValue],
+                ),
+                depth + 1,
+              ))
+              ..add((
+                row.key,
+                skir.ValuePath(
+                  segments: [...rowPath.segments, skir.PathSegment.mapKey],
+                ),
+                depth + 1,
+              ));
+          }
+        default:
+      }
+    }
+  }
 }

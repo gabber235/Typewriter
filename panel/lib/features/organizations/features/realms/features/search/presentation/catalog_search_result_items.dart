@@ -53,7 +53,9 @@ class AuthoringCreationSearchResultItem extends StatelessWidget {
         spacing: context.spacing.space1,
         children: [
           SearchResultTitle(title: option.label),
-          if (description != null && description.isNotEmpty)
+          if (option.disabledReason case final reason?)
+            SearchResultDescription(description: reason)
+          else if (description != null && description.isNotEmpty)
             SearchResultDescription(description: description),
         ],
       ),

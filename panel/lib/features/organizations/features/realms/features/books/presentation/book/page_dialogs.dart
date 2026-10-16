@@ -23,17 +23,7 @@ Future<void> createPage({
   final template = checked.resourceCreationTemplate(
     corePageResourceDefinition.value,
   );
-  final book = draft?.resource(bookId);
-  final binding = book == null
-      ? null
-      : checked
-            ?.endpointBindings(book.configuration)
-            .where(
-              (candidate) =>
-                  _isDirectPagesCollection(candidate.template.relativePath),
-            )
-            .singleOrNull;
-  if (checked == null || template == null || binding == null) {
+  if (checked == null || template == null || draft?.resource(bookId) == null) {
     throw ApiException.badRequest("Page creation is unavailable");
   }
   final chapterValue = checked.admitPortablePayloadAt(
@@ -49,7 +39,6 @@ Future<void> createPage({
   if (chapterValue == null || priorityValue == null) {
     throw ApiException.badRequest("Page creation fields are unavailable");
   }
-  final item = skir.ItemId(value: "panel:${uuid.v4()}");
   await ref
       .read(
         resourceCreationProvider(
@@ -58,6 +47,14 @@ Future<void> createPage({
       )
       .createAndReveal(
         context: context,
+        creationContext: CreationContext(
+          constraints: [
+            CreationReferenceConstraint(
+              route: [libraryPageBookEndpoint],
+              target: bookId,
+            ),
+          ],
+        ),
         request: ResourceCreationRequest(
           definition: template.definition,
           configuration: template.configuration,
@@ -65,28 +62,6 @@ Future<void> createPage({
             skir.FieldValue(name: "chapter", value: chapterValue),
             skir.FieldValue(name: "priority", value: priorityValue),
           ],
-          connections: [
-            ResourceCreationConnection.collection(
-              source: bookId,
-              endpoint: binding.template.endpoint,
-              containing: skir.ValuePath(
-                segments: [skir.PathSegment.createField(name: "pages")],
-              ),
-              item: item,
-            ),
-          ],
         ),
       );
-}
-
-bool _isDirectPagesCollection(skir.RelativeFieldPattern pattern) {
-  final segments = pattern.segments.toList();
-  if (segments.length != 2 || segments[1] != skir.FieldPatternSegment.items) {
-    return false;
-  }
-  return switch (segments.first) {
-    skir.FieldPatternSegment_fieldWrapper(:final value) =>
-      value.name == "pages",
-    _ => false,
-  };
 }

@@ -4930,6 +4930,969 @@ class PreparedValue private constructor(
     }
 }
 
+sealed interface RequiredInput_OrMutable {
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val expected: skirout.editor.v1.type_catalog.TypeUse;
+
+    fun toFrozen(): skirout.editor.v1.catalog.RequiredInput;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RequiredInput private constructor(
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    override val expected: skirout.editor.v1.type_catalog.TypeUse,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.RequiredInput>? =
+        null,
+): skirout.editor.v1.catalog.RequiredInput_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        expected: skirout.editor.v1.type_catalog.TypeUse,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.RequiredInput>? =
+            null,
+    ): this(
+        path.toFrozen(),
+        expected,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        path = this.path,
+        expected = this.expected,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.path,
+        expected: skirout.editor.v1.type_catalog.TypeUse =
+            this.expected,
+    ) = skirout.editor.v1.catalog.RequiredInput(
+        path.toFrozen(),
+        expected,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.catalog.RequiredInput && this.path == other.path && this.expected == other.expected);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.expected).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RequiredInputSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RequiredInput]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var expected: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.RequiredInput>? =
+            null,
+    ): skirout.editor.v1.catalog.RequiredInput_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.catalog.RequiredInput(
+            path = this.path,
+            expected = this.expected,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [path] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+         */
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.path;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.path = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.catalog.RequiredInput(
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RequiredInput].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            expected: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        ) = skirout.editor.v1.catalog.RequiredInput(
+            path = path,
+            expected = expected,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RequiredInput] instances. */
+        val serializer get() = _SerializerRegistry.RequiredInputSerializer;
+
+        /** Describes the [RequiredInput] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RequiredInputSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface PreparationDraft_OrMutable {
+    val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
+    val target: skirout.editor.v1.catalog.PreparationTarget;
+    val content: skirout.editor.v1.catalog.PreparedContent;
+    val pendingDefaults: kotlin.collections.List<skirout.editor.v1.type_catalog.ValuePath_OrMutable>;
+    val requiredInputs: kotlin.collections.List<skirout.editor.v1.catalog.RequiredInput_OrMutable>;
+    val findings: kotlin.collections.List<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>;
+
+    fun toFrozen(): skirout.editor.v1.catalog.PreparationDraft;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class PreparationDraft private constructor(
+    override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
+    override val target: skirout.editor.v1.catalog.PreparationTarget,
+    override val content: skirout.editor.v1.catalog.PreparedContent,
+    override val pendingDefaults: kotlin.collections.List<skirout.editor.v1.type_catalog.ValuePath>,
+    override val requiredInputs: kotlin.collections.List<skirout.editor.v1.catalog.RequiredInput>,
+    override val findings: kotlin.collections.List<skirout.editor.v1.diagnostic.InitializationDiagnostic>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationDraft>? =
+        null,
+): skirout.editor.v1.catalog.PreparationDraft_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+        target: skirout.editor.v1.catalog.PreparationTarget,
+        content: skirout.editor.v1.catalog.PreparedContent,
+        pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
+        requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
+        findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationDraft>? =
+            null,
+    ): this(
+        catalog.toFrozen(),
+        target,
+        content,
+        build.skir.internal.toFrozenList(pendingDefaults, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(requiredInputs, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(findings, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        catalog = this.catalog,
+        target = this.target,
+        content = this.content,
+        pendingDefaults = this.pendingDefaults,
+        requiredInputs = this.requiredInputs,
+        findings = this.findings,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            this.catalog,
+        target: skirout.editor.v1.catalog.PreparationTarget =
+            this.target,
+        content: skirout.editor.v1.catalog.PreparedContent =
+            this.content,
+        pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable> =
+            this.pendingDefaults,
+        requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable> =
+            this.requiredInputs,
+        findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable> =
+            this.findings,
+    ) = skirout.editor.v1.catalog.PreparationDraft(
+        catalog.toFrozen(),
+        target,
+        content,
+        build.skir.internal.toFrozenList(pendingDefaults, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(requiredInputs, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(findings, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.catalog.PreparationDraft && this.catalog == other.catalog && this.target == other.target && this.content == other.content && this.pendingDefaults == other.pendingDefaults && this.requiredInputs == other.requiredInputs && this.findings == other.findings);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.catalog, this.target, this.content, this.pendingDefaults, this.requiredInputs, this.findings).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PreparationDraftSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [PreparationDraft]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+            skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+        override var target: skirout.editor.v1.catalog.PreparationTarget =
+            skirout.editor.v1.catalog.PreparationTarget.UNKNOWN,
+        override var content: skirout.editor.v1.catalog.PreparedContent =
+            skirout.editor.v1.catalog.PreparedContent.UNKNOWN,
+        override var pendingDefaults: kotlin.collections.List<skirout.editor.v1.type_catalog.ValuePath_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValuePath>(),
+        override var requiredInputs: kotlin.collections.List<skirout.editor.v1.catalog.RequiredInput_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RequiredInput>(),
+        override var findings: kotlin.collections.List<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.InitializationDiagnostic>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationDraft>? =
+            null,
+    ): skirout.editor.v1.catalog.PreparationDraft_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.catalog.PreparationDraft(
+            catalog = this.catalog,
+            target = this.target,
+            content = this.content,
+            pendingDefaults = this.pendingDefaults,
+            requiredInputs = this.requiredInputs,
+            findings = this.findings,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [catalog] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
+         */
+        val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
+            var value = this.catalog;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.CatalogGeneration -> {
+                    value = value.toMutable();
+                    this.catalog = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.CatalogGeneration.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [pendingDefaults] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [pendingDefaults] and returns it.
+         */
+        val mutablePendingDefaults: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ValuePath_OrMutable> get() {
+            var value = this.pendingDefaults;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.pendingDefaults = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [requiredInputs] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [requiredInputs] and returns it.
+         */
+        val mutableRequiredInputs: kotlin.collections.MutableList<skirout.editor.v1.catalog.RequiredInput_OrMutable> get() {
+            var value = this.requiredInputs;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.requiredInputs = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [findings] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [findings] and returns it.
+         */
+        val mutableFindings: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable> get() {
+            var value = this.findings;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.findings = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.catalog.PreparationDraft(
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+                skirout.editor.v1.catalog.PreparationTarget.UNKNOWN,
+                skirout.editor.v1.catalog.PreparedContent.UNKNOWN,
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValuePath>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RequiredInput>(),
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.InitializationDiagnostic>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [PreparationDraft].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable =
+                skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
+            target: skirout.editor.v1.catalog.PreparationTarget =
+                skirout.editor.v1.catalog.PreparationTarget.UNKNOWN,
+            content: skirout.editor.v1.catalog.PreparedContent =
+                skirout.editor.v1.catalog.PreparedContent.UNKNOWN,
+            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ValuePath>(),
+            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.RequiredInput>(),
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.diagnostic.InitializationDiagnostic>(),
+        ) = skirout.editor.v1.catalog.PreparationDraft(
+            catalog = catalog,
+            target = target,
+            content = content,
+            pendingDefaults = pendingDefaults,
+            requiredInputs = requiredInputs,
+            findings = findings,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [PreparationDraft] instances. */
+        val serializer get() = _SerializerRegistry.PreparationDraftSerializer;
+
+        /** Describes the [PreparationDraft] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PreparationDraftSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface InputAnswer_OrMutable {
+    val path: skirout.editor.v1.type_catalog.ValuePath_OrMutable;
+    val value: skirout.editor.v1.type_catalog.DataValue;
+
+    fun toFrozen(): skirout.editor.v1.catalog.InputAnswer;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class InputAnswer private constructor(
+    override val path: skirout.editor.v1.type_catalog.ValuePath,
+    override val value: skirout.editor.v1.type_catalog.DataValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.InputAnswer>? =
+        null,
+): skirout.editor.v1.catalog.InputAnswer_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable,
+        value: skirout.editor.v1.type_catalog.DataValue,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.InputAnswer>? =
+            null,
+    ): this(
+        path.toFrozen(),
+        value,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        path = this.path,
+        value = this.value,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            this.path,
+        value: skirout.editor.v1.type_catalog.DataValue =
+            this.value,
+    ) = skirout.editor.v1.catalog.InputAnswer(
+        path.toFrozen(),
+        value,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.editor.v1.catalog.InputAnswer && this.path == other.path && this.value == other.value);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.path, this.value).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.InputAnswerSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [InputAnswer]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+            skirout.editor.v1.type_catalog.ValuePath.partial(),
+        override var value: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.InputAnswer>? =
+            null,
+    ): skirout.editor.v1.catalog.InputAnswer_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.editor.v1.catalog.InputAnswer(
+            path = this.path,
+            value = this.value,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [path] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
+         */
+        val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
+            var value = this.path;
+            return when (value) {
+                is skirout.editor.v1.type_catalog.ValuePath -> {
+                    value = value.toMutable();
+                    this.path = value;
+                    return value;
+                }
+                is skirout.editor.v1.type_catalog.ValuePath.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.editor.v1.catalog.InputAnswer(
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [InputAnswer].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            path: skirout.editor.v1.type_catalog.ValuePath_OrMutable =
+                skirout.editor.v1.type_catalog.ValuePath.partial(),
+            value: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+        ) = skirout.editor.v1.catalog.InputAnswer(
+            path = path,
+            value = value,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [InputAnswer] instances. */
+        val serializer get() = _SerializerRegistry.InputAnswerSerializer;
+
+        /** Describes the [InputAnswer] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.InputAnswerSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class PreparationOperation private constructor() {
+    /** The kind of variant held by a `PreparationOperation`. */
+    enum class Kind {
+        UNKNOWN,
+        START_WRAPPER,
+        RESUME_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PreparationOperation.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationOperation>?,
+    ) : skirout.editor.v1.catalog.PreparationOperation() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationOperation && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class StartWrapper private constructor (
+        val value: skirout.editor.v1.catalog.ValuePreparationRequest,
+    ) : skirout.editor.v1.catalog.PreparationOperation() {
+        constructor(
+            value: skirout.editor.v1.catalog.ValuePreparationRequest_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.START_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationOperation.StartWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 109757538;
+        }
+    }
+
+    class ResumeWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparationOperation.Resume,
+    ) : skirout.editor.v1.catalog.PreparationOperation() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparationOperation.Resume_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.RESUME_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationOperation.ResumeWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -934426579;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationOperation>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PreparationOperationSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PreparationOperation].
+         * Default value for fields of type [PreparationOperation].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `StartWrapper(skirout.editor.v1.catalog.ValuePreparationRequest(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createStart(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            target: skirout.editor.v1.catalog.PreparationTarget,
+            suppliedValue: skirout.editor.v1.type_catalog.DataValue?,
+        ) = StartWrapper(
+            skirout.editor.v1.catalog.ValuePreparationRequest(
+                catalog = catalog,
+                target = target,
+                suppliedValue = suppliedValue,
+            )
+        );
+
+        /** Shortcut for `ResumeWrapper(skirout.editor.v1.catalog.PreparationOperation.Resume(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createResume(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+            answers: kotlin.collections.Iterable<skirout.editor.v1.catalog.InputAnswer_OrMutable>,
+        ) = ResumeWrapper(
+            skirout.editor.v1.catalog.PreparationOperation.Resume(
+                draft = draft,
+                answers = answers,
+            )
+        );
+
+        /** Serializer for [PreparationOperation] instances. */
+        val serializer get() = _SerializerRegistry.PreparationOperationSerializer;
+
+        /** Describes the [PreparationOperation] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PreparationOperationSerializerImpl.typeDescriptor;
+    }
+
+    sealed interface Resume_OrMutable {
+        val draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable;
+        val answers: kotlin.collections.List<skirout.editor.v1.catalog.InputAnswer_OrMutable>;
+
+        fun toFrozen(): skirout.editor.v1.catalog.PreparationOperation.Resume;
+    }
+
+    /** Deeply immutable. */
+    @kotlin.Suppress("UNUSED_PARAMETER")
+    class Resume private constructor(
+        override val draft: skirout.editor.v1.catalog.PreparationDraft,
+        override val answers: kotlin.collections.List<skirout.editor.v1.catalog.InputAnswer>,
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationOperation.Resume>? =
+            null,
+    ): skirout.editor.v1.catalog.PreparationOperation.Resume_OrMutable {
+        constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+            answers: kotlin.collections.Iterable<skirout.editor.v1.catalog.InputAnswer_OrMutable>,
+            _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationOperation.Resume>? =
+                null,
+        ): this(
+            draft.toFrozen(),
+            build.skir.internal.toFrozenList(answers, { it.toFrozen() }),
+            _unrecognizedFields,
+        ) {}
+
+        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+        override fun toFrozen() = this;
+
+        /** Returns a mutable shallow copy of this instance */
+        fun toMutable() = Mutable(
+            draft = this.draft,
+            answers = this.answers,
+        );
+
+        /** Returns a shallow copy of this instance with the specified fields replaced. */
+        fun copy(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable =
+                this.draft,
+            answers: kotlin.collections.Iterable<skirout.editor.v1.catalog.InputAnswer_OrMutable> =
+                this.answers,
+        ) = skirout.editor.v1.catalog.PreparationOperation.Resume(
+            draft.toFrozen(),
+            build.skir.internal.toFrozenList(answers, { it.toFrozen() }),
+            this._unrecognizedFields,
+        );
+
+        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+        fun copy() = this;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return this === other || (other is skirout.editor.v1.catalog.PreparationOperation.Resume && this.draft == other.draft && this.answers == other.answers);
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kotlin.collections.listOf<kotlin.Any?>(this.draft, this.answers).hashCode();
+        }
+
+        override fun toString(): kotlin.String {
+            return build.skir.internal.toStringImpl(
+                this,
+                _SerializerRegistry.PreparationOperation_ResumeSerializerImpl,
+            )
+        }
+
+        /** Mutable version of [Resume]. */
+        class Mutable internal constructor(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            override var draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable =
+                skirout.editor.v1.catalog.PreparationDraft.partial(),
+            override var answers: kotlin.collections.List<skirout.editor.v1.catalog.InputAnswer_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.InputAnswer>(),
+            internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.catalog.PreparationOperation.Resume>? =
+                null,
+        ): skirout.editor.v1.catalog.PreparationOperation.Resume_OrMutable {
+            /** Returns a deeply immutable copy of this instance */
+            override fun toFrozen() = skirout.editor.v1.catalog.PreparationOperation.Resume(
+                draft = this.draft,
+                answers = this.answers,
+                _unrecognizedFields = this._unrecognizedFields,
+            );
+
+            /**
+             * If the value of [draft] is already mutable, returns it as is.
+             * Otherwise, makes a mutable copy, assigns it back to [draft] and returns it.
+             */
+            val mutableDraft: skirout.editor.v1.catalog.PreparationDraft.Mutable get() {
+                var value = this.draft;
+                return when (value) {
+                    is skirout.editor.v1.catalog.PreparationDraft -> {
+                        value = value.toMutable();
+                        this.draft = value;
+                        return value;
+                    }
+                    is skirout.editor.v1.catalog.PreparationDraft.Mutable -> value;
+                }
+            }
+
+            /**
+             * If the value of [answers] is already mutable, returns it as is.
+             * Otherwise, makes a mutable copy, assigns it back to [answers] and returns it.
+             */
+            val mutableAnswers: kotlin.collections.MutableList<skirout.editor.v1.catalog.InputAnswer_OrMutable> get() {
+                var value = this.answers;
+                return when (value) {
+                    is build.skir.internal.MutableList -> value;
+                    else -> {
+                        value = build.skir.internal.MutableList(value);
+                        this.answers = value;
+                        value;
+                    }
+                }
+            }
+        }
+
+        companion object {
+            private val default =
+                skirout.editor.v1.catalog.PreparationOperation.Resume(
+                    skirout.editor.v1.catalog.PreparationDraft.partial(),
+                    build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.InputAnswer>(),
+                );
+
+            /** Returns an instance with all fields set to their default values. */
+            fun partial() = default;
+
+            /**
+             * Creates a new instance of [Resume].
+             * Unlike the constructor, does not require all fields to be specified.
+             * Missing fields will be set to their default values.
+             */
+            fun partial(
+                _mustNameArguments: _MustNameArguments =
+                    _MustNameArguments,
+                draft: skirout.editor.v1.catalog.PreparationDraft_OrMutable =
+                    skirout.editor.v1.catalog.PreparationDraft.partial(),
+                answers: kotlin.collections.Iterable<skirout.editor.v1.catalog.InputAnswer_OrMutable> =
+                    build.skir.internal.emptyFrozenList<skirout.editor.v1.catalog.InputAnswer>(),
+            ) = skirout.editor.v1.catalog.PreparationOperation.Resume(
+                draft = draft,
+                answers = answers,
+                _unrecognizedFields = null,
+            );
+
+            /** Serializer for [Resume] instances. */
+            val serializer get() = _SerializerRegistry.PreparationOperation_ResumeSerializer;
+
+            /** Describes the [Resume] type. Provides runtime introspection capabilities. */
+            val typeDescriptor get() = _SerializerRegistry.PreparationOperation_ResumeSerializerImpl.typeDescriptor;
+        }
+    }
+}
+
+/** Deeply immutable. */
+sealed class PreparationStep private constructor() {
+    /** The kind of variant held by a `PreparationStep`. */
+    enum class Kind {
+        UNKNOWN,
+        READY_WRAPPER,
+        NEEDS_INPUT_WRAPPER,
+        UNAVAILABLE_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PreparationStep.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationStep>?,
+    ) : skirout.editor.v1.catalog.PreparationStep() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationStep && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class ReadyWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparedValue,
+    ) : skirout.editor.v1.catalog.PreparationStep() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparedValue_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.READY_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationStep.ReadyWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 108386723;
+        }
+    }
+
+    class NeedsInputWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparationDraft,
+    ) : skirout.editor.v1.catalog.PreparationStep() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.NEEDS_INPUT_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationStep.NeedsInputWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -642245720;
+        }
+    }
+
+    class UnavailableWrapper private constructor (
+        val value: skirout.editor.v1.catalog.PreparationDraft,
+    ) : skirout.editor.v1.catalog.PreparationStep() {
+        constructor(
+            value: skirout.editor.v1.catalog.PreparationDraft_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.UNAVAILABLE_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.editor.v1.catalog.PreparationStep.UnavailableWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -665462704;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.editor.v1.catalog.PreparationStep>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.PreparationStepSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [PreparationStep].
+         * Default value for fields of type [PreparationStep].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ReadyWrapper(skirout.editor.v1.catalog.PreparedValue(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReady(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = ReadyWrapper(
+            skirout.editor.v1.catalog.PreparedValue(
+                content = content,
+                findings = findings,
+            )
+        );
+
+        /** Shortcut for `NeedsInputWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createNeedsInput(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            target: skirout.editor.v1.catalog.PreparationTarget,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
+            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = NeedsInputWrapper(
+            skirout.editor.v1.catalog.PreparationDraft(
+                catalog = catalog,
+                target = target,
+                content = content,
+                pendingDefaults = pendingDefaults,
+                requiredInputs = requiredInputs,
+                findings = findings,
+            )
+        );
+
+        /** Shortcut for `UnavailableWrapper(skirout.editor.v1.catalog.PreparationDraft(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createUnavailable(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
+            target: skirout.editor.v1.catalog.PreparationTarget,
+            content: skirout.editor.v1.catalog.PreparedContent,
+            pendingDefaults: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ValuePath_OrMutable>,
+            requiredInputs: kotlin.collections.Iterable<skirout.editor.v1.catalog.RequiredInput_OrMutable>,
+            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
+        ) = UnavailableWrapper(
+            skirout.editor.v1.catalog.PreparationDraft(
+                catalog = catalog,
+                target = target,
+                content = content,
+                pendingDefaults = pendingDefaults,
+                requiredInputs = requiredInputs,
+                findings = findings,
+            )
+        );
+
+        /** Serializer for [PreparationStep] instances. */
+        val serializer get() = _SerializerRegistry.PreparationStepSerializer;
+
+        /** Describes the [PreparationStep] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PreparationStepSerializerImpl.typeDescriptor;
+    }
+}
+
 /** Deeply immutable. */
 sealed class PrepareValueResult private constructor() {
     /** The kind of variant held by a `PrepareValueResult`. */
@@ -4955,13 +5918,9 @@ sealed class PrepareValueResult private constructor() {
         }
     }
 
-    class PreparedWrapper private constructor (
-        val value: skirout.editor.v1.catalog.PreparedValue,
+    class PreparedWrapper(
+        val value: skirout.editor.v1.catalog.PreparationStep,
     ) : skirout.editor.v1.catalog.PrepareValueResult() {
-        constructor(
-            value: skirout.editor.v1.catalog.PreparedValue_OrMutable,
-        ): this(value.toFrozen()) {}
-
         override val kind get() = Kind.PREPARED_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
@@ -5026,20 +5985,6 @@ sealed class PrepareValueResult private constructor() {
          * Default value for fields of type [PrepareValueResult].
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `PreparedWrapper(skirout.editor.v1.catalog.PreparedValue(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createPrepared(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            content: skirout.editor.v1.catalog.PreparedContent,
-            findings: kotlin.collections.Iterable<skirout.editor.v1.diagnostic.InitializationDiagnostic_OrMutable>,
-        ) = PreparedWrapper(
-            skirout.editor.v1.catalog.PreparedValue(
-                content = content,
-                findings = findings,
-            )
-        );
 
         /** Shortcut for `CatalogChangedWrapper(skirout.editor.v1.type_catalog.CatalogGeneration(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
@@ -5678,13 +6623,13 @@ val WatchEditorCatalog: build.skir.service.Method<
 }
 
 val PrepareValue: build.skir.service.Method<
-    skirout.editor.v1.catalog.ValuePreparationRequest,
+    skirout.editor.v1.catalog.PreparationOperation,
     skirout.editor.v1.catalog.PrepareValueResult,
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareValue",
         910003,
-        skirout.editor.v1.catalog.ValuePreparationRequest.serializer,
+        skirout.editor.v1.catalog.PreparationOperation.serializer,
         skirout.editor.v1.catalog.PrepareValueResult.serializer,
         "",
     )
@@ -5889,6 +6834,18 @@ private object _SerializerRegistry {
 
     val EndpointSlotSerializer = build.skir.internal.makeSerializer(EndpointSlotSerializerImpl);
 
+    val InputAnswerSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:InputAnswer",
+        doc = "",
+        defaultInstance = skirout.editor.v1.catalog.InputAnswer.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.InputAnswer.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val InputAnswerSerializer = build.skir.internal.makeSerializer(InputAnswerSerializerImpl);
+
     val OwnedRuleSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:OwnedRule",
         doc = "",
@@ -5900,6 +6857,56 @@ private object _SerializerRegistry {
     );
 
     val OwnedRuleSerializer = build.skir.internal.makeSerializer(OwnedRuleSerializerImpl);
+
+    val PreparationDraftSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:PreparationDraft",
+        doc = "",
+        defaultInstance = skirout.editor.v1.catalog.PreparationDraft.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.PreparationDraft.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PreparationDraftSerializer = build.skir.internal.makeSerializer(PreparationDraftSerializerImpl);
+
+    val PreparationOperationSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationOperation, skirout.editor.v1.catalog.PreparationOperation.Unknown>(
+            recordId = "editor/v1/catalog.skir:PreparationOperation",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.catalog.PreparationOperation.Kind.values().size,
+            unknownInstance = skirout.editor.v1.catalog.PreparationOperation.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.PreparationOperation.Unknown(skirout.editor.v1.catalog.PreparationOperation.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PreparationOperationSerializer = build.skir.internal.makeSerializer(PreparationOperationSerializerImpl);
+
+    val PreparationOperation_ResumeSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:PreparationOperation.Resume",
+        doc = "",
+        defaultInstance = skirout.editor.v1.catalog.PreparationOperation.Resume.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.PreparationOperation.Resume.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PreparationOperation_ResumeSerializer = build.skir.internal.makeSerializer(PreparationOperation_ResumeSerializerImpl);
+
+    val PreparationStepSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationStep, skirout.editor.v1.catalog.PreparationStep.Unknown>(
+            recordId = "editor/v1/catalog.skir:PreparationStep",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.editor.v1.catalog.PreparationStep.Kind.values().size,
+            unknownInstance = skirout.editor.v1.catalog.PreparationStep.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.editor.v1.catalog.PreparationStep.Unknown(skirout.editor.v1.catalog.PreparationStep.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val PreparationStepSerializer = build.skir.internal.makeSerializer(PreparationStepSerializerImpl);
 
     val PreparationTargetSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationTarget, skirout.editor.v1.catalog.PreparationTarget.Unknown>(
@@ -6051,6 +7058,18 @@ private object _SerializerRegistry {
         );
 
     val RepresentationKindSerializer = build.skir.internal.makeSerializer(RepresentationKindSerializerImpl);
+
+    val RequiredInputSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/catalog.skir:RequiredInput",
+        doc = "",
+        defaultInstance = skirout.editor.v1.catalog.RequiredInput.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.RequiredInput.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RequiredInputSerializer = build.skir.internal.makeSerializer(RequiredInputSerializerImpl);
 
     val ResourceDefinitionIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:ResourceDefinitionId",
@@ -6710,6 +7729,26 @@ private object _SerializerRegistry {
         );
         EndpointSlotSerializerImpl.finalizeEnum();
 
+        InputAnswerSerializerImpl.addField(
+            "path",
+            "path",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.path },
+            { mut, v -> mut.path = v },
+        );
+        InputAnswerSerializerImpl.addField(
+            "value",
+            "value",
+            1,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.value },
+            { mut, v -> mut.value = v },
+        );
+        InputAnswerSerializerImpl.finalizeStruct();
+
         OwnedRuleSerializerImpl.addField(
             "id",
             "id",
@@ -6738,6 +7777,139 @@ private object _SerializerRegistry {
             { mut, v -> mut.diagnostic = v },
         );
         OwnedRuleSerializerImpl.finalizeStruct();
+
+        PreparationDraftSerializerImpl.addField(
+            "catalog",
+            "catalog",
+            0,
+            skirout.editor.v1.type_catalog.CatalogGeneration.serializer,
+            "",
+            { it.catalog },
+            { mut, v -> mut.catalog = v },
+        );
+        PreparationDraftSerializerImpl.addField(
+            "target",
+            "target",
+            1,
+            _SerializerRegistry.PreparationTargetSerializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        PreparationDraftSerializerImpl.addField(
+            "content",
+            "content",
+            2,
+            _SerializerRegistry.PreparedContentSerializer,
+            "",
+            { it.content },
+            { mut, v -> mut.content = v },
+        );
+        PreparationDraftSerializerImpl.addField(
+            "pending_defaults",
+            "pendingDefaults",
+            3,
+            build.skir.Serializers.list(
+                skirout.editor.v1.type_catalog.ValuePath.serializer,
+            ),
+            "",
+            { it.pendingDefaults },
+            { mut, v -> mut.pendingDefaults = v },
+        );
+        PreparationDraftSerializerImpl.addField(
+            "required_inputs",
+            "requiredInputs",
+            4,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RequiredInputSerializer,
+            ),
+            "",
+            { it.requiredInputs },
+            { mut, v -> mut.requiredInputs = v },
+        );
+        PreparationDraftSerializerImpl.addField(
+            "findings",
+            "findings",
+            5,
+            build.skir.Serializers.list(
+                skirout.editor.v1.diagnostic.InitializationDiagnostic.serializer,
+            ),
+            "",
+            { it.findings },
+            { mut, v -> mut.findings = v },
+        );
+        PreparationDraftSerializerImpl.finalizeStruct();
+
+        PreparationOperationSerializerImpl.addWrapperVariant(
+            1,
+            "start",
+            skirout.editor.v1.catalog.PreparationOperation.Kind.START_WRAPPER.ordinal,
+            _SerializerRegistry.ValuePreparationRequestSerializer,
+            "",
+            { skirout.editor.v1.catalog.PreparationOperation.StartWrapper(it) },
+            { it.value },
+        );
+        PreparationOperationSerializerImpl.addWrapperVariant(
+            2,
+            "resume",
+            skirout.editor.v1.catalog.PreparationOperation.Kind.RESUME_WRAPPER.ordinal,
+            _SerializerRegistry.PreparationOperation_ResumeSerializer,
+            "",
+            { skirout.editor.v1.catalog.PreparationOperation.ResumeWrapper(it) },
+            { it.value },
+        );
+        PreparationOperationSerializerImpl.finalizeEnum();
+
+        PreparationOperation_ResumeSerializerImpl.addField(
+            "draft",
+            "draft",
+            0,
+            _SerializerRegistry.PreparationDraftSerializer,
+            "",
+            { it.draft },
+            { mut, v -> mut.draft = v },
+        );
+        PreparationOperation_ResumeSerializerImpl.addField(
+            "answers",
+            "answers",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.InputAnswerSerializer,
+            ),
+            "",
+            { it.answers },
+            { mut, v -> mut.answers = v },
+        );
+        PreparationOperation_ResumeSerializerImpl.finalizeStruct();
+
+        PreparationStepSerializerImpl.addWrapperVariant(
+            1,
+            "ready",
+            skirout.editor.v1.catalog.PreparationStep.Kind.READY_WRAPPER.ordinal,
+            _SerializerRegistry.PreparedValueSerializer,
+            "",
+            { skirout.editor.v1.catalog.PreparationStep.ReadyWrapper(it) },
+            { it.value },
+        );
+        PreparationStepSerializerImpl.addWrapperVariant(
+            2,
+            "needs_input",
+            skirout.editor.v1.catalog.PreparationStep.Kind.NEEDS_INPUT_WRAPPER.ordinal,
+            _SerializerRegistry.PreparationDraftSerializer,
+            "",
+            { skirout.editor.v1.catalog.PreparationStep.NeedsInputWrapper(it) },
+            { it.value },
+        );
+        PreparationStepSerializerImpl.addWrapperVariant(
+            3,
+            "unavailable",
+            skirout.editor.v1.catalog.PreparationStep.Kind.UNAVAILABLE_WRAPPER.ordinal,
+            _SerializerRegistry.PreparationDraftSerializer,
+            "",
+            { skirout.editor.v1.catalog.PreparationStep.UnavailableWrapper(it) },
+            { it.value },
+        );
+        PreparationStepSerializerImpl.finalizeEnum();
 
         PreparationTargetSerializerImpl.addWrapperVariant(
             1,
@@ -6805,7 +7977,7 @@ private object _SerializerRegistry {
             1,
             "prepared",
             skirout.editor.v1.catalog.PrepareValueResult.Kind.PREPARED_WRAPPER.ordinal,
-            _SerializerRegistry.PreparedValueSerializer,
+            _SerializerRegistry.PreparationStepSerializer,
             "",
             { skirout.editor.v1.catalog.PrepareValueResult.PreparedWrapper(it) },
             { it.value },
@@ -7244,6 +8416,26 @@ private object _SerializerRegistry {
             skirout.editor.v1.catalog.RepresentationKind.LINK,
         );
         RepresentationKindSerializerImpl.finalizeEnum();
+
+        RequiredInputSerializerImpl.addField(
+            "path",
+            "path",
+            0,
+            skirout.editor.v1.type_catalog.ValuePath.serializer,
+            "",
+            { it.path },
+            { mut, v -> mut.path = v },
+        );
+        RequiredInputSerializerImpl.addField(
+            "expected",
+            "expected",
+            1,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.expected },
+            { mut, v -> mut.expected = v },
+        );
+        RequiredInputSerializerImpl.finalizeStruct();
 
         ResourceDefinitionIdSerializerImpl.addField(
             "value",

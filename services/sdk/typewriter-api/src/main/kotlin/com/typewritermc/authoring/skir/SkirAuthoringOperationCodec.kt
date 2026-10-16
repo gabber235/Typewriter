@@ -6,12 +6,17 @@ import com.typewritermc.authoring.CounterpartChoice
 import com.typewritermc.authoring.EditExpectation
 import com.typewritermc.authoring.EditIntent
 import com.typewritermc.authoring.InitializationRequest
+import com.typewritermc.authoring.InputAnswer
 import com.typewritermc.authoring.ItemId
 import com.typewritermc.authoring.LinkProjection
+import com.typewritermc.authoring.PreparationDraft
+import com.typewritermc.authoring.PreparationOperation
+import com.typewritermc.authoring.PreparationStep
 import com.typewritermc.authoring.PreparationTarget
 import com.typewritermc.authoring.PreparedContent
 import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.PreparedValue
+import com.typewritermc.authoring.RequiredInput
 import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.checking.CatalogGeneration
@@ -35,9 +40,14 @@ import skirout.editor.v1.authoring_facts.EditExpectation as SkirEditExpectation
 import skirout.editor.v1.authoring_facts.ExpectationConflict as SkirExpectationConflict
 import skirout.editor.v1.authoring_facts.LinkProjection as SkirLinkProjection
 import skirout.editor.v1.authoring_facts.TraversalDirection as SkirTraversalDirection
+import skirout.editor.v1.catalog.InputAnswer as SkirInputAnswer
+import skirout.editor.v1.catalog.PreparationDraft as SkirPreparationDraft
+import skirout.editor.v1.catalog.PreparationOperation as SkirPreparationOperation
+import skirout.editor.v1.catalog.PreparationStep as SkirPreparationStep
 import skirout.editor.v1.catalog.PreparationTarget as SkirPreparationTarget
 import skirout.editor.v1.catalog.PreparedContent as SkirPreparedContent
 import skirout.editor.v1.catalog.PreparedValue as SkirPreparedValue
+import skirout.editor.v1.catalog.RequiredInput as SkirRequiredInput
 import skirout.editor.v1.catalog.ValuePreparationRequest as SkirInitializationRequest
 import skirout.editor.v1.diagnostic.ValueProblem as SkirValueProblem
 import skirout.editor.v1.type_catalog.CatalogGeneration as SkirCatalogGeneration
@@ -50,6 +60,20 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
 object SkirAuthoringOperationCodec {
+    fun encode(value: PreparationOperation): SkirConversionResult<SkirPreparationOperation> =
+        captureOperationConversion { encodePreparationOperation(value) }
+
+    fun decode(value: SkirPreparationOperation): SkirConversionResult<PreparationOperation> =
+        captureOperationConversion {
+            decodePreparationOperation(value)
+        }
+
+    fun encode(value: PreparationStep): SkirConversionResult<SkirPreparationStep> =
+        captureOperationConversion { encodePreparationStep(value) }
+
+    fun decode(value: SkirPreparationStep): SkirConversionResult<PreparationStep> =
+        captureOperationConversion { decodePreparationStep(value) }
+
     fun encode(value: EditExpectation): SkirConversionResult<SkirEditExpectation> = captureOperationConversion { encodeExpectation(value) }
 
     fun decode(value: SkirEditExpectation): SkirConversionResult<EditExpectation> = captureOperationConversion { decodeExpectation(value) }
@@ -73,6 +97,104 @@ object SkirAuthoringOperationCodec {
     fun encode(value: PreparedValue): SkirConversionResult<SkirPreparedValue> = captureOperationConversion { encodePreparedValue(value) }
 
     fun decode(value: SkirPreparedValue): SkirConversionResult<PreparedValue> = captureOperationConversion { decodePreparedValue(value) }
+}
+
+private fun OperationConversionScope.encodePreparationOperation(value: PreparationOperation): SkirPreparationOperation =
+    when (value) {
+        is PreparationOperation.Start -> {
+            SkirPreparationOperation.StartWrapper(encodeInitializationRequest(value.request))
+        }
+
+        is PreparationOperation.Resume -> {
+            SkirPreparationOperation.createResume(
+                draft = encodePreparationDraft(value.draft),
+                answers =
+                    value.answers.map {
+                        SkirInputAnswer(
+                            path = convert(SkirAuthoringValueCodec.encode(it.path)),
+                            value = convert(SkirDataValueCodec.encode(it.value)),
+                        )
+                    },
+            )
+        }
+    }
+
+private fun OperationConversionScope.decodePreparationOperation(value: SkirPreparationOperation): PreparationOperation =
+    when (value) {
+        is SkirPreparationOperation.StartWrapper -> {
+            PreparationOperation.Start(decodeInitializationRequest(value.value))
+        }
+
+        is SkirPreparationOperation.ResumeWrapper -> {
+            PreparationOperation.Resume(
+                decodePreparationDraft(value.value.draft),
+                value.value.answers.map {
+                    InputAnswer(
+                        convert(SkirAuthoringValueCodec.decode(it.path)),
+                        convert(SkirDataValueCodec.decode(it.value)),
+                    )
+                },
+            )
+        }
+
+        else -> {
+            fail("Unknown preparation operation.")
+        }
+    }
+
+private fun OperationConversionScope.encodePreparationStep(value: PreparationStep): SkirPreparationStep =
+    when (value) {
+        is PreparationStep.Ready -> SkirPreparationStep.ReadyWrapper(encodePreparedValue(value.value))
+        is PreparationStep.NeedsInput -> SkirPreparationStep.NeedsInputWrapper(encodePreparationDraft(value.draft))
+        is PreparationStep.Unavailable -> SkirPreparationStep.UnavailableWrapper(encodePreparationDraft(value.draft))
+    }
+
+private fun OperationConversionScope.decodePreparationStep(value: SkirPreparationStep): PreparationStep =
+    when (value) {
+        is SkirPreparationStep.ReadyWrapper -> PreparationStep.Ready(decodePreparedValue(value.value))
+        is SkirPreparationStep.NeedsInputWrapper -> PreparationStep.NeedsInput(decodePreparationDraft(value.value))
+        is SkirPreparationStep.UnavailableWrapper -> PreparationStep.Unavailable(decodePreparationDraft(value.value))
+        else -> fail("Unknown preparation step.")
+    }
+
+private fun OperationConversionScope.encodePreparationDraft(value: PreparationDraft): SkirPreparationDraft {
+    val request = encodeInitializationRequest(InitializationRequest(value.catalog, value.target, null))
+    val prepared = encodePreparedValue(PreparedValue(value.content, value.findings))
+    return SkirPreparationDraft(
+        catalog = request.catalog,
+        target = request.target,
+        content = prepared.content,
+        pendingDefaults = value.pendingDefaults.map { convert(SkirAuthoringValueCodec.encode(it)) },
+        requiredInputs =
+            value.requiredInputs.map {
+                SkirRequiredInput(
+                    path = convert(SkirAuthoringValueCodec.encode(it.path)),
+                    expected = convert(SkirTypeCodec.encode(it.expected)),
+                )
+            },
+        findings = prepared.findings,
+    )
+}
+
+private fun OperationConversionScope.decodePreparationDraft(value: SkirPreparationDraft): PreparationDraft {
+    val request =
+        decodeInitializationRequest(SkirInitializationRequest(catalog = value.catalog, target = value.target, suppliedValue = null))
+    val prepared = decodePreparedValue(SkirPreparedValue(content = value.content, findings = value.findings))
+    val pending = value.pendingDefaults.map { convert(SkirAuthoringValueCodec.decode(it)) }
+    if (pending.toSet().size != pending.size) fail("A pending default path is duplicated.")
+    return PreparationDraft(
+        request.catalog,
+        request.target,
+        prepared.content,
+        pending.toSet(),
+        value.requiredInputs.map {
+            RequiredInput(
+                convert(SkirAuthoringValueCodec.decode(it.path)),
+                convert(SkirTypeCodec.decode(it.expected)),
+            )
+        },
+        prepared.findings,
+    )
 }
 
 private fun OperationConversionScope.encodePreparedEdit(value: PreparedEdit): SkirPreparedEdit =

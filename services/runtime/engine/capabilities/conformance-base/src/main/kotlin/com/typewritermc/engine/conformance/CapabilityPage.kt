@@ -20,6 +20,7 @@ import com.typewritermc.types.TypewriterType
  * composition.
  */
 interface CapabilityElement : Element {
+    override val page: Ref<PageElements.Element, CapabilityPage>
     override val placement: GraphPlacement
 }
 

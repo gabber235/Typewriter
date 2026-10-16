@@ -982,88 +982,6 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     );
   }
 
-  /// Resolves incoming creation links against this branch before defaults run.
-  /// Canonical connect intents still own relation mutation after preparation.
-  List<skir.FieldValue> creationInputs(ResourceCreationRequest request) {
-    final checked = catalog;
-    if (checked == null) throw StateError("The editor catalog is unavailable");
-    final fields = <String, skir.DataValue>{};
-    for (final field in request.supplied) {
-      if (fields.containsKey(field.name)) {
-        throw StateError("A creation input was supplied more than once");
-      }
-      fields[field.name] = field.value;
-    }
-    for (final connection in request.connections) {
-      final source = _resources[connection.source];
-      if (source == null) throw StateError("The creation parent is absent");
-      _observe(_exists(resource: connection.source));
-      final relation = checked.snapshot.relations
-          .where(
-            (candidate) =>
-                candidate.first.id == connection.endpoint ||
-                candidate.second.id == connection.endpoint,
-          )
-          .singleOrNull;
-      if (relation == null) {
-        throw StateError("The creation relation is unavailable");
-      }
-      final opposite = relation.first.id == connection.endpoint
-          ? relation.second.id
-          : relation.first.id;
-      final counterpart = switch (checked.resolveScalarCounterpart(
-        configuration: request.configuration,
-        resource: request.id,
-        endpoint: opposite,
-      )) {
-        ResolvedResourceCounterpart(:final location) => location,
-        ResourceCounterpartChoiceRequired(:final message) => throw StateError(
-          message,
-        ),
-        InvalidResourceCounterpart(:final message) => throw StateError(message),
-      };
-      final sourceBindings = checked.endpointBindings(source.configuration);
-      if (!sourceBindings.any(
-        (binding) => binding.template.endpoint == connection.endpoint,
-      )) {
-        throw StateError("The parent does not support the creation relation");
-      }
-      _observeRelationPath(
-        skir.ValueLocation(resource: connection.source, path: connection.path),
-      );
-      final actual = _concreteNamed(
-        checked.valueTypeAt(request.configuration, counterpart.path),
-      );
-      if (actual == null) {
-        throw StateError("The creation link type is unavailable");
-      }
-      final linked = skir.DataValue.createNamed(
-        actualType: actual,
-        payload: skir.DataValue.createLink(
-          endpoint: opposite,
-          target: skir.LinkTarget(
-            resource: connection.source,
-            opposite: connection.path,
-          ),
-        ),
-      );
-      final name =
-          (counterpart.path.segments.single as skir.PathSegment_fieldWrapper)
-              .value
-              .name;
-      if (fields.containsKey(name) && fields[name] != linked) {
-        throw StateError(
-          "The supplied creation input conflicts with its connection",
-        );
-      }
-      fields[name] = linked;
-    }
-    return [
-      for (final field in fields.entries)
-        skir.FieldValue(name: field.key, value: field.value),
-    ];
-  }
-
   skir.ValueLocation? _automaticScalarCounterpart(
     skir.ResourceId resource,
     skir.EndpointId endpoint,
@@ -1182,7 +1100,11 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       target: target,
     );
     final actual = _concreteNamed(
-      catalog?.valueTypeAt(record.configuration, location.path),
+      catalog?.valueTypeAt(
+        record.configuration,
+        location.path,
+        value: skir.DataValue.createRecord(fields: record.fields),
+      ),
     );
     final replacement = switch (current) {
       PortablePathValue(value: final skir.DataValue_namedWrapper value) =>
@@ -1260,7 +1182,11 @@ final class AuthoringEdit implements PortableAuthoringEdit {
       }
       replacement = collection;
     } else {
-      final expected = catalog?.valueTypeAt(record.configuration, path);
+      final expected = catalog?.valueTypeAt(
+        record.configuration,
+        path,
+        value: skir.DataValue.createRecord(fields: record.fields),
+      );
       replacement = expected is skir.TypeUse_nullableWrapper
           ? skir.DataValue.null_
           : skir.DataValue.unfilled;

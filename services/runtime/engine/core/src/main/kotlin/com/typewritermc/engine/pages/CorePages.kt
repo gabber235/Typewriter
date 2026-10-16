@@ -19,6 +19,7 @@ import com.typewritermc.types.TypewriterType
  * [com.typewritermc.engine.runtime.EngineContentFacet] assembly from compiled artifacts.
  */
 interface SequenceEntry : Entry {
+    override val page: Ref<PageElements.Element, SequencePage>
     override val placement: GraphPlacement
 }
 
@@ -28,6 +29,7 @@ interface SequenceEntry : Entry {
  * The page specification defines layout, while runtime behavior remains separate.
  */
 interface StaticEntry : Entry {
+    override val page: Ref<PageElements.Element, StaticPage>
     override val placement: GraphPlacement
 }
 
@@ -35,6 +37,7 @@ interface StaticEntry : Entry {
  * Marks entries accepted by the core manifest graph page.
  */
 interface ManifestEntry : Entry {
+    override val page: Ref<PageElements.Element, ManifestPage>
     override val placement: GraphPlacement
 }
 
@@ -42,6 +45,7 @@ interface ManifestEntry : Entry {
  * Marks track entries accepted by the core scene timeline alongside segments and keyframes.
  */
 interface SceneEntry : Entry {
+    override val page: Ref<PageElements.Element, ScenePage>
     override val placement: TimelineEntryPlacement
 }
 
