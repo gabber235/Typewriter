@@ -21,6 +21,13 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
+import com.typewritermc.operations.OperationInvocation
+import com.typewritermc.operations.OperationOrigin
+import com.typewritermc.operations.PreparationChoices
+import com.typewritermc.realm.authoring.AuthoringView
+import com.typewritermc.realm.authoring.OperationLayoutPreparation
+import com.typewritermc.realm.authoring.RuntimeOperationPreparation
+import com.typewritermc.realm.authoring.SnapshotEditContext
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -48,9 +55,856 @@ import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
+import kotlinx.coroutines.runBlocking
 
 class AuthoringMutationPlannerTest {
+    fun inverseOnlyReferencesDoNotOfferLinkedDuplication() {
+        val id = ResourceId("inverse_only")
+        val definitions =
+            DEFINITIONS.map { definition ->
+                if (definition.id ==
+                    NODE
+                ) {
+                    definition.copy(
+                        representation =
+                            (definition.representation as RepresentationTemplate.Record).let {
+                                it.copy(
+                                    fields =
+                                        it.fields.filterNot { field ->
+                                            field.owner.name ==
+                                                "manyFirst"
+                                        },
+                                )
+                            },
+                    )
+                } else {
+                    definition
+                }
+            }
+        val catalog =
+            com.typewritermc.realm.checking.TestCatalogLease(
+                generation = GENERATION,
+                definitions = definitions,
+                resourceRoot = NODE,
+                relations = listOf(manyContract()),
+                endpointBindings = BINDINGS,
+            )
+        val resources = mapOf(id to record().let { it.copy(fields = it.fields - "manyFirst") })
+        val baseline = AuthoringView(catalog, resources, mapOf(id to com.typewritermc.authoring.ResourceDefinitionId("test")), emptyMap())
+        try {
+            val reads =
+                com.typewritermc.realm.checking.CapturedAuthoringReads(
+                    com.typewritermc.realm.authoring.AuthoredReadView
+                        .Original(baseline),
+                )
+            val result =
+                com.typewritermc.realm.authoring
+                    .BuiltinOperationAvailability(
+                        baseline,
+                        reads,
+                    ).availability(com.typewritermc.operations.BuiltinResourceOperation.LinkWithDuplicate, listOf(id))
+            assertEquals(com.typewritermc.operations.OperationAvailability.Hidden, result)
+        } finally {
+            catalog.close()
+        }
+    }
+
+    fun placementPoliciesMatchExactOwnershipCollections() =
+        runBlocking {
+            val owner = ResourceId("layout-owner")
+            val first = ResourceId("layout-first")
+            val second = ResourceId("layout-second")
+            val firstItem = ItemId("layout-first-item")
+            val secondItem = ItemId("layout-second-item")
+            val inverseItem = ItemId("layout-inverse-item")
+            val resources =
+                mapOf(
+                    owner to
+                        record(
+                            children = listOf(ListItem(firstItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, first, fieldPath("parent")))),
+                            manyFirst =
+                                listOf(
+                                    ListItem(
+                                        secondItem,
+                                        link(MANY_FIRST_TYPE, MANY_FIRST, second, fieldPath("manySecond").item(inverseItem)),
+                                    ),
+                                ),
+                        ),
+                    first to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, owner, fieldPath("children").item(firstItem))),
+                    second to
+                        record(
+                            manySecond =
+                                listOf(
+                                    ListItem(
+                                        inverseItem,
+                                        link(MANY_SECOND_TYPE, MANY_SECOND, owner, fieldPath("manyFirst").item(secondItem)),
+                                    ),
+                                ),
+                        ),
+                )
+            val ownership = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))
+            val baseline =
+                operationBaseline(
+                    resources,
+                    listOf(
+                        parentContract(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR).copy(families = ownership),
+                        manyContract().copy(families = ownership),
+                    ),
+                )
+            val origin =
+                com.typewritermc.discovery.ProviderOrigin(
+                    com.typewritermc.types.DeclarationOwner(
+                        com.typewritermc.discovery.ContributionKey(
+                            com.typewritermc.imprint.ContributionSourceId("layout-test"),
+                            "main",
+                            com.typewritermc.imprint.ProducerId("test"),
+                            com.typewritermc.imprint.ContributionName("layout"),
+                        ),
+                        "fixture.LayoutOperations",
+                    ),
+                    com.typewritermc.imprint.ArtifactId("fixture:layout"),
+                    "main",
+                )
+            val requests = mutableListOf<com.typewritermc.operations.DestinationPlacementRequest>()
+
+            fun policy(
+                field: String,
+                use: TypeUse,
+            ) = com.typewritermc.operations.DestinationPlacementDeclaration(
+                origin,
+                TypeTemplate.Named(NODE),
+                com.typewritermc.authoring.typedPath<Any, Any>(NODE, fieldPath(field), use),
+                com.typewritermc.operations.DestinationPlacementPolicy { request ->
+                    requests += request
+                    com.typewritermc.operations.PlacementPreparation { }
+                },
+            )
+            val operations =
+                com.typewritermc.operations.OperationCatalog(
+                    placements =
+                        listOf(
+                            policy("children", CHILDREN_USE),
+                            policy("manyFirst", MANY_FIRST_LIST_USE),
+                        ),
+                )
+            val catalog =
+                object : com.typewritermc.realm.authoring.AuthoringCatalogLease by baseline.catalog {
+                    override val operations = operations
+
+                    override fun retain(): com.typewritermc.realm.authoring.AuthoringCatalogLease = this
+
+                    override fun close() = Unit
+                }
+            try {
+                val working = baseline.copy(catalog = catalog)
+                val edit = SnapshotEditContext(working, "exact-layout")
+                val layouts = OperationLayoutPreparation(edit, working)
+                val session =
+                    RuntimeOperationPreparation(
+                        OperationInvocation("exact-layout", listOf(first, second)),
+                        PreparationChoices(),
+                        edit,
+                        working,
+                    )
+                with(session) { layouts.prepareMove(listOf(layouts.draft(first), layouts.draft(second)), owner, null).apply() }
+                assertEquals(listOf(fieldPath("children"), fieldPath("manyFirst")), requests.map { it.collection.path })
+                assertEquals(listOf(listOf(first), listOf(second)), requests.map { it.subjects.map { draft -> draft.id } })
+                assertEquals(listOf(listOf(first), listOf(second)), requests.map { it.occupants.map { draft -> draft.id } })
+                assertEquals(resources, baseline.resources)
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun runtimeResolvesInlineCallbacksAndPreparesAgainstWorkingValues() =
+        runBlocking {
+            val first = ResourceId("callback_first")
+            val second = ResourceId("callback_second")
+            val resources = mapOf(first to record(label = "Saved"), second to record(label = "Second"))
+            val baseline = operationBaseline(resources, emptyList())
+            val origin =
+                com.typewritermc.discovery.ProviderOrigin(
+                    com.typewritermc.types.DeclarationOwner(
+                        com.typewritermc.discovery.ContributionKey(
+                            com.typewritermc.imprint.ContributionSourceId("operation-test"),
+                            "main",
+                            com.typewritermc.imprint.ProducerId("test"),
+                            com.typewritermc.imprint.ContributionName("inline"),
+                        ),
+                        "fixture.InlineOperations",
+                    ),
+                    com.typewritermc.imprint.ArtifactId("fixture:operations"),
+                    "main",
+                )
+            val declaration =
+                com.typewritermc.operations.collectOperations(
+                    origin,
+                    "fixture.InlineOperations",
+                    TypeTemplate.Named(NODE),
+                    com.typewritermc.authoring.draftViewProjection(NODE_USE, com.typewritermc.authoring.ResourceDrafts::bind),
+                ) { build ->
+                    build.operation("suffix", com.typewritermc.operations.noInput()) {
+                        label("Add suffix")
+                        availability {
+                            val authoredValues =
+                                subjects.map {
+                                    read(
+                                        com.typewritermc.authoring.boundPath<String>(
+                                            location(it.id, "label"),
+                                            TypeUse.Scalar(ScalarKind.Text),
+                                        ),
+                                    )
+                                }
+                            val state = com.typewritermc.operations.authored(authoredValues)
+                            if (state != com.typewritermc.operations.OperationAvailability.Enabled) return@availability state
+                            val values = authoredValues.map { com.typewritermc.operations.requireAuthored(it) }
+                            require(values.none { it == "availability-failure" }) { "Availability provider failed" }
+                            com.typewritermc.operations.OperationAvailability.Enabled
+                        }
+                        prepare {
+                            for (subject in subjects) {
+                                val previous =
+                                    com.typewritermc.operations.requireAuthored(
+                                        read(
+                                            com.typewritermc.authoring.boundPath<String>(
+                                                location(subject.id, "label"),
+                                                TypeUse.Scalar(ScalarKind.Text),
+                                            ),
+                                        ),
+                                    )
+                                require(previous != "reject") { "The complete selection cannot be changed" }
+                                checkedSet(location(subject.id, "label"), DataValue.StringValue("$previous!"))
+                            }
+                        }
+                    }
+                }
+            val operations =
+                com.typewritermc.operations.bindOperations(
+                    listOf(declaration),
+                    baseline.catalog.checked,
+                    baseline.catalog.nativeBindings,
+                    emptyList(),
+                    emptyList(),
+                )
+            check(operations.failures.isEmpty()) { operations.failures.joinToString { it.cause.toString() } }
+            val lease =
+                object : com.typewritermc.realm.authoring.AuthoringCatalogLease by baseline.catalog {
+                    override val operations = operations
+
+                    override fun retain(): com.typewritermc.realm.authoring.AuthoringCatalogLease = this
+
+                    override fun close() = Unit
+                }
+            val store =
+                com.typewritermc.realm.authoring.InMemoryAuthoringViewStore(
+                    lease,
+                    com.typewritermc.realm.authoring
+                        .AuthoringSeed(resources),
+                )
+            try {
+                val runtime =
+                    com.typewritermc.realm.authoring
+                        .ResourceOperationRuntime(store)
+                val invocation = OperationInvocation("callback-operation", listOf(first, second))
+                val token = store.capture().use { it.root.observationId }
+                val overlay = mapOf(first to record(label = "Draft"))
+                val resolved = runtime.resolve(invocation, GENERATION, token, overlay, emptySet())
+                assertEquals(listOf("Add suffix"), resolved.operations.map { it.definition.presentation.label })
+                val partial = record().let { it.copy(fields = it.fields + ("label" to DataValue.Unfilled)) }
+                val partialResolution = runtime.resolve(invocation, GENERATION, token, mapOf(first to partial), emptySet())
+                assertIs<com.typewritermc.operations.OperationAvailability.Disabled>(partialResolution.operations.single().availability)
+                val capability =
+                    resolved.operations
+                        .single()
+                        .definition.id.capability
+                val preview =
+                    assertIs<com.typewritermc.realm.authoring.OperationPreparationResult.Preview>(
+                        runtime.prepare(invocation, GENERATION, capability, token, overlay, emptySet(), null, PreparationChoices()),
+                    )
+                assertTrue(preview.edit.intents.any { it is EditIntent.SetValue && it.value == DataValue.StringValue("Draft!") })
+                assertTrue(
+                    preview.edit.expectations.any {
+                        it is com.typewritermc.authoring.EditExpectation.Value &&
+                            it.at == location(first, "label") &&
+                            it.expected == DataValue.StringValue("Draft")
+                    },
+                )
+                val failed =
+                    runtime.prepare(
+                        invocation,
+                        GENERATION,
+                        capability,
+                        token,
+                        mapOf(second to record(label = "reject")),
+                        emptySet(),
+                        null,
+                        PreparationChoices(),
+                    )
+                assertTrue(failed is com.typewritermc.realm.authoring.OperationPreparationResult.Failed)
+                assertEquals(resources, store.capture().use { it.root.resources })
+                var resolutionFailure: com.typewritermc.realm.authoring.OperationResolutionFailure? = null
+                try {
+                    runtime.resolve(invocation, GENERATION, token, mapOf(second to record(label = "availability-failure")), emptySet())
+                } catch (
+                    failure: com.typewritermc.realm.authoring.OperationResolutionFailure,
+                ) {
+                    resolutionFailure = failure
+                }
+                assertEquals(origin, resolutionFailure?.origin)
+                assertEquals("Availability provider failed", resolutionFailure?.cause?.message)
+                val routes =
+                    com.typewritermc.realm.routes.ResourceOperationRoutes(
+                        runtime,
+                        com.typewritermc.realm.routes.EditorContracts(
+                            com.typewritermc.protocol.transport.generated
+                                .RealmRouteScope("organization", "realm"),
+                        ),
+                    )
+                val wire =
+                    skirout.editor.v1.resource_operations.ResolveResourceOperationsRequest(
+                        invocation =
+                            skirout.editor.v1.resource_operations.OperationInvocation(
+                                invocationId =
+                                    skirout.editor.v1.capability
+                                        .InvocationId(value = invocation.invocationId),
+                                catalog =
+                                    skirout.editor.v1.type_catalog
+                                        .CatalogGeneration(value = GENERATION.value),
+                                targets =
+                                    invocation.targets.map {
+                                        skirout.editor.v1.type_catalog
+                                            .ResourceId(value = it.value)
+                                    },
+                                origin =
+                                    skirout.editor.v1.resource_operations
+                                        .OperationOrigin(container = null, occurrences = emptyList()),
+                            ),
+                        context =
+                            skirout.editor.v1.resource_operations.OperationWorkingContext(
+                                confirmedObservation =
+                                    skirout.editor.v1.authoring
+                                        .AuthoringObservationId(value = token),
+                                overlay =
+                                    skirout.editor.v1.resource_operations.OperationWorkingOverlay(
+                                        upserts =
+                                            listOf(
+                                                skirout.editor.v1.resource_operations.OperationResourceUpsert(
+                                                    resource =
+                                                        skirout.editor.v1.type_catalog
+                                                            .ResourceId(value = second.value),
+                                                    content =
+                                                        com.typewritermc.types.skir.SkirAuthoringValueCodec
+                                                            .encode(
+                                                                record(label = "availability-failure"),
+                                                            ).getOrThrow(),
+                                                ),
+                                            ),
+                                        removals = emptyList(),
+                                    ),
+                            ),
+                    )
+                val wireFailure =
+                    assertIs<skirout.editor.v1.resource_operations.ResolveResourceOperationsResult.FailedWrapper>(routes.resolve(wire))
+                assertTrue(
+                    wireFailure.value.diagnostics
+                        .single()
+                        .message
+                        .contains("fixture.InlineOperations"),
+                )
+            } finally {
+                store.close()
+                baseline.catalog.close()
+            }
+        }
+
+    fun adjacentDeletesValidateRestrictionAgainstTheWholeSet() {
+        val first = ResourceId("restricted_first")
+        val second = ResourceId("restricted_second")
+        val third = ResourceId("unrelated_write")
+        val resources =
+            mapOf(
+                first to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, second, fieldPath("second"))),
+                second to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, first, fieldPath("first"))),
+                third to record(),
+            )
+        val contract =
+            pairContract().let {
+                it.copy(
+                    first = it.first.copy(onDelete = RelationDeletePolicy.RESTRICT),
+                    second = it.second.copy(onDelete = RelationDeletePolicy.RESTRICT),
+                )
+            }
+        val planner = planner(contract)
+        val complete =
+            assertIs<MutationPlanningResult.Accepted>(
+                planner.plan(resources, edit(EditIntent.DeleteResource(first), EditIntent.DeleteResource(second))),
+            ).plan
+        assertEquals(setOf(first, second), complete.removedResources)
+        val separated =
+            planner.plan(
+                resources,
+                edit(
+                    EditIntent.DeleteResource(first),
+                    EditIntent.SetValue(location(third, "label"), DataValue.StringValue("ordered boundary")),
+                    EditIntent.DeleteResource(second),
+                ),
+            )
+        assertTrue(separated is MutationPlanningResult.Rejected)
+    }
+
+    fun deletionSelectionIncludesCascadeAndExplicitDescendantOnce() =
+        runBlocking {
+            val parent = ResourceId("delete_parent")
+            val child = ResourceId("delete_child")
+            val item = ItemId("child")
+            val resources =
+                mapOf(
+                    parent to record(children = listOf(ListItem(item, link(PARENT_FIRST_TYPE, PARENT_FIRST, child, fieldPath("parent"))))),
+                    child to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, parent, fieldPath("children").item(item))),
+                )
+            val baseline = operationBaseline(resources, listOf(parentContract(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR)))
+            try {
+                val edit = SnapshotEditContext(baseline, "delete-overlap")
+                val session =
+                    RuntimeOperationPreparation(
+                        OperationInvocation("delete-overlap", listOf(parent, child)),
+                        PreparationChoices(),
+                        edit,
+                        baseline,
+                    )
+                session.deleteSelection(listOf(parent, child))
+                val result = edit.finish()
+                assertTrue(edit.session.resources.isEmpty())
+                assertEquals(2, result.intents.filterIsInstance<EditIntent.DeleteResource>().size)
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun moveTransfersTheWholeSelectionThroughExactOwnershipInverses() =
+        runBlocking {
+            val from = ResourceId("move_from")
+            val to = ResourceId("move_to")
+            val first = ResourceId("move_first")
+            val second = ResourceId("move_second")
+            val firstItem = ItemId("first")
+            val secondItem = ItemId("second")
+            val resources =
+                mapOf(
+                    from to
+                        record(
+                            children =
+                                listOf(
+                                    ListItem(firstItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, first, fieldPath("parent"))),
+                                    ListItem(secondItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, second, fieldPath("parent"))),
+                                ),
+                        ),
+                    to to record(),
+                    first to
+                        record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, from, fieldPath("children").item(firstItem)),
+                            label = "first",
+                        ),
+                    second to
+                        record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, from, fieldPath("children").item(secondItem)),
+                            label = "second",
+                        ),
+                )
+            val baseline =
+                operationBaseline(
+                    resources,
+                    listOf(
+                        parentContract(
+                            RelationDeletePolicy.CASCADE,
+                            RelationDeletePolicy.CLEAR,
+                        ).copy(families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))),
+                    ),
+                )
+            try {
+                val edit = SnapshotEditContext(baseline, "move-selection")
+                val origin = OperationOrigin(from, baseline.links.values.filter { it.source == from })
+                val session =
+                    RuntimeOperationPreparation(
+                        OperationInvocation("move-selection", listOf(first, second), origin),
+                        PreparationChoices(),
+                        edit,
+                        baseline,
+                    )
+                val subjects = listOf(first, second).map(OperationLayoutPreparation(edit, baseline)::draft)
+                with(session) { relations.requireMove(subjects, to, origin, choices).apply() }
+                val prepared = edit.finish()
+                assertTrue(
+                    prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all {
+                        it.intent.counterpart is CounterpartChoice.Existing
+                    },
+                )
+                val final = ResourceValueMapper.discover(edit.session.resources)
+                assertEquals(setOf(first, second), final.filter { it.source == to }.map { it.target.resource }.toSet())
+                assertTrue(final.none { it.source == from })
+                assertEquals(
+                    "first",
+                    (
+                        edit.session.resources
+                            .getValue(first)
+                            .fields
+                            .getValue("label") as DataValue.StringValue
+                    ).value,
+                )
+                assertEquals(resources, baseline.resources)
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun impossibleBatchMoveRejectsBeforeChangingAnyResource() =
+        runBlocking {
+            val ownerA = ResourceId("owner_a")
+            val ownerB = ResourceId("owner_b")
+            val destination = ResourceId("single_owner")
+            val childA = ResourceId("child_a")
+            val childB = ResourceId("child_b")
+            val resources =
+                mapOf(
+                    ownerA to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, childA, fieldPath("second"))),
+                    ownerB to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, childB, fieldPath("second"))),
+                    destination to record(),
+                    childA to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, ownerA, fieldPath("first"))),
+                    childB to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, ownerB, fieldPath("first"))),
+                )
+            val baseline = operationBaseline(resources, listOf(pairContract(setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)))))
+            try {
+                val edit = SnapshotEditContext(baseline, "impossible-move")
+                val session =
+                    RuntimeOperationPreparation(
+                        OperationInvocation("impossible-move", listOf(childA, childB)),
+                        PreparationChoices(),
+                        edit,
+                        baseline,
+                    )
+                val subjects = listOf(childA, childB).map(OperationLayoutPreparation(edit, baseline)::draft)
+                var rejected = false
+                try {
+                    with(session) { relations.requireMove(subjects, destination, invocation.origin, choices).apply() }
+                } catch (
+                    _: IllegalArgumentException,
+                ) {
+                    rejected =
+                        true
+                }
+                assertTrue(rejected)
+                assertTrue(edit.session.intents.isEmpty())
+                assertEquals(resources, edit.session.resources)
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants() =
+        runBlocking {
+            val book = ResourceId("clone_book")
+            val page = ResourceId("clone_page")
+            val element = ResourceId("clone_element")
+            val outside = ResourceId("clone_shared")
+            val pageItem = ItemId("page")
+            val elementItem = ItemId("element")
+            val resources =
+                mapOf(
+                    book to
+                        record(
+                            children = listOf(ListItem(pageItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, page, fieldPath("parent")))),
+                            manyFirst =
+                                listOf(
+                                    ListItem(
+                                        pageItem,
+                                        link(MANY_FIRST_TYPE, MANY_FIRST, outside, fieldPath("manySecond").item(ItemId("outside"))),
+                                    ),
+                                ),
+                        ),
+                    page to
+                        record(
+                            parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, book, fieldPath("children").item(pageItem)),
+                            children = listOf(ListItem(elementItem, link(PARENT_FIRST_TYPE, PARENT_FIRST, element, fieldPath("parent")))),
+                        ),
+                    element to record(parent = link(PARENT_SECOND_TYPE, PARENT_SECOND, page, fieldPath("children").item(elementItem))),
+                    outside to
+                        record(
+                            manySecond =
+                                listOf(
+                                    ListItem(
+                                        ItemId("outside"),
+                                        link(MANY_SECOND_TYPE, MANY_SECOND, book, fieldPath("manyFirst").item(pageItem)),
+                                    ),
+                                ),
+                        ),
+                )
+            val baseline =
+                operationBaseline(
+                    resources,
+                    listOf(
+                        parentContract(
+                            RelationDeletePolicy.CASCADE,
+                            RelationDeletePolicy.CLEAR,
+                        ).copy(families = setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID))),
+                        manyContract(),
+                    ),
+                )
+            try {
+                val edit = SnapshotEditContext(baseline, "clone-closure")
+                val session =
+                    RuntimeOperationPreparation(
+                        OperationInvocation("clone-closure", listOf(book, page)),
+                        PreparationChoices(),
+                        edit,
+                        baseline,
+                    )
+                val result = with(session) { cloner.duplicateOwned(listOf(book, page)) }
+                val final = edit.finish()
+                assertEquals(2, result.selectedCopies.size)
+                assertEquals(3, final.intents.filterIsInstance<EditIntent.CreateResource>().size)
+                assertEquals(7, edit.session.resources.size)
+                val copy = edit.session.resources.getValue(result.selectedCopies[0])
+                val copiedChildItem =
+                    (
+                        (
+                            copy.fields.getValue(
+                                "children",
+                            ) as DataValue.Named
+                        ).payload as DataValue.ListValue
+                    ).items.single().id
+                val copiedOrdinaryItem =
+                    (
+                        (
+                            copy.fields.getValue(
+                                "manyFirst",
+                            ) as DataValue.Named
+                        ).payload as DataValue.ListValue
+                    ).items.single().id
+                assertTrue(copiedChildItem != copiedOrdinaryItem)
+                assertEquals(resources, baseline.resources)
+                val copied =
+                    ResourceValueMapper.project(
+                        ResourceValueMapper.discover(edit.session.resources),
+                        edit.session.resources,
+                        baseline.catalog.relations,
+                        baseline.catalog.checked,
+                    )
+                assertTrue(copied.problems.isEmpty())
+                assertTrue(copied.projections.any { it.first == result.selectedCopies[0] && it.second == result.selectedCopies[1] })
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun clonePreservesOutsideOutgoingAndLeavesIncomingOnOriginal() =
+        runBlocking {
+            val source = ResourceId("copy_source")
+            val outside = ResourceId("copy_outside")
+            val incoming = ResourceId("copy_incoming")
+            val outgoingItem = ItemId("outgoing")
+            val outsideItem = ItemId("outside_inverse")
+            val incomingItem = ItemId("incoming")
+            val sourceInverse = ItemId("source_inverse")
+            val resources =
+                mapOf(
+                    source to
+                        record(
+                            manyFirst =
+                                listOf(
+                                    ListItem(
+                                        outgoingItem,
+                                        link(MANY_FIRST_TYPE, MANY_FIRST, outside, fieldPath("manySecond").item(outsideItem)),
+                                    ),
+                                ),
+                            manySecond =
+                                listOf(
+                                    ListItem(
+                                        sourceInverse,
+                                        link(MANY_SECOND_TYPE, MANY_SECOND, incoming, fieldPath("manyFirst").item(incomingItem)),
+                                    ),
+                                ),
+                        ),
+                    outside to
+                        record(
+                            manySecond =
+                                listOf(
+                                    ListItem(
+                                        outsideItem,
+                                        link(MANY_SECOND_TYPE, MANY_SECOND, source, fieldPath("manyFirst").item(outgoingItem)),
+                                    ),
+                                ),
+                        ),
+                    incoming to
+                        record(
+                            manyFirst =
+                                listOf(
+                                    ListItem(
+                                        incomingItem,
+                                        link(MANY_FIRST_TYPE, MANY_FIRST, source, fieldPath("manySecond").item(sourceInverse)),
+                                    ),
+                                ),
+                        ),
+                )
+            val baseline = operationBaseline(resources, listOf(manyContract()))
+            try {
+                val edit = SnapshotEditContext(baseline, "clone-outside")
+                val session =
+                    RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit, baseline)
+                val copy = with(session) { cloner.duplicateOwned(listOf(source)).selectedCopies.single() }
+                edit.finish()
+                val links = ResourceValueMapper.discover(edit.session.resources)
+                assertTrue(links.any { it.source == copy && it.target.resource == outside })
+                assertTrue(links.none { it.source == incoming && it.target.resource == copy })
+                assertEquals(resources.getValue(incoming), edit.session.resources.getValue(incoming))
+                assertTrue(links.none { it.source == copy && it.target.resource == incoming })
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun cloneRejectsOccupiedExternalScalarWithoutChangingSavedState() =
+        runBlocking {
+            val source = ResourceId("scalar_copy_source")
+            val outside = ResourceId("scalar_copy_outside")
+            val resources =
+                mapOf(
+                    source to record(first = link(PAIR_FIRST_TYPE, PAIR_FIRST, outside, fieldPath("second"))),
+                    outside to record(second = link(PAIR_SECOND_TYPE, PAIR_SECOND, source, fieldPath("first"))),
+                )
+            val baseline = operationBaseline(resources, listOf(pairContract()))
+            try {
+                val edit = SnapshotEditContext(baseline, "clone-scalar")
+                val session =
+                    RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit, baseline)
+                var rejected = false
+                try {
+                    with(session) { cloner.duplicateOwned(listOf(source)) }
+                } catch (_: IllegalArgumentException) {
+                    rejected = true
+                }
+                assertTrue(rejected)
+                assertEquals(resources, baseline.resources)
+            } finally {
+                baseline.catalog.close()
+            }
+        }
+
+    fun repeatedEmbeddedCounterpartsRetainDistinctExplicitIdentities() {
+        val source = ResourceId("embedded_source")
+        val target = ResourceId("embedded_target")
+        val definitions =
+            DEFINITIONS.map { definition ->
+                if (definition.id ==
+                    CHILDREN_USE.definition
+                ) {
+                    definition.copy(
+                        representation =
+                            RepresentationTemplate.Sequence(
+                                item = TypeTemplate.Named(WRAPPER_USE.definition),
+                                kind = CollectionKind.List,
+                            ),
+                    )
+                } else {
+                    definition
+                }
+            }
+        val catalog =
+            com.typewritermc.realm.checking.TestCatalogLease(
+                generation = GENERATION,
+                definitions = definitions,
+                resourceRoot = NODE,
+                relations =
+                    listOf(
+                        nestedContract().let {
+                            it.copy(second = it.second.copy(cardinality = EndpointCardinality.Many))
+                        },
+                    ),
+                endpointBindings = BINDINGS,
+            )
+        val resources = mapOf(source to record(), target to record())
+        val baseline =
+            com.typewritermc.realm.authoring.AuthoringView(
+                catalog,
+                resources,
+                resources.mapValues {
+                    com.typewritermc.authoring.ResourceDefinitionId("test")
+                },
+                emptyMap(),
+            )
+        try {
+            val session = AuthoringPlanningSession(baseline, "embedded-normalization")
+            val occurrence = occurrence(NESTED_SECOND, location(source, "nestedSecond"), target, null)
+            val choice =
+                CounterpartChoice.New(
+                    location(target, "children"),
+                    PreparedValue(
+                        PreparedContent.Record(
+                            AuthoringRecord(
+                                TypeSelection.Complete(WRAPPER_USE),
+                                mapOf("inner" to DataValue.Unfilled),
+                            ),
+                        ),
+                        emptyList(),
+                    ),
+                )
+            session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
+            session.append(EditIntent.DisconnectRelation(occurrence.id))
+            session.append(EditIntent.ConnectRelation(ConnectIntent(occurrence, target, choice)))
+            val (prepared, _) = session.finish()
+            val inserts = prepared.intents.filterIsInstance<EditIntent.Insert>()
+            assertEquals(2, inserts.size)
+            assertTrue(inserts[0].item.id != inserts[1].item.id)
+            assertTrue(
+                prepared.intents.filterIsInstance<EditIntent.ConnectRelation>().all { it.intent.counterpart is CounterpartChoice.Existing },
+            )
+        } finally {
+            catalog.close()
+        }
+    }
+
+    fun normalizedInverseIdentitySurvivesLaterWritesAndComposition() {
+        val parent = ResourceId("normalized_parent")
+        val child = ResourceId("normalized_child")
+        val resources = mapOf(parent to record(), child to record())
+        val catalog =
+            com.typewritermc.realm.checking.TestCatalogLease(
+                generation = GENERATION,
+                definitions = DEFINITIONS,
+                resourceRoot = NODE,
+                relations = listOf(parentContract(RelationDeletePolicy.CLEAR, RelationDeletePolicy.CLEAR)),
+                endpointBindings = BINDINGS,
+            )
+        val baseline =
+            com.typewritermc.realm.authoring.AuthoringView(
+                catalog,
+                resources,
+                resources.mapValues { com.typewritermc.authoring.ResourceDefinitionId("test") },
+                emptyMap(),
+            )
+        try {
+            val session = AuthoringPlanningSession(baseline, "normalization-test")
+            session.append(
+                EditIntent.ConnectRelation(ConnectIntent(occurrence(PARENT_SECOND, location(child, "parent"), parent, null), parent, null)),
+            )
+            val inverse = ResourceValueMapper.discover(session.resources).single { it.source == parent }
+            assertTrue((session.intents.single() as EditIntent.ConnectRelation).intent.counterpart is CounterpartChoice.Existing)
+            session.append(EditIntent.SetValue(location(child, "label"), DataValue.StringValue("later write")))
+            val (prepared, plan) = session.finish()
+            assertEquals(session.resources, resources + plan.resources - plan.removedResources)
+            val composed =
+                prepared.copy(
+                    intents =
+                        listOf(EditIntent.SetValue(location(parent, "label"), DataValue.StringValue("earlier draft"))) + prepared.intents,
+                )
+            val final = assertIs<MutationPlanningResult.Accepted>(session.planner.plan(resources, composed)).plan
+            assertTrue(ResourceValueMapper.discover(resources + final.resources).any { it.id == inverse.id })
+        } finally {
+            catalog.close()
+        }
+    }
+
     fun counterpartClassificationPreservesBroaderServerCapabilities() {
         val resource = ResourceId("counterpart")
         assertEquals(
@@ -1360,6 +2214,31 @@ class AuthoringMutationPlannerTest {
 
 private fun planner(contract: RelationContract) = AuthoringMutationPlanner(CATALOG, listOf(contract), BINDINGS)
 
+private fun operationBaseline(
+    resources: Map<ResourceId, AuthoringRecord>,
+    contracts: List<RelationContract>,
+): AuthoringView {
+    val catalog =
+        com.typewritermc.realm.checking.TestCatalogLease(
+            generation = GENERATION,
+            definitions =
+                DEFINITIONS + com.typewritermc.types.StandardTypes.definitions + com.typewritermc.types.ResourceIdDefinition.definition,
+            resourceRoot = NODE,
+            relations = contracts,
+            endpointBindings = BINDINGS,
+        )
+    return AuthoringView(
+        catalog,
+        resources,
+        resources.mapValues {
+            com.typewritermc.authoring.ResourceDefinitionId("test")
+        },
+        ResourceValueMapper.discover(resources).associateBy { it.id },
+    )
+}
+
+private fun ValuePath.item(id: ItemId) = ValuePath(segments + PathSegment.Item(id))
+
 private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
     RelationContract(
         RelationId("pair"),
@@ -1643,6 +2522,42 @@ private val NESTED_BINDINGS =
     )
 
 val AuthoringMutationPlannerTestSuite by testSuite {
+    test("placementPoliciesMatchExactOwnershipCollections") {
+        AuthoringMutationPlannerTest().placementPoliciesMatchExactOwnershipCollections()
+    }
+    test("inverseOnlyReferencesDoNotOfferLinkedDuplication") {
+        AuthoringMutationPlannerTest().inverseOnlyReferencesDoNotOfferLinkedDuplication()
+    }
+    test("runtimeResolvesInlineCallbacksAndPreparesAgainstWorkingValues") {
+        AuthoringMutationPlannerTest().runtimeResolvesInlineCallbacksAndPreparesAgainstWorkingValues()
+    }
+    test("adjacentDeletesValidateRestrictionAgainstTheWholeSet") {
+        AuthoringMutationPlannerTest().adjacentDeletesValidateRestrictionAgainstTheWholeSet()
+    }
+    test("deletionSelectionIncludesCascadeAndExplicitDescendantOnce") {
+        AuthoringMutationPlannerTest().deletionSelectionIncludesCascadeAndExplicitDescendantOnce()
+    }
+    test("moveTransfersTheWholeSelectionThroughExactOwnershipInverses") {
+        AuthoringMutationPlannerTest().moveTransfersTheWholeSelectionThroughExactOwnershipInverses()
+    }
+    test("impossibleBatchMoveRejectsBeforeChangingAnyResource") {
+        AuthoringMutationPlannerTest().impossibleBatchMoveRejectsBeforeChangingAnyResource()
+    }
+    test("cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants") {
+        AuthoringMutationPlannerTest().cloneCopiesOwnedClosureAndDeduplicatesSelectedDescendants()
+    }
+    test("clonePreservesOutsideOutgoingAndLeavesIncomingOnOriginal") {
+        AuthoringMutationPlannerTest().clonePreservesOutsideOutgoingAndLeavesIncomingOnOriginal()
+    }
+    test("cloneRejectsOccupiedExternalScalarWithoutChangingSavedState") {
+        AuthoringMutationPlannerTest().cloneRejectsOccupiedExternalScalarWithoutChangingSavedState()
+    }
+    test("repeatedEmbeddedCounterpartsRetainDistinctExplicitIdentities") {
+        AuthoringMutationPlannerTest().repeatedEmbeddedCounterpartsRetainDistinctExplicitIdentities()
+    }
+    test("normalizedInverseIdentitySurvivesLaterWritesAndComposition") {
+        AuthoringMutationPlannerTest().normalizedInverseIdentitySurvivesLaterWritesAndComposition()
+    }
     test("counterpartClassificationPreservesBroaderServerCapabilities") {
         AuthoringMutationPlannerTest().counterpartClassificationPreservesBroaderServerCapabilities()
     }

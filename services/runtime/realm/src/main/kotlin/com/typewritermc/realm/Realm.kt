@@ -144,7 +144,7 @@ internal class Realm(
                     publisher = publisher,
                     editorCatalog = SnapshotRealmEditorCatalogSource(catalogs),
                     preparation = preparation,
-                    presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs),
+                    presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs, snapshotStore),
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
                     checkEvents = checkEvents,
                 )

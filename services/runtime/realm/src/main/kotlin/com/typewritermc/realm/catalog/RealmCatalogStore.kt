@@ -120,6 +120,7 @@ class RealmCatalogStore : AutoCloseable {
         override val endpointBindings: List<EndpointBindingTemplate> get() = assembly.snapshot.endpointBindings
         override val resources: List<AuthoringResourceDefinition> get() = assembly.snapshot.resourceDefinitions
         override val configuration: List<ConfigurationRecipe> get() = assembly.snapshot.configuration
+        override val operations: com.typewritermc.operations.OperationCatalog get() = assembly.operations
         override val editorSnapshot: EditorCatalogSnapshot get() = assembly.snapshot
         override val capabilities: List<RealmCapabilityProvider>
             get() =

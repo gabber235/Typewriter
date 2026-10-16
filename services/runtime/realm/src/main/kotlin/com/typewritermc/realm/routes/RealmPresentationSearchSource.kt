@@ -6,8 +6,16 @@ import com.typewritermc.capability.RealmCapabilityRegistry
 import com.typewritermc.capability.RealmCapabilityRuntime
 import com.typewritermc.capability.RealmSearchContext
 import com.typewritermc.capability.RealmSearchUpdate
+import com.typewritermc.capability.ResourceOperationSearchContext
+import com.typewritermc.operations.OperationSearch
+import com.typewritermc.realm.authoring.AuthoredReadView
+import com.typewritermc.realm.authoring.AuthoringLease
+import com.typewritermc.realm.authoring.AuthoringViewStore
+import com.typewritermc.realm.authoring.StaleOperationObservation
+import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.realm.catalog.RealmCatalogLease
 import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirConversionResult
@@ -50,6 +58,8 @@ class UnavailableRealmPresentationSearchSource : RealmPresentationSearchSource {
 class CapabilityRealmPresentationSearchSource(
     private val scope: CoroutineScope,
     private val catalogs: RealmCatalogStore,
+    private val snapshots: AuthoringViewStore? = null,
+    private val operationSearch: RealmPresentationSearchSource? = snapshots?.let { OperationRealmPresentationSearchSource(scope, it) },
 ) : RealmPresentationSearchSource {
     private val subscriptions = ConcurrentHashMap<String, Job>()
 
@@ -57,6 +67,11 @@ class CapabilityRealmPresentationSearchSource(
         request: RealmPresentationSearchRequest,
         updates: RealmPresentationSearchUpdatePublisher,
     ): RealmPresentationSearchUpdate {
+        cancel(request.subscriptionId)
+        if (OperationSearch.descriptors.any { it.id.value == request.capabilityId.value }) {
+            return operationSearch?.watch(request, updates)
+                ?: unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Operation search is unavailable")
+        }
         val catalog =
             runCatching { catalogs.captureCurrent() }.getOrNull()
                 ?: return unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Realm catalog is unavailable")
@@ -64,8 +79,20 @@ class CapabilityRealmPresentationSearchSource(
             catalog.close()
             return failure
         }
+        val operation =
+            try {
+                captureOperation(request)
+            } catch (stale: StaleOperationObservation) {
+                catalog.close()
+                return staleSearch(request.subscriptionId, stale.actual)
+            } catch (failure: Exception) {
+                catalog.close()
+                return unavailableRealmPresentationSearchUpdate(
+                    request.subscriptionId,
+                    failure.message ?: "Operation search context is invalid",
+                )
+            }
 
-        subscriptions.remove(request.subscriptionId)?.cancel()
         val job =
             scope.launch(start = CoroutineStart.LAZY) {
                 val values = mutableListOf<skirout.editor.v1.type_catalog.DataValue>()
@@ -75,12 +102,13 @@ class CapabilityRealmPresentationSearchSource(
                     val payload = SkirDataValueCodec.decode(request.payload).getOrThrow()
                     provider
                         .invoke(
-                            SearchContext(request.subscriptionId),
+                            SearchContext(request.subscriptionId, operation?.context),
                             RealmCapabilityRuntime(catalog.checked, catalog.nativeBindings),
                             payload,
                             request.query.toDomain(),
                         ).updates
                         .collect { update ->
+                            operation?.requireCurrent()
                             when (update) {
                                 is RealmSearchUpdate.Partial -> {
                                     values += update.values.map { value -> SkirDataValueCodec.encode(value).getOrThrow() }
@@ -105,6 +133,8 @@ class CapabilityRealmPresentationSearchSource(
                                 }
                             }
                         }
+                } catch (stale: StaleOperationObservation) {
+                    updates.publish(staleSearch(request.subscriptionId, stale.actual))
                 } catch (failure: CancellationException) {
                     throw failure
                 } catch (failure: Throwable) {
@@ -116,19 +146,55 @@ class CapabilityRealmPresentationSearchSource(
                     )
                 } finally {
                     catalog.close()
+                    operation?.lease?.close()
                     subscriptions.remove(request.subscriptionId, coroutineContext[Job])
                 }
             }
         subscriptions[request.subscriptionId] = job
+        job.invokeOnCompletion {
+            catalog.close()
+            operation?.lease?.close()
+        }
         job.start()
         return searchSnapshot(request.subscriptionId, RealmPresentationSearchStatus.LOADING, emptyList())
     }
 
-    override fun cancel(subscriptionId: String): Boolean =
-        subscriptions.remove(subscriptionId)?.let { job ->
-            job.cancel()
-            true
-        } ?: false
+    override fun cancel(subscriptionId: String): Boolean {
+        val ordinary =
+            subscriptions.remove(subscriptionId)?.let { job ->
+                job.cancel()
+                true
+            } ?: false
+        val operation = operationSearch?.cancel(subscriptionId) ?: false
+        return ordinary || operation
+    }
+
+    private fun captureOperation(request: RealmPresentationSearchRequest): CapturedOperationSearch? {
+        val context = request.operationContext ?: return null
+        val store = requireNotNull(snapshots) { "Operation search observations are unavailable." }
+        val lease = store.capture()
+        try {
+            require(
+                context.inputRevision >= 0 && request.generation == context.invocation.catalog &&
+                    request.generation.value == lease.root.catalog.generation.value,
+            )
+            val invocation = context.invocation.decodeInvocation()
+            val captured = context.context.decodeWorkingContext()
+            val baseline = lease.operationObservation(captured.confirmed, captured.upserts, captured.removals)
+            require(invocation.targets.all { it in baseline.resources }) { "The operation search selection changed." }
+            require(invocation.origin.occurrences.all { baseline.links[it.id] == it }) { "The operation search origin changed." }
+            return CapturedOperationSearch(
+                lease,
+                invocation,
+                CapturedAuthoringReads(AuthoredReadView.Original(baseline)),
+                captured.confirmed,
+                store,
+            )
+        } catch (failure: Throwable) {
+            lease.close()
+            throw failure
+        }
+    }
 
     private fun validate(
         request: RealmPresentationSearchRequest,
@@ -162,7 +228,25 @@ class CapabilityRealmPresentationSearchSource(
 
 private data class SearchContext(
     override val invocationId: String,
+    override val operationContext: ResourceOperationSearchContext? = null,
 ) : RealmSearchContext
+
+private data class CapturedOperationSearch(
+    val lease: AuthoringLease,
+    val invocation: com.typewritermc.operations.OperationInvocation,
+    val reads: CapturedAuthoringReads,
+    val observation: String,
+    val snapshots: AuthoringViewStore,
+) {
+    val context get() = ResourceOperationSearchContext(invocation, reads)
+
+    fun requireCurrent() {
+        val health = reads.health()
+        check(health.failures.isEmpty() && health.incomplete.isEmpty()) { "Operation search reads did not produce complete evidence" }
+        val actual = snapshots.read { it.observationId }
+        if (actual != observation) throw StaleOperationObservation(actual)
+    }
+}
 
 private fun searchSnapshot(
     subscriptionId: String,

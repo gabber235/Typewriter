@@ -53,6 +53,7 @@ private fun RealmPresentationSearchUpdate.forSubscription(subscriptionId: String
         when (this) {
             is RealmPresentationSearchUpdate.SnapshotWrapper -> value.subscriptionId
             is RealmPresentationSearchUpdate.UnavailableWrapper -> value.subscriptionId
+            is RealmPresentationSearchUpdate.StaleObservationWrapper -> value.subscriptionId
             else -> null
         }
     if (actualSubscriptionId == subscriptionId) return this

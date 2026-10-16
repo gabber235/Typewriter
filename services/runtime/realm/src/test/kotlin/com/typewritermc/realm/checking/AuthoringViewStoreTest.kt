@@ -29,6 +29,7 @@ import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
+import com.typewritermc.realm.authoring.operationObservation
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -60,6 +61,44 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 val AuthoringViewStoreTest by testSuite {
+    test("operation overlays require the exact saved observation and preserve saved state") {
+        val id = ResourceId("operation-page")
+        val store = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(mapOf(id to record(name = "Saved"))))
+        try {
+            val token =
+                store.capture().use { saved ->
+                    val working = saved.operationObservation(saved.root.observationId, mapOf(id to record(name = "Draft")), emptySet())
+                    assertEquals(
+                        "Draft",
+                        (
+                            working.resources
+                                .getValue(id)
+                                .fields
+                                .getValue("name") as DataValue.StringValue
+                        ).value,
+                    )
+                    assertEquals(
+                        "Saved",
+                        (
+                            saved.root.resources
+                                .getValue(id)
+                                .fields
+                                .getValue("name") as DataValue.StringValue
+                        ).value,
+                    )
+                    saved.root.observationId
+                }
+            store.install(store.prepare(AuthoringViewDelta(mapOf(id to record(name = "Other panel")))))
+            store.capture().use { next ->
+                assertTrue(next.root.observationId != token)
+                assertFailsWith<com.typewritermc.realm.authoring.StaleOperationObservation> {
+                    next.operationObservation(token, mapOf(id to record(name = "Draft")), emptySet())
+                }
+            }
+        } finally {
+            store.close()
+        }
+    }
     test("retained views preserve original values while new reads see installed state") {
         val catalog = TestCatalogLease()
         val id = ResourceId("page")

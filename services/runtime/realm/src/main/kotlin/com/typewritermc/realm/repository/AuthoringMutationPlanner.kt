@@ -67,58 +67,7 @@ internal class AuthoringMutationPlanner(
     ): MutationPlanningResult {
         val resources = latestResources.toMutableMap()
         val removed = linkedSetOf<ResourceId>()
-        val problems = mutableListOf<ValueProblem>()
-
-        edit.intents.forEachIndexed { index, intent ->
-            if (problems.isNotEmpty()) return@forEachIndexed
-            when (intent) {
-                is EditIntent.CreateResource -> {
-                    create(resources, removed, intent, problems)
-                }
-
-                is EditIntent.DeleteResource -> {
-                    delete(resources, removed, intent.id, problems)
-                }
-
-                is EditIntent.SetValue -> {
-                    val before = ResourceValueMapper.discover(resources)
-                    update(resources, intent.at, intent.value, problems)
-                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
-                }
-
-                is EditIntent.Insert -> {
-                    val before = ResourceValueMapper.discover(resources)
-                    insert(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
-                }
-
-                is EditIntent.Remove -> {
-                    val before = ResourceValueMapper.discover(resources)
-                    remove(resources, intent, problems)
-                    synchronizeValueMutation(before, resources, canonicalPreparedIntentDigest(edit), index, problems)
-                }
-
-                is EditIntent.Move -> {
-                    move(resources, intent, problems)
-                }
-
-                is EditIntent.ConnectRelation -> {
-                    connect(resources, intent, canonicalPreparedIntentDigest(edit), index, problems)
-                }
-
-                is EditIntent.DisconnectRelation -> {
-                    disconnect(resources, intent.occurrence, problems)
-                }
-
-                is EditIntent.Retag -> {
-                    retag(resources, intent, problems)
-                }
-
-                is EditIntent.ConfigureResource -> {
-                    configureResource(resources, intent, problems)
-                }
-            }
-        }
+        val problems = replayStaged(resources, removed, edit).toMutableList()
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
         val affected =
@@ -126,21 +75,9 @@ internal class AuthoringMutationPlanner(
                 addAll(removed)
                 resources.forEach { (id, record) -> if (latestResources[id] != record) add(id) }
             }
-        resources.filterKeys { it in affected }.forEach { (id, record) ->
-            when (val structural = record.validateStructure(catalog)) {
-                StructuralResult.Valid -> Unit
-                is StructuralResult.Invalid -> problems += structural.problems.map { it.on(id) }
-            }
-        }
         val proposedLinks = ResourceValueMapper.discover(resources)
         val projection = ResourceValueMapper.project(proposedLinks, resources, contracts, catalog)
-        val affectedLocations =
-            proposedLinks
-                .filter { it.source in affected || it.target.resource in affected }
-                .mapTo(hashSetOf()) { it.id.location }
-        problems += projection.problems.filter { it.location in affectedLocations }
-        validateOwnership(projection.projections, contracts, affected, problems)
-        validateCardinality(projection.projections, contracts, affected, problems)
+        problems += validateSnapshot(resources, affected, projection)
         if (problems.isNotEmpty()) return MutationPlanningResult.Rejected(problems)
 
         val beforeLinks =
@@ -164,6 +101,101 @@ internal class AuthoringMutationPlanner(
         )
     }
 
+    /** Applies ordered mutations to a request owned graph without rebuilding global projections. */
+    fun replayStaged(
+        resources: MutableMap<ResourceId, AuthoringRecord>,
+        removed: MutableSet<ResourceId>,
+        edit: PreparedEdit,
+    ): List<ValueProblem> {
+        val problems = mutableListOf<ValueProblem>()
+        var deletionRunEnd = 0
+        val batchIdentity by lazy(LazyThreadSafetyMode.NONE) { canonicalPreparedIntentDigest(edit) }
+
+        edit.intents.forEachIndexed { index, intent ->
+            if (problems.isNotEmpty()) return@forEachIndexed
+            if (index < deletionRunEnd) return@forEachIndexed
+            when (intent) {
+                is EditIntent.CreateResource -> {
+                    create(resources, removed, intent, problems)
+                }
+
+                is EditIntent.DeleteResource -> {
+                    val requested = linkedSetOf<ResourceId>()
+                    deletionRunEnd = index
+                    while (deletionRunEnd < edit.intents.size) {
+                        val deleting = edit.intents[deletionRunEnd] as? EditIntent.DeleteResource ?: break
+                        requested += deleting.id
+                        deletionRunEnd++
+                    }
+                    delete(resources, removed, requested, problems)
+                }
+
+                is EditIntent.SetValue -> {
+                    val before = resourceLinks(resources, intent.at.resource)
+                    update(resources, intent.at, intent.value, problems)
+                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                }
+
+                is EditIntent.Insert -> {
+                    val before = resourceLinks(resources, intent.at.resource)
+                    insert(resources, intent, problems)
+                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                }
+
+                is EditIntent.Remove -> {
+                    val before = resourceLinks(resources, intent.at.resource)
+                    remove(resources, intent, problems)
+                    synchronizeValueMutation(before, resources, intent.at.resource, batchIdentity, index, problems)
+                }
+
+                is EditIntent.Move -> {
+                    move(resources, intent, problems)
+                }
+
+                is EditIntent.ConnectRelation -> {
+                    connect(resources, intent, batchIdentity, index, problems)
+                }
+
+                is EditIntent.DisconnectRelation -> {
+                    disconnect(resources, intent.occurrence, problems)
+                }
+
+                is EditIntent.Retag -> {
+                    retag(resources, intent, problems)
+                }
+
+                is EditIntent.ConfigureResource -> {
+                    configureResource(resources, intent, problems)
+                }
+            }
+        }
+        return problems
+    }
+
+    /** Validates the same affected graph boundary for replay and caller supplied working overlays. */
+    fun validateSnapshot(
+        resources: Map<ResourceId, AuthoringRecord>,
+        affected: Set<ResourceId>,
+        projection: ProjectionResult = ResourceValueMapper.project(ResourceValueMapper.discover(resources), resources, contracts, catalog),
+    ): List<ValueProblem> {
+        val problems = mutableListOf<ValueProblem>()
+        resources.filterKeys { it in affected }.forEach { (id, record) ->
+            when (val structural = record.validateStructure(catalog)) {
+                StructuralResult.Valid -> Unit
+                is StructuralResult.Invalid -> problems += structural.problems.map { it.on(id) }
+            }
+        }
+        val affectedLocations =
+            ResourceValueMapper
+                .discover(resources)
+                .filter { it.source in affected || it.target.resource in affected }
+                .mapTo(hashSetOf()) { it.id.location }
+        problems += projection.problems.filter { it.location in affectedLocations }
+        validateOwnership(projection.projections, contracts, affected, problems)
+        validateCardinality(projection.projections, contracts, affected, problems)
+        return problems
+    }
+
     private fun create(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         removed: MutableSet<ResourceId>,
@@ -181,11 +213,12 @@ internal class AuthoringMutationPlanner(
     private fun delete(
         resources: MutableMap<ResourceId, AuthoringRecord>,
         removed: MutableSet<ResourceId>,
-        requested: ResourceId,
+        requested: Set<ResourceId>,
         problems: MutableList<ValueProblem>,
     ) {
-        if (requested !in resources) {
-            problems += problem(requested, "resource_missing")
+        val missing = requested.filter { it !in resources && it !in removed }
+        if (missing.isNotEmpty()) {
+            problems += missing.map { problem(it, "resource_missing") }
             return
         }
         val projection =
@@ -201,7 +234,7 @@ internal class AuthoringMutationPlanner(
         }
         val byRelation = contracts.associateBy(RelationContract::id)
         val deleting = linkedSetOf<ResourceId>()
-        val pending = ArrayDeque<ResourceId>().also { it += requested }
+        val pending = ArrayDeque<ResourceId>().also { it.addAll(requested.filter(resources::containsKey)) }
         while (pending.isNotEmpty()) {
             val current = pending.removeFirst()
             if (!deleting.add(current)) continue
@@ -502,12 +535,13 @@ internal class AuthoringMutationPlanner(
     private fun synchronizeValueMutation(
         before: List<LinkOccurrence>,
         resources: MutableMap<ResourceId, AuthoringRecord>,
+        source: ResourceId,
         batch: String,
         ordinal: Int,
         problems: MutableList<ValueProblem>,
     ) {
         if (problems.isNotEmpty()) return
-        val intended = ResourceValueMapper.discover(resources).associateBy(LinkOccurrence::id)
+        val intended = resourceLinks(resources, source).associateBy(LinkOccurrence::id)
         val previous = before.associateBy(LinkOccurrence::id)
         previous.values.filter { intended[it.id] != it }.forEach { occurrence ->
             clearOppositeIfPresent(resources, occurrence, problems)
@@ -548,7 +582,7 @@ internal class AuthoringMutationPlanner(
     ) {
         val opposite = occurrence.target.opposite ?: return
         val location = ValueLocation(occurrence.target.resource, opposite)
-        val current = ResourceValueMapper.discover(resources).singleOrNull { it.id.location == location } ?: return
+        val current = resourceLinks(resources, location.resource).singleOrNull { it.id.location == location } ?: return
         if (current.target.resource == occurrence.source && current.target.opposite == occurrence.id.location.path) {
             clearLocation(resources, location, problems)
         }
@@ -560,12 +594,12 @@ internal class AuthoringMutationPlanner(
         target: LinkTarget,
         problems: MutableList<ValueProblem>,
     ) {
-        val current = ResourceValueMapper.discover(resources).associateBy(LinkOccurrence::id)[proposed.id] ?: return
+        val current = resourceLinks(resources, proposed.source).singleOrNull { it.id == proposed.id } ?: return
         if (current.target == target) return
         val opposite = current.target.opposite ?: return
         val location = ValueLocation(current.target.resource, opposite)
         val other =
-            ResourceValueMapper.discover(resources).associateBy(LinkOccurrence::id).values.singleOrNull {
+            resourceLinks(resources, location.resource).singleOrNull {
                 it.id.location == location && it.target.resource == current.source
             }
         if (other != null) clearLocation(resources, location, problems)
@@ -696,7 +730,7 @@ internal class AuthoringMutationPlanner(
         occurrence: LinkOccurrenceId,
         problems: MutableList<ValueProblem>,
     ) {
-        val current = ResourceValueMapper.discover(resources).associateBy(LinkOccurrence::id)[occurrence]
+        val current = resourceLinks(resources, occurrence.location.resource).singleOrNull { it.id == occurrence }
         if (current == null) {
             problems += ValueProblem(occurrence.location, "link_occurrence_missing")
             return
@@ -915,3 +949,8 @@ private fun projectionKey(value: com.typewritermc.authoring.LinkProjection): Str
 
 private fun projectionEndpoints(value: com.typewritermc.authoring.LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}"
+
+private fun resourceLinks(
+    resources: Map<ResourceId, AuthoringRecord>,
+    resource: ResourceId,
+): List<LinkOccurrence> = resources[resource]?.let { ResourceValueMapper.discover(mapOf(resource to it)) }.orEmpty()

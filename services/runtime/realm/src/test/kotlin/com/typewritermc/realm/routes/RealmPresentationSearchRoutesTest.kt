@@ -1,8 +1,16 @@
 package com.typewritermc.realm.routes
 
+import com.typewritermc.operations.OperationSearch
+import com.typewritermc.realm.catalog.RealmCatalogStore
+import com.typewritermc.realm.catalog.installTestCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import skirout.editor.v1.search.RealmPresentationSearchRequest
 import skirout.editor.v1.search.RealmPresentationSearchStatus
@@ -14,6 +22,26 @@ import skirout.editor.v1.type_catalog.DataValue
 import skirout.editor.v1.type_catalog.TypeTemplate
 
 val RealmPresentationSearchRoutesTest by testSuite {
+    test("switching from an operation search cancels its stream even when the next capability is unavailable") {
+        runTest {
+            RealmCatalogStore().use { catalogs ->
+                catalogs.installTestCatalog("generation")
+                val operation = PendingSearchSource(backgroundScope)
+                val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, operationSearch = operation)
+                source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = OperationSearch.compatibleBooks.id.value))) { }
+                runCurrent()
+                operation.active.toSet() shouldBe setOf("search")
+
+                val replacement = source.watch(validSearchRequest()) { }
+                runCurrent()
+
+                (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
+                operation.active.toSet() shouldBe emptySet()
+                source.cancel("search") shouldBe false
+            }
+        }
+    }
+
     test("unavailable source returns a correlated typed diagnostic") {
         runTest {
             val response = UnavailableRealmPresentationSearchSource().watch(validSearchRequest()) { }
@@ -69,6 +97,41 @@ val RealmPresentationSearchRoutesTest by testSuite {
     }
 }
 
+private class PendingSearchSource(
+    private val scope: CoroutineScope,
+) : RealmPresentationSearchSource {
+    val active = mutableSetOf<String>()
+    private val jobs = mutableMapOf<String, Job>()
+
+    override suspend fun watch(
+        request: RealmPresentationSearchRequest,
+        updates: RealmPresentationSearchUpdatePublisher,
+    ): RealmPresentationSearchUpdate {
+        jobs[request.subscriptionId] =
+            scope.launch {
+                active += request.subscriptionId
+                try {
+                    awaitCancellation()
+                } finally {
+                    active -= request.subscriptionId
+                }
+            }
+        return RealmPresentationSearchUpdate.createSnapshot(
+            subscriptionId = request.subscriptionId,
+            status = RealmPresentationSearchStatus.LOADING,
+            values = emptyList(),
+            guidance = emptyList(),
+            diagnostics = emptyList(),
+        )
+    }
+
+    override fun cancel(subscriptionId: String): Boolean =
+        jobs.remove(subscriptionId)?.let {
+            it.cancel()
+            true
+        } ?: false
+}
+
 private class FakeRealmPresentationSearchSource : RealmPresentationSearchSource {
     var request: RealmPresentationSearchRequest? = null
 
@@ -105,6 +168,7 @@ private fun validSearchRequest() =
         capabilityId = CapabilityId(value = "capability"),
         payload = DataValue.StringValueWrapper("server"),
         resultType = TypeTemplate.ScalarWrapper(skirout.editor.v1.type_catalog.ScalarKind.TEXT),
+        operationContext = null,
         query =
             RealmSearchQuery(
                 normalizedQuery = "alex",

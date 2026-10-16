@@ -54,6 +54,8 @@ interface AuthoringCatalogLease : AutoCloseable {
         get() = emptyList()
     val configuration: List<ConfigurationRecipe>
         get() = emptyList()
+    val operations: com.typewritermc.operations.OperationCatalog
+        get() = com.typewritermc.operations.OperationCatalog()
 
     fun retain(): AuthoringCatalogLease
 }
@@ -64,6 +66,11 @@ data class AuthoringView internal constructor(
     val resources: Map<ResourceId, AuthoringRecord>,
     val resourceDefinitions: Map<ResourceId, ResourceDefinitionId>,
     val links: Map<LinkOccurrenceId, LinkOccurrence>,
+    /** Identifies this saved view until replacement, including across state transfer chunks. */
+    val observationId: String =
+        java.util.UUID
+            .randomUUID()
+            .toString(),
 ) {
     internal val readContext = ReadContext(catalog.generation)
     internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
@@ -126,12 +133,32 @@ sealed interface AuthoredReadView {
         override val readContext = ReadContext(original.catalog.generation)
         internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
     }
+
+    /** A request owned staged graph whose evidence remains attached to its immutable baseline. */
+    class Working internal constructor(
+        override val original: AuthoringView,
+    ) : AuthoredReadView {
+        override var resources: Map<ResourceId, AuthoringRecord> = original.resources
+            private set
+        private var cachedLinks: Map<LinkOccurrenceId, LinkOccurrence>? = original.links
+        override val links: Map<LinkOccurrenceId, LinkOccurrence>
+            get() = cachedLinks ?: discoverLinks(resources).immutableMapCopy().also { cachedLinks = it }
+        override val readContext = original.readContext
+        internal val graphIndexes = ConcurrentHashMap<RelationSelection, CapturedGraphIndex>()
+
+        fun replace(next: Map<ResourceId, AuthoringRecord>) {
+            resources = next
+            cachedLinks = null
+            graphIndexes.clear()
+        }
+    }
 }
 
 internal fun AuthoredReadView.graphIndex(selection: RelationSelection): CapturedGraphIndex =
     when (this) {
         is AuthoredReadView.Original -> original.graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
         is AuthoredReadView.Staged -> graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
+        is AuthoredReadView.Working -> graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
     }
 
 /** Serializes current view installation and admission while leases preserve original read values. */

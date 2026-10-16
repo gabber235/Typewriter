@@ -148,6 +148,9 @@ internal class AuthoringRoutes private constructor(
                     resources = resources,
                     links = links,
                     findings = capturedFindings.findings,
+                    confirmedObservation =
+                        skirout.editor.v1.authoring
+                            .AuthoringObservationId(value = root.observationId),
                 )
             return authored.toTransfer(request.transferId)
         }

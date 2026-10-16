@@ -1,6 +1,7 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
+import com.typewritermc.protocol.transport.generated.authoringActionPrepare
 import com.typewritermc.protocol.transport.generated.authoringChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
 import com.typewritermc.protocol.transport.generated.authoringCompiledQuery
@@ -20,6 +21,7 @@ import com.typewritermc.protocol.transport.generated.editorCatalogWatch
 import com.typewritermc.protocol.transport.generated.editorPresentationSearch
 import com.typewritermc.protocol.transport.generated.editorPresentationSearchCancel
 import com.typewritermc.protocol.transport.generated.editorValuePrepare
+import com.typewritermc.protocol.transport.generated.resourceOperationsResolve
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -59,6 +61,20 @@ internal class EditorContracts(
             responseClassifier(ResponseOutcome.SUCCESS),
         )
     val prepareValue = address.editorValuePrepare(policy(PrepareValueResult.createInternalError()))
+    val resolveResourceOperations =
+        address.resourceOperationsResolve(
+            policy(
+                skirout.editor.v1.resource_operations.ResolveResourceOperationsResult
+                    .createInternalError(),
+            ),
+        )
+    val prepareAuthoringAction =
+        address.authoringActionPrepare(
+            policy(
+                skirout.editor.v1.resource_operations.AuthoringActionResult
+                    .createInternalError(),
+            ),
+        )
     val watchRealmPresentationSearch =
         address.editorPresentationSearch(
             policy(
@@ -166,7 +182,9 @@ private fun <Response : Any> responseClassifier(): ResponseClassifier<Response> 
                     ResponseOutcome.INTERNAL_ERROR
                 }
 
-                "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled" -> {
+                "success", "prepared", "committed", "result", "applied", "initial", "activated", "canceled",
+                "resolved", "preview", "needs-input",
+                -> {
                     ResponseOutcome.SUCCESS
                 }
 
