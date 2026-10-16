@@ -10,6 +10,7 @@ import com.typewritermc.loader.deployment.RealmDeploymentSelection
 import com.typewritermc.loader.deployment.projectFor
 import com.typewritermc.services.libs.registrar.ServiceId
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
+import com.typewritermc.services.libs.telemetry.SpanPresentation
 import kotlinx.coroutines.delay
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -96,6 +97,7 @@ class CoordinatedRollout(
         telemetry.artifactSpan(
             "artifact.rollout.coordinate",
             "artifact-rollout-coordinate-failed",
+            presentation = SpanPresentation("Artifact deployment ${snapshot.generation.value} for Realm ${realmId.value}"),
         ) { span ->
             span?.annotate {
                 attribute("realm.id", realmId.value)

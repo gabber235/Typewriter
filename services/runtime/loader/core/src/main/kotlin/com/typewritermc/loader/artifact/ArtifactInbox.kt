@@ -16,6 +16,8 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobResult
 import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
 import com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
+import com.typewritermc.services.libs.telemetry.EventProjection
+import com.typewritermc.services.libs.telemetry.LogSeverity
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -118,12 +120,25 @@ class ArtifactInboxReconciler(
                 after.filter { (path, observation) ->
                     initial[path] == observation
                 }
-            val outcomes = stable.map { (path, observation) -> import(path, observation) }
+            val outcomes = stable.mapValues { (path, observation) -> import(path, observation) }
+            val imported = outcomes.filterValues { it == ImportOutcome.ACCEPTED }.keys.map(::relative)
             candidates.observePresence(after.keys.map { relative(it) }.toSet())
             span?.annotate {
-                attribute("inbox.changed_count", outcomes.count { it == ImportOutcome.ACCEPTED }.toLong())
+                attribute("inbox.changed_count", imported.size.toLong())
                 attribute("inbox.unstable_count", (after.size - stable.size).toLong())
-                attribute("inbox.quarantined_count", outcomes.count { it == ImportOutcome.QUARANTINED }.toLong())
+                attribute("inbox.quarantined_count", outcomes.values.count { it == ImportOutcome.QUARANTINED }.toLong())
+            }
+            if (imported.isNotEmpty()) {
+                span?.event(
+                    "artifact.inbox.imported",
+                    EventProjection.log(
+                        LogSeverity.INFO,
+                        "Imported ${imported.size} artifact(s) from the inbox: ${imported.joinToString()}",
+                    ),
+                ) {
+                    attribute("inbox.changed_count", imported.size)
+                    attribute("inbox.imported_paths", imported.joinToString())
+                }
             }
         }
 
