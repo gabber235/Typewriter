@@ -19,3 +19,5 @@ control_unsupported_operation	cases	reject	Unresolved reference 'textInput'
 navigation_handlers	positive	accept	BUILD SUCCESSFUL
 navigation_handler_string	cases	reject	Resource definitions require a supported navigation handler
 inherited_generated_endpoint	positive	accept	BUILD SUCCESSFUL
+effective_inherited_accessors	positive	accept	BUILD SUCCESSFUL
+ambiguous_inherited_accessor	cases	reject	Ambiguous inherited authoring field title requires an explicit override

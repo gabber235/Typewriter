@@ -383,7 +383,7 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
             ) {
                 return@forEach
             }
-            emitSdk(sourceDeclaration, definitions.getValue(definition), conversion.ownedFields[definition].orEmpty())
+            emitSdk(sourceDeclaration, definitions.getValue(definition), conversion)
         }
         if (claimDependencyClosure) {
             conversion.declarations.values
@@ -400,15 +400,17 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
     private fun emitSdk(
         declaration: KSClassDeclaration,
         typeDefinition: TypeDefinition,
-        fields: List<OwnedFieldDeclaration>,
+        conversion: KspTypeConversionResult.Success,
     ) {
         val qualified = declaration.qualifiedName?.asString() ?: return
         if (!generatedTypes.add(qualified)) return
-        val properties =
+        val ownedFields = conversion.ownedFields[typeDefinition.id].orEmpty()
+        val ownedProperties =
             declaration.declarations
                 .filterIsInstance<KSPropertyDeclaration>()
                 .associateBy { property -> property.simpleName.asString() }
-        val source = sdkSource(declaration, typeDefinition, fields, properties)
+        val accessors = declaration.effectiveAccessorFields(typeDefinition, conversion) ?: return
+        val source = sdkSource(declaration, typeDefinition, ownedFields, ownedProperties, accessors)
         val name = declaration.generatedTypeName()
         val fileName = "${name}TypewriterSdk"
         codeGenerator
@@ -425,6 +427,77 @@ object $generatedName : com.typewritermc.discovery.GeneratedRelationProvider {
                 "${declaration.packageName.asString()}.${name}NativeBindingFactory",
             )
         }
+    }
+
+    private fun KSClassDeclaration.effectiveAccessorFields(
+        root: TypeDefinition,
+        conversion: KspTypeConversionResult.Success,
+    ): List<EffectiveAccessorField>? {
+        if (root.representation !is RepresentationTemplate.Record) return emptyList()
+        val definitions = conversion.definitions.associateBy(TypeDefinition::id)
+        var valid = true
+
+        fun collect(
+            template: TypeTemplate.Named,
+            stack: Set<TypeDefinitionId>,
+        ): List<OwnedFieldDeclaration> {
+            if (template.definition in stack) return emptyList()
+            val definition = definitions.getValue(template.definition)
+            val substitutions =
+                definition.parameters
+                    .map(TypeParameter::key)
+                    .zip(template.arguments)
+                    .toMap()
+            val inherited =
+                definition.parents.flatMap { parent ->
+                    collect(parent.substitute(substitutions) as TypeTemplate.Named, stack + template.definition)
+                }
+            val own =
+                conversion.ownedFields[definition.id].orEmpty().map { field ->
+                    field.copy(template = field.template.substitute(substitutions))
+                }
+            val ownByName = own.associateBy(OwnedFieldDeclaration::name)
+            val inheritedByName = inherited.groupBy(OwnedFieldDeclaration::name)
+            for ((name, candidates) in inheritedByName) {
+                if (name !in ownByName && candidates.distinctBy { it.owner to it.template }.size > 1) {
+                    logger.error("Ambiguous inherited authoring field $name requires an explicit override.", this)
+                    valid = false
+                }
+            }
+            return (inherited.map(OwnedFieldDeclaration::name) + own.map(OwnedFieldDeclaration::name)).distinct().map { name ->
+                ownByName[name] ?: inheritedByName.getValue(name).first()
+            }
+        }
+        val fields = collect(TypeTemplate.Named(root.id, root.parameters.map { TypeTemplate.Parameter(it.key) }), emptySet())
+        for ((name, candidates) in fields.groupBy(OwnedFieldDeclaration::sourceName)) {
+            if (candidates.size > 1) {
+                logger.error(
+                    "Authoring property $name maps to conflicting serialized fields; preserve its inherited serialized name.",
+                    this,
+                )
+                valid = false
+            }
+        }
+        if (!valid) return null
+        val properties = getAllProperties().associateBy { it.simpleName.asString() }
+        // Unlike a star projection, the declaration type preserves its own generic parameters.
+        val containing = asType(emptyList())
+        return fields
+            .mapNotNull { field ->
+                val property = properties[field.sourceName]
+                if (property == null) {
+                    logger.error("No Kotlin property resolves inherited authoring field ${field.name}.", this)
+                    valid = false
+                    return@mapNotNull null
+                }
+                val resolved = property.asMemberOf(containing)
+                if (resolved.isError) {
+                    logger.error("Cannot resolve authoring field ${field.name} in ${simpleName.asString()}.", property)
+                    valid = false
+                    return@mapNotNull null
+                }
+                EffectiveAccessorField(field, resolved)
+            }.takeIf { valid }
     }
 
     private fun emitSupportType(definition: TypeDefinition) {
@@ -501,7 +574,8 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
         declaration: KSClassDeclaration,
         typeDefinition: TypeDefinition,
         fields: List<OwnedFieldDeclaration>,
-        properties: Map<String, KSPropertyDeclaration>,
+        ownedProperties: Map<String, KSPropertyDeclaration>,
+        accessors: List<EffectiveAccessorField>,
     ): String {
         val definitionId = typeDefinition.id
         val packageName = declaration.packageName.asString()
@@ -639,17 +713,16 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
                     RepresentationKind.Record
                 }
             }
-        val exposedFields = if (typeDefinition.representation is RepresentationTemplate.Record) fields else emptyList()
+        val exposedFields = accessors.map(EffectiveAccessorField::field)
+        val accessorTypes = accessors.associateBy({ it.field.sourceName }, EffectiveAccessorField::type)
         val configurationFields =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
-                val scope = configurationScope(field.template, property?.type?.resolve())
+                val scope = configurationScope(field.template, accessorTypes[field.sourceName])
                 "    fun ${field.sourceName}(configure: com.typewritermc.configuration.Configuration<$scope>)"
             }
         val expressionFields =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
-                val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
+                val valueType = accessorTypes[field.sourceName]?.sourceType(field.template is TypeTemplate.Nullable) ?: "kotlin.Any?"
                 "    val ${field.sourceName}: com.typewritermc.expression.Expr<$valueType, com.typewritermc.expression.MayBeMissing>"
             }
         val expressionReceiverName =
@@ -657,8 +730,7 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
                 .first { candidate -> exposedFields.none { it.sourceName == candidate } }
         val expressionImplementation =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
-                val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
+                val valueType = accessorTypes[field.sourceName]?.sourceType(field.template is TypeTemplate.Nullable) ?: "kotlin.Any?"
                 "    override val ${field.sourceName}: " +
                     "com.typewritermc.expression.Expr<$valueType, com.typewritermc.expression.MayBeMissing> " +
                     "get() = $expressionReceiverName.field(\"${field.name}\")"
@@ -689,15 +761,14 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
             }
         val configurationImplementation =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
-                val scope = configurationScope(field.template, property?.type?.resolve())
-                val kind = representationKind(field.template, property?.type?.resolve())
+                val scope = configurationScope(field.template, accessorTypes[field.sourceName])
+                val kind = representationKind(field.template, accessorTypes[field.sourceName])
                 val pattern = fieldPattern(field.name)
-                val expected = configurationExpectedTemplate(field.template, property?.type?.resolve()).kotlinCode()
-                val scopeClass = configurationScopeClass(field.template, property?.type?.resolve())
-                val nested = configurationNestedScopes(field.template, property?.type?.resolve())
-                val expressions = expressionScopeClass(field.template, property?.type?.resolve())
-                val fieldType = property?.type?.resolve()
+                val expected = configurationExpectedTemplate(field.template, accessorTypes[field.sourceName]).kotlinCode()
+                val scopeClass = configurationScopeClass(field.template, accessorTypes[field.sourceName])
+                val nested = configurationNestedScopes(field.template, accessorTypes[field.sourceName])
+                val expressions = expressionScopeClass(field.template, accessorTypes[field.sourceName])
+                val fieldType = accessorTypes[field.sourceName]
                 if (field.template is TypeTemplate.Named && fieldType != null && fieldType.hasGeneratedConfigurationImplementation()) {
                     "    override fun ${field.sourceName}(configure: com.typewritermc.configuration.Configuration<$scope>) { " +
                         "${fieldType.generatedConfigurationScopeImplementation()}(collection.nested($pattern)).configure() }"
@@ -711,20 +782,18 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
             }
         val presentationFields =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
-                val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
+                val valueType = accessorTypes[field.sourceName]?.sourceType(field.template is TypeTemplate.Nullable) ?: "kotlin.Any?"
                 "    val ${field.sourceName}: com.typewritermc.presentation.PresentedField<$valueType, ${presentationScope(
                     field.template,
-                    property?.type?.resolve(),
+                    accessorTypes[field.sourceName],
                 )}>"
             }
         val presentationImplementation =
             exposedFields.joinToString("\n") { field ->
-                val scope = presentationScope(field.template, properties[field.sourceName]?.type?.resolve())
-                val scopeClass = presentationScopeClass(field.template, properties[field.sourceName]?.type?.resolve())
-                val nested = presentationNestedScopes(field.template, properties[field.sourceName]?.type?.resolve())
-                val property = properties[field.sourceName]
-                val valueType = property?.type?.resolve()?.sourceType(property.type.explicitNullable) ?: "kotlin.Any?"
+                val scope = presentationScope(field.template, accessorTypes[field.sourceName])
+                val scopeClass = presentationScopeClass(field.template, accessorTypes[field.sourceName])
+                val nested = presentationNestedScopes(field.template, accessorTypes[field.sourceName])
+                val valueType = accessorTypes[field.sourceName]?.sourceType(field.template is TypeTemplate.Nullable) ?: "kotlin.Any?"
                 "    @Suppress(\"UNCHECKED_CAST\") override val ${field.sourceName}: " +
                     "com.typewritermc.presentation.PresentedField<$valueType, $scope> get() = " +
                     "build.field(\"${field.name}\", $scopeClass::class as kotlin.reflect.KClass<$scope>, $nested)"
@@ -761,14 +830,13 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
         val draftApplicationArguments = typeParameters.indices.joinToString { "argument$it.expected" }
         val draftFields =
             exposedFields.joinToString("\n") { field ->
-                val property = properties[field.sourceName]
                 val result =
-                    property?.type?.let { draftType(it.resolve(), declaration, it.explicitNullable) }
+                    accessorTypes[field.sourceName]?.let { draftType(it, declaration, field.template is TypeTemplate.Nullable) }
                         ?: "com.typewritermc.authoring.PortableValue"
                 val projection =
                     draftProjectionCode(
                         field.template,
-                        property?.type?.resolve(),
+                        accessorTypes[field.sourceName],
                         definitionId,
                         declaration,
                         typeParameters,
@@ -781,13 +849,25 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
             exposedFields
                 .filterNot { it.template.containsParameter() }
                 .joinToString("\n") { field ->
-                    draftEditMethods(field, properties[field.sourceName], definitionId, typeParameters)
+                    draftEditMethods(
+                        field,
+                        accessorTypes[field.sourceName],
+                        field.template is TypeTemplate.Nullable,
+                        definitionId,
+                        typeParameters,
+                    )
                 }
         val dependentDraftEdits =
             exposedFields
                 .filter { it.template.containsParameter() }
                 .joinToString("\n") { field ->
-                    draftEditMethods(field, properties[field.sourceName], definitionId, typeParameters)
+                    draftEditMethods(
+                        field,
+                        accessorTypes[field.sourceName],
+                        field.template is TypeTemplate.Nullable,
+                        definitionId,
+                        typeParameters,
+                    )
                 }
         val actualType =
             "when (val selected = binding.actual) { " +
@@ -795,7 +875,7 @@ object $objectName : com.typewritermc.discovery.GeneratedEndpointBindingsProvide
                 "com.typewritermc.authoring.Availability.Available(selected.use); " +
                 "is com.typewritermc.authoring.TypeSelection.Pending -> " +
                 "com.typewritermc.authoring.Availability.Unavailable(listOf(binding.location)) }"
-        val nativeFactory = nativeFactorySource(declaration, typeDefinition, fields, properties)
+        val nativeFactory = nativeFactorySource(declaration, typeDefinition, fields, ownedProperties)
         val draftProjection = draftProjectionDeclaration(name, typeDefinition, draftParameters, draftProjectionArguments)
         return """
 package $packageName
@@ -817,9 +897,10 @@ ${exposedFields.joinToString("\n") { field ->
                     field.name,
                 )}, ${field.template.kotlinCode()})"
             } else {
-                val property = properties[field.sourceName]
                 val valueType =
-                    property?.type?.let { it.resolve().sourceType(it.explicitNullable) } ?: "com.typewritermc.authoring.PortableValue"
+                    accessorTypes[field.sourceName]?.sourceType(
+                        field.template is TypeTemplate.Nullable,
+                    ) ?: "com.typewritermc.authoring.PortableValue"
                 "    val ${field.sourceName} = com.typewritermc.authoring.typedPath<$ownerType, $valueType>($definition, ${fieldPath(
                     field.name,
                 )}, ${field.template.completeUseCode()})"
@@ -1408,6 +1489,11 @@ class $adapterName : com.typewritermc.discovery.GeneratedCheckProvider {
         providerIndex += "$kind\t$providerClass\t$sourcePart"
     }
 }
+
+private data class EffectiveAccessorField(
+    val field: OwnedFieldDeclaration,
+    val type: KSType,
+)
 
 private fun discoverEndpointBindings(
     root: TypeTemplate.Named,
@@ -2995,14 +3081,13 @@ private fun fieldPath(name: String): String =
 
 private fun draftEditMethods(
     field: OwnedFieldDeclaration,
-    property: KSPropertyDeclaration?,
+    type: KSType?,
+    explicitParameterNullable: Boolean,
     owner: TypeDefinitionId,
     parameters: List<String>,
 ): String {
     val valueType =
-        property
-            ?.type
-            ?.let { reference -> reference.resolve().sourceType(reference.explicitNullable) }
+        type?.sourceType(explicitParameterNullable)
             ?: "com.typewritermc.authoring.PortableValue"
     val expected = field.template.generatedAppliedCode(owner, parameters)
     val suffix = field.sourceName.replaceFirstChar(Char::uppercaseChar)
