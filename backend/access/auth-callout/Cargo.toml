@@ -22,7 +22,5 @@ wit-bindgen.workspace = true
 
 wasmcloud-component.workspace = true
 
-opentelemetry.workspace = true
 otel-wasi.workspace = true
 tracing.workspace = true
-tracing-opentelemetry.workspace = true

@@ -9,17 +9,10 @@ repository.workspace = true
 crate-type = ["cdylib"]
 
 [dependencies]
-base64.workspace = true
-jose.workspace = true
-nats-jwt-rs.workspace = true
 serde.workspace = true
-serde_json.workspace = true
-wstd.workspace = true
 
 wasmcloud-utils.workspace = true
 wit-bindgen.workspace = true
 
-opentelemetry.workspace = true
 otel-wasi.workspace = true
 tracing.workspace = true
-tracing-opentelemetry.workspace = true

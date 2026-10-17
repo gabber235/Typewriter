@@ -616,7 +616,7 @@ fn write_manifest(
 
 fn sha256(path: &Path) -> Result<String> {
     let bytes = fs::read(path).with_context(|| format!("hash phase: read {}", path.display()))?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(hex::encode(Sha256::digest(bytes)))
 }
 fn version(program: &str) -> Result<String> {
     let output = Command::new(program)

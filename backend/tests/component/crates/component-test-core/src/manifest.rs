@@ -78,7 +78,7 @@ pub(crate) fn artifacts(descriptor: &FixtureDescriptor) -> Result<HashMap<String
                 command(descriptor.id)
             )
         })?;
-        let digest = format!("sha256:{:x}", Sha256::digest(&bytes));
+        let digest = format!("sha256:{}", hex::encode(Sha256::digest(&bytes)));
         let expected = record
             .sha256
             .strip_prefix("sha256:")
