@@ -537,13 +537,10 @@ Future<void> _move(WidgetTester tester, _Movement movement) async {
         const GraphMoveIntent(direction: TraversalDirection.right),
       );
     case _Movement.drag:
-      final gesture = await tester.startGesture(
-        tester.getCenter(find.byType(TagNode)),
+      await tester.drag(
+        find.byType(TagNode),
+        const Offset(tagGraphCellSize, 0),
       );
-      await tester.pump();
-      await gesture.moveBy(const Offset(tagGraphCellSize, 0));
-      await tester.pump();
-      await gesture.up();
   }
   await tester.pump();
 }
