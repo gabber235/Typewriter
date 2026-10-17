@@ -15,13 +15,13 @@ import "dart:core" as _core;
 
 import "package:skir_client/skir_client.dart" as _skir;
 
-import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
-import "../../kernel/v1/bounded_transfer.dart"
-    as _lib_kernel_v1_bounded_transfer;
 import "./authoring_facts.dart" as _lib_editor_v1_authoring_facts;
 import "./checking.dart" as _lib_editor_v1_checking;
+import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
 import "./diagnostic.dart" as _lib_editor_v1_diagnostic;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
+import "../../kernel/v1/bounded_transfer.dart"
+    as _lib_kernel_v1_bounded_transfer;
 import "../../kernel/v1/errors.dart" as _lib_kernel_v1_errors;
 
 // struct OwnedPortableTypes
