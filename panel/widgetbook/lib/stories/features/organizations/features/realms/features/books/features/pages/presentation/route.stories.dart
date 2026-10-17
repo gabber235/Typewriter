@@ -48,7 +48,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
     resource: _fixture.page,
     source: _workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.editor,
+    role: skir.PresentationRole.workspaceEditor,
     budget: _budget,
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,
@@ -133,7 +133,7 @@ final class _PageWorkspaceStoryState extends State<PageWorkspaceStory> {
                   authored: _workspace.document,
                 ),
                 resource: _fixture.page,
-                role: skir.PresentationRole.editor,
+                role: skir.PresentationRole.workspaceEditor,
                 host: _host,
                 openResource: (resource) {
                   setState(() => _selected = resource);

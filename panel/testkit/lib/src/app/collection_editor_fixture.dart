@@ -78,7 +78,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
           (skir.PresentationMaterial.mutable()
                 ..layout = transformLayout?.call(_layout()) ?? _layout())
               .toFrozen(),
-      role: skir.PresentationRole.editor,
+      role: skir.PresentationRole.workspaceEditor,
       budget: skir.EvaluationBudget(maxSteps: 2000, maxCollectionItems: 200),
       capabilities: capabilities,
       edit: binding,

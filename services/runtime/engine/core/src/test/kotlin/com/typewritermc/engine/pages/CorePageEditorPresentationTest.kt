@@ -122,8 +122,8 @@ val CorePageEditorPresentationTest by testSuite {
     ).forEach { (name, type, direction) ->
         test("$name page has a discovered editor with its intended canvas") {
             val checked = (catalog.resolve(type) as Resolution.Ready).value
-            val selection = registry.select(PresentationRole.EDITOR, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
-            val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.EDITOR)
+            val selection = registry.select(PresentationRole.WORKSPACE_EDITOR, checked).shouldBeInstanceOf<PresentationSelection.Selected>()
+            val binding = PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)
             val layout = providers.getValue(selection.descriptor).build(binding).layout
             val children = layout.element.shouldBeInstanceOf<PresentationElement.ChildrenWrapper>().value
             val column = children.shouldBeInstanceOf<ChildrenElement.ColumnWrapper>().value

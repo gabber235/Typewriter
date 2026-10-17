@@ -137,7 +137,12 @@ sealed interface AuthoringResourceDefinition_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.AuthoringResourceDefinition;
 }
 
-/** Deeply immutable. */
+/**
+ * Gives an authored resource family its stable definition identity and navigation behavior,
+ * independently of the concrete type application currently selected by a resource.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringResourceDefinition private constructor(
     override val id: skirout.editor.v1.catalog.ResourceDefinitionId,
@@ -545,7 +550,12 @@ sealed interface EndpointDefinition_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.EndpointDefinition;
 }
 
-/** Deeply immutable. */
+/**
+ * Declares one side of a relation. Cardinality constrains how many resources on this side
+ * one opposite resource can reference. on_delete applies when a resource on this side is deleted.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EndpointDefinition private constructor(
     override val id: skirout.editor.v1.type_catalog.EndpointId,
@@ -745,7 +755,12 @@ sealed interface RelationContract_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.RelationContract;
 }
 
-/** Deeply immutable. */
+/**
+ * Shared relation meaning used to validate authored references and derive graph edges.
+ * Families attach shared semantics such as ownership without relying on presentation names.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RelationContract private constructor(
     override val id: skirout.editor.v1.type_catalog.RelationId,
@@ -2332,20 +2347,22 @@ class ConfigurationRecipe private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * The UI surface requesting a type's presentation. Registering a role does not create a surface.
+ * Missing presentations follow the catalog's explicit role fallbacks.
+ *
+ * Deeply immutable.
+ */
 sealed class PresentationRole private constructor() {
     /** The kind of variant held by a `PresentationRole`. */
     enum class Kind {
         UNKNOWN,
-        EDITOR_CONST,
+        WORKSPACE_EDITOR_CONST,
         INSPECTOR_CONST,
-        REFERENCE_SUMMARY_CONST,
-        REFERENCE_OPTION_CONST,
-        COLLECTION_ITEM_CONST,
-        CATALOG_OPTION_CONST,
-        AUTHORING_RESULT_CONST,
-        PAGE_TILE_CONST,
-        GRAPH_NODE_CONST,
+        REFERENCE_PREVIEW_CONST,
+        REFERENCE_PICKER_RESULT_CONST,
+        RESOURCE_SEARCH_RESULT_CONST,
+        EDITOR_NODE_CONST,
     }
 
     class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.editor.v1.catalog.PresentationRole.UNKNOWN")) internal constructor(
@@ -2363,18 +2380,20 @@ sealed class PresentationRole private constructor() {
         }
     }
 
-    object EDITOR : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.EDITOR_CONST;
+    /** The main workspace for an opened resource, such as a page graph or timeline. */
+    object WORKSPACE_EDITOR : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.WORKSPACE_EDITOR_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.EDITOR_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.WORKSPACE_EDITOR_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.EDITOR_CONST.ordinal;
+            return Kind.WORKSPACE_EDITOR_CONST.ordinal;
         }
     }
 
+    /** Editable properties in inspectors, editing review, and delegated field controls. */
     object INSPECTOR : skirout.editor.v1.catalog.PresentationRole() {
         override val kind get() = Kind.INSPECTOR_CONST;
 
@@ -2387,87 +2406,55 @@ sealed class PresentationRole private constructor() {
         }
     }
 
-    object REFERENCE_SUMMARY : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.REFERENCE_SUMMARY_CONST;
+    /** A compact preview of the selected reference target, with writes and input disabled. */
+    object REFERENCE_PREVIEW : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.REFERENCE_PREVIEW_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.REFERENCE_SUMMARY_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.REFERENCE_PREVIEW_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.REFERENCE_SUMMARY_CONST.ordinal;
+            return Kind.REFERENCE_PREVIEW_CONST.ordinal;
         }
     }
 
-    object REFERENCE_OPTION : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.REFERENCE_OPTION_CONST;
+    /** A candidate target in a reference picker or a reference question during creation. */
+    object REFERENCE_PICKER_RESULT : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.REFERENCE_PICKER_RESULT_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.REFERENCE_OPTION_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.REFERENCE_PICKER_RESULT_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.REFERENCE_OPTION_CONST.ordinal;
+            return Kind.REFERENCE_PICKER_RESULT_CONST.ordinal;
         }
     }
 
-    object COLLECTION_ITEM : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.COLLECTION_ITEM_CONST;
+    /** An existing resource shown in authoring search, with navigation owned by the result row. */
+    object RESOURCE_SEARCH_RESULT : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.RESOURCE_SEARCH_RESULT_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.COLLECTION_ITEM_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.RESOURCE_SEARCH_RESULT_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.COLLECTION_ITEM_CONST.ordinal;
+            return Kind.RESOURCE_SEARCH_RESULT_CONST.ordinal;
         }
     }
 
-    object CATALOG_OPTION : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.CATALOG_OPTION_CONST;
+    /** Resource content inside an editor node, independent of graph or timeline layout. */
+    object EDITOR_NODE : skirout.editor.v1.catalog.PresentationRole() {
+        override val kind get() = Kind.EDITOR_NODE_CONST;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.CATALOG_OPTION_CONST;
+            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.EDITOR_NODE_CONST;
         }
 
         override fun hashCode(): kotlin.Int {
-            return Kind.CATALOG_OPTION_CONST.ordinal;
-        }
-    }
-
-    object AUTHORING_RESULT : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.AUTHORING_RESULT_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.AUTHORING_RESULT_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.AUTHORING_RESULT_CONST.ordinal;
-        }
-    }
-
-    object PAGE_TILE : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.PAGE_TILE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.PAGE_TILE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.PAGE_TILE_CONST.ordinal;
-        }
-    }
-
-    object GRAPH_NODE : skirout.editor.v1.catalog.PresentationRole() {
-        override val kind get() = Kind.GRAPH_NODE_CONST;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.editor.v1.catalog.PresentationRole && other.kind == Kind.GRAPH_NODE_CONST;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return Kind.GRAPH_NODE_CONST.ordinal;
+            return Kind.EDITOR_NODE_CONST.ordinal;
         }
     }
 
@@ -2823,7 +2810,13 @@ sealed interface PresentationMaterial_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.PresentationMaterial;
 }
 
-/** Deeply immutable. */
+/**
+ * Checked portable layout for a provider, target, and role. Dependencies describe required
+ * services and typed inputs. inheritable_nodes identifies reusable inspector material rather
+ * than granting inheritance to every node in the layout.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationMaterial private constructor(
     override val provider: skirout.editor.v1.type_catalog.PresentationId,
@@ -3247,7 +3240,13 @@ sealed interface EditorCatalogWireSnapshot_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.EditorCatalogWireSnapshot;
 }
 
-/** Deeply immutable. */
+/**
+ * One coherent generation of authoring types, relations, presentations, capabilities, and operations.
+ * Generation changes invalidate client assumptions across the whole snapshot; they are separate
+ * from saved resource observations and selected compiled publications.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EditorCatalogWireSnapshot private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -4450,7 +4449,12 @@ sealed interface CatalogInvalidated_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.CatalogInvalidated;
 }
 
-/** Deeply immutable. */
+/**
+ * Announces the installed catalog generation so clients can fetch current declarations.
+ * Delivery is an invalidation hint, rather than a durable history of catalog transitions.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CatalogInvalidated private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -4905,7 +4909,12 @@ sealed interface PreparedValue_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.PreparedValue;
 }
 
-/** Deeply immutable. */
+/**
+ * Proposed editable content after value preparation. It may carry initialization findings;
+ * preparation does not save a resource or establish that authored content is publishable.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PreparedValue private constructor(
     override val content: skirout.editor.v1.catalog.PreparedContent,
@@ -5189,7 +5198,13 @@ sealed interface PreparationDraft_OrMutable {
     fun toFrozen(): skirout.editor.v1.catalog.PreparationDraft;
 }
 
-/** Deeply immutable. */
+/**
+ * Caller retained continuation for deferred constructor defaults and required input.
+ * Resume validates catalog, target, pending default paths, and supplied answers. The runtime
+ * retains no preparation session behind this value, and constructor sampling may execute provider code.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PreparationDraft private constructor(
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -5838,7 +5853,12 @@ sealed class PreparationOperation private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Separates prepared editable content from a continuation needing caller input or unavailable
+ * preparation. ready describes completion of initialization, not saved authoring or publication.
+ *
+ * Deeply immutable.
+ */
 sealed class PreparationStep private constructor() {
     /** The kind of variant held by a `PreparationStep`. */
     enum class Kind {
@@ -6759,7 +6779,7 @@ private object _SerializerRegistry {
 
     val AuthoringResourceDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:AuthoringResourceDefinition",
-        doc = "",
+        doc = "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
         defaultInstance = skirout.editor.v1.catalog.AuthoringResourceDefinition.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.AuthoringResourceDefinition.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6796,7 +6816,7 @@ private object _SerializerRegistry {
 
     val CatalogInvalidatedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:CatalogInvalidated",
-        doc = "",
+        doc = "Announces the installed catalog generation so clients can fetch current declarations.\nDelivery is an invalidation hint, rather than a durable history of catalog transitions.",
         defaultInstance = skirout.editor.v1.catalog.CatalogInvalidated.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.CatalogInvalidated.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6870,7 +6890,7 @@ private object _SerializerRegistry {
 
     val EditorCatalogWireSnapshotSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:EditorCatalogWireSnapshot",
-        doc = "",
+        doc = "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
         defaultInstance = skirout.editor.v1.catalog.EditorCatalogWireSnapshot.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.EditorCatalogWireSnapshot.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6919,7 +6939,7 @@ private object _SerializerRegistry {
 
     val EndpointDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:EndpointDefinition",
-        doc = "",
+        doc = "Declares one side of a relation. Cardinality constrains how many resources on this side\none opposite resource can reference. on_delete applies when a resource on this side is deleted.",
         defaultInstance = skirout.editor.v1.catalog.EndpointDefinition.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.EndpointDefinition.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6968,7 +6988,7 @@ private object _SerializerRegistry {
 
     val PreparationDraftSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:PreparationDraft",
-        doc = "",
+        doc = "Caller retained continuation for deferred constructor defaults and required input.\nResume validates catalog, target, pending default paths, and supplied answers. The runtime\nretains no preparation session behind this value, and constructor sampling may execute provider code.",
         defaultInstance = skirout.editor.v1.catalog.PreparationDraft.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.PreparationDraft.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -7006,7 +7026,7 @@ private object _SerializerRegistry {
     val PreparationStepSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PreparationStep, skirout.editor.v1.catalog.PreparationStep.Unknown>(
             recordId = "editor/v1/catalog.skir:PreparationStep",
-            doc = "",
+            doc = "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.catalog.PreparationStep.Kind.values().size,
             unknownInstance = skirout.editor.v1.catalog.PreparationStep.UNKNOWN,
@@ -7044,7 +7064,7 @@ private object _SerializerRegistry {
 
     val PreparedValueSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:PreparedValue",
-        doc = "",
+        doc = "Proposed editable content after value preparation. It may carry initialization findings;\npreparation does not save a resource or establish that authored content is publishable.",
         defaultInstance = skirout.editor.v1.catalog.PreparedValue.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.PreparedValue.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -7081,7 +7101,7 @@ private object _SerializerRegistry {
 
     val PresentationMaterialSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:PresentationMaterial",
-        doc = "",
+        doc = "Checked portable layout for a provider, target, and role. Dependencies describe required\nservices and typed inputs. inheritable_nodes identifies reusable inspector material rather\nthan granting inheritance to every node in the layout.",
         defaultInstance = skirout.editor.v1.catalog.PresentationMaterial.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.PresentationMaterial.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -7094,7 +7114,7 @@ private object _SerializerRegistry {
     val PresentationRoleSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.catalog.PresentationRole, skirout.editor.v1.catalog.PresentationRole.Unknown>(
             recordId = "editor/v1/catalog.skir:PresentationRole",
-            doc = "",
+            doc = "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.catalog.PresentationRole.Kind.values().size,
             unknownInstance = skirout.editor.v1.catalog.PresentationRole.UNKNOWN,
@@ -7131,7 +7151,7 @@ private object _SerializerRegistry {
 
     val RelationContractSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/catalog.skir:RelationContract",
-        doc = "",
+        doc = "Shared relation meaning used to validate authored references and derive graph edges.\nFamilies attach shared semantics such as ownership without relying on presentation names.",
         defaultInstance = skirout.editor.v1.catalog.RelationContract.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.catalog.RelationContract.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -8261,66 +8281,45 @@ private object _SerializerRegistry {
 
         PresentationRoleSerializerImpl.addConstantVariant(
             1,
-            "editor",
-            skirout.editor.v1.catalog.PresentationRole.Kind.EDITOR_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.EDITOR,
+            "workspace_editor",
+            skirout.editor.v1.catalog.PresentationRole.Kind.WORKSPACE_EDITOR_CONST.ordinal,
+            "The main workspace for an opened resource, such as a page graph or timeline.",
+            skirout.editor.v1.catalog.PresentationRole.WORKSPACE_EDITOR,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             2,
             "inspector",
             skirout.editor.v1.catalog.PresentationRole.Kind.INSPECTOR_CONST.ordinal,
-            "",
+            "Editable properties in inspectors, editing review, and delegated field controls.",
             skirout.editor.v1.catalog.PresentationRole.INSPECTOR,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             3,
-            "reference_summary",
-            skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_SUMMARY_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.REFERENCE_SUMMARY,
+            "reference_preview",
+            skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_PREVIEW_CONST.ordinal,
+            "A compact preview of the selected reference target, with writes and input disabled.",
+            skirout.editor.v1.catalog.PresentationRole.REFERENCE_PREVIEW,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             4,
-            "reference_option",
-            skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_OPTION_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.REFERENCE_OPTION,
+            "reference_picker_result",
+            skirout.editor.v1.catalog.PresentationRole.Kind.REFERENCE_PICKER_RESULT_CONST.ordinal,
+            "A candidate target in a reference picker or a reference question during creation.",
+            skirout.editor.v1.catalog.PresentationRole.REFERENCE_PICKER_RESULT,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             5,
-            "collection_item",
-            skirout.editor.v1.catalog.PresentationRole.Kind.COLLECTION_ITEM_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.COLLECTION_ITEM,
+            "resource_search_result",
+            skirout.editor.v1.catalog.PresentationRole.Kind.RESOURCE_SEARCH_RESULT_CONST.ordinal,
+            "An existing resource shown in authoring search, with navigation owned by the result row.",
+            skirout.editor.v1.catalog.PresentationRole.RESOURCE_SEARCH_RESULT,
         );
         PresentationRoleSerializerImpl.addConstantVariant(
             6,
-            "catalog_option",
-            skirout.editor.v1.catalog.PresentationRole.Kind.CATALOG_OPTION_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.CATALOG_OPTION,
-        );
-        PresentationRoleSerializerImpl.addConstantVariant(
-            7,
-            "authoring_result",
-            skirout.editor.v1.catalog.PresentationRole.Kind.AUTHORING_RESULT_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.AUTHORING_RESULT,
-        );
-        PresentationRoleSerializerImpl.addConstantVariant(
-            8,
-            "page_tile",
-            skirout.editor.v1.catalog.PresentationRole.Kind.PAGE_TILE_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.PAGE_TILE,
-        );
-        PresentationRoleSerializerImpl.addConstantVariant(
-            9,
-            "graph_node",
-            skirout.editor.v1.catalog.PresentationRole.Kind.GRAPH_NODE_CONST.ordinal,
-            "",
-            skirout.editor.v1.catalog.PresentationRole.GRAPH_NODE,
+            "editor_node",
+            skirout.editor.v1.catalog.PresentationRole.Kind.EDITOR_NODE_CONST.ordinal,
+            "Resource content inside an editor node, independent of graph or timeline layout.",
+            skirout.editor.v1.catalog.PresentationRole.EDITOR_NODE,
         );
         PresentationRoleSerializerImpl.finalizeEnum();
 

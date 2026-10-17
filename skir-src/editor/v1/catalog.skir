@@ -153,16 +153,21 @@ struct ConfigurationRecipe(810900015) {
   rules: [OwnedRule] = 3;
 }
 
+/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
+/// Missing presentations follow the catalog's explicit role fallbacks.
 enum PresentationRole(810900016) {
-  editor = 1;
+  /// The main workspace for an opened resource, such as a page graph or timeline.
+  workspace_editor = 1;
+  /// Editable properties in inspectors, editing review, and delegated field controls.
   inspector = 2;
-  reference_summary = 3;
-  reference_option = 4;
-  collection_item = 5;
-  catalog_option = 6;
-  authoring_result = 7;
-  page_tile = 8;
-  graph_node = 9;
+  /// A compact preview of the selected reference target, with writes and input disabled.
+  reference_preview = 3;
+  /// A candidate target in a reference picker or a reference question during creation.
+  reference_picker_result = 4;
+  /// An existing resource shown in authoring search, with navigation owned by the result row.
+  resource_search_result = 5;
+  /// Resource content inside an editor node, independent of graph or timeline layout.
+  editor_node = 6;
 }
 
 enum PresentationTarget(810900017) {

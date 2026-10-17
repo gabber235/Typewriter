@@ -23,7 +23,7 @@ void main() {
         resource: compiledEntryPageId,
         source: document,
         material: skir.PresentationMaterial.defaultInstance,
-        role: skir.PresentationRole.editor,
+        role: skir.PresentationRole.workspaceEditor,
         budget: budget,
         capabilities: const PortablePresentationCapabilities(),
       );
@@ -76,7 +76,7 @@ void main() {
                 ),
                 host: host,
                 resource: compiledEntryPageId,
-                role: skir.PresentationRole.editor,
+                role: skir.PresentationRole.workspaceEditor,
               ),
             ),
           ),
@@ -105,7 +105,7 @@ void main() {
       expect(find.text("Welcome to the village"), findsNothing);
       final selected = document.catalog.selectPresentation(
         document.resource(compiledEntryFirstId)!.configuration,
-        skir.PresentationRole.graphNode,
+        skir.PresentationRole.editorNode,
       ) as SelectedEditorPresentation;
       final target = skir.PresentationTarget.createNamed(
         definition: compiledSdkElementValue.authoredActualType!.definition,
@@ -298,7 +298,7 @@ BorderSide _frame(WidgetTester tester) => tester
 Widget _editor(AuthoringDocument document) => AuthoredResourceEditor(
   resource: _resource,
   document: document,
-  role: skir.PresentationRole.graphNode,
+  role: skir.PresentationRole.editorNode,
   budget: skir.EvaluationBudget(maxSteps: 10000, maxCollectionItems: 1000),
   fillAvailableSpace: true,
 );

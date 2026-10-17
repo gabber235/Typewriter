@@ -688,9 +688,9 @@ CheckedEditorCatalog authoringFixtureCatalog({
     );
     for (final role in [
       skir.PresentationRole.inspector,
-      skir.PresentationRole.editor,
-      skir.PresentationRole.graphNode,
-      skir.PresentationRole.collectionItem,
+      skir.PresentationRole.workspaceEditor,
+      skir.PresentationRole.editorNode,
+      skir.PresentationRole.referencePreview,
     ]) {
       final id = skir.PresentationId(
         namespace: "fixture",
@@ -727,7 +727,7 @@ CheckedEditorCatalog authoringFixtureCatalog({
             header: null,
             element:
                 role == skir.PresentationRole.inspector ||
-                    role == skir.PresentationRole.editor
+                    role == skir.PresentationRole.workspaceEditor
                 ? skir.PresentationElement.createTextInput(
                     control: skir.BoundControl(
                       binding: reference,

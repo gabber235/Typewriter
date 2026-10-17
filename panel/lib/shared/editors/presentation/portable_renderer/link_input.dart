@@ -194,7 +194,7 @@ extension _DirectLinkCollectionRow on PortablePresentationNodeRenderer {
             : _ResourceReferenceAppearance(
                 resource: link.target.resource,
                 scope: selectedRow?.scope ?? scope,
-                role: skir.PresentationRole.referenceSummary,
+                role: skir.PresentationRole.referencePreview,
                 fallbackLabel: link.target.resource.value,
                 render: (node, targetScope, appearance, accent) =>
                     PortablePresentationNodeRenderer(
@@ -422,7 +422,7 @@ final class _AuthoredLinkValueInput extends StatelessWidget {
         : _ResourceReferenceAppearance(
             resource: link.target.resource,
             scope: selectedRow?.scope ?? scope,
-            role: skir.PresentationRole.referenceSummary,
+            role: skir.PresentationRole.referencePreview,
             fallbackLabel: link.target.resource.value,
             render: (node, targetScope, appearance, accent) =>
                 PortablePresentationNodeRenderer(

@@ -146,7 +146,7 @@ final class CompiledLiveResourceResults extends HookWidget {
                         fixture.ids[kind]!,
                         authoringResourceSearchResultType,
                       ),
-                      role: skir.PresentationRole.authoringResult,
+                      role: skir.PresentationRole.resourceSearchResult,
                       fallbackLabel: "Resource unavailable",
                     ),
                   const Text(

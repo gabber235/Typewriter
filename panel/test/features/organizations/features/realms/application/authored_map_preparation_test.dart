@@ -185,7 +185,7 @@ final class _MapFixture {
       resource: resource,
       source: document,
       material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.editor,
+      role: skir.PresentationRole.workspaceEditor,
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       capabilities: const PortablePresentationCapabilities(),
       edit: binding,

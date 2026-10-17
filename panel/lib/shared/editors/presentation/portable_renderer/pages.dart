@@ -256,7 +256,7 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
     final projected = entry.resourceProjection;
     final selected = parent.catalog?.selectPresentation(
       projected.configuration,
-      skir.PresentationRole.graphNode,
+      skir.PresentationRole.editorNode,
     );
     final content = switch (selected) {
       SelectedEditorPresentation() => PortablePresentationNodeRenderer(

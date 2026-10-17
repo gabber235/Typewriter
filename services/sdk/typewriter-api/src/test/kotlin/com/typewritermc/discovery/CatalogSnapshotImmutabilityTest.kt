@@ -12,7 +12,7 @@ val CatalogSnapshotImmutabilityTest by testSuite {
     test("catalog snapshots reject outer and nested collection mutation") {
         val types = mutableListOf<com.typewritermc.types.catalog.PublishedType>()
         val parents = mutableListOf(PresentationRole.INSPECTOR)
-        val fallbacks = mutableListOf(RoleFallback(PresentationRole.EDITOR, parents))
+        val fallbacks = mutableListOf(RoleFallback(PresentationRole.WORKSPACE_EDITOR, parents))
         val source =
             EditorCatalogSnapshot(
                 generation = CatalogGeneration("catalog"),
@@ -28,7 +28,7 @@ val CatalogSnapshotImmutabilityTest by testSuite {
 
         val retained = source.immutableCopy()
         types.clear()
-        parents += PresentationRole.REFERENCE_SUMMARY
+        parents += PresentationRole.REFERENCE_PREVIEW
         fallbacks.clear()
 
         retained.roleFallbacks.single().parents shouldBe listOf(PresentationRole.INSPECTOR)

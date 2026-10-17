@@ -1250,7 +1250,7 @@ val SdkRuntimeConformanceTest by testSuite {
                 ),
             )
         val definition = TypeDefinition(id, representation = RepresentationTemplate.Record(fieldList))
-        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.EDITOR)
+        val fallbackParents = mutableListOf(com.typewritermc.types.PresentationRole.WORKSPACE_EDITOR)
         val endpointPath = mutableListOf<com.typewritermc.configuration.FieldPatternSegment>(FieldPatternSegment.Field("items"))
         val rules =
             mutableListOf(
@@ -1308,7 +1308,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
         fieldList += FieldDeclaration(FieldOwner(id, "late"), TypeTemplate.Scalar(ScalarKind.Text))
         argumentList[0] = INT
-        fallbackParents += com.typewritermc.types.PresentationRole.CATALOG_OPTION
+        fallbackParents += com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT
         endpointPath += FieldPatternSegment.Items
         rules.clear()
 
@@ -1325,7 +1325,7 @@ val SdkRuntimeConformanceTest by testSuite {
         assembly.snapshot.roleFallbacks
             .single()
             .parents shouldBe
-            listOf(com.typewritermc.types.PresentationRole.EDITOR)
+            listOf(com.typewritermc.types.PresentationRole.WORKSPACE_EDITOR)
         val checked = assembly.checked.resolve(TypeUse.Named(id)).ready()
         (checked.schema.representation as com.typewritermc.types.catalog.ResolvedRepresentation.Record).fields.size shouldBe 1
     }

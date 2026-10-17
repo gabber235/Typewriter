@@ -465,7 +465,7 @@ final class PortablePresentationRenderer extends HookWidget {
           scope: scope,
           fillAvailableSpace:
               fillAvailableSpace ||
-              document.role == skir.PresentationRole.editor,
+              document.role == skir.PresentationRole.workspaceEditor,
         );
     return _PortableDiagnosticBoundary(
       key: ValueKey(generation),

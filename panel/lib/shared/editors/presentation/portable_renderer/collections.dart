@@ -485,7 +485,7 @@ final class _ResourceReferenceAppearance extends HookWidget {
     if (projection == null) return fallback(Text(fallbackLabel), null);
     final display = catalog.selectionDisplay(projection.configuration);
     final fallbackAccent = display?.searchResultAccent;
-    final override = role == skir.PresentationRole.referenceOption
+    final override = role == skir.PresentationRole.referencePickerResult
         ? appearanceOverride
         : null;
     final material = override == null
@@ -560,7 +560,7 @@ final class _ResourceReferenceAppearance extends HookWidget {
           value: projection.value,
         ),
       ],
-      child: role == skir.PresentationRole.referenceSummary
+      child: role == skir.PresentationRole.referencePreview
           ? ExcludeFocus(child: IgnorePointer(child: content))
           : content,
     );

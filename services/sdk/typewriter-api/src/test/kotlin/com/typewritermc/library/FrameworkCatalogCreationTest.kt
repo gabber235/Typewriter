@@ -109,10 +109,10 @@ val FrameworkCatalogCreationTest by testSuite {
         val runtime = DefaultPresentationRuntime()
         val provider = com.typewritermc.elements.com_typewritermc_elements_ElementGraphNodePresentation_ElementPresentationProvider(runtime)
         val inherited = provider.descriptor(origin("element_graph"))
-        inherited.roles shouldBe setOf(PresentationRole.GRAPH_NODE)
+        inherited.roles shouldBe setOf(PresentationRole.EDITOR_NODE)
         entries.count { it.providerClass == provider.javaClass.name } shouldBe 1
         val inheritedRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited))
-        (inheritedRegistry.select(PresentationRole.GRAPH_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+        (inheritedRegistry.select(PresentationRole.EDITOR_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
             .descriptor.id shouldBe inherited.id
         val concrete =
             inherited.copy(
@@ -123,13 +123,13 @@ val FrameworkCatalogCreationTest by testSuite {
                 priority = inherited.priority - 1,
             )
         val customRegistry = com.typewritermc.presentation.DefaultPresentationRegistry(catalog, listOf(inherited, concrete))
-        (customRegistry.select(PresentationRole.GRAPH_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
+        (customRegistry.select(PresentationRole.EDITOR_NODE, checked) as com.typewritermc.presentation.PresentationSelection.Selected)
             .descriptor.id shouldBe concrete.id
         val material =
             provider.build(
                 PresentationBuildBinding(
                     checked.presentationTemplate(),
-                    PresentationRole.GRAPH_NODE,
+                    PresentationRole.EDITOR_NODE,
                     mapOf(com.typewritermc.elements.Element::class to TypeTemplate.Named(com.typewritermc.elements.ElementDefinition.id)),
                 ),
             )
@@ -345,7 +345,7 @@ val FrameworkCatalogCreationTest by testSuite {
         val checkedTag = (catalog.resolve(TagDefinition.use) as Resolution.Ready).value
         val graphMaterial =
             tagGraphProvider.build(
-                PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.GRAPH_NODE, resourceTypes),
+                PresentationBuildBinding(checkedTag.presentationTemplate(), PresentationRole.EDITOR_NODE, resourceTypes),
             )
         val graphSurface = (graphMaterial.layout.singleFixed().element as PresentationElement.ContainerWrapper).value
         graphSurface.transitionMilliseconds shouldBe 100
@@ -430,7 +430,7 @@ val FrameworkCatalogCreationTest by testSuite {
             bookReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedBook.presentationTemplate(),
-                    PresentationRole.REFERENCE_SUMMARY,
+                    PresentationRole.REFERENCE_PREVIEW,
                     resourceTypes,
                 ),
             )
@@ -475,7 +475,7 @@ val FrameworkCatalogCreationTest by testSuite {
             tagReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedTag.presentationTemplate(),
-                    PresentationRole.REFERENCE_SUMMARY,
+                    PresentationRole.REFERENCE_PREVIEW,
                     resourceTypes,
                 ),
             )
@@ -490,7 +490,7 @@ val FrameworkCatalogCreationTest by testSuite {
             pageReferenceProvider.build(
                 PresentationBuildBinding(
                     checkedPage.presentationTemplate(),
-                    PresentationRole.REFERENCE_SUMMARY,
+                    PresentationRole.REFERENCE_PREVIEW,
                     resourceTypes,
                 ),
             )

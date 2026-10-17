@@ -26,8 +26,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
     }
 
     if (material.resultAppearance != null &&
-        material.role != skir.PresentationRole.authoringResult &&
-        material.role != skir.PresentationRole.referenceOption) {
+        material.role != skir.PresentationRole.resourceSearchResult &&
+        material.role != skir.PresentationRole.referencePickerResult) {
       errors.add("invalid_result_appearance_role");
     }
     final callerInputs = <skir.ExpressionBindingId, skir.TypeUse>{};

@@ -149,7 +149,7 @@ final class _AuthoredInteractionGalleryState
     resource: _interactionResource,
     source: _workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.editor,
+    role: skir.PresentationRole.workspaceEditor,
     budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000),
     capabilities: const PortablePresentationCapabilities(),
     edit: _binding,

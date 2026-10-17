@@ -36,7 +36,7 @@ data class CapabilityPage(
 ) : Page
 
 object CapabilityPageEditor : CapabilityPagePresentation {
-    override val roles = setOf(PresentationRole.EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
 
     override fun CapabilityPagePresentationScope.present() {
         elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }

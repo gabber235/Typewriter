@@ -135,6 +135,9 @@ sealed class AuthoringResourceDefinition_orMutable {
   AuthoringResourceDefinition toFrozen();
 }
 
+/// Gives an authored resource family its stable definition identity and navigation behavior,
+/// independently of the concrete type application currently selected by a resource.
+///
 /// Deeply immutable.
 final class AuthoringResourceDefinition
     implements AuthoringResourceDefinition_orMutable {
@@ -250,7 +253,7 @@ final class AuthoringResourceDefinition
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:AuthoringResourceDefinition",
-    doc: "",
+    doc: "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringResourceDefinition_mutable it) => it.toFrozen(),
@@ -603,6 +606,9 @@ sealed class EndpointDefinition_orMutable {
   EndpointDefinition toFrozen();
 }
 
+/// Declares one side of a relation. Cardinality constrains how many resources on this side
+/// one opposite resource can reference. on_delete applies when a resource on this side is deleted.
+///
 /// Deeply immutable.
 final class EndpointDefinition implements EndpointDefinition_orMutable {
   @_core.override
@@ -752,7 +758,7 @@ final class EndpointDefinition implements EndpointDefinition_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:EndpointDefinition",
-    doc: "",
+    doc: "Declares one side of a relation. Cardinality constrains how many resources on this side\none opposite resource can reference. on_delete applies when a resource on this side is deleted.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (EndpointDefinition_mutable it) => it.toFrozen(),
@@ -825,6 +831,9 @@ sealed class RelationContract_orMutable {
   RelationContract toFrozen();
 }
 
+/// Shared relation meaning used to validate authored references and derive graph edges.
+/// Families attach shared semantics such as ownership without relying on presentation names.
+///
 /// Deeply immutable.
 final class RelationContract implements RelationContract_orMutable {
   @_core.override
@@ -956,7 +965,7 @@ final class RelationContract implements RelationContract_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:RelationContract",
-    doc: "",
+    doc: "Shared relation meaning used to validate authored references and derive graph edges.\nFamilies attach shared semantics such as ownership without relying on presentation names.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RelationContract_mutable it) => it.toFrozen(),
@@ -2448,19 +2457,19 @@ final class ConfigurationRecipe_mutable
 
 // enum PresentationRole
 
+/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
+/// Missing presentations follow the catalog's explicit role fallbacks.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
 ///     case PresentationRole_unknown(): { ... }
-///     case PresentationRole.editor: { ... }
+///     case PresentationRole.workspaceEditor: { ... }
 ///     case PresentationRole.inspector: { ... }
-///     case PresentationRole.referenceSummary: { ... }
-///     case PresentationRole.referenceOption: { ... }
-///     case PresentationRole.collectionItem: { ... }
-///     case PresentationRole.catalogOption: { ... }
-///     case PresentationRole.authoringResult: { ... }
-///     case PresentationRole.pageTile: { ... }
-///     case PresentationRole.graphNode: { ... }
+///     case PresentationRole.referencePreview: { ... }
+///     case PresentationRole.referencePickerResult: { ... }
+///     case PresentationRole.resourceSearchResult: { ... }
+///     case PresentationRole.editorNode: { ... }
 ///   }
 ///   ```
 ///
@@ -2470,16 +2479,26 @@ sealed class PresentationRole {
   /// Default value for fields of type `PresentationRole`.
   static const PresentationRole unknown = PresentationRole_unknown._instance;
 
-  static const editor = _PresentationRole_consts.editorConst;
+  /// The main workspace for an opened resource, such as a page graph or timeline.
+  static const workspaceEditor = _PresentationRole_consts.workspaceEditorConst;
+
+  /// Editable properties in inspectors, editing review, and delegated field controls.
   static const inspector = _PresentationRole_consts.inspectorConst;
-  static const referenceSummary =
-      _PresentationRole_consts.referenceSummaryConst;
-  static const referenceOption = _PresentationRole_consts.referenceOptionConst;
-  static const collectionItem = _PresentationRole_consts.collectionItemConst;
-  static const catalogOption = _PresentationRole_consts.catalogOptionConst;
-  static const authoringResult = _PresentationRole_consts.authoringResultConst;
-  static const pageTile = _PresentationRole_consts.pageTileConst;
-  static const graphNode = _PresentationRole_consts.graphNodeConst;
+
+  /// A compact preview of the selected reference target, with writes and input disabled.
+  static const referencePreview =
+      _PresentationRole_consts.referencePreviewConst;
+
+  /// A candidate target in a reference picker or a reference question during creation.
+  static const referencePickerResult =
+      _PresentationRole_consts.referencePickerResultConst;
+
+  /// An existing resource shown in authoring search, with navigation owned by the result row.
+  static const resourceSearchResult =
+      _PresentationRole_consts.resourceSearchResultConst;
+
+  /// Resource content inside an editor node, independent of graph or timeline layout.
+  static const editorNode = _PresentationRole_consts.editorNodeConst;
 
   /// Returns the kind of variant held by this PresentationRole.
   PresentationRole_kind get kind;
@@ -2487,62 +2506,47 @@ sealed class PresentationRole {
   /// Serializer for `PresentationRole` instances.
   static _skir.EnumSerializer<PresentationRole> get serializer {
     if (_serializerBuilder.mustInitialize()) {
-      _serializerBuilder.addConstantVariant(1, "editor", "editor", "", editor);
+      _serializerBuilder.addConstantVariant(
+        1,
+        "workspace_editor",
+        "workspaceEditor",
+        "The main workspace for an opened resource, such as a page graph or timeline.",
+        workspaceEditor,
+      );
       _serializerBuilder.addConstantVariant(
         2,
         "inspector",
         "inspector",
-        "",
+        "Editable properties in inspectors, editing review, and delegated field controls.",
         inspector,
       );
       _serializerBuilder.addConstantVariant(
         3,
-        "reference_summary",
-        "referenceSummary",
-        "",
-        referenceSummary,
+        "reference_preview",
+        "referencePreview",
+        "A compact preview of the selected reference target, with writes and input disabled.",
+        referencePreview,
       );
       _serializerBuilder.addConstantVariant(
         4,
-        "reference_option",
-        "referenceOption",
-        "",
-        referenceOption,
+        "reference_picker_result",
+        "referencePickerResult",
+        "A candidate target in a reference picker or a reference question during creation.",
+        referencePickerResult,
       );
       _serializerBuilder.addConstantVariant(
         5,
-        "collection_item",
-        "collectionItem",
-        "",
-        collectionItem,
+        "resource_search_result",
+        "resourceSearchResult",
+        "An existing resource shown in authoring search, with navigation owned by the result row.",
+        resourceSearchResult,
       );
       _serializerBuilder.addConstantVariant(
         6,
-        "catalog_option",
-        "catalogOption",
-        "",
-        catalogOption,
-      );
-      _serializerBuilder.addConstantVariant(
-        7,
-        "authoring_result",
-        "authoringResult",
-        "",
-        authoringResult,
-      );
-      _serializerBuilder.addConstantVariant(
-        8,
-        "page_tile",
-        "pageTile",
-        "",
-        pageTile,
-      );
-      _serializerBuilder.addConstantVariant(
-        9,
-        "graph_node",
-        "graphNode",
-        "",
-        graphNode,
+        "editor_node",
+        "editorNode",
+        "Resource content inside an editor node, independent of graph or timeline layout.",
+        editorNode,
       );
       _serializerBuilder.finalize();
     }
@@ -2552,7 +2556,7 @@ sealed class PresentationRole {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/catalog.skir:PresentationRole",
-        doc: "",
+        doc: "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
         unknownInstance: PresentationRole_unknown._instance,
         enumInstance: PresentationRole.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -2564,15 +2568,12 @@ sealed class PresentationRole {
 /// The kind of variant held by a `PresentationRole`.
 enum PresentationRole_kind {
   unknown(0),
-  editorConst(1),
+  workspaceEditorConst(1),
   inspectorConst(2),
-  referenceSummaryConst(3),
-  referenceOptionConst(4),
-  collectionItemConst(5),
-  catalogOptionConst(6),
-  authoringResultConst(7),
-  pageTileConst(8),
-  graphNodeConst(9);
+  referencePreviewConst(3),
+  referencePickerResultConst(4),
+  resourceSearchResultConst(5),
+  editorNodeConst(6);
 
   final _core.int _ordinal;
 
@@ -2599,15 +2600,12 @@ final class PresentationRole_unknown implements PresentationRole {
 }
 
 enum _PresentationRole_consts implements PresentationRole {
-  editorConst(PresentationRole_kind.editorConst),
+  workspaceEditorConst(PresentationRole_kind.workspaceEditorConst),
   inspectorConst(PresentationRole_kind.inspectorConst),
-  referenceSummaryConst(PresentationRole_kind.referenceSummaryConst),
-  referenceOptionConst(PresentationRole_kind.referenceOptionConst),
-  collectionItemConst(PresentationRole_kind.collectionItemConst),
-  catalogOptionConst(PresentationRole_kind.catalogOptionConst),
-  authoringResultConst(PresentationRole_kind.authoringResultConst),
-  pageTileConst(PresentationRole_kind.pageTileConst),
-  graphNodeConst(PresentationRole_kind.graphNodeConst);
+  referencePreviewConst(PresentationRole_kind.referencePreviewConst),
+  referencePickerResultConst(PresentationRole_kind.referencePickerResultConst),
+  resourceSearchResultConst(PresentationRole_kind.resourceSearchResultConst),
+  editorNodeConst(PresentationRole_kind.editorNodeConst);
 
   @_core.override
   final PresentationRole_kind kind;
@@ -3023,6 +3021,10 @@ sealed class PresentationMaterial_orMutable {
   PresentationMaterial toFrozen();
 }
 
+/// Checked portable layout for a provider, target, and role. Dependencies describe required
+/// services and typed inputs. inheritable_nodes identifies reusable inspector material rather
+/// than granting inheritance to every node in the layout.
+///
 /// Deeply immutable.
 final class PresentationMaterial implements PresentationMaterial_orMutable {
   @_core.override
@@ -3234,7 +3236,7 @@ final class PresentationMaterial implements PresentationMaterial_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:PresentationMaterial",
-    doc: "",
+    doc: "Checked portable layout for a provider, target, and role. Dependencies describe required\nservices and typed inputs. inheritable_nodes identifies reusable inspector material rather\nthan granting inheritance to every node in the layout.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationMaterial_mutable it) => it.toFrozen(),
@@ -3484,6 +3486,10 @@ sealed class EditorCatalogWireSnapshot_orMutable {
   EditorCatalogWireSnapshot toFrozen();
 }
 
+/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
+/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
+/// from saved resource observations and selected compiled publications.
+///
 /// Deeply immutable.
 final class EditorCatalogWireSnapshot
     implements EditorCatalogWireSnapshot_orMutable {
@@ -3834,7 +3840,7 @@ final class EditorCatalogWireSnapshot
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:EditorCatalogWireSnapshot",
-    doc: "",
+    doc: "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (EditorCatalogWireSnapshot_mutable it) => it.toFrozen(),
@@ -4876,6 +4882,9 @@ sealed class CatalogInvalidated_orMutable {
   CatalogInvalidated toFrozen();
 }
 
+/// Announces the installed catalog generation so clients can fetch current declarations.
+/// Delivery is an invalidation hint, rather than a durable history of catalog transitions.
+///
 /// Deeply immutable.
 final class CatalogInvalidated implements CatalogInvalidated_orMutable {
   @_core.override
@@ -4946,7 +4955,7 @@ final class CatalogInvalidated implements CatalogInvalidated_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:CatalogInvalidated",
-    doc: "",
+    doc: "Announces the installed catalog generation so clients can fetch current declarations.\nDelivery is an invalidation hint, rather than a durable history of catalog transitions.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CatalogInvalidated_mutable it) => it.toFrozen(),
@@ -5439,6 +5448,9 @@ sealed class PreparedValue_orMutable {
   PreparedValue toFrozen();
 }
 
+/// Proposed editable content after value preparation. It may carry initialization findings;
+/// preparation does not save a resource or establish that authored content is publishable.
+///
 /// Deeply immutable.
 final class PreparedValue implements PreparedValue_orMutable {
   @_core.override
@@ -5532,7 +5544,7 @@ final class PreparedValue implements PreparedValue_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:PreparedValue",
-    doc: "",
+    doc: "Proposed editable content after value preparation. It may carry initialization findings;\npreparation does not save a resource or establish that authored content is publishable.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PreparedValue_mutable it) => it.toFrozen(),
@@ -5715,6 +5727,10 @@ sealed class PreparationDraft_orMutable {
   PreparationDraft toFrozen();
 }
 
+/// Caller retained continuation for deferred constructor defaults and required input.
+/// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
+/// retains no preparation session behind this value, and constructor sampling may execute provider code.
+///
 /// Deeply immutable.
 final class PreparationDraft implements PreparationDraft_orMutable {
   @_core.override
@@ -5891,7 +5907,7 @@ final class PreparationDraft implements PreparationDraft_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/catalog.skir:PreparationDraft",
-    doc: "",
+    doc: "Caller retained continuation for deferred constructor defaults and required input.\nResume validates catalog, target, pending default paths, and supplied answers. The runtime\nretains no preparation session behind this value, and constructor sampling may execute provider code.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PreparationDraft_mutable it) => it.toFrozen(),
@@ -6421,6 +6437,9 @@ final class PreparationOperation_resumeWrapper
 
 // enum PreparationStep
 
+/// Separates prepared editable content from a continuation needing caller input or unavailable
+/// preparation. ready describes completion of initialization, not saved authoring or publication.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -6550,7 +6569,7 @@ sealed class PreparationStep {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/catalog.skir:PreparationStep",
-        doc: "",
+        doc: "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
         unknownInstance: PreparationStep_unknown._instance,
         enumInstance: PreparationStep.unknown,
         getOrdinal: (it) => it.kind._ordinal,

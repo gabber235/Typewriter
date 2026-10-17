@@ -639,7 +639,7 @@ Widget _linkControl(
     resource: source.resource,
     source: editing.workspace.document,
     material: skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.editor,
+    role: skir.PresentationRole.workspaceEditor,
     budget: budget,
     capabilities: const PortablePresentationCapabilities(),
     prepareValue: prepareValue,

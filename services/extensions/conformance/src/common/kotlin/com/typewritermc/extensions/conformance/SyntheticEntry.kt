@@ -104,7 +104,7 @@ data class SyntheticPage(
 ) : Page
 
 object SyntheticPageEditor : SyntheticPagePresentation {
-    override val roles = setOf(PresentationRole.EDITOR)
+    override val roles = setOf(PresentationRole.WORKSPACE_EDITOR)
 
     override fun SyntheticPagePresentationScope.present() {
         elements { graphPage(GraphDirection.LEFT_TO_RIGHT) }

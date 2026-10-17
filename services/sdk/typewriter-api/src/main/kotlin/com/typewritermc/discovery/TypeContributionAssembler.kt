@@ -84,8 +84,7 @@ data class CatalogAssemblyContext(
 
 val DEFAULT_ROLE_FALLBACKS: List<RoleFallback> =
     listOf(
-        RoleFallback(PresentationRole.REFERENCE_OPTION, listOf(PresentationRole.COLLECTION_ITEM)),
-        RoleFallback(PresentationRole.COLLECTION_ITEM, listOf(PresentationRole.REFERENCE_SUMMARY)),
+        RoleFallback(PresentationRole.REFERENCE_PICKER_RESULT, listOf(PresentationRole.REFERENCE_PREVIEW)),
     )
 
 data class CatalogAssembly(
@@ -341,10 +340,10 @@ private fun collectPresentationMaterials(
                 try {
                     val result = owned.provider.build(PresentationBuildBinding(template, role, nativeTypes))
                     require(
-                        result.resultAppearance == null || role == com.typewritermc.types.PresentationRole.AUTHORING_RESULT ||
-                            role == com.typewritermc.types.PresentationRole.REFERENCE_OPTION,
+                        result.resultAppearance == null || role == com.typewritermc.types.PresentationRole.RESOURCE_SEARCH_RESULT ||
+                            role == com.typewritermc.types.PresentationRole.REFERENCE_PICKER_RESULT,
                     ) {
-                        "Result appearance requires an authoring result or reference option role."
+                        "Result appearance requires a resource search result or reference picker result role."
                     }
                     val inferred = result.layout.inferInheritableNodes(result.dependencies)
                     result.layout.validateInheritableNodes(

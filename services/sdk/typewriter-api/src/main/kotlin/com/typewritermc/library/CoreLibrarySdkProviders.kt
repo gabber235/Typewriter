@@ -67,7 +67,7 @@ object TagInspectorPresentation : TagPresentation {
 }
 
 object TagGraphNodePresentation : TagPresentation {
-    override val roles = setOf(PresentationRole.GRAPH_NODE)
+    override val roles = setOf(PresentationRole.EDITOR_NODE)
 
     override fun TagPresentationScope.present() {
         tagGraphSurface {
@@ -79,7 +79,7 @@ object TagGraphNodePresentation : TagPresentation {
 }
 
 object TagReferencePresentation : TagPresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_SUMMARY)
+    override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun TagPresentationScope.present() {
         librarySubjectLayout(expressions.name.orIfBlank("Unnamed tag")) {
@@ -152,12 +152,7 @@ object PageInspectorPresentation : PagePresentation {
 }
 
 object PageReferencePresentation : PagePresentation {
-    override val roles =
-        setOf(
-            PresentationRole.REFERENCE_SUMMARY,
-            PresentationRole.PAGE_TILE,
-            PresentationRole.CATALOG_OPTION,
-        )
+    override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun PagePresentationScope.present() {
         librarySubjectLayout(expressions.name.orIfBlank("Unnamed page")) {
@@ -167,7 +162,7 @@ object PageReferencePresentation : PagePresentation {
 }
 
 object TagSearchPresentation : TagPresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+    override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 
     override fun TagPresentationScope.present() {
         resourceSearchResult(
@@ -180,7 +175,7 @@ object TagSearchPresentation : TagPresentation {
 }
 
 object PageSearchPresentation : PagePresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+    override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 
     override fun PagePresentationScope.present() {
         val page = subject.resource<Page>()

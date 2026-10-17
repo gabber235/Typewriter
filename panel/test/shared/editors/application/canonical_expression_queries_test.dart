@@ -1221,7 +1221,7 @@ skir.PresentationMaterial _resultMaterial(
 }) =>
     (skir.PresentationMaterial.mutable()
           ..provider = skir.PresentationId(namespace: "test", name: "result")
-          ..role = skir.PresentationRole.authoringResult
+          ..role = skir.PresentationRole.resourceSearchResult
           ..target = skir.PresentationTarget.createNamed(
             definition: _page,
             arguments: const [],

@@ -78,7 +78,7 @@ object BookInspectorPresentation : BookPresentation {
 }
 
 object BookReferencePresentation : BookPresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_SUMMARY)
+    override val roles = setOf(PresentationRole.REFERENCE_PREVIEW)
 
     override fun BookPresentationScope.present() {
         val iconInput = icon.input
@@ -103,7 +103,7 @@ private fun Layout.bookSubjectIcon(input: PresentationInput<Icon, *>) {
 }
 
 object BookSearchPresentation : BookPresentation {
-    override val roles = setOf(PresentationRole.REFERENCE_OPTION, PresentationRole.AUTHORING_RESULT)
+    override val roles = setOf(PresentationRole.REFERENCE_PICKER_RESULT, PresentationRole.RESOURCE_SEARCH_RESULT)
 
     override fun BookPresentationScope.present() {
         val authoredIcon = icon.input

@@ -139,7 +139,7 @@ final class _AuthoredResourceInspectionState
               _binding.reportStatus(message);
             },
           ),
-        if (widget.role == skir.PresentationRole.editor)
+        if (widget.role == skir.PresentationRole.workspaceEditor)
           Expanded(child: editor)
         else
           editor,
@@ -160,7 +160,7 @@ final class _AuthoredResourceInspectionState
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: context.spacing.space3,
       children: [
-        if (widget.role == skir.PresentationRole.editor)
+        if (widget.role == skir.PresentationRole.workspaceEditor)
           Expanded(child: content)
         else
           content,

@@ -344,7 +344,7 @@ Widget _buildAuthoredLinkChoiceResult(
         child: _ResourceReferenceAppearance(
           resource: choice.target.resource,
           scope: choice.row?.scope ?? scope,
-          role: skir.PresentationRole.referenceOption,
+          role: skir.PresentationRole.referencePickerResult,
           fallbackLabel: choice.label,
           appearanceOverride: choice.definition?.resources?.appearance,
           render: render,

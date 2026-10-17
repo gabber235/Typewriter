@@ -469,8 +469,8 @@ extension _PortableDiagnosticStoryContext on BuildContext {
               label: "Presentation role",
               options: [
                 skir.PresentationRole.inspector,
-                skir.PresentationRole.editor,
-                skir.PresentationRole.authoringResult,
+                skir.PresentationRole.workspaceEditor,
+                skir.PresentationRole.resourceSearchResult,
               ],
               initialOption: skir.PresentationRole.inspector,
             ),

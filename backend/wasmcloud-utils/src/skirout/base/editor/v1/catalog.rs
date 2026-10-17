@@ -57,6 +57,8 @@ impl ResourceDefinitionId {
 // struct AuthoringResourceDefinition
 // ==============================================================================
 
+/// Gives an authored resource family its stable definition identity and navigation behavior,
+/// independently of the concrete type application currently selected by a resource.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringResourceDefinition {
     pub id: ResourceDefinitionId,
@@ -83,7 +85,7 @@ impl AuthoringResourceDefinition {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "AuthoringResourceDefinition",
-                "",
+                "Gives an authored resource family its stable definition identity and navigation behavior,\nindependently of the concrete type application currently selected by a resource.",
                 |x: &AuthoringResourceDefinition| &x._unrecognized,
                 |x: &mut AuthoringResourceDefinition, u| x._unrecognized = u,
             )
@@ -242,6 +244,8 @@ impl EndpointCardinality {
 // struct EndpointDefinition
 // ==============================================================================
 
+/// Declares one side of a relation. Cardinality constrains how many resources on this side
+/// one opposite resource can reference. on_delete applies when a resource on this side is deleted.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EndpointDefinition {
     pub id: crate::skirout::base::editor::v1::type_catalog::EndpointId,
@@ -269,7 +273,7 @@ impl EndpointDefinition {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "EndpointDefinition",
-                "",
+                "Declares one side of a relation. Cardinality constrains how many resources on this side\none opposite resource can reference. on_delete applies when a resource on this side is deleted.",
                 |x: &EndpointDefinition| &x._unrecognized,
                 |x: &mut EndpointDefinition, u| x._unrecognized = u,
             )
@@ -286,6 +290,8 @@ impl EndpointDefinition {
 // struct RelationContract
 // ==============================================================================
 
+/// Shared relation meaning used to validate authored references and derive graph edges.
+/// Families attach shared semantics such as ownership without relying on presentation names.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RelationContract {
     pub id: crate::skirout::base::editor::v1::type_catalog::RelationId,
@@ -312,7 +318,7 @@ impl RelationContract {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "RelationContract",
-                "",
+                "Shared relation meaning used to validate authored references and derive graph edges.\nFamilies attach shared semantics such as ownership without relying on presentation names.",
                 |x: &RelationContract| &x._unrecognized,
                 |x: &mut RelationContract, u| x._unrecognized = u,
             )
@@ -719,18 +725,23 @@ impl ConfigurationRecipe {
 // enum PresentationRole
 // ==============================================================================
 
+/// The UI surface requesting a type's presentation. Registering a role does not create a surface.
+/// Missing presentations follow the catalog's explicit role fallbacks.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PresentationRole {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PresentationRole>>),
-    Editor,
+    /// The main workspace for an opened resource, such as a page graph or timeline.
+    WorkspaceEditor,
+    /// Editable properties in inspectors, editing review, and delegated field controls.
     Inspector,
-    ReferenceSummary,
-    ReferenceOption,
-    CollectionItem,
-    CatalogOption,
-    AuthoringResult,
-    PageTile,
-    GraphNode,
+    /// A compact preview of the selected reference target, with writes and input disabled.
+    ReferencePreview,
+    /// A candidate target in a reference picker or a reference question during creation.
+    ReferencePickerResult,
+    /// An existing resource shown in authoring search, with navigation owned by the result row.
+    ResourceSearchResult,
+    /// Resource content inside an editor node, independent of graph or timeline layout.
+    EditorNode,
 }
 
 impl Default for PresentationRole {
@@ -747,15 +758,12 @@ impl PresentationRole {
             crate::skir_client::internal::EnumAdapter::new(
                 |x: &PresentationRole| match x {
                     PresentationRole::Unknown(_) => 0,
-                    PresentationRole::Editor => 1,
+                    PresentationRole::WorkspaceEditor => 1,
                     PresentationRole::Inspector => 2,
-                    PresentationRole::ReferenceSummary => 3,
-                    PresentationRole::ReferenceOption => 4,
-                    PresentationRole::CollectionItem => 5,
-                    PresentationRole::CatalogOption => 6,
-                    PresentationRole::AuthoringResult => 7,
-                    PresentationRole::PageTile => 8,
-                    PresentationRole::GraphNode => 9,
+                    PresentationRole::ReferencePreview => 3,
+                    PresentationRole::ReferencePickerResult => 4,
+                    PresentationRole::ResourceSearchResult => 5,
+                    PresentationRole::EditorNode => 6,
                 },
                 |u| PresentationRole::Unknown(Some(u)),
                 |x: &PresentationRole| match x {
@@ -764,7 +772,7 @@ impl PresentationRole {
                 },
                 "editor/v1/catalog.skir",
                 "PresentationRole",
-                "",
+                "The UI surface requesting a type's presentation. Registering a role does not create a surface.\nMissing presentations follow the catalog's explicit role fallbacks.",
             )
         });
         &*ADAPTER
@@ -871,6 +879,9 @@ impl PresentationDescriptor {
 // struct PresentationMaterial
 // ==============================================================================
 
+/// Checked portable layout for a provider, target, and role. Dependencies describe required
+/// services and typed inputs. inheritable_nodes identifies reusable inspector material rather
+/// than granting inheritance to every node in the layout.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationMaterial {
     pub provider: crate::skirout::base::editor::v1::type_catalog::PresentationId,
@@ -901,7 +912,7 @@ impl PresentationMaterial {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "PresentationMaterial",
-                "",
+                "Checked portable layout for a provider, target, and role. Dependencies describe required\nservices and typed inputs. inheritable_nodes identifies reusable inspector material rather\nthan granting inheritance to every node in the layout.",
                 |x: &PresentationMaterial| &x._unrecognized,
                 |x: &mut PresentationMaterial, u| x._unrecognized = u,
             )
@@ -959,6 +970,9 @@ impl RoleFallback {
 // struct EditorCatalogWireSnapshot
 // ==============================================================================
 
+/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
+/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
+/// from saved resource observations and selected compiled publications.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EditorCatalogWireSnapshot {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -998,7 +1012,7 @@ impl EditorCatalogWireSnapshot {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "EditorCatalogWireSnapshot",
-                "",
+                "One coherent generation of authoring types, relations, presentations, capabilities, and operations.\nGeneration changes invalidate client assumptions across the whole snapshot; they are separate\nfrom saved resource observations and selected compiled publications.",
                 |x: &EditorCatalogWireSnapshot| &x._unrecognized,
                 |x: &mut EditorCatalogWireSnapshot, u| x._unrecognized = u,
             )
@@ -1239,6 +1253,8 @@ impl CatalogFetchResult {
 // struct CatalogInvalidated
 // ==============================================================================
 
+/// Announces the installed catalog generation so clients can fetch current declarations.
+/// Delivery is an invalidation hint, rather than a durable history of catalog transitions.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogInvalidated {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -1262,7 +1278,7 @@ impl CatalogInvalidated {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "CatalogInvalidated",
-                "",
+                "Announces the installed catalog generation so clients can fetch current declarations.\nDelivery is an invalidation hint, rather than a durable history of catalog transitions.",
                 |x: &CatalogInvalidated| &x._unrecognized,
                 |x: &mut CatalogInvalidated, u| x._unrecognized = u,
             )
@@ -1415,6 +1431,8 @@ impl PreparedContent {
 // struct PreparedValue
 // ==============================================================================
 
+/// Proposed editable content after value preparation. It may carry initialization findings;
+/// preparation does not save a resource or establish that authored content is publishable.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PreparedValue {
     pub content: PreparedContent,
@@ -1439,7 +1457,7 @@ impl PreparedValue {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "PreparedValue",
-                "",
+                "Proposed editable content after value preparation. It may carry initialization findings;\npreparation does not save a resource or establish that authored content is publishable.",
                 |x: &PreparedValue| &x._unrecognized,
                 |x: &mut PreparedValue, u| x._unrecognized = u,
             )
@@ -1497,6 +1515,9 @@ impl RequiredInput {
 // struct PreparationDraft
 // ==============================================================================
 
+/// Caller retained continuation for deferred constructor defaults and required input.
+/// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
+/// retains no preparation session behind this value, and constructor sampling may execute provider code.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PreparationDraft {
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -1525,7 +1546,7 @@ impl PreparationDraft {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/catalog.skir",
                 "PreparationDraft",
-                "",
+                "Caller retained continuation for deferred constructor defaults and required input.\nResume validates catalog, target, pending default paths, and supplied answers. The runtime\nretains no preparation session behind this value, and constructor sampling may execute provider code.",
                 |x: &PreparationDraft| &x._unrecognized,
                 |x: &mut PreparationDraft, u| x._unrecognized = u,
             )
@@ -1672,6 +1693,8 @@ impl PreparationOperation {
 // enum PreparationStep
 // ==============================================================================
 
+/// Separates prepared editable content from a continuation needing caller input or unavailable
+/// preparation. ready describes completion of initialization, not saved authoring or publication.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PreparationStep {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PreparationStep>>),
@@ -1705,7 +1728,7 @@ impl PreparationStep {
                 },
                 "editor/v1/catalog.skir",
                 "PreparationStep",
-                "",
+                "Separates prepared editable content from a continuation needing caller input or unavailable\npreparation. ready describes completion of initialization, not saved authoring or publication.",
             )
         });
         &*ADAPTER
@@ -2383,39 +2406,36 @@ fn initialize_module_serializers() {
         unsafe {
             let a: *mut crate::skir_client::internal::EnumAdapter<PresentationRole> =
                 PresentationRole::_adapter() as *const _ as *mut _;
-            (*a).add_constant_variant("editor", 1, 1, "", PresentationRole::Editor);
-            (*a).add_constant_variant("inspector", 2, 2, "", PresentationRole::Inspector);
             (*a).add_constant_variant(
-                "reference_summary",
-                3,
-                3,
-                "",
-                PresentationRole::ReferenceSummary,
+                "workspace_editor",
+                1,
+                1,
+                "The main workspace for an opened resource, such as a page graph or timeline.",
+                PresentationRole::WorkspaceEditor,
             );
             (*a).add_constant_variant(
-                "reference_option",
+                "inspector",
+                2,
+                2,
+                "Editable properties in inspectors, editing review, and delegated field controls.",
+                PresentationRole::Inspector,
+            );
+            (*a).add_constant_variant("reference_preview", 3, 3, "A compact preview of the selected reference target, with writes and input disabled.", PresentationRole::ReferencePreview);
+            (*a).add_constant_variant(
+                "reference_picker_result",
                 4,
                 4,
-                "",
-                PresentationRole::ReferenceOption,
+                "A candidate target in a reference picker or a reference question during creation.",
+                PresentationRole::ReferencePickerResult,
             );
+            (*a).add_constant_variant("resource_search_result", 5, 5, "An existing resource shown in authoring search, with navigation owned by the result row.", PresentationRole::ResourceSearchResult);
             (*a).add_constant_variant(
-                "collection_item",
-                5,
-                5,
-                "",
-                PresentationRole::CollectionItem,
+                "editor_node",
+                6,
+                6,
+                "Resource content inside an editor node, independent of graph or timeline layout.",
+                PresentationRole::EditorNode,
             );
-            (*a).add_constant_variant("catalog_option", 6, 6, "", PresentationRole::CatalogOption);
-            (*a).add_constant_variant(
-                "authoring_result",
-                7,
-                7,
-                "",
-                PresentationRole::AuthoringResult,
-            );
-            (*a).add_constant_variant("page_tile", 8, 8, "", PresentationRole::PageTile);
-            (*a).add_constant_variant("graph_node", 9, 9, "", PresentationRole::GraphNode);
             (*a).finalize();
         }
         unsafe {

@@ -131,7 +131,7 @@ void main() {
         resource: fixture.resource,
         source: observation,
         material: skir.PresentationMaterial.defaultInstance,
-        role: skir.PresentationRole.editor,
+        role: skir.PresentationRole.workspaceEditor,
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         capabilities: const PortablePresentationCapabilities(),
       );
@@ -219,7 +219,7 @@ void main() {
       resource: fixture.resource,
       source: observation,
       material: skir.PresentationMaterial.defaultInstance,
-      role: skir.PresentationRole.editor,
+      role: skir.PresentationRole.workspaceEditor,
       budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
       capabilities: const PortablePresentationCapabilities(),
     );

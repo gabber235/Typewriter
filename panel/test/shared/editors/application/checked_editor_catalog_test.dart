@@ -54,7 +54,7 @@ void main() {
         final selected = catalog.fieldPresentation(
           actual,
           "title",
-          skir.PresentationRole.editor,
+          skir.PresentationRole.workspaceEditor,
         );
         expect(selected, isA<SelectedEditorFieldPresentation>());
       }
@@ -467,14 +467,14 @@ void main() {
         id: exact,
         owner: skir.DeclarationOwner.defaultInstance,
         target: exactTarget,
-        roles: [skir.PresentationRole.editor],
+        roles: [skir.PresentationRole.workspaceEditor],
         priority: 10,
       ),
       skir.PresentationDescriptor(
         id: base,
         owner: skir.DeclarationOwner.defaultInstance,
         target: baseTarget,
-        roles: [skir.PresentationRole.editor],
+        roles: [skir.PresentationRole.workspaceEditor],
         priority: 100,
       ),
     ];
@@ -514,7 +514,7 @@ void main() {
 
               provider: descriptor.id,
               target: descriptor.target,
-              role: skir.PresentationRole.editor,
+              role: skir.PresentationRole.workspaceEditor,
               layout: skir.PresentationNode.defaultInstance,
               dependencies: skir.PresentationDependencies.defaultInstance,
               subject: _subject(descriptor.target, wrapper),
@@ -536,7 +536,7 @@ void main() {
           skir.TypeUse.createNamed(definition: coin, arguments: const []),
         ],
       ),
-      skir.PresentationRole.editor,
+      skir.PresentationRole.workspaceEditor,
     );
 
     expect((selected as SelectedEditorPresentation).descriptor.id, exact);
@@ -593,9 +593,9 @@ void main() {
 
     expect(fixture.catalog.roleFallbackOrder(skir.PresentationRole.inspector), [
       skir.PresentationRole.inspector,
-      skir.PresentationRole.editor,
-      skir.PresentationRole.referenceSummary,
-      skir.PresentationRole.catalogOption,
+      skir.PresentationRole.workspaceEditor,
+      skir.PresentationRole.referencePreview,
+      skir.PresentationRole.resourceSearchResult,
     ]);
   });
 
@@ -614,7 +614,7 @@ void main() {
     expect(selected, isA<SelectedEditorPresentation>());
     final value = selected as SelectedEditorPresentation;
     expect(value.requestedRole, skir.PresentationRole.inspector);
-    expect(value.resolvedRole, skir.PresentationRole.editor);
+    expect(value.resolvedRole, skir.PresentationRole.workspaceEditor);
     expect(value.descriptor.id, fixture.rootPresentation);
     expect(value.material.provider, fixture.rootPresentation);
   });
@@ -625,7 +625,7 @@ void main() {
 
     final selected = fixture.catalog.selectPresentation(
       pending,
-      skir.PresentationRole.editor,
+      skir.PresentationRole.workspaceEditor,
     );
 
     expect(
@@ -657,7 +657,7 @@ void main() {
             id: tie,
             owner: skir.DeclarationOwner.defaultInstance,
             target: target,
-            roles: [skir.PresentationRole.editor],
+            roles: [skir.PresentationRole.workspaceEditor],
             priority: 1,
           ),
         ],
@@ -669,7 +669,7 @@ void main() {
 
             provider: tie,
             target: target,
-            role: skir.PresentationRole.editor,
+            role: skir.PresentationRole.workspaceEditor,
             layout: skir.PresentationNode.defaultInstance,
             dependencies: skir.PresentationDependencies.defaultInstance,
             subject: _subject(target, fixture.root),
@@ -691,7 +691,7 @@ void main() {
 
     final selected = checked.selectPresentation(
       actual,
-      skir.PresentationRole.editor,
+      skir.PresentationRole.workspaceEditor,
     );
 
     expect(selected, isA<ConflictingEditorPresentation>());
@@ -708,7 +708,7 @@ void main() {
 
       final selected = fixture.catalog.selectPresentation(
         fixture.actual,
-        skir.PresentationRole.editor,
+        skir.PresentationRole.workspaceEditor,
       );
 
       expect(
@@ -739,7 +739,7 @@ void main() {
 
     final selected = fixture.catalog.selectPresentation(
       fixture.actual,
-      skir.PresentationRole.editor,
+      skir.PresentationRole.workspaceEditor,
     );
 
     expect(
@@ -790,14 +790,14 @@ _patternCatalog({required bool repeated}) {
       id: first,
       owner: skir.DeclarationOwner.defaultInstance,
       target: firstTarget,
-      roles: [skir.PresentationRole.editor],
+      roles: [skir.PresentationRole.workspaceEditor],
       priority: repeated ? 1 : 100,
     ),
     skir.PresentationDescriptor(
       id: second,
       owner: skir.DeclarationOwner.defaultInstance,
       target: secondTarget,
-      roles: [skir.PresentationRole.editor],
+      roles: [skir.PresentationRole.workspaceEditor],
       priority: repeated ? 100 : 1,
     ),
   ];
@@ -844,7 +844,7 @@ _patternCatalog({required bool repeated}) {
 
           provider: descriptor.id,
           target: descriptor.target,
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           layout: skir.PresentationNode.defaultInstance,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: _subject(descriptor.target, pair),
@@ -1014,21 +1014,21 @@ _catalog() {
         id: rootPresentation,
         owner: skir.DeclarationOwner.defaultInstance,
         target: rootTarget,
-        roles: [skir.PresentationRole.editor],
+        roles: [skir.PresentationRole.workspaceEditor],
         priority: 1,
       ),
       skir.PresentationDescriptor(
         id: basePresentation,
         owner: skir.DeclarationOwner.defaultInstance,
         target: baseTarget,
-        roles: [skir.PresentationRole.editor],
+        roles: [skir.PresentationRole.workspaceEditor],
         priority: 100,
       ),
       skir.PresentationDescriptor(
         id: recordPresentation,
         owner: skir.DeclarationOwner.defaultInstance,
         target: recordTarget,
-        roles: [skir.PresentationRole.editor],
+        roles: [skir.PresentationRole.workspaceEditor],
         priority: 1000,
       ),
     ],
@@ -1044,7 +1044,7 @@ _catalog() {
 
           provider: entry.$1,
           target: entry.$2,
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           layout: skir.PresentationNode.defaultInstance,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: _subject(entry.$2, root),
@@ -1072,16 +1072,16 @@ _catalog() {
       skir.RoleFallback(
         role: skir.PresentationRole.inspector,
         parents: [
-          skir.PresentationRole.editor,
-          skir.PresentationRole.referenceSummary,
+          skir.PresentationRole.workspaceEditor,
+          skir.PresentationRole.referencePreview,
         ],
       ),
       skir.RoleFallback(
-        role: skir.PresentationRole.editor,
-        parents: [skir.PresentationRole.catalogOption],
+        role: skir.PresentationRole.workspaceEditor,
+        parents: [skir.PresentationRole.resourceSearchResult],
       ),
       skir.RoleFallback(
-        role: skir.PresentationRole.catalogOption,
+        role: skir.PresentationRole.resourceSearchResult,
         parents: [skir.PresentationRole.inspector],
       ),
     ],

@@ -391,7 +391,7 @@ void main() {
           resource: fixture.resource,
           workspace: authoring.workspace,
           commands: fixtureAuthoringCommands(authoring.transport),
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
         ),
       ),
     );
@@ -488,7 +488,7 @@ void main() {
             ),
           );
       await tester.pumpTestApp(
-        child: editor(page.resource, skir.PresentationRole.editor),
+        child: editor(page.resource, skir.PresentationRole.workspaceEditor),
       );
       await tester.pumpAndSettle();
       expect(find.byType(Graph), findsOneWidget);
@@ -501,7 +501,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       await tester.pumpTestApp(
-        child: editor(child.resource, skir.PresentationRole.graphNode),
+        child: editor(child.resource, skir.PresentationRole.editorNode),
       );
       await tester.pumpAndSettle();
       final marker = find.bySemanticsLabel("Presentation error");
@@ -576,7 +576,7 @@ void main() {
       );
       final embeddedMaterials = child.catalog.snapshot.presentationMaterials
           .map((material) {
-            if (material.role != skir.PresentationRole.graphNode) {
+            if (material.role != skir.PresentationRole.editorNode) {
               return material;
             }
             final text = skir.TextContent.defaultInstance.toMutable()
@@ -667,7 +667,7 @@ void main() {
           body: AuthoredResourceEditor(
             resource: page.resource,
             document: document,
-            role: skir.PresentationRole.editor,
+            role: skir.PresentationRole.workspaceEditor,
             budget: skir.EvaluationBudget(
               maxSteps: 1000,
               maxCollectionItems: 100,
@@ -782,7 +782,7 @@ void main() {
                 child: AuthoredResourceEditor(
                   resource: fixture.resource,
                   document: fixture.draft.toDocument(),
-                  role: skir.PresentationRole.graphNode,
+                  role: skir.PresentationRole.editorNode,
                   budget: skir.EvaluationBudget(
                     maxSteps: 100,
                     maxCollectionItems: 100,
@@ -849,7 +849,7 @@ void main() {
         body: AuthoredResourceEditor(
           resource: fixture.resource,
           document: fixture.draft.toDocument(),
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
         ),
       ),
@@ -1123,7 +1123,7 @@ _emptyPageGraphFixture() {
           id: presentationId,
           owner: skir.DeclarationOwner.defaultInstance,
           target: target,
-          roles: [skir.PresentationRole.editor],
+          roles: [skir.PresentationRole.workspaceEditor],
           priority: 0,
         ),
       ],
@@ -1134,7 +1134,7 @@ _emptyPageGraphFixture() {
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           layout: skir.PresentationNode(
             nodeId: "generated.root",
             properties: skir.PresentationProperties.defaultInstance,
@@ -1632,9 +1632,9 @@ _fixture({
           owner: skir.DeclarationOwner.defaultInstance,
           target: target,
           roles: [
-            skir.PresentationRole.editor,
+            skir.PresentationRole.workspaceEditor,
             skir.PresentationRole.inspector,
-            skir.PresentationRole.graphNode,
+            skir.PresentationRole.editorNode,
           ],
           priority: 0,
         ),
@@ -1646,7 +1646,7 @@ _fixture({
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           layout: layout,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: skir.TypeTemplate.createNamed(
@@ -1687,7 +1687,7 @@ _fixture({
 
           provider: presentationId,
           target: target,
-          role: skir.PresentationRole.graphNode,
+          role: skir.PresentationRole.editorNode,
           layout: generatedGraphLayout,
           dependencies: skir.PresentationDependencies.defaultInstance,
           subject: skir.TypeTemplate.createNamed(

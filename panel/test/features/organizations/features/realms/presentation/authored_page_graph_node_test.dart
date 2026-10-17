@@ -17,7 +17,7 @@ void main() {
     expect(
       document.catalog.selectPresentation(
         document.resource(compiledEntryFirstId)!.configuration,
-        skir.PresentationRole.graphNode,
+        skir.PresentationRole.editorNode,
       ),
       isA<SelectedEditorPresentation>(),
     );

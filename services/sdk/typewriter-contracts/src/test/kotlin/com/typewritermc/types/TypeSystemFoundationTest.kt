@@ -687,7 +687,7 @@ val TypeSystemFoundationTest by testSuite {
                             id = PresentationId("example", "editor"),
                             owner = owner,
                             target = PresentationTarget.Representation(com.typewritermc.configuration.RepresentationKind.Text),
-                            roles = setOf(PresentationRole.EDITOR),
+                            roles = setOf(PresentationRole.WORKSPACE_EDITOR),
                             priority = 1,
                         ),
                     ),

@@ -743,15 +743,12 @@ private fun ConversionScope.encode(target: PresentationTarget): SkirPresentation
 
 private fun encode(role: PresentationRole): SkirPresentationRole =
     when (role) {
-        PresentationRole.EDITOR -> SkirPresentationRole.EDITOR
+        PresentationRole.WORKSPACE_EDITOR -> SkirPresentationRole.WORKSPACE_EDITOR
         PresentationRole.INSPECTOR -> SkirPresentationRole.INSPECTOR
-        PresentationRole.REFERENCE_SUMMARY -> SkirPresentationRole.REFERENCE_SUMMARY
-        PresentationRole.REFERENCE_OPTION -> SkirPresentationRole.REFERENCE_OPTION
-        PresentationRole.COLLECTION_ITEM -> SkirPresentationRole.COLLECTION_ITEM
-        PresentationRole.CATALOG_OPTION -> SkirPresentationRole.CATALOG_OPTION
-        PresentationRole.AUTHORING_RESULT -> SkirPresentationRole.AUTHORING_RESULT
-        PresentationRole.PAGE_TILE -> SkirPresentationRole.PAGE_TILE
-        PresentationRole.GRAPH_NODE -> SkirPresentationRole.GRAPH_NODE
+        PresentationRole.REFERENCE_PREVIEW -> SkirPresentationRole.REFERENCE_PREVIEW
+        PresentationRole.REFERENCE_PICKER_RESULT -> SkirPresentationRole.REFERENCE_PICKER_RESULT
+        PresentationRole.RESOURCE_SEARCH_RESULT -> SkirPresentationRole.RESOURCE_SEARCH_RESULT
+        PresentationRole.EDITOR_NODE -> SkirPresentationRole.EDITOR_NODE
     }
 
 private fun encode(kind: RepresentationKind): SkirRepresentationKind =

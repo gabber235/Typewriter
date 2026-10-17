@@ -31,11 +31,11 @@ class PagePage extends ConsumerWidget {
         child = const Center(child: Text("This page is no longer available"));
       } else {
         child = AuthoredResourceInspection(
-          key: ValueKey((resource, skir.PresentationRole.editor)),
+          key: ValueKey((resource, skir.PresentationRole.workspaceEditor)),
           resource: resource,
           workspace: ref.watch(realmEditingProvider(scope)),
           commands: ref.watch(authoredResourceCommandsProvider(scope)),
-          role: skir.PresentationRole.editor,
+          role: skir.PresentationRole.workspaceEditor,
           openResource: (selected) {
             ref
                 .read(selectionProvider.notifier)

@@ -192,15 +192,53 @@ data class PresentationId(
     }
 }
 
+/**
+ * The UI context for which a presentation is selected. A type can provide different layouts for
+ * its main workspace, inspector, references, search results, and editor nodes.
+ *
+ * The host requests a role when selecting a presentation for a subject. Registering a role does
+ * not create a UI surface. If no presentation matches, selection follows the catalog's explicit
+ * role fallbacks; roles do not automatically inherit an editor or inspector layout.
+ */
 @Serializable
 enum class PresentationRole {
-    EDITOR,
+    /**
+     * The main workspace for an opened resource, such as a page graph or timeline.
+     * The workspace host requests this role separately from the resource's inspector.
+     */
+    WORKSPACE_EDITOR,
+
+    /**
+     * Editable properties for a resource or nested value. Used by resource inspectors,
+     * editing review, and delegated field controls. Layouts can compose inherited inspector
+     * material from the subject's parent types.
+     */
     INSPECTOR,
-    REFERENCE_SUMMARY,
-    REFERENCE_OPTION,
-    COLLECTION_ITEM,
-    CATALOG_OPTION,
-    AUTHORING_RESULT,
-    PAGE_TILE,
-    GRAPH_NODE,
+
+    /**
+     * A compact preview of the selected reference target inside a link control.
+     * Writes, pointer input, and focus are disabled by the host. Also serves as the default
+     * fallback for [REFERENCE_PICKER_RESULT].
+     */
+    REFERENCE_PREVIEW,
+
+    /**
+     * A candidate target in a reference picker, including reference questions during creation.
+     * The picker owns selection and disables writes. Missing presentations fall back to
+     * [REFERENCE_PREVIEW]. Supports result appearance metadata for the surrounding row.
+     */
+    REFERENCE_PICKER_RESULT,
+
+    /**
+     * An existing resource in authoring search. The surrounding result owns navigation and
+     * selection and disables writes. Supports result appearance metadata for the surrounding row.
+     */
+    RESOURCE_SEARCH_RESULT,
+
+    /**
+     * The content of a resource node within an editor, independent of graph or timeline layout.
+     * Currently requested by page graphs, tag graphs, and tag drag previews. The containing
+     * editor supplies the node's bounds and surrounding interaction.
+     */
+    EDITOR_NODE,
 }

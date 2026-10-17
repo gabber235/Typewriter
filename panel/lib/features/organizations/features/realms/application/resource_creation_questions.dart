@@ -98,7 +98,7 @@ extension on _ResourceCreationOperation {
             presentationContext: surfaceContext,
             resource: resource,
             row: row,
-            role: skir.PresentationRole.referenceOption,
+            role: skir.PresentationRole.referencePickerResult,
             fallbackLabel: candidate.label,
             kindLabelOverride: candidate.disabledReason == null
                 ? "select"

@@ -71,7 +71,7 @@ void main() {
       final record = document.resource(compiledInheritanceTagId)!;
       final selected = document.catalog.selectPresentation(
         record.configuration,
-        skir.PresentationRole.graphNode,
+        skir.PresentationRole.editorNode,
       ) as SelectedEditorPresentation;
       final imported = skir.ExpressionBindingId(value: "context:test.page");
       final pageField = skir.ExpressionBindingId(value: "page_field");
@@ -501,7 +501,7 @@ void main() {
     tester,
   ) async {
     for (final role in [
-      skir.PresentationRole.editor,
+      skir.PresentationRole.workspaceEditor,
       skir.PresentationRole.inspector,
     ]) {
       final host = _TestPortableHost(
@@ -2097,7 +2097,7 @@ _linkCollectionFixture({
                 id: appearanceId,
                 owner: skir.DeclarationOwner.defaultInstance,
                 target: appearanceTarget,
-                roles: [skir.PresentationRole.referenceOption],
+                roles: [skir.PresentationRole.referencePickerResult],
                 priority: 0,
               ),
             ]
@@ -2110,7 +2110,7 @@ _linkCollectionFixture({
 
                 provider: appearanceId,
                 target: appearanceTarget,
-                role: skir.PresentationRole.referenceOption,
+                role: skir.PresentationRole.referencePickerResult,
                 layout: appearanceLayout,
                 dependencies: skir.PresentationDependencies.defaultInstance,
                 subject: rootTemplate,
@@ -2337,7 +2337,7 @@ AuthoredPresentationHost _authoredHost(
     resource: _resource,
     source: document.workspace.document,
     material: material ?? skir.PresentationMaterial.defaultInstance,
-    role: skir.PresentationRole.editor,
+    role: skir.PresentationRole.workspaceEditor,
     budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 100),
     capabilities: const PortablePresentationCapabilities(),
     prepareValue: prepareValue,

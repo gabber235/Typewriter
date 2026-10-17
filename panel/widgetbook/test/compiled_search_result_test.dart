@@ -120,7 +120,7 @@ Future<void> _pump(
   final configuration = document.resource(resource)!.configuration;
   final selection = document.catalog.selectPresentation(
     configuration,
-    skir.PresentationRole.authoringResult,
+    skir.PresentationRole.resourceSearchResult,
   );
   if (selection is UnavailableEditorPresentation) {
     final material = document.catalog.snapshot.presentationMaterials
@@ -147,7 +147,7 @@ Future<void> _pump(
               issues: ResourceIssues.evaluate(document: document),
               presentationContext: libraryOriginBindings(origin),
               resource: resource,
-              role: skir.PresentationRole.authoringResult,
+              role: skir.PresentationRole.resourceSearchResult,
               fallbackLabel: "Missing recipe",
               row: SearchResultRowContext(
                 result: SearchResult(

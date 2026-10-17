@@ -185,7 +185,7 @@ void main() {
               width: 480,
               child: PortableDiagnosticGallery(
                 severity: skir.DiagnosticSeverity.error,
-                role: skir.PresentationRole.authoringResult,
+                role: skir.PresentationRole.resourceSearchResult,
                 general: true,
                 readOnly: true,
               ),

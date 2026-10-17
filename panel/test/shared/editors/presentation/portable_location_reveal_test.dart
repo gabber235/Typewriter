@@ -72,7 +72,7 @@ void main() {
       child: Scaffold(
         body: Column(
           children: [
-            target(skir.PresentationRole.editor, editor),
+            target(skir.PresentationRole.workspaceEditor, editor),
             target(skir.PresentationRole.inspector, inspector),
           ],
         ),

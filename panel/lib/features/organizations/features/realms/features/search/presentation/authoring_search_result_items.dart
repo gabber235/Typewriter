@@ -14,7 +14,7 @@ Widget buildAuthoringResourceSearchResultItem(SearchResultRowContext row) {
     presentationContext: payload.presentationContext,
     resource: payload.id,
     row: row,
-    role: skir.PresentationRole.authoringResult,
+    role: skir.PresentationRole.resourceSearchResult,
     fallbackLabel: payload.title,
   );
 }

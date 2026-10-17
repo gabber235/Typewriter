@@ -229,7 +229,7 @@ class _TagNodeContent extends StatelessWidget {
       child: SizedBox.expand(
         child: AuthoringSubjectRole(
           resourceId: tag.tagId,
-          role: skir.PresentationRole.graphNode,
+          role: skir.PresentationRole.editorNode,
           fillAvailableSpace: true,
         ),
       ),
@@ -245,7 +245,7 @@ class _TagRoleNode extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AuthoringSubjectRole(
     resourceId: tagId,
-    role: skir.PresentationRole.graphNode,
+    role: skir.PresentationRole.editorNode,
   );
 }
 

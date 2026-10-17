@@ -355,10 +355,10 @@ fn collection_expressions_preserve_typed_fold_operands_and_lexical_slots() {
 fn current_state_lifecycle_contracts_round_trip_with_expected_values() {
     let catalog_snapshot = catalog::EditorCatalogWireSnapshot {
         role_fallbacks: vec![catalog::RoleFallback {
-            role: catalog::PresentationRole::ReferenceOption,
+            role: catalog::PresentationRole::ReferencePickerResult,
             parents: vec![
-                catalog::PresentationRole::ReferenceSummary,
-                catalog::PresentationRole::CatalogOption,
+                catalog::PresentationRole::ReferencePreview,
+                catalog::PresentationRole::ResourceSearchResult,
             ],
             _unrecognized: None,
         }],

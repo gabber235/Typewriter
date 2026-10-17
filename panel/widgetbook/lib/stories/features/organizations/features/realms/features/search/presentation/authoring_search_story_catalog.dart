@@ -20,7 +20,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
         id: presentation,
         owner: skir.DeclarationOwner.defaultInstance,
         target: target,
-        roles: [skir.PresentationRole.authoringResult],
+        roles: [skir.PresentationRole.resourceSearchResult],
         priority: 0,
       ),
     );
@@ -29,7 +29,7 @@ CheckedEditorCatalog authoringSearchStoryCatalog() {
         inheritableNodes: const [],
         provider: presentation,
         target: target,
-        role: skir.PresentationRole.authoringResult,
+        role: skir.PresentationRole.resourceSearchResult,
         layout: _resultLayout(entry.key),
         resultAppearance: skir.ResultAppearance(
           accent: null,
