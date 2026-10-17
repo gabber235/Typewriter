@@ -4,10 +4,48 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../../../../../support/graph.dart";
 import "../../../../../../../support/test_utils.dart";
 
 void main() {
   group("TagNode parent linking", () {
+    testWidgets(
+      "ready admission cannot mutate until that exact payload starts",
+      (tester) async {
+        final childId = skir.ResourceId(value: "child");
+        final parentId = skir.ResourceId(value: "parent");
+        await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
+        final payload = GraphDragPayload(
+          value: AuthoringResourceIdentifier.inScope(_scope, parentId),
+        );
+        addTearDown(payload.retire);
+        final details = DragTargetDetails(data: payload, offset: Offset.zero);
+        final target = _target(tester);
+        expect(target.onWillAcceptWithDetails!(details), isTrue);
+        target.onAcceptWithDetails!(details);
+        expect(
+          tester
+              .container()
+              .read(workingTagProvider(childId))
+              .requireValue!
+              .parentIds,
+          isEmpty,
+        );
+        payload.start();
+        target.onAcceptWithDetails!(details);
+        target.onAcceptWithDetails!(details);
+        await tester.pump();
+        expect(
+          tester
+              .container()
+              .read(workingTagProvider(childId))
+              .requireValue!
+              .parentIds,
+          [parentId],
+        );
+      },
+    );
+
     testWidgets("dropping a parent onto a child links them", (tester) async {
       final childId = skir.ResourceId(value: "child");
       final parentId = skir.ResourceId(value: "parent");
@@ -93,7 +131,7 @@ void main() {
       expect(
         _target(tester).onWillAcceptWithDetails!(
           DragTargetDetails(
-            data: AuthoringResourceIdentifier.inScope(otherScope, parentId),
+            data: _activePayload(parentId, scope: otherScope),
             offset: Offset.zero,
           ),
         ),
@@ -157,9 +195,13 @@ void main() {
       expect(target.onWillAcceptWithDetails!(_details(childId)), isFalse);
 
       final rejectedTarget = target.builder(
-        tester.element(find.byType(DragTarget<AuthoringResourceIdentifier>)),
+        tester.element(
+          find.byType(
+            DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>,
+          ),
+        ),
         const [],
-        [AuthoringResourceIdentifier.inScope(_scope, childId)],
+        [_activePayload(childId)],
       );
       await tester.pumpTestApp(
         overrides: [...authoringFixtureOverrides(tags: tags)],
@@ -180,16 +222,15 @@ void main() {
   });
 }
 
-DragTarget<AuthoringResourceIdentifier> _target(WidgetTester tester) =>
-    tester.widget<DragTarget<AuthoringResourceIdentifier>>(
-      find.byType(DragTarget<AuthoringResourceIdentifier>),
-    );
+DragTarget<GraphDragPayload<AuthoringResourceIdentifier>> _target(
+  WidgetTester tester,
+) => tester.widget<DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>>(
+  find.byType(DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>),
+);
 
-DragTargetDetails<AuthoringResourceIdentifier> _details(skir.ResourceId id) =>
-    DragTargetDetails(
-      data: AuthoringResourceIdentifier.inScope(_scope, id),
-      offset: Offset.zero,
-    );
+DragTargetDetails<GraphDragPayload<AuthoringResourceIdentifier>> _details(
+  skir.ResourceId id,
+) => DragTargetDetails(data: _activePayload(id), offset: Offset.zero);
 
 final _scope = AuthoringScope(
   organizationId: skir.recordId("organization:fixture"),
@@ -216,12 +257,20 @@ Future<void> _pumpTagTarget(
       child: SizedBox(
         width: 200,
         height: 100,
-        child: GraphDrag(
-          draggingInsideGraph: ValueNotifier(false),
-          child: TagNode(tagId: targetId),
-        ),
+        child: testGraphDragScope(tester, child: TagNode(tagId: targetId)),
       ),
     ),
   );
   await tester.pumpAndSettle();
+}
+
+GraphDragPayload<AuthoringResourceIdentifier> _activePayload(
+  skir.ResourceId id, {
+  AuthoringScope? scope,
+}) {
+  final payload = GraphDragPayload(
+    value: AuthoringResourceIdentifier.inScope(scope ?? _scope, id),
+  )..start();
+  addTearDown(payload.retire);
+  return payload;
 }

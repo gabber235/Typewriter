@@ -1178,6 +1178,12 @@ final directories = <_widgetbook.WidgetbookNode>[
                             .complexFlowGraphUseCase,
                   ),
                   _widgetbook.WidgetbookUseCase(
+                    name: 'Drag lifecycle',
+                    builder:
+                        _widgetbook_workspace_stories_shared_graph_presentation_graph_stories
+                            .graphDragLifecycleUseCase,
+                  ),
+                  _widgetbook.WidgetbookUseCase(
                     name: 'Edge Orientation Test',
                     builder:
                         _widgetbook_workspace_stories_shared_graph_presentation_graph_stories

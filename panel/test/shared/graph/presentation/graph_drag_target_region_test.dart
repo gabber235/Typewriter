@@ -148,10 +148,24 @@ Future<TestGesture> _dragFromSourceToTarget(WidgetTester tester) async {
 }
 
 Widget _draggableNode(String id) {
-  return Draggable<GraphDragData>(
-    data: _TestDragData(GraphIdentifier(id)),
-    feedback: const SizedBox(width: 40, height: 40),
-    child: ColoredBox(key: ValueKey("el-$id"), color: Colors.blue),
+  return HookBuilder(
+    builder: (context) {
+      final data = _TestDragData(GraphIdentifier(id));
+      final source = useGraphDragSource(context, data);
+      final offered = source.payload;
+      return Draggable<GraphDragPayload<GraphDragData>>(
+        data: offered,
+        key: ObjectKey(offered),
+        maxSimultaneousDrags: 1,
+        dragAnchorStrategy: (widget, context, position) =>
+            source.anchor(offered, widget, context, position),
+        onDragStarted: () => source.begin(offered),
+        onDragUpdate: (details) => source.update(offered, details),
+        onDragEnd: (_) => source.end(offered),
+        feedback: const SizedBox(width: 40, height: 40),
+        child: ColoredBox(key: ValueKey("el-$id"), color: Colors.blue),
+      );
+    },
   );
 }
 
@@ -162,9 +176,11 @@ Widget _exclusiveTarget(
 }) {
   return GraphDragTargetRegion(
     targetId: GraphIdentifier(id),
-    child: DragTarget<GraphDragData>(
-      onWillAcceptWithDetails: (_) => accepts,
-      onAcceptWithDetails: (_) => onAccepted(),
+    child: DragTarget<GraphDragPayload<GraphDragData>>(
+      onWillAcceptWithDetails: (details) => accepts && details.data.canHover,
+      onAcceptWithDetails: (details) {
+        if (details.data.claim()) onAccepted();
+      },
       builder: (_, candidateData, rejectedData) {
         return ColoredBox(
           key: ValueKey("el-$id"),
@@ -180,17 +196,23 @@ Widget _exclusiveTarget(
 
 Widget _exclusiveDraggableNode(String id) {
   final data = _TestDragData(GraphIdentifier(id));
-  return Builder(
+  return HookBuilder(
     builder: (context) {
-      final graphDrag = GraphDrag.maybeOf(context);
-      return Draggable<GraphDragData>(
-        data: data,
-        onDragStarted: () => graphDrag?.beginDrag(data),
-        onDragEnd: (_) => graphDrag?.endDrag(),
+      final source = useGraphDragSource(context, data);
+      final offered = source.payload;
+      return Draggable<GraphDragPayload<GraphDragData>>(
+        data: offered,
+        key: ObjectKey(offered),
+        maxSimultaneousDrags: 1,
+        dragAnchorStrategy: (widget, context, position) =>
+            source.anchor(offered, widget, context, position),
+        onDragStarted: () => source.begin(offered),
+        onDragUpdate: (details) => source.update(offered, details),
+        onDragEnd: (_) => source.end(offered),
         feedback: const SizedBox(width: 40, height: 40),
         child: GraphDragTargetRegion(
           targetId: data.graphId,
-          child: DragTarget<GraphDragData>(
+          child: DragTarget<GraphDragPayload<GraphDragData>>(
             onWillAcceptWithDetails: (_) => false,
             builder: (_, _, _) =>
                 ColoredBox(key: ValueKey("el-$id"), color: Colors.blue),

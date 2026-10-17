@@ -104,6 +104,8 @@ void main() {
             .first,
         fixture.source,
       );
+      await tester.pumpWidget(const SizedBox.shrink());
+      fixture.workspace.dispose();
     },
   );
 
@@ -132,7 +134,10 @@ void main() {
     Actions.invoke(selector.focusNode.context!, const DeleteIntent());
     await tester.pumpAndSettle();
     expect(inheritedDeletes, 0);
-    expect(find.byType(Draggable<AuthoringResourceDragGroup>), findsNothing);
+    expect(
+      find.byType(Draggable<GraphDragPayload<AuthoringResourceDragGroup>>),
+      findsNothing,
+    );
     expect(find.byType(AlertDialog), findsNothing);
     expect(fixture.workspace.document.resource(fixture.source), isNotNull);
   });
@@ -161,6 +166,8 @@ void main() {
       fixture.workspace.document.relations.children[fixture.page] ?? const [],
       isNot(contains(fixture.source)),
     );
+    await tester.pumpWidget(const SizedBox.shrink());
+    fixture.workspace.dispose();
   });
 
   testWidgets("keyboard movement and resize use focused owned nodes", (

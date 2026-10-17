@@ -1,6 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/graph.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
@@ -21,7 +22,7 @@ void main() {
             y: 1,
             width: 2,
             height: 2,
-            builder: (_) => _DragStateProbe(
+            builder: (_) => GraphDragStateProbe(
               sink: dragInside,
               child: _draggableNode("a", color: Colors.blue),
             ),
@@ -120,7 +121,7 @@ void main() {
               y: 0,
               width: 2,
               height: 2,
-              builder: (_) => _DragStateProbe(
+              builder: (_) => GraphDragStateProbe(
                 sink: dragInside,
                 child: _draggableNode("x", color: Colors.red),
               ),
@@ -160,42 +161,37 @@ class _TestDragData extends GraphDragData {
 }
 
 Widget _draggableNode(String id, {Color? color}) {
-  return Draggable<GraphDragData>(
-    data: _TestDragData(GraphIdentifier(id)),
-    feedback: Material(
-      elevation: 2,
-      color: Colors.transparent,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-        child: ColoredBox(color: (color ?? Colors.blue).withValues(alpha: 0.8)),
-      ),
-    ),
-    child: RepaintBoundary(
-      key: ValueKey("el-$id"),
-      child: ColoredBox(color: color ?? Colors.blue),
-    ),
+  return HookBuilder(
+    builder: (context) {
+      final data = _TestDragData(GraphIdentifier(id));
+      final source = useGraphDragSource(context, data);
+      final offered = source.payload;
+      return Draggable<GraphDragPayload<GraphDragData>>(
+        data: offered,
+        key: ObjectKey(offered),
+        maxSimultaneousDrags: 1,
+        dragAnchorStrategy: (widget, context, position) =>
+            source.anchor(offered, widget, context, position),
+        onDragStarted: () => source.begin(offered),
+        onDragUpdate: (details) => source.update(offered, details),
+        onDragEnd: (_) => source.end(offered),
+        feedback: Material(
+          elevation: 2,
+          color: Colors.transparent,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+            child: ColoredBox(
+              color: (color ?? Colors.blue).withValues(alpha: 0.8),
+            ),
+          ),
+        ),
+        child: RepaintBoundary(
+          key: ValueKey("el-$id"),
+          child: ColoredBox(color: color ?? Colors.blue),
+        ),
+      );
+    },
   );
-}
-
-class _DragStateProbe extends StatelessWidget {
-  const _DragStateProbe({required this.sink, required this.child});
-
-  final ValueNotifier<bool> sink;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final scope = GraphDrag.maybeOf(context);
-    if (scope == null) return child;
-    return ValueListenableBuilder<bool>(
-      valueListenable: scope.draggingInsideGraph,
-      builder: (_, v, _) {
-        // Mirror the current drag-inside state for assertions.
-        if (sink.value != v) sink.value = v;
-        return child;
-      },
-    );
-  }
 }
 
 class _FocusableTapBox extends StatelessWidget {

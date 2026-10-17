@@ -166,10 +166,12 @@ class AuthoredPageGraphNode extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final focus = useFocusNode();
-    final drag = GraphDrag.maybeOf(context);
-    useListenable(drag?.draggingInsideGraph);
     final selection = ref.watch(selectionProvider);
     final group = page.group(identifier, selection);
+    final dragSource = useGraphDragSource(context, group);
+    final offered = dragSource.payload;
+    useListenable(dragSource.state);
+    useListenable(offered);
     final editable = page.canMutate();
     final mode = ref.watch(currentInteractionModeProvider);
     final directionalMode =
@@ -267,17 +269,21 @@ class AuthoredPageGraphNode extends HookConsumerWidget {
               ),
             );
             if (!editable) return target;
-            return Draggable<AuthoringResourceDragGroup>(
-              data: group,
+            return Draggable<GraphDragPayload<AuthoringResourceDragGroup>>(
+              data: offered,
+              key: ObjectKey(offered),
+              maxSimultaneousDrags: 1,
+              dragAnchorStrategy: (widget, context, position) =>
+                  dragSource.anchor(offered, widget, context, position),
               rootOverlay: true,
-              onDragStarted: () => drag?.beginDrag(group),
-              onDragEnd: (_) => drag?.endDrag(),
-              onDraggableCanceled: (_, _) => drag?.endDrag(),
-              onDragCompleted: () => drag?.endDrag(),
+              onDragStarted: () => dragSource.begin(offered),
+              onDragUpdate: (details) => dragSource.update(offered, details),
+              onDragEnd: (_) => dragSource.end(offered),
               feedback: HookBuilder(
                 builder: (context) {
-                  useListenable(drag?.draggingInsideGraph);
-                  if (drag?.draggingInsideGraph.value ?? false) {
+                  useListenable(dragSource.state);
+                  useListenable(offered);
+                  if (!dragSource.showFeedback(offered)) {
                     return const SizedBox.shrink();
                   }
                   return themes.wrap(

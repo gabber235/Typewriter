@@ -28,9 +28,30 @@ class ResourceOperationDropTarget extends ConsumerStatefulWidget {
 
 class _ResourceOperationDropTargetState
     extends ConsumerState<ResourceOperationDropTarget> {
-  AuthoringResourceDragGroup? _hovered;
+  GraphDragPayload<AuthoringResourceDragGroup>? _hovered;
 
-  bool _current(AuthoringResourceDragGroup group) =>
+  void _observeHover(GraphDragPayload<AuthoringResourceDragGroup>? value) {
+    if (identical(_hovered, value)) return;
+    _hovered?.removeListener(_refreshHover);
+    _hovered = value;
+    value?.addListener(_refreshHover);
+  }
+
+  void _refreshHover() {
+    if (!mounted) return;
+    setState(() {
+      final current = _hovered;
+      if (current != null && !current.canHover) _observeHover(null);
+    });
+  }
+
+  @override
+  void dispose() {
+    _hovered?.removeListener(_refreshHover);
+    super.dispose();
+  }
+
+  bool _domainCurrent(AuthoringResourceDragGroup group) =>
       mounted &&
       widget.canMutate() &&
       group.primary.scope == widget.scope &&
@@ -38,9 +59,12 @@ class _ResourceOperationDropTargetState
 
   @override
   Widget build(BuildContext context) {
-    final hovered = _hovered;
+    final evaluated = _hovered;
     AsyncValue<bool>? check;
-    if (hovered != null) {
+    if (evaluated != null &&
+        evaluated.canHover &&
+        _domainCurrent(evaluated.value)) {
+      final hovered = evaluated.value;
       final document = ref
           .watch(workingAuthoringDocumentProvider(widget.scope))
           .value;
@@ -77,42 +101,84 @@ class _ResourceOperationDropTargetState
       }
     }
     final known = check is AsyncData<bool> ? check.value : null;
-    return DragTarget<AuthoringResourceDragGroup>(
+    bool? knownFor(GraphDragPayload<AuthoringResourceDragGroup> offered) =>
+        identical(evaluated, offered) ? known : null;
+
+    bool eligible(GraphDragPayload<AuthoringResourceDragGroup> offered) =>
+        offered.canHover && _domainCurrent(offered.value);
+
+    return DragTarget<GraphDragPayload<AuthoringResourceDragGroup>>(
       onWillAcceptWithDetails: (details) {
-        if (!_current(details.data)) return false;
-        if (_hovered != details.data) {
-          setState(() => _hovered = details.data);
-          return true;
+        final offered = details.data;
+        if (!eligible(offered)) return false;
+        if (!identical(_hovered, offered)) {
+          setState(() => _observeHover(offered));
         }
-        return known != false;
+        return knownFor(offered) != false;
       },
-      onLeave: (_) {
-        if (mounted) setState(() => _hovered = null);
+      onLeave: (offered) {
+        if (mounted && identical(_hovered, offered)) {
+          setState(() => _observeHover(null));
+        }
       },
       onAcceptWithDetails: (details) async {
-        if (!_current(details.data) || known == false) return;
+        final offered = details.data;
+        if (!eligible(offered) ||
+            knownFor(offered) == false ||
+            !offered.claim()) {
+          return;
+        }
+        // Claim is the handoff. Do not check hover phase after an await.
+        final group = offered.value;
         final expected = widget;
         try {
           await invokeResourceDropOperation(
             ref: ref,
             scope: widget.scope,
-            group: details.data,
+            group: group,
             operationLocalId: widget.operationLocalId,
             suppliedFields: widget.suppliedFields,
             isCurrent: () =>
+                mounted &&
                 widget.scope == expected.scope &&
                 widget.operationLocalId == expected.operationLocalId &&
                 mapEquals(widget.suppliedFields, expected.suppliedFields) &&
-                _current(details.data),
+                _domainCurrent(group),
           );
         } finally {
-          if (mounted) setState(() => _hovered = null);
+          if (mounted && identical(_hovered, offered)) {
+            setState(() => _observeHover(null));
+          }
         }
       },
-      builder: (context, accepted, rejected) => widget.builder(
-        context,
-        accepted.isNotEmpty && known == true,
-        rejected.isNotEmpty || accepted.isNotEmpty && known == false,
+      builder: (context, accepted, rejected) => HookBuilder(
+        builder: (context) {
+          useListenable(
+            Listenable.merge([
+              ...accepted.nonNulls,
+              ...rejected
+                  .whereType<GraphDragPayload<AuthoringResourceDragGroup>>(),
+            ]),
+          );
+          return widget.builder(
+            context,
+            accepted.nonNulls.any(
+              (offered) =>
+                  eligible(offered) &&
+                  identical(_hovered, offered) &&
+                  knownFor(offered) == true,
+            ),
+            rejected
+                    .whereType<GraphDragPayload<AuthoringResourceDragGroup>>()
+                    .any((offered) => offered.canHover) ||
+                accepted.nonNulls.any(
+                  (offered) =>
+                      eligible(offered) &&
+                      identical(_hovered, offered) &&
+                      knownFor(offered) == false,
+                ),
+          );
+        },
       ),
     );
   }

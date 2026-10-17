@@ -9,7 +9,110 @@ class SimpleDragData extends GraphDragData {
   final GraphIdentifier graphId;
 }
 
-class _SimpleNode<D extends GraphDragData> extends StatefulWidget {
+@widgetbook.UseCase(name: "Drag lifecycle", type: Graph)
+Widget graphDragLifecycleUseCase(BuildContext context) {
+  return FakeApp(
+    child: HookBuilder(
+      builder: (context) {
+        final width = useState(500.0);
+        final visible = useState(true);
+        final generation = useState(0);
+        final accepted = useState(0);
+        return Column(
+          children: [
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: Slider(
+                    value: width.value,
+                    min: 250,
+                    max: 600,
+                    label: "Viewport width",
+                    onChanged: (value) => width.value = value,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => visible.value = !visible.value,
+                  child: Text(
+                    visible.value ? "Remove source" : "Restore source",
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => generation.value++,
+                  child: const Text("Replace source"),
+                ),
+              ],
+            ),
+            Expanded(
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: width.value,
+                    child: Graph(
+                      data: GraphData(
+                        cellSize: 50,
+                        edges: const [],
+                        elements: [
+                          GraphElement(
+                            id: const GraphIdentifier("source"),
+                            x: 0,
+                            y: 0,
+                            width: 3,
+                            height: 2,
+                            builder: (_) => visible.value
+                                ? _SimpleNode(
+                                    key: ValueKey(generation.value),
+                                    text: "Drag me",
+                                    color: Colors.blue,
+                                    data: const SimpleDragData(
+                                      graphId: GraphIdentifier("source"),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                      onElementsMoved: (_) {},
+                    ),
+                  ),
+                  Expanded(
+                    child: DragTarget<GraphDragPayload<GraphDragData>>(
+                      onWillAcceptWithDetails: (details) =>
+                          details.data.canHover,
+                      onAcceptWithDetails: (details) {
+                        if (details.data.claim()) accepted.value++;
+                      },
+                      builder: (context, candidates, rejected) => HookBuilder(
+                        builder: (context) {
+                          useListenable(Listenable.merge(candidates));
+                          final hovering = candidates.nonNulls.any(
+                            (payload) => payload.canHover,
+                          );
+                          return ColoredBox(
+                            color: hovering ? Colors.green : Colors.grey,
+                            child: Center(
+                              child: Text(
+                                "Drop outside graph. Accepted: ${accepted.value}",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
+class _SimpleNode<D extends GraphDragData> extends HookWidget {
   const _SimpleNode({
     required this.text,
     required this.color,
@@ -24,27 +127,10 @@ class _SimpleNode<D extends GraphDragData> extends StatefulWidget {
   final D data;
 
   @override
-  State<_SimpleNode> createState() => _SimpleNodeState();
-}
-
-class _SimpleNodeState extends State<_SimpleNode<GraphDragData>>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = AnimationController(vsync: this, duration: 200.ms);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    controller.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = useAnimationController(duration: 200.ms);
+    final dragSource = useGraphDragSource(context, data);
+    final offered = dragSource.payload;
     return LayoutBuilder(
       builder: (context, constraints) {
         final child = Container(
@@ -52,18 +138,18 @@ class _SimpleNodeState extends State<_SimpleNode<GraphDragData>>
           height: constraints.maxHeight,
           decoration: BoxDecoration(
             color: .alphaBlend(
-              widget.color.withValues(alpha: 0.2),
+              color.withValues(alpha: 0.2),
               Theme.of(context).colorScheme.surfaceContainerLowest,
             ),
-            border: .all(color: widget.color, width: 2),
+            border: .all(color: color, width: 2),
             borderRadius: .circular(8),
           ),
-          padding: EdgeInsets.all(widget.padding),
+          padding: EdgeInsets.all(padding),
           child: FittedBox(
             child: Text(
-              widget.text,
+              text,
               style: TextStyle(
-                color: widget.color,
+                color: color,
                 letterSpacing: 1.5,
                 fontVariations: [extraBoldWeight],
               ),
@@ -76,20 +162,20 @@ class _SimpleNodeState extends State<_SimpleNode<GraphDragData>>
           to: Navigator.of(context, rootNavigator: true).context,
         );
 
-        final graphDrag = GraphDrag.maybeOf(context);
-
-        return Draggable(
-          data: widget.data,
-          onDragStarted: () {
-            // Because we initially start dragging over itself, we know that we are dragging inside the graph.
-            // And want to prevent the feedback from being shown.
-            // However the graph doesn't know that we are dragging on it yet.
-            graphDrag?.draggingInsideGraph.value = true;
-          },
+        return Draggable<GraphDragPayload<GraphDragData>>(
+          data: offered,
+          key: ObjectKey(offered),
+          maxSimultaneousDrags: 1,
+          dragAnchorStrategy: (widget, context, position) =>
+              dragSource.anchor(offered, widget, context, position),
+          onDragStarted: () => dragSource.begin(offered),
+          onDragUpdate: (details) => dragSource.update(offered, details),
+          onDragEnd: (_) => dragSource.end(offered),
           feedback: HookBuilder(
             builder: (context) {
-              useListenable(graphDrag?.draggingInsideGraph);
-              return graphDrag?.draggingInsideGraph.value ?? false
+              useListenable(dragSource.state);
+              useListenable(offered);
+              return !dragSource.showFeedback(offered)
                   ? SizedBox()
                   : Opacity(opacity: 0.5, child: themes.wrap(child));
             },

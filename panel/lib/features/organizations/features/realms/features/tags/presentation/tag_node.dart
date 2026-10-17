@@ -41,104 +41,162 @@ class _TagNode extends HookConsumerWidget {
     final focusNode = useFocusNode();
     final scope = ref.watch(selectedAuthoringScopeProvider);
 
-    final graphDrag = GraphDrag.maybeOf(context);
-    useListenable(graphDrag?.draggingInsideGraph);
     if (scope == null) return const SizedBox.shrink();
     final identifier = AuthoringResourceIdentifier.inScope(scope, tag.tagId);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Selector(
-          selectableId: identifier,
-          focusNode: focusNode,
-          builder: (isSelected, isFocused, isHovered) {
-            final content = _TagNodeContent(
-              tag: tag,
-              isSelected: isSelected,
-              isFocused: isFocused,
-              isHovered: isHovered,
-            );
-            return Draggable<AuthoringResourceIdentifier>(
-              data: identifier,
-              onDragStarted: () => graphDrag?.beginDrag(identifier),
-              onDragEnd: (_) => graphDrag?.endDrag(),
-              feedback: HookBuilder(
-                builder: (context) {
-                  useListenable(graphDrag?.draggingInsideGraph);
-                  return graphDrag?.draggingInsideGraph.value ?? false
-                      ? SizedBox()
-                      : SizedBox(
-                          width: constraints.maxWidth,
-                          height: constraints.maxHeight,
-                          child: FeedbackTagNode(tag: tag),
-                        );
-                },
-              ),
-              childWhenDragging: graphDrag?.draggingInsideGraph.value ?? false
-                  ? content
-                  : const PlaceholderTagNode(),
-              child: GraphDragTargetRegion(
-                targetId: identifier.graphId,
-                child: DragTarget<AuthoringResourceIdentifier>(
-                  onWillAcceptWithDetails: (details) =>
-                      details.data.scope == scope &&
-                      tagParentDropAction(
-                            ref.read(workingTagsProvider).value ?? const [],
-                            childId: tag.tagId,
-                            parentId: details.data.resourceId,
-                          ) !=
-                          null,
-                  onAcceptWithDetails: (details) {
-                    final tags = ref.read(workingTagsProvider).requireValue;
-                    final action = tagParentDropAction(
-                      tags,
-                      childId: tag.tagId,
-                      parentId: details.data.resourceId,
-                    );
-                    if (action == null) return;
-                    final child = tags.firstWhere(
-                      (value) => value.tagId == tag.tagId,
-                    );
-                    final parents = action == TagParentDropAction.link
-                        ? [...child.parentIds, details.data.resourceId]
-                        : child.parentIds
-                              .where((id) => id != details.data.resourceId)
-                              .toList();
-                    final workspace = ref.read(realmEditingProvider(scope));
-                    workspace
-                        .edit(
-                          label: "Change tag parents",
-                          apply: (edit) {
-                            replacePortableLinkCollection(
-                              draft: edit,
-                              catalog: workspace.document.catalog,
-                              resource: child.tagId,
-                              field: "parents",
-                              expected: child.parentIds,
-                              proposed: parents,
+        return HookBuilder(
+          builder: (context) {
+            final dragSource = useGraphDragSource(context, identifier);
+            final offered = dragSource.payload;
+            useListenable(dragSource.state);
+            useListenable(offered);
+            return Selector(
+              selectableId: identifier,
+              focusNode: focusNode,
+              builder: (isSelected, isFocused, isHovered) {
+                final content = _TagNodeContent(
+                  tag: tag,
+                  isSelected: isSelected,
+                  isFocused: isFocused,
+                  isHovered: isHovered,
+                );
+                return Draggable<GraphDragPayload<AuthoringResourceIdentifier>>(
+                  data: offered,
+                  key: ObjectKey(offered),
+                  maxSimultaneousDrags: 1,
+                  dragAnchorStrategy: (widget, context, position) =>
+                      dragSource.anchor(offered, widget, context, position),
+                  onDragStarted: () => dragSource.begin(offered),
+                  onDragUpdate: (details) =>
+                      dragSource.update(offered, details),
+                  onDragEnd: (_) => dragSource.end(offered),
+                  feedback: HookBuilder(
+                    builder: (context) {
+                      useListenable(dragSource.state);
+                      useListenable(offered);
+                      return !dragSource.showFeedback(offered)
+                          ? SizedBox()
+                          : SizedBox(
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              child: FeedbackTagNode(tag: tag),
                             );
+                    },
+                  ),
+                  childWhenDragging: dragSource.isInsideGraph(offered)
+                      ? content
+                      : const PlaceholderTagNode(),
+                  child: GraphDragTargetRegion(
+                    targetId: identifier.graphId,
+                    child:
+                        DragTarget<
+                          GraphDragPayload<AuthoringResourceIdentifier>
+                        >(
+                          onWillAcceptWithDetails: (details) {
+                            final incoming = details.data;
+                            return incoming.canHover &&
+                                incoming.value.scope == scope &&
+                                tagParentDropAction(
+                                      ref.read(workingTagsProvider).value ??
+                                          const [],
+                                      childId: tag.tagId,
+                                      parentId: incoming.value.resourceId,
+                                    ) !=
+                                    null;
                           },
-                        )
-                        .report(context);
-                  },
-                  builder: (context, candidateData, rejectedData) {
-                    final isDropTarget = candidateData.isNotEmpty;
-                    final isRejected = rejectedData.isNotEmpty;
-                    if (isRejected) {
-                      return RejectedTagDropTarget(tag: tag);
-                    }
-                    if (isDropTarget) {
-                      return _TagNodeContent(
-                        tag: tag,
-                        isSelected: true,
-                        isFocused: true,
-                        isHovered: true,
-                      );
-                    }
-                    return content;
-                  },
-                ),
-              ),
+                          onAcceptWithDetails: (details) {
+                            final incoming = details.data;
+                            if (!incoming.isDragging ||
+                                incoming.value.scope != scope) {
+                              return;
+                            }
+                            final tags = ref
+                                .read(workingTagsProvider)
+                                .requireValue;
+                            final action = tagParentDropAction(
+                              tags,
+                              childId: tag.tagId,
+                              parentId: incoming.value.resourceId,
+                            );
+                            if (action == null || !incoming.claim()) return;
+                            final child = tags.firstWhere(
+                              (value) => value.tagId == tag.tagId,
+                            );
+                            final parents = action == TagParentDropAction.link
+                                ? [
+                                    ...child.parentIds,
+                                    incoming.value.resourceId,
+                                  ]
+                                : child.parentIds
+                                      .where(
+                                        (id) => id != incoming.value.resourceId,
+                                      )
+                                      .toList();
+                            final workspace = ref.read(
+                              realmEditingProvider(scope),
+                            );
+                            workspace
+                                .edit(
+                                  label: "Change tag parents",
+                                  apply: (edit) {
+                                    replacePortableLinkCollection(
+                                      draft: edit,
+                                      catalog: workspace.document.catalog,
+                                      resource: child.tagId,
+                                      field: "parents",
+                                      expected: child.parentIds,
+                                      proposed: parents,
+                                    );
+                                  },
+                                )
+                                .report(context);
+                          },
+                          builder: (context, candidateData, rejectedData) =>
+                              HookBuilder(
+                                builder: (context) {
+                                  useListenable(
+                                    Listenable.merge([
+                                      ...candidateData.nonNulls.map(
+                                        (incoming) => incoming,
+                                      ),
+                                      ...rejectedData
+                                          .whereType<
+                                            GraphDragPayload<
+                                              AuthoringResourceIdentifier
+                                            >
+                                          >()
+                                          .map((incoming) => incoming),
+                                    ]),
+                                  );
+                                  final isRejected = rejectedData
+                                      .whereType<
+                                        GraphDragPayload<
+                                          AuthoringResourceIdentifier
+                                        >
+                                      >()
+                                      .any((incoming) => incoming.canHover);
+                                  final isDropTarget = candidateData.nonNulls
+                                      .any((incoming) => incoming.canHover);
+                                  if (isRejected) {
+                                    return RejectedTagDropTarget(tag: tag);
+                                  }
+                                  if (isDropTarget) {
+                                    return _TagNodeContent(
+                                      tag: tag,
+                                      isSelected: true,
+                                      isFocused: true,
+                                      isHovered: true,
+                                    );
+                                  }
+                                  return content;
+                                },
+                              ),
+                        ),
+                  ),
+                );
+              },
             );
           },
         );

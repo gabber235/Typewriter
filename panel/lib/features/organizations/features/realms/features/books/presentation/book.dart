@@ -34,101 +34,161 @@ class BookWidget extends HookConsumerWidget {
     if (scope == null) return const SizedBox.shrink();
     final selectableId = AuthoringResourceIdentifier.inScope(scope, id);
 
-    return Selector(
-      selectableId: selectableId,
-      focusNode: focusNode,
-      onDoubleTap: () => invokeResourcePrimary(ref, selectableId),
-      builder: (isSelected, isFocused, isHovered) {
-        final book = Surface(
-          color: Theme.of(context).colorScheme.surface,
-          child:
-              OutlineDecorator(
-                    show: isFocused,
-                    outerColor: color,
-                    innerColor: Surface.colorOf(context),
-                    builder: (context) => SizedBox(
-                      width: bookWidth,
-                      height: bookHeight,
-                      child: _BookStack(
-                        key: const ValueKey("content"),
-                        color: color,
-                        icon: icon,
-                        title: title,
-                        tags: tags,
-                        isSelected: isSelected,
-                      ),
-                    ),
-                  )
-                  .animate(target: isHovered ? 1 : 0)
-                  .hoverScale(isHovered)
-                  .hoverRotate(isHovered),
-        );
-        return DragTarget<AuthoringResourceIdentifier>(
-          onWillAcceptWithDetails: (details) =>
-              details.data.scope == scope &&
-              (ref.read(workingTagsProvider).value ?? const <Tag>[]).any(
-                (tag) => tag.tagId == details.data.resourceId,
-              ),
-          onAcceptWithDetails: (details) async {
-            final data = details.data;
-            final current = ref.read(workingBookProvider(id)).value;
-            if (current == null) return;
-            final tags = [...current.tagIds];
-            final index = tags.indexOf(data.referenceId);
-            if (index < 0) {
-              tags.add(data.referenceId);
-            } else {
-              tags.removeAt(index);
-            }
-            final workspace = ref.read(realmEditingProvider(scope));
-            workspace
-                .edit(
-                  label: "Change book tags",
-                  apply: (edit) {
-                    replacePortableLinkCollection(
-                      draft: edit,
-                      catalog: workspace.document.catalog,
-                      resource: id,
-                      field: "tags",
-                      expected: current.tagIds,
-                      proposed: tags,
-                    );
-                  },
-                )
-                .report(context);
-          },
-          builder: (context, accepted, rejected) => AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
-            decoration: BoxDecoration(
-              borderRadius: context.shapes.largeBorderRadius,
-              border: accepted.isEmpty && rejected.isEmpty
-                  ? null
-                  : Border.all(
-                      color: accepted.isNotEmpty
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.error,
-                      width: 2,
-                    ),
-            ),
-            child: Draggable<AuthoringResourceIdentifier>(
-              data: selectableId,
-              feedback: Material(
-                color: Colors.transparent,
-                child: Surface(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: SizedBox(
-                    width: bookWidth,
-                    child: Padding(
-                      padding: EdgeInsets.all(context.spacing.space4),
-                      child: Text(title),
-                    ),
+    return HookBuilder(
+      builder: (context) {
+        final dragSource = useGraphDragSource(context, selectableId);
+        final offered = dragSource.payload;
+        bool accepts(GraphDragPayload<AuthoringResourceIdentifier> incoming) =>
+            incoming.value.scope == scope &&
+            (ref.read(workingTagsProvider).value ?? const <Tag>[]).any(
+              (tag) => tag.tagId == incoming.value.resourceId,
+            );
+        return Selector(
+          selectableId: selectableId,
+          focusNode: focusNode,
+          onDoubleTap: () => invokeResourcePrimary(ref, selectableId),
+          builder: (isSelected, isFocused, isHovered) {
+            final book = Surface(
+              color: Theme.of(context).colorScheme.surface,
+              child:
+                  OutlineDecorator(
+                        show: isFocused,
+                        outerColor: color,
+                        innerColor: Surface.colorOf(context),
+                        builder: (context) => SizedBox(
+                          width: bookWidth,
+                          height: bookHeight,
+                          child: _BookStack(
+                            key: const ValueKey("content"),
+                            color: color,
+                            icon: icon,
+                            title: title,
+                            tags: tags,
+                            isSelected: isSelected,
+                          ),
+                        ),
+                      )
+                      .animate(target: isHovered ? 1 : 0)
+                      .hoverScale(isHovered)
+                      .hoverRotate(isHovered),
+            );
+            final feedback = Material(
+              color: Colors.transparent,
+              child: Surface(
+                color: Theme.of(context).colorScheme.surface,
+                child: SizedBox(
+                  width: bookWidth,
+                  child: Padding(
+                    padding: EdgeInsets.all(context.spacing.space4),
+                    child: Text(title),
                   ),
                 ),
               ),
-              childWhenDragging: Opacity(opacity: 0.35, child: book),
-              child: book,
-            ),
-          ),
+            );
+            return DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>(
+              onWillAcceptWithDetails: (details) =>
+                  details.data.canHover && accepts(details.data),
+              onAcceptWithDetails: (details) async {
+                final incoming = details.data;
+                if (!accepts(incoming) || !incoming.claim()) return;
+                final data = incoming.value;
+                final current = ref.read(workingBookProvider(id)).value;
+                if (current == null) return;
+                final tags = [...current.tagIds];
+                final index = tags.indexOf(data.referenceId);
+                if (index < 0) {
+                  tags.add(data.referenceId);
+                } else {
+                  tags.removeAt(index);
+                }
+                final workspace = ref.read(realmEditingProvider(scope));
+                workspace
+                    .edit(
+                      label: "Change book tags",
+                      apply: (edit) {
+                        replacePortableLinkCollection(
+                          draft: edit,
+                          catalog: workspace.document.catalog,
+                          resource: id,
+                          field: "tags",
+                          expected: current.tagIds,
+                          proposed: tags,
+                        );
+                      },
+                    )
+                    .report(context);
+              },
+              builder: (context, accepted, rejected) => HookBuilder(
+                builder: (context) {
+                  useListenable(
+                    Listenable.merge([
+                      ...accepted.nonNulls.map((incoming) => incoming),
+                      ...rejected
+                          .whereType<
+                            GraphDragPayload<AuthoringResourceIdentifier>
+                          >()
+                          .map((incoming) => incoming),
+                    ]),
+                  );
+                  final hasAccepted = accepted.nonNulls.any(
+                    (incoming) => incoming.canHover && accepts(incoming),
+                  );
+                  final hasRejected = rejected
+                      .whereType<
+                        GraphDragPayload<AuthoringResourceIdentifier>
+                      >()
+                      .any((incoming) => incoming.canHover);
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    decoration: BoxDecoration(
+                      borderRadius: context.shapes.largeBorderRadius,
+                      border: !hasAccepted && !hasRejected
+                          ? null
+                          : Border.all(
+                              color: hasAccepted
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Theme.of(context).colorScheme.error,
+                              width: 2,
+                            ),
+                    ),
+                    child:
+                        Draggable<
+                          GraphDragPayload<AuthoringResourceIdentifier>
+                        >(
+                          key: ObjectKey(offered),
+                          maxSimultaneousDrags: 1,
+                          dragAnchorStrategy: (widget, context, position) =>
+                              dragSource.anchor(
+                                offered,
+                                widget,
+                                context,
+                                position,
+                              ),
+                          onDragStarted: () => dragSource.begin(offered),
+                          onDragUpdate: (details) =>
+                              dragSource.update(offered, details),
+                          onDragEnd: (_) => dragSource.end(offered),
+                          data: offered,
+                          feedback: HookBuilder(
+                            builder: (context) {
+                              useListenable(offered);
+                              useListenable(dragSource.state);
+                              return dragSource.showFeedback(offered)
+                                  ? feedback
+                                  : const SizedBox.shrink();
+                            },
+                          ),
+                          childWhenDragging: Opacity(
+                            opacity: 0.35,
+                            child: book,
+                          ),
+                          child: book,
+                        ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );

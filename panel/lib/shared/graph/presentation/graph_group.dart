@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The group does not participate in graph layout. Its [data] is forwarded to
 /// the surrounding [GraphDrag] scope when a drag begins.
-class GraphGroup extends StatelessWidget {
+class GraphGroup extends HookWidget {
   const GraphGroup({
     required this.title,
     required this.color,
@@ -22,6 +22,8 @@ class GraphGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final dragSource = useGraphDragSource(context, data);
+    final offered = dragSource.payload;
     return LayoutBuilder(
       builder: (context, constraints) {
         final backgroundColor = Theme.of(context)
@@ -52,16 +54,20 @@ class GraphGroup extends StatelessWidget {
           to: Navigator.of(context, rootNavigator: true).context,
         );
 
-        final graphDrag = GraphDrag.maybeOf(context);
-
-        return Draggable(
-          data: data,
-          onDragStarted: () => graphDrag?.beginDrag(data),
-          onDragEnd: (_) => graphDrag?.endDrag(),
+        return Draggable<GraphDragPayload<GraphDragData>>(
+          data: offered,
+          key: ObjectKey(offered),
+          maxSimultaneousDrags: 1,
+          dragAnchorStrategy: (widget, context, position) =>
+              dragSource.anchor(offered, widget, context, position),
+          onDragStarted: () => dragSource.begin(offered),
+          onDragUpdate: (details) => dragSource.update(offered, details),
+          onDragEnd: (_) => dragSource.end(offered),
           feedback: HookBuilder(
             builder: (context) {
-              useListenable(graphDrag?.draggingInsideGraph);
-              return graphDrag?.draggingInsideGraph.value ?? false
+              useListenable(dragSource.state);
+              useListenable(offered);
+              return !dragSource.showFeedback(offered)
                   ? SizedBox()
                   : Opacity(opacity: 0.5, child: themes.wrap(child));
             },

@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_page_graph_node.stories.dart";
+import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/resource_operation_drop_target.stories.dart";
 
 void main() {
   final screenshots = Platform.environment["SAVE_ENTRY_NODE_SCREENSHOTS"] ?? "";
@@ -25,12 +26,34 @@ void main() {
     (tester) async {
       const scene = ValueKey("drag.scene");
       await tester.pumpWidget(
-        RepaintBoundary(key: scene, child: compiledEntryGraphStory()),
+        RepaintBoundary(
+          key: scene,
+          child: resourceOperationDropTargetExample(delayed: false),
+        ),
       );
       await tester.pumpAndSettle();
       final nodes = find.byType(AuthoredPageGraphNode);
       final source = tester.getCenter(nodes.first);
-      final destination = tester.getCenter(find.byType(ResourcePageDropTarget));
+      final pageTarget = find.byType(ResourcePageDropTarget);
+      final destination = tester.getCenter(pageTarget);
+      // The nested route blocks sidebar semantics. The foreground border
+      // exposes the target's checked availability without that projection.
+      final targetFrame = find.descendant(
+        of: pageTarget,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is DecoratedBox &&
+              widget.position == DecorationPosition.foreground,
+        ),
+      );
+      BoxBorder? targetBorder() =>
+          (tester.widget<DecoratedBox>(targetFrame).decoration as BoxDecoration)
+              .border;
+      final availableBorder = Border.all(
+        width: 2,
+        color: Theme.of(tester.element(pageTarget)).colorScheme.primary,
+      );
+      expect(targetBorder(), isNull);
       final sourceContext = tester.element(nodes.first);
       final rootOverlay = Overlay.of(sourceContext, rootOverlay: true);
       expect(Overlay.of(sourceContext), isNot(same(rootOverlay)));
@@ -45,6 +68,7 @@ void main() {
       await gesture.moveTo(destination);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+      expect(targetBorder(), availableBorder);
       expect(find.text("Welcome to the village"), findsNWidgets(2));
       final previewContext = tester.element(
         find.text("Welcome to the village").last,
@@ -87,8 +111,10 @@ void main() {
       expect(find.text("Welcome to the village"), findsOneWidget);
       expect(find.byType(PortableDiagnosticPreview), findsNothing);
       expect(diagnosticTree.snapshot.nodes.length, originalAnchors);
+      expect(targetBorder(), isNull);
       await gesture.moveTo(destination);
       await tester.pumpAndSettle();
+      expect(targetBorder(), availableBorder);
       await gesture.up();
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
