@@ -240,12 +240,12 @@ class AuthoredPageGraphNode extends HookConsumerWidget {
                                 child: Text(
                                   dropLabel,
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onInverseSurface,
-                                  ),
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onInverseSurface,
+                                      ),
                                 ),
                               ),
                             ),
