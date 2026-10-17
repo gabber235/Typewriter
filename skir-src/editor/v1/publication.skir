@@ -1,23 +1,23 @@
-import { CompilationRoot } from "editor/v1/compilation_root.skir";
-import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { EditExpectation } from "editor/v1/authoring_facts.skir";
 import { FindingSet } from "editor/v1/checking.skir";
+import { CompilationRoot } from "editor/v1/compilation_root.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   CatalogGeneration,
   DeclarationOwner,
   DiagnosticId,
-  RuleOrigin,
-  ValueLocation,
   InputToken,
   PublicationId,
+  RuleOrigin,
   RuntimeMemberId,
   ScriptCapabilityId,
   TypeDefinition,
   TypeDefinitionId,
   TypeTemplate,
   TypeUse,
+  ValueLocation,
 } from "editor/v1/type_catalog.skir";
+import { BoundedTransferChunk } from "kernel/v1/bounded_transfer.skir";
 import { InternalError } from "kernel/v1/errors.skir";
 
 struct OwnedPortableTypes(811600001) {
@@ -79,16 +79,18 @@ enum PublicationResult(811600008) {
   candidate_changed: PublicationViewChanged = 6;
 }
 
-
 struct PublicationReport(811600009) {
   id: PublicationId = 0;
   state: PublicationState = 1;
   findings: [Diagnostic] = 2;
 }
 
-
-struct PublicationCandidateId(811600010) { value: string = 0; }
-struct PublicationViewId(811600011) { value: string = 0; }
+struct PublicationCandidateId(811600010) {
+  value: string = 0;
+}
+struct PublicationViewId(811600011) {
+  value: string = 0;
+}
 
 enum PublicationBaseline(811600012) {
   initial = 1;
@@ -155,7 +157,9 @@ enum PublicationFailure(811600022) {
 }
 
 enum PublicationStatus(811600023) {
-  empty: struct { notices: [PublicationNotice] = 0; } = 1;
+  empty: struct {
+    notices: [PublicationNotice] = 0;
+  } = 1;
   current: struct {
     selected: PublicationId = 0;
     notices: [PublicationNotice] = 1;
@@ -207,12 +211,16 @@ struct PublicationTransferUnavailable(811600027) {
 }
 
 method PublishAuthoring(
-  struct { candidate: PublicationCandidateId = 0; }
+  struct {
+    candidate: PublicationCandidateId = 0;
+  }
 ): enum {
   result: PublicationResult = 1;
   internal_error: InternalError = 2;
 } = 920020;
-method WatchPublication(struct {}): PublicationViewChanged = 920021;
+method WatchPublication(
+  struct {}
+): PublicationViewChanged = 920021;
 
 method QueryPublicationView(
   struct {
