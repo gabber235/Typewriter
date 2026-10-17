@@ -6,7 +6,9 @@ import ch.qos.logback.classic.Level
 import com.typewritermc.authoring.DefaultInitializationRuntime
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputToken
+import com.typewritermc.discovery.CatalogAssembly
 import com.typewritermc.discovery.CatalogAssemblyContext
+import com.typewritermc.discovery.CatalogCallback
 import com.typewritermc.discovery.DeploymentFacts
 import com.typewritermc.discovery.DiscoveryDomains
 import com.typewritermc.discovery.GeneratedProviderArtifact
@@ -33,6 +35,7 @@ import com.typewritermc.realm.schema.RealmDatabaseConfiguration
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.EventProjection
 import com.typewritermc.services.libs.telemetry.LogSeverity
+import com.typewritermc.services.libs.telemetry.MainSpanScope
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.SpanPresentation
 import com.typewritermc.services.libs.telemetry.console.installOpenTelemetryLogback
@@ -81,18 +84,32 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
             // The loader can change catalog behavior without changing the deployment artifacts.
             // Identify this assembled catalog so clients cannot reuse a previous runtime's definitions.
             val generation = CatalogGeneration(UUID.randomUUID().toString())
+            val telemetry = context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION)
             val assembly =
-                loaded.providers.contributions.assemble(
-                    CatalogAssemblyContext(
-                        generation = generation,
-                        capabilities = loaded.providers.capabilities.map { it.provider.descriptor },
-                    ),
-                )
+                telemetry.mainSpan(
+                    name = "realm.catalog.assemble",
+                    unhandledFailureSlug = ErrorSlug.of("realm-catalog-assembly-failed"),
+                    presentation = SpanPresentation("Realm catalog assembly"),
+                ) { main ->
+                    val assembled =
+                        loaded.providers.contributions.assemble(
+                            CatalogAssemblyContext(
+                                generation = generation,
+                                capabilities = loaded.providers.capabilities.map { it.provider.descriptor },
+                            ),
+                        )
+                    main.annotate {
+                        attribute("catalog.generation", generation.value)
+                        attribute("catalog.callback.failure_count", assembled.callbackFailures.size)
+                        attribute("operation.degraded", assembled.callbackFailures.isNotEmpty())
+                    }
+                    with(main) { assembled.reportCallbackFailures() }
+                    assembled
+                }
             val catalogStore = RealmCatalogStore()
             catalogs = catalogStore
             catalogStore.replace(RealmCatalogIncarnation(assembly, loaded))
             deployment = null
-            val telemetry = context.host.openTelemetry.serviceTelemetry("realm", REALM_VERSION)
             val realm =
                 Realm(
                     databaseProvider = DatabaseProvider(configuration.database),
@@ -260,5 +277,33 @@ private suspend fun startRealm(
     ) {
         attribute("workflow.stage", "database")
         attribute("operation.outcome", "completed")
+    }
+}
+
+context(main: MainSpanScope)
+internal fun CatalogAssembly.reportCallbackFailures() {
+    callbackFailures.forEach { failure ->
+        main.event(
+            name = "catalog.callback.failed",
+            projection = EventProjection.log(LogSeverity.WARN, "Catalog provider failed; inspect its correlated diagnostic"),
+        ) {
+            attribute("exception.slug", "catalog-provider-callback-failed")
+            attribute("catalog.provider", failure.origin.owner.localIdentity)
+            attribute("artifact.id", failure.origin.artifact.value)
+            attribute("source.part", failure.origin.sourcePart)
+            when (val callback = failure.callback) {
+                is CatalogCallback.Configuration -> {
+                    attribute("catalog.callback.kind", "configuration")
+                    attribute("catalog.subject", callback.target.toString())
+                }
+
+                is CatalogCallback.Presentation -> {
+                    attribute("catalog.callback.kind", "presentation")
+                    attribute("catalog.subject", callback.subject.toString())
+                    attribute("presentation.role", callback.role.name)
+                }
+            }
+            exception(failure.cause)
+        }
     }
 }

@@ -1,14 +1,19 @@
 package com.typewritermc.discovery
 
+import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.types.FieldDeclaration
 import com.typewritermc.types.FieldOwner
+import com.typewritermc.types.ParameterKey
 import com.typewritermc.types.RepresentationTemplate
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.StandardTypes
 import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
+import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.catalog.DeclarationDiagnostic
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
@@ -19,7 +24,11 @@ val CatalogRecommendationsTest by testSuite {
         val weightedText = TypeTemplate.Named(weighted, listOf(TypeTemplate.Scalar(ScalarKind.Text)))
         val definitions =
             listOf(
-                TypeDefinition(weighted, representation = RepresentationTemplate.Record(emptyList())),
+                TypeDefinition(
+                    weighted,
+                    parameters = listOf(TypeParameter(ParameterKey(weighted, 0), "T")),
+                    representation = RepresentationTemplate.Record(emptyList()),
+                ),
                 record(
                     source,
                     field(source, "primary", weightedText),
@@ -27,7 +36,7 @@ val CatalogRecommendationsTest by testSuite {
                 ),
             ).associateBy(TypeDefinition::id)
 
-        typeRecommendations(definitions).map { it.type to it.occurrences } shouldBe
+        typeRecommendations(definitions, catalog(definitions)).map { it.type to it.occurrences } shouldBe
             listOf(weightedText.toUse() to 2L)
     }
 
@@ -52,7 +61,7 @@ val CatalogRecommendationsTest by testSuite {
                 ),
             ).associateBy(TypeDefinition::id)
 
-        typeRecommendations(definitions, setOf(unavailable)).map { it.type.definition to it.occurrences } shouldBe
+        typeRecommendations(definitions, catalog(definitions, unavailable)).map { it.type.definition to it.occurrences } shouldBe
             listOf(available to 1L)
     }
 
@@ -71,7 +80,7 @@ val CatalogRecommendationsTest by testSuite {
                 ),
             ).associateBy(TypeDefinition::id)
 
-        typeRecommendations(definitions).map { it.type.definition } shouldBe listOf(alpha, beta)
+        typeRecommendations(definitions, catalog(definitions)).map { it.type.definition } shouldBe listOf(alpha, beta)
     }
 }
 
@@ -104,3 +113,12 @@ private fun TypeTemplate.Named.toUse() =
             }
         },
     )
+
+private fun catalog(
+    definitions: Map<TypeDefinitionId, TypeDefinition>,
+    unavailable: TypeDefinitionId? = null,
+) = DefaultCheckedCatalog(
+    CatalogGeneration("recommendations"),
+    StandardTypes.definitions + definitions.values,
+    quarantine = listOfNotNull(unavailable?.let { DeclarationDiagnostic(it, "fixture_unavailable") }),
+)

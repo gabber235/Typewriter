@@ -6,11 +6,14 @@ import com.typewritermc.types.TypeDefinition
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.catalog.CheckedCatalog
+import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.TypeRecommendation
+import com.typewritermc.types.catalog.isReady
 
 internal fun typeRecommendations(
     definitions: Map<TypeDefinitionId, TypeDefinition>,
-    unavailable: Set<TypeDefinitionId> = emptySet(),
+    catalog: CheckedCatalog,
 ): List<TypeRecommendation> {
     val standard = StandardTypes.definitions.map(TypeDefinition::id).toSet()
     val counts = linkedMapOf<TypeUse.Named, Long>()
@@ -28,8 +31,8 @@ internal fun typeRecommendations(
             is TypeTemplate.Named -> {
                 val representation = definitions[template.definition]?.representation
                 val container = representation is RepresentationTemplate.Sequence || representation is RepresentationTemplate.Mapping
-                if (!container && template.definition !in standard && template.definition !in unavailable) {
-                    (template.toCompleteUse() as? TypeUse.Named)?.let { use ->
+                if (!container && template.definition !in standard && catalog.isReady(template.definition)) {
+                    (template.toCompleteUse() as? TypeUse.Named)?.takeIf { catalog.resolve(it) is Resolution.Ready }?.let { use ->
                         counts[use] = counts.getOrDefault(use, 0) + 1
                     }
                 }
@@ -38,7 +41,7 @@ internal fun typeRecommendations(
         }
     }
 
-    definitions.values.forEach { definition ->
+    definitions.values.filter { catalog.isReady(it.id) }.forEach { definition ->
         val record = definition.representation as? RepresentationTemplate.Record ?: return@forEach
         record.fields.filter { field -> field.overrides.isEmpty() }.forEach { field -> count(field.type) }
     }

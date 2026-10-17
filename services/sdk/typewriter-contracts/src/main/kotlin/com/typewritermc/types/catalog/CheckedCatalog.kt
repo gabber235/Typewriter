@@ -20,6 +20,7 @@ import com.typewritermc.types.TypeParameter
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.immutableListCopy
 import kotlinx.serialization.Serializable
 import java.util.concurrent.ConcurrentHashMap
 
@@ -148,6 +149,7 @@ fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUs
 class DefaultCheckedCatalog(
     override val generation: CatalogGeneration,
     declarations: List<TypeDefinition>,
+    quarantine: List<DeclarationDiagnostic> = emptyList(),
 ) : CheckedCatalog {
     private val depthInvalidDefinitions = declarations.filter(TypeDefinition::exceedsTypeDepth).map(TypeDefinition::id).toSet()
     private val definitions =
@@ -168,6 +170,7 @@ class DefaultCheckedCatalog(
             .map(List<TypeDefinition>::single)
             .forEach(::validateDeclaration)
         markInheritanceCycles()
+        quarantine.forEach(::markUnavailable)
         propagateUnavailableDependencies()
     }
 
@@ -674,7 +677,7 @@ class DefaultCheckedCatalog(
             changed = false
             definitions.values.mapNotNull(List<TypeDefinition>::singleOrNull).forEach { definition ->
                 if (definition.id in unavailable) return@forEach
-                val dependencies = definition.requiredDefinitions()
+                val dependencies = definition.referencedDefinitions()
                 if (dependencies.any { it in unavailable }) {
                     markUnavailable(definition.id, "unavailable_dependency")
                     changed = true
@@ -900,8 +903,18 @@ class DefaultCheckedCatalog(
     private fun markUnavailable(
         id: TypeDefinitionId,
         code: String,
-    ) {
-        unavailable.getOrPut(id, ::mutableListOf) += diagnostic(id, code)
+    ) = markUnavailable(DeclarationDiagnostic(id, code))
+
+    private fun markUnavailable(diagnostic: DeclarationDiagnostic) {
+        val reasons = unavailable.getOrPut(diagnostic.affected, ::mutableListOf)
+        val previous = reasons.indexOfFirst { it.code == diagnostic.code && it.field == diagnostic.field }
+        val origins = if (previous < 0) diagnostic.origins else reasons[previous].origins + diagnostic.origins
+        val owned =
+            diagnostic.copy(
+                origins = origins.distinct().immutableListCopy(),
+                field = diagnostic.field?.let { it.copy(segments = it.segments.immutableListCopy()) },
+            )
+        if (previous < 0) reasons += owned else reasons[previous] = owned
     }
 }
 
@@ -1011,33 +1024,6 @@ private fun RepresentationTemplate.templates(): List<TypeTemplate> =
         is RepresentationTemplate.Link -> listOf(target)
     }
 
-private fun TypeDefinition.requiredDefinitions(): Set<TypeDefinitionId> =
-    buildSet {
-        parents.forEach { add(it.definition) }
-        parameters.flatMap(TypeParameter::bounds).forEach { addAll(it.namedDefinitions()) }
-        representation.templates().forEach { addAll(it.namedDefinitions()) }
-    }
-
-private fun TypeTemplate.namedDefinitions(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeTemplate.Parameter,
-        is TypeTemplate.Scalar,
-        -> {
-            emptySet()
-        }
-
-        is TypeTemplate.Nullable -> {
-            value.namedDefinitions()
-        }
-
-        is TypeTemplate.Named -> {
-            buildSet {
-                add(definition)
-                arguments.forEach { addAll(it.namedDefinitions()) }
-            }
-        }
-    }
-
 private fun TypeTemplate.namedTemplates(): List<TypeTemplate.Named> =
     when (this) {
         is TypeTemplate.Parameter,
@@ -1070,4 +1056,15 @@ private fun TypeUse.toTemplate(): TypeTemplate =
         is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
         is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
         is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
+    }
+
+/** Reports declaration readiness from this catalog generation's canonical quarantine. */
+fun CheckedCatalog.isReady(id: TypeDefinitionId): Boolean = definition(id) == DeclarationStatus.Ready
+
+/** Checks referenced declarations while preserving symbolic free parameters. */
+fun CheckedCatalog.isReady(template: TypeTemplate): Boolean =
+    when (template) {
+        is TypeTemplate.Parameter, is TypeTemplate.Scalar -> true
+        is TypeTemplate.Nullable -> isReady(template.value)
+        is TypeTemplate.Named -> isReady(template.definition) && template.arguments.all(::isReady)
     }

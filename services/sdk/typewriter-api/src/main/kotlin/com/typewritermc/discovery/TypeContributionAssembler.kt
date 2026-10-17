@@ -56,7 +56,10 @@ import com.typewritermc.types.catalog.EffectiveFieldTemplate
 import com.typewritermc.types.catalog.PublishedType
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.apply
+import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.encodeGeneratedDefault
+import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.immutableListCopy
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
@@ -92,11 +95,27 @@ data class CatalogAssembly(
     val providers: OwnedProviderRegistry,
     val checks: List<OwnedCheckRecipe>,
     val operations: com.typewritermc.operations.OperationCatalog = com.typewritermc.operations.OperationCatalog(),
+    val callbackFailures: List<CatalogCallbackFailure> = emptyList(),
 )
 
-interface DeclarationDependencyIndex {
-    fun requiredDependents(id: TypeDefinitionId): Set<TypeDefinitionId>
+/** Identifies the authored callback whose runtime cause is retained by an assembly. */
+sealed interface CatalogCallback {
+    data class Configuration(
+        val target: TypeDefinitionId,
+    ) : CatalogCallback
+
+    data class Presentation(
+        val subject: TypeTemplate,
+        val role: PresentationRole,
+    ) : CatalogCallback
 }
+
+/** Runtime evidence for the Realm owner. Causes never enter the portable catalog. */
+data class CatalogCallbackFailure(
+    val origin: ProviderOrigin,
+    val callback: CatalogCallback,
+    val cause: Throwable,
+)
 
 /**
  * Builds one catalog generation's published editor model and executable SDK services from owned contributions.
@@ -125,7 +144,6 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         assembledDeclarations.filter {
             (it.definition.id.type as? com.typewritermc.types.TypeId.Qualified)?.namespace == "typewriter.read"
         }
-    val reservedIdentities = reservedDeclarations.map { it.definition.id }.toSet()
     val reservedDiagnostics =
         reservedDeclarations.map { owned ->
             DeclarationDiagnostic(
@@ -137,7 +155,7 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
     val symbolicDiagnostics =
         definitionIndex.values.flatMap { definition -> definition.templateFields(definitionIndex).diagnostics }
     val providerRegistry = ImmutableOwnedProviderRegistry(configurations, presentations, nativeBindings, checks)
-    val structural = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in reservedIdentities })
+    val structural = DefaultCheckedCatalog(context.generation, definitions, quarantine = reservedDiagnostics)
     val resourceDefinitions = (resources + context.resources).distinctBy(AuthoringResourceDefinition::id)
     val resourceFamilyDiagnostics =
         definitions
@@ -159,7 +177,9 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
         com.typewritermc.types.FactoryNativeBindingRegistry(structural, nativeBindings.map(OwnedNativeBinding::factory))
     val constants = PortableConstantEncoder { expected, value -> encodeConstant(expected, value, structural, structuralBindings) }
     val collectionResults = configurations.map { collectConfiguration(it, constants) }
-    val ruleDiagnostics = configurationRuleDiagnostics(collectionResults, definitionIndex, structural)
+    val collectedCandidates = collectionResults.filterIsInstance<ConfigurationCollectionResult.Collected>().map { it.value }
+    val configurationFailures = collectionResults.filterIsInstance<ConfigurationCollectionResult.Failed>()
+    val ruleDiagnostics = configurationRuleDiagnostics(collectedCandidates, definitionIndex, structural)
     val materialCollection =
         collectPresentationMaterials(
             presentations,
@@ -170,33 +190,23 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             resourceDefinitions,
         )
     val directFailures =
-        collectionResults.mapNotNull(ConfigurationCollectionResult::failure) +
+        configurationFailures.map { it.diagnostic } +
             duplicateDiagnostics + reservedDiagnostics + symbolicDiagnostics + ruleDiagnostics +
             materialCollection.failures + resourceFamilyDiagnostics
-    val unavailable = propagateUnavailableDefinitions(directFailures.map(DeclarationDiagnostic::affected).toSet(), definitions)
-    val checked = DefaultCheckedCatalog(context.generation, definitions.filterNot { it.id in unavailable })
+    val checked = DefaultCheckedCatalog(context.generation, definitions, quarantine = directFailures)
     val bindingRegistry =
         com.typewritermc.types.FactoryNativeBindingRegistry(checked, nativeBindings.map(OwnedNativeBinding::factory))
-    val collected = collectionResults.mapNotNull(ConfigurationCollectionResult::collected)
+    val collected = collectedCandidates.filter { checked.isReady(it.owned.target) }
     val recipes = collected.flatMap { it.configuration.recipes }
     val simpleChecks =
         collected.flatMap { result ->
             result.configuration.checks.map { OwnedCheckRecipe(result.owned.origin, it.bindNative(bindingRegistry)) }
         }
-    val propagatedFailures =
-        (unavailable - directFailures.map(DeclarationDiagnostic::affected).toSet()).map { affected ->
-            DeclarationDiagnostic(affected, "configuration_dependency_unavailable")
-        }
-    val isolationDiagnostics = directFailures + propagatedFailures
-    val isolationByDefinition = isolationDiagnostics.groupBy(DeclarationDiagnostic::affected)
-    val diagnostics =
-        declarationGroups.keys.flatMap { id ->
-            isolationByDefinition[id] ?: checked.definition(id).diagnostics()
-        }
+    val diagnostics = declarationGroups.keys.flatMap { checked.definition(it).diagnostics() }
     val published =
         declarationGroups.entries.sortedBy { it.key.toString() }.map { (id, owned) ->
             val definition = owned.first().definition
-            val status = isolationByDefinition[id]?.let(DeclarationStatus::Unavailable) ?: checked.definition(id)
+            val status = checked.definition(id)
             val ancestry = if (status == DeclarationStatus.Ready) definition.transitiveAncestors(definitionIndex) else emptyList()
             PublishedType(
                 definition = definition,
@@ -213,13 +223,20 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 display = owned.first().display,
             )
         }
+    val publishedPresentations =
+        presentations.filter { owned ->
+            when (val target = owned.descriptor.target) {
+                is PresentationTarget.Named -> checked.isReady(target.type)
+                is PresentationTarget.Representation -> true
+            }
+        }
     val boundOperations =
         com.typewritermc.operations.bindOperations(
             operations,
             checked,
             bindingRegistry,
             assembledDeclarations,
-            presentations,
+            publishedPresentations,
             context.capabilities,
         )
     val snapshot =
@@ -227,12 +244,15 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
             generation = context.generation,
             types = published,
             relations = (relations + context.relations).distinctBy(RelationContract::id),
-            resourceDefinitions = resourceDefinitions.filter { it.root !in unavailable },
-            presentations = presentations.map(OwnedPresentation::descriptor),
+            resourceDefinitions = resourceDefinitions.filter { checked.isReady(it.root) },
+            presentations = publishedPresentations.map(OwnedPresentation::descriptor),
             presentationMaterials =
                 materialCollection.materials.filter { material ->
-                    val target = material.target as? PresentationTarget.Named
-                    target == null || target.type.definition !in unavailable
+                    checked.isReady(material.subject) &&
+                        when (val target = material.target) {
+                            is PresentationTarget.Named -> checked.isReady(target.type)
+                            is PresentationTarget.Representation -> true
+                        }
                 },
             configuration = recipes,
             diagnostics = diagnostics + boundOperations.diagnostics,
@@ -245,10 +265,18 @@ fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssem
                 ).sortedBy { it.id.value },
             resourceOperations = boundOperations.definitions,
             resourceOperationContributions = boundOperations.contributions,
-            recommendations = typeRecommendations(definitionIndex, unavailable),
+            recommendations = typeRecommendations(definitionIndex, checked),
             roleFallbacks = context.roleFallbacks,
         ).immutableCopy()
-    return CatalogAssembly(snapshot, checked, bindingRegistry, providerRegistry, simpleChecks, boundOperations)
+    return CatalogAssembly(
+        snapshot,
+        checked,
+        bindingRegistry,
+        providerRegistry,
+        simpleChecks,
+        boundOperations,
+        callbackFailures = (configurationFailures.map { it.evidence } + materialCollection.callbackFailures).immutableListCopy(),
+    )
 }
 
 private data class CollectedOwnedConfiguration(
@@ -259,6 +287,7 @@ private data class CollectedOwnedConfiguration(
 private data class PresentationMaterialCollection(
     val materials: List<PresentationMaterial>,
     val failures: List<DeclarationDiagnostic>,
+    val callbackFailures: List<CatalogCallbackFailure>,
 )
 
 private fun collectPresentationMaterials(
@@ -271,6 +300,7 @@ private fun collectPresentationMaterials(
 ): PresentationMaterialCollection {
     val materials = mutableListOf<PresentationMaterial>()
     val failures = mutableListOf<DeclarationDiagnostic>()
+    val callbackFailures = mutableListOf<CatalogCallbackFailure>()
     val nativeTypes =
         (
             declarations.mapNotNull { owned ->
@@ -355,7 +385,13 @@ private fun collectPresentationMaterials(
                     }
                 } catch (cancellation: CancellationException) {
                     throw cancellation
-                } catch (_: Exception) {
+                } catch (cause: Exception) {
+                    callbackFailures +=
+                        CatalogCallbackFailure(
+                            owned.origin,
+                            CatalogCallback.Presentation(subject.immutableCopy(), role),
+                            cause,
+                        )
                     val affected = (subject as? TypeTemplate.Named)?.definition
                     if (affected != null) {
                         failures +=
@@ -369,7 +405,7 @@ private fun collectPresentationMaterials(
             }
         }
     }
-    return PresentationMaterialCollection(materials, failures)
+    return PresentationMaterialCollection(materials, failures, callbackFailures)
 }
 
 private fun skirout.editor.v1.presentation.PresentationDependencies.validCollections(
@@ -629,10 +665,16 @@ private fun RepresentationKind.scalarSubjects(): List<TypeTemplate.Scalar> =
         }
     }
 
-private data class ConfigurationCollectionResult(
-    val collected: CollectedOwnedConfiguration? = null,
-    val failure: DeclarationDiagnostic? = null,
-)
+private sealed interface ConfigurationCollectionResult {
+    data class Collected(
+        val value: CollectedOwnedConfiguration,
+    ) : ConfigurationCollectionResult
+
+    data class Failed(
+        val diagnostic: DeclarationDiagnostic,
+        val evidence: CatalogCallbackFailure,
+    ) : ConfigurationCollectionResult
+}
 
 private fun RepresentationTemplate.presentationKind(): RepresentationKind =
     when (this) {
@@ -717,35 +759,30 @@ private fun collectConfiguration(
     constants: PortableConstantEncoder,
 ): ConfigurationCollectionResult =
     try {
-        ConfigurationCollectionResult(
-            collected =
-                CollectedOwnedConfiguration(
-                    owned,
-                    owned.callback.collect(DefaultConfigurationCollectionScope(owned.target, constants)),
-                ),
+        ConfigurationCollectionResult.Collected(
+            CollectedOwnedConfiguration(
+                owned,
+                owned.callback.collect(DefaultConfigurationCollectionScope(owned.target, constants)),
+            ),
         )
-    } catch (cancellation: CancellationException) {
-        throw cancellation
-    } catch (_: Exception) {
-        ConfigurationCollectionResult(
-            failure =
-                DeclarationDiagnostic(
-                    affected = owned.target,
-                    code = "configuration_callback_failed",
-                    origins = listOf(DeclarationOrigin(owned.origin.owner)),
-                ),
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (cause: Exception) {
+        ConfigurationCollectionResult.Failed(
+            DeclarationDiagnostic(owned.target, "configuration_callback_failed", listOf(DeclarationOrigin(owned.origin.owner))),
+            CatalogCallbackFailure(owned.origin, CatalogCallback.Configuration(owned.target), cause),
         )
     }
 
 private fun configurationRuleDiagnostics(
-    results: List<ConfigurationCollectionResult>,
+    results: List<CollectedOwnedConfiguration>,
     definitions: Map<TypeDefinitionId, TypeDefinition>,
     catalog: CheckedCatalog,
 ): List<DeclarationDiagnostic> {
     val compiler = DefaultPortableRuleCompiler()
     val reasoner = DefaultPredicateReasoner()
     val recipes =
-        results.mapNotNull(ConfigurationCollectionResult::collected).flatMap { collected ->
+        results.flatMap { collected ->
             collected.configuration.recipes.map { recipe ->
                 CollectedConfigurationRecipe(collected.owned.target, collected.owned.origin, recipe)
             }
@@ -1135,44 +1172,6 @@ private fun encodeConstant(
         }
     return bindings.bind(checked).encodeGeneratedDefault(value)
 }
-
-private fun propagateUnavailableDefinitions(
-    initial: Set<TypeDefinitionId>,
-    definitions: List<TypeDefinition>,
-): Set<TypeDefinitionId> {
-    val declared = definitions.map(TypeDefinition::id).toSet()
-    val unavailable = initial.toMutableSet()
-    var changed: Boolean
-    do {
-        changed = false
-        definitions.forEach { definition ->
-            if (definition.id !in unavailable && definition.requiredDefinitions().any { it in unavailable && it in declared }) {
-                unavailable += definition.id
-                changed = true
-            }
-        }
-    } while (changed)
-    return unavailable
-}
-
-private fun TypeDefinition.requiredDefinitions(): Set<TypeDefinitionId> =
-    parents.flatMapTo(mutableSetOf()) { it.requiredDefinitions() } + representation.requiredDefinitions()
-
-private fun RepresentationTemplate.requiredDefinitions(): Set<TypeDefinitionId> =
-    when (this) {
-        is RepresentationTemplate.Scalar, is RepresentationTemplate.Enumeration -> emptySet()
-        is RepresentationTemplate.Record -> fields.flatMapTo(mutableSetOf()) { it.type.requiredDefinitions() }
-        is RepresentationTemplate.Sequence -> item.requiredDefinitions()
-        is RepresentationTemplate.Mapping -> key.requiredDefinitions() + value.requiredDefinitions()
-        is RepresentationTemplate.Link -> target.requiredDefinitions()
-    }
-
-private fun TypeTemplate.requiredDefinitions(): Set<TypeDefinitionId> =
-    when (this) {
-        is TypeTemplate.Parameter, is TypeTemplate.Scalar -> emptySet()
-        is TypeTemplate.Nullable -> value.requiredDefinitions()
-        is TypeTemplate.Named -> setOf(definition) + arguments.flatMapTo(mutableSetOf()) { it.requiredDefinitions() }
-    }
 
 private fun TypeDefinition.effectiveFields(
     definitions: Map<TypeDefinitionId, TypeDefinition>,

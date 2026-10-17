@@ -36,7 +36,7 @@ private fun TypeTemplate.referencedDefinitions(): Set<TypeDefinitionId> =
         is TypeTemplate.Scalar -> emptySet()
     }
 
-private fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
+internal fun TypeDefinition.referencedDefinitions(): Set<TypeDefinitionId> {
     val roots =
         parents +
             parameters.flatMap { parameter -> parameter.bounds } +
