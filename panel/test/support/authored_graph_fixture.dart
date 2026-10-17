@@ -206,51 +206,51 @@ final class AuthoredGraphFixture {
           "Entry",
           collection: !scalarIncoming,
         ),
-      ];
-    snapshot.capabilities = [
-      for (final operation in ["moveToPage", "linkWith", "delete"])
-        skir.CapabilityDefinition.createAuthoring(
-          capabilityId: skir.CapabilityId(value: operation),
-          targets: skir.OperationTargets.contributedSelection,
-          input: operation == "delete"
-              ? null
-              : skir.OperationInputDefinition(
-                  type: skir.TypeUse.wrapNamed(
-                    use(operation == "linkWith" ? "LinkInput" : "MoveInput"),
+      ]
+      ..capabilities = [
+        for (final operation in ["moveToPage", "linkWith", "delete"])
+          skir.CapabilityDefinition.createAuthoring(
+            capabilityId: skir.CapabilityId(value: operation),
+            targets: skir.OperationTargets.contributedSelection,
+            input: operation == "delete"
+                ? null
+                : skir.OperationInputDefinition(
+                    type: skir.TypeUse.wrapNamed(
+                      use(operation == "linkWith" ? "LinkInput" : "MoveInput"),
+                    ),
+                    presentation: null,
                   ),
-                  presentation: null,
-                ),
-        ),
-    ];
-    snapshot.resourceOperations = [
-      for (final operation in ["moveToPage", "linkWith", "delete"])
-        skir.ResourceOperationDefinition(
-          id: (resourceDeleteOperationId.toMutable()..local = operation)
-              .toFrozen(),
-          targets: skir.OperationTargets.contributedSelection,
-          presentation: skir.OperationPresentation(
-            label: {
-              "moveToPage": "Move to page",
-              "linkWith": "Link with",
-              "delete": "Delete",
-            }[operation]!,
-            description: "Fixture operation",
-            icon: "",
-            group: skir.OperationGroup.edit,
-            order: 0,
-            tone: skir.HeaderActionTone.neutral,
-            confirmation: null,
           ),
-          action: skir.EditorAction.createAuthoring(
-            capability: skir.CapabilityId(value: operation),
-            targets: skir.ExpressionNode.createRead(
-              binding: skir.ExpressionBindingId(value: "context:selection"),
-              path: editorRootPath,
+      ]
+      ..resourceOperations = [
+        for (final operation in ["moveToPage", "linkWith", "delete"])
+          skir.ResourceOperationDefinition(
+            id: (resourceDeleteOperationId.toMutable()..local = operation)
+                .toFrozen(),
+            targets: skir.OperationTargets.contributedSelection,
+            presentation: skir.OperationPresentation(
+              label: {
+                "moveToPage": "Move to page",
+                "linkWith": "Link with",
+                "delete": "Delete",
+              }[operation]!,
+              description: "Fixture operation",
+              icon: "",
+              group: skir.OperationGroup.edit,
+              order: 0,
+              tone: skir.HeaderActionTone.neutral,
+              confirmation: null,
             ),
-            initialInput: null,
+            action: skir.EditorAction.createAuthoring(
+              capability: skir.CapabilityId(value: operation),
+              targets: skir.ExpressionNode.createRead(
+                binding: skir.ExpressionBindingId(value: "context:selection"),
+                path: editorRootPath,
+              ),
+              initialInput: null,
+            ),
           ),
-        ),
-    ];
+      ];
     final catalog = CheckedEditorCatalog(snapshot.toFrozen());
     skir.DataValue sequence(String type, List<skir.ListItem> items) =>
         skir.DataValue.createNamed(

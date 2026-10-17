@@ -489,8 +489,9 @@ Future<void> invokeResourceDropOperation({
         .where((item) => item.capabilityId == action.value.capability)
         .firstOrNull
         ?.input;
-    if (input == null)
+    if (input == null) {
       throw StateError("The drop action has no declared input");
+    }
     final value = seedResourceOperationInput(
       workspace.document,
       input,

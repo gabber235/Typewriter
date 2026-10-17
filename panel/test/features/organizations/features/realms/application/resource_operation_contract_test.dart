@@ -164,11 +164,12 @@ void main() {
             group: group,
             label: "Draft",
             apply: (edit) {
-              edit.delete(_second);
-              edit.create(
-                skir.ResourceId(value: "copy"),
-                workspace.document.resource(_first)!,
-              );
+              edit
+                ..delete(_second)
+                ..create(
+                  skir.ResourceId(value: "copy"),
+                  workspace.document.resource(_first)!,
+                );
             },
           )
           .requireAccepted();
@@ -246,14 +247,15 @@ void main() {
       policy: EditorCommitPolicy.applyResource,
     );
     addTearDown(form.detach);
-    form.edit(
-      label: "Required rename",
-      apply: (edit) => edit.set(_title(_first), _text("Draft")),
-    );
-    form.edit(
-      label: "Unrelated rename",
-      apply: (edit) => edit.set(_title(_second), _text("Unrelated")),
-    );
+    form
+      ..edit(
+        label: "Required rename",
+        apply: (edit) => edit.set(_title(_first), _text("Draft")),
+      )
+      ..edit(
+        label: "Unrelated rename",
+        apply: (edit) => edit.set(_title(_second), _text("Unrelated")),
+      );
     final remote = AuthoringEdit.fromDocument(workspace.document)
       ..set(_title(_first), _text("Prefix Draft"));
     final operation = workspace.workspace.createGroup(

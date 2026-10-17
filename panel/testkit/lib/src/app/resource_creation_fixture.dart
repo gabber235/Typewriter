@@ -160,7 +160,7 @@ final class ResourceCreationFixture {
       ],
       parent: parent,
     );
-    if (resource)
+    if (resource) {
       _definitions.add(
         skir.AuthoringResourceDefinition(
           id: _family(name),
@@ -168,6 +168,7 @@ final class ResourceCreationFixture {
           navigationHandler: skir.AuthoringNavigationHandler.generic,
         ),
       );
+    }
   }
 
   void _sequence(String name, String item) => _publish(
@@ -227,10 +228,12 @@ final class ResourceCreationFixture {
         ),
       ),
     );
-    if (sourceBinding)
+    if (sourceBinding) {
       _binding(first, firstField, firstEndpoint, second, collection);
-    if (secondField != null)
+    }
+    if (secondField != null) {
       _binding(second, secondField, secondEndpoint, first, false);
+    }
   }
 
   void _binding(
