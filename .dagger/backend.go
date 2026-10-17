@@ -15,12 +15,14 @@ const (
 	backendTarget        = backendCacheRoot + "/target"
 	componentTestXtask   = backendTarget + "/debug/component-test-xtask"
 	cleanupBackendTarget = `cargo clean --manifest-path /workspace/backend/Cargo.toml --target-dir "$CARGO_TARGET_DIR" >/dev/null`
+	finishBackendCommand = `cleanup_status=0; ` + cleanupBackendTarget + ` || cleanup_status=$?; ` +
+		`if [ "$status" -ne 0 ]; then exit "$status"; fi; exit "$cleanup_status"`
 )
 
 func withBackendTargetCleanup(command ...string) []string {
 	return append([]string{
 		"sh", "-c",
-		`status=0; "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
+		`status=0; "$@" || status=$?; ` + finishBackendCommand,
 		"backend-command",
 	}, command...)
 }
@@ -29,7 +31,7 @@ func backendTestCommand(args ...string) []string {
 	command := append([]string{componentTestXtask}, args...)
 	return append([]string{
 		"sh", "-c",
-		`status=0; cargo build --locked --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
+		`status=0; cargo build --locked --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + finishBackendCommand,
 		"backend-test",
 	}, command...)
 }
