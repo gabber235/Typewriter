@@ -274,7 +274,10 @@ extension _PortablePageRendering on PortablePresentationNodeRenderer {
         ),
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: context.spacing.space3,
+              vertical: context.spacing.space2,
+            ),
             child: Text(projected.label, overflow: TextOverflow.ellipsis),
           ),
         ),
