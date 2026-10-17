@@ -54,7 +54,7 @@ jobs:
         env:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
         run: |
-          query='{ currentWorkspace { checks(noGenerate: true) { list { name } } } }'
+          query='{ currentWorkspace { checks { list { name } } } }'
           checks="$(dagger query <<< "$query" |
             jq -ce '.currentWorkspace.checks.list | map(.name) | select(length > 0)')"
           printf 'checks=%s\n' "$checks" >> "$GITHUB_OUTPUT"
@@ -81,7 +81,7 @@ jobs:
           version: 0.21.8
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           verb: check
-          args: --no-generate ${{ matrix.check }}
+          args: ${{ matrix.check }}
 
   check:
     name: check
