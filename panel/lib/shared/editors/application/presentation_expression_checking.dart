@@ -108,7 +108,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       if (body == null) return;
       errors.addAll(
         checkPortableExpression(
-          body, catalog: this,
+          body,
+          catalog: this,
           bindings: env,
           expectedOutput: type(payload(expected), missing),
           allowResultNumericWidth: numericWidth,
@@ -129,7 +130,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           if (selected == null) {
             errors.add("missing_resource_action_context");
           } else {
-            if (selected.declaredUse() case final use?) check(value.targets, use, env, missing: false);
+            if (selected.declaredUse() case final use?)
+              check(value.targets, use, env, missing: false);
           }
           final capability = snapshot.capabilities
               .whereType<skir.CapabilityDefinition_authoringWrapper>()
@@ -163,7 +165,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       final attempts = [
         for (final contract in contracts)
           checkPortableExpression(
-            body, catalog: this,
+            body,
+            catalog: this,
             bindings: env,
             expectedOutput: type(contract),
             allowResultNumericWidth: true,
@@ -667,7 +670,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           case skir.SearchProvider_staticValuesWrapper(:final value):
             skir.ExpressionType? source;
             final sourceProblems = checkPortableExpression(
-              value.values, catalog: this,
+              value.values,
+              catalog: this,
               bindings: parent,
               onInferred: (result) => source = result,
             );
@@ -1087,7 +1091,8 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         case skir.PresentationElement_repeatedWrapper(:final value):
           skir.ExpressionType? source;
           final sourceProblems = checkPortableExpression(
-            value.source, catalog: this,
+            value.source,
+            catalog: this,
             bindings: env,
             onInferred: (result) => source = result,
           );
