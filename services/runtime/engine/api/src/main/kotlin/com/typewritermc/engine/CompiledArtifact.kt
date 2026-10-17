@@ -6,6 +6,8 @@ import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
+const val PUBLISHED_CONTENT_FORMAT_REVISION = 1
+
 /** Identifies the compiler that owns one compiled artifact format. */
 @JvmInline
 @Serializable

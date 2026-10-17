@@ -176,7 +176,7 @@ private fun content(
     LoadedPublishedContent(
         PublishedContent(
             PublicationId("publication:$revision"),
-            2,
+            com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
             CatalogGeneration("catalog:1"),
             implementationToken,
             emptySet(),

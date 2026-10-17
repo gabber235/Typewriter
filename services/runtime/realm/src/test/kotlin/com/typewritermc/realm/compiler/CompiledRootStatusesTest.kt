@@ -71,7 +71,7 @@ private fun selected(content: PublishedContent) =
 private fun published(root: CompilationRoot): PublishedContent =
     PublishedContent(
         publication = PublicationId("selected"),
-        formatRevision = 2,
+        formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         catalog = CatalogGeneration("catalog"),
         implementationToken = "implementation",
         runtimeSignatures = emptySet(),

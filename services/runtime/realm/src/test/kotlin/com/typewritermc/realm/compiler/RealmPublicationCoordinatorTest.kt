@@ -139,7 +139,14 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.publisher.refresh()
         (fixture.ready().candidate == old.candidate) shouldBe false
         fixture.attempts.installed =
-            PublishedContent(PublicationId("other"), 2, CatalogGeneration("other"), "implementation", emptySet(), emptyList())
+            PublishedContent(
+                PublicationId("other"),
+                com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
+                CatalogGeneration("other"),
+                "implementation",
+                emptySet(),
+                emptyList(),
+            )
         fixture.publisher.publish(fixture.ready().candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
         fixture.attempts.started shouldBe 0
         fixture.close()
@@ -268,7 +275,7 @@ val RealmPublicationCoordinatorTest by testSuite {
                 }.shouldBeInstanceOf<PageCompileResult.Success>()
             val inputs = CompilationInputs(capture.root, testAssessment(capture.root, fixture.bindings).resources)
             val artifact = with(inputs) { pageCompilation().compile().single() }.shouldBeInstanceOf<CompilationResult.Success>().artifact
-            artifact.formatRevision shouldBe 2
+            artifact.formatRevision shouldBe com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
             artifact.mediaType shouldBe "application/vnd.typewriter.page+json"
             artifact.inputFingerprint shouldBe expected.inputFingerprint
             artifact.semanticDigest shouldBe expected.shard.digest

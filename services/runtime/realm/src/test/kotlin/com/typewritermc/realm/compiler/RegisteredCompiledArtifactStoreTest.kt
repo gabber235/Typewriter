@@ -30,7 +30,7 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val third = store.store(PublicationId("third"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(replacement))
         third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
         third.publication shouldBe PublicationId("third")
-        third.formatRevision shouldBe 2
+        third.formatRevision shouldBe com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
         val empty = store.store(PublicationId("empty"), CatalogGeneration("catalog"), "implementation", emptySet(), emptyList())
         empty.outputs shouldBe emptyList()
     }

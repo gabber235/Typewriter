@@ -6,6 +6,7 @@ import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.scripting.RuntimeMemberSignature
@@ -27,7 +28,7 @@ class RegisteredCompiledArtifactStore(
     ): PublishedContent =
         PublishedContent(
             publication = publication,
-            formatRevision = 2,
+            formatRevision = PUBLISHED_CONTENT_FORMAT_REVISION,
             catalog = catalog,
             implementationToken = implementationToken,
             runtimeSignatures = runtimeSignatures,

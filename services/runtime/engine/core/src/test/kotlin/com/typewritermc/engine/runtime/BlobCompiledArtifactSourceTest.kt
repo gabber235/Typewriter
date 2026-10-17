@@ -134,7 +134,7 @@ private fun shard(
     digest = ContentDigest(digestCharacter.repeat(64)),
     facts =
         RuntimeCompilationFacts(
-            formatRevision = 2,
+            formatRevision = com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION,
             root = CompiledResourceKey(ResourceId(pageKey), CompilationContext.Root),
             resources = emptyList(),
             edges = emptyList(),
@@ -162,7 +162,7 @@ private fun activation(
         }
     return PublishedContent(
         PublicationId("publication:$revision"),
-        2,
+        com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog:1"),
         "implementation",
         emptySet(),

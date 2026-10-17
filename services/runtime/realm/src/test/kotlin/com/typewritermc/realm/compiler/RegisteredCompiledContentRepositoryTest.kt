@@ -123,7 +123,7 @@ internal fun testPublishedContent(
 ): PublishedContent =
     PublishedContent(
         PublicationId(id),
-        2,
+        com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog"),
         "implementation",
         emptySet(),

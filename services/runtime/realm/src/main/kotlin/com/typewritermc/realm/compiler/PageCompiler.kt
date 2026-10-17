@@ -9,6 +9,7 @@ import com.typewritermc.engine.CompiledPageShard
 import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.ContentDigest
+import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
 import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.RuntimeRelationFact
@@ -34,7 +35,7 @@ import java.security.MessageDigest
 internal class PageCompiler(
     private val ownershipRelations: Set<RelationId>,
     private val readiness: Map<ResourceId, ResourceReadiness>,
-    private val formatRevision: Int = CURRENT_COMPILER_FORMAT,
+    private val formatRevision: Int = PAGE_COMPILATION_FORMAT_REVISION,
 ) {
     context(snapshot: AuthoringView)
     fun compile(root: ResourceId): PageCompileResult {
@@ -216,8 +217,6 @@ private fun digest(value: String): ContentDigest =
             "%02x".format(byte.toInt() and 0xff)
         },
     )
-
-const val CURRENT_COMPILER_FORMAT = 2
 
 internal fun compilationDiagnostic(
     code: String,

@@ -7,6 +7,8 @@ import com.typewritermc.engine.CompiledArtifactReference
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.LoadedCompiledArtifact
 import com.typewritermc.engine.LoadedPublishedContent
+import com.typewritermc.engine.PAGE_COMPILATION_FORMAT_REVISION
+import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.decodeCompiledPageShard
@@ -95,7 +97,7 @@ class PageCompiledArtifactConsumer(
         require(facts.root.source == reference.root.resource) {
             "Compiled Page artifact root does not match its payload."
         }
-        require(facts.formatRevision == reference.formatRevision && facts.formatRevision == 2) {
+        require(facts.formatRevision == reference.formatRevision && facts.formatRevision == PAGE_COMPILATION_FORMAT_REVISION) {
             "Compiled Page artifact format does not match its manifest."
         }
         facts.requireAccepted(catalog, relations)
@@ -133,7 +135,7 @@ class AssemblingEngineContentGateway(
     val snapshot: StateFlow<EngineContentSnapshot?> = mutableSnapshot
 
     override suspend fun apply(content: LoadedPublishedContent) {
-        require(content.descriptor.formatRevision == 2) {
+        require(content.descriptor.formatRevision == PUBLISHED_CONTENT_FORMAT_REVISION) {
             "Unsupported compiled content format ${content.descriptor.formatRevision}."
         }
         val target = EngineContentBuilder()

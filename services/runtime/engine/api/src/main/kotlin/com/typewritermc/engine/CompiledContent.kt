@@ -11,6 +11,8 @@ import com.typewritermc.types.TypeUse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+const val PAGE_COMPILATION_FORMAT_REVISION = 1
+
 /** Distinguishes one generated occurrence of an authored resource. */
 @Serializable
 data class InstancePath(

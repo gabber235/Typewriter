@@ -69,6 +69,21 @@ val PublicationComparisonTest by testSuite {
         }
         PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
     }
+    test("old envelope format requires explicit publication even without changed output") {
+        val artifact = comparisonArtifact()
+        for (outputs in listOf(comparisonSelected(artifact), comparisonSelected(artifact).copy(outputs = emptyList()))) {
+            val candidate = if (outputs.outputs.isEmpty()) emptyList() else listOf(artifact)
+            PublicationComparison
+                .between(
+                    outputs.copy(formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION + 1),
+                    candidate,
+                    testEngineInputs(),
+                ).shouldBeInstanceOf<PublicationComparison.Changed>()
+                .delta.allChanges shouldBe
+                listOf(PublicationChange.RequirementsChanged)
+            PublicationComparison.between(outputs, candidate, testEngineInputs()) shouldBe PublicationComparison.Unchanged
+        }
+    }
     test("failed roots remain pending while definite removals and successful additions are comparable") {
         val old = comparisonArtifact()
         val fresh = comparisonArtifact("new")
@@ -96,7 +111,7 @@ private fun comparisonArtifact(id: String = "root") =
 private fun comparisonSelected(artifact: CompiledArtifact) =
     PublishedContent(
         PublicationId("selected"),
-        2,
+        com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog"),
         "implementation",
         emptySet(),

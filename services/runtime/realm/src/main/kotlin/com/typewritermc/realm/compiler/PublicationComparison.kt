@@ -3,10 +3,12 @@ package com.typewritermc.realm.compiler
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.CompiledArtifactReference
+import com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
 import com.typewritermc.engine.PublishedContent
 
 /** Semantic release contents independent of storage pointers or publication IDs. */
 data class PublicationRuntimeContent(
+    val formatRevision: Int,
     val roots: Map<CompilationRoot, CompiledArtifactReference>,
     val implementationToken: String,
     val signatures: Set<com.typewritermc.scripting.RuntimeMemberSignature>,
@@ -14,6 +16,7 @@ data class PublicationRuntimeContent(
     companion object {
         fun selected(content: PublishedContent) =
             PublicationRuntimeContent(
+                content.formatRevision,
                 content.outputs.associate { it.reference.root to it.reference },
                 content.implementationToken,
                 content.runtimeSignatures,
@@ -23,6 +26,7 @@ data class PublicationRuntimeContent(
             artifacts: List<CompiledArtifact>,
             engine: EngineImplementationInputs,
         ) = PublicationRuntimeContent(
+            PUBLISHED_CONTENT_FORMAT_REVISION,
             artifacts.associate { it.root to CompiledArtifactReference(it.root, it.formatRevision, it.mediaType, it.semanticDigest) },
             engine.token.value,
             engine.signatures,
@@ -118,7 +122,10 @@ sealed interface PublicationComparison {
                     }
                 }
                 if (selected != null &&
-                    (selected.implementationToken != engine.token.value || selected.signatures != engine.signatures)
+                    (
+                        selected.formatRevision != PUBLISHED_CONTENT_FORMAT_REVISION ||
+                            selected.implementationToken != engine.token.value || selected.signatures != engine.signatures
+                    )
                 ) {
                     add(PublicationChange.RequirementsChanged)
                 }
