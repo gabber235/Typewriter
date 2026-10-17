@@ -3,6 +3,7 @@ package com.typewritermc.engine.runtime
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.engine.PublishedContentCodec
+import com.typewritermc.loader.api.HostedMessagingSession
 import com.typewritermc.loader.api.HostedRuntimeHost
 import com.typewritermc.protocol.transport.generated.RealmRouteScope
 import com.typewritermc.protocol.transport.generated.authoringCompiledChanged
@@ -23,6 +24,7 @@ import com.typewritermc.services.libs.communicator.transport.Payload
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -34,7 +36,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import skirout.editor.v1.compiled_content.QueryPublishedContentRequest
 import skirout.editor.v1.compiled_content.QueryPublishedContentResponse
@@ -97,37 +99,17 @@ class MessagingEngineContentDelivery(
                         mutableHealth.value = EngineContentDeliveryHealth.Idle
                         return@collectLatest
                     }
-                    coroutineScope {
-                        val address = RealmRouteScope(organizationId = session.organizationId, realmId = realmId)
-                        val hints = Channel<Unit>(Channel.CONFLATED)
-                        val contract = address.authoringCompiledChanged
-                        val router =
-                            session.communicator.createRouter(
-                                communicatorRoutes { eventAt(contract, address) { hints.trySend(Unit) } },
-                                this,
-                            )
+                    while (currentCoroutineContext().isActive) {
                         try {
-                            check(router.start() !is RouterResult.Failure) { "Could not subscribe to compiled content hints" }
-                            while (currentCoroutineContext().isActive) {
-                                mutableHealth.value = EngineContentDeliveryHealth.Watching
-                                try {
-                                    val content = fetchPublishedContent(session.communicator, address)
-                                    if (content != null) {
-                                        apply(source.load(content))
-                                        mutableHealth.value = EngineContentDeliveryHealth.Active(content.publication)
-                                    }
-                                    withTimeoutOrNull(30.seconds) { hints.receive() }
-                                } catch (cancelled: CancellationException) {
-                                    throw cancelled
-                                } catch (failure: Exception) {
-                                    mutableHealth.value =
-                                        EngineContentDeliveryHealth.Failed(failure.message ?: "Compiled content delivery failed")
-                                    delay(1.seconds)
-                                }
-                            }
-                        } finally {
-                            router.stop()
-                            hints.close()
+                            deliverSession(session, apply)
+                        } catch (cancelled: CancellationException) {
+                            throw cancelled
+                        } catch (failure: Exception) {
+                            mutableHealth.value =
+                                EngineContentDeliveryHealth.Failed(
+                                    failure.message ?: "Compiled content delivery failed",
+                                )
+                            delay(1.seconds)
                         }
                     }
                 }
@@ -139,6 +121,63 @@ class MessagingEngineContentDelivery(
         worker = null
         mutableHealth.value = EngineContentDeliveryHealth.Idle
     }
+
+    private suspend fun deliverSession(
+        session: HostedMessagingSession,
+        apply: suspend (LoadedPublishedContent) -> Unit,
+    ) = coroutineScope {
+        val address =
+            RealmRouteScope(
+                organizationId = session.organizationId,
+                realmId = realmId,
+            )
+        val hints = Channel<Unit>(Channel.CONFLATED)
+        val router =
+            session.communicator.createRouter(
+                communicatorRoutes {
+                    eventAt(address.authoringCompiledChanged, address) { hints.trySend(Unit) }
+                },
+                this,
+            )
+        var primary: Throwable? = null
+        try {
+            router.start().requireDeliverySuccess("subscribe")
+            while (currentCoroutineContext().isActive) {
+                mutableHealth.value = EngineContentDeliveryHealth.Watching
+                val content = fetchPublishedContent(session.communicator, address)
+                if (content != null) {
+                    apply(source.load(content))
+                    mutableHealth.value = EngineContentDeliveryHealth.Active(content.publication)
+                }
+                withTimeoutOrNull(30.seconds) { hints.receive() }
+            }
+        } catch (failure: Throwable) {
+            primary = failure
+            throw failure
+        } finally {
+            try {
+                withContext(NonCancellable) {
+                    router.stop().requireDeliverySuccess("unsubscribe")
+                }
+            } catch (cleanup: Throwable) {
+                val original = primary
+                if (cleanup !is Exception || cleanup is CancellationException) {
+                    if (original != null && original !== cleanup) cleanup.addSuppressed(original)
+                    throw cleanup
+                }
+                if (original == null) throw cleanup
+                if (original !== cleanup) original.addSuppressed(cleanup)
+            } finally {
+                hints.close()
+            }
+        }
+    }
+}
+
+private fun RouterResult.requireDeliverySuccess(operation: String) {
+    if (this is RouterResult.Failure) {
+        throw IllegalStateException("Compiled content $operation failed", error.cause)
+    }
 }
 
 internal suspend fun fetchPublishedContent(
@@ -148,56 +187,64 @@ internal suspend fun fetchPublishedContent(
     val id = UUID.randomUUID().toString()
     val assembler = BoundedByteTransferAssembler(id)
     var content: com.typewritermc.engine.PublishedContent? = null
-    withTimeout(30.seconds) {
-        communicator.watch(publishedContentQuery(address), address, QueryPublishedContentRequest(transferId = id)).first { result ->
-            when (result) {
-                is CommunicationResult.Failure -> {
-                    throw result.error.cause ?: IllegalStateException("Published content query failed")
-                }
-
-                is CommunicationResult.Success -> {
-                    val response =
-                        when (val message = result.value) {
-                            is WatchMessage.Initial -> message.value
-                            is WatchMessage.Update -> message.value
+    val completed =
+        withTimeoutOrNull(30.seconds) {
+            communicator
+                .watch(
+                    publishedContentQuery(address),
+                    address,
+                    QueryPublishedContentRequest(transferId = id),
+                ).first { result ->
+                    when (result) {
+                        is CommunicationResult.Failure -> {
+                            throw result.error.cause ?: IllegalStateException("Published content query failed")
                         }
-                    when (response) {
-                        is QueryPublishedContentResponse.ChunkWrapper -> {
-                            val chunk = response.value.transfer
-                            val bytes =
-                                assembler.accept(
-                                    BoundedTransferChunk(
-                                        chunk.transferId,
-                                        chunk.index,
-                                        chunk.chunkCount,
-                                        chunk.encodedSize,
-                                        chunk.sha256,
-                                        Payload.copyOf(chunk.payload.toByteArray()),
-                                    ),
-                                )
-                            if (bytes ==
-                                null
-                            ) {
-                                false
-                            } else {
-                                content =
-                                    PublishedContentCodec.decode(WirePublishedContent.serializer.fromBytes(okio.ByteString.of(*bytes)))
-                                true
+
+                        is CommunicationResult.Success -> {
+                            val response =
+                                when (val message = result.value) {
+                                    is WatchMessage.Initial -> message.value
+                                    is WatchMessage.Update -> message.value
+                                }
+                            when (response) {
+                                is QueryPublishedContentResponse.ChunkWrapper -> {
+                                    val chunk = response.value.transfer
+                                    val bytes =
+                                        assembler.accept(
+                                            BoundedTransferChunk(
+                                                chunk.transferId,
+                                                chunk.index,
+                                                chunk.chunkCount,
+                                                chunk.encodedSize,
+                                                chunk.sha256,
+                                                Payload.copyOf(chunk.payload.toByteArray()),
+                                            ),
+                                        )
+                                    if (bytes == null) {
+                                        false
+                                    } else {
+                                        content =
+                                            PublishedContentCodec.decode(
+                                                WirePublishedContent.serializer.fromBytes(okio.ByteString.of(*bytes)),
+                                            )
+                                        true
+                                    }
+                                }
+
+                                is QueryPublishedContentResponse.AbsentWrapper -> {
+                                    true
+                                }
+
+                                else -> {
+                                    error("Published content is unavailable")
+                                }
                             }
-                        }
-
-                        is QueryPublishedContentResponse.AbsentWrapper -> {
-                            true
-                        }
-
-                        else -> {
-                            error("Published content is unavailable")
                         }
                     }
                 }
-            }
+            true
         }
-    }
+    check(completed != null) { "Published content query exceeded thirty seconds" }
     return content
 }
 
@@ -215,6 +262,13 @@ private val compiledContentResponseClassifier =
                 is QueryPublishedContentResponse.InternalErrorWrapper -> ResponseOutcome.INTERNAL_ERROR
                 else -> ResponseOutcome.DOMAIN_ERROR
             },
-            ResponseVariant.of(response.kind.name.lowercase()),
+            ResponseVariant.of(
+                when (response) {
+                    is QueryPublishedContentResponse.ChunkWrapper -> "chunk"
+                    is QueryPublishedContentResponse.AbsentWrapper -> "absent"
+                    is QueryPublishedContentResponse.InternalErrorWrapper -> "internal-error"
+                    else -> "unknown"
+                },
+            ),
         )
     }
