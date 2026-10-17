@@ -677,11 +677,10 @@ skir.PresentationNode _textNode(String id, String value) =>
 
 AuthoringEdit _interactionDraft() {
   final configuration = _namedType("InteractionStory");
+  final catalog = _interactionCatalog();
   return AuthoringEdit(
-    generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
-    catalog: authoringFixtureCatalog(
-      generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
-    ),
+    generation: catalog.snapshot.generation,
+    catalog: catalog,
     resources: [
       skir.AuthoringResource(
         id: _interactionResource,
@@ -727,6 +726,101 @@ AuthoringEdit _interactionDraft() {
       ),
     ],
     links: const [],
+  );
+}
+
+CheckedEditorCatalog _interactionCatalog() {
+  final root = _namedType("InteractionStory").definition;
+  final list = _namedType("StoryList").definition;
+  final map = _namedType("StoryMap").definition;
+  final text = skir.TypeTemplate.wrapScalar(skir.ScalarKind.text);
+  final fields = {
+    "status": text,
+    "enabled": skir.TypeTemplate.wrapScalar(skir.ScalarKind.boolean),
+    "items": skir.TypeTemplate.createNamed(
+      definition: list,
+      arguments: const [],
+    ),
+    "metadata": skir.TypeTemplate.createNamed(
+      definition: map,
+      arguments: const [],
+    ),
+  };
+  skir.PublishedType published(
+    skir.TypeDefinitionId id,
+    skir.RepresentationTemplate representation, {
+    List<skir.EffectiveFieldTemplate> effective = const [],
+  }) => skir.PublishedType(
+    definition: skir.TypeDefinition(
+      id: id,
+      parameters: const [],
+      representation: representation,
+      parents: const [],
+    ),
+    display: null,
+    status: skir.DeclarationStatus.ready,
+    effectiveFields: effective,
+    ancestorTemplates: const [],
+  );
+  return CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot(
+      generation: skir.CatalogGeneration(value: "catalog:interaction_story"),
+      types: [
+        published(
+          root,
+          skir.RepresentationTemplate.createRecord(
+            abstract_: false,
+            fields: [
+              for (final field in fields.entries)
+                skir.FieldDeclaration(
+                  owner: skir.FieldOwner(definition: root, name: field.key),
+                  type: field.value,
+                  overrides: const [],
+                  hasConstructorDefault: false,
+                ),
+            ],
+          ),
+          effective: [
+            for (final field in fields.entries)
+              skir.EffectiveFieldTemplate(
+                key: field.key,
+                owner: skir.FieldOwner(definition: root, name: field.key),
+                type: field.value,
+                rules: const [],
+              ),
+          ],
+        ),
+        published(
+          list,
+          skir.RepresentationTemplate.createSequence(
+            item: text,
+            kind: skir.CollectionKind.list,
+          ),
+        ),
+        published(
+          map,
+          skir.RepresentationTemplate.createMapping(key: text, value: text),
+        ),
+      ],
+      resourceDefinitions: [
+        skir.AuthoringResourceDefinition(
+          id: skir.ResourceDefinitionId(value: "widgetbook.interaction"),
+          root: root,
+          navigationHandler: skir.AuthoringNavigationHandler.generic,
+        ),
+      ],
+      resourceOperations: const [],
+      resourceOperationContributions: const [],
+      relations: const [],
+      presentations: const [],
+      presentationMaterials: const [],
+      configuration: const [],
+      diagnostics: const [],
+      endpointBindings: const [],
+      capabilities: const [],
+      recommendations: const [],
+      roleFallbacks: const [],
+    ),
   );
 }
 

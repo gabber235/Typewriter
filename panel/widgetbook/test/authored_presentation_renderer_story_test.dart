@@ -1,4 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_workspace/stories/features/organizations/features/realms/presentation/authored_presentation_renderer.stories.dart";
@@ -102,6 +104,12 @@ void main() {
     expect(find.text("Details are visible"), findsOneWidget);
     expect(find.byType(DepthBox), findsWidgets);
     expect(find.text("Quest actions"), findsOneWidget);
+    final actionHeader = find.widgetWithText(InkWell, "Quest actions");
+    expect(actionHeader, findsOneWidget);
+    Finder headerAction(String label) => find.descendant(
+      of: actionHeader,
+      matching: find.widgetWithText(TextButton, label),
+    );
     expect(
       find.text("Portable header actions use the current draft"),
       findsOneWidget,
@@ -111,10 +119,8 @@ void main() {
       findsOneWidget,
     );
     expect(
-      tester.getCenter(find.widgetWithText(TextButton, "Archive")).dx,
-      greaterThan(
-        tester.getCenter(find.widgetWithText(TextButton, "Duplicate")).dx,
-      ),
+      tester.getCenter(headerAction("Archive")).dx,
+      greaterThan(tester.getCenter(headerAction("Duplicate")).dx),
     );
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
@@ -128,7 +134,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Change history"), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(FilledButton, "Add item").last);
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey("authored.scalar.interaction.add_item")),
+        matching: find.widgetWithText(FilledButton, "Add item"),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text("Item 4"), findsOneWidget);
     expect(find.byTooltip("Remove item"), findsNWidgets(4));
@@ -139,7 +150,17 @@ void main() {
       tester.getTopLeft(firstItem).dy,
       lessThan(tester.getTopLeft(secondItem).dy),
     );
-    await tester.tap(find.byTooltip("Reorder item").first);
+    final firstRow = find.descendant(
+      of: find.byKey(const ValueKey("authored.scalar.interaction.list")),
+      matching: find.byWidgetPredicate(
+        (widget) =>
+            widget is KeyedSubtree && widget.key == const ValueKey("one"),
+      ),
+    );
+    expect(firstRow, findsOneWidget);
+    await tester.tap(
+      find.descendant(of: firstRow, matching: find.byTooltip("Reorder item")),
+    );
     await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
     await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
@@ -149,13 +170,87 @@ void main() {
       greaterThan(tester.getTopLeft(secondItem).dy),
     );
 
-    await tester.tap(find.widgetWithText(FilledButton, "Add entry").last);
+    expect(find.text("intro"), findsOneWidget);
+    expect(find.text("Welcome"), findsOneWidget);
+    expect(find.text("outro"), findsOneWidget);
+    expect(find.text("Farewell"), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey("authored.scalar.interaction.add_row")),
+        matching: find.widgetWithText(FilledButton, "Add entry"),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text("chapter"), findsOneWidget);
     expect(find.text("Arrival"), findsOneWidget);
     expect(find.byTooltip("Remove row"), findsNWidgets(3));
+    expect(find.text("No default presentation is available"), findsNothing);
 
-    await tester.tap(find.widgetWithText(TextButton, "Archive"));
+    final rootRenderer = tester
+        .widgetList<PortablePresentationNodeRenderer>(
+          find.byType(PortablePresentationNodeRenderer),
+        )
+        .firstWhere(
+          (renderer) => renderer.node.nodeId == "authored.interaction.gallery",
+        );
+    final host = rootRenderer.scope.host! as AuthoredPresentationHost;
+    Iterable<skir.MapRow> rows() => switch (host.authored
+        .resource(host.resource)!
+        .authoredField("metadata")!
+        .authoredPayload) {
+      skir.DataValue_mapValueWrapper(:final value) => value.rows,
+      _ => throw StateError("The interaction metadata is no longer a map"),
+    };
+    final added = rows().singleWhere(
+      (row) => row.key == skir.DataValue.wrapStringValue("chapter"),
+    );
+    final rowOrder = rows().map((row) => row.id).toList();
+    final otherRows = rows().where((row) => row.id != added.id).toList();
+    skir.DataValue at(skir.PathSegment branch) => switch (host.authored.read(
+      skir.ValueLocation(
+        resource: host.resource,
+        path: skir.ValuePath(
+          segments: [
+            skir.PathSegment.createField(name: "metadata"),
+            skir.PathSegment.createItem(id: added.id),
+            branch,
+          ],
+        ),
+      ),
+    )) {
+      PortablePathValue(:final value) => value,
+      _ => throw StateError("The inserted map branch is unavailable"),
+    };
+    Finder editor(String text) => find.byWidgetPredicate(
+      (widget) => widget is TextFormField && widget.controller?.text == text,
+    );
+
+    await tester.enterText(editor("chapter"), "chapter_two");
+    await tester.pumpAndSettle();
+    expect(
+      at(skir.PathSegment.mapKey),
+      skir.DataValue.wrapStringValue("chapter_two"),
+    );
+    expect(
+      at(skir.PathSegment.mapValue),
+      skir.DataValue.wrapStringValue("Arrival"),
+    );
+    expect(rows().where((row) => row.id != added.id).toList(), otherRows);
+    expect(rows().map((row) => row.id).toList(), rowOrder);
+    await tester.enterText(editor("Arrival"), "Departure");
+    await tester.pumpAndSettle();
+    expect(
+      at(skir.PathSegment.mapKey),
+      skir.DataValue.wrapStringValue("chapter_two"),
+    );
+    expect(
+      at(skir.PathSegment.mapValue),
+      skir.DataValue.wrapStringValue("Departure"),
+    );
+    expect(rows().where((row) => row.id != added.id).toList(), otherRows);
+    expect(rows().map((row) => row.id).toList(), rowOrder);
+
+    await tester.tap(headerAction("Archive"));
     await tester.pumpAndSettle();
     expect(find.text("Archive quest?"), findsOneWidget);
     expect(
@@ -166,19 +261,45 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text("Archived quest"), findsOneWidget);
 
-    await tester.tap(find.byTooltip("Collapse"));
+    await tester.tap(
+      find.descendant(of: actionHeader, matching: find.byTooltip("Collapse")),
+    );
     await tester.pumpAndSettle();
     expect(find.text("Archived quest"), findsNothing);
-    await tester.tap(find.byTooltip("Expand"));
+    await tester.tap(
+      find.descendant(of: actionHeader, matching: find.byTooltip("Expand")),
+    );
     await tester.pumpAndSettle();
     expect(find.text("Archived quest"), findsOneWidget);
 
-    final reload = find.widgetWithText(FilledButton, "Reload from Realm");
+    final reload = find.descendant(
+      of: find.byKey(const ValueKey("authored.scalar.interaction.reload")),
+      matching: find.widgetWithText(FilledButton, "Reload from Realm"),
+    );
+    final status = find.byKey(const ValueKey("authored.action.status"));
+    expect(host.capabilities.reload, isNull);
+    expect(tester.widget<FilledButton>(reload).onPressed, isNotNull);
+    expect(status, findsNothing);
     await tester.ensureVisible(reload);
     await tester.pumpAndSettle();
     await tester.tap(reload);
     await tester.pumpAndSettle();
-    expect(find.text("Reload is unavailable"), findsOneWidget);
+    const reloadFailure =
+        "The editor action did not complete: Bad state: Reload is unavailable";
+    final reloadOutcome =
+        rootRenderer
+            .scope
+            .operations
+            .value
+            .outcomes[PortableOperationKey.execute(
+          skir.EditorAction.wrapRealm(skir.RealmEditorAction.createReload()),
+        )];
+    expect(reloadOutcome, isNotNull);
+    expect(reloadOutcome!.pending, isFalse);
+    expect(reloadOutcome.diagnostics.single.message, reloadFailure);
+    expect(reloadOutcome.diagnostics.single.targets, isEmpty);
+    expect(status, findsOneWidget);
+    expect(tester.widget<Text>(status).data, reloadFailure);
     expect(tester.takeException(), isNull);
   });
 }
