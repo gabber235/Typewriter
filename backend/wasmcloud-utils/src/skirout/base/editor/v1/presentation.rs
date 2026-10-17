@@ -770,6 +770,8 @@ impl PresentationHeader {
 // struct PresentationNode
 // ==============================================================================
 
+/// One authored layout node. node_id scopes diagnostics and reusable inspector membership.
+/// Read only and enabled properties constrain interaction without granting persistence access.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationNode {
     pub node_id: String,
@@ -796,7 +798,7 @@ impl PresentationNode {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "PresentationNode",
-                "",
+                "One authored layout node. node_id scopes diagnostics and reusable inspector membership.\nRead only and enabled properties constrain interaction without granting persistence access.",
                 |x: &PresentationNode| &x._unrecognized,
                 |x: &mut PresentationNode, u| x._unrecognized = u,
             )
@@ -6563,6 +6565,8 @@ impl PresentationElement {
 // struct PresentationDefinition
 // ==============================================================================
 
+/// Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies
+/// current binding values and owns transient interaction state; the definition carries no widget lifecycle.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationDefinition {
     pub presentation_id: crate::skirout::base::editor::v1::type_catalog::PresentationId,
@@ -6590,7 +6594,7 @@ impl PresentationDefinition {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "PresentationDefinition",
-                "",
+                "Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies\ncurrent binding values and owns transient interaction state; the definition carries no widget lifecycle.",
                 |x: &PresentationDefinition| &x._unrecognized,
                 |x: &mut PresentationDefinition, u| x._unrecognized = u,
             )
@@ -7291,6 +7295,8 @@ impl LinkRejectionDisplay {
 // struct RemainingFieldsElement
 // ==============================================================================
 
+/// Composes inherited inspector members and default controls for fields not claimed explicitly.
+/// Exclusions suppress named field patterns or reusable parts without copying their source layouts.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RemainingFieldsElement {
     pub excluded: Vec<crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern>,
@@ -7315,7 +7321,7 @@ impl RemainingFieldsElement {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "RemainingFieldsElement",
-                "",
+                "Composes inherited inspector members and default controls for fields not claimed explicitly.\nExclusions suppress named field patterns or reusable parts without copying their source layouts.",
                 |x: &RemainingFieldsElement| &x._unrecognized,
                 |x: &mut RemainingFieldsElement, u| x._unrecognized = u,
             )
@@ -8530,6 +8536,8 @@ impl InputContent {
 // struct AppearanceDefaultsElement
 // ==============================================================================
 
+/// Supplies inherited input appearance within its child scope. Explicit descendant properties
+/// take precedence per property; expressions retain the bindings where their layer was declared.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AppearanceDefaultsElement {
     pub appearance: InputAppearance,
@@ -8555,7 +8563,7 @@ impl AppearanceDefaultsElement {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "AppearanceDefaultsElement",
-                "",
+                "Supplies inherited input appearance within its child scope. Explicit descendant properties\ntake precedence per property; expressions retain the bindings where their layer was declared.",
                 |x: &AppearanceDefaultsElement| &x._unrecognized,
                 |x: &mut AppearanceDefaultsElement, u| x._unrecognized = u,
             )
@@ -8751,6 +8759,8 @@ impl ExpressionMapping {
 // struct ValueMappings
 // ==============================================================================
 
+/// Optional display and completion transforms for an edited value. They are evaluated in
+/// an explicit input binding; applying a mapped value still goes through the owning edit scope.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ValueMappings {
     pub completion: Option<ExpressionMapping>,
@@ -8775,7 +8785,7 @@ impl ValueMappings {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "ValueMappings",
-                "",
+                "Optional display and completion transforms for an edited value. They are evaluated in\nan explicit input binding; applying a mapped value still goes through the owning edit scope.",
                 |x: &ValueMappings| &x._unrecognized,
                 |x: &mut ValueMappings, u| x._unrecognized = u,
             )
@@ -10937,6 +10947,8 @@ impl ResultStyle {
 // struct ResultAppearance
 // ==============================================================================
 
+/// Describes host supplied result chrome around the portable body, shared by search options,
+/// authoring result rows, page tiles, and graph nodes where the requested role supports it.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResultAppearance {
     pub style: Option<ResultStyle>,
@@ -10963,7 +10975,7 @@ impl ResultAppearance {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/presentation.skir",
                 "ResultAppearance",
-                "",
+                "Describes host supplied result chrome around the portable body, shared by search options,\nauthoring result rows, page tiles, and graph nodes where the requested role supports it.",
                 |x: &ResultAppearance| &x._unrecognized,
                 |x: &mut ResultAppearance, u| x._unrecognized = u,
             )

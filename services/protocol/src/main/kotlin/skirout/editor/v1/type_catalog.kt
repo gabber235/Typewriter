@@ -1523,7 +1523,11 @@ class NullableTypeTemplate private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Declaration type expression that can retain references to parameters owned by a definition.
+ *
+ * Deeply immutable.
+ */
 sealed class TypeTemplate private constructor() {
     /** The kind of variant held by a `TypeTemplate`. */
     enum class Kind {
@@ -1932,7 +1936,11 @@ class NullableTypeUse private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Closed type application with concrete arguments, suitable for resolution in a checked catalog.
+ *
+ * Deeply immutable.
+ */
 sealed class TypeUse private constructor() {
     /** The kind of variant held by a `TypeUse`. */
     enum class Kind {
@@ -3861,7 +3869,12 @@ sealed interface TypeDefinition_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.TypeDefinition;
 }
 
-/** Deeply immutable. */
+/**
+ * Canonical declaration meaning before application of generic arguments and inherited fields.
+ * Display metadata, editor controls, and native constructors are owned by adjacent catalog services.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TypeDefinition private constructor(
     override val id: skirout.editor.v1.type_catalog.TypeDefinitionId,
@@ -4169,7 +4182,12 @@ sealed interface ItemId_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.ItemId;
 }
 
-/** Deeply immutable. */
+/**
+ * Stable authored collection occurrence identity. Reordering preserves it; equal values can
+ * still occupy different list positions or map rows with different identities.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ItemId private constructor(
     override val value: kotlin.String,
@@ -4279,7 +4297,12 @@ sealed interface LinkTarget_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.LinkTarget;
 }
 
-/** Deeply immutable. */
+/**
+ * Targets an authored resource and optionally the exact inverse value location.
+ * An absent opposite path allows a relation authored on only one side.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class LinkTarget private constructor(
     override val resource: skirout.editor.v1.type_catalog.ResourceId,
@@ -5579,7 +5602,13 @@ class DurationValue private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Portable authored content. unfilled means input is unfinished, while null is an explicit
+ * nullable value. Named wrappers retain concrete type evidence; collection item identities
+ * are independent of value equality. Schema and completeness checks apply separately.
+ *
+ * Deeply immutable.
+ */
 sealed class DataValue private constructor() {
     /** The kind of variant held by a `DataValue`. */
     enum class Kind {
@@ -6239,7 +6268,12 @@ class PendingTypeSelection private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * A resource configuration can retain unfinished generic arguments without inventing a closed type.
+ * Partial schema resolution exposes known fields while dependent fields await those arguments.
+ *
+ * Deeply immutable.
+ */
 sealed class TypeSelection private constructor() {
     /** The kind of variant held by a `TypeSelection`. */
     enum class Kind {
@@ -6360,7 +6394,12 @@ sealed interface AuthoringRecord_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.AuthoringRecord;
 }
 
-/** Deeply immutable. */
+/**
+ * Canonical authored configuration and fields for one resource, before native construction.
+ * It can be structurally valid while containing unfinished input that blocks publication.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringRecord private constructor(
     override val configuration: skirout.editor.v1.type_catalog.TypeSelection,
@@ -6856,7 +6895,12 @@ sealed interface CatalogGeneration_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.CatalogGeneration;
 }
 
-/** Deeply immutable. */
+/**
+ * Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
+ * resource observations and publication identities have separate lifecycles.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CatalogGeneration private constructor(
     override val value: kotlin.String,
@@ -7463,7 +7507,12 @@ sealed interface ValuePath_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.ValuePath;
 }
 
-/** Deeply immutable. */
+/**
+ * Exact path within one resource or bound value. Collection segments use stable item identity,
+ * and map_key or map_value selects a branch after the map row item segment.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ValuePath private constructor(
     override val segments: kotlin.collections.List<skirout.editor.v1.type_catalog.PathSegment>,
@@ -8341,7 +8390,12 @@ sealed interface RelativeFieldPattern_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.RelativeFieldPattern;
 }
 
-/** Deeply immutable. */
+/**
+ * Schema pattern expanded against an owning occurrence. Collection wildcards describe many
+ * concrete value paths and do not themselves identify an editable item.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RelativeFieldPattern private constructor(
     override val segments: kotlin.collections.List<skirout.editor.v1.type_catalog.FieldPatternSegment>,
@@ -11059,7 +11113,12 @@ sealed interface CheckedType_OrMutable {
     fun toFrozen(): skirout.editor.v1.type_catalog.CheckedType;
 }
 
-/** Deeply immutable. */
+/**
+ * Applied type evidence bound to a specific checked catalog generation.
+ * A resolved schema is separate from proving that a particular authored value is complete.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CheckedType private constructor(
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -12398,7 +12457,7 @@ private object _SerializerRegistry {
 
     val AuthoringRecordSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:AuthoringRecord",
-        doc = "",
+        doc = "Canonical authored configuration and fields for one resource, before native construction.\nIt can be structurally valid while containing unfinished input that blocks publication.",
         defaultInstance = skirout.editor.v1.type_catalog.AuthoringRecord.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.AuthoringRecord.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -12434,7 +12493,7 @@ private object _SerializerRegistry {
 
     val CatalogGenerationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:CatalogGeneration",
-        doc = "",
+        doc = "Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;\nresource observations and publication identities have separate lifecycles.",
         defaultInstance = skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -12446,7 +12505,7 @@ private object _SerializerRegistry {
 
     val CheckedTypeSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:CheckedType",
-        doc = "",
+        doc = "Applied type evidence bound to a specific checked catalog generation.\nA resolved schema is separate from proving that a particular authored value is complete.",
         defaultInstance = skirout.editor.v1.type_catalog.CheckedType.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.CheckedType.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -12532,7 +12591,7 @@ private object _SerializerRegistry {
     val DataValueSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.DataValue, skirout.editor.v1.type_catalog.DataValue.Unknown>(
             recordId = "editor/v1/type_catalog.skir:DataValue",
-            doc = "",
+            doc = "Portable authored content. unfilled means input is unfinished, while null is an explicit\nnullable value. Named wrappers retain concrete type evidence; collection item identities\nare independent of value equality. Schema and completeness checks apply separately.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.type_catalog.DataValue.Kind.values().size,
             unknownInstance = skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
@@ -12787,7 +12846,7 @@ private object _SerializerRegistry {
 
     val ItemIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:ItemId",
-        doc = "",
+        doc = "Stable authored collection occurrence identity. Reordering preserves it; equal values can\nstill occupy different list positions or map rows with different identities.",
         defaultInstance = skirout.editor.v1.type_catalog.ItemId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.ItemId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -12835,7 +12894,7 @@ private object _SerializerRegistry {
 
     val LinkTargetSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:LinkTarget",
-        doc = "",
+        doc = "Targets an authored resource and optionally the exact inverse value location.\nAn absent opposite path allows a relation authored on only one side.",
         defaultInstance = skirout.editor.v1.type_catalog.LinkTarget.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.LinkTarget.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -13172,7 +13231,7 @@ private object _SerializerRegistry {
 
     val RelativeFieldPatternSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:RelativeFieldPattern",
-        doc = "",
+        doc = "Schema pattern expanded against an owning occurrence. Collection wildcards describe many\nconcrete value paths and do not themselves identify an editable item.",
         defaultInstance = skirout.editor.v1.type_catalog.RelativeFieldPattern.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.RelativeFieldPattern.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -13367,7 +13426,7 @@ private object _SerializerRegistry {
 
     val TypeDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:TypeDefinition",
-        doc = "",
+        doc = "Canonical declaration meaning before application of generic arguments and inherited fields.\nDisplay metadata, editor controls, and native constructors are owned by adjacent catalog services.",
         defaultInstance = skirout.editor.v1.type_catalog.TypeDefinition.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.TypeDefinition.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -13417,7 +13476,7 @@ private object _SerializerRegistry {
     val TypeSelectionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.TypeSelection, skirout.editor.v1.type_catalog.TypeSelection.Unknown>(
             recordId = "editor/v1/type_catalog.skir:TypeSelection",
-            doc = "",
+            doc = "A resource configuration can retain unfinished generic arguments without inventing a closed type.\nPartial schema resolution exposes known fields while dependent fields await those arguments.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.type_catalog.TypeSelection.Kind.values().size,
             unknownInstance = skirout.editor.v1.type_catalog.TypeSelection.UNKNOWN,
@@ -13430,7 +13489,7 @@ private object _SerializerRegistry {
     val TypeTemplateSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.TypeTemplate, skirout.editor.v1.type_catalog.TypeTemplate.Unknown>(
             recordId = "editor/v1/type_catalog.skir:TypeTemplate",
-            doc = "",
+            doc = "Declaration type expression that can retain references to parameters owned by a definition.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.type_catalog.TypeTemplate.Kind.values().size,
             unknownInstance = skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
@@ -13443,7 +13502,7 @@ private object _SerializerRegistry {
     val TypeUseSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.TypeUse, skirout.editor.v1.type_catalog.TypeUse.Unknown>(
             recordId = "editor/v1/type_catalog.skir:TypeUse",
-            doc = "",
+            doc = "Closed type application with concrete arguments, suitable for resolution in a checked catalog.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.type_catalog.TypeUse.Kind.values().size,
             unknownInstance = skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
@@ -13467,7 +13526,7 @@ private object _SerializerRegistry {
 
     val ValuePathSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:ValuePath",
-        doc = "",
+        doc = "Exact path within one resource or bound value. Collection segments use stable item identity,\nand map_key or map_value selects a branch after the map row item segment.",
         defaultInstance = skirout.editor.v1.type_catalog.ValuePath.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.ValuePath.Mutable() },
         toFrozenFn = { it.toFrozen() },

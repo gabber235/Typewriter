@@ -930,6 +930,8 @@ sealed class EngineImplementationInputs_orMutable {
   EngineImplementationInputs toFrozen();
 }
 
+/// Captured implementation requirements used to fence candidate assessment and publication selection.
+///
 /// Deeply immutable.
 final class EngineImplementationInputs
     implements EngineImplementationInputs_orMutable {
@@ -1022,7 +1024,7 @@ final class EngineImplementationInputs
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:EngineImplementationInputs",
-    doc: "",
+    doc: "Captured implementation requirements used to fence candidate assessment and publication selection.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (EngineImplementationInputs_mutable it) => it.toFrozen(),
@@ -1073,6 +1075,9 @@ final class EngineImplementationInputs_mutable
 
 // enum PublicationState
 
+/// Durable attempt progress, separate from review status. complete means the Realm selected its
+/// descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1164,7 +1169,7 @@ sealed class PublicationState {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/publication.skir:PublicationState",
-        doc: "",
+        doc: "Durable attempt progress, separate from review status. complete means the Realm selected its\ndescriptor, while blocked or interrupted attempts do not replace the prior selected publication.",
         unknownInstance: PublicationState_unknown._instance,
         enumInstance: PublicationState.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1577,6 +1582,10 @@ final class PublicationResult_Activated_mutable
 
 // enum PublicationResult
 
+/// Reports release admission and selection. activated identifies the newly selected publication,
+/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
+/// means another release currently owns the publication gate.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1713,7 +1722,7 @@ sealed class PublicationResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/publication.skir:PublicationResult",
-        doc: "",
+        doc: "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
         unknownInstance: PublicationResult_unknown._instance,
         enumInstance: PublicationResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -2003,6 +2012,9 @@ sealed class PublicationCandidateId_orMutable {
   PublicationCandidateId toFrozen();
 }
 
+/// Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
+/// A newer review may invalidate it even when no resource revision counter is exposed.
+///
 /// Deeply immutable.
 final class PublicationCandidateId implements PublicationCandidateId_orMutable {
   @_core.override
@@ -2072,7 +2084,7 @@ final class PublicationCandidateId implements PublicationCandidateId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:PublicationCandidateId",
-    doc: "",
+    doc: "Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.\nA newer review may invalidate it even when no resource revision counter is exposed.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublicationCandidateId_mutable it) => it.toFrozen(),
@@ -2103,6 +2115,9 @@ sealed class PublicationViewId_orMutable {
   PublicationViewId toFrozen();
 }
 
+/// Identifies one emitted review state, including checking and failure states without a candidate.
+/// It is a freshness identity rather than a sortable publication or resource revision.
+///
 /// Deeply immutable.
 final class PublicationViewId implements PublicationViewId_orMutable {
   @_core.override
@@ -2168,7 +2183,7 @@ final class PublicationViewId implements PublicationViewId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:PublicationViewId",
-    doc: "",
+    doc: "Identifies one emitted review state, including checking and failure states without a candidate.\nIt is a freshness identity rather than a sortable publication or resource revision.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublicationViewId_mutable it) => it.toFrozen(),
@@ -2341,6 +2356,9 @@ sealed class DiagnosticEvidence_orMutable {
   DiagnosticEvidence toFrozen();
 }
 
+/// Original facts under which a publication diagnostic applies to an authored value.
+/// Consumers compare this evidence with their working state before presenting it as current.
+///
 /// Deeply immutable.
 final class DiagnosticEvidence implements DiagnosticEvidence_orMutable {
   @_core.override
@@ -2432,7 +2450,7 @@ final class DiagnosticEvidence implements DiagnosticEvidence_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:DiagnosticEvidence",
-    doc: "",
+    doc: "Original facts under which a publication diagnostic applies to an authored value.\nConsumers compare this evidence with their working state before presenting it as current.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (DiagnosticEvidence_mutable it) => it.toFrozen(),
@@ -3070,6 +3088,9 @@ final class PublicationBlocker_mutable implements PublicationBlocker_orMutable {
 
 // enum PublicationChange
 
+/// Semantic runtime changes relative to selection. A root update compares artifact meaning and
+/// format, independently of blob storage location or a newly allocated publication identity.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -3192,7 +3213,7 @@ sealed class PublicationChange {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/publication.skir:PublicationChange",
-        doc: "",
+        doc: "Semantic runtime changes relative to selection. A root update compares artifact meaning and\nformat, independently of blob storage location or a newly allocated publication identity.",
         unknownInstance: PublicationChange_unknown._instance,
         enumInstance: PublicationChange.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -3302,6 +3323,8 @@ sealed class PublicationDelta_orMutable {
   PublicationDelta toFrozen();
 }
 
+/// A releasable change set is nonempty by construction; additional entries extend its first change.
+///
 /// Deeply immutable.
 final class PublicationDelta implements PublicationDelta_orMutable {
   @_core.override
@@ -3386,7 +3409,7 @@ final class PublicationDelta implements PublicationDelta_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:PublicationDelta",
-    doc: "",
+    doc: "A releasable change set is nonempty by construction; additional entries extend its first change.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublicationDelta_mutable it) => it.toFrozen(),
@@ -5402,6 +5425,10 @@ final class PublicationStatus_Unavailable_mutable
 
 // enum PublicationStatus
 
+/// Current saved review state. ready authorizes only its issued candidate; blocked can still
+/// report confirmed changes while failed roots remain pending. During publishing, releasing is
+/// frozen and next describes later saved work without adding it to the in progress release.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -5622,7 +5649,7 @@ sealed class PublicationStatus {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/publication.skir:PublicationStatus",
-        doc: "",
+        doc: "Current saved review state. ready authorizes only its issued candidate; blocked can still\nreport confirmed changes while failed roots remain pending. During publishing, releasing is\nfrozen and next describes later saved work without adding it to the in progress release.",
         unknownInstance: PublicationStatus_unknown._instance,
         enumInstance: PublicationStatus.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -5886,6 +5913,8 @@ sealed class PublicationViewChanged_orMutable {
   PublicationViewChanged toFrozen();
 }
 
+/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+///
 /// Deeply immutable.
 final class PublicationViewChanged implements PublicationViewChanged_orMutable {
   @_core.override
@@ -5958,7 +5987,7 @@ final class PublicationViewChanged implements PublicationViewChanged_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/publication.skir:PublicationViewChanged",
-    doc: "",
+    doc: "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublicationViewChanged_mutable it) => it.toFrozen(),
@@ -7030,13 +7059,14 @@ final class QueryPublicationViewResponse_internalErrorWrapper
       QueryPublicationViewResponse_kind.internalErrorWrapper;
 }
 
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
   920020,
   PublishAuthoringRequest.serializer,
   PublishAuthoringResponse.serializer,
-  "",
+  "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
 );
 
 final _skir.Method<WatchPublicationRequest, PublicationViewChanged>
@@ -7048,11 +7078,13 @@ watchPublicationMethod = _skir.Method(
   "",
 );
 
+/// Transfers one immutable review view or reports that expected is no longer current.
+/// All chunks share the view and transfer identities; later invalidations require a separate query.
 final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
 queryPublicationViewMethod = _skir.Method(
   "QueryPublicationView",
   920022,
   QueryPublicationViewRequest.serializer,
   QueryPublicationViewResponse.serializer,
-  "",
+  "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",
 );

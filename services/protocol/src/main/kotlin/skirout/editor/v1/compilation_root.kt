@@ -136,7 +136,12 @@ sealed interface CompilationRoot_OrMutable {
     fun toFrozen(): skirout.editor.v1.compilation_root.CompilationRoot;
 }
 
-/** Deeply immutable. */
+/**
+ * Identifies one compiler owned output root without interpreting its domain payload.
+ * The projection selects the compiler family; resource identifies the authored root within that family.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompilationRoot private constructor(
     override val projection: skirout.editor.v1.compilation_root.CompilationProjectionId,
@@ -300,7 +305,7 @@ private object _SerializerRegistry {
 
     val CompilationRootSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compilation_root.skir:CompilationRoot",
-        doc = "",
+        doc = "Identifies one compiler owned output root without interpreting its domain payload.\nThe projection selects the compiler family; resource identifies the authored root within that family.",
         defaultInstance = skirout.editor.v1.compilation_root.CompilationRoot.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compilation_root.CompilationRoot.Mutable() },
         toFrozenFn = { it.toFrozen() },

@@ -639,7 +639,12 @@ sealed interface RealmSearchQuery_OrMutable {
     fun toFrozen(): skirout.editor.v1.search.RealmSearchQuery;
 }
 
-/** Deeply immutable. */
+/**
+ * Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.
+ * Providers interpret the query instead of reconstructing selected filters from display text.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmSearchQuery private constructor(
     override val normalizedQuery: kotlin.String,
@@ -828,7 +833,12 @@ sealed interface RealmPresentationSearchRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchRequest;
 }
 
-/** Deeply immutable. */
+/**
+ * Starts or replaces work for one subscription. Operation context gives input searches the
+ * same confirmed saved baseline and local overlay used by action preparation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmPresentationSearchRequest private constructor(
     override val subscriptionId: kotlin.String,
@@ -1160,7 +1170,12 @@ sealed interface RealmPresentationSearchSnapshot_OrMutable {
     fun toFrozen(): skirout.editor.v1.search.RealmPresentationSearchSnapshot;
 }
 
-/** Deeply immutable. */
+/**
+ * Complete values accumulated for this subscription so far, not an incremental append batch.
+ * loading allows further snapshots; ready marks producer completion; error carries diagnostics.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RealmPresentationSearchSnapshot private constructor(
     override val subscriptionId: kotlin.String,
@@ -2009,6 +2024,7 @@ val WatchRealmPresentationSearch: build.skir.service.Method<
     )
 }
 
+/** Requests cancellation of a source owned search job. not_found also covers work already retired. */
 val CancelRealmPresentationSearch: build.skir.service.Method<
     skirout.editor.v1.search.CancelRealmPresentationSearchRequest,
     skirout.editor.v1.search.CancelRealmPresentationSearchResult,
@@ -2018,7 +2034,7 @@ val CancelRealmPresentationSearch: build.skir.service.Method<
         919104,
         skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.CancelRealmPresentationSearchResult.serializer,
-        "",
+        "Requests cancellation of a source owned search job. not_found also covers work already retired.",
     )
 }
 
@@ -2050,7 +2066,7 @@ private object _SerializerRegistry {
 
     val RealmPresentationSearchRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmPresentationSearchRequest",
-        doc = "",
+        doc = "Starts or replaces work for one subscription. Operation context gives input searches the\nsame confirmed saved baseline and local overlay used by action preparation.",
         defaultInstance = skirout.editor.v1.search.RealmPresentationSearchRequest.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchRequest.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2062,7 +2078,7 @@ private object _SerializerRegistry {
 
     val RealmPresentationSearchSnapshotSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmPresentationSearchSnapshot",
-        doc = "",
+        doc = "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
         defaultInstance = skirout.editor.v1.search.RealmPresentationSearchSnapshot.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmPresentationSearchSnapshot.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2124,7 +2140,7 @@ private object _SerializerRegistry {
 
     val RealmSearchQuerySerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/search.skir:RealmSearchQuery",
-        doc = "",
+        doc = "Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.\nProviders interpret the query instead of reconstructing selected filters from display text.",
         defaultInstance = skirout.editor.v1.search.RealmSearchQuery.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.search.RealmSearchQuery.Mutable() },
         toFrozenFn = { it.toFrozen() },

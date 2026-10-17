@@ -1575,7 +1575,12 @@ class ChooseFormAction private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Mutations of bound editor values. Collection item identities identify occurrences and
+ * anchors; the owning edit scope decides staging and commit behavior.
+ *
+ * Deeply immutable.
+ */
 sealed class LocalEditorAction private constructor() {
     /** The kind of variant held by a `LocalEditorAction`. */
     enum class Kind {
@@ -2511,7 +2516,12 @@ sealed interface AuthoringCapabilityAction_OrMutable {
     fun toFrozen(): skirout.editor.v1.action.AuthoringCapabilityAction;
 }
 
-/** Deeply immutable. */
+/**
+ * Invokes catalog authoring preparation for evaluated resource targets and optional initial input.
+ * Its output is a proposed edit, rather than an immediate saved resource mutation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringCapabilityAction private constructor(
     override val capability: skirout.editor.v1.type_catalog.CapabilityId,
@@ -2819,7 +2829,7 @@ private object _SerializerRegistry {
 
     val AuthoringCapabilityActionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/action.skir:AuthoringCapabilityAction",
-        doc = "",
+        doc = "Invokes catalog authoring preparation for evaluated resource targets and optional initial input.\nIts output is a proposed edit, rather than an immediate saved resource mutation.",
         defaultInstance = skirout.editor.v1.action.AuthoringCapabilityAction.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.action.AuthoringCapabilityAction.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2905,7 +2915,7 @@ private object _SerializerRegistry {
     val LocalEditorActionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.action.LocalEditorAction, skirout.editor.v1.action.LocalEditorAction.Unknown>(
             recordId = "editor/v1/action.skir:LocalEditorAction",
-            doc = "",
+            doc = "Mutations of bound editor values. Collection item identities identify occurrences and\nanchors; the owning edit scope decides staging and commit behavior.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.action.LocalEditorAction.Kind.values().size,
             unknownInstance = skirout.editor.v1.action.LocalEditorAction.UNKNOWN,

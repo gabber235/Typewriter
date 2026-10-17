@@ -127,6 +127,9 @@ sealed class CompilationRoot_orMutable {
   CompilationRoot toFrozen();
 }
 
+/// Identifies one compiler owned output root without interpreting its domain payload.
+/// The projection selects the compiler family; resource identifies the authored root within that family.
+///
 /// Deeply immutable.
 final class CompilationRoot implements CompilationRoot_orMutable {
   @_core.override
@@ -211,7 +214,7 @@ final class CompilationRoot implements CompilationRoot_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/compilation_root.skir:CompilationRoot",
-    doc: "",
+    doc: "Identifies one compiler owned output root without interpreting its domain payload.\nThe projection selects the compiler family; resource identifies the authored root within that family.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CompilationRoot_mutable it) => it.toFrozen(),

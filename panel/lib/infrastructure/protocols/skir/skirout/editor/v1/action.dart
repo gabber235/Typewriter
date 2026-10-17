@@ -1492,6 +1492,9 @@ final class ChooseFormAction_mutable implements ChooseFormAction_orMutable {
 
 // enum LocalEditorAction
 
+/// Mutations of bound editor values. Collection item identities identify occurrences and
+/// anchors; the owning edit scope decides staging and commit behavior.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1755,7 +1758,7 @@ sealed class LocalEditorAction {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/action.skir:LocalEditorAction",
-        doc: "",
+        doc: "Mutations of bound editor values. Collection item identities identify occurrences and\nanchors; the owning edit scope decides staging and commit behavior.",
         unknownInstance: LocalEditorAction_unknown._instance,
         enumInstance: LocalEditorAction.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -2511,6 +2514,9 @@ sealed class AuthoringCapabilityAction_orMutable {
   AuthoringCapabilityAction toFrozen();
 }
 
+/// Invokes catalog authoring preparation for evaluated resource targets and optional initial input.
+/// Its output is a proposed edit, rather than an immediate saved resource mutation.
+///
 /// Deeply immutable.
 final class AuthoringCapabilityAction
     implements AuthoringCapabilityAction_orMutable {
@@ -2625,7 +2631,7 @@ final class AuthoringCapabilityAction
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/action.skir:AuthoringCapabilityAction",
-    doc: "",
+    doc: "Invokes catalog authoring preparation for evaluated resource targets and optional initial input.\nIts output is a proposed edit, rather than an immediate saved resource mutation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringCapabilityAction_mutable it) => it.toFrozen(),

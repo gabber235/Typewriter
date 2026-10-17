@@ -434,6 +434,8 @@ impl ChooseFormAction {
 // enum LocalEditorAction
 // ==============================================================================
 
+/// Mutations of bound editor values. Collection item identities identify occurrences and
+/// anchors; the owning edit scope decides staging and commit behavior.
 #[derive(Debug, Clone, PartialEq)]
 pub enum LocalEditorAction {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<LocalEditorAction>>),
@@ -481,7 +483,7 @@ impl LocalEditorAction {
                 },
                 "editor/v1/action.skir",
                 "LocalEditorAction",
-                "",
+                "Mutations of bound editor values. Collection item identities identify occurrences and\nanchors; the owning edit scope decides staging and commit behavior.",
             )
         });
         &*ADAPTER
@@ -716,6 +718,8 @@ impl ResourceNavigationAction {
 // struct AuthoringCapabilityAction
 // ==============================================================================
 
+/// Invokes catalog authoring preparation for evaluated resource targets and optional initial input.
+/// Its output is a proposed edit, rather than an immediate saved resource mutation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringCapabilityAction {
     pub capability: crate::skirout::base::editor::v1::type_catalog::CapabilityId,
@@ -742,7 +746,7 @@ impl AuthoringCapabilityAction {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/action.skir",
                 "AuthoringCapabilityAction",
-                "",
+                "Invokes catalog authoring preparation for evaluated resource targets and optional initial input.\nIts output is a proposed edit, rather than an immediate saved resource mutation.",
                 |x: &AuthoringCapabilityAction| &x._unrecognized,
                 |x: &mut AuthoringCapabilityAction, u| x._unrecognized = u,
             )

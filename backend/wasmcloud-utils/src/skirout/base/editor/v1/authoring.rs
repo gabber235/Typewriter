@@ -59,6 +59,7 @@ impl AuthoringResource {
 // struct LinkOccurrenceId
 // ==============================================================================
 
+/// Identifies an authored reference by endpoint and exact value location, including collection item identity.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkOccurrenceId {
     pub endpoint: crate::skirout::base::editor::v1::type_catalog::EndpointId,
@@ -83,7 +84,7 @@ impl LinkOccurrenceId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "LinkOccurrenceId",
-                "",
+                "Identifies an authored reference by endpoint and exact value location, including collection item identity.",
                 |x: &LinkOccurrenceId| &x._unrecognized,
                 |x: &mut LinkOccurrenceId, u| x._unrecognized = u,
             )
@@ -142,6 +143,7 @@ impl LinkOccurrence {
 // struct RelationProjectionDelta
 // ==============================================================================
 
+/// Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RelationProjectionDelta {
     pub removals: Vec<crate::skirout::base::editor::v1::authoring_facts::LinkProjection>,
@@ -167,7 +169,7 @@ impl RelationProjectionDelta {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "RelationProjectionDelta",
-                "",
+                "Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.",
                 |x: &RelationProjectionDelta| &x._unrecognized,
                 |x: &mut RelationProjectionDelta, u| x._unrecognized = u,
             )
@@ -533,6 +535,8 @@ impl UnresolvedLink {
 // struct PresentationSubject
 // ==============================================================================
 
+/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PresentationSubject {
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
@@ -559,7 +563,7 @@ impl PresentationSubject {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "PresentationSubject",
-                "",
+                "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
                 |x: &PresentationSubject| &x._unrecognized,
                 |x: &mut PresentationSubject, u| x._unrecognized = u,
             )
@@ -792,6 +796,9 @@ impl CatalogChanged {
 // struct AuthoringState
 // ==============================================================================
 
+/// Captures one saved resource graph and its catalog for editor synchronization.
+/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
+/// confirmed observation, which resource operations must echo before supplying a working overlay.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringState {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -819,7 +826,7 @@ impl AuthoringState {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "AuthoringState",
-                "",
+                "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
                 |x: &AuthoringState| &x._unrecognized,
                 |x: &mut AuthoringState, u| x._unrecognized = u,
             )
@@ -1295,6 +1302,8 @@ impl ResourceConfigurationIntent {
 // enum EditIntent
 // ==============================================================================
 
+/// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
+/// synchronize inverses and validate the resulting graph before persistence.
 #[derive(Debug, Clone, PartialEq)]
 pub enum EditIntent {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<EditIntent>>),
@@ -1341,7 +1350,7 @@ impl EditIntent {
                     },
                     "editor/v1/authoring.skir",
                     "EditIntent",
-                    "",
+                    "Ordered proposed mutations. Relation intent names exact authored occurrences so admission can\nsynchronize inverses and validate the resulting graph before persistence.",
                 )
             });
         &*ADAPTER
@@ -1356,6 +1365,9 @@ impl EditIntent {
 // struct PreparedEdit
 // ==============================================================================
 
+/// Carries a proposed edit and the original saved facts that justify replaying it.
+/// Matching supplied facts alone is insufficient: Realm admission independently requires guards for
+/// the affected values and relations. Preparation grants no persistence or publication authority.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PreparedEdit {
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -1381,7 +1393,7 @@ impl PreparedEdit {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "PreparedEdit",
-                "",
+                "Carries a proposed edit and the original saved facts that justify replaying it.\nMatching supplied facts alone is insufficient: Realm admission independently requires guards for\nthe affected values and relations. Preparation grants no persistence or publication authority.",
                 |x: &PreparedEdit| &x._unrecognized,
                 |x: &mut PreparedEdit, u| x._unrecognized = u,
             )
@@ -1486,6 +1498,9 @@ impl PreparedEditResult {
 // enum CommitResult
 // ==============================================================================
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. Conflict requires refreshing original
+/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CommitResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CommitResult>>),
@@ -1521,7 +1536,7 @@ impl CommitResult {
                 },
                 "editor/v1/authoring.skir",
                 "CommitResult",
-                "",
+                "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
             )
         });
         &*ADAPTER
@@ -1580,6 +1595,7 @@ impl AuthoringOperation {
 // struct AuthoringChanged
 // ==============================================================================
 
+/// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringChanged {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -1603,7 +1619,7 @@ impl AuthoringChanged {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "AuthoringChanged",
-                "",
+                "Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.",
                 |x: &AuthoringChanged| &x._unrecognized,
                 |x: &mut AuthoringChanged, u| x._unrecognized = u,
             )
@@ -1666,6 +1682,8 @@ impl LinkRepairIntent {
 // struct TypeArgumentChangePreview
 // ==============================================================================
 
+/// Proposes a fixed definition type configuration change together with all value and link repairs.
+/// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TypeArgumentChangePreview {
     pub resource: crate::skirout::base::editor::v1::type_catalog::ResourceId,
@@ -1694,7 +1712,7 @@ impl TypeArgumentChangePreview {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "TypeArgumentChangePreview",
-                "",
+                "Proposes a fixed definition type configuration change together with all value and link repairs.\nPreparation rechecks expectations and regenerates repairs before yielding a committable edit.",
                 |x: &TypeArgumentChangePreview| &x._unrecognized,
                 |x: &mut TypeArgumentChangePreview, u| x._unrecognized = u,
             )
@@ -2169,6 +2187,9 @@ impl AuthoringTransferUnavailable {
 // struct AuthoringObservationId
 // ==============================================================================
 
+/// Identifies one saved authoring observation without ordering resource changes.
+/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
+/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringObservationId {
     pub value: String,
@@ -2192,7 +2213,7 @@ impl AuthoringObservationId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring.skir",
                 "AuthoringObservationId",
-                "",
+                "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
                 |x: &AuthoringObservationId| &x._unrecognized,
                 |x: &mut AuthoringObservationId, u| x._unrecognized = u,
             )
@@ -4473,16 +4494,19 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
+/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
 pub fn query_authoring_state_method()
 -> &'static crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse> {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "QueryAuthoringState".to_string(),
-        number: 920010_i64,
-        request_serializer: QueryAuthoringStateRequest::serializer(),
-        response_serializer: QueryAuthoringStateResponse::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "QueryAuthoringState".to_string(),
+            number: 920010_i64,
+            request_serializer: QueryAuthoringStateRequest::serializer(),
+            response_serializer: QueryAuthoringStateResponse::serializer(),
+            doc: "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.".to_string(),
+        }
     });
     &*METHOD
 }
@@ -4534,17 +4558,20 @@ pub fn preview_type_argument_change_method() -> &'static crate::skir_client::Met
     &*METHOD
 }
 
+/// Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.
 pub fn prepare_type_argument_change_method()
 -> &'static crate::skir_client::Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>
 {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "PrepareTypeArgumentChange".to_string(),
-        number: 920014_i64,
-        request_serializer: TypeArgumentChangePreview::serializer(),
-        response_serializer: PrepareTypeArgumentChangeResponse::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "PrepareTypeArgumentChange".to_string(),
+            number: 920014_i64,
+            request_serializer: TypeArgumentChangePreview::serializer(),
+            response_serializer: PrepareTypeArgumentChangeResponse::serializer(),
+            doc: "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.".to_string(),
+        }
     });
     &*METHOD
 }

@@ -171,6 +171,10 @@ sealed class OperationInvocation_orMutable {
   OperationInvocation toFrozen();
 }
 
+/// Captures the operation selection and its exact origin occurrences under one catalog.
+/// invocation_id correlates requests and supplies stable preparation allocation identity; it does
+/// not make requests durable or guarantee server deduplication.
+///
 /// Deeply immutable.
 final class OperationInvocation implements OperationInvocation_orMutable {
   @_core.override
@@ -308,7 +312,7 @@ final class OperationInvocation implements OperationInvocation_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/resource_operations.skir:OperationInvocation",
-    doc: "",
+    doc: "Captures the operation selection and its exact origin occurrences under one catalog.\ninvocation_id correlates requests and supplies stable preparation allocation identity; it does\nnot make requests durable or guarantee server deduplication.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (OperationInvocation_mutable it) => it.toFrozen(),
@@ -549,6 +553,9 @@ sealed class OperationWorkingOverlay_orMutable {
   OperationWorkingOverlay toFrozen();
 }
 
+/// Proposed replacements and removals layered over the confirmed saved observation for this request.
+/// These values are validated before callbacks run and are not saved by resolve or preparation.
+///
 /// Deeply immutable.
 final class OperationWorkingOverlay
     implements OperationWorkingOverlay_orMutable {
@@ -644,7 +651,7 @@ final class OperationWorkingOverlay
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/resource_operations.skir:OperationWorkingOverlay",
-    doc: "",
+    doc: "Proposed replacements and removals layered over the confirmed saved observation for this request.\nThese values are validated before callbacks run and are not saved by resolve or preparation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (OperationWorkingOverlay_mutable it) => it.toFrozen(),
@@ -706,6 +713,9 @@ sealed class OperationWorkingContext_orMutable {
   OperationWorkingContext toFrozen();
 }
 
+/// Couples a local overlay to the saved observation it was built from. A stale observation must
+/// be refreshed rather than silently applying the overlay to a different saved graph.
+///
 /// Deeply immutable.
 final class OperationWorkingContext
     implements OperationWorkingContext_orMutable {
@@ -802,7 +812,7 @@ final class OperationWorkingContext
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/resource_operations.skir:OperationWorkingContext",
-    doc: "",
+    doc: "Couples a local overlay to the saved observation it was built from. A stale observation must\nbe refreshed rather than silently applying the overlay to a different saved graph.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (OperationWorkingContext_mutable it) => it.toFrozen(),
@@ -3295,6 +3305,9 @@ sealed class PrepareAuthoringActionRequest_orMutable {
   PrepareAuthoringActionRequest toFrozen();
 }
 
+/// Replays preparation with current input and choice answers. input_revision orders client responses;
+/// it is echoed in successful preparation results and is independent of saved resource versions.
+///
 /// Deeply immutable.
 final class PrepareAuthoringActionRequest
     implements PrepareAuthoringActionRequest_orMutable {
@@ -3471,7 +3484,7 @@ final class PrepareAuthoringActionRequest
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId:
         "editor/v1/resource_operations.skir:PrepareAuthoringActionRequest",
-    doc: "",
+    doc: "Replays preparation with current input and choice answers. input_revision orders client responses;\nit is echoed in successful preparation results and is independent of saved resource versions.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PrepareAuthoringActionRequest_mutable it) => it.toFrozen(),
@@ -3810,6 +3823,9 @@ sealed class AuthoringActionPreview_orMutable {
   AuthoringActionPreview toFrozen();
 }
 
+/// Proposed edit and client effects after preparation. Selection replacement applies when the
+/// preview is staged; confirmation describes the proposed action and does not persist it.
+///
 /// Deeply immutable.
 final class AuthoringActionPreview implements AuthoringActionPreview_orMutable {
   @_core.override
@@ -3967,7 +3983,7 @@ final class AuthoringActionPreview implements AuthoringActionPreview_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/resource_operations.skir:AuthoringActionPreview",
-    doc: "",
+    doc: "Proposed edit and client effects after preparation. Selection replacement applies when the\npreview is staged; confirmation describes the proposed action and does not persist it.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringActionPreview_mutable it) => it.toFrozen(),
@@ -4031,6 +4047,10 @@ final class AuthoringActionPreview_mutable
 
 // enum AuthoringActionResult
 
+/// Separates missing interactive input from a usable preview, stale baseline, unavailable action,
+/// validation rejection, permission failure, and callback failure. Refresh catalog or saved state
+/// when requested before attempting preparation again.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -4296,7 +4316,7 @@ sealed class AuthoringActionResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/resource_operations.skir:AuthoringActionResult",
-        doc: "",
+        doc: "Separates missing interactive input from a usable preview, stale baseline, unavailable action,\nvalidation rejection, permission failure, and callback failure. Refresh catalog or saved state\nwhen requested before attempting preparation again.",
         unknownInstance: AuthoringActionResult_unknown._instance,
         enumInstance: AuthoringActionResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -4468,6 +4488,8 @@ sealed class OperationSearchContext_orMutable {
   OperationSearchContext toFrozen();
 }
 
+/// Gives operation input search the same selection, working observation, and input revision as preparation.
+///
 /// Deeply immutable.
 final class OperationSearchContext implements OperationSearchContext_orMutable {
   @_core.override
@@ -4582,7 +4604,7 @@ final class OperationSearchContext implements OperationSearchContext_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/resource_operations.skir:OperationSearchContext",
-    doc: "",
+    doc: "Gives operation input search the same selection, working observation, and input revision as preparation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (OperationSearchContext_mutable it) => it.toFrozen(),

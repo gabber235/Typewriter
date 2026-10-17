@@ -250,6 +250,8 @@ impl RealmSearchSelectorExpression {
 // struct RealmSearchQuery
 // ==============================================================================
 
+/// Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.
+/// Providers interpret the query instead of reconstructing selected filters from display text.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmSearchQuery {
     pub normalized_query: String,
@@ -276,7 +278,7 @@ impl RealmSearchQuery {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/search.skir",
                 "RealmSearchQuery",
-                "",
+                "Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.\nProviders interpret the query instead of reconstructing selected filters from display text.",
                 |x: &RealmSearchQuery| &x._unrecognized,
                 |x: &mut RealmSearchQuery, u| x._unrecognized = u,
             )
@@ -293,6 +295,8 @@ impl RealmSearchQuery {
 // struct RealmPresentationSearchRequest
 // ==============================================================================
 
+/// Starts or replaces work for one subscription. Operation context gives input searches the
+/// same confirmed saved baseline and local overlay used by action preparation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchRequest {
     pub subscription_id: String,
@@ -325,7 +329,7 @@ impl RealmPresentationSearchRequest {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/search.skir",
                 "RealmPresentationSearchRequest",
-                "",
+                "Starts or replaces work for one subscription. Operation context gives input searches the\nsame confirmed saved baseline and local overlay used by action preparation.",
                 |x: &RealmPresentationSearchRequest| &x._unrecognized,
                 |x: &mut RealmPresentationSearchRequest, u| x._unrecognized = u,
             )
@@ -395,6 +399,8 @@ impl RealmPresentationSearchStatus {
 // struct RealmPresentationSearchSnapshot
 // ==============================================================================
 
+/// Complete values accumulated for this subscription so far, not an incremental append batch.
+/// loading allows further snapshots; ready marks producer completion; error carries diagnostics.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RealmPresentationSearchSnapshot {
     pub subscription_id: String,
@@ -424,7 +430,7 @@ impl RealmPresentationSearchSnapshot {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/search.skir",
                 "RealmPresentationSearchSnapshot",
-                "",
+                "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
                 |x: &RealmPresentationSearchSnapshot| &x._unrecognized,
                 |x: &mut RealmPresentationSearchSnapshot, u| x._unrecognized = u,
             )
@@ -1137,6 +1143,7 @@ pub fn watch_realm_presentation_search_method() -> &'static crate::skir_client::
     &*METHOD
 }
 
+/// Requests cancellation of a source owned search job. not_found also covers work already retired.
 pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client::Method<
     CancelRealmPresentationSearchRequest,
     CancelRealmPresentationSearchResult,
@@ -1146,12 +1153,14 @@ pub fn cancel_realm_presentation_search_method() -> &'static crate::skir_client:
             CancelRealmPresentationSearchRequest,
             CancelRealmPresentationSearchResult,
         >,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "CancelRealmPresentationSearch".to_string(),
-        number: 919104_i64,
-        request_serializer: CancelRealmPresentationSearchRequest::serializer(),
-        response_serializer: CancelRealmPresentationSearchResult::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "CancelRealmPresentationSearch".to_string(),
+            number: 919104_i64,
+            request_serializer: CancelRealmPresentationSearchRequest::serializer(),
+            response_serializer: CancelRealmPresentationSearchResult::serializer(),
+            doc: "Requests cancellation of a source owned search job. not_found also covers work already retired.".to_string(),
+        }
     });
     &*METHOD
 }

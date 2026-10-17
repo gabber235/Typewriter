@@ -1352,6 +1352,8 @@ final class CompleteValue_mutable implements CompleteValue_orMutable {
 
 // enum StructuralResult
 
+/// Reports whether authored shape is valid under its schema, independently of unfinished input.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1398,7 +1400,7 @@ sealed class StructuralResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/diagnostic.skir:StructuralResult",
-        doc: "",
+        doc: "Reports whether authored shape is valid under its schema, independently of unfinished input.",
         unknownInstance: StructuralResult_unknown._instance,
         enumInstance: StructuralResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1478,6 +1480,9 @@ final class StructuralResult_invalidWrapper extends _StructuralResult_wrapper {
 
 // enum CompletenessResult
 
+/// Distinguishes a value ready for native decoding from unfinished locations and invalid shape.
+/// Schema resolution alone does not prove this value specific result.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1562,7 +1567,7 @@ sealed class CompletenessResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/diagnostic.skir:CompletenessResult",
-        doc: "",
+        doc: "Distinguishes a value ready for native decoding from unfinished locations and invalid shape.\nSchema resolution alone does not prove this value specific result.",
         unknownInstance: CompletenessResult_unknown._instance,
         enumInstance: CompletenessResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,

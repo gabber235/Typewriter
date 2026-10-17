@@ -17,6 +17,7 @@
 // struct InvocationId
 // ==============================================================================
 
+/// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct InvocationId {
     pub value: String,
@@ -40,7 +41,7 @@ impl InvocationId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/capability.skir",
                 "InvocationId",
-                "",
+                "Caller correlation identity. It does not imply durable command storage or automatic deduplication.",
                 |x: &InvocationId| &x._unrecognized,
                 |x: &mut InvocationId, u| x._unrecognized = u,
             )
@@ -460,6 +461,8 @@ impl NotifyInstruction {
 // enum PanelInstruction
 // ==============================================================================
 
+/// Client effects returned by Realm commands. These instructions direct navigation, refresh,
+/// or notification; receiving them is separate from applying them in the current panel session.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PanelInstruction {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PanelInstruction>>),
@@ -493,7 +496,7 @@ impl PanelInstruction {
                 },
                 "editor/v1/capability.skir",
                 "PanelInstruction",
-                "",
+                "Client effects returned by Realm commands. These instructions direct navigation, refresh,\nor notification; receiving them is separate from applying them in the current panel session.",
             )
         });
         &*ADAPTER
@@ -508,6 +511,8 @@ impl PanelInstruction {
 // struct CapabilityInvocationRequest
 // ==============================================================================
 
+/// Selects a capability under a catalog generation with portable input. Computations require
+/// the declared result type; commands require expected_result_type to be absent.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CapabilityInvocationRequest {
     pub invocation_id: InvocationId,
@@ -536,7 +541,7 @@ impl CapabilityInvocationRequest {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/capability.skir",
                 "CapabilityInvocationRequest",
-                "",
+                "Selects a capability under a catalog generation with portable input. Computations require\nthe declared result type; commands require expected_result_type to be absent.",
                 |x: &CapabilityInvocationRequest| &x._unrecognized,
                 |x: &mut CapabilityInvocationRequest, u| x._unrecognized = u,
             )

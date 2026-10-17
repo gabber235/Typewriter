@@ -17,6 +17,7 @@
 // struct ResourceOperationId
 // ==============================================================================
 
+/// Stable declaration owned identity, independent of display labels and catalog generation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourceOperationId {
     pub artifact: String,
@@ -43,7 +44,7 @@ impl ResourceOperationId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/operation.skir",
                 "ResourceOperationId",
-                "",
+                "Stable declaration owned identity, independent of display labels and catalog generation.",
                 |x: &ResourceOperationId| &x._unrecognized,
                 |x: &mut ResourceOperationId, u| x._unrecognized = u,
             )
@@ -342,6 +343,9 @@ impl ResourceOperationDefinition {
 // struct ResourceOperationContribution
 // ==============================================================================
 
+/// Adds operation identities to matching resource types and optionally nominates a primary action.
+/// Resolution considers all selected targets; primary nomination applies to a single resource
+/// and conflicting equally applicable nominations are rejected.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ResourceOperationContribution {
     pub target: crate::skirout::base::editor::v1::type_catalog::TypeTemplate,
@@ -369,7 +373,7 @@ impl ResourceOperationContribution {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/operation.skir",
                 "ResourceOperationContribution",
-                "",
+                "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
                 |x: &ResourceOperationContribution| &x._unrecognized,
                 |x: &mut ResourceOperationContribution, u| x._unrecognized = u,
             )
@@ -388,6 +392,8 @@ impl ResourceOperationContribution {
 // enum OperationAvailability
 // ==============================================================================
 
+/// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
+/// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
 #[derive(Debug, Clone, PartialEq)]
 pub enum OperationAvailability {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<OperationAvailability>>),
@@ -421,7 +427,7 @@ impl OperationAvailability {
                 },
                 "editor/v1/operation.skir",
                 "OperationAvailability",
-                "",
+                "hidden omits an affordance, disabled retains its explanation, and enabled permits attempting\ndispatch. Availability is evaluated against current working facts and must be rechecked at preparation.",
             )
         });
         &*ADAPTER

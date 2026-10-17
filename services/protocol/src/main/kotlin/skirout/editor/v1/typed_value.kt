@@ -27,7 +27,12 @@ sealed interface PortableValue_OrMutable {
     fun toFrozen(): skirout.editor.v1.typed_value.PortableValue;
 }
 
-/** Deeply immutable. */
+/**
+ * Carries a closed type and portable payload together when the receiver cannot infer the
+ * type from its surrounding binding. Receiving this pair does not replace schema validation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PortableValue private constructor(
     override val actualType: skirout.editor.v1.type_catalog.TypeUse,
@@ -147,7 +152,7 @@ class PortableValue private constructor(
 private object _SerializerRegistry {
     val PortableValueSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/typed_value.skir:PortableValue",
-        doc = "",
+        doc = "Carries a closed type and portable payload together when the receiver cannot infer the\ntype from its surrounding binding. Receiving this pair does not replace schema validation.",
         defaultInstance = skirout.editor.v1.typed_value.PortableValue.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.typed_value.PortableValue.Mutable() },
         toFrozenFn = { it.toFrozen() },

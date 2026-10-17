@@ -27,7 +27,12 @@ sealed interface BindingRef_OrMutable {
     fun toFrozen(): skirout.editor.v1.binding.BindingRef;
 }
 
-/** Deeply immutable. */
+/**
+ * Locates a value within an expression binding scope. The binding identifies the root and
+ * path identifies a descendant; this carries no resource ownership or edit permission by itself.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class BindingRef private constructor(
     override val path: skirout.editor.v1.type_catalog.ValuePath,
@@ -606,7 +611,7 @@ private object _SerializerRegistry {
 
     val BindingRefSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/binding.skir:BindingRef",
-        doc = "",
+        doc = "Locates a value within an expression binding scope. The binding identifies the root and\npath identifies a descendant; this carries no resource ownership or edit permission by itself.",
         defaultInstance = skirout.editor.v1.binding.BindingRef.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.binding.BindingRef.Mutable() },
         toFrozenFn = { it.toFrozen() },

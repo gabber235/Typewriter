@@ -214,7 +214,11 @@ sealed interface LinkOccurrenceId_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.LinkOccurrenceId;
 }
 
-/** Deeply immutable. */
+/**
+ * Identifies an authored reference by endpoint and exact value location, including collection item identity.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class LinkOccurrenceId private constructor(
     override val endpoint: skirout.editor.v1.type_catalog.EndpointId,
@@ -558,7 +562,11 @@ sealed interface RelationProjectionDelta_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.RelationProjectionDelta;
 }
 
-/** Deeply immutable. */
+/**
+ * Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RelationProjectionDelta private constructor(
     override val removals: kotlin.collections.List<skirout.editor.v1.authoring_facts.LinkProjection>,
@@ -1906,7 +1914,12 @@ sealed interface PresentationSubject_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.PresentationSubject;
 }
 
-/** Deeply immutable. */
+/**
+ * Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+ * Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationSubject private constructor(
     override val resource: skirout.editor.v1.type_catalog.ResourceId,
@@ -2781,7 +2794,13 @@ sealed interface AuthoringState_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringState;
 }
 
-/** Deeply immutable. */
+/**
+ * Captures one saved resource graph and its catalog for editor synchronization.
+ * Findings retain their own execution evidence and freshness. All transfer chunks describe this same
+ * confirmed observation, which resource operations must echo before supplying a working overlay.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringState private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -4678,7 +4697,12 @@ class ResourceConfigurationIntent private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
+ * synchronize inverses and validate the resulting graph before persistence.
+ *
+ * Deeply immutable.
+ */
 sealed class EditIntent private constructor() {
     /** The kind of variant held by a `EditIntent`. */
     enum class Kind {
@@ -5068,7 +5092,13 @@ sealed interface PreparedEdit_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.PreparedEdit;
 }
 
-/** Deeply immutable. */
+/**
+ * Carries a proposed edit and the original saved facts that justify replaying it.
+ * Matching supplied facts alone is insufficient: Realm admission independently requires guards for
+ * the affected values and relations. Preparation grants no persistence or publication authority.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PreparedEdit private constructor(
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -5489,7 +5519,13 @@ sealed class PreparedEditResult private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * committed confirms installation of saved authoring state. It does not confirm check completion,
+ * compilation, publication selection, or engine application. Conflict requires refreshing original
+ * facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
+ *
+ * Deeply immutable.
+ */
 sealed class CommitResult private constructor() {
     /** The kind of variant held by a `CommitResult`. */
     enum class Kind {
@@ -5708,7 +5744,11 @@ sealed interface AuthoringChanged_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringChanged;
 }
 
-/** Deeply immutable. */
+/**
+ * Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringChanged private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -5951,7 +5991,12 @@ sealed interface TypeArgumentChangePreview_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.TypeArgumentChangePreview;
 }
 
-/** Deeply immutable. */
+/**
+ * Proposes a fixed definition type configuration change together with all value and link repairs.
+ * Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class TypeArgumentChangePreview private constructor(
     override val resource: skirout.editor.v1.type_catalog.ResourceId,
@@ -7674,7 +7719,13 @@ sealed interface AuthoringObservationId_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring.AuthoringObservationId;
 }
 
-/** Deeply immutable. */
+/**
+ * Identifies one saved authoring observation without ordering resource changes.
+ * It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
+ * while carrying separate proposed values; a changed saved view requires refreshing the baseline.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringObservationId private constructor(
     override val value: kotlin.String,
@@ -8928,6 +8979,7 @@ sealed class PrepareTypeArgumentChangeResponse private constructor() {
     }
 }
 
+/** Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata. */
 val QueryAuthoringState: build.skir.service.Method<
     skirout.editor.v1.authoring.QueryAuthoringStateRequest,
     skirout.editor.v1.authoring.QueryAuthoringStateResponse,
@@ -8937,7 +8989,7 @@ val QueryAuthoringState: build.skir.service.Method<
         920010,
         skirout.editor.v1.authoring.QueryAuthoringStateRequest.serializer,
         skirout.editor.v1.authoring.QueryAuthoringStateResponse.serializer,
-        "",
+        "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.",
     )
 }
 
@@ -8980,6 +9032,7 @@ val PreviewTypeArgumentChange: build.skir.service.Method<
     )
 }
 
+/** Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write. */
 val PrepareTypeArgumentChange: build.skir.service.Method<
     skirout.editor.v1.authoring.TypeArgumentChangePreview,
     skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse,
@@ -8989,7 +9042,7 @@ val PrepareTypeArgumentChange: build.skir.service.Method<
         920014,
         skirout.editor.v1.authoring.TypeArgumentChangePreview.serializer,
         skirout.editor.v1.authoring.PrepareTypeArgumentChangeResponse.serializer,
-        "",
+        "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",
     )
 }
 
@@ -9020,7 +9073,7 @@ private object _SerializerRegistry {
 
     val AuthoringChangedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:AuthoringChanged",
-        doc = "",
+        doc = "Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.",
         defaultInstance = skirout.editor.v1.authoring.AuthoringChanged.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringChanged.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9056,7 +9109,7 @@ private object _SerializerRegistry {
 
     val AuthoringObservationIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:AuthoringObservationId",
-        doc = "",
+        doc = "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
         defaultInstance = skirout.editor.v1.authoring.AuthoringObservationId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringObservationId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9117,7 +9170,7 @@ private object _SerializerRegistry {
 
     val AuthoringStateSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:AuthoringState",
-        doc = "",
+        doc = "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
         defaultInstance = skirout.editor.v1.authoring.AuthoringState.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.AuthoringState.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9229,7 +9282,7 @@ private object _SerializerRegistry {
     val CommitResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.CommitResult, skirout.editor.v1.authoring.CommitResult.Unknown>(
             recordId = "editor/v1/authoring.skir:CommitResult",
-            doc = "",
+            doc = "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.authoring.CommitResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.authoring.CommitResult.UNKNOWN,
@@ -9303,7 +9356,7 @@ private object _SerializerRegistry {
     val EditIntentSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring.EditIntent, skirout.editor.v1.authoring.EditIntent.Unknown>(
             recordId = "editor/v1/authoring.skir:EditIntent",
-            doc = "",
+            doc = "Ordered proposed mutations. Relation intent names exact authored occurrences so admission can\nsynchronize inverses and validate the resulting graph before persistence.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.authoring.EditIntent.Kind.values().size,
             unknownInstance = skirout.editor.v1.authoring.EditIntent.UNKNOWN,
@@ -9375,7 +9428,7 @@ private object _SerializerRegistry {
 
     val LinkOccurrenceIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:LinkOccurrenceId",
-        doc = "",
+        doc = "Identifies an authored reference by endpoint and exact value location, including collection item identity.",
         defaultInstance = skirout.editor.v1.authoring.LinkOccurrenceId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.LinkOccurrenceId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9424,7 +9477,7 @@ private object _SerializerRegistry {
 
     val PreparedEditSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:PreparedEdit",
-        doc = "",
+        doc = "Carries a proposed edit and the original saved facts that justify replaying it.\nMatching supplied facts alone is insufficient: Realm admission independently requires guards for\nthe affected values and relations. Preparation grants no persistence or publication authority.",
         defaultInstance = skirout.editor.v1.authoring.PreparedEdit.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.PreparedEdit.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9474,7 +9527,7 @@ private object _SerializerRegistry {
 
     val PresentationSubjectSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:PresentationSubject",
-        doc = "",
+        doc = "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
         defaultInstance = skirout.editor.v1.authoring.PresentationSubject.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.PresentationSubject.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9561,7 +9614,7 @@ private object _SerializerRegistry {
 
     val RelationProjectionDeltaSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:RelationProjectionDelta",
-        doc = "",
+        doc = "Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.",
         defaultInstance = skirout.editor.v1.authoring.RelationProjectionDelta.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.RelationProjectionDelta.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -9671,7 +9724,7 @@ private object _SerializerRegistry {
 
     val TypeArgumentChangePreviewSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring.skir:TypeArgumentChangePreview",
-        doc = "",
+        doc = "Proposes a fixed definition type configuration change together with all value and link repairs.\nPreparation rechecks expectations and regenerates repairs before yielding a committable edit.",
         defaultInstance = skirout.editor.v1.authoring.TypeArgumentChangePreview.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring.TypeArgumentChangePreview.Mutable() },
         toFrozenFn = { it.toFrozen() },

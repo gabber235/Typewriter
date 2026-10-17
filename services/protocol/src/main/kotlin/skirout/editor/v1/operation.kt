@@ -29,7 +29,11 @@ sealed interface ResourceOperationId_OrMutable {
     fun toFrozen(): skirout.editor.v1.operation.ResourceOperationId;
 }
 
-/** Deeply immutable. */
+/**
+ * Stable declaration owned identity, independent of display labels and catalog generation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResourceOperationId private constructor(
     override val artifact: kotlin.String,
@@ -1034,7 +1038,13 @@ sealed interface ResourceOperationContribution_OrMutable {
     fun toFrozen(): skirout.editor.v1.operation.ResourceOperationContribution;
 }
 
-/** Deeply immutable. */
+/**
+ * Adds operation identities to matching resource types and optionally nominates a primary action.
+ * Resolution considers all selected targets; primary nomination applies to a single resource
+ * and conflicting equally applicable nominations are rejected.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResourceOperationContribution private constructor(
     override val target: skirout.editor.v1.type_catalog.TypeTemplate,
@@ -1181,7 +1191,12 @@ class ResourceOperationContribution private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
+ * dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
+ *
+ * Deeply immutable.
+ */
 sealed class OperationAvailability private constructor() {
     /** The kind of variant held by a `OperationAvailability`. */
     enum class Kind {
@@ -1554,7 +1569,7 @@ private object _SerializerRegistry {
     val OperationAvailabilitySerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.operation.OperationAvailability, skirout.editor.v1.operation.OperationAvailability.Unknown>(
             recordId = "editor/v1/operation.skir:OperationAvailability",
-            doc = "",
+            doc = "hidden omits an affordance, disabled retains its explanation, and enabled permits attempting\ndispatch. Availability is evaluated against current working facts and must be rechecked at preparation.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.operation.OperationAvailability.Kind.values().size,
             unknownInstance = skirout.editor.v1.operation.OperationAvailability.UNKNOWN,
@@ -1652,7 +1667,7 @@ private object _SerializerRegistry {
 
     val ResourceOperationContributionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:ResourceOperationContribution",
-        doc = "",
+        doc = "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
         defaultInstance = skirout.editor.v1.operation.ResourceOperationContribution.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.ResourceOperationContribution.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1676,7 +1691,7 @@ private object _SerializerRegistry {
 
     val ResourceOperationIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/operation.skir:ResourceOperationId",
-        doc = "",
+        doc = "Stable declaration owned identity, independent of display labels and catalog generation.",
         defaultInstance = skirout.editor.v1.operation.ResourceOperationId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.operation.ResourceOperationId.Mutable() },
         toFrozenFn = { it.toFrozen() },

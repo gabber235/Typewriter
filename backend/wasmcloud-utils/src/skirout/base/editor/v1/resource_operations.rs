@@ -58,6 +58,9 @@ impl OperationOrigin {
 // struct OperationInvocation
 // ==============================================================================
 
+/// Captures the operation selection and its exact origin occurrences under one catalog.
+/// invocation_id correlates requests and supplies stable preparation allocation identity; it does
+/// not make requests durable or guarantee server deduplication.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationInvocation {
     pub invocation_id: crate::skirout::base::editor::v1::capability::InvocationId,
@@ -84,7 +87,7 @@ impl OperationInvocation {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "OperationInvocation",
-                "",
+                "Captures the operation selection and its exact origin occurrences under one catalog.\ninvocation_id correlates requests and supplies stable preparation allocation identity; it does\nnot make requests durable or guarantee server deduplication.",
                 |x: &OperationInvocation| &x._unrecognized,
                 |x: &mut OperationInvocation, u| x._unrecognized = u,
             )
@@ -144,6 +147,8 @@ impl OperationResourceUpsert {
 // struct OperationWorkingOverlay
 // ==============================================================================
 
+/// Proposed replacements and removals layered over the confirmed saved observation for this request.
+/// These values are validated before callbacks run and are not saved by resolve or preparation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationWorkingOverlay {
     pub upserts: Vec<OperationResourceUpsert>,
@@ -168,7 +173,7 @@ impl OperationWorkingOverlay {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "OperationWorkingOverlay",
-                "",
+                "Proposed replacements and removals layered over the confirmed saved observation for this request.\nThese values are validated before callbacks run and are not saved by resolve or preparation.",
                 |x: &OperationWorkingOverlay| &x._unrecognized,
                 |x: &mut OperationWorkingOverlay, u| x._unrecognized = u,
             )
@@ -187,6 +192,8 @@ impl OperationWorkingOverlay {
 // struct OperationWorkingContext
 // ==============================================================================
 
+/// Couples a local overlay to the saved observation it was built from. A stale observation must
+/// be refreshed rather than silently applying the overlay to a different saved graph.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationWorkingContext {
     pub confirmed_observation: crate::skirout::base::editor::v1::authoring::AuthoringObservationId,
@@ -211,7 +218,7 @@ impl OperationWorkingContext {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "OperationWorkingContext",
-                "",
+                "Couples a local overlay to the saved observation it was built from. A stale observation must\nbe refreshed rather than silently applying the overlay to a different saved graph.",
                 |x: &OperationWorkingContext| &x._unrecognized,
                 |x: &mut OperationWorkingContext, u| x._unrecognized = u,
             )
@@ -916,6 +923,8 @@ impl ResolveResourceOperationsResult {
 // struct PrepareAuthoringActionRequest
 // ==============================================================================
 
+/// Replays preparation with current input and choice answers. input_revision orders client responses;
+/// it is echoed in successful preparation results and is independent of saved resource versions.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PrepareAuthoringActionRequest {
     pub invocation: OperationInvocation,
@@ -946,7 +955,7 @@ impl PrepareAuthoringActionRequest {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "PrepareAuthoringActionRequest",
-                "",
+                "Replays preparation with current input and choice answers. input_revision orders client responses;\nit is echoed in successful preparation results and is independent of saved resource versions.",
                 |x: &PrepareAuthoringActionRequest| &x._unrecognized,
                 |x: &mut PrepareAuthoringActionRequest, u| x._unrecognized = u,
             )
@@ -1012,6 +1021,8 @@ impl AuthoringActionNeedsInput {
 // struct AuthoringActionPreview
 // ==============================================================================
 
+/// Proposed edit and client effects after preparation. Selection replacement applies when the
+/// preview is staged; confirmation describes the proposed action and does not persist it.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringActionPreview {
     pub invocation_id: crate::skirout::base::editor::v1::capability::InvocationId,
@@ -1039,7 +1050,7 @@ impl AuthoringActionPreview {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "AuthoringActionPreview",
-                "",
+                "Proposed edit and client effects after preparation. Selection replacement applies when the\npreview is staged; confirmation describes the proposed action and does not persist it.",
                 |x: &AuthoringActionPreview| &x._unrecognized,
                 |x: &mut AuthoringActionPreview, u| x._unrecognized = u,
             )
@@ -1058,6 +1069,9 @@ impl AuthoringActionPreview {
 // enum AuthoringActionResult
 // ==============================================================================
 
+/// Separates missing interactive input from a usable preview, stale baseline, unavailable action,
+/// validation rejection, permission failure, and callback failure. Refresh catalog or saved state
+/// when requested before attempting preparation again.
 #[derive(Debug, Clone, PartialEq)]
 pub enum AuthoringActionResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<AuthoringActionResult>>),
@@ -1103,7 +1117,7 @@ impl AuthoringActionResult {
                 },
                 "editor/v1/resource_operations.skir",
                 "AuthoringActionResult",
-                "",
+                "Separates missing interactive input from a usable preview, stale baseline, unavailable action,\nvalidation rejection, permission failure, and callback failure. Refresh catalog or saved state\nwhen requested before attempting preparation again.",
             )
         });
         &*ADAPTER
@@ -1118,6 +1132,7 @@ impl AuthoringActionResult {
 // struct OperationSearchContext
 // ==============================================================================
 
+/// Gives operation input search the same selection, working observation, and input revision as preparation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OperationSearchContext {
     pub invocation: OperationInvocation,
@@ -1143,7 +1158,7 @@ impl OperationSearchContext {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/resource_operations.skir",
                 "OperationSearchContext",
-                "",
+                "Gives operation input search the same selection, working observation, and input revision as preparation.",
                 |x: &OperationSearchContext| &x._unrecognized,
                 |x: &mut OperationSearchContext, u| x._unrecognized = u,
             )

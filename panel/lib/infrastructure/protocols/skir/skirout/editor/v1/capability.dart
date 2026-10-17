@@ -27,6 +27,8 @@ sealed class InvocationId_orMutable {
   InvocationId toFrozen();
 }
 
+/// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
+///
 /// Deeply immutable.
 final class InvocationId implements InvocationId_orMutable {
   @_core.override
@@ -90,7 +92,7 @@ final class InvocationId implements InvocationId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/capability.skir:InvocationId",
-    doc: "",
+    doc: "Caller correlation identity. It does not imply durable command storage or automatic deduplication.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (InvocationId_mutable it) => it.toFrozen(),
@@ -1415,6 +1417,9 @@ final class NotifyInstruction_mutable implements NotifyInstruction_orMutable {
 
 // enum PanelInstruction
 
+/// Client effects returned by Realm commands. These instructions direct navigation, refresh,
+/// or notification; receiving them is separate from applying them in the current panel session.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1510,7 +1515,7 @@ sealed class PanelInstruction {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/capability.skir:PanelInstruction",
-        doc: "",
+        doc: "Client effects returned by Realm commands. These instructions direct navigation, refresh,\nor notification; receiving them is separate from applying them in the current panel session.",
         unknownInstance: PanelInstruction_unknown._instance,
         enumInstance: PanelInstruction.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1609,6 +1614,9 @@ sealed class CapabilityInvocationRequest_orMutable {
   CapabilityInvocationRequest toFrozen();
 }
 
+/// Selects a capability under a catalog generation with portable input. Computations require
+/// the declared result type; commands require expected_result_type to be absent.
+///
 /// Deeply immutable.
 final class CapabilityInvocationRequest
     implements CapabilityInvocationRequest_orMutable {
@@ -1766,7 +1774,7 @@ final class CapabilityInvocationRequest
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/capability.skir:CapabilityInvocationRequest",
-    doc: "",
+    doc: "Selects a capability under a catalog generation with portable input. Computations require\nthe declared result type; commands require expected_result_type to be absent.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CapabilityInvocationRequest_mutable it) => it.toFrozen(),

@@ -196,6 +196,7 @@ impl ScriptContextDescriptor {
 // struct EngineImplementationInputs
 // ==============================================================================
 
+/// Captured implementation requirements used to fence candidate assessment and publication selection.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EngineImplementationInputs {
     pub signatures: Vec<RuntimeMemberSignature>,
@@ -221,7 +222,7 @@ impl EngineImplementationInputs {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "EngineImplementationInputs",
-                "",
+                "Captured implementation requirements used to fence candidate assessment and publication selection.",
                 |x: &EngineImplementationInputs| &x._unrecognized,
                 |x: &mut EngineImplementationInputs, u| x._unrecognized = u,
             )
@@ -240,6 +241,8 @@ impl EngineImplementationInputs {
 // enum PublicationState
 // ==============================================================================
 
+/// Durable attempt progress, separate from review status. complete means the Realm selected its
+/// descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PublicationState {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PublicationState>>),
@@ -279,7 +282,7 @@ impl PublicationState {
                 },
                 "editor/v1/publication.skir",
                 "PublicationState",
-                "",
+                "Durable attempt progress, separate from review status. complete means the Realm selected its\ndescriptor, while blocked or interrupted attempts do not replace the prior selected publication.",
             )
         });
         &*ADAPTER
@@ -380,6 +383,9 @@ impl PublicationResult_Activated {
 // enum PublicationResult
 // ==============================================================================
 
+/// Reports release admission and selection. activated identifies the newly selected publication,
+/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
+/// means another release currently owns the publication gate.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PublicationResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PublicationResult>>),
@@ -419,7 +425,7 @@ impl PublicationResult {
                 },
                 "editor/v1/publication.skir",
                 "PublicationResult",
-                "",
+                "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
             )
         });
         &*ADAPTER
@@ -476,6 +482,8 @@ impl PublicationReport {
 // struct PublicationCandidateId
 // ==============================================================================
 
+/// Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
+/// A newer review may invalidate it even when no resource revision counter is exposed.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublicationCandidateId {
     pub value: String,
@@ -499,7 +507,7 @@ impl PublicationCandidateId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "PublicationCandidateId",
-                "",
+                "Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.\nA newer review may invalidate it even when no resource revision counter is exposed.",
                 |x: &PublicationCandidateId| &x._unrecognized,
                 |x: &mut PublicationCandidateId, u| x._unrecognized = u,
             )
@@ -518,6 +526,8 @@ impl PublicationCandidateId {
 // struct PublicationViewId
 // ==============================================================================
 
+/// Identifies one emitted review state, including checking and failure states without a candidate.
+/// It is a freshness identity rather than a sortable publication or resource revision.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublicationViewId {
     pub value: String,
@@ -541,7 +551,7 @@ impl PublicationViewId {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "PublicationViewId",
-                "",
+                "Identifies one emitted review state, including checking and failure states without a candidate.\nIt is a freshness identity rather than a sortable publication or resource revision.",
                 |x: &PublicationViewId| &x._unrecognized,
                 |x: &mut PublicationViewId, u| x._unrecognized = u,
             )
@@ -604,6 +614,8 @@ impl PublicationBaseline {
 // struct DiagnosticEvidence
 // ==============================================================================
 
+/// Original facts under which a publication diagnostic applies to an authored value.
+/// Consumers compare this evidence with their working state before presenting it as current.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct DiagnosticEvidence {
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -628,7 +640,7 @@ impl DiagnosticEvidence {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "DiagnosticEvidence",
-                "",
+                "Original facts under which a publication diagnostic applies to an authored value.\nConsumers compare this evidence with their working state before presenting it as current.",
                 |x: &DiagnosticEvidence| &x._unrecognized,
                 |x: &mut DiagnosticEvidence, u| x._unrecognized = u,
             )
@@ -780,6 +792,8 @@ impl PublicationBlocker {
 // enum PublicationChange
 // ==============================================================================
 
+/// Semantic runtime changes relative to selection. A root update compares artifact meaning and
+/// format, independently of blob storage location or a newly allocated publication identity.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PublicationChange {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PublicationChange>>),
@@ -815,7 +829,7 @@ impl PublicationChange {
                 },
                 "editor/v1/publication.skir",
                 "PublicationChange",
-                "",
+                "Semantic runtime changes relative to selection. A root update compares artifact meaning and\nformat, independently of blob storage location or a newly allocated publication identity.",
             )
         });
         &*ADAPTER
@@ -830,6 +844,7 @@ impl PublicationChange {
 // struct PublicationDelta
 // ==============================================================================
 
+/// A releasable change set is nonempty by construction; additional entries extend its first change.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublicationDelta {
     pub first: PublicationChange,
@@ -854,7 +869,7 @@ impl PublicationDelta {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "PublicationDelta",
-                "",
+                "A releasable change set is nonempty by construction; additional entries extend its first change.",
                 |x: &PublicationDelta| &x._unrecognized,
                 |x: &mut PublicationDelta, u| x._unrecognized = u,
             )
@@ -1370,6 +1385,9 @@ impl PublicationStatus_Unavailable {
 // enum PublicationStatus
 // ==============================================================================
 
+/// Current saved review state. ready authorizes only its issued candidate; blocked can still
+/// report confirmed changes while failed roots remain pending. During publishing, releasing is
+/// frozen and next describes later saved work without adding it to the in progress release.
 #[derive(Debug, Clone, PartialEq)]
 pub enum PublicationStatus {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<PublicationStatus>>),
@@ -1411,7 +1429,7 @@ impl PublicationStatus {
                 },
                 "editor/v1/publication.skir",
                 "PublicationStatus",
-                "",
+                "Current saved review state. ready authorizes only its issued candidate; blocked can still\nreport confirmed changes while failed roots remain pending. During publishing, releasing is\nfrozen and next describes later saved work without adding it to the in progress release.",
             )
         });
         &*ADAPTER
@@ -1467,6 +1485,7 @@ impl PublicationView {
 // struct PublicationViewChanged
 // ==============================================================================
 
+/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublicationViewChanged {
     pub current: PublicationViewId,
@@ -1490,7 +1509,7 @@ impl PublicationViewChanged {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/publication.skir",
                 "PublicationViewChanged",
-                "",
+                "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
                 |x: &PublicationViewChanged| &x._unrecognized,
                 |x: &mut PublicationViewChanged, u| x._unrecognized = u,
             )
@@ -3173,16 +3192,19 @@ fn initialize_module_serializers() {
 // Methods
 // ==============================================================================
 
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
 pub fn publish_authoring_method()
 -> &'static crate::skir_client::Method<PublishAuthoringRequest, PublishAuthoringResponse> {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<PublishAuthoringRequest, PublishAuthoringResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "PublishAuthoring".to_string(),
-        number: 920020_i64,
-        request_serializer: PublishAuthoringRequest::serializer(),
-        response_serializer: PublishAuthoringResponse::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "PublishAuthoring".to_string(),
+            number: 920020_i64,
+            request_serializer: PublishAuthoringRequest::serializer(),
+            response_serializer: PublishAuthoringResponse::serializer(),
+            doc: "Releases only the issued candidate while its captured saved inputs and engine requirements still match.".to_string(),
+        }
     });
     &*METHOD
 }
@@ -3201,16 +3223,20 @@ pub fn watch_publication_method()
     &*METHOD
 }
 
+/// Transfers one immutable review view or reports that expected is no longer current.
+/// All chunks share the view and transfer identities; later invalidations require a separate query.
 pub fn query_publication_view_method()
 -> &'static crate::skir_client::Method<QueryPublicationViewRequest, QueryPublicationViewResponse> {
     static METHOD: std::sync::LazyLock<
         crate::skir_client::Method<QueryPublicationViewRequest, QueryPublicationViewResponse>,
-    > = std::sync::LazyLock::new(|| crate::skir_client::Method {
-        name: "QueryPublicationView".to_string(),
-        number: 920022_i64,
-        request_serializer: QueryPublicationViewRequest::serializer(),
-        response_serializer: QueryPublicationViewResponse::serializer(),
-        doc: "".to_string(),
+    > = std::sync::LazyLock::new(|| {
+        crate::skir_client::Method {
+            name: "QueryPublicationView".to_string(),
+            number: 920022_i64,
+            request_serializer: QueryPublicationViewRequest::serializer(),
+            response_serializer: QueryPublicationViewResponse::serializer(),
+            doc: "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.".to_string(),
+        }
     });
     &*METHOD
 }

@@ -17,6 +17,8 @@
 // struct BindingRef
 // ==============================================================================
 
+/// Locates a value within an expression binding scope. The binding identifies the root and
+/// path identifies a descendant; this carries no resource ownership or edit permission by itself.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct BindingRef {
     pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
@@ -40,7 +42,7 @@ impl BindingRef {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/binding.skir",
                 "BindingRef",
-                "",
+                "Locates a value within an expression binding scope. The binding identifies the root and\npath identifies a descendant; this carries no resource ownership or edit permission by itself.",
                 |x: &BindingRef| &x._unrecognized,
                 |x: &mut BindingRef, u| x._unrecognized = u,
             )

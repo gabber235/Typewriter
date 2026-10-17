@@ -209,6 +209,8 @@ sealed class LinkOccurrenceId_orMutable {
   LinkOccurrenceId toFrozen();
 }
 
+/// Identifies an authored reference by endpoint and exact value location, including collection item identity.
+///
 /// Deeply immutable.
 final class LinkOccurrenceId implements LinkOccurrenceId_orMutable {
   @_core.override
@@ -293,7 +295,7 @@ final class LinkOccurrenceId implements LinkOccurrenceId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:LinkOccurrenceId",
-    doc: "",
+    doc: "Identifies an authored reference by endpoint and exact value location, including collection item identity.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (LinkOccurrenceId_mutable it) => it.toFrozen(),
@@ -522,6 +524,8 @@ sealed class RelationProjectionDelta_orMutable {
   RelationProjectionDelta toFrozen();
 }
 
+/// Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.
+///
 /// Deeply immutable.
 final class RelationProjectionDelta
     implements RelationProjectionDelta_orMutable {
@@ -653,7 +657,7 @@ final class RelationProjectionDelta
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:RelationProjectionDelta",
-    doc: "",
+    doc: "Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RelationProjectionDelta_mutable it) => it.toFrozen(),
@@ -1951,6 +1955,9 @@ sealed class PresentationSubject_orMutable {
   PresentationSubject toFrozen();
 }
 
+/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
+///
 /// Deeply immutable.
 final class PresentationSubject implements PresentationSubject_orMutable {
   @_core.override
@@ -2085,7 +2092,7 @@ final class PresentationSubject implements PresentationSubject_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:PresentationSubject",
-    doc: "",
+    doc: "Supplies a resource identity, authored content, and display descriptor to portable resource presentations.\nCatalog choices use CatalogPresentationSubject instead because they have no resource instance.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationSubject_mutable it) => it.toFrozen(),
@@ -2872,6 +2879,10 @@ sealed class AuthoringState_orMutable {
   AuthoringState toFrozen();
 }
 
+/// Captures one saved resource graph and its catalog for editor synchronization.
+/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
+/// confirmed observation, which resource operations must echo before supplying a working overlay.
+///
 /// Deeply immutable.
 final class AuthoringState implements AuthoringState_orMutable {
   @_core.override
@@ -3029,7 +3040,7 @@ final class AuthoringState implements AuthoringState_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:AuthoringState",
-    doc: "",
+    doc: "Captures one saved resource graph and its catalog for editor synchronization.\nFindings retain their own execution evidence and freshness. All transfer chunks describe this same\nconfirmed observation, which resource operations must echo before supplying a working overlay.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringState_mutable it) => it.toFrozen(),
@@ -4720,6 +4731,9 @@ final class ResourceConfigurationIntent_mutable
 
 // enum EditIntent
 
+/// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
+/// synchronize inverses and validate the resulting graph before persistence.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -4970,7 +4984,7 @@ sealed class EditIntent {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/authoring.skir:EditIntent",
-        doc: "",
+        doc: "Ordered proposed mutations. Relation intent names exact authored occurrences so admission can\nsynchronize inverses and validate the resulting graph before persistence.",
         unknownInstance: EditIntent_unknown._instance,
         enumInstance: EditIntent.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -5135,6 +5149,10 @@ sealed class PreparedEdit_orMutable {
   PreparedEdit toFrozen();
 }
 
+/// Carries a proposed edit and the original saved facts that justify replaying it.
+/// Matching supplied facts alone is insufficient: Realm admission independently requires guards for
+/// the affected values and relations. Preparation grants no persistence or publication authority.
+///
 /// Deeply immutable.
 final class PreparedEdit implements PreparedEdit_orMutable {
   @_core.override
@@ -5245,7 +5263,7 @@ final class PreparedEdit implements PreparedEdit_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:PreparedEdit",
-    doc: "",
+    doc: "Carries a proposed edit and the original saved facts that justify replaying it.\nMatching supplied facts alone is insufficient: Realm admission independently requires guards for\nthe affected values and relations. Preparation grants no persistence or publication authority.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PreparedEdit_mutable it) => it.toFrozen(),
@@ -5594,6 +5612,10 @@ final class PreparedEditResult_rejectedWrapper
 
 // enum CommitResult
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. Conflict requires refreshing original
+/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -5689,7 +5711,7 @@ sealed class CommitResult {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/authoring.skir:CommitResult",
-        doc: "",
+        doc: "committed confirms installation of saved authoring state. It does not confirm check completion,\ncompilation, publication selection, or engine application. Conflict requires refreshing original\nfacts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.",
         unknownInstance: CommitResult_unknown._instance,
         enumInstance: CommitResult.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -5921,6 +5943,8 @@ sealed class AuthoringChanged_orMutable {
   AuthoringChanged toFrozen();
 }
 
+/// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
+///
 /// Deeply immutable.
 final class AuthoringChanged implements AuthoringChanged_orMutable {
   @_core.override
@@ -5991,7 +6015,7 @@ final class AuthoringChanged implements AuthoringChanged_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:AuthoringChanged",
-    doc: "",
+    doc: "Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringChanged_mutable it) => it.toFrozen(),
@@ -6187,6 +6211,9 @@ sealed class TypeArgumentChangePreview_orMutable {
   TypeArgumentChangePreview toFrozen();
 }
 
+/// Proposes a fixed definition type configuration change together with all value and link repairs.
+/// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
+///
 /// Deeply immutable.
 final class TypeArgumentChangePreview
     implements TypeArgumentChangePreview_orMutable {
@@ -6346,7 +6373,7 @@ final class TypeArgumentChangePreview
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:TypeArgumentChangePreview",
-    doc: "",
+    doc: "Proposes a fixed definition type configuration change together with all value and link repairs.\nPreparation rechecks expectations and regenerates repairs before yielding a committable edit.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (TypeArgumentChangePreview_mutable it) => it.toFrozen(),
@@ -8144,6 +8171,10 @@ sealed class AuthoringObservationId_orMutable {
   AuthoringObservationId toFrozen();
 }
 
+/// Identifies one saved authoring observation without ordering resource changes.
+/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
+/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
+///
 /// Deeply immutable.
 final class AuthoringObservationId implements AuthoringObservationId_orMutable {
   @_core.override
@@ -8213,7 +8244,7 @@ final class AuthoringObservationId implements AuthoringObservationId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring.skir:AuthoringObservationId",
-    doc: "",
+    doc: "Identifies one saved authoring observation without ordering resource changes.\nIt remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity\nwhile carrying separate proposed values; a changed saved view requires refreshing the baseline.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringObservationId_mutable it) => it.toFrozen(),
@@ -9746,13 +9777,14 @@ final class PrepareTypeArgumentChangeResponse_internalErrorWrapper
       PrepareTypeArgumentChangeResponse_kind.internalErrorWrapper;
 }
 
+/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
 final _skir.Method<QueryAuthoringStateRequest, QueryAuthoringStateResponse>
 queryAuthoringStateMethod = _skir.Method(
   "QueryAuthoringState",
   920010,
   QueryAuthoringStateRequest.serializer,
   QueryAuthoringStateResponse.serializer,
-  "",
+  "Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.",
 );
 
 final _skir.Method<SearchAuthoringRequest, SearchAuthoringResponse>
@@ -9785,11 +9817,12 @@ previewTypeArgumentChangeMethod = _skir.Method(
   "",
 );
 
+/// Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.
 final _skir.Method<TypeArgumentChangePreview, PrepareTypeArgumentChangeResponse>
 prepareTypeArgumentChangeMethod = _skir.Method(
   "PrepareTypeArgumentChange",
   920014,
   TypeArgumentChangePreview.serializer,
   PrepareTypeArgumentChangeResponse.serializer,
-  "",
+  "Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.",
 );

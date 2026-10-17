@@ -30,6 +30,8 @@ sealed class ResourceOperationId_orMutable {
   ResourceOperationId toFrozen();
 }
 
+/// Stable declaration owned identity, independent of display labels and catalog generation.
+///
 /// Deeply immutable.
 final class ResourceOperationId implements ResourceOperationId_orMutable {
   @_core.override
@@ -150,7 +152,7 @@ final class ResourceOperationId implements ResourceOperationId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/operation.skir:ResourceOperationId",
-    doc: "",
+    doc: "Stable declaration owned identity, independent of display labels and catalog generation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ResourceOperationId_mutable it) => it.toFrozen(),
@@ -1208,6 +1210,10 @@ sealed class ResourceOperationContribution_orMutable {
   ResourceOperationContribution toFrozen();
 }
 
+/// Adds operation identities to matching resource types and optionally nominates a primary action.
+/// Resolution considers all selected targets; primary nomination applies to a single resource
+/// and conflicting equally applicable nominations are rejected.
+///
 /// Deeply immutable.
 final class ResourceOperationContribution
     implements ResourceOperationContribution_orMutable {
@@ -1323,7 +1329,7 @@ final class ResourceOperationContribution
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/operation.skir:ResourceOperationContribution",
-    doc: "",
+    doc: "Adds operation identities to matching resource types and optionally nominates a primary action.\nResolution considers all selected targets; primary nomination applies to a single resource\nand conflicting equally applicable nominations are rejected.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ResourceOperationContribution_mutable it) => it.toFrozen(),
@@ -1368,6 +1374,9 @@ final class ResourceOperationContribution_mutable
 
 // enum OperationAvailability
 
+/// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
+/// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1424,7 +1433,7 @@ sealed class OperationAvailability {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/operation.skir:OperationAvailability",
-        doc: "",
+        doc: "hidden omits an affordance, disabled retains its explanation, and enabled permits attempting\ndispatch. Availability is evaluated against current working facts and must be rechecked at preparation.",
         unknownInstance: OperationAvailability_unknown._instance,
         enumInstance: OperationAvailability.unknown,
         getOrdinal: (it) => it.kind._ordinal,

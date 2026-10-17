@@ -17,6 +17,8 @@
 // struct CompiledBlobPointer
 // ==============================================================================
 
+/// Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
+/// This digest can differ from the semantic digest of the decoded artifact.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledBlobPointer {
     pub digest: String,
@@ -41,7 +43,7 @@ impl CompiledBlobPointer {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/compiled_content.skir",
                 "CompiledBlobPointer",
-                "",
+                "Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.\nThis digest can differ from the semantic digest of the decoded artifact.",
                 |x: &CompiledBlobPointer| &x._unrecognized,
                 |x: &mut CompiledBlobPointer, u| x._unrecognized = u,
             )
@@ -145,6 +147,8 @@ impl PublishedOutput {
 // struct PublishedContent
 // ==============================================================================
 
+/// Complete selected runtime descriptor, including the implementation requirements under which
+/// its outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PublishedContent {
     pub publication: crate::skirout::base::editor::v1::type_catalog::PublicationId,
@@ -174,7 +178,7 @@ impl PublishedContent {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/compiled_content.skir",
                 "PublishedContent",
-                "",
+                "Complete selected runtime descriptor, including the implementation requirements under which\nits outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.",
                 |x: &PublishedContent| &x._unrecognized,
                 |x: &mut PublishedContent, u| x._unrecognized = u,
             )
@@ -233,6 +237,8 @@ impl PublishedContentChunk {
 // enum CompiledResourceState
 // ==============================================================================
 
+/// Membership in the Realm selected publication. active does not confirm application by any engine,
+/// nor that the currently saved root still compiles to the selected artifact.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompiledResourceState {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CompiledResourceState>>),
@@ -264,7 +270,7 @@ impl CompiledResourceState {
                 },
                 "editor/v1/compiled_content.skir",
                 "CompiledResourceState",
-                "",
+                "Membership in the Realm selected publication. active does not confirm application by any engine,\nnor that the currently saved root still compiles to the selected artifact.",
             )
         });
         &*ADAPTER
@@ -322,6 +328,7 @@ impl CompiledResourceStatus {
 // struct CompiledContentChanged
 // ==============================================================================
 
+/// Hint to refetch current selection. The event carries no descriptor or ordered publication log.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompiledContentChanged {
     pub generation: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
@@ -345,7 +352,7 @@ impl CompiledContentChanged {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/compiled_content.skir",
                 "CompiledContentChanged",
-                "",
+                "Hint to refetch current selection. The event carries no descriptor or ordered publication log.",
                 |x: &CompiledContentChanged| &x._unrecognized,
                 |x: &mut CompiledContentChanged, u| x._unrecognized = u,
             )

@@ -29,6 +29,9 @@ sealed class LinkProjection_orMutable {
   LinkProjection toFrozen();
 }
 
+/// One directed relation edge derived from authored references. Nullable endpoint locations allow
+/// a relation to be authored on only one side; present locations retain exact occurrence identity.
+///
 /// Deeply immutable.
 final class LinkProjection implements LinkProjection_orMutable {
   @_core.override
@@ -182,7 +185,7 @@ final class LinkProjection implements LinkProjection_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring_facts.skir:LinkProjection",
-    doc: "",
+    doc: "One directed relation edge derived from authored references. Nullable endpoint locations allow\na relation to be authored on only one side; present locations retain exact occurrence identity.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (LinkProjection_mutable it) => it.toFrozen(),
@@ -1127,6 +1130,9 @@ final class EditExpectation_Links_mutable
 
 // enum EditExpectation
 
+/// Records a saved fact required by proposed work. Missing values and absent resources are valid
+/// observations. Staged writes do not replace this original evidence with their proposed output.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1296,7 +1302,7 @@ sealed class EditExpectation {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/authoring_facts.skir:EditExpectation",
-        doc: "",
+        doc: "Records a saved fact required by proposed work. Missing values and absent resources are valid\nobservations. Staged writes do not replace this original evidence with their proposed output.",
         unknownInstance: EditExpectation_unknown._instance,
         enumInstance: EditExpectation.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1422,6 +1428,8 @@ sealed class ExpectationConflict_orMutable {
   ExpectationConflict toFrozen();
 }
 
+/// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.
+///
 /// Deeply immutable.
 final class ExpectationConflict implements ExpectationConflict_orMutable {
   @_core.override
@@ -1509,7 +1517,7 @@ final class ExpectationConflict implements ExpectationConflict_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/authoring_facts.skir:ExpectationConflict",
-    doc: "",
+    doc: "Pairs a required original fact with the current saved fact so the caller can refresh before retrying.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ExpectationConflict_mutable it) => it.toFrozen(),

@@ -20,7 +20,12 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-/** Deeply immutable. */
+/**
+ * Describes whether an inspection covered its requested scope. Interrupted inspections may
+ * still return useful partial matches, but cannot establish that omitted matches do not exist.
+ *
+ * Deeply immutable.
+ */
 sealed class InspectionCompletion private constructor() {
     /** The kind of variant held by a `InspectionCompletion`. */
     enum class Kind {
@@ -252,7 +257,12 @@ class UndecidedCandidate private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Evaluation completion, separate from the diagnostics it emitted. finished may still have
+ * error findings; needs_input, failed, and incomplete cannot establish publication readiness.
+ *
+ * Deeply immutable.
+ */
 sealed class CheckOutcome private constructor() {
     /** The kind of variant held by a `CheckOutcome`. */
     enum class Kind {
@@ -605,7 +615,12 @@ sealed interface CheckTicket_OrMutable {
     fun toFrozen(): skirout.editor.v1.checking.CheckTicket;
 }
 
-/** Deeply immutable. */
+/**
+ * Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.
+ * Current finding admission rejects results from executions superseded for the same instance.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CheckTicket private constructor(
     override val instance: skirout.editor.v1.checking.CheckInstanceId,
@@ -808,7 +823,12 @@ sealed interface FindingSet_OrMutable {
     fun toFrozen(): skirout.editor.v1.checking.FindingSet;
 }
 
-/** Deeply immutable. */
+/**
+ * Findings with the execution and original facts they describe. Status records freshness;
+ * consumers retain the evidence needed to compare them with saved or local working values.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class FindingSet private constructor(
     override val ticket: skirout.editor.v1.checking.CheckTicket,
@@ -1435,7 +1455,7 @@ private object _SerializerRegistry {
     val CheckOutcomeSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.checking.CheckOutcome, skirout.editor.v1.checking.CheckOutcome.Unknown>(
             recordId = "editor/v1/checking.skir:CheckOutcome",
-            doc = "",
+            doc = "Evaluation completion, separate from the diagnostics it emitted. finished may still have\nerror findings; needs_input, failed, and incomplete cannot establish publication readiness.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.checking.CheckOutcome.Kind.values().size,
             unknownInstance = skirout.editor.v1.checking.CheckOutcome.UNKNOWN,
@@ -1459,7 +1479,7 @@ private object _SerializerRegistry {
 
     val CheckTicketSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/checking.skir:CheckTicket",
-        doc = "",
+        doc = "Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.\nCurrent finding admission rejects results from executions superseded for the same instance.",
         defaultInstance = skirout.editor.v1.checking.CheckTicket.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.checking.CheckTicket.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1471,7 +1491,7 @@ private object _SerializerRegistry {
 
     val FindingSetSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/checking.skir:FindingSet",
-        doc = "",
+        doc = "Findings with the execution and original facts they describe. Status records freshness;\nconsumers retain the evidence needed to compare them with saved or local working values.",
         defaultInstance = skirout.editor.v1.checking.FindingSet.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.checking.FindingSet.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1497,7 +1517,7 @@ private object _SerializerRegistry {
     val InspectionCompletionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.checking.InspectionCompletion, skirout.editor.v1.checking.InspectionCompletion.Unknown>(
             recordId = "editor/v1/checking.skir:InspectionCompletion",
-            doc = "",
+            doc = "Describes whether an inspection covered its requested scope. Interrupted inspections may\nstill return useful partial matches, but cannot establish that omitted matches do not exist.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.checking.InspectionCompletion.Kind.values().size,
             unknownInstance = skirout.editor.v1.checking.InspectionCompletion.UNKNOWN,

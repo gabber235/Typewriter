@@ -450,6 +450,7 @@ impl CollectionMappingRule {
 // struct ConversionCompositionRule
 // ==============================================================================
 
+/// Ordered conversion identities forming one path from the declared source to target.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ConversionCompositionRule {
     pub steps: Vec<crate::skirout::base::editor::v1::type_catalog::ConversionId>,
@@ -474,7 +475,7 @@ impl ConversionCompositionRule {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/conversion.skir",
                 "ConversionCompositionRule",
-                "",
+                "Ordered conversion identities forming one path from the declared source to target.",
                 |x: &ConversionCompositionRule| &x._unrecognized,
                 |x: &mut ConversionCompositionRule, u| x._unrecognized = u,
             )

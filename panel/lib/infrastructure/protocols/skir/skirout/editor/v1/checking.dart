@@ -22,6 +22,9 @@ import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 
 // enum InspectionCompletion
 
+/// Describes whether an inspection covered its requested scope. Interrupted inspections may
+/// still return useful partial matches, but cannot establish that omitted matches do not exist.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -75,7 +78,7 @@ sealed class InspectionCompletion {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/checking.skir:InspectionCompletion",
-        doc: "",
+        doc: "Describes whether an inspection covered its requested scope. Interrupted inspections may\nstill return useful partial matches, but cannot establish that omitted matches do not exist.",
         unknownInstance: InspectionCompletion_unknown._instance,
         enumInstance: InspectionCompletion.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -308,6 +311,9 @@ final class UndecidedCandidate_mutable implements UndecidedCandidate_orMutable {
 
 // enum CheckOutcome
 
+/// Evaluation completion, separate from the diagnostics it emitted. finished may still have
+/// error findings; needs_input, failed, and incomplete cannot establish publication readiness.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -396,7 +402,7 @@ sealed class CheckOutcome {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/checking.skir:CheckOutcome",
-        doc: "",
+        doc: "Evaluation completion, separate from the diagnostics it emitted. finished may still have\nerror findings; needs_input, failed, and incomplete cannot establish publication readiness.",
         unknownInstance: CheckOutcome_unknown._instance,
         enumInstance: CheckOutcome.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -746,6 +752,9 @@ sealed class CheckTicket_orMutable {
   CheckTicket toFrozen();
 }
 
+/// Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.
+/// Current finding admission rejects results from executions superseded for the same instance.
+///
 /// Deeply immutable.
 final class CheckTicket implements CheckTicket_orMutable {
   @_core.override
@@ -872,7 +881,7 @@ final class CheckTicket implements CheckTicket_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/checking.skir:CheckTicket",
-    doc: "",
+    doc: "Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.\nCurrent finding admission rejects results from executions superseded for the same instance.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CheckTicket_mutable it) => it.toFrozen(),
@@ -954,6 +963,9 @@ sealed class FindingSet_orMutable {
   FindingSet toFrozen();
 }
 
+/// Findings with the execution and original facts they describe. Status records freshness;
+/// consumers retain the evidence needed to compare them with saved or local working values.
+///
 /// Deeply immutable.
 final class FindingSet implements FindingSet_orMutable {
   @_core.override
@@ -1109,7 +1121,7 @@ final class FindingSet implements FindingSet_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/checking.skir:FindingSet",
-    doc: "",
+    doc: "Findings with the execution and original facts they describe. Status records freshness;\nconsumers retain the evidence needed to compare them with saved or local working values.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (FindingSet_mutable it) => it.toFrozen(),

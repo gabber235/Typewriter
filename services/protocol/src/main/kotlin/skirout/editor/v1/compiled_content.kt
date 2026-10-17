@@ -27,7 +27,12 @@ sealed interface CompiledBlobPointer_OrMutable {
     fun toFrozen(): skirout.editor.v1.compiled_content.CompiledBlobPointer;
 }
 
-/** Deeply immutable. */
+/**
+ * Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
+ * This digest can differ from the semantic digest of the decoded artifact.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledBlobPointer private constructor(
     override val digest: kotlin.String,
@@ -481,7 +486,12 @@ sealed interface PublishedContent_OrMutable {
     fun toFrozen(): skirout.editor.v1.compiled_content.PublishedContent;
 }
 
-/** Deeply immutable. */
+/**
+ * Complete selected runtime descriptor, including the implementation requirements under which
+ * its outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PublishedContent private constructor(
     override val publication: skirout.editor.v1.type_catalog.PublicationId,
@@ -843,7 +853,12 @@ class PublishedContentChunk private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Membership in the Realm selected publication. active does not confirm application by any engine,
+ * nor that the currently saved root still compiles to the selected artifact.
+ *
+ * Deeply immutable.
+ */
 sealed class CompiledResourceState private constructor() {
     /** The kind of variant held by a `CompiledResourceState`. */
     enum class Kind {
@@ -1081,7 +1096,11 @@ sealed interface CompiledContentChanged_OrMutable {
     fun toFrozen(): skirout.editor.v1.compiled_content.CompiledContentChanged;
 }
 
-/** Deeply immutable. */
+/**
+ * Hint to refetch current selection. The event carries no descriptor or ordered publication log.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CompiledContentChanged private constructor(
     override val generation: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -2107,7 +2126,7 @@ private object _SerializerRegistry {
 
     val CompiledBlobPointerSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:CompiledBlobPointer",
-        doc = "",
+        doc = "Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.\nThis digest can differ from the semantic digest of the decoded artifact.",
         defaultInstance = skirout.editor.v1.compiled_content.CompiledBlobPointer.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledBlobPointer.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2119,7 +2138,7 @@ private object _SerializerRegistry {
 
     val CompiledContentChangedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:CompiledContentChanged",
-        doc = "",
+        doc = "Hint to refetch current selection. The event carries no descriptor or ordered publication log.",
         defaultInstance = skirout.editor.v1.compiled_content.CompiledContentChanged.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.CompiledContentChanged.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -2132,7 +2151,7 @@ private object _SerializerRegistry {
     val CompiledResourceStateSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.compiled_content.CompiledResourceState, skirout.editor.v1.compiled_content.CompiledResourceState.Unknown>(
             recordId = "editor/v1/compiled_content.skir:CompiledResourceState",
-            doc = "",
+            doc = "Membership in the Realm selected publication. active does not confirm application by any engine,\nnor that the currently saved root still compiles to the selected artifact.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.compiled_content.CompiledResourceState.Kind.values().size,
             unknownInstance = skirout.editor.v1.compiled_content.CompiledResourceState.UNKNOWN,
@@ -2156,7 +2175,7 @@ private object _SerializerRegistry {
 
     val PublishedContentSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/compiled_content.skir:PublishedContent",
-        doc = "",
+        doc = "Complete selected runtime descriptor, including the implementation requirements under which\nits outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.",
         defaultInstance = skirout.editor.v1.compiled_content.PublishedContent.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.compiled_content.PublishedContent.Mutable() },
         toFrozenFn = { it.toFrozen() },

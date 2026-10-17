@@ -547,6 +547,7 @@ impl NullableTypeTemplate {
 // enum TypeTemplate
 // ==============================================================================
 
+/// Declaration type expression that can retain references to parameters owned by a definition.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeTemplate {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeTemplate>>),
@@ -582,7 +583,7 @@ impl TypeTemplate {
                 },
                 "editor/v1/type_catalog.skir",
                 "TypeTemplate",
-                "",
+                "Declaration type expression that can retain references to parameters owned by a definition.",
             )
         });
         &*ADAPTER
@@ -678,6 +679,7 @@ impl NullableTypeUse {
 // enum TypeUse
 // ==============================================================================
 
+/// Closed type application with concrete arguments, suitable for resolution in a checked catalog.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeUse {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeUse>>),
@@ -710,7 +712,7 @@ impl TypeUse {
                     },
                     "editor/v1/type_catalog.skir",
                     "TypeUse",
-                    "",
+                    "Closed type application with concrete arguments, suitable for resolution in a checked catalog.",
                 )
             });
         &*ADAPTER
@@ -1310,6 +1312,8 @@ impl RepresentationTemplate {
 // struct TypeDefinition
 // ==============================================================================
 
+/// Canonical declaration meaning before application of generic arguments and inherited fields.
+/// Display metadata, editor controls, and native constructors are owned by adjacent catalog services.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct TypeDefinition {
     pub id: TypeDefinitionId,
@@ -1336,7 +1340,7 @@ impl TypeDefinition {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "TypeDefinition",
-                "",
+                "Canonical declaration meaning before application of generic arguments and inherited fields.\nDisplay metadata, editor controls, and native constructors are owned by adjacent catalog services.",
                 |x: &TypeDefinition| &x._unrecognized,
                 |x: &mut TypeDefinition, u| x._unrecognized = u,
             )
@@ -1392,6 +1396,8 @@ impl ResourceId {
 // struct ItemId
 // ==============================================================================
 
+/// Stable authored collection occurrence identity. Reordering preserves it; equal values can
+/// still occupy different list positions or map rows with different identities.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ItemId {
     pub value: String,
@@ -1413,7 +1419,7 @@ impl ItemId {
                 crate::skir_client::internal::StructAdapter::new(
                     "editor/v1/type_catalog.skir",
                     "ItemId",
-                    "",
+                    "Stable authored collection occurrence identity. Reordering preserves it; equal values can\nstill occupy different list positions or map rows with different identities.",
                     |x: &ItemId| &x._unrecognized,
                     |x: &mut ItemId, u| x._unrecognized = u,
                 )
@@ -1430,6 +1436,8 @@ impl ItemId {
 // struct LinkTarget
 // ==============================================================================
 
+/// Targets an authored resource and optionally the exact inverse value location.
+/// An absent opposite path allows a relation authored on only one side.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkTarget {
     pub resource: ResourceId,
@@ -1453,7 +1461,7 @@ impl LinkTarget {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "LinkTarget",
-                "",
+                "Targets an authored resource and optionally the exact inverse value location.\nAn absent opposite path allows a relation authored on only one side.",
                 |x: &LinkTarget| &x._unrecognized,
                 |x: &mut LinkTarget, u| x._unrecognized = u,
             )
@@ -1844,6 +1852,9 @@ impl DurationValue {
 // enum DataValue
 // ==============================================================================
 
+/// Portable authored content. unfilled means input is unfinished, while null is an explicit
+/// nullable value. Named wrappers retain concrete type evidence; collection item identities
+/// are independent of value equality. Schema and completeness checks apply separately.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DataValue {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<DataValue>>),
@@ -1906,7 +1917,7 @@ impl DataValue {
                     },
                     "editor/v1/type_catalog.skir",
                     "DataValue",
-                    "",
+                    "Portable authored content. unfilled means input is unfinished, while null is an explicit\nnullable value. Named wrappers retain concrete type evidence; collection item identities\nare independent of value equality. Schema and completeness checks apply separately.",
                 )
             });
         &*ADAPTER
@@ -2008,6 +2019,8 @@ impl PendingTypeSelection {
 // enum TypeSelection
 // ==============================================================================
 
+/// A resource configuration can retain unfinished generic arguments without inventing a closed type.
+/// Partial schema resolution exposes known fields while dependent fields await those arguments.
 #[derive(Debug, Clone, PartialEq)]
 pub enum TypeSelection {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<TypeSelection>>),
@@ -2039,7 +2052,7 @@ impl TypeSelection {
                 },
                 "editor/v1/type_catalog.skir",
                 "TypeSelection",
-                "",
+                "A resource configuration can retain unfinished generic arguments without inventing a closed type.\nPartial schema resolution exposes known fields while dependent fields await those arguments.",
             )
         });
         &*ADAPTER
@@ -2054,6 +2067,8 @@ impl TypeSelection {
 // struct AuthoringRecord
 // ==============================================================================
 
+/// Canonical authored configuration and fields for one resource, before native construction.
+/// It can be structurally valid while containing unfinished input that blocks publication.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct AuthoringRecord {
     pub configuration: TypeSelection,
@@ -2078,7 +2093,7 @@ impl AuthoringRecord {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "AuthoringRecord",
-                "",
+                "Canonical authored configuration and fields for one resource, before native construction.\nIt can be structurally valid while containing unfinished input that blocks publication.",
                 |x: &AuthoringRecord| &x._unrecognized,
                 |x: &mut AuthoringRecord, u| x._unrecognized = u,
             )
@@ -2217,6 +2232,8 @@ impl CapabilityId {
 // struct CatalogGeneration
 // ==============================================================================
 
+/// Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
+/// resource observations and publication identities have separate lifecycles.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CatalogGeneration {
     pub value: String,
@@ -2240,7 +2257,7 @@ impl CatalogGeneration {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "CatalogGeneration",
-                "",
+                "Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;\nresource observations and publication identities have separate lifecycles.",
                 |x: &CatalogGeneration| &x._unrecognized,
                 |x: &mut CatalogGeneration, u| x._unrecognized = u,
             )
@@ -2415,6 +2432,8 @@ impl RuleId {
 // struct ValuePath
 // ==============================================================================
 
+/// Exact path within one resource or bound value. Collection segments use stable item identity,
+/// and map_key or map_value selects a branch after the map row item segment.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ValuePath {
     pub segments: Vec<PathSegment>,
@@ -2437,7 +2456,7 @@ impl ValuePath {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "ValuePath",
-                "",
+                "Exact path within one resource or bound value. Collection segments use stable item identity,\nand map_key or map_value selects a branch after the map row item segment.",
                 |x: &ValuePath| &x._unrecognized,
                 |x: &mut ValuePath, u| x._unrecognized = u,
             )
@@ -2718,6 +2737,8 @@ impl FieldPatternSegment {
 // struct RelativeFieldPattern
 // ==============================================================================
 
+/// Schema pattern expanded against an owning occurrence. Collection wildcards describe many
+/// concrete value paths and do not themselves identify an editable item.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct RelativeFieldPattern {
     pub segments: Vec<FieldPatternSegment>,
@@ -2741,7 +2762,7 @@ impl RelativeFieldPattern {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "RelativeFieldPattern",
-                "",
+                "Schema pattern expanded against an owning occurrence. Collection wildcards describe many\nconcrete value paths and do not themselves identify an editable item.",
                 |x: &RelativeFieldPattern| &x._unrecognized,
                 |x: &mut RelativeFieldPattern, u| x._unrecognized = u,
             )
@@ -3617,6 +3638,8 @@ impl AppliedSchema {
 // struct CheckedType
 // ==============================================================================
 
+/// Applied type evidence bound to a specific checked catalog generation.
+/// A resolved schema is separate from proving that a particular authored value is complete.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CheckedType {
     pub catalog: CatalogGeneration,
@@ -3641,7 +3664,7 @@ impl CheckedType {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/type_catalog.skir",
                 "CheckedType",
-                "",
+                "Applied type evidence bound to a specific checked catalog generation.\nA resolved schema is separate from proving that a particular authored value is complete.",
                 |x: &CheckedType| &x._unrecognized,
                 |x: &mut CheckedType, u| x._unrecognized = u,
             )

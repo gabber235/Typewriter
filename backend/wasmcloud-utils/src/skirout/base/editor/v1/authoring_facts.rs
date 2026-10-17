@@ -17,6 +17,8 @@
 // struct LinkProjection
 // ==============================================================================
 
+/// One directed relation edge derived from authored references. Nullable endpoint locations allow
+/// a relation to be authored on only one side; present locations retain exact occurrence identity.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct LinkProjection {
     pub contract: crate::skirout::base::editor::v1::type_catalog::RelationId,
@@ -44,7 +46,7 @@ impl LinkProjection {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring_facts.skir",
                 "LinkProjection",
-                "",
+                "One directed relation edge derived from authored references. Nullable endpoint locations allow\na relation to be authored on only one side; present locations retain exact occurrence identity.",
                 |x: &LinkProjection| &x._unrecognized,
                 |x: &mut LinkProjection, u| x._unrecognized = u,
             )
@@ -331,6 +333,8 @@ impl EditExpectation_Links {
 // enum EditExpectation
 // ==============================================================================
 
+/// Records a saved fact required by proposed work. Missing values and absent resources are valid
+/// observations. Staged writes do not replace this original evidence with their proposed output.
 #[derive(Debug, Clone, PartialEq)]
 pub enum EditExpectation {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<EditExpectation>>),
@@ -370,7 +374,7 @@ impl EditExpectation {
                 },
                 "editor/v1/authoring_facts.skir",
                 "EditExpectation",
-                "",
+                "Records a saved fact required by proposed work. Missing values and absent resources are valid\nobservations. Staged writes do not replace this original evidence with their proposed output.",
             )
         });
         &*ADAPTER
@@ -385,6 +389,7 @@ impl EditExpectation {
 // struct ExpectationConflict
 // ==============================================================================
 
+/// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ExpectationConflict {
     pub expected: EditExpectation,
@@ -409,7 +414,7 @@ impl ExpectationConflict {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/authoring_facts.skir",
                 "ExpectationConflict",
-                "",
+                "Pairs a required original fact with the current saved fact so the caller can refresh before retrying.",
                 |x: &ExpectationConflict| &x._unrecognized,
                 |x: &mut ExpectationConflict, u| x._unrecognized = u,
             )

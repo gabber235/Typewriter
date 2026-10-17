@@ -1499,6 +1499,8 @@ final class NullableTypeTemplate_mutable
 
 // enum TypeTemplate
 
+/// Declaration type expression that can retain references to parameters owned by a definition.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -1604,7 +1606,7 @@ sealed class TypeTemplate {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/type_catalog.skir:TypeTemplate",
-        doc: "",
+        doc: "Declaration type expression that can retain references to parameters owned by a definition.",
         unknownInstance: TypeTemplate_unknown._instance,
         enumInstance: TypeTemplate.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1925,6 +1927,8 @@ final class NullableTypeUse_mutable implements NullableTypeUse_orMutable {
 
 // enum TypeUse
 
+/// Closed type application with concrete arguments, suitable for resolution in a checked catalog.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -2009,7 +2013,7 @@ sealed class TypeUse {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/type_catalog.skir:TypeUse",
-        doc: "",
+        doc: "Closed type application with concrete arguments, suitable for resolution in a checked catalog.",
         unknownInstance: TypeUse_unknown._instance,
         enumInstance: TypeUse.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -3894,6 +3898,9 @@ sealed class TypeDefinition_orMutable {
   TypeDefinition toFrozen();
 }
 
+/// Canonical declaration meaning before application of generic arguments and inherited fields.
+/// Display metadata, editor controls, and native constructors are owned by adjacent catalog services.
+///
 /// Deeply immutable.
 final class TypeDefinition implements TypeDefinition_orMutable {
   @_core.override
@@ -4020,7 +4027,7 @@ final class TypeDefinition implements TypeDefinition_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:TypeDefinition",
-    doc: "",
+    doc: "Canonical declaration meaning before application of generic arguments and inherited fields.\nDisplay metadata, editor controls, and native constructors are owned by adjacent catalog services.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (TypeDefinition_mutable it) => it.toFrozen(),
@@ -4186,6 +4193,9 @@ sealed class ItemId_orMutable {
   ItemId toFrozen();
 }
 
+/// Stable authored collection occurrence identity. Reordering preserves it; equal values can
+/// still occupy different list positions or map rows with different identities.
+///
 /// Deeply immutable.
 final class ItemId implements ItemId_orMutable {
   @_core.override
@@ -4248,7 +4258,7 @@ final class ItemId implements ItemId_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:ItemId",
-    doc: "",
+    doc: "Stable authored collection occurrence identity. Reordering preserves it; equal values can\nstill occupy different list positions or map rows with different identities.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ItemId_mutable it) => it.toFrozen(),
@@ -4278,6 +4288,9 @@ sealed class LinkTarget_orMutable {
   LinkTarget toFrozen();
 }
 
+/// Targets an authored resource and optionally the exact inverse value location.
+/// An absent opposite path allows a relation authored on only one side.
+///
 /// Deeply immutable.
 final class LinkTarget implements LinkTarget_orMutable {
   @_core.override
@@ -4359,7 +4372,7 @@ final class LinkTarget implements LinkTarget_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:LinkTarget",
-    doc: "",
+    doc: "Targets an authored resource and optionally the exact inverse value location.\nAn absent opposite path allows a relation authored on only one side.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (LinkTarget_mutable it) => it.toFrozen(),
@@ -5432,6 +5445,10 @@ final class DurationValue_mutable implements DurationValue_orMutable {
 
 // enum DataValue
 
+/// Portable authored content. unfilled means input is unfinished, while null is an explicit
+/// nullable value. Named wrappers retain concrete type evidence; collection item identities
+/// are independent of value equality. Schema and completeness checks apply separately.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -5737,7 +5754,7 @@ sealed class DataValue {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/type_catalog.skir:DataValue",
-        doc: "",
+        doc: "Portable authored content. unfilled means input is unfinished, while null is an explicit\nnullable value. Named wrappers retain concrete type evidence; collection item identities\nare independent of value equality. Schema and completeness checks apply separately.",
         unknownInstance: DataValue_unknown._instance,
         enumInstance: DataValue.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -6241,6 +6258,9 @@ final class PendingTypeSelection_mutable
 
 // enum TypeSelection
 
+/// A resource configuration can retain unfinished generic arguments without inventing a closed type.
+/// Partial schema resolution exposes known fields while dependent fields await those arguments.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -6314,7 +6334,7 @@ sealed class TypeSelection {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/type_catalog.skir:TypeSelection",
-        doc: "",
+        doc: "A resource configuration can retain unfinished generic arguments without inventing a closed type.\nPartial schema resolution exposes known fields while dependent fields await those arguments.",
         unknownInstance: TypeSelection_unknown._instance,
         enumInstance: TypeSelection.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -6397,6 +6417,9 @@ sealed class AuthoringRecord_orMutable {
   AuthoringRecord toFrozen();
 }
 
+/// Canonical authored configuration and fields for one resource, before native construction.
+/// It can be structurally valid while containing unfinished input that blocks publication.
+///
 /// Deeply immutable.
 final class AuthoringRecord implements AuthoringRecord_orMutable {
   @_core.override
@@ -6493,7 +6516,7 @@ final class AuthoringRecord implements AuthoringRecord_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:AuthoringRecord",
-    doc: "",
+    doc: "Canonical authored configuration and fields for one resource, before native construction.\nIt can be structurally valid while containing unfinished input that blocks publication.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AuthoringRecord_mutable it) => it.toFrozen(),
@@ -6848,6 +6871,9 @@ sealed class CatalogGeneration_orMutable {
   CatalogGeneration toFrozen();
 }
 
+/// Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
+/// resource observations and publication identities have separate lifecycles.
+///
 /// Deeply immutable.
 final class CatalogGeneration implements CatalogGeneration_orMutable {
   @_core.override
@@ -6913,7 +6939,7 @@ final class CatalogGeneration implements CatalogGeneration_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:CatalogGeneration",
-    doc: "",
+    doc: "Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;\nresource observations and publication identities have separate lifecycles.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CatalogGeneration_mutable it) => it.toFrozen(),
@@ -7378,6 +7404,9 @@ sealed class ValuePath_orMutable {
   ValuePath toFrozen();
 }
 
+/// Exact path within one resource or bound value. Collection segments use stable item identity,
+/// and map_key or map_value selects a branch after the map row item segment.
+///
 /// Deeply immutable.
 final class ValuePath implements ValuePath_orMutable {
   @_core.override
@@ -7442,7 +7471,7 @@ final class ValuePath implements ValuePath_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:ValuePath",
-    doc: "",
+    doc: "Exact path within one resource or bound value. Collection segments use stable item identity,\nand map_key or map_value selects a branch after the map row item segment.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ValuePath_mutable it) => it.toFrozen(),
@@ -8232,6 +8261,9 @@ sealed class RelativeFieldPattern_orMutable {
   RelativeFieldPattern toFrozen();
 }
 
+/// Schema pattern expanded against an owning occurrence. Collection wildcards describe many
+/// concrete value paths and do not themselves identify an editable item.
+///
 /// Deeply immutable.
 final class RelativeFieldPattern implements RelativeFieldPattern_orMutable {
   @_core.override
@@ -8304,7 +8336,7 @@ final class RelativeFieldPattern implements RelativeFieldPattern_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:RelativeFieldPattern",
-    doc: "",
+    doc: "Schema pattern expanded against an owning occurrence. Collection wildcards describe many\nconcrete value paths and do not themselves identify an editable item.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RelativeFieldPattern_mutable it) => it.toFrozen(),
@@ -10836,6 +10868,9 @@ sealed class CheckedType_orMutable {
   CheckedType toFrozen();
 }
 
+/// Applied type evidence bound to a specific checked catalog generation.
+/// A resolved schema is separate from proving that a particular authored value is complete.
+///
 /// Deeply immutable.
 final class CheckedType implements CheckedType_orMutable {
   @_core.override
@@ -10934,7 +10969,7 @@ final class CheckedType implements CheckedType_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/type_catalog.skir:CheckedType",
-    doc: "",
+    doc: "Applied type evidence bound to a specific checked catalog generation.\nA resolved schema is separate from proving that a particular authored value is complete.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CheckedType_mutable it) => it.toFrozen(),

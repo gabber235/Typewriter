@@ -1269,7 +1269,11 @@ class CompleteValue private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Reports whether authored shape is valid under its schema, independently of unfinished input.
+ *
+ * Deeply immutable.
+ */
 sealed class StructuralResult private constructor() {
     /** The kind of variant held by a `StructuralResult`. */
     enum class Kind {
@@ -1349,7 +1353,12 @@ sealed class StructuralResult private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Distinguishes a value ready for native decoding from unfinished locations and invalid shape.
+ * Schema resolution alone does not prove this value specific result.
+ *
+ * Deeply immutable.
+ */
 sealed class CompletenessResult private constructor() {
     /** The kind of variant held by a `CompletenessResult`. */
     enum class Kind {
@@ -1472,7 +1481,7 @@ private object _SerializerRegistry {
     val CompletenessResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.diagnostic.CompletenessResult, skirout.editor.v1.diagnostic.CompletenessResult.Unknown>(
             recordId = "editor/v1/diagnostic.skir:CompletenessResult",
-            doc = "",
+            doc = "Distinguishes a value ready for native decoding from unfinished locations and invalid shape.\nSchema resolution alone does not prove this value specific result.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.diagnostic.CompletenessResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.diagnostic.CompletenessResult.UNKNOWN,
@@ -1570,7 +1579,7 @@ private object _SerializerRegistry {
     val StructuralResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.diagnostic.StructuralResult, skirout.editor.v1.diagnostic.StructuralResult.Unknown>(
             recordId = "editor/v1/diagnostic.skir:StructuralResult",
-            doc = "",
+            doc = "Reports whether authored shape is valid under its schema, independently of unfinished input.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.diagnostic.StructuralResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.diagnostic.StructuralResult.UNKNOWN,

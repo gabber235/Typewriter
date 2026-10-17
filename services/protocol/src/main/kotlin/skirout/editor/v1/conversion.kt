@@ -1153,7 +1153,11 @@ sealed interface ConversionCompositionRule_OrMutable {
     fun toFrozen(): skirout.editor.v1.conversion.ConversionCompositionRule;
 }
 
-/** Deeply immutable. */
+/**
+ * Ordered conversion identities forming one path from the declared source to target.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConversionCompositionRule private constructor(
     override val steps: kotlin.collections.List<skirout.editor.v1.type_catalog.ConversionId>,
@@ -1851,7 +1855,7 @@ private object _SerializerRegistry {
 
     val ConversionCompositionRuleSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/conversion.skir:ConversionCompositionRule",
-        doc = "",
+        doc = "Ordered conversion identities forming one path from the declared source to target.",
         defaultInstance = skirout.editor.v1.conversion.ConversionCompositionRule.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.conversion.ConversionCompositionRule.Mutable() },
         toFrozenFn = { it.toFrozen() },

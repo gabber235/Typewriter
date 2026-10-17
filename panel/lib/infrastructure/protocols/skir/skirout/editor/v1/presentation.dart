@@ -2895,6 +2895,9 @@ sealed class PresentationNode_orMutable {
   PresentationNode toFrozen();
 }
 
+/// One authored layout node. node_id scopes diagnostics and reusable inspector membership.
+/// Read only and enabled properties constrain interaction without granting persistence access.
+///
 /// Deeply immutable.
 final class PresentationNode implements PresentationNode_orMutable {
   @_core.override
@@ -3021,7 +3024,7 @@ final class PresentationNode implements PresentationNode_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:PresentationNode",
-    doc: "",
+    doc: "One authored layout node. node_id scopes diagnostics and reusable inspector membership.\nRead only and enabled properties constrain interaction without granting persistence access.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationNode_mutable it) => it.toFrozen(),
@@ -27118,6 +27121,9 @@ sealed class PresentationDefinition_orMutable {
   PresentationDefinition toFrozen();
 }
 
+/// Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies
+/// current binding values and owns transient interaction state; the definition carries no widget lifecycle.
+///
 /// Deeply immutable.
 final class PresentationDefinition implements PresentationDefinition_orMutable {
   @_core.override
@@ -27276,7 +27282,7 @@ final class PresentationDefinition implements PresentationDefinition_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:PresentationDefinition",
-    doc: "",
+    doc: "Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies\ncurrent binding values and owns transient interaction state; the definition carries no widget lifecycle.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PresentationDefinition_mutable it) => it.toFrozen(),
@@ -29935,6 +29941,9 @@ sealed class RemainingFieldsElement_orMutable {
   RemainingFieldsElement toFrozen();
 }
 
+/// Composes inherited inspector members and default controls for fields not claimed explicitly.
+/// Exclusions suppress named field patterns or reusable parts without copying their source layouts.
+///
 /// Deeply immutable.
 final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
   @_core.override
@@ -30032,7 +30041,7 @@ final class RemainingFieldsElement implements RemainingFieldsElement_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:RemainingFieldsElement",
-    doc: "",
+    doc: "Composes inherited inspector members and default controls for fields not claimed explicitly.\nExclusions suppress named field patterns or reusable parts without copying their source layouts.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RemainingFieldsElement_mutable it) => it.toFrozen(),
@@ -33967,6 +33976,9 @@ sealed class AppearanceDefaultsElement_orMutable {
   AppearanceDefaultsElement toFrozen();
 }
 
+/// Supplies inherited input appearance within its child scope. Explicit descendant properties
+/// take precedence per property; expressions retain the bindings where their layer was declared.
+///
 /// Deeply immutable.
 final class AppearanceDefaultsElement
     implements AppearanceDefaultsElement_orMutable {
@@ -34056,7 +34068,7 @@ final class AppearanceDefaultsElement
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:AppearanceDefaultsElement",
-    doc: "",
+    doc: "Supplies inherited input appearance within its child scope. Explicit descendant properties\ntake precedence per property; expressions retain the bindings where their layer was declared.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (AppearanceDefaultsElement_mutable it) => it.toFrozen(),
@@ -34632,6 +34644,9 @@ sealed class ValueMappings_orMutable {
   ValueMappings toFrozen();
 }
 
+/// Optional display and completion transforms for an edited value. They are evaluated in
+/// an explicit input binding; applying a mapped value still goes through the owning edit scope.
+///
 /// Deeply immutable.
 final class ValueMappings implements ValueMappings_orMutable {
   @_core.override
@@ -34713,7 +34728,7 @@ final class ValueMappings implements ValueMappings_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:ValueMappings",
-    doc: "",
+    doc: "Optional display and completion transforms for an edited value. They are evaluated in\nan explicit input binding; applying a mapped value still goes through the owning edit scope.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ValueMappings_mutable it) => it.toFrozen(),
@@ -42424,6 +42439,9 @@ sealed class ResultAppearance_orMutable {
   ResultAppearance toFrozen();
 }
 
+/// Describes host supplied result chrome around the portable body, shared by search options,
+/// authoring result rows, page tiles, and graph nodes where the requested role supports it.
+///
 /// Deeply immutable.
 final class ResultAppearance implements ResultAppearance_orMutable {
   @_core.override
@@ -42545,7 +42563,7 @@ final class ResultAppearance implements ResultAppearance_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/presentation.skir:ResultAppearance",
-    doc: "",
+    doc: "Describes host supplied result chrome around the portable body, shared by search options,\nauthoring result rows, page tiles, and graph nodes where the requested role supports it.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ResultAppearance_mutable it) => it.toFrozen(),

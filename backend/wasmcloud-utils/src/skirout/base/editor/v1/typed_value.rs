@@ -17,6 +17,8 @@
 // struct PortableValue
 // ==============================================================================
 
+/// Carries a closed type and portable payload together when the receiver cannot infer the
+/// type from its surrounding binding. Receiving this pair does not replace schema validation.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct PortableValue {
     pub actual_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
@@ -41,7 +43,7 @@ impl PortableValue {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/typed_value.skir",
                 "PortableValue",
-                "",
+                "Carries a closed type and portable payload together when the receiver cannot infer the\ntype from its surrounding binding. Receiving this pair does not replace schema validation.",
                 |x: &PortableValue| &x._unrecognized,
                 |x: &mut PortableValue, u| x._unrecognized = u,
             )

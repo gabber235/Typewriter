@@ -30,7 +30,12 @@ sealed interface LinkProjection_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring_facts.LinkProjection;
 }
 
-/** Deeply immutable. */
+/**
+ * One directed relation edge derived from authored references. Nullable endpoint locations allow
+ * a relation to be authored on only one side; present locations retain exact occurrence identity.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class LinkProjection private constructor(
     override val contract: skirout.editor.v1.type_catalog.RelationId,
@@ -324,7 +329,12 @@ sealed class TraversalDirection private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Records a saved fact required by proposed work. Missing values and absent resources are valid
+ * observations. Staged writes do not replace this original evidence with their proposed output.
+ *
+ * Deeply immutable.
+ */
 sealed class EditExpectation private constructor() {
     /** The kind of variant held by a `EditExpectation`. */
     enum class Kind {
@@ -1329,7 +1339,11 @@ sealed interface ExpectationConflict_OrMutable {
     fun toFrozen(): skirout.editor.v1.authoring_facts.ExpectationConflict;
 }
 
-/** Deeply immutable. */
+/**
+ * Pairs a required original fact with the current saved fact so the caller can refresh before retrying.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ExpectationConflict private constructor(
     override val expected: skirout.editor.v1.authoring_facts.EditExpectation,
@@ -1450,7 +1464,7 @@ private object _SerializerRegistry {
     val EditExpectationSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.authoring_facts.EditExpectation, skirout.editor.v1.authoring_facts.EditExpectation.Unknown>(
             recordId = "editor/v1/authoring_facts.skir:EditExpectation",
-            doc = "",
+            doc = "Records a saved fact required by proposed work. Missing values and absent resources are valid\nobservations. Staged writes do not replace this original evidence with their proposed output.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.authoring_facts.EditExpectation.Kind.values().size,
             unknownInstance = skirout.editor.v1.authoring_facts.EditExpectation.UNKNOWN,
@@ -1522,7 +1536,7 @@ private object _SerializerRegistry {
 
     val ExpectationConflictSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring_facts.skir:ExpectationConflict",
-        doc = "",
+        doc = "Pairs a required original fact with the current saved fact so the caller can refresh before retrying.",
         defaultInstance = skirout.editor.v1.authoring_facts.ExpectationConflict.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring_facts.ExpectationConflict.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -1534,7 +1548,7 @@ private object _SerializerRegistry {
 
     val LinkProjectionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/authoring_facts.skir:LinkProjection",
-        doc = "",
+        doc = "One directed relation edge derived from authored references. Nullable endpoint locations allow\na relation to be authored on only one side; present locations retain exact occurrence identity.",
         defaultInstance = skirout.editor.v1.authoring_facts.LinkProjection.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.authoring_facts.LinkProjection.Mutable() },
         toFrozenFn = { it.toFrozen() },

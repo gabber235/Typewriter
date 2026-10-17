@@ -169,7 +169,13 @@ sealed interface OperationInvocation_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationInvocation;
 }
 
-/** Deeply immutable. */
+/**
+ * Captures the operation selection and its exact origin occurrences under one catalog.
+ * invocation_id correlates requests and supplies stable preparation allocation identity; it does
+ * not make requests durable or guarantee server deduplication.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationInvocation private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
@@ -541,7 +547,12 @@ sealed interface OperationWorkingOverlay_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationWorkingOverlay;
 }
 
-/** Deeply immutable. */
+/**
+ * Proposed replacements and removals layered over the confirmed saved observation for this request.
+ * These values are validated before callbacks run and are not saved by resolve or preparation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationWorkingOverlay private constructor(
     override val upserts: kotlin.collections.List<skirout.editor.v1.resource_operations.OperationResourceUpsert>,
@@ -697,7 +708,12 @@ sealed interface OperationWorkingContext_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationWorkingContext;
 }
 
-/** Deeply immutable. */
+/**
+ * Couples a local overlay to the saved observation it was built from. A stale observation must
+ * be refreshed rather than silently applying the overlay to a different saved graph.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationWorkingContext private constructor(
     override val confirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId,
@@ -3038,7 +3054,12 @@ sealed interface PrepareAuthoringActionRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest;
 }
 
-/** Deeply immutable. */
+/**
+ * Replays preparation with current input and choice answers. input_revision orders client responses;
+ * it is echoed in successful preparation results and is independent of saved resource versions.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PrepareAuthoringActionRequest private constructor(
     override val invocation: skirout.editor.v1.resource_operations.OperationInvocation,
@@ -3502,7 +3523,12 @@ sealed interface AuthoringActionPreview_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.AuthoringActionPreview;
 }
 
-/** Deeply immutable. */
+/**
+ * Proposed edit and client effects after preparation. Selection replacement applies when the
+ * preview is staged; confirmation describes the proposed action and does not persist it.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AuthoringActionPreview private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
@@ -3693,7 +3719,13 @@ class AuthoringActionPreview private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Separates missing interactive input from a usable preview, stale baseline, unavailable action,
+ * validation rejection, permission failure, and callback failure. Refresh catalog or saved state
+ * when requested before attempting preparation again.
+ *
+ * Deeply immutable.
+ */
 sealed class AuthoringActionResult private constructor() {
     /** The kind of variant held by a `AuthoringActionResult`. */
     enum class Kind {
@@ -4041,7 +4073,11 @@ sealed interface OperationSearchContext_OrMutable {
     fun toFrozen(): skirout.editor.v1.resource_operations.OperationSearchContext;
 }
 
-/** Deeply immutable. */
+/**
+ * Gives operation input search the same selection, working observation, and input revision as preparation.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class OperationSearchContext private constructor(
     override val invocation: skirout.editor.v1.resource_operations.OperationInvocation,
@@ -4245,7 +4281,7 @@ private object _SerializerRegistry {
 
     val AuthoringActionPreviewSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:AuthoringActionPreview",
-        doc = "",
+        doc = "Proposed edit and client effects after preparation. Selection replacement applies when the\npreview is staged; confirmation describes the proposed action and does not persist it.",
         defaultInstance = skirout.editor.v1.resource_operations.AuthoringActionPreview.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.AuthoringActionPreview.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -4258,7 +4294,7 @@ private object _SerializerRegistry {
     val AuthoringActionResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.resource_operations.AuthoringActionResult, skirout.editor.v1.resource_operations.AuthoringActionResult.Unknown>(
             recordId = "editor/v1/resource_operations.skir:AuthoringActionResult",
-            doc = "",
+            doc = "Separates missing interactive input from a usable preview, stale baseline, unavailable action,\nvalidation rejection, permission failure, and callback failure. Refresh catalog or saved state\nwhen requested before attempting preparation again.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.resource_operations.AuthoringActionResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.resource_operations.AuthoringActionResult.UNKNOWN,
@@ -4282,7 +4318,7 @@ private object _SerializerRegistry {
 
     val OperationInvocationSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:OperationInvocation",
-        doc = "",
+        doc = "Captures the operation selection and its exact origin occurrences under one catalog.\ninvocation_id correlates requests and supplies stable preparation allocation identity; it does\nnot make requests durable or guarantee server deduplication.",
         defaultInstance = skirout.editor.v1.resource_operations.OperationInvocation.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.OperationInvocation.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -4318,7 +4354,7 @@ private object _SerializerRegistry {
 
     val OperationSearchContextSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:OperationSearchContext",
-        doc = "",
+        doc = "Gives operation input search the same selection, working observation, and input revision as preparation.",
         defaultInstance = skirout.editor.v1.resource_operations.OperationSearchContext.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.OperationSearchContext.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -4343,7 +4379,7 @@ private object _SerializerRegistry {
 
     val OperationWorkingContextSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:OperationWorkingContext",
-        doc = "",
+        doc = "Couples a local overlay to the saved observation it was built from. A stale observation must\nbe refreshed rather than silently applying the overlay to a different saved graph.",
         defaultInstance = skirout.editor.v1.resource_operations.OperationWorkingContext.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -4355,7 +4391,7 @@ private object _SerializerRegistry {
 
     val OperationWorkingOverlaySerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:OperationWorkingOverlay",
-        doc = "",
+        doc = "Proposed replacements and removals layered over the confirmed saved observation for this request.\nThese values are validated before callbacks run and are not saved by resolve or preparation.",
         defaultInstance = skirout.editor.v1.resource_operations.OperationWorkingOverlay.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.OperationWorkingOverlay.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -4477,7 +4513,7 @@ private object _SerializerRegistry {
 
     val PrepareAuthoringActionRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/resource_operations.skir:PrepareAuthoringActionRequest",
-        doc = "",
+        doc = "Replays preparation with current input and choice answers. input_revision orders client responses;\nit is echoed in successful preparation results and is independent of saved resource versions.",
         defaultInstance = skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.resource_operations.PrepareAuthoringActionRequest.Mutable() },
         toFrozenFn = { it.toFrozen() },

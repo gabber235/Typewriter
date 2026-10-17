@@ -366,6 +366,7 @@ impl CompleteValue {
 // enum StructuralResult
 // ==============================================================================
 
+/// Reports whether authored shape is valid under its schema, independently of unfinished input.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StructuralResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<StructuralResult>>),
@@ -397,7 +398,7 @@ impl StructuralResult {
                 },
                 "editor/v1/diagnostic.skir",
                 "StructuralResult",
-                "",
+                "Reports whether authored shape is valid under its schema, independently of unfinished input.",
             )
         });
         &*ADAPTER
@@ -412,6 +413,8 @@ impl StructuralResult {
 // enum CompletenessResult
 // ==============================================================================
 
+/// Distinguishes a value ready for native decoding from unfinished locations and invalid shape.
+/// Schema resolution alone does not prove this value specific result.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompletenessResult {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CompletenessResult>>),
@@ -445,7 +448,7 @@ impl CompletenessResult {
                 },
                 "editor/v1/diagnostic.skir",
                 "CompletenessResult",
-                "",
+                "Distinguishes a value ready for native decoding from unfinished locations and invalid shape.\nSchema resolution alone does not prove this value specific result.",
             )
         });
         &*ADAPTER

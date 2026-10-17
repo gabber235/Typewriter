@@ -31,6 +31,9 @@ sealed class CompiledBlobPointer_orMutable {
   CompiledBlobPointer toFrozen();
 }
 
+/// Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
+/// This digest can differ from the semantic digest of the decoded artifact.
+///
 /// Deeply immutable.
 final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
   @_core.override
@@ -113,7 +116,7 @@ final class CompiledBlobPointer implements CompiledBlobPointer_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/compiled_content.skir:CompiledBlobPointer",
-    doc: "",
+    doc: "Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.\nThis digest can differ from the semantic digest of the decoded artifact.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CompiledBlobPointer_mutable it) => it.toFrozen(),
@@ -485,6 +488,9 @@ sealed class PublishedContent_orMutable {
   PublishedContent toFrozen();
 }
 
+/// Complete selected runtime descriptor, including the implementation requirements under which
+/// its outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.
+///
 /// Deeply immutable.
 final class PublishedContent implements PublishedContent_orMutable {
   @_core.override
@@ -658,7 +664,7 @@ final class PublishedContent implements PublishedContent_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/compiled_content.skir:PublishedContent",
-    doc: "",
+    doc: "Complete selected runtime descriptor, including the implementation requirements under which\nits outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PublishedContent_mutable it) => it.toFrozen(),
@@ -871,6 +877,9 @@ final class PublishedContentChunk_mutable
 
 // enum CompiledResourceState
 
+/// Membership in the Realm selected publication. active does not confirm application by any engine,
+/// nor that the currently saved root still compiles to the selected artifact.
+///
 /// To switch on the variants:
 ///   ```
 ///   switch (e) {
@@ -931,7 +940,7 @@ sealed class CompiledResourceState {
   static final _serializerBuilder = _skir.internal__EnumSerializerBuilder
       .create(
         recordId: "editor/v1/compiled_content.skir:CompiledResourceState",
-        doc: "",
+        doc: "Membership in the Realm selected publication. active does not confirm application by any engine,\nnor that the currently saved root still compiles to the selected artifact.",
         unknownInstance: CompiledResourceState_unknown._instance,
         enumInstance: CompiledResourceState.unknown,
         getOrdinal: (it) => it.kind._ordinal,
@@ -1153,6 +1162,8 @@ sealed class CompiledContentChanged_orMutable {
   CompiledContentChanged toFrozen();
 }
 
+/// Hint to refetch current selection. The event carries no descriptor or ordered publication log.
+///
 /// Deeply immutable.
 final class CompiledContentChanged implements CompiledContentChanged_orMutable {
   @_core.override
@@ -1227,7 +1238,7 @@ final class CompiledContentChanged implements CompiledContentChanged_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/compiled_content.skir:CompiledContentChanged",
-    doc: "",
+    doc: "Hint to refetch current selection. The event carries no descriptor or ordered publication log.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (CompiledContentChanged_mutable it) => it.toFrozen(),

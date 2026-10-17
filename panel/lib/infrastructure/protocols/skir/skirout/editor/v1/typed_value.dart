@@ -26,6 +26,9 @@ sealed class PortableValue_orMutable {
   PortableValue toFrozen();
 }
 
+/// Carries a closed type and portable payload together when the receiver cannot infer the
+/// type from its surrounding binding. Receiving this pair does not replace schema validation.
+///
 /// Deeply immutable.
 final class PortableValue implements PortableValue_orMutable {
   @_core.override
@@ -110,7 +113,7 @@ final class PortableValue implements PortableValue_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/typed_value.skir:PortableValue",
-    doc: "",
+    doc: "Carries a closed type and portable payload together when the receiver cannot infer the\ntype from its surrounding binding. Receiving this pair does not replace schema validation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (PortableValue_mutable it) => it.toFrozen(),

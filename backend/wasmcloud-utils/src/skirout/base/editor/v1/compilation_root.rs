@@ -59,6 +59,8 @@ impl CompilationProjectionId {
 // struct CompilationRoot
 // ==============================================================================
 
+/// Identifies one compiler owned output root without interpreting its domain payload.
+/// The projection selects the compiler family; resource identifies the authored root within that family.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CompilationRoot {
     pub projection: CompilationProjectionId,
@@ -83,7 +85,7 @@ impl CompilationRoot {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/compilation_root.skir",
                 "CompilationRoot",
-                "",
+                "Identifies one compiler owned output root without interpreting its domain payload.\nThe projection selects the compiler family; resource identifies the authored root within that family.",
                 |x: &CompilationRoot| &x._unrecognized,
                 |x: &mut CompilationRoot, u| x._unrecognized = u,
             )

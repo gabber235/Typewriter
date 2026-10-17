@@ -713,6 +713,9 @@ sealed class RealmSearchQuery_orMutable {
   RealmSearchQuery toFrozen();
 }
 
+/// Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.
+/// Providers interpret the query instead of reconstructing selected filters from display text.
+///
 /// Deeply immutable.
 final class RealmSearchQuery implements RealmSearchQuery_orMutable {
   @_core.override
@@ -844,7 +847,7 @@ final class RealmSearchQuery implements RealmSearchQuery_orMutable {
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/search.skir:RealmSearchQuery",
-    doc: "",
+    doc: "Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.\nProviders interpret the query instead of reconstructing selected filters from display text.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RealmSearchQuery_mutable it) => it.toFrozen(),
@@ -915,6 +918,9 @@ sealed class RealmPresentationSearchRequest_orMutable {
   RealmPresentationSearchRequest toFrozen();
 }
 
+/// Starts or replaces work for one subscription. Operation context gives input searches the
+/// same confirmed saved baseline and local overlay used by action preparation.
+///
 /// Deeply immutable.
 final class RealmPresentationSearchRequest
     implements RealmPresentationSearchRequest_orMutable {
@@ -1110,7 +1116,7 @@ final class RealmPresentationSearchRequest
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/search.skir:RealmPresentationSearchRequest",
-    doc: "",
+    doc: "Starts or replaces work for one subscription. Operation context gives input searches the\nsame confirmed saved baseline and local overlay used by action preparation.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RealmPresentationSearchRequest_mutable it) => it.toFrozen(),
@@ -1308,6 +1314,9 @@ sealed class RealmPresentationSearchSnapshot_orMutable {
   RealmPresentationSearchSnapshot toFrozen();
 }
 
+/// Complete values accumulated for this subscription so far, not an incremental append batch.
+/// loading allows further snapshots; ready marks producer completion; error carries diagnostics.
+///
 /// Deeply immutable.
 final class RealmPresentationSearchSnapshot
     implements RealmPresentationSearchSnapshot_orMutable {
@@ -1468,7 +1477,7 @@ final class RealmPresentationSearchSnapshot
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/search.skir:RealmPresentationSearchSnapshot",
-    doc: "",
+    doc: "Complete values accumulated for this subscription so far, not an incremental append batch.\nloading allows further snapshots; ready marks producer completion; error carries diagnostics.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (RealmPresentationSearchSnapshot_mutable it) => it.toFrozen(),
@@ -2317,6 +2326,7 @@ watchRealmPresentationSearchMethod = _skir.Method(
   "",
 );
 
+/// Requests cancellation of a source owned search job. not_found also covers work already retired.
 final _skir.Method<
   CancelRealmPresentationSearchRequest,
   CancelRealmPresentationSearchResult
@@ -2326,5 +2336,5 @@ cancelRealmPresentationSearchMethod = _skir.Method(
   919104,
   CancelRealmPresentationSearchRequest.serializer,
   CancelRealmPresentationSearchResult.serializer,
-  "",
+  "Requests cancellation of a source owned search job. not_found also covers work already retired.",
 );

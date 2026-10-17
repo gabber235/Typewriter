@@ -1235,6 +1235,8 @@ sealed class ConversionCompositionRule_orMutable {
   ConversionCompositionRule toFrozen();
 }
 
+/// Ordered conversion identities forming one path from the declared source to target.
+///
 /// Deeply immutable.
 final class ConversionCompositionRule
     implements ConversionCompositionRule_orMutable {
@@ -1313,7 +1315,7 @@ final class ConversionCompositionRule
 
   static final _serializerBuilder = _skir.internal__StructSerializerBuilder(
     recordId: "editor/v1/conversion.skir:ConversionCompositionRule",
-    doc: "",
+    doc: "Ordered conversion identities forming one path from the declared source to target.",
     defaultInstance: defaultInstance,
     newMutable: (it) => (it != null) ? it.toMutable() : mutable(),
     toFrozen: (ConversionCompositionRule_mutable it) => it.toFrozen(),

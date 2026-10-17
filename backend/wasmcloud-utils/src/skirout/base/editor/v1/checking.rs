@@ -17,6 +17,8 @@
 // enum InspectionCompletion
 // ==============================================================================
 
+/// Describes whether an inspection covered its requested scope. Interrupted inspections may
+/// still return useful partial matches, but cannot establish that omitted matches do not exist.
 #[derive(Debug, Clone, PartialEq)]
 pub enum InspectionCompletion {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<InspectionCompletion>>),
@@ -48,7 +50,7 @@ impl InspectionCompletion {
                 },
                 "editor/v1/checking.skir",
                 "InspectionCompletion",
-                "",
+                "Describes whether an inspection covered its requested scope. Interrupted inspections may\nstill return useful partial matches, but cannot establish that omitted matches do not exist.",
             )
         });
         &*ADAPTER
@@ -104,6 +106,8 @@ impl UndecidedCandidate {
 // enum CheckOutcome
 // ==============================================================================
 
+/// Evaluation completion, separate from the diagnostics it emitted. finished may still have
+/// error findings; needs_input, failed, and incomplete cannot establish publication readiness.
 #[derive(Debug, Clone, PartialEq)]
 pub enum CheckOutcome {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<CheckOutcome>>),
@@ -139,7 +143,7 @@ impl CheckOutcome {
                 },
                 "editor/v1/checking.skir",
                 "CheckOutcome",
-                "",
+                "Evaluation completion, separate from the diagnostics it emitted. finished may still have\nerror findings; needs_input, failed, and incomplete cannot establish publication readiness.",
             )
         });
         &*ADAPTER
@@ -241,6 +245,8 @@ impl CheckInstanceId {
 // struct CheckTicket
 // ==============================================================================
 
+/// Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.
+/// Current finding admission rejects results from executions superseded for the same instance.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct CheckTicket {
     pub instance: CheckInstanceId,
@@ -266,7 +272,7 @@ impl CheckTicket {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/checking.skir",
                 "CheckTicket",
-                "",
+                "Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.\nCurrent finding admission rejects results from executions superseded for the same instance.",
                 |x: &CheckTicket| &x._unrecognized,
                 |x: &mut CheckTicket, u| x._unrecognized = u,
             )
@@ -283,6 +289,8 @@ impl CheckTicket {
 // struct FindingSet
 // ==============================================================================
 
+/// Findings with the execution and original facts they describe. Status records freshness;
+/// consumers retain the evidence needed to compare them with saved or local working values.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct FindingSet {
     pub ticket: CheckTicket,
@@ -309,7 +317,7 @@ impl FindingSet {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/checking.skir",
                 "FindingSet",
-                "",
+                "Findings with the execution and original facts they describe. Status records freshness;\nconsumers retain the evidence needed to compare them with saved or local working values.",
                 |x: &FindingSet| &x._unrecognized,
                 |x: &mut FindingSet, u| x._unrecognized = u,
             )

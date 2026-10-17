@@ -26,7 +26,11 @@ sealed interface InvocationId_OrMutable {
     fun toFrozen(): skirout.editor.v1.capability.InvocationId;
 }
 
-/** Deeply immutable. */
+/**
+ * Caller correlation identity. It does not imply durable command storage or automatic deduplication.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class InvocationId private constructor(
     override val value: kotlin.String,
@@ -1363,7 +1367,12 @@ class NotifyInstruction private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Client effects returned by Realm commands. These instructions direct navigation, refresh,
+ * or notification; receiving them is separate from applying them in the current panel session.
+ *
+ * Deeply immutable.
+ */
 sealed class PanelInstruction private constructor() {
     /** The kind of variant held by a `PanelInstruction`. */
     enum class Kind {
@@ -1516,7 +1525,12 @@ sealed interface CapabilityInvocationRequest_OrMutable {
     fun toFrozen(): skirout.editor.v1.capability.CapabilityInvocationRequest;
 }
 
-/** Deeply immutable. */
+/**
+ * Selects a capability under a catalog generation with portable input. Computations require
+ * the declared result type; commands require expected_result_type to be absent.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class CapabilityInvocationRequest private constructor(
     override val invocationId: skirout.editor.v1.capability.InvocationId,
@@ -3118,7 +3132,7 @@ private object _SerializerRegistry {
 
     val CapabilityInvocationRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/capability.skir:CapabilityInvocationRequest",
-        doc = "",
+        doc = "Selects a capability under a catalog generation with portable input. Computations require\nthe declared result type; commands require expected_result_type to be absent.",
         defaultInstance = skirout.editor.v1.capability.CapabilityInvocationRequest.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.CapabilityInvocationRequest.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -3228,7 +3242,7 @@ private object _SerializerRegistry {
 
     val InvocationIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/capability.skir:InvocationId",
-        doc = "",
+        doc = "Caller correlation identity. It does not imply durable command storage or automatic deduplication.",
         defaultInstance = skirout.editor.v1.capability.InvocationId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.capability.InvocationId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -3278,7 +3292,7 @@ private object _SerializerRegistry {
     val PanelInstructionSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.capability.PanelInstruction, skirout.editor.v1.capability.PanelInstruction.Unknown>(
             recordId = "editor/v1/capability.skir:PanelInstruction",
-            doc = "",
+            doc = "Client effects returned by Realm commands. These instructions direct navigation, refresh,\nor notification; receiving them is separate from applying them in the current panel session.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.capability.PanelInstruction.Kind.values().size,
             unknownInstance = skirout.editor.v1.capability.PanelInstruction.UNKNOWN,

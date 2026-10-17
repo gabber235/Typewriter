@@ -2469,7 +2469,12 @@ sealed interface PresentationNode_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.PresentationNode;
 }
 
-/** Deeply immutable. */
+/**
+ * One authored layout node. node_id scopes diagnostics and reusable inspector membership.
+ * Read only and enabled properties constrain interaction without granting persistence access.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationNode private constructor(
     override val nodeId: kotlin.String,
@@ -23931,7 +23936,12 @@ sealed interface PresentationDefinition_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.PresentationDefinition;
 }
 
-/** Deeply immutable. */
+/**
+ * Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies
+ * current binding values and owns transient interaction state; the definition carries no widget lifecycle.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PresentationDefinition private constructor(
     override val presentationId: skirout.editor.v1.type_catalog.PresentationId,
@@ -26391,7 +26401,12 @@ sealed interface RemainingFieldsElement_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.RemainingFieldsElement;
 }
 
-/** Deeply immutable. */
+/**
+ * Composes inherited inspector members and default controls for fields not claimed explicitly.
+ * Exclusions suppress named field patterns or reusable parts without copying their source layouts.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class RemainingFieldsElement private constructor(
     override val excluded: kotlin.collections.List<skirout.editor.v1.type_catalog.RelativeFieldPattern>,
@@ -29966,7 +29981,12 @@ sealed interface AppearanceDefaultsElement_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.AppearanceDefaultsElement;
 }
 
-/** Deeply immutable. */
+/**
+ * Supplies inherited input appearance within its child scope. Explicit descendant properties
+ * take precedence per property; expressions retain the bindings where their layer was declared.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class AppearanceDefaultsElement private constructor(
     override val appearance: skirout.editor.v1.presentation.InputAppearance,
@@ -30598,7 +30618,12 @@ sealed interface ValueMappings_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.ValueMappings;
 }
 
-/** Deeply immutable. */
+/**
+ * Optional display and completion transforms for an edited value. They are evaluated in
+ * an explicit input binding; applying a mapped value still goes through the owning edit scope.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ValueMappings private constructor(
     override val completion: skirout.editor.v1.presentation.ExpressionMapping?,
@@ -37233,7 +37258,12 @@ sealed interface ResultAppearance_OrMutable {
     fun toFrozen(): skirout.editor.v1.presentation.ResultAppearance;
 }
 
-/** Deeply immutable. */
+/**
+ * Describes host supplied result chrome around the portable body, shared by search options,
+ * authoring result rows, page tiles, and graph nodes where the requested role supports it.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ResultAppearance private constructor(
     override val style: skirout.editor.v1.presentation.ResultStyle?,
@@ -37869,7 +37899,7 @@ private object _SerializerRegistry {
 
     val AppearanceDefaultsElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:AppearanceDefaultsElement",
-        doc = "",
+        doc = "Supplies inherited input appearance within its child scope. Explicit descendant properties\ntake precedence per property; expressions retain the bindings where their layer was declared.",
         defaultInstance = skirout.editor.v1.presentation.AppearanceDefaultsElement.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.AppearanceDefaultsElement.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -39602,7 +39632,7 @@ private object _SerializerRegistry {
 
     val PresentationDefinitionSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationDefinition",
-        doc = "",
+        doc = "Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies\ncurrent binding values and owns transient interaction state; the definition carries no widget lifecycle.",
         defaultInstance = skirout.editor.v1.presentation.PresentationDefinition.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationDefinition.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -39727,7 +39757,7 @@ private object _SerializerRegistry {
 
     val PresentationNodeSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:PresentationNode",
-        doc = "",
+        doc = "One authored layout node. node_id scopes diagnostics and reusable inspector membership.\nRead only and enabled properties constrain interaction without granting persistence access.",
         defaultInstance = skirout.editor.v1.presentation.PresentationNode.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.PresentationNode.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -39984,7 +40014,7 @@ private object _SerializerRegistry {
 
     val RemainingFieldsElementSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:RemainingFieldsElement",
-        doc = "",
+        doc = "Composes inherited inspector members and default controls for fields not claimed explicitly.\nExclusions suppress named field patterns or reusable parts without copying their source layouts.",
         defaultInstance = skirout.editor.v1.presentation.RemainingFieldsElement.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.RemainingFieldsElement.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -40008,7 +40038,7 @@ private object _SerializerRegistry {
 
     val ResultAppearanceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ResultAppearance",
-        doc = "",
+        doc = "Describes host supplied result chrome around the portable body, shared by search options,\nauthoring result rows, page tiles, and graph nodes where the requested role supports it.",
         defaultInstance = skirout.editor.v1.presentation.ResultAppearance.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ResultAppearance.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -40696,7 +40726,7 @@ private object _SerializerRegistry {
 
     val ValueMappingsSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/presentation.skir:ValueMappings",
-        doc = "",
+        doc = "Optional display and completion transforms for an edited value. They are evaluated in\nan explicit input binding; applying a mapped value still goes through the owning edit scope.",
         defaultInstance = skirout.editor.v1.presentation.ValueMappings.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.presentation.ValueMappings.Mutable() },
         toFrozenFn = { it.toFrozen() },

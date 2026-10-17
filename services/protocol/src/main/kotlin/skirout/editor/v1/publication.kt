@@ -804,7 +804,11 @@ sealed interface EngineImplementationInputs_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.EngineImplementationInputs;
 }
 
-/** Deeply immutable. */
+/**
+ * Captured implementation requirements used to fence candidate assessment and publication selection.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EngineImplementationInputs private constructor(
     override val signatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature>,
@@ -953,7 +957,12 @@ class EngineImplementationInputs private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Durable attempt progress, separate from review status. complete means the Realm selected its
+ * descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
+ *
+ * Deeply immutable.
+ */
 sealed class PublicationState private constructor() {
     /** The kind of variant held by a `PublicationState`. */
     enum class Kind {
@@ -1287,7 +1296,13 @@ class PublicationAttempt private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Reports release admission and selection. activated identifies the newly selected publication,
+ * not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
+ * means another release currently owns the publication gate.
+ *
+ * Deeply immutable.
+ */
 sealed class PublicationResult private constructor() {
     /** The kind of variant held by a `PublicationResult`. */
     enum class Kind {
@@ -1789,7 +1804,12 @@ sealed interface PublicationCandidateId_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.PublicationCandidateId;
 }
 
-/** Deeply immutable. */
+/**
+ * Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
+ * A newer review may invalidate it even when no resource revision counter is exposed.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PublicationCandidateId private constructor(
     override val value: kotlin.String,
@@ -1898,7 +1918,12 @@ sealed interface PublicationViewId_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.PublicationViewId;
 }
 
-/** Deeply immutable. */
+/**
+ * Identifies one emitted review state, including checking and failure states without a candidate.
+ * It is a freshness identity rather than a sortable publication or resource revision.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PublicationViewId private constructor(
     override val value: kotlin.String,
@@ -2100,7 +2125,12 @@ sealed interface DiagnosticEvidence_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.DiagnosticEvidence;
 }
 
-/** Deeply immutable. */
+/**
+ * Original facts under which a publication diagnostic applies to an authored value.
+ * Consumers compare this evidence with their working state before presenting it as current.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class DiagnosticEvidence private constructor(
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
@@ -2755,7 +2785,12 @@ class PublicationBlocker private constructor(
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Semantic runtime changes relative to selection. A root update compares artifact meaning and
+ * format, independently of blob storage location or a newly allocated publication identity.
+ *
+ * Deeply immutable.
+ */
 sealed class PublicationChange private constructor() {
     /** The kind of variant held by a `PublicationChange`. */
     enum class Kind {
@@ -2922,7 +2957,11 @@ sealed interface PublicationDelta_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.PublicationDelta;
 }
 
-/** Deeply immutable. */
+/**
+ * A releasable change set is nonempty by construction; additional entries extend its first change.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PublicationDelta private constructor(
     override val first: skirout.editor.v1.publication.PublicationChange,
@@ -3643,7 +3682,13 @@ sealed class PublicationFailure private constructor() {
     }
 }
 
-/** Deeply immutable. */
+/**
+ * Current saved review state. ready authorizes only its issued candidate; blocked can still
+ * report confirmed changes while failed roots remain pending. During publishing, releasing is
+ * frozen and next describes later saved work without adding it to the in progress release.
+ *
+ * Deeply immutable.
+ */
 sealed class PublicationStatus private constructor() {
     /** The kind of variant held by a `PublicationStatus`. */
     enum class Kind {
@@ -5295,7 +5340,11 @@ sealed interface PublicationViewChanged_OrMutable {
     fun toFrozen(): skirout.editor.v1.publication.PublicationViewChanged;
 }
 
-/** Deeply immutable. */
+/**
+ * Invalidation hint naming the current review view. Query that exact identity to transfer its content.
+ *
+ * Deeply immutable.
+ */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class PublicationViewChanged private constructor(
     override val current: skirout.editor.v1.publication.PublicationViewId,
@@ -6336,6 +6385,7 @@ sealed class QueryPublicationViewResponse private constructor() {
     }
 }
 
+/** Releases only the issued candidate while its captured saved inputs and engine requirements still match. */
 val PublishAuthoring: build.skir.service.Method<
     skirout.editor.v1.publication.PublishAuthoringRequest,
     skirout.editor.v1.publication.PublishAuthoringResponse,
@@ -6345,7 +6395,7 @@ val PublishAuthoring: build.skir.service.Method<
         920020,
         skirout.editor.v1.publication.PublishAuthoringRequest.serializer,
         skirout.editor.v1.publication.PublishAuthoringResponse.serializer,
-        "",
+        "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
     )
 }
 
@@ -6362,6 +6412,10 @@ val WatchPublication: build.skir.service.Method<
     )
 }
 
+/**
+ * Transfers one immutable review view or reports that expected is no longer current.
+ * All chunks share the view and transfer identities; later invalidations require a separate query.
+ */
 val QueryPublicationView: build.skir.service.Method<
     skirout.editor.v1.publication.QueryPublicationViewRequest,
     skirout.editor.v1.publication.QueryPublicationViewResponse,
@@ -6371,14 +6425,14 @@ val QueryPublicationView: build.skir.service.Method<
         920022,
         skirout.editor.v1.publication.QueryPublicationViewRequest.serializer,
         skirout.editor.v1.publication.QueryPublicationViewResponse.serializer,
-        "",
+        "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",
     )
 }
 
 private object _SerializerRegistry {
     val DiagnosticEvidenceSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:DiagnosticEvidence",
-        doc = "",
+        doc = "Original facts under which a publication diagnostic applies to an authored value.\nConsumers compare this evidence with their working state before presenting it as current.",
         defaultInstance = skirout.editor.v1.publication.DiagnosticEvidence.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.DiagnosticEvidence.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6390,7 +6444,7 @@ private object _SerializerRegistry {
 
     val EngineImplementationInputsSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:EngineImplementationInputs",
-        doc = "",
+        doc = "Captured implementation requirements used to fence candidate assessment and publication selection.",
         defaultInstance = skirout.editor.v1.publication.EngineImplementationInputs.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.EngineImplementationInputs.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6476,7 +6530,7 @@ private object _SerializerRegistry {
 
     val PublicationCandidateIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationCandidateId",
-        doc = "",
+        doc = "Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.\nA newer review may invalidate it even when no resource revision counter is exposed.",
         defaultInstance = skirout.editor.v1.publication.PublicationCandidateId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationCandidateId.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6489,7 +6543,7 @@ private object _SerializerRegistry {
     val PublicationChangeSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationChange, skirout.editor.v1.publication.PublicationChange.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationChange",
-            doc = "",
+            doc = "Semantic runtime changes relative to selection. A root update compares artifact meaning and\nformat, independently of blob storage location or a newly allocated publication identity.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.publication.PublicationChange.Kind.values().size,
             unknownInstance = skirout.editor.v1.publication.PublicationChange.UNKNOWN,
@@ -6501,7 +6555,7 @@ private object _SerializerRegistry {
 
     val PublicationDeltaSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationDelta",
-        doc = "",
+        doc = "A releasable change set is nonempty by construction; additional entries extend its first change.",
         defaultInstance = skirout.editor.v1.publication.PublicationDelta.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationDelta.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6576,7 +6630,7 @@ private object _SerializerRegistry {
     val PublicationResultSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationResult, skirout.editor.v1.publication.PublicationResult.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationResult",
-            doc = "",
+            doc = "Reports release admission and selection. activated identifies the newly selected publication,\nnot an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing\nmeans another release currently owns the publication gate.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.publication.PublicationResult.Kind.values().size,
             unknownInstance = skirout.editor.v1.publication.PublicationResult.UNKNOWN,
@@ -6601,7 +6655,7 @@ private object _SerializerRegistry {
     val PublicationStateSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationState, skirout.editor.v1.publication.PublicationState.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationState",
-            doc = "",
+            doc = "Durable attempt progress, separate from review status. complete means the Realm selected its\ndescriptor, while blocked or interrupted attempts do not replace the prior selected publication.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.publication.PublicationState.Kind.values().size,
             unknownInstance = skirout.editor.v1.publication.PublicationState.UNKNOWN,
@@ -6614,7 +6668,7 @@ private object _SerializerRegistry {
     val PublicationStatusSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationStatus, skirout.editor.v1.publication.PublicationStatus.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationStatus",
-            doc = "",
+            doc = "Current saved review state. ready authorizes only its issued candidate; blocked can still\nreport confirmed changes while failed roots remain pending. During publishing, releasing is\nfrozen and next describes later saved work without adding it to the in progress release.",
             getKindOrdinal = { it.kind.ordinal },
             kindCount = skirout.editor.v1.publication.PublicationStatus.Kind.values().size,
             unknownInstance = skirout.editor.v1.publication.PublicationStatus.UNKNOWN,
@@ -6734,7 +6788,7 @@ private object _SerializerRegistry {
 
     val PublicationViewChangedSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationViewChanged",
-        doc = "",
+        doc = "Invalidation hint naming the current review view. Query that exact identity to transfer its content.",
         defaultInstance = skirout.editor.v1.publication.PublicationViewChanged.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationViewChanged.Mutable() },
         toFrozenFn = { it.toFrozen() },
@@ -6758,7 +6812,7 @@ private object _SerializerRegistry {
 
     val PublicationViewIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:PublicationViewId",
-        doc = "",
+        doc = "Identifies one emitted review state, including checking and failure states without a candidate.\nIt is a freshness identity rather than a sortable publication or resource revision.",
         defaultInstance = skirout.editor.v1.publication.PublicationViewId.partial(),
         newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.PublicationViewId.Mutable() },
         toFrozenFn = { it.toFrozen() },
