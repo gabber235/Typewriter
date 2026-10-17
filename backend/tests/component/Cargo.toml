@@ -69,25 +69,25 @@ component-test-core = { path = "crates/component-test-core" }
 component-test-macros = { path = "crates/component-test-macros" }
 component-test = { path = "crates/component-test" }
 typewriter-component-test = { path = "crates/typewriter-component-test" }
-wasmtime-wasi = { version = "47.0.3", default-features = false, features = [
+wasmtime-wasi = { version = "48.0.6", default-features = false, features = [
     "p2",
     "p3",
 ] }
-wasmtime-wasi-http = { version = "47.0.3", default-features = false, features = [
+wasmtime-wasi-http = { version = "48.0.6", default-features = false, features = [
     "p2",
     "p3",
 ] }
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 
-wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "c8984bda3fadaf825d0b47f69a8041561fd3d32c", default-features = false, features = [
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "0d5784c3159ecfc893230955d8dad4d675e414bf", default-features = false, features = [
     "wasmcloud-nats",
     "wasi-config",
     "wasi-logging",
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "f7dad10b6c739e8e1fc58432aef4fe1021763d10" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "ef71a4fa1718a0ffbbdba362004e2bb69707ac54" }
 
 [profile.dev]
 debug = 0
