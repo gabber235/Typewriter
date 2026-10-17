@@ -213,7 +213,7 @@ private fun PresentationNode.writesWithinOwner(
 
             is PresentationElement.RepeatedWrapper -> {
                 val value = element.value
-                val source = (value.source as? skirout.editor.v1.expression.ExpressionNode.ReadWrapper)?.value
+                val source = (value.source as? skirout.editor.v1.expression.ExpressionNode.InputWrapper)?.value
                 val scope =
                     source?.let { BindingRef(bindingId = it.binding, path = it.path).writeScope(bindings) } ?: FieldWriteScope.Foreign
                 child(value.presentation.item, bindings + (value.itemBindingId.value to scope)) &&

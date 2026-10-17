@@ -8,6 +8,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.AxisChildrenElement
 import skirout.editor.v1.presentation.AxisChildrenLayout
@@ -112,9 +113,7 @@ internal class PresentationBuildState(
                 declare("context:subject", resource)
                 declare("context:selection", selection)
                 val expression =
-                    com.typewritermc.types.skir.SkirExpressionCodec
-                        .decode(action.value.resource)
-                        .getOrThrow()
+                    action.value.resource
                 val errors = type.checkExpression(expression, expressionTypes, resource.template(), expressionTypes.keys)
                 require(errors.isEmpty()) { "Invalid resource navigation expression: ${errors.joinToString()}." }
             }
@@ -124,9 +123,7 @@ internal class PresentationBuildState(
                 declare("context:selection", selection)
                 capability(com.typewritermc.capability.CapabilityId(action.value.capability.value))
                 val expression =
-                    com.typewritermc.types.skir.SkirExpressionCodec
-                        .decode(action.value.targets)
-                        .getOrThrow()
+                    action.value.targets
                 val errors = type.checkExpression(expression, expressionTypes, selection.template(), expressionTypes.keys)
                 require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
             }
@@ -194,7 +191,7 @@ internal class PresentationBuildState(
         type(use)
         contextInputs.putIfAbsent(key.binding, declaration)
         expressionTypes[key.binding] = template
-        return com.typewritermc.expression.Expr(ExpressionNode.Read(key.binding, com.typewritermc.authoring.ValuePath()))
+        return com.typewritermc.expression.inputExpression(key.binding)
     }
 
     fun captureResult(content: (PresentationBuildScope) -> Unit): CapturedResultPresentation {

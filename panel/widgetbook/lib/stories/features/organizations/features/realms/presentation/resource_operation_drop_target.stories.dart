@@ -151,7 +151,7 @@ AuthoringDocument _operationDocument() {
         ),
         action: key == "open" || key == "edit"
             ? skir.EditorAction.createNavigate(
-                resource: skir.ExpressionNode.createRead(
+                resource: skir.ExpressionNode.createInput(
                   binding: skir.ExpressionBindingId(value: "context:subject"),
                   path: editorRootPath,
                 ),
@@ -161,7 +161,7 @@ AuthoringDocument _operationDocument() {
               )
             : skir.EditorAction.createAuthoring(
                 capability: skir.CapabilityId(value: "story:$key"),
-                targets: skir.ExpressionNode.createRead(
+                targets: skir.ExpressionNode.createInput(
                   binding: skir.ExpressionBindingId(value: "context:selection"),
                   path: editorRootPath,
                 ),

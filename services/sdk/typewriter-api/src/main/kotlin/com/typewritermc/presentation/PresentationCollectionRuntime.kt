@@ -10,6 +10,7 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationCollectionDefinition
 import skirout.editor.v1.presentation.PresentationCollectionProjection
 import skirout.editor.v1.presentation.PresentationCollectionProjectionField
@@ -34,9 +35,7 @@ internal fun <V, ItemScope> RuntimePresentationData.renderRepeated(
     val scope =
         object : SequenceScope<ItemScope>, Layout by itemLayout, SequenceLayoutScope by sequenceLayout {
             override val item =
-                Expr<ItemScope, MayBeMissing>(
-                    ExpressionNode.Read(binding, ValuePath()),
-                )
+                com.typewritermc.expression.inputExpression<ItemScope, MayBeMissing>(binding)
 
             override fun empty(body: Layout.() -> Unit) {
                 check(empty == null) { "A repeated presentation may declare empty content once." }
@@ -77,9 +76,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionLookup(
     val scope =
         object : LookupScope<Row> {
             override val row =
-                Expr<Row, MayBeMissing>(
-                    ExpressionNode.Read(source.rowBinding, ValuePath()),
-                )
+                com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
 
             override fun found(body: Layout.() -> Unit) {
                 check(found == null) { "Collection lookup found content may be declared once." }
@@ -136,7 +133,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 val sequenceScope =
                     object : GraphRootSequenceScope<Row>, SequenceLayoutScope by layout {
                         override val item =
-                            Expr<Row, MayBeMissing>(ExpressionNode.Read(source.rowBinding, ValuePath()))
+                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
 
                         override fun empty(body: Layout.() -> Unit) {
                             check(empty == null) { "Collection graph empty content may be declared once." }
@@ -159,9 +156,9 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 val sequenceScope =
                     object : GraphChildrenSequenceScope<Row>, SequenceLayoutScope by layout {
                         override val parent =
-                            Expr<Row, MayBeMissing>(ExpressionNode.Read(source.rowBinding, ValuePath()))
+                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
                         override val item =
-                            Expr<Row, MayBeMissing>(ExpressionNode.Read(childBinding, ValuePath()))
+                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(childBinding)
                     }
                 sequenceScope.body()
                 childSequence =
@@ -176,29 +173,23 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
             override fun root(binding: PresentationInput<Key, *>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots =
-                    ExpressionNode.Read(
-                        ExpressionBindingId(binding.binding.bindingId.value),
-                        SkirAuthoringValueCodec.decode(binding.binding.path).getOrThrow(),
-                    )
+                    ExpressionNode.createInput(binding = binding.binding.bindingId, path = binding.binding.path)
             }
 
             override fun roots(binding: PresentationInput<List<Key>, *>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
                 roots =
-                    ExpressionNode.Read(
-                        ExpressionBindingId(binding.binding.bindingId.value),
-                        SkirAuthoringValueCodec.decode(binding.binding.path).getOrThrow(),
-                    )
+                    ExpressionNode.createInput(binding = binding.binding.bindingId, path = binding.binding.path)
             }
 
             override fun root(value: Expr<Key, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
-                roots = value.node
+                roots = value.toNode()
             }
 
             override fun roots(value: Expr<List<Key>, MayBeMissing>) {
                 check(roots == null) { "Collection graph roots may be declared once." }
-                roots = value.node
+                roots = value.toNode()
             }
 
             override fun relation(
@@ -221,13 +212,9 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
                 val nodeScope =
                     object : GraphNodeScope<Row>, Layout by layout {
                         override val row =
-                            Expr<Row, MayBeMissing>(
-                                ExpressionNode.Read(source.rowBinding, ValuePath()),
-                            )
+                            com.typewritermc.expression.inputExpression<Row, MayBeMissing>(source.rowBinding)
                         override val children =
-                            Expr<List<Row>, MayBeMissing>(
-                                ExpressionNode.Read(childrenBinding, ValuePath()),
-                            )
+                            com.typewritermc.expression.inputExpression<List<Row>, MayBeMissing>(childrenBinding)
 
                         override fun descendants() {
                             state.currentTarget += state.node(PresentationElement.createSlot(slotId = childSlot))
@@ -242,7 +229,7 @@ internal fun <Row, Key> RuntimePresentationData.renderCollectionGraph(
         state.node(
             PresentationElement.createCollectionGraph(
                 sourceId = source.id,
-                roots = SkirTypeCodec.encode(requireNotNull(roots) { "Collection graph roots are required." }).getOrThrow(),
+                roots = requireNotNull(roots) { "Collection graph roots are required." },
                 rootSequence = rootSequence ?: sequence(rootItem),
                 relationId = requireNotNull(relation) { "Collection graph relation is required." },
                 direction =
@@ -368,7 +355,7 @@ internal fun CollectionSource<*, *>.wire(state: PresentationBuildState): Present
             relations.map { relation ->
                 PresentationCollectionRelationDefinition(
                     relationId = relation.id,
-                    targets = SkirTypeCodec.encode(relation.targets).getOrThrow(),
+                    targets = relation.targets,
                 )
             },
         projection =

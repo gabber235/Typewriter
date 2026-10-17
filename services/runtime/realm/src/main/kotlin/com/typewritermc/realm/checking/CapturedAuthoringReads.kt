@@ -34,7 +34,6 @@ import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.kind
 import com.typewritermc.expression.EvaluationDiagnostic
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.realm.authoring.AuthoredReadView
 import com.typewritermc.realm.authoring.RESOURCE_SELECTION_INPUT
 import com.typewritermc.realm.repository.CapturedAuthoringValues
@@ -48,6 +47,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import skirout.editor.v1.expression.ExpressionNode
 import java.util.concurrent.CancellationException
 
 fun interface SelectionPredicateEvaluator {

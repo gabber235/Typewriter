@@ -13,6 +13,7 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.action.EditorAction
+import skirout.editor.v1.expression.ExpressionNode
 import kotlin.time.Instant
 
 interface PresentationContent {
@@ -502,7 +503,7 @@ internal fun <Row : Resource> resourceCollectionSource(
 private class DefaultCollectionSourceScope<Row, Key>(
     private val binding: ExpressionBindingId,
 ) : CollectionSourceScope<Row, Key> {
-    override val row = Expr<Row, Handled>(ExpressionNode.Read(binding, ValuePath()))
+    override val row = com.typewritermc.expression.inputExpression<Row, Handled>(binding)
     private var key: Expr<Key, Handled>? = null
     private var selectability: Expr<Boolean, Handled> = literal(true)
     private val relations = mutableListOf<CollectionRelation<Key>>()
@@ -520,14 +521,14 @@ private class DefaultCollectionSourceScope<Row, Key>(
         id: String,
         target: Expr<Key, Handled>,
     ) {
-        addRelation(id, target.node)
+        addRelation(id, target.toNode())
     }
 
     override fun relations(
         id: String,
         targets: Expr<List<Key>, Handled>,
     ) {
-        addRelation(id, targets.node)
+        addRelation(id, targets.toNode())
     }
 
     private fun addRelation(
@@ -560,8 +561,8 @@ private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>
     private val resourceBinding: ExpressionBindingId,
     expressionFactory: ExpressionFactory<Expressions>,
 ) : ProjectedCollectionSourceScope<Row, Key, Expressions> {
-    override val row = Expr<Row, MayBeMissing>(ExpressionNode.Read(rowBinding, ValuePath()))
-    override val resource = Expr<ResourceId, Handled>(ExpressionNode.Read(resourceBinding, ValuePath()))
+    override val row = com.typewritermc.expression.inputExpression<Row, MayBeMissing>(rowBinding)
+    override val resource = com.typewritermc.expression.inputExpression<ResourceId, Handled>(resourceBinding)
     override val expressions: Expressions = expressionFactory.create(row)
     private var selectability: Expr<Boolean, Handled> = literal(true)
     private val relations = mutableListOf<CollectionRelation<Key>>()
@@ -574,14 +575,14 @@ private class DefaultProjectedCollectionSourceScope<Row, Key, Expressions : Any>
         id: String,
         target: Expr<Key, Handled>,
     ) {
-        addRelation(id, target.node)
+        addRelation(id, target.toNode())
     }
 
     override fun relations(
         id: String,
         targets: Expr<List<Key>, Handled>,
     ) {
-        addRelation(id, targets.node)
+        addRelation(id, targets.toNode())
     }
 
     private fun addRelation(
@@ -612,8 +613,8 @@ private class DefaultResourceCollectionSourceScope<Row : Resource>(
     private val rowBinding: ExpressionBindingId,
     private val resourceBinding: ExpressionBindingId,
 ) : ResourceCollectionSourceScope<Row> {
-    override val row = Expr<Row, MayBeMissing>(ExpressionNode.Read(rowBinding, ValuePath()))
-    override val resource = Expr<ResourceId, Handled>(ExpressionNode.Read(resourceBinding, ValuePath()))
+    override val row = com.typewritermc.expression.inputExpression<Row, MayBeMissing>(rowBinding)
+    override val resource = com.typewritermc.expression.inputExpression<ResourceId, Handled>(resourceBinding)
     private var selectability: Expr<Boolean, Handled> = literal(true)
     private val relations = mutableListOf<CollectionRelation<ResourceId>>()
 
@@ -625,14 +626,14 @@ private class DefaultResourceCollectionSourceScope<Row : Resource>(
         id: String,
         target: Expr<ResourceId, Handled>,
     ) {
-        addRelation(id, target.node)
+        addRelation(id, target.toNode())
     }
 
     override fun relations(
         id: String,
         targets: Expr<List<ResourceId>, Handled>,
     ) {
-        addRelation(id, targets.node)
+        addRelation(id, targets.toNode())
     }
 
     private fun addRelation(

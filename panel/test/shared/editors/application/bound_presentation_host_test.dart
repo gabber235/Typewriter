@@ -107,14 +107,12 @@ void main() {
       final uppercase = skir.EditorAction.wrapLocal(
         skir.LocalEditorAction.createSetValue(
           target: _rootReference,
-          value: skir.ExpressionNode.createCall(
-            operation: skir.OperationId(value: "typewriter.text.upper"),
-            arguments: [
-              skir.ExpressionNode.createRead(
-                binding: _bindingId,
-                path: skir.ValuePath(segments: const []),
-              ),
-            ],
+          value: skir.ExpressionNode.createTextUnary(
+            operation: skir.TextUnaryOperation.upper,
+            source: skir.ExpressionNode.createInput(
+              binding: _bindingId,
+              path: skir.ValuePath(segments: const []),
+            ),
           ),
         ),
       );

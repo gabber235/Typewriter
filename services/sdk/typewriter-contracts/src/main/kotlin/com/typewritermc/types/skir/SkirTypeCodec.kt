@@ -16,7 +16,6 @@ import com.typewritermc.configuration.RepresentationKind
 import com.typewritermc.configuration.RuleId
 import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.discovery.ContributionKey
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationTarget
@@ -83,13 +82,6 @@ import skirout.editor.v1.diagnostic.Diagnostic as SkirDiagnostic
 import skirout.editor.v1.diagnostic.DiagnosticSeverity as SkirDiagnosticSeverity
 import skirout.editor.v1.diagnostic.DiagnosticTemplate as SkirDiagnosticTemplate
 import skirout.editor.v1.diagnostic.InitializationDiagnostic as SkirInitializationDiagnostic
-import skirout.editor.v1.expression.BinaryExpression as SkirBinaryExpression
-import skirout.editor.v1.expression.CollectionExpression as SkirCollectionExpression
-import skirout.editor.v1.expression.ConditionalExpression as SkirConditionalExpression
-import skirout.editor.v1.expression.ExpressionCall as SkirExpressionCall
-import skirout.editor.v1.expression.ExpressionNode as SkirExpressionNode
-import skirout.editor.v1.expression.ExpressionRead as SkirExpressionRead
-import skirout.editor.v1.expression.OrElseExpression as SkirOrElseExpression
 import skirout.editor.v1.type_catalog.CollectionKind as SkirCollectionKind
 import skirout.editor.v1.type_catalog.ContributionKey as SkirContributionKey
 import skirout.editor.v1.type_catalog.ContributionName as SkirContributionName
@@ -156,8 +148,6 @@ object SkirTypeCodec {
     fun encode(diagnostic: Diagnostic): SkirConversionResult<SkirDiagnostic> = captureSkirConversion { this.encode(diagnostic) }
 
     fun encode(rule: RuleId): SkirConversionResult<SkirRuleId> = captureSkirConversion { this.encode(rule) }
-
-    fun encode(expression: ExpressionNode): SkirConversionResult<SkirExpressionNode> = captureSkirConversion { this.encode(expression) }
 }
 
 internal fun ConversionScope.encodeTypeId(id: TypeId): SkirTypeId =
@@ -794,7 +784,7 @@ private fun ConversionScope.encode(recipe: ConfigurationRecipe) =
 private fun ConversionScope.encode(rule: OwnedRule) =
     SkirOwnedRule(
         id = encode(rule.id),
-        descriptor = SkirRuleDescriptor(predicate = encode(rule.descriptor.predicate)),
+        descriptor = SkirRuleDescriptor(predicate = rule.descriptor.predicate),
         diagnostic =
             SkirDiagnosticTemplate(
                 code = rule.diagnostic.code,
@@ -803,71 +793,6 @@ private fun ConversionScope.encode(rule: OwnedRule) =
                 targets = rule.diagnostic.targets.map(::encode),
             ),
     )
-
-private fun ConversionScope.encode(expression: ExpressionNode): SkirExpressionNode =
-    when (expression) {
-        is ExpressionNode.Literal -> {
-            SkirExpressionNode.LiteralWrapper(encodeDataValue(expression.value))
-        }
-
-        is ExpressionNode.Read -> {
-            SkirExpressionNode.ReadWrapper(
-                SkirExpressionRead(
-                    binding =
-                        skirout.editor.v1.type_catalog
-                            .ExpressionBindingId(value = expression.binding.value),
-                    path = encodeValuePath(expression.path),
-                ),
-            )
-        }
-
-        is ExpressionNode.Call -> {
-            SkirExpressionNode.CallWrapper(
-                SkirExpressionCall(
-                    operation =
-                        skirout.editor.v1.type_catalog
-                            .OperationId(value = expression.operation.value),
-                    arguments = expression.arguments.map(::encode),
-                ),
-            )
-        }
-
-        is ExpressionNode.And -> {
-            SkirExpressionNode.AndWrapper(SkirBinaryExpression(left = encode(expression.left), right = encode(expression.right)))
-        }
-
-        is ExpressionNode.Or -> {
-            SkirExpressionNode.OrWrapper(SkirBinaryExpression(left = encode(expression.left), right = encode(expression.right)))
-        }
-
-        is ExpressionNode.Conditional -> {
-            SkirExpressionNode.ConditionalWrapper(
-                SkirConditionalExpression(test = encode(expression.test), yes = encode(expression.yes), no = encode(expression.no)),
-            )
-        }
-
-        is ExpressionNode.OrElse -> {
-            SkirExpressionNode.OrElseWrapper(SkirOrElseExpression(input = encode(expression.input), fallback = encode(expression.fallback)))
-        }
-
-        is ExpressionNode.Collection -> {
-            SkirExpressionNode.CollectionWrapper(
-                SkirCollectionExpression(
-                    operation =
-                        skirout.editor.v1.type_catalog
-                            .OperationId(value = expression.operation.value),
-                    input = encode(expression.input),
-                    bindings =
-                        expression.bindings.map {
-                            skirout.editor.v1.type_catalog
-                                .ExpressionBindingId(value = it.value)
-                        },
-                    arguments = expression.arguments.map(::encode),
-                    body = expression.body?.let(::encode),
-                ),
-            )
-        }
-    }
 
 private fun ConversionScope.encode(diagnostic: DeclarationDiagnostic) =
     SkirDeclarationDiagnostic(

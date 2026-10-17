@@ -364,7 +364,7 @@ final _interactionGallery = skir.PresentationNode(
           _node(
             "interaction.conditional",
             skir.PresentationElement.createConditional(
-              condition: skir.ExpressionNode.createRead(
+              condition: skir.ExpressionNode.createInput(
                 binding: _interactionRoot,
                 path: _fieldPath("enabled"),
               ),
@@ -539,7 +539,7 @@ final _interactionGallery = skir.PresentationNode(
           name: "unavailable_label",
         ),
         icon: _literal("material-symbols:edit"),
-        label: skir.ExpressionNode.createRead(
+        label: skir.ExpressionNode.createInput(
           binding: skir.ExpressionBindingId(value: "missing_header_value"),
           path: skir.ValuePath(segments: const []),
         ),
@@ -593,7 +593,7 @@ final _reorderableListItem = skir.PresentationNode(
   nodeId: "interaction.list.item",
   properties: skir.PresentationProperties.defaultInstance,
   element: skir.PresentationElement.createText(
-    value: skir.ExpressionNode.createRead(
+    value: skir.ExpressionNode.createInput(
       binding: _listItemBinding,
       path: skir.ValuePath(segments: const []),
     ),
@@ -617,7 +617,7 @@ final _reorderableListItem = skir.PresentationNode(
       path: skir.ValuePath(segments: const []),
     ),
     title: skir.PresentationHeaderTitle.wrapText(
-      skir.ExpressionNode.createRead(
+      skir.ExpressionNode.createInput(
         binding: _listItemBinding,
         path: skir.ValuePath(segments: const []),
       ),

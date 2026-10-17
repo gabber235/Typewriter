@@ -7177,115 +7177,6 @@ class ExpressionBindingId private constructor(
     }
 }
 
-sealed interface OperationId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.OperationId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class OperationId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.OperationId>? =
-        null,
-): skirout.editor.v1.type_catalog.OperationId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.OperationId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.OperationId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.OperationId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.OperationIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [OperationId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.OperationId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.OperationId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.OperationId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.OperationId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [OperationId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.OperationId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [OperationId] instances. */
-        val serializer get() = _SerializerRegistry.OperationIdSerializer;
-
-        /** Describes the [OperationId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.OperationIdSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface RuleOrigin_OrMutable {
     val owner: skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable;
     val ordinal: kotlin.Int;
@@ -13122,18 +13013,6 @@ private object _SerializerRegistry {
 
     val NullableTypeUseSerializer = build.skir.internal.makeSerializer(NullableTypeUseSerializerImpl);
 
-    val OperationIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:OperationId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.OperationId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.OperationId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val OperationIdSerializer = build.skir.internal.makeSerializer(OperationIdSerializerImpl);
-
     val ParameterKeySerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:ParameterKey",
         doc = "",
@@ -14726,17 +14605,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.value = v },
         );
         NullableTypeUseSerializerImpl.finalizeStruct();
-
-        OperationIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        OperationIdSerializerImpl.finalizeStruct();
 
         ParameterKeySerializerImpl.addField(
             "owner",

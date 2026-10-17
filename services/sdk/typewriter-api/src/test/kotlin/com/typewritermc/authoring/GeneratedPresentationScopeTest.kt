@@ -11,7 +11,6 @@ import com.typewritermc.expression.gte
 import com.typewritermc.expression.literal
 import com.typewritermc.expression.orElse
 import com.typewritermc.presentation.DefaultPresentationRuntime
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.PresentationBuildBinding
 import com.typewritermc.presentation.presentationTemplate
 import com.typewritermc.types.PresentationRole
@@ -20,6 +19,7 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
@@ -27,16 +27,15 @@ import skirout.editor.v1.presentation.PresentationElement
 val GeneratedPresentationScopeTest by testSuite {
     test("generated record value field remains distinct from the configured value") {
         val configured =
-            Expr<Any?, MayBeMissing>(
-                ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
-            )
+            com.typewritermc.expression.input<Any?>(ExpressionBindingId("configured_value"))
         val expressions = ValueFieldExpressionsFactory.create(configured)
 
-        expressions.value.node shouldBe
-            ExpressionNode.Read(
-                ExpressionBindingId("configured_value"),
-                ValuePath(listOf(PathSegment.Field("value"))),
-            )
+        expressions.value.toNode() shouldBe
+            com.typewritermc.expression
+                .input<Any?>(
+                    ExpressionBindingId("configured_value"),
+                    ValuePath(listOf(PathSegment.Field("value"))),
+                ).toNode()
     }
 
     test("generated record expressions compile into symbolic presentation conditions") {

@@ -14,84 +14,220 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct ExpressionRead
+// struct ExpressionInput
 // ==============================================================================
 
+/// Reads an externally supplied input at an authored value path.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ExpressionRead {
+pub struct ExpressionInput {
     pub binding: crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId,
     pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionRead>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionInput>>,
 }
 
-impl ExpressionRead {
-    pub fn default_ref() -> &'static ExpressionRead {
-        static D: std::sync::LazyLock<ExpressionRead> =
-            std::sync::LazyLock::new(ExpressionRead::default);
+impl ExpressionInput {
+    pub fn default_ref() -> &'static ExpressionInput {
+        static D: std::sync::LazyLock<ExpressionInput> =
+            std::sync::LazyLock::new(ExpressionInput::default);
         &D
     }
 }
 
-impl ExpressionRead {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionRead> {
+impl ExpressionInput {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionInput> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ExpressionRead>,
+            crate::skir_client::internal::StructAdapter<ExpressionInput>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/expression.skir",
-                "ExpressionRead",
-                "",
-                |x: &ExpressionRead| &x._unrecognized,
-                |x: &mut ExpressionRead, u| x._unrecognized = u,
+                "ExpressionInput",
+                "Reads an externally supplied input at an authored value path.",
+                |x: &ExpressionInput| &x._unrecognized,
+                |x: &mut ExpressionInput, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ExpressionRead> {
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionInput> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ExpressionRead::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(ExpressionInput::_adapter())
     }
 }
 
 // ==============================================================================
-// struct ExpressionCall
+// struct ExpressionLocal
+// ==============================================================================
+
+/// Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.
+/// Local values are captured for evaluation and may retain their authored location for read evidence.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ExpressionLocal {
+    pub depth: i32,
+    pub slot: i32,
+    pub path: crate::skirout::base::editor::v1::type_catalog::ValuePath,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionLocal>>,
+}
+
+impl ExpressionLocal {
+    pub fn default_ref() -> &'static ExpressionLocal {
+        static D: std::sync::LazyLock<ExpressionLocal> =
+            std::sync::LazyLock::new(ExpressionLocal::default);
+        &D
+    }
+}
+
+impl ExpressionLocal {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionLocal> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionLocal>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionLocal",
+                "Reads a lambda frame. Depth zero is the innermost frame; slots are defined by the enclosing operation.\nLocal values are captured for evaluation and may retain their authored location for read evidence.",
+                |x: &ExpressionLocal| &x._unrecognized,
+                |x: &mut ExpressionLocal, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionLocal> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ExpressionLocal::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ExpressionField
+// ==============================================================================
+
+/// Projects one field while preserving lazy query reads and the originating authored location.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ExpressionField {
+    pub source: ExpressionNode,
+    pub name: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionField>>,
+}
+
+impl ExpressionField {
+    pub fn default_ref() -> &'static ExpressionField {
+        static D: std::sync::LazyLock<ExpressionField> =
+            std::sync::LazyLock::new(ExpressionField::default);
+        &D
+    }
+}
+
+impl ExpressionField {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionField> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionField>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionField",
+                "Projects one field while preserving lazy query reads and the originating authored location.",
+                |x: &ExpressionField| &x._unrecognized,
+                |x: &mut ExpressionField, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionField> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ExpressionField::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum EntryBranch
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum EntryBranch {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<EntryBranch>>),
+    Key,
+    Value,
+}
+
+impl Default for EntryBranch {
+    fn default() -> Self {
+        EntryBranch::Unknown(None)
+    }
+}
+
+impl EntryBranch {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<EntryBranch> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<EntryBranch>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &EntryBranch| match x {
+                    EntryBranch::Unknown(_) => 0,
+                    EntryBranch::Key => 1,
+                    EntryBranch::Value => 2,
+                },
+                |u| EntryBranch::Unknown(Some(u)),
+                |x: &EntryBranch| match x {
+                    EntryBranch::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "EntryBranch",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<EntryBranch> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(EntryBranch::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ExpressionEntryProjection
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct ExpressionCall {
-    pub operation: crate::skirout::base::editor::v1::type_catalog::OperationId,
-    pub arguments: Vec<ExpressionNode>,
+pub struct ExpressionEntryProjection {
+    pub source: ExpressionNode,
+    pub branch: EntryBranch,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionCall>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionEntryProjection>>,
 }
 
-impl ExpressionCall {
-    pub fn default_ref() -> &'static ExpressionCall {
-        static D: std::sync::LazyLock<ExpressionCall> =
-            std::sync::LazyLock::new(ExpressionCall::default);
+impl ExpressionEntryProjection {
+    pub fn default_ref() -> &'static ExpressionEntryProjection {
+        static D: std::sync::LazyLock<ExpressionEntryProjection> =
+            std::sync::LazyLock::new(ExpressionEntryProjection::default);
         &D
     }
 }
 
-impl ExpressionCall {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionCall> {
+impl ExpressionEntryProjection {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionEntryProjection>
+    {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ExpressionCall>,
+            crate::skir_client::internal::StructAdapter<ExpressionEntryProjection>,
         > = std::sync::LazyLock::new(|| {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/expression.skir",
-                "ExpressionCall",
+                "ExpressionEntryProjection",
                 "",
-                |x: &ExpressionCall| &x._unrecognized,
-                |x: &mut ExpressionCall, u| x._unrecognized = u,
+                |x: &ExpressionEntryProjection| &x._unrecognized,
+                |x: &mut ExpressionEntryProjection, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<ExpressionCall> {
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionEntryProjection> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ExpressionCall::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(
+            ExpressionEntryProjection::_adapter(),
+        )
     }
 }
 
@@ -184,6 +320,8 @@ impl ConditionalExpression {
 // struct OrElseExpression
 // ==============================================================================
 
+/// Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain
+/// failures instead of being hidden by the fallback.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct OrElseExpression {
     pub input: ExpressionNode,
@@ -208,7 +346,7 @@ impl OrElseExpression {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/expression.skir",
                 "OrElseExpression",
-                "",
+                "Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain\nfailures instead of being hidden by the fallback.",
                 |x: &OrElseExpression| &x._unrecognized,
                 |x: &mut OrElseExpression, u| x._unrecognized = u,
             )
@@ -222,46 +360,2176 @@ impl OrElseExpression {
 }
 
 // ==============================================================================
-// struct CollectionExpression
+// enum TextUnaryOperation
 // ==============================================================================
 
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct CollectionExpression {
-    pub operation: crate::skirout::base::editor::v1::type_catalog::OperationId,
-    pub input: ExpressionNode,
-    pub bindings: Vec<crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId>,
-    pub arguments: Vec<ExpressionNode>,
-    pub body: Option<ExpressionNode>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionExpression>>,
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextUnaryOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<TextUnaryOperation>>),
+    Value,
+    Trim,
+    Lower,
+    Upper,
+    Title,
 }
 
-impl CollectionExpression {
-    pub fn default_ref() -> &'static CollectionExpression {
-        static D: std::sync::LazyLock<CollectionExpression> =
-            std::sync::LazyLock::new(CollectionExpression::default);
-        &D
+impl Default for TextUnaryOperation {
+    fn default() -> Self {
+        TextUnaryOperation::Unknown(None)
     }
 }
 
-impl CollectionExpression {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CollectionExpression> {
+impl TextUnaryOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TextUnaryOperation> {
         static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<CollectionExpression>,
+            crate::skir_client::internal::EnumAdapter<TextUnaryOperation>,
         > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &TextUnaryOperation| match x {
+                    TextUnaryOperation::Unknown(_) => 0,
+                    TextUnaryOperation::Value => 1,
+                    TextUnaryOperation::Trim => 2,
+                    TextUnaryOperation::Lower => 3,
+                    TextUnaryOperation::Upper => 4,
+                    TextUnaryOperation::Title => 5,
+                },
+                |u| TextUnaryOperation::Unknown(Some(u)),
+                |x: &TextUnaryOperation| match x {
+                    TextUnaryOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
                 "editor/v1/expression.skir",
-                "CollectionExpression",
+                "TextUnaryOperation",
                 "",
-                |x: &CollectionExpression| &x._unrecognized,
-                |x: &mut CollectionExpression, u| x._unrecognized = u,
             )
         });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<CollectionExpression> {
+    pub fn serializer() -> crate::skir_client::Serializer<TextUnaryOperation> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(CollectionExpression::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(TextUnaryOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TextUnaryExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextUnaryExpression {
+    pub operation: TextUnaryOperation,
+    pub source: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextUnaryExpression>>,
+}
+
+impl TextUnaryExpression {
+    pub fn default_ref() -> &'static TextUnaryExpression {
+        static D: std::sync::LazyLock<TextUnaryExpression> =
+            std::sync::LazyLock::new(TextUnaryExpression::default);
+        &D
+    }
+}
+
+impl TextUnaryExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextUnaryExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextUnaryExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextUnaryExpression",
+                "",
+                |x: &TextUnaryExpression| &x._unrecognized,
+                |x: &mut TextUnaryExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextUnaryExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TextUnaryExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum TextCompareOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TextCompareOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<TextCompareOperation>>),
+    Contains,
+    StartsWith,
+    EndsWith,
+}
+
+impl Default for TextCompareOperation {
+    fn default() -> Self {
+        TextCompareOperation::Unknown(None)
+    }
+}
+
+impl TextCompareOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TextCompareOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<TextCompareOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &TextCompareOperation| match x {
+                    TextCompareOperation::Unknown(_) => 0,
+                    TextCompareOperation::Contains => 1,
+                    TextCompareOperation::StartsWith => 2,
+                    TextCompareOperation::EndsWith => 3,
+                },
+                |u| TextCompareOperation::Unknown(Some(u)),
+                |x: &TextCompareOperation| match x {
+                    TextCompareOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "TextCompareOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextCompareOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(TextCompareOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TextCompareExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextCompareExpression {
+    pub operation: TextCompareOperation,
+    pub source: ExpressionNode,
+    pub other: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextCompareExpression>>,
+}
+
+impl TextCompareExpression {
+    pub fn default_ref() -> &'static TextCompareExpression {
+        static D: std::sync::LazyLock<TextCompareExpression> =
+            std::sync::LazyLock::new(TextCompareExpression::default);
+        &D
+    }
+}
+
+impl TextCompareExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextCompareExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextCompareExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextCompareExpression",
+                "",
+                |x: &TextCompareExpression| &x._unrecognized,
+                |x: &mut TextCompareExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextCompareExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TextCompareExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct TextReplaceExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextReplaceExpression {
+    pub source: ExpressionNode,
+    pub target: ExpressionNode,
+    pub replacement: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextReplaceExpression>>,
+}
+
+impl TextReplaceExpression {
+    pub fn default_ref() -> &'static TextReplaceExpression {
+        static D: std::sync::LazyLock<TextReplaceExpression> =
+            std::sync::LazyLock::new(TextReplaceExpression::default);
+        &D
+    }
+}
+
+impl TextReplaceExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextReplaceExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextReplaceExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextReplaceExpression",
+                "",
+                |x: &TextReplaceExpression| &x._unrecognized,
+                |x: &mut TextReplaceExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextReplaceExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TextReplaceExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct TextSplitExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextSplitExpression {
+    pub source: ExpressionNode,
+    pub separator: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextSplitExpression>>,
+}
+
+impl TextSplitExpression {
+    pub fn default_ref() -> &'static TextSplitExpression {
+        static D: std::sync::LazyLock<TextSplitExpression> =
+            std::sync::LazyLock::new(TextSplitExpression::default);
+        &D
+    }
+}
+
+impl TextSplitExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextSplitExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextSplitExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextSplitExpression",
+                "",
+                |x: &TextSplitExpression| &x._unrecognized,
+                |x: &mut TextSplitExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextSplitExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TextSplitExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TextJoinExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextJoinExpression {
+    pub source: ExpressionNode,
+    pub separator: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextJoinExpression>>,
+}
+
+impl TextJoinExpression {
+    pub fn default_ref() -> &'static TextJoinExpression {
+        static D: std::sync::LazyLock<TextJoinExpression> =
+            std::sync::LazyLock::new(TextJoinExpression::default);
+        &D
+    }
+}
+
+impl TextJoinExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextJoinExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextJoinExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextJoinExpression",
+                "",
+                |x: &TextJoinExpression| &x._unrecognized,
+                |x: &mut TextJoinExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextJoinExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(TextJoinExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct TextSubstringExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextSubstringExpression {
+    pub source: ExpressionNode,
+    pub start: ExpressionNode,
+    pub end: Option<ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextSubstringExpression>>,
+}
+
+impl TextSubstringExpression {
+    pub fn default_ref() -> &'static TextSubstringExpression {
+        static D: std::sync::LazyLock<TextSubstringExpression> =
+            std::sync::LazyLock::new(TextSubstringExpression::default);
+        &D
+    }
+}
+
+impl TextSubstringExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextSubstringExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextSubstringExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextSubstringExpression",
+                "",
+                |x: &TextSubstringExpression| &x._unrecognized,
+                |x: &mut TextSubstringExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextSubstringExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TextSubstringExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct TextInterpolateExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TextInterpolateExpression {
+    pub parts: Vec<ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TextInterpolateExpression>>,
+}
+
+impl TextInterpolateExpression {
+    pub fn default_ref() -> &'static TextInterpolateExpression {
+        static D: std::sync::LazyLock<TextInterpolateExpression> =
+            std::sync::LazyLock::new(TextInterpolateExpression::default);
+        &D
+    }
+}
+
+impl TextInterpolateExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TextInterpolateExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TextInterpolateExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TextInterpolateExpression",
+                "",
+                |x: &TextInterpolateExpression| &x._unrecognized,
+                |x: &mut TextInterpolateExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TextInterpolateExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TextInterpolateExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum RegexMatchMode
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RegexMatchMode {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<RegexMatchMode>>),
+    Search,
+    FullMatch,
+}
+
+impl Default for RegexMatchMode {
+    fn default() -> Self {
+        RegexMatchMode::Unknown(None)
+    }
+}
+
+impl RegexMatchMode {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RegexMatchMode> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RegexMatchMode>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RegexMatchMode| match x {
+                    RegexMatchMode::Unknown(_) => 0,
+                    RegexMatchMode::Search => 1,
+                    RegexMatchMode::FullMatch => 2,
+                },
+                |u| RegexMatchMode::Unknown(Some(u)),
+                |x: &RegexMatchMode| match x {
+                    RegexMatchMode::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "RegexMatchMode",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegexMatchMode> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(RegexMatchMode::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RegexTestExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RegexTestExpression {
+    pub mode: RegexMatchMode,
+    pub source: ExpressionNode,
+    pub pattern: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RegexTestExpression>>,
+}
+
+impl RegexTestExpression {
+    pub fn default_ref() -> &'static RegexTestExpression {
+        static D: std::sync::LazyLock<RegexTestExpression> =
+            std::sync::LazyLock::new(RegexTestExpression::default);
+        &D
+    }
+}
+
+impl RegexTestExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegexTestExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RegexTestExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RegexTestExpression",
+                "",
+                |x: &RegexTestExpression| &x._unrecognized,
+                |x: &mut RegexTestExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegexTestExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RegexTestExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RegexCaptureExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RegexCaptureExpression {
+    pub source: ExpressionNode,
+    pub pattern: ExpressionNode,
+    pub group: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RegexCaptureExpression>>,
+}
+
+impl RegexCaptureExpression {
+    pub fn default_ref() -> &'static RegexCaptureExpression {
+        static D: std::sync::LazyLock<RegexCaptureExpression> =
+            std::sync::LazyLock::new(RegexCaptureExpression::default);
+        &D
+    }
+}
+
+impl RegexCaptureExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegexCaptureExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RegexCaptureExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RegexCaptureExpression",
+                "",
+                |x: &RegexCaptureExpression| &x._unrecognized,
+                |x: &mut RegexCaptureExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegexCaptureExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RegexCaptureExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RegexReplaceExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RegexReplaceExpression {
+    pub source: ExpressionNode,
+    pub pattern: ExpressionNode,
+    pub replacement: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RegexReplaceExpression>>,
+}
+
+impl RegexReplaceExpression {
+    pub fn default_ref() -> &'static RegexReplaceExpression {
+        static D: std::sync::LazyLock<RegexReplaceExpression> =
+            std::sync::LazyLock::new(RegexReplaceExpression::default);
+        &D
+    }
+}
+
+impl RegexReplaceExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RegexReplaceExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RegexReplaceExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RegexReplaceExpression",
+                "",
+                |x: &RegexReplaceExpression| &x._unrecognized,
+                |x: &mut RegexReplaceExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RegexReplaceExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RegexReplaceExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum ValueCompareOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValueCompareOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ValueCompareOperation>>),
+    Equal,
+    NotEqual,
+}
+
+impl Default for ValueCompareOperation {
+    fn default() -> Self {
+        ValueCompareOperation::Unknown(None)
+    }
+}
+
+impl ValueCompareOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ValueCompareOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ValueCompareOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ValueCompareOperation| match x {
+                    ValueCompareOperation::Unknown(_) => 0,
+                    ValueCompareOperation::Equal => 1,
+                    ValueCompareOperation::NotEqual => 2,
+                },
+                |u| ValueCompareOperation::Unknown(Some(u)),
+                |x: &ValueCompareOperation| match x {
+                    ValueCompareOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "ValueCompareOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ValueCompareOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ValueCompareOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ValueCompareExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ValueCompareExpression {
+    pub operation: ValueCompareOperation,
+    pub left: ExpressionNode,
+    pub right: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ValueCompareExpression>>,
+}
+
+impl ValueCompareExpression {
+    pub fn default_ref() -> &'static ValueCompareExpression {
+        static D: std::sync::LazyLock<ValueCompareExpression> =
+            std::sync::LazyLock::new(ValueCompareExpression::default);
+        &D
+    }
+}
+
+impl ValueCompareExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ValueCompareExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ValueCompareExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ValueCompareExpression",
+                "",
+                |x: &ValueCompareExpression| &x._unrecognized,
+                |x: &mut ValueCompareExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ValueCompareExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ValueCompareExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum NumberArithmeticOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum NumberArithmeticOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<NumberArithmeticOperation>>),
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Remainder,
+}
+
+impl Default for NumberArithmeticOperation {
+    fn default() -> Self {
+        NumberArithmeticOperation::Unknown(None)
+    }
+}
+
+impl NumberArithmeticOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<NumberArithmeticOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<NumberArithmeticOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &NumberArithmeticOperation| match x {
+                    NumberArithmeticOperation::Unknown(_) => 0,
+                    NumberArithmeticOperation::Add => 1,
+                    NumberArithmeticOperation::Subtract => 2,
+                    NumberArithmeticOperation::Multiply => 3,
+                    NumberArithmeticOperation::Divide => 4,
+                    NumberArithmeticOperation::Remainder => 5,
+                },
+                |u| NumberArithmeticOperation::Unknown(Some(u)),
+                |x: &NumberArithmeticOperation| match x {
+                    NumberArithmeticOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "NumberArithmeticOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberArithmeticOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            NumberArithmeticOperation::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct NumberArithmeticExpression
+// ==============================================================================
+
+/// Evaluates at least two operands in one arithmetic operation, preserving numeric promotion
+/// across the complete argument sequence.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NumberArithmeticExpression {
+    pub operation: NumberArithmeticOperation,
+    pub first: ExpressionNode,
+    pub second: ExpressionNode,
+    pub remaining: Vec<ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NumberArithmeticExpression>>,
+}
+
+impl NumberArithmeticExpression {
+    pub fn default_ref() -> &'static NumberArithmeticExpression {
+        static D: std::sync::LazyLock<NumberArithmeticExpression> =
+            std::sync::LazyLock::new(NumberArithmeticExpression::default);
+        &D
+    }
+}
+
+impl NumberArithmeticExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NumberArithmeticExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<NumberArithmeticExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "NumberArithmeticExpression",
+                "Evaluates at least two operands in one arithmetic operation, preserving numeric promotion\nacross the complete argument sequence.",
+                |x: &NumberArithmeticExpression| &x._unrecognized,
+                |x: &mut NumberArithmeticExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberArithmeticExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            NumberArithmeticExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum NumberCompareOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum NumberCompareOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<NumberCompareOperation>>),
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+}
+
+impl Default for NumberCompareOperation {
+    fn default() -> Self {
+        NumberCompareOperation::Unknown(None)
+    }
+}
+
+impl NumberCompareOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<NumberCompareOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<NumberCompareOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &NumberCompareOperation| match x {
+                    NumberCompareOperation::Unknown(_) => 0,
+                    NumberCompareOperation::Greater => 1,
+                    NumberCompareOperation::GreaterEqual => 2,
+                    NumberCompareOperation::Less => 3,
+                    NumberCompareOperation::LessEqual => 4,
+                },
+                |u| NumberCompareOperation::Unknown(Some(u)),
+                |x: &NumberCompareOperation| match x {
+                    NumberCompareOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "NumberCompareOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberCompareOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(NumberCompareOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct NumberCompareExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NumberCompareExpression {
+    pub operation: NumberCompareOperation,
+    pub left: ExpressionNode,
+    pub right: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NumberCompareExpression>>,
+}
+
+impl NumberCompareExpression {
+    pub fn default_ref() -> &'static NumberCompareExpression {
+        static D: std::sync::LazyLock<NumberCompareExpression> =
+            std::sync::LazyLock::new(NumberCompareExpression::default);
+        &D
+    }
+}
+
+impl NumberCompareExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NumberCompareExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<NumberCompareExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "NumberCompareExpression",
+                "",
+                |x: &NumberCompareExpression| &x._unrecognized,
+                |x: &mut NumberCompareExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberCompareExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            NumberCompareExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct NumberRoundExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NumberRoundExpression {
+    pub source: ExpressionNode,
+    pub increment: ExpressionNode,
+    pub rounding: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NumberRoundExpression>>,
+}
+
+impl NumberRoundExpression {
+    pub fn default_ref() -> &'static NumberRoundExpression {
+        static D: std::sync::LazyLock<NumberRoundExpression> =
+            std::sync::LazyLock::new(NumberRoundExpression::default);
+        &D
+    }
+}
+
+impl NumberRoundExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NumberRoundExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<NumberRoundExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "NumberRoundExpression",
+                "",
+                |x: &NumberRoundExpression| &x._unrecognized,
+                |x: &mut NumberRoundExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberRoundExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            NumberRoundExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct NumberFormatExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct NumberFormatExpression {
+    pub source: ExpressionNode,
+    pub fraction_digits: ExpressionNode,
+    pub locale: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<NumberFormatExpression>>,
+}
+
+impl NumberFormatExpression {
+    pub fn default_ref() -> &'static NumberFormatExpression {
+        static D: std::sync::LazyLock<NumberFormatExpression> =
+            std::sync::LazyLock::new(NumberFormatExpression::default);
+        &D
+    }
+}
+
+impl NumberFormatExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<NumberFormatExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<NumberFormatExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "NumberFormatExpression",
+                "",
+                |x: &NumberFormatExpression| &x._unrecognized,
+                |x: &mut NumberFormatExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<NumberFormatExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            NumberFormatExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct DurationFormatExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DurationFormatExpression {
+    pub source: ExpressionNode,
+    pub units: ExpressionNode,
+    pub fraction_digits: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DurationFormatExpression>>,
+}
+
+impl DurationFormatExpression {
+    pub fn default_ref() -> &'static DurationFormatExpression {
+        static D: std::sync::LazyLock<DurationFormatExpression> =
+            std::sync::LazyLock::new(DurationFormatExpression::default);
+        &D
+    }
+}
+
+impl DurationFormatExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DurationFormatExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DurationFormatExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "DurationFormatExpression",
+                "",
+                |x: &DurationFormatExpression| &x._unrecognized,
+                |x: &mut DurationFormatExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DurationFormatExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            DurationFormatExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct TimestampFormatExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct TimestampFormatExpression {
+    pub source: ExpressionNode,
+    pub pattern: ExpressionNode,
+    pub zone: ExpressionNode,
+    pub locale: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TimestampFormatExpression>>,
+}
+
+impl TimestampFormatExpression {
+    pub fn default_ref() -> &'static TimestampFormatExpression {
+        static D: std::sync::LazyLock<TimestampFormatExpression> =
+            std::sync::LazyLock::new(TimestampFormatExpression::default);
+        &D
+    }
+}
+
+impl TimestampFormatExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TimestampFormatExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<TimestampFormatExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "TimestampFormatExpression",
+                "",
+                |x: &TimestampFormatExpression| &x._unrecognized,
+                |x: &mut TimestampFormatExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TimestampFormatExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            TimestampFormatExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct CollectionAccessExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CollectionAccessExpression {
+    pub source: ExpressionNode,
+    pub index: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionAccessExpression>>,
+}
+
+impl CollectionAccessExpression {
+    pub fn default_ref() -> &'static CollectionAccessExpression {
+        static D: std::sync::LazyLock<CollectionAccessExpression> =
+            std::sync::LazyLock::new(CollectionAccessExpression::default);
+        &D
+    }
+}
+
+impl CollectionAccessExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CollectionAccessExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CollectionAccessExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "CollectionAccessExpression",
+                "",
+                |x: &CollectionAccessExpression| &x._unrecognized,
+                |x: &mut CollectionAccessExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CollectionAccessExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            CollectionAccessExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct CollectionContainsExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CollectionContainsExpression {
+    pub source: ExpressionNode,
+    pub value: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionContainsExpression>>,
+}
+
+impl CollectionContainsExpression {
+    pub fn default_ref() -> &'static CollectionContainsExpression {
+        static D: std::sync::LazyLock<CollectionContainsExpression> =
+            std::sync::LazyLock::new(CollectionContainsExpression::default);
+        &D
+    }
+}
+
+impl CollectionContainsExpression {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<CollectionContainsExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CollectionContainsExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "CollectionContainsExpression",
+                "",
+                |x: &CollectionContainsExpression| &x._unrecognized,
+                |x: &mut CollectionContainsExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CollectionContainsExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            CollectionContainsExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct ColorWithAlphaExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ColorWithAlphaExpression {
+    pub source: ExpressionNode,
+    pub alpha: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ColorWithAlphaExpression>>,
+}
+
+impl ColorWithAlphaExpression {
+    pub fn default_ref() -> &'static ColorWithAlphaExpression {
+        static D: std::sync::LazyLock<ColorWithAlphaExpression> =
+            std::sync::LazyLock::new(ColorWithAlphaExpression::default);
+        &D
+    }
+}
+
+impl ColorWithAlphaExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ColorWithAlphaExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ColorWithAlphaExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ColorWithAlphaExpression",
+                "",
+                |x: &ColorWithAlphaExpression| &x._unrecognized,
+                |x: &mut ColorWithAlphaExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ColorWithAlphaExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ColorWithAlphaExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum RuleUnaryOperation
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RuleUnaryOperation {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<RuleUnaryOperation>>),
+    NonEmpty,
+    NonBlank,
+    SingleLine,
+    Positive,
+    NonNegative,
+    Unique,
+    NotNull,
+    Opaque,
+}
+
+impl Default for RuleUnaryOperation {
+    fn default() -> Self {
+        RuleUnaryOperation::Unknown(None)
+    }
+}
+
+impl RuleUnaryOperation {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<RuleUnaryOperation> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<RuleUnaryOperation>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &RuleUnaryOperation| match x {
+                    RuleUnaryOperation::Unknown(_) => 0,
+                    RuleUnaryOperation::NonEmpty => 1,
+                    RuleUnaryOperation::NonBlank => 2,
+                    RuleUnaryOperation::SingleLine => 3,
+                    RuleUnaryOperation::Positive => 4,
+                    RuleUnaryOperation::NonNegative => 5,
+                    RuleUnaryOperation::Unique => 6,
+                    RuleUnaryOperation::NotNull => 7,
+                    RuleUnaryOperation::Opaque => 8,
+                },
+                |u| RuleUnaryOperation::Unknown(Some(u)),
+                |x: &RuleUnaryOperation| match x {
+                    RuleUnaryOperation::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "RuleUnaryOperation",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleUnaryOperation> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(RuleUnaryOperation::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RuleUnaryExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleUnaryExpression {
+    pub operation: RuleUnaryOperation,
+    pub source: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleUnaryExpression>>,
+}
+
+impl RuleUnaryExpression {
+    pub fn default_ref() -> &'static RuleUnaryExpression {
+        static D: std::sync::LazyLock<RuleUnaryExpression> =
+            std::sync::LazyLock::new(RuleUnaryExpression::default);
+        &D
+    }
+}
+
+impl RuleUnaryExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleUnaryExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleUnaryExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleUnaryExpression",
+                "",
+                |x: &RuleUnaryExpression| &x._unrecognized,
+                |x: &mut RuleUnaryExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleUnaryExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RuleUnaryExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RuleOneOfExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleOneOfExpression {
+    pub source: ExpressionNode,
+    pub first_candidate: ExpressionNode,
+    pub remaining_candidates: Vec<ExpressionNode>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleOneOfExpression>>,
+}
+
+impl RuleOneOfExpression {
+    pub fn default_ref() -> &'static RuleOneOfExpression {
+        static D: std::sync::LazyLock<RuleOneOfExpression> =
+            std::sync::LazyLock::new(RuleOneOfExpression::default);
+        &D
+    }
+}
+
+impl RuleOneOfExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleOneOfExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleOneOfExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleOneOfExpression",
+                "",
+                |x: &RuleOneOfExpression| &x._unrecognized,
+                |x: &mut RuleOneOfExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleOneOfExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(RuleOneOfExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum BoundDirection
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum BoundDirection {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<BoundDirection>>),
+    Minimum,
+    Maximum,
+}
+
+impl Default for BoundDirection {
+    fn default() -> Self {
+        BoundDirection::Unknown(None)
+    }
+}
+
+impl BoundDirection {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<BoundDirection> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<BoundDirection>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &BoundDirection| match x {
+                    BoundDirection::Unknown(_) => 0,
+                    BoundDirection::Minimum => 1,
+                    BoundDirection::Maximum => 2,
+                },
+                |u| BoundDirection::Unknown(Some(u)),
+                |x: &BoundDirection| match x {
+                    BoundDirection::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "BoundDirection",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<BoundDirection> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(BoundDirection::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SizeBoundMetric
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SizeBoundMetric {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SizeBoundMetric>>),
+    TextLength,
+    TextLines,
+    CollectionItems,
+}
+
+impl Default for SizeBoundMetric {
+    fn default() -> Self {
+        SizeBoundMetric::Unknown(None)
+    }
+}
+
+impl SizeBoundMetric {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SizeBoundMetric> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<SizeBoundMetric>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &SizeBoundMetric| match x {
+                    SizeBoundMetric::Unknown(_) => 0,
+                    SizeBoundMetric::TextLength => 1,
+                    SizeBoundMetric::TextLines => 2,
+                    SizeBoundMetric::CollectionItems => 3,
+                },
+                |u| SizeBoundMetric::Unknown(Some(u)),
+                |x: &SizeBoundMetric| match x {
+                    SizeBoundMetric::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "SizeBoundMetric",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SizeBoundMetric> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SizeBoundMetric::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum SizeRangeMetric
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum SizeRangeMetric {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<SizeRangeMetric>>),
+    TextLength,
+    CollectionItems,
+}
+
+impl Default for SizeRangeMetric {
+    fn default() -> Self {
+        SizeRangeMetric::Unknown(None)
+    }
+}
+
+impl SizeRangeMetric {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<SizeRangeMetric> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<SizeRangeMetric>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &SizeRangeMetric| match x {
+                    SizeRangeMetric::Unknown(_) => 0,
+                    SizeRangeMetric::TextLength => 1,
+                    SizeRangeMetric::CollectionItems => 2,
+                },
+                |u| SizeRangeMetric::Unknown(Some(u)),
+                |x: &SizeRangeMetric| match x {
+                    SizeRangeMetric::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "SizeRangeMetric",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SizeRangeMetric> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(SizeRangeMetric::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct RuleSizeBoundExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleSizeBoundExpression {
+    pub metric: SizeBoundMetric,
+    pub direction: BoundDirection,
+    pub source: ExpressionNode,
+    pub bound: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleSizeBoundExpression>>,
+}
+
+impl RuleSizeBoundExpression {
+    pub fn default_ref() -> &'static RuleSizeBoundExpression {
+        static D: std::sync::LazyLock<RuleSizeBoundExpression> =
+            std::sync::LazyLock::new(RuleSizeBoundExpression::default);
+        &D
+    }
+}
+
+impl RuleSizeBoundExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleSizeBoundExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleSizeBoundExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleSizeBoundExpression",
+                "",
+                |x: &RuleSizeBoundExpression| &x._unrecognized,
+                |x: &mut RuleSizeBoundExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleSizeBoundExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleSizeBoundExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleSizeRangeExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleSizeRangeExpression {
+    pub metric: SizeRangeMetric,
+    pub source: ExpressionNode,
+    pub minimum: ExpressionNode,
+    pub maximum: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleSizeRangeExpression>>,
+}
+
+impl RuleSizeRangeExpression {
+    pub fn default_ref() -> &'static RuleSizeRangeExpression {
+        static D: std::sync::LazyLock<RuleSizeRangeExpression> =
+            std::sync::LazyLock::new(RuleSizeRangeExpression::default);
+        &D
+    }
+}
+
+impl RuleSizeRangeExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleSizeRangeExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleSizeRangeExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleSizeRangeExpression",
+                "",
+                |x: &RuleSizeRangeExpression| &x._unrecognized,
+                |x: &mut RuleSizeRangeExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleSizeRangeExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleSizeRangeExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleNumericBoundExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleNumericBoundExpression {
+    pub direction: BoundDirection,
+    pub source: ExpressionNode,
+    pub bound: ExpressionNode,
+    pub inclusive: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleNumericBoundExpression>>,
+}
+
+impl RuleNumericBoundExpression {
+    pub fn default_ref() -> &'static RuleNumericBoundExpression {
+        static D: std::sync::LazyLock<RuleNumericBoundExpression> =
+            std::sync::LazyLock::new(RuleNumericBoundExpression::default);
+        &D
+    }
+}
+
+impl RuleNumericBoundExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleNumericBoundExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleNumericBoundExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleNumericBoundExpression",
+                "",
+                |x: &RuleNumericBoundExpression| &x._unrecognized,
+                |x: &mut RuleNumericBoundExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleNumericBoundExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleNumericBoundExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleNumericRangeExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleNumericRangeExpression {
+    pub source: ExpressionNode,
+    pub minimum: ExpressionNode,
+    pub maximum: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleNumericRangeExpression>>,
+}
+
+impl RuleNumericRangeExpression {
+    pub fn default_ref() -> &'static RuleNumericRangeExpression {
+        static D: std::sync::LazyLock<RuleNumericRangeExpression> =
+            std::sync::LazyLock::new(RuleNumericRangeExpression::default);
+        &D
+    }
+}
+
+impl RuleNumericRangeExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleNumericRangeExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleNumericRangeExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleNumericRangeExpression",
+                "",
+                |x: &RuleNumericRangeExpression| &x._unrecognized,
+                |x: &mut RuleNumericRangeExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleNumericRangeExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleNumericRangeExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleMultipleOfExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleMultipleOfExpression {
+    pub source: ExpressionNode,
+    pub divisor: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleMultipleOfExpression>>,
+}
+
+impl RuleMultipleOfExpression {
+    pub fn default_ref() -> &'static RuleMultipleOfExpression {
+        static D: std::sync::LazyLock<RuleMultipleOfExpression> =
+            std::sync::LazyLock::new(RuleMultipleOfExpression::default);
+        &D
+    }
+}
+
+impl RuleMultipleOfExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleMultipleOfExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleMultipleOfExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleMultipleOfExpression",
+                "",
+                |x: &RuleMultipleOfExpression| &x._unrecognized,
+                |x: &mut RuleMultipleOfExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleMultipleOfExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleMultipleOfExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleMaximumScaleExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleMaximumScaleExpression {
+    pub source: ExpressionNode,
+    pub scale: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleMaximumScaleExpression>>,
+}
+
+impl RuleMaximumScaleExpression {
+    pub fn default_ref() -> &'static RuleMaximumScaleExpression {
+        static D: std::sync::LazyLock<RuleMaximumScaleExpression> =
+            std::sync::LazyLock::new(RuleMaximumScaleExpression::default);
+        &D
+    }
+}
+
+impl RuleMaximumScaleExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuleMaximumScaleExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleMaximumScaleExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleMaximumScaleExpression",
+                "",
+                |x: &RuleMaximumScaleExpression| &x._unrecognized,
+                |x: &mut RuleMaximumScaleExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleMaximumScaleExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleMaximumScaleExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum TimestampBoundDirection
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TimestampBoundDirection {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<TimestampBoundDirection>>),
+    NotBefore,
+    NotAfter,
+}
+
+impl Default for TimestampBoundDirection {
+    fn default() -> Self {
+        TimestampBoundDirection::Unknown(None)
+    }
+}
+
+impl TimestampBoundDirection {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<TimestampBoundDirection> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<TimestampBoundDirection>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &TimestampBoundDirection| match x {
+                    TimestampBoundDirection::Unknown(_) => 0,
+                    TimestampBoundDirection::NotBefore => 1,
+                    TimestampBoundDirection::NotAfter => 2,
+                },
+                |u| TimestampBoundDirection::Unknown(Some(u)),
+                |x: &TimestampBoundDirection| match x {
+                    TimestampBoundDirection::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "TimestampBoundDirection",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<TimestampBoundDirection> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(
+            TimestampBoundDirection::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct RuleTimestampBoundExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct RuleTimestampBoundExpression {
+    pub direction: TimestampBoundDirection,
+    pub source: ExpressionNode,
+    pub bound: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuleTimestampBoundExpression>>,
+}
+
+impl RuleTimestampBoundExpression {
+    pub fn default_ref() -> &'static RuleTimestampBoundExpression {
+        static D: std::sync::LazyLock<RuleTimestampBoundExpression> =
+            std::sync::LazyLock::new(RuleTimestampBoundExpression::default);
+        &D
+    }
+}
+
+impl RuleTimestampBoundExpression {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<RuleTimestampBoundExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<RuleTimestampBoundExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "RuleTimestampBoundExpression",
+                "",
+                |x: &RuleTimestampBoundExpression| &x._unrecognized,
+                |x: &mut RuleTimestampBoundExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<RuleTimestampBoundExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            RuleTimestampBoundExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct UnaryCollectionExpression
+// ==============================================================================
+
+/// The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct UnaryCollectionExpression {
+    pub source: ExpressionNode,
+    pub body: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<UnaryCollectionExpression>>,
+}
+
+impl UnaryCollectionExpression {
+    pub fn default_ref() -> &'static UnaryCollectionExpression {
+        static D: std::sync::LazyLock<UnaryCollectionExpression> =
+            std::sync::LazyLock::new(UnaryCollectionExpression::default);
+        &D
+    }
+}
+
+impl UnaryCollectionExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<UnaryCollectionExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<UnaryCollectionExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "UnaryCollectionExpression",
+                "The body receives the current item at slot zero, except reduce, whose slots are accumulator then item.",
+                |x: &UnaryCollectionExpression| &x._unrecognized,
+                |x: &mut UnaryCollectionExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<UnaryCollectionExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            UnaryCollectionExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct FoldExpression
+// ==============================================================================
+
+/// Evaluates source and initial outside the body frame. The body slots are accumulator then item.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct FoldExpression {
+    pub source: ExpressionNode,
+    pub initial: ExpressionNode,
+    pub body: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<FoldExpression>>,
+}
+
+impl FoldExpression {
+    pub fn default_ref() -> &'static FoldExpression {
+        static D: std::sync::LazyLock<FoldExpression> =
+            std::sync::LazyLock::new(FoldExpression::default);
+        &D
+    }
+}
+
+impl FoldExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<FoldExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<FoldExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "FoldExpression",
+                "Evaluates source and initial outside the body frame. The body slots are accumulator then item.",
+                |x: &FoldExpression| &x._unrecognized,
+                |x: &mut FoldExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<FoldExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(FoldExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SortByExpression
+// ==============================================================================
+
+/// Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SortByExpression {
+    pub source: ExpressionNode,
+    pub descending: Option<ExpressionNode>,
+    pub key: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SortByExpression>>,
+}
+
+impl SortByExpression {
+    pub fn default_ref() -> &'static SortByExpression {
+        static D: std::sync::LazyLock<SortByExpression> =
+            std::sync::LazyLock::new(SortByExpression::default);
+        &D
+    }
+}
+
+impl SortByExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SortByExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SortByExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "SortByExpression",
+                "Evaluates each key with the item in slot zero. The descending expression belongs to the outer scope.",
+                |x: &SortByExpression| &x._unrecognized,
+                |x: &mut SortByExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SortByExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SortByExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct SortWithExpression
+// ==============================================================================
+
+/// The comparator slots are the left item then the right item.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct SortWithExpression {
+    pub source: ExpressionNode,
+    pub comparator: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<SortWithExpression>>,
+}
+
+impl SortWithExpression {
+    pub fn default_ref() -> &'static SortWithExpression {
+        static D: std::sync::LazyLock<SortWithExpression> =
+            std::sync::LazyLock::new(SortWithExpression::default);
+        &D
+    }
+}
+
+impl SortWithExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<SortWithExpression> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<SortWithExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "SortWithExpression",
+                "The comparator slots are the left item then the right item.",
+                |x: &SortWithExpression| &x._unrecognized,
+                |x: &mut SortWithExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<SortWithExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(SortWithExpression::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct CollectionSliceExpression
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CollectionSliceExpression {
+    pub source: ExpressionNode,
+    pub count: ExpressionNode,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CollectionSliceExpression>>,
+}
+
+impl CollectionSliceExpression {
+    pub fn default_ref() -> &'static CollectionSliceExpression {
+        static D: std::sync::LazyLock<CollectionSliceExpression> =
+            std::sync::LazyLock::new(CollectionSliceExpression::default);
+        &D
+    }
+}
+
+impl CollectionSliceExpression {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CollectionSliceExpression>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CollectionSliceExpression>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "CollectionSliceExpression",
+                "",
+                |x: &CollectionSliceExpression| &x._unrecognized,
+                |x: &mut CollectionSliceExpression, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CollectionSliceExpression> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            CollectionSliceExpression::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct ResourceIdentityQuerySource
+// ==============================================================================
+
+/// An identity expression needs an explicit catalog type witness to admit resource reads.
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ResourceIdentityQuerySource {
+    pub identity: ExpressionNode,
+    pub target: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ResourceIdentityQuerySource>>,
+}
+
+impl ResourceIdentityQuerySource {
+    pub fn default_ref() -> &'static ResourceIdentityQuerySource {
+        static D: std::sync::LazyLock<ResourceIdentityQuerySource> =
+            std::sync::LazyLock::new(ResourceIdentityQuerySource::default);
+        &D
+    }
+}
+
+impl ResourceIdentityQuerySource {
+    fn _adapter()
+    -> &'static crate::skir_client::internal::StructAdapter<ResourceIdentityQuerySource> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ResourceIdentityQuerySource>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ResourceIdentityQuerySource",
+                "An identity expression needs an explicit catalog type witness to admit resource reads.",
+                |x: &ResourceIdentityQuerySource| &x._unrecognized,
+                |x: &mut ResourceIdentityQuerySource, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceIdentityQuerySource> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ResourceIdentityQuerySource::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// enum ResourceQuerySource
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ResourceQuerySource {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ResourceQuerySource>>),
+    Reference(Box<ExpressionNode>),
+    Identity(Box<ResourceIdentityQuerySource>),
+}
+
+impl Default for ResourceQuerySource {
+    fn default() -> Self {
+        ResourceQuerySource::Unknown(None)
+    }
+}
+
+impl ResourceQuerySource {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ResourceQuerySource> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ResourceQuerySource>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ResourceQuerySource| match x {
+                    ResourceQuerySource::Unknown(_) => 0,
+                    ResourceQuerySource::Reference(_) => 1,
+                    ResourceQuerySource::Identity(_) => 2,
+                },
+                |u| ResourceQuerySource::Unknown(Some(u)),
+                |x: &ResourceQuerySource| match x {
+                    ResourceQuerySource::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "ResourceQuerySource",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ResourceQuerySource> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ResourceQuerySource::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum ExpressionQuery
+// ==============================================================================
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpressionQuery {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ExpressionQuery>>),
+    ResourceIdentity(Box<ResourceQuerySource>),
+    ResourceValue(Box<ResourceQuerySource>),
+    ResourceConfiguration(Box<ResourceQuerySource>),
+    ValueConfiguration(Box<ExpressionNode>),
+    CatalogDeclaration(Box<ExpressionNode>),
+}
+
+impl Default for ExpressionQuery {
+    fn default() -> Self {
+        ExpressionQuery::Unknown(None)
+    }
+}
+
+impl ExpressionQuery {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ExpressionQuery> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ExpressionQuery>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ExpressionQuery| match x {
+                    ExpressionQuery::Unknown(_) => 0,
+                    ExpressionQuery::ResourceIdentity(_) => 1,
+                    ExpressionQuery::ResourceValue(_) => 2,
+                    ExpressionQuery::ResourceConfiguration(_) => 3,
+                    ExpressionQuery::ValueConfiguration(_) => 4,
+                    ExpressionQuery::CatalogDeclaration(_) => 5,
+                },
+                |u| ExpressionQuery::Unknown(Some(u)),
+                |x: &ExpressionQuery| match x {
+                    ExpressionQuery::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "ExpressionQuery",
+                "",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionQuery> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ExpressionQuery::_adapter())
     }
 }
 
@@ -269,17 +2537,79 @@ impl CollectionExpression {
 // enum ExpressionNode
 // ==============================================================================
 
+/// Closed expression language shared by producers, checkers and evaluators.
+/// Boolean and conditional branches evaluate only the needed branch. Collection bodies
+/// introduce lexical frames without modifying authored state.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExpressionNode {
     Unknown(Option<crate::skir_client::UnrecognizedVariant<ExpressionNode>>),
     Literal(Box<crate::skirout::base::editor::v1::type_catalog::DataValue>),
-    Read(Box<ExpressionRead>),
-    Call(Box<ExpressionCall>),
+    Input(Box<ExpressionInput>),
+    Local(Box<ExpressionLocal>),
+    Field(Box<ExpressionField>),
+    EntryProjection(Box<ExpressionEntryProjection>),
     And(Box<BinaryExpression>),
     Or(Box<BinaryExpression>),
     Conditional(Box<ConditionalExpression>),
     OrElse(Box<OrElseExpression>),
-    Collection(Box<CollectionExpression>),
+    TextUnary(Box<TextUnaryExpression>),
+    TextCompare(Box<TextCompareExpression>),
+    TextLength(Box<ExpressionNode>),
+    TextHasLineBreak(Box<ExpressionNode>),
+    TextReplace(Box<TextReplaceExpression>),
+    TextSplit(Box<TextSplitExpression>),
+    TextJoin(Box<TextJoinExpression>),
+    TextSubstring(Box<TextSubstringExpression>),
+    TextInterpolate(Box<TextInterpolateExpression>),
+    RegexTest(Box<RegexTestExpression>),
+    RegexCapture(Box<RegexCaptureExpression>),
+    RegexReplace(Box<RegexReplaceExpression>),
+    ValueCompare(Box<ValueCompareExpression>),
+    IsNull(Box<ExpressionNode>),
+    LinkTarget(Box<ExpressionNode>),
+    BooleanNot(Box<ExpressionNode>),
+    NumberArithmetic(Box<NumberArithmeticExpression>),
+    NumberCompare(Box<NumberCompareExpression>),
+    NumberNegate(Box<ExpressionNode>),
+    NumberRound(Box<NumberRoundExpression>),
+    NumberFormat(Box<NumberFormatExpression>),
+    DurationFormat(Box<DurationFormatExpression>),
+    TimestampFormat(Box<TimestampFormatExpression>),
+    CollectionSize(Box<ExpressionNode>),
+    CollectionAccess(Box<CollectionAccessExpression>),
+    CollectionContains(Box<CollectionContainsExpression>),
+    ColorParse(Box<ExpressionNode>),
+    ColorWithAlpha(Box<ColorWithAlphaExpression>),
+    RuleUnary(Box<RuleUnaryExpression>),
+    RuleOneOf(Box<RuleOneOfExpression>),
+    RuleSizeBound(Box<RuleSizeBoundExpression>),
+    RuleSizeRange(Box<RuleSizeRangeExpression>),
+    RuleNumericBound(Box<RuleNumericBoundExpression>),
+    RuleNumericRange(Box<RuleNumericRangeExpression>),
+    RuleMultipleOf(Box<RuleMultipleOfExpression>),
+    RuleMaximumScale(Box<RuleMaximumScaleExpression>),
+    RuleTimestampBound(Box<RuleTimestampBoundExpression>),
+    Any(Box<UnaryCollectionExpression>),
+    All(Box<UnaryCollectionExpression>),
+    None(Box<UnaryCollectionExpression>),
+    Map(Box<UnaryCollectionExpression>),
+    Filter(Box<UnaryCollectionExpression>),
+    Find(Box<UnaryCollectionExpression>),
+    FindLast(Box<UnaryCollectionExpression>),
+    Count(Box<UnaryCollectionExpression>),
+    DistinctBy(Box<UnaryCollectionExpression>),
+    GroupBy(Box<UnaryCollectionExpression>),
+    FlatMap(Box<UnaryCollectionExpression>),
+    UniqueBy(Box<UnaryCollectionExpression>),
+    Reduce(Box<UnaryCollectionExpression>),
+    SortBy(Box<SortByExpression>),
+    SortWith(Box<SortWithExpression>),
+    Fold(Box<FoldExpression>),
+    Take(Box<CollectionSliceExpression>),
+    Skip(Box<CollectionSliceExpression>),
+    Reverse(Box<ExpressionNode>),
+    Distinct(Box<ExpressionNode>),
+    Query(Box<ExpressionQuery>),
 }
 
 impl Default for ExpressionNode {
@@ -297,13 +2627,72 @@ impl ExpressionNode {
                 |x: &ExpressionNode| match x {
                     ExpressionNode::Unknown(_) => 0,
                     ExpressionNode::Literal(_) => 1,
-                    ExpressionNode::Read(_) => 2,
-                    ExpressionNode::Call(_) => 3,
-                    ExpressionNode::And(_) => 4,
-                    ExpressionNode::Or(_) => 5,
-                    ExpressionNode::Conditional(_) => 6,
-                    ExpressionNode::OrElse(_) => 7,
-                    ExpressionNode::Collection(_) => 8,
+                    ExpressionNode::Input(_) => 2,
+                    ExpressionNode::Local(_) => 3,
+                    ExpressionNode::Field(_) => 4,
+                    ExpressionNode::EntryProjection(_) => 5,
+                    ExpressionNode::And(_) => 6,
+                    ExpressionNode::Or(_) => 7,
+                    ExpressionNode::Conditional(_) => 8,
+                    ExpressionNode::OrElse(_) => 9,
+                    ExpressionNode::TextUnary(_) => 10,
+                    ExpressionNode::TextCompare(_) => 11,
+                    ExpressionNode::TextLength(_) => 12,
+                    ExpressionNode::TextHasLineBreak(_) => 13,
+                    ExpressionNode::TextReplace(_) => 14,
+                    ExpressionNode::TextSplit(_) => 15,
+                    ExpressionNode::TextJoin(_) => 16,
+                    ExpressionNode::TextSubstring(_) => 17,
+                    ExpressionNode::TextInterpolate(_) => 18,
+                    ExpressionNode::RegexTest(_) => 19,
+                    ExpressionNode::RegexCapture(_) => 20,
+                    ExpressionNode::RegexReplace(_) => 21,
+                    ExpressionNode::ValueCompare(_) => 22,
+                    ExpressionNode::IsNull(_) => 23,
+                    ExpressionNode::LinkTarget(_) => 24,
+                    ExpressionNode::BooleanNot(_) => 25,
+                    ExpressionNode::NumberArithmetic(_) => 26,
+                    ExpressionNode::NumberCompare(_) => 27,
+                    ExpressionNode::NumberNegate(_) => 28,
+                    ExpressionNode::NumberRound(_) => 29,
+                    ExpressionNode::NumberFormat(_) => 30,
+                    ExpressionNode::DurationFormat(_) => 31,
+                    ExpressionNode::TimestampFormat(_) => 32,
+                    ExpressionNode::CollectionSize(_) => 33,
+                    ExpressionNode::CollectionAccess(_) => 34,
+                    ExpressionNode::CollectionContains(_) => 35,
+                    ExpressionNode::ColorParse(_) => 36,
+                    ExpressionNode::ColorWithAlpha(_) => 37,
+                    ExpressionNode::RuleUnary(_) => 38,
+                    ExpressionNode::RuleOneOf(_) => 39,
+                    ExpressionNode::RuleSizeBound(_) => 40,
+                    ExpressionNode::RuleSizeRange(_) => 41,
+                    ExpressionNode::RuleNumericBound(_) => 42,
+                    ExpressionNode::RuleNumericRange(_) => 43,
+                    ExpressionNode::RuleMultipleOf(_) => 44,
+                    ExpressionNode::RuleMaximumScale(_) => 45,
+                    ExpressionNode::RuleTimestampBound(_) => 46,
+                    ExpressionNode::Any(_) => 47,
+                    ExpressionNode::All(_) => 48,
+                    ExpressionNode::None(_) => 49,
+                    ExpressionNode::Map(_) => 50,
+                    ExpressionNode::Filter(_) => 51,
+                    ExpressionNode::Find(_) => 52,
+                    ExpressionNode::FindLast(_) => 53,
+                    ExpressionNode::Count(_) => 54,
+                    ExpressionNode::DistinctBy(_) => 55,
+                    ExpressionNode::GroupBy(_) => 56,
+                    ExpressionNode::FlatMap(_) => 57,
+                    ExpressionNode::UniqueBy(_) => 58,
+                    ExpressionNode::Reduce(_) => 59,
+                    ExpressionNode::SortBy(_) => 60,
+                    ExpressionNode::SortWith(_) => 61,
+                    ExpressionNode::Fold(_) => 62,
+                    ExpressionNode::Take(_) => 63,
+                    ExpressionNode::Skip(_) => 64,
+                    ExpressionNode::Reverse(_) => 65,
+                    ExpressionNode::Distinct(_) => 66,
+                    ExpressionNode::Query(_) => 67,
                 },
                 |u| ExpressionNode::Unknown(Some(u)),
                 |x: &ExpressionNode| match x {
@@ -312,7 +2701,7 @@ impl ExpressionNode {
                 },
                 "editor/v1/expression.skir",
                 "ExpressionNode",
-                "",
+                "Closed expression language shared by producers, checkers and evaluators.\nBoolean and conditional branches evaluate only the needed branch. Collection bodies\nintroduce lexical frames without modifying authored state.",
             )
         });
         &*ADAPTER
@@ -324,12 +2713,111 @@ impl ExpressionNode {
 }
 
 // ==============================================================================
+// enum ExpressionValueType
+// ==============================================================================
+
+/// Structural expression results retain nominal catalog identities only where they are meaningful.
+/// Null is a value; unavailable input is represented separately by ExpressionType.may_be_missing.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExpressionValueType {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<ExpressionValueType>>),
+    Nominal(Box<crate::skirout::base::editor::v1::type_catalog::TypeUse>),
+    List(Box<ExpressionType>),
+    Map(Box<ExpressionMappingType>),
+    Entry(Box<ExpressionMappingType>),
+    Nullable(Box<ExpressionType>),
+    NullValue,
+}
+
+impl Default for ExpressionValueType {
+    fn default() -> Self {
+        ExpressionValueType::Unknown(None)
+    }
+}
+
+impl ExpressionValueType {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ExpressionValueType> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ExpressionValueType>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ExpressionValueType| match x {
+                    ExpressionValueType::Unknown(_) => 0,
+                    ExpressionValueType::Nominal(_) => 1,
+                    ExpressionValueType::List(_) => 2,
+                    ExpressionValueType::Map(_) => 3,
+                    ExpressionValueType::Entry(_) => 4,
+                    ExpressionValueType::Nullable(_) => 5,
+                    ExpressionValueType::NullValue => 6,
+                },
+                |u| ExpressionValueType::Unknown(Some(u)),
+                |x: &ExpressionValueType| match x {
+                    ExpressionValueType::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/expression.skir",
+                "ExpressionValueType",
+                "Structural expression results retain nominal catalog identities only where they are meaningful.\nNull is a value; unavailable input is represented separately by ExpressionType.may_be_missing.",
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionValueType> {
+        initialize_module_serializers();
+        crate::skir_client::internal::enum_serializer_from_static(ExpressionValueType::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ExpressionMappingType
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ExpressionMappingType {
+    pub key: ExpressionType,
+    pub value: ExpressionType,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionMappingType>>,
+}
+
+impl ExpressionMappingType {
+    pub fn default_ref() -> &'static ExpressionMappingType {
+        static D: std::sync::LazyLock<ExpressionMappingType> =
+            std::sync::LazyLock::new(ExpressionMappingType::default);
+        &D
+    }
+}
+
+impl ExpressionMappingType {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ExpressionMappingType> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ExpressionMappingType>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/expression.skir",
+                "ExpressionMappingType",
+                "",
+                |x: &ExpressionMappingType| &x._unrecognized,
+                |x: &mut ExpressionMappingType, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ExpressionMappingType> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            ExpressionMappingType::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
 // struct ExpressionType
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct ExpressionType {
-    pub value: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub value: ExpressionValueType,
     pub may_be_missing: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ExpressionType>>,
@@ -365,51 +2853,11 @@ impl ExpressionType {
 }
 
 // ==============================================================================
-// struct OperationDescriptor
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct OperationDescriptor {
-    pub id: crate::skirout::base::editor::v1::type_catalog::OperationId,
-    pub input: Vec<ExpressionType>,
-    pub result: ExpressionType,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationDescriptor>>,
-}
-
-impl OperationDescriptor {
-    pub fn default_ref() -> &'static OperationDescriptor {
-        static D: std::sync::LazyLock<OperationDescriptor> =
-            std::sync::LazyLock::new(OperationDescriptor::default);
-        &D
-    }
-}
-
-impl OperationDescriptor {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OperationDescriptor> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<OperationDescriptor>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/expression.skir",
-                "OperationDescriptor",
-                "",
-                |x: &OperationDescriptor| &x._unrecognized,
-                |x: &mut OperationDescriptor, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<OperationDescriptor> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(OperationDescriptor::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct EvaluationBudget
 // ==============================================================================
 
+/// Limits one evaluation by executed steps and inspected collection items.
+/// Exhaustion is an evaluation failure, not a successful partial expression result.
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct EvaluationBudget {
     pub max_steps: i64,
@@ -434,7 +2882,7 @@ impl EvaluationBudget {
             crate::skir_client::internal::StructAdapter::new(
                 "editor/v1/expression.skir",
                 "EvaluationBudget",
-                "",
+                "Limits one evaluation by executed steps and inspected collection items.\nExhaustion is an evaluation failure, not a successful partial expression result.",
                 |x: &EvaluationBudget| &x._unrecognized,
                 |x: &mut EvaluationBudget, u| x._unrecognized = u,
             )
@@ -577,48 +3025,105 @@ impl EvaluationDiagnostic {
 fn initialize_module_serializers() {
     static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionRead> =
-                ExpressionRead::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionInput> =
+                ExpressionInput::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "binding",
                 0,
                 crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(),
                 "",
-                |x: &ExpressionRead| &x.binding,
-                |x: &mut ExpressionRead, v| x.binding = v,
+                |x: &ExpressionInput| &x.binding,
+                |x: &mut ExpressionInput, v| x.binding = v,
             );
             (*a).add_field(
                 "path",
                 1,
                 crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
                 "",
-                |x: &ExpressionRead| &x.path,
-                |x: &mut ExpressionRead, v| x.path = v,
+                |x: &ExpressionInput| &x.path,
+                |x: &mut ExpressionInput, v| x.path = v,
             );
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionCall> =
-                ExpressionCall::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionLocal> =
+                ExpressionLocal::_adapter() as *const _ as *mut _;
             (*a).add_field(
-                "operation",
+                "depth",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
+                crate::skir_client::Serializer::int32(),
                 "",
-                |x: &ExpressionCall| &x.operation,
-                |x: &mut ExpressionCall, v| x.operation = v,
+                |x: &ExpressionLocal| &x.depth,
+                |x: &mut ExpressionLocal, v| x.depth = v,
             );
             (*a).add_field(
-                "arguments",
+                "slot",
                 1,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::enum_serializer_from_static(
-                        ExpressionNode::_adapter(),
-                    ),
+                crate::skir_client::Serializer::int32(),
+                "",
+                |x: &ExpressionLocal| &x.slot,
+                |x: &mut ExpressionLocal, v| x.slot = v,
+            );
+            (*a).add_field(
+                "path",
+                2,
+                crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                "",
+                |x: &ExpressionLocal| &x.path,
+                |x: &mut ExpressionLocal, v| x.path = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionField> =
+                ExpressionField::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
                 ),
                 "",
-                |x: &ExpressionCall| &x.arguments,
-                |x: &mut ExpressionCall, v| x.arguments = v,
+                |x: &ExpressionField| &x.source,
+                |x: &mut ExpressionField, v| x.source = v,
+            );
+            (*a).add_field(
+                "name",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ExpressionField| &x.name,
+                |x: &mut ExpressionField, v| x.name = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<EntryBranch> =
+                EntryBranch::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("key", 1, 1, "", EntryBranch::Key);
+            (*a).add_constant_variant("value", 2, 2, "", EntryBranch::Value);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionEntryProjection> =
+                ExpressionEntryProjection::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ExpressionEntryProjection| &x.source,
+                |x: &mut ExpressionEntryProjection, v| x.source = v,
+            );
+            (*a).add_field(
+                "branch",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(EntryBranch::_adapter()),
+                "",
+                |x: &ExpressionEntryProjection| &x.branch,
+                |x: &mut ExpressionEntryProjection, v| x.branch = v,
             );
             (*a).finalize();
         }
@@ -708,39 +3213,421 @@ fn initialize_module_serializers() {
             (*a).finalize();
         }
         unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<CollectionExpression> =
-                CollectionExpression::_adapter() as *const _ as *mut _;
+            let a: *mut crate::skir_client::internal::EnumAdapter<TextUnaryOperation> =
+                TextUnaryOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("value", 1, 1, "", TextUnaryOperation::Value);
+            (*a).add_constant_variant("trim", 2, 2, "", TextUnaryOperation::Trim);
+            (*a).add_constant_variant("lower", 3, 3, "", TextUnaryOperation::Lower);
+            (*a).add_constant_variant("upper", 4, 4, "", TextUnaryOperation::Upper);
+            (*a).add_constant_variant("title", 5, 5, "", TextUnaryOperation::Title);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextUnaryExpression> =
+                TextUnaryExpression::_adapter() as *const _ as *mut _;
             (*a).add_field(
                 "operation",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
+                crate::skir_client::internal::enum_serializer_from_static(
+                    TextUnaryOperation::_adapter(),
+                ),
                 "",
-                |x: &CollectionExpression| &x.operation,
-                |x: &mut CollectionExpression, v| x.operation = v,
+                |x: &TextUnaryExpression| &x.operation,
+                |x: &mut TextUnaryExpression, v| x.operation = v,
             );
             (*a).add_field(
-                "input",
+                "source",
                 1,
                 crate::skir_client::internal::enum_serializer_from_static(
                     ExpressionNode::_adapter(),
                 ),
                 "",
-                |x: &CollectionExpression| &x.input,
-                |x: &mut CollectionExpression, v| x.input = v,
+                |x: &TextUnaryExpression| &x.source,
+                |x: &mut TextUnaryExpression, v| x.source = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<TextCompareOperation> =
+                TextCompareOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("contains", 1, 1, "", TextCompareOperation::Contains);
+            (*a).add_constant_variant("starts_with", 2, 2, "", TextCompareOperation::StartsWith);
+            (*a).add_constant_variant("ends_with", 3, 3, "", TextCompareOperation::EndsWith);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextCompareExpression> =
+                TextCompareExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    TextCompareOperation::_adapter(),
+                ),
+                "",
+                |x: &TextCompareExpression| &x.operation,
+                |x: &mut TextCompareExpression, v| x.operation = v,
             );
             (*a).add_field(
-                "bindings",
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextCompareExpression| &x.source,
+                |x: &mut TextCompareExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "other",
                 2,
-                crate::skir_client::Serializer::array(
-                    crate::skirout::base::editor::v1::type_catalog::ExpressionBindingId::serializer(
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextCompareExpression| &x.other,
+                |x: &mut TextCompareExpression, v| x.other = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextReplaceExpression> =
+                TextReplaceExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextReplaceExpression| &x.source,
+                |x: &mut TextReplaceExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "target",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextReplaceExpression| &x.target,
+                |x: &mut TextReplaceExpression, v| x.target = v,
+            );
+            (*a).add_field(
+                "replacement",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextReplaceExpression| &x.replacement,
+                |x: &mut TextReplaceExpression, v| x.replacement = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextSplitExpression> =
+                TextSplitExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextSplitExpression| &x.source,
+                |x: &mut TextSplitExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "separator",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextSplitExpression| &x.separator,
+                |x: &mut TextSplitExpression, v| x.separator = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextJoinExpression> =
+                TextJoinExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextJoinExpression| &x.source,
+                |x: &mut TextJoinExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "separator",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextJoinExpression| &x.separator,
+                |x: &mut TextJoinExpression, v| x.separator = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextSubstringExpression> =
+                TextSubstringExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextSubstringExpression| &x.source,
+                |x: &mut TextSubstringExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "start",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TextSubstringExpression| &x.start,
+                |x: &mut TextSubstringExpression, v| x.start = v,
+            );
+            (*a).add_field(
+                "end",
+                2,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
                     ),
                 ),
                 "",
-                |x: &CollectionExpression| &x.bindings,
-                |x: &mut CollectionExpression, v| x.bindings = v,
+                |x: &TextSubstringExpression| &x.end,
+                |x: &mut TextSubstringExpression, v| x.end = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TextInterpolateExpression> =
+                TextInterpolateExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "parts",
+                0,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &TextInterpolateExpression| &x.parts,
+                |x: &mut TextInterpolateExpression, v| x.parts = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RegexMatchMode> =
+                RegexMatchMode::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("search", 1, 1, "", RegexMatchMode::Search);
+            (*a).add_constant_variant("full_match", 2, 2, "", RegexMatchMode::FullMatch);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RegexTestExpression> =
+                RegexTestExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "mode",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RegexMatchMode::_adapter(),
+                ),
+                "",
+                |x: &RegexTestExpression| &x.mode,
+                |x: &mut RegexTestExpression, v| x.mode = v,
             );
             (*a).add_field(
-                "arguments",
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexTestExpression| &x.source,
+                |x: &mut RegexTestExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "pattern",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexTestExpression| &x.pattern,
+                |x: &mut RegexTestExpression, v| x.pattern = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RegexCaptureExpression> =
+                RegexCaptureExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexCaptureExpression| &x.source,
+                |x: &mut RegexCaptureExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "pattern",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexCaptureExpression| &x.pattern,
+                |x: &mut RegexCaptureExpression, v| x.pattern = v,
+            );
+            (*a).add_field(
+                "group",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexCaptureExpression| &x.group,
+                |x: &mut RegexCaptureExpression, v| x.group = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RegexReplaceExpression> =
+                RegexReplaceExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexReplaceExpression| &x.source,
+                |x: &mut RegexReplaceExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "pattern",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexReplaceExpression| &x.pattern,
+                |x: &mut RegexReplaceExpression, v| x.pattern = v,
+            );
+            (*a).add_field(
+                "replacement",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RegexReplaceExpression| &x.replacement,
+                |x: &mut RegexReplaceExpression, v| x.replacement = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ValueCompareOperation> =
+                ValueCompareOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("equal", 1, 1, "", ValueCompareOperation::Equal);
+            (*a).add_constant_variant("not_equal", 2, 2, "", ValueCompareOperation::NotEqual);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ValueCompareExpression> =
+                ValueCompareExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ValueCompareOperation::_adapter(),
+                ),
+                "",
+                |x: &ValueCompareExpression| &x.operation,
+                |x: &mut ValueCompareExpression, v| x.operation = v,
+            );
+            (*a).add_field(
+                "left",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ValueCompareExpression| &x.left,
+                |x: &mut ValueCompareExpression, v| x.left = v,
+            );
+            (*a).add_field(
+                "right",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ValueCompareExpression| &x.right,
+                |x: &mut ValueCompareExpression, v| x.right = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<NumberArithmeticOperation> =
+                NumberArithmeticOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("add", 1, 1, "", NumberArithmeticOperation::Add);
+            (*a).add_constant_variant("subtract", 2, 2, "", NumberArithmeticOperation::Subtract);
+            (*a).add_constant_variant("multiply", 3, 3, "", NumberArithmeticOperation::Multiply);
+            (*a).add_constant_variant("divide", 4, 4, "", NumberArithmeticOperation::Divide);
+            (*a).add_constant_variant("remainder", 5, 5, "", NumberArithmeticOperation::Remainder);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<NumberArithmeticExpression> =
+                NumberArithmeticExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    NumberArithmeticOperation::_adapter(),
+                ),
+                "",
+                |x: &NumberArithmeticExpression| &x.operation,
+                |x: &mut NumberArithmeticExpression, v| x.operation = v,
+            );
+            (*a).add_field(
+                "first",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberArithmeticExpression| &x.first,
+                |x: &mut NumberArithmeticExpression, v| x.first = v,
+            );
+            (*a).add_field(
+                "second",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberArithmeticExpression| &x.second,
+                |x: &mut NumberArithmeticExpression, v| x.second = v,
+            );
+            (*a).add_field(
+                "remaining",
                 3,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::enum_serializer_from_static(
@@ -748,20 +3635,932 @@ fn initialize_module_serializers() {
                     ),
                 ),
                 "",
-                |x: &CollectionExpression| &x.arguments,
-                |x: &mut CollectionExpression, v| x.arguments = v,
+                |x: &NumberArithmeticExpression| &x.remaining,
+                |x: &mut NumberArithmeticExpression, v| x.remaining = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<NumberCompareOperation> =
+                NumberCompareOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("greater", 1, 1, "", NumberCompareOperation::Greater);
+            (*a).add_constant_variant(
+                "greater_equal",
+                2,
+                2,
+                "",
+                NumberCompareOperation::GreaterEqual,
+            );
+            (*a).add_constant_variant("less", 3, 3, "", NumberCompareOperation::Less);
+            (*a).add_constant_variant("less_equal", 4, 4, "", NumberCompareOperation::LessEqual);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<NumberCompareExpression> =
+                NumberCompareExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    NumberCompareOperation::_adapter(),
+                ),
+                "",
+                |x: &NumberCompareExpression| &x.operation,
+                |x: &mut NumberCompareExpression, v| x.operation = v,
+            );
+            (*a).add_field(
+                "left",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberCompareExpression| &x.left,
+                |x: &mut NumberCompareExpression, v| x.left = v,
+            );
+            (*a).add_field(
+                "right",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberCompareExpression| &x.right,
+                |x: &mut NumberCompareExpression, v| x.right = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<NumberRoundExpression> =
+                NumberRoundExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberRoundExpression| &x.source,
+                |x: &mut NumberRoundExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "increment",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberRoundExpression| &x.increment,
+                |x: &mut NumberRoundExpression, v| x.increment = v,
+            );
+            (*a).add_field(
+                "rounding",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberRoundExpression| &x.rounding,
+                |x: &mut NumberRoundExpression, v| x.rounding = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<NumberFormatExpression> =
+                NumberFormatExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberFormatExpression| &x.source,
+                |x: &mut NumberFormatExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "fraction_digits",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberFormatExpression| &x.fraction_digits,
+                |x: &mut NumberFormatExpression, v| x.fraction_digits = v,
+            );
+            (*a).add_field(
+                "locale",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &NumberFormatExpression| &x.locale,
+                |x: &mut NumberFormatExpression, v| x.locale = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DurationFormatExpression> =
+                DurationFormatExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &DurationFormatExpression| &x.source,
+                |x: &mut DurationFormatExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "units",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &DurationFormatExpression| &x.units,
+                |x: &mut DurationFormatExpression, v| x.units = v,
+            );
+            (*a).add_field(
+                "fraction_digits",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &DurationFormatExpression| &x.fraction_digits,
+                |x: &mut DurationFormatExpression, v| x.fraction_digits = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<TimestampFormatExpression> =
+                TimestampFormatExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TimestampFormatExpression| &x.source,
+                |x: &mut TimestampFormatExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "pattern",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TimestampFormatExpression| &x.pattern,
+                |x: &mut TimestampFormatExpression, v| x.pattern = v,
+            );
+            (*a).add_field(
+                "zone",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TimestampFormatExpression| &x.zone,
+                |x: &mut TimestampFormatExpression, v| x.zone = v,
+            );
+            (*a).add_field(
+                "locale",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &TimestampFormatExpression| &x.locale,
+                |x: &mut TimestampFormatExpression, v| x.locale = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CollectionAccessExpression> =
+                CollectionAccessExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionAccessExpression| &x.source,
+                |x: &mut CollectionAccessExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "index",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionAccessExpression| &x.index,
+                |x: &mut CollectionAccessExpression, v| x.index = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CollectionContainsExpression> =
+                CollectionContainsExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionContainsExpression| &x.source,
+                |x: &mut CollectionContainsExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionContainsExpression| &x.value,
+                |x: &mut CollectionContainsExpression, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ColorWithAlphaExpression> =
+                ColorWithAlphaExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ColorWithAlphaExpression| &x.source,
+                |x: &mut ColorWithAlphaExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "alpha",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ColorWithAlphaExpression| &x.alpha,
+                |x: &mut ColorWithAlphaExpression, v| x.alpha = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<RuleUnaryOperation> =
+                RuleUnaryOperation::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("non_empty", 1, 1, "", RuleUnaryOperation::NonEmpty);
+            (*a).add_constant_variant("non_blank", 2, 2, "", RuleUnaryOperation::NonBlank);
+            (*a).add_constant_variant("single_line", 3, 3, "", RuleUnaryOperation::SingleLine);
+            (*a).add_constant_variant("positive", 4, 4, "", RuleUnaryOperation::Positive);
+            (*a).add_constant_variant("non_negative", 5, 5, "", RuleUnaryOperation::NonNegative);
+            (*a).add_constant_variant("unique", 6, 6, "", RuleUnaryOperation::Unique);
+            (*a).add_constant_variant("not_null", 7, 7, "", RuleUnaryOperation::NotNull);
+            (*a).add_constant_variant("opaque", 8, 8, "", RuleUnaryOperation::Opaque);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleUnaryExpression> =
+                RuleUnaryExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "operation",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    RuleUnaryOperation::_adapter(),
+                ),
+                "",
+                |x: &RuleUnaryExpression| &x.operation,
+                |x: &mut RuleUnaryExpression, v| x.operation = v,
+            );
+            (*a).add_field(
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleUnaryExpression| &x.source,
+                |x: &mut RuleUnaryExpression, v| x.source = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleOneOfExpression> =
+                RuleOneOfExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleOneOfExpression| &x.source,
+                |x: &mut RuleOneOfExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "first_candidate",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleOneOfExpression| &x.first_candidate,
+                |x: &mut RuleOneOfExpression, v| x.first_candidate = v,
+            );
+            (*a).add_field(
+                "remaining_candidates",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::enum_serializer_from_static(
+                        ExpressionNode::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &RuleOneOfExpression| &x.remaining_candidates,
+                |x: &mut RuleOneOfExpression, v| x.remaining_candidates = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<BoundDirection> =
+                BoundDirection::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("minimum", 1, 1, "", BoundDirection::Minimum);
+            (*a).add_constant_variant("maximum", 2, 2, "", BoundDirection::Maximum);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<SizeBoundMetric> =
+                SizeBoundMetric::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("text_length", 1, 1, "", SizeBoundMetric::TextLength);
+            (*a).add_constant_variant("text_lines", 2, 2, "", SizeBoundMetric::TextLines);
+            (*a).add_constant_variant(
+                "collection_items",
+                3,
+                3,
+                "",
+                SizeBoundMetric::CollectionItems,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<SizeRangeMetric> =
+                SizeRangeMetric::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("text_length", 1, 1, "", SizeRangeMetric::TextLength);
+            (*a).add_constant_variant(
+                "collection_items",
+                2,
+                2,
+                "",
+                SizeRangeMetric::CollectionItems,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleSizeBoundExpression> =
+                RuleSizeBoundExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "metric",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    SizeBoundMetric::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeBoundExpression| &x.metric,
+                |x: &mut RuleSizeBoundExpression, v| x.metric = v,
+            );
+            (*a).add_field(
+                "direction",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    BoundDirection::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeBoundExpression| &x.direction,
+                |x: &mut RuleSizeBoundExpression, v| x.direction = v,
+            );
+            (*a).add_field(
+                "source",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeBoundExpression| &x.source,
+                |x: &mut RuleSizeBoundExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "bound",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeBoundExpression| &x.bound,
+                |x: &mut RuleSizeBoundExpression, v| x.bound = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleSizeRangeExpression> =
+                RuleSizeRangeExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "metric",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    SizeRangeMetric::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeRangeExpression| &x.metric,
+                |x: &mut RuleSizeRangeExpression, v| x.metric = v,
+            );
+            (*a).add_field(
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeRangeExpression| &x.source,
+                |x: &mut RuleSizeRangeExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "minimum",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeRangeExpression| &x.minimum,
+                |x: &mut RuleSizeRangeExpression, v| x.minimum = v,
+            );
+            (*a).add_field(
+                "maximum",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleSizeRangeExpression| &x.maximum,
+                |x: &mut RuleSizeRangeExpression, v| x.maximum = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleNumericBoundExpression> =
+                RuleNumericBoundExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "direction",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    BoundDirection::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericBoundExpression| &x.direction,
+                |x: &mut RuleNumericBoundExpression, v| x.direction = v,
+            );
+            (*a).add_field(
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericBoundExpression| &x.source,
+                |x: &mut RuleNumericBoundExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "bound",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericBoundExpression| &x.bound,
+                |x: &mut RuleNumericBoundExpression, v| x.bound = v,
+            );
+            (*a).add_field(
+                "inclusive",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericBoundExpression| &x.inclusive,
+                |x: &mut RuleNumericBoundExpression, v| x.inclusive = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleNumericRangeExpression> =
+                RuleNumericRangeExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericRangeExpression| &x.source,
+                |x: &mut RuleNumericRangeExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "minimum",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericRangeExpression| &x.minimum,
+                |x: &mut RuleNumericRangeExpression, v| x.minimum = v,
+            );
+            (*a).add_field(
+                "maximum",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleNumericRangeExpression| &x.maximum,
+                |x: &mut RuleNumericRangeExpression, v| x.maximum = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleMultipleOfExpression> =
+                RuleMultipleOfExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleMultipleOfExpression| &x.source,
+                |x: &mut RuleMultipleOfExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "divisor",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleMultipleOfExpression| &x.divisor,
+                |x: &mut RuleMultipleOfExpression, v| x.divisor = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleMaximumScaleExpression> =
+                RuleMaximumScaleExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleMaximumScaleExpression| &x.source,
+                |x: &mut RuleMaximumScaleExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "scale",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleMaximumScaleExpression| &x.scale,
+                |x: &mut RuleMaximumScaleExpression, v| x.scale = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<TimestampBoundDirection> =
+                TimestampBoundDirection::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("not_before", 1, 1, "", TimestampBoundDirection::NotBefore);
+            (*a).add_constant_variant("not_after", 2, 2, "", TimestampBoundDirection::NotAfter);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<RuleTimestampBoundExpression> =
+                RuleTimestampBoundExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "direction",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    TimestampBoundDirection::_adapter(),
+                ),
+                "",
+                |x: &RuleTimestampBoundExpression| &x.direction,
+                |x: &mut RuleTimestampBoundExpression, v| x.direction = v,
+            );
+            (*a).add_field(
+                "source",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleTimestampBoundExpression| &x.source,
+                |x: &mut RuleTimestampBoundExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "bound",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &RuleTimestampBoundExpression| &x.bound,
+                |x: &mut RuleTimestampBoundExpression, v| x.bound = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<UnaryCollectionExpression> =
+                UnaryCollectionExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &UnaryCollectionExpression| &x.source,
+                |x: &mut UnaryCollectionExpression, v| x.source = v,
             );
             (*a).add_field(
                 "body",
-                4,
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &UnaryCollectionExpression| &x.body,
+                |x: &mut UnaryCollectionExpression, v| x.body = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<FoldExpression> =
+                FoldExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &FoldExpression| &x.source,
+                |x: &mut FoldExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "initial",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &FoldExpression| &x.initial,
+                |x: &mut FoldExpression, v| x.initial = v,
+            );
+            (*a).add_field(
+                "body",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &FoldExpression| &x.body,
+                |x: &mut FoldExpression, v| x.body = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SortByExpression> =
+                SortByExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &SortByExpression| &x.source,
+                |x: &mut SortByExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "descending",
+                1,
                 crate::skir_client::Serializer::optional(
                     crate::skir_client::internal::enum_serializer_from_static(
                         ExpressionNode::_adapter(),
                     ),
                 ),
                 "",
-                |x: &CollectionExpression| &x.body,
-                |x: &mut CollectionExpression, v| x.body = v,
+                |x: &SortByExpression| &x.descending,
+                |x: &mut SortByExpression, v| x.descending = v,
+            );
+            (*a).add_field(
+                "key",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &SortByExpression| &x.key,
+                |x: &mut SortByExpression, v| x.key = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<SortWithExpression> =
+                SortWithExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &SortWithExpression| &x.source,
+                |x: &mut SortWithExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "comparator",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &SortWithExpression| &x.comparator,
+                |x: &mut SortWithExpression, v| x.comparator = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CollectionSliceExpression> =
+                CollectionSliceExpression::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "source",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionSliceExpression| &x.source,
+                |x: &mut CollectionSliceExpression, v| x.source = v,
+            );
+            (*a).add_field(
+                "count",
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &CollectionSliceExpression| &x.count,
+                |x: &mut CollectionSliceExpression, v| x.count = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ResourceIdentityQuerySource> =
+                ResourceIdentityQuerySource::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "identity",
+                0,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |x: &ResourceIdentityQuerySource| &x.identity,
+                |x: &mut ResourceIdentityQuerySource, v| x.identity = v,
+            );
+            (*a).add_field(
+                "target",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |x: &ResourceIdentityQuerySource| &x.target,
+                |x: &mut ResourceIdentityQuerySource, v| x.target = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ResourceQuerySource> =
+                ResourceQuerySource::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "reference",
+                1,
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ResourceQuerySource::Reference(Box::new(v)),
+                |x| match x {
+                    ResourceQuerySource::Reference(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "identity",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ResourceIdentityQuerySource::_adapter(),
+                ),
+                "",
+                |v| ResourceQuerySource::Identity(Box::new(v)),
+                |x| match x {
+                    ResourceQuerySource::Identity(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ExpressionQuery> =
+                ExpressionQuery::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "resource_identity",
+                1,
+                1,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ResourceQuerySource::_adapter(),
+                ),
+                "",
+                |v| ExpressionQuery::ResourceIdentity(Box::new(v)),
+                |x| match x {
+                    ExpressionQuery::ResourceIdentity(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resource_value",
+                2,
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ResourceQuerySource::_adapter(),
+                ),
+                "",
+                |v| ExpressionQuery::ResourceValue(Box::new(v)),
+                |x| match x {
+                    ExpressionQuery::ResourceValue(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "resource_configuration",
+                3,
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ResourceQuerySource::_adapter(),
+                ),
+                "",
+                |v| ExpressionQuery::ResourceConfiguration(Box::new(v)),
+                |x| match x {
+                    ExpressionQuery::ResourceConfiguration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "value_configuration",
+                4,
+                4,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionQuery::ValueConfiguration(Box::new(v)),
+                |x| match x {
+                    ExpressionQuery::ValueConfiguration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "catalog_declaration",
+                5,
+                5,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionQuery::CatalogDeclaration(Box::new(v)),
+                |x| match x {
+                    ExpressionQuery::CatalogDeclaration(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
             );
             (*a).finalize();
         }
@@ -781,37 +4580,65 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "read",
+                "input",
                 2,
                 2,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    ExpressionRead::_adapter(),
+                    ExpressionInput::_adapter(),
                 ),
                 "",
-                |v| ExpressionNode::Read(Box::new(v)),
+                |v| ExpressionNode::Input(Box::new(v)),
                 |x| match x {
-                    ExpressionNode::Read(b) => b.as_ref(),
+                    ExpressionNode::Input(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
-                "call",
+                "local",
                 3,
                 3,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    ExpressionCall::_adapter(),
+                    ExpressionLocal::_adapter(),
                 ),
                 "",
-                |v| ExpressionNode::Call(Box::new(v)),
+                |v| ExpressionNode::Local(Box::new(v)),
                 |x| match x {
-                    ExpressionNode::Call(b) => b.as_ref(),
+                    ExpressionNode::Local(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "field",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionField::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Field(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Field(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "entry_projection",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionEntryProjection::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::EntryProjection(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::EntryProjection(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
             );
             (*a).add_wrapper_variant(
                 "and",
-                4,
-                4,
+                6,
+                6,
                 crate::skir_client::internal::struct_serializer_from_static(
                     BinaryExpression::_adapter(),
                 ),
@@ -824,8 +4651,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "or",
-                5,
-                5,
+                7,
+                7,
                 crate::skir_client::internal::struct_serializer_from_static(
                     BinaryExpression::_adapter(),
                 ),
@@ -838,8 +4665,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "conditional",
-                6,
-                6,
+                8,
+                8,
                 crate::skir_client::internal::struct_serializer_from_static(
                     ConditionalExpression::_adapter(),
                 ),
@@ -852,8 +4679,8 @@ fn initialize_module_serializers() {
             );
             (*a).add_wrapper_variant(
                 "or_else",
-                7,
-                7,
+                9,
+                9,
                 crate::skir_client::internal::struct_serializer_from_static(
                     OrElseExpression::_adapter(),
                 ),
@@ -865,18 +4692,915 @@ fn initialize_module_serializers() {
                 },
             );
             (*a).add_wrapper_variant(
-                "collection",
-                8,
-                8,
+                "text_unary",
+                10,
+                10,
                 crate::skir_client::internal::struct_serializer_from_static(
-                    CollectionExpression::_adapter(),
+                    TextUnaryExpression::_adapter(),
                 ),
                 "",
-                |v| ExpressionNode::Collection(Box::new(v)),
+                |v| ExpressionNode::TextUnary(Box::new(v)),
                 |x| match x {
-                    ExpressionNode::Collection(b) => b.as_ref(),
+                    ExpressionNode::TextUnary(b) => b.as_ref(),
                     _ => unreachable!(),
                 },
+            );
+            (*a).add_wrapper_variant(
+                "text_compare",
+                11,
+                11,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextCompareExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextCompare(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextCompare(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_length",
+                12,
+                12,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextLength(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextLength(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_has_line_break",
+                13,
+                13,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextHasLineBreak(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextHasLineBreak(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_replace",
+                14,
+                14,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextReplaceExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextReplace(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextReplace(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_split",
+                15,
+                15,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextSplitExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextSplit(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextSplit(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_join",
+                16,
+                16,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextJoinExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextJoin(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextJoin(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_substring",
+                17,
+                17,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextSubstringExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextSubstring(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextSubstring(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "text_interpolate",
+                18,
+                18,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TextInterpolateExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TextInterpolate(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TextInterpolate(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "regex_test",
+                19,
+                19,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RegexTestExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RegexTest(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RegexTest(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "regex_capture",
+                20,
+                20,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RegexCaptureExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RegexCapture(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RegexCapture(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "regex_replace",
+                21,
+                21,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RegexReplaceExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RegexReplace(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RegexReplace(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "value_compare",
+                22,
+                22,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ValueCompareExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::ValueCompare(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::ValueCompare(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "is_null",
+                23,
+                23,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::IsNull(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::IsNull(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "link_target",
+                24,
+                24,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::LinkTarget(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::LinkTarget(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "boolean_not",
+                25,
+                25,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::BooleanNot(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::BooleanNot(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number_arithmetic",
+                26,
+                26,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    NumberArithmeticExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::NumberArithmetic(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::NumberArithmetic(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number_compare",
+                27,
+                27,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    NumberCompareExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::NumberCompare(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::NumberCompare(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number_negate",
+                28,
+                28,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::NumberNegate(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::NumberNegate(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number_round",
+                29,
+                29,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    NumberRoundExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::NumberRound(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::NumberRound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "number_format",
+                30,
+                30,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    NumberFormatExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::NumberFormat(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::NumberFormat(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "duration_format",
+                31,
+                31,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    DurationFormatExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::DurationFormat(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::DurationFormat(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "timestamp_format",
+                32,
+                32,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    TimestampFormatExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::TimestampFormat(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::TimestampFormat(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "collection_size",
+                33,
+                33,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::CollectionSize(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::CollectionSize(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "collection_access",
+                34,
+                34,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CollectionAccessExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::CollectionAccess(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::CollectionAccess(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "collection_contains",
+                35,
+                35,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CollectionContainsExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::CollectionContains(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::CollectionContains(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "color_parse",
+                36,
+                36,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::ColorParse(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::ColorParse(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "color_with_alpha",
+                37,
+                37,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ColorWithAlphaExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::ColorWithAlpha(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::ColorWithAlpha(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_unary",
+                38,
+                38,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleUnaryExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleUnary(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleUnary(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_one_of",
+                39,
+                39,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleOneOfExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleOneOf(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleOneOf(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_size_bound",
+                40,
+                40,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleSizeBoundExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleSizeBound(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleSizeBound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_size_range",
+                41,
+                41,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleSizeRangeExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleSizeRange(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleSizeRange(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_numeric_bound",
+                42,
+                42,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleNumericBoundExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleNumericBound(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleNumericBound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_numeric_range",
+                43,
+                43,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleNumericRangeExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleNumericRange(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleNumericRange(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_multiple_of",
+                44,
+                44,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleMultipleOfExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleMultipleOf(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleMultipleOf(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_maximum_scale",
+                45,
+                45,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleMaximumScaleExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleMaximumScale(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleMaximumScale(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "rule_timestamp_bound",
+                46,
+                46,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    RuleTimestampBoundExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::RuleTimestampBound(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::RuleTimestampBound(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "any",
+                47,
+                47,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Any(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Any(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "all",
+                48,
+                48,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::All(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::All(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "none",
+                49,
+                49,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::None(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::None(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "map",
+                50,
+                50,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Map(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Map(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "filter",
+                51,
+                51,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Filter(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Filter(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "find",
+                52,
+                52,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Find(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Find(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "find_last",
+                53,
+                53,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::FindLast(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::FindLast(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "count",
+                54,
+                54,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Count(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Count(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "distinct_by",
+                55,
+                55,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::DistinctBy(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::DistinctBy(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "group_by",
+                56,
+                56,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::GroupBy(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::GroupBy(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "flat_map",
+                57,
+                57,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::FlatMap(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::FlatMap(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unique_by",
+                58,
+                58,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::UniqueBy(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::UniqueBy(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "reduce",
+                59,
+                59,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    UnaryCollectionExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Reduce(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Reduce(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "sort_by",
+                60,
+                60,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    SortByExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::SortBy(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::SortBy(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "sort_with",
+                61,
+                61,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    SortWithExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::SortWith(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::SortWith(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "fold",
+                62,
+                62,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    FoldExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Fold(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Fold(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "take",
+                63,
+                63,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CollectionSliceExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Take(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Take(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "skip",
+                64,
+                64,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CollectionSliceExpression::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Skip(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Skip(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "reverse",
+                65,
+                65,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Reverse(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Reverse(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "distinct",
+                66,
+                66,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionNode::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Distinct(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Distinct(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "query",
+                67,
+                67,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionQuery::_adapter(),
+                ),
+                "",
+                |v| ExpressionNode::Query(Box::new(v)),
+                |x| match x {
+                    ExpressionNode::Query(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ExpressionValueType> =
+                ExpressionValueType::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "nominal",
+                1,
+                1,
+                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                "",
+                |v| ExpressionValueType::Nominal(Box::new(v)),
+                |x| match x {
+                    ExpressionValueType::Nominal(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "list",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionType::_adapter(),
+                ),
+                "",
+                |v| ExpressionValueType::List(Box::new(v)),
+                |x| match x {
+                    ExpressionValueType::List(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "map",
+                3,
+                3,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionMappingType::_adapter(),
+                ),
+                "",
+                |v| ExpressionValueType::Map(Box::new(v)),
+                |x| match x {
+                    ExpressionValueType::Map(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "entry",
+                4,
+                4,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionMappingType::_adapter(),
+                ),
+                "",
+                |v| ExpressionValueType::Entry(Box::new(v)),
+                |x| match x {
+                    ExpressionValueType::Entry(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "nullable",
+                5,
+                5,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionType::_adapter(),
+                ),
+                "",
+                |v| ExpressionValueType::Nullable(Box::new(v)),
+                |x| match x {
+                    ExpressionValueType::Nullable(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_constant_variant("null_value", 6, 6, "", ExpressionValueType::NullValue);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ExpressionMappingType> =
+                ExpressionMappingType::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "key",
+                0,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionType::_adapter(),
+                ),
+                "",
+                |x: &ExpressionMappingType| &x.key,
+                |x: &mut ExpressionMappingType, v| x.key = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ExpressionType::_adapter(),
+                ),
+                "",
+                |x: &ExpressionMappingType| &x.value,
+                |x: &mut ExpressionMappingType, v| x.value = v,
             );
             (*a).finalize();
         }
@@ -886,7 +5610,9 @@ fn initialize_module_serializers() {
             (*a).add_field(
                 "value",
                 0,
-                crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+                crate::skir_client::internal::enum_serializer_from_static(
+                    ExpressionValueType::_adapter(),
+                ),
                 "",
                 |x: &ExpressionType| &x.value,
                 |x: &mut ExpressionType, v| x.value = v,
@@ -898,41 +5624,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &ExpressionType| &x.may_be_missing,
                 |x: &mut ExpressionType, v| x.may_be_missing = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<OperationDescriptor> =
-                OperationDescriptor::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "id",
-                0,
-                crate::skirout::base::editor::v1::type_catalog::OperationId::serializer(),
-                "",
-                |x: &OperationDescriptor| &x.id,
-                |x: &mut OperationDescriptor, v| x.id = v,
-            );
-            (*a).add_field(
-                "input",
-                1,
-                crate::skir_client::Serializer::array(
-                    crate::skir_client::internal::struct_serializer_from_static(
-                        ExpressionType::_adapter(),
-                    ),
-                ),
-                "",
-                |x: &OperationDescriptor| &x.input,
-                |x: &mut OperationDescriptor, v| x.input = v,
-            );
-            (*a).add_field(
-                "result",
-                2,
-                crate::skir_client::internal::struct_serializer_from_static(
-                    ExpressionType::_adapter(),
-                ),
-                "",
-                |x: &OperationDescriptor| &x.result,
-                |x: &mut OperationDescriptor, v| x.result = v,
             );
             (*a).finalize();
         }

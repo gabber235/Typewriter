@@ -180,7 +180,7 @@ skir.NamedControl _control() => skir.NamedControl(
               nodeId: "style.conditional",
               properties: skir.PresentationProperties.defaultInstance,
               element: skir.PresentationElement.createConditional(
-                condition: skir.ExpressionNode.createRead(
+                condition: skir.ExpressionNode.createInput(
                   binding: _rootBinding,
                   path: skir.ValuePath(
                     segments: [

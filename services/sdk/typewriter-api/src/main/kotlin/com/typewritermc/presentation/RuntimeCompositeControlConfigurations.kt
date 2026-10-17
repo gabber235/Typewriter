@@ -2,6 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.CollectionAppearance as WireCollectionAppearance
 import skirout.editor.v1.presentation.CollectionContent as WireCollectionContent
 import skirout.editor.v1.presentation.PageGraphAppearance as WirePageGraphAppearance

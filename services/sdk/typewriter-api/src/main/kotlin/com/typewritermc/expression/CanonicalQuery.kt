@@ -3,27 +3,13 @@ package com.typewritermc.expression
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.AuthoringRecord
 import com.typewritermc.authoring.Availability
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.PublishedType
-
-enum class CanonicalQueryOperation(
-    val id: String,
-) {
-    ResourceIdentity("typewriter.resource.id"),
-    ResourceValue("typewriter.resource.value"),
-    ResourceConfiguration("typewriter.resource.configuration"),
-    ValueConfiguration("typewriter.value.configuration"),
-    CatalogDeclaration("typewriter.catalog.declaration"),
-    ;
-
-    companion object {
-        fun from(id: String): CanonicalQueryOperation? = entries.firstOrNull { it.id == id }
-    }
-}
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.ExpressionType
 
 /** A traversal path local to one checked expression and its lexical typing environment. */
 data class ExpressionOccurrence(
@@ -33,7 +19,7 @@ data class ExpressionOccurrence(
 }
 
 data class CheckedQueryCall(
-    val operation: CanonicalQueryOperation,
+    val operation: skirout.editor.v1.expression.ExpressionQuery.Kind,
     val targetType: TypeUse?,
     val result: ExpressionType,
     val sourceIsReference: Boolean,

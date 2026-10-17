@@ -49,6 +49,7 @@ import com.typewritermc.types.skir.getOrThrow
 import com.typewritermc.types.text
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.ChildrenElement
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
@@ -574,10 +575,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 }
             }
         val conditional = result.layout.singleFixed().element as PresentationElement.ConditionalWrapper
-        val condition = conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.CallWrapper
-        condition.value.operation.value shouldBe "typewriter.value.eq"
-        val count = condition.value.arguments.first() as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        (count.value.input as skirout.editor.v1.expression.ExpressionNode.ReadWrapper).value.binding.value shouldBe
+        val condition = conditional.value.condition as skirout.editor.v1.expression.ExpressionNode.ValueCompareWrapper
+        condition.value.operation shouldBe skirout.editor.v1.expression.ValueCompareOperation.EQUAL
+        val count = condition.value.left as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
+        (count.value.input as skirout.editor.v1.expression.ExpressionNode.InputWrapper).value.binding.value shouldBe
             "presentation.context.selection_count"
         val paragraphs =
             conditional.value.whenTrue
@@ -608,8 +609,8 @@ val DefaultPresentationRuntimeTest by testSuite {
         idText.paragraph.selectable shouldBe true
         idText.paragraph.softWrap shouldBe true
         val identifier = idText.value as skirout.editor.v1.expression.ExpressionNode.OrElseWrapper
-        val representation = identifier.value.input as skirout.editor.v1.expression.ExpressionNode.CallWrapper
-        val identityRead = representation.value.arguments.single() as skirout.editor.v1.expression.ExpressionNode.ReadWrapper
+        val representation = identifier.value.input as skirout.editor.v1.expression.ExpressionNode.TextUnaryWrapper
+        val identityRead = representation.value.source as skirout.editor.v1.expression.ExpressionNode.InputWrapper
         identityRead.value.binding.value shouldBe "presentation.subject.identifier"
     }
 
@@ -1700,11 +1701,9 @@ val DefaultPresentationRuntimeTest by testSuite {
                 it.register(reference, descriptor("invoked", PresentationTarget.Named(TypeTemplate.Named(id)), 0))
             }
         val repeatedSource =
-            com.typewritermc.expression.Expr<List<String>, com.typewritermc.expression.Handled>(
-                ExpressionNode.Literal(
-                    DataValue.ListValue(
-                        listOf(ListItem(ItemId("first"), DataValue.StringValue("value"))),
-                    ),
+            com.typewritermc.expression.portableLiteral<List<String>>(
+                DataValue.ListValue(
+                    listOf(ListItem(ItemId("first"), DataValue.StringValue("value"))),
                 ),
             )
         val source =
@@ -1806,7 +1805,7 @@ val DefaultPresentationRuntimeTest by testSuite {
             .single()
             .relations
             .single()
-            .targets shouldBe SkirTypeCodec.encode(repeatedSource.node).getOrThrow()
+            .targets shouldBe repeatedSource.toNode()
         val match = elements[5] as PresentationElement.PolymorphicMatchWrapper
         match.value.cases.size shouldBe 1
         (match.value.fallback != null) shouldBe true
@@ -1862,14 +1861,16 @@ val DefaultPresentationRuntimeTest by testSuite {
 
         byResource.id shouldBe projection.specification.sourceId
         byResource.rowType shouldBe projection.specification.rowType
-        byResource.key.node shouldBe
-            ExpressionNode.Read(projectedRows.resourceBinding, com.typewritermc.authoring.ValuePath())
+        byResource.key.toNode() shouldBe
+            com.typewritermc.expression
+                .input<Any?>(projectedRows.resourceBinding)
+                .toNode()
 
         val byName: CollectionSource<com.typewritermc.library.TagCollectionRow, String> =
             projection.projectedCollectionSource(
                 key = { expressions.name.orElse(literal("unnamed")) },
             )
-        (byName.key.node is ExpressionNode.OrElse) shouldBe true
+        (byName.key.toNode() is ExpressionNode.OrElseWrapper) shouldBe true
         byName.relations shouldBe emptyList()
 
         val resources: CollectionSource<com.typewritermc.library.Tag, ResourceId> =
@@ -1879,8 +1880,10 @@ val DefaultPresentationRuntimeTest by testSuite {
                 appearance = null,
             ) {}
         val resourceRows = resources.rows as CollectionRows.Resources
-        resources.key.node shouldBe
-            ExpressionNode.Read(resourceRows.resourceBinding, com.typewritermc.authoring.ValuePath())
+        resources.key.toNode() shouldBe
+            com.typewritermc.expression
+                .input<Any?>(resourceRows.resourceBinding)
+                .toNode()
     }
 
     test("selects specific presentations before priority and preserves fallback order") {

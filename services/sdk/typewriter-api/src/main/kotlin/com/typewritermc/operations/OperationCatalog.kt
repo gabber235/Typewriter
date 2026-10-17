@@ -12,7 +12,6 @@ import com.typewritermc.discovery.OwnedPresentation
 import com.typewritermc.discovery.OwnedTypeDeclaration
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.expression.ExpressionBindingId
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.PresentationTarget
 import com.typewritermc.presentation.matches
 import com.typewritermc.types.DataValue
@@ -38,6 +37,7 @@ import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.ExpressionNode
 import kotlin.reflect.KClass
 
 class BoundOperationInput internal constructor(
@@ -171,10 +171,14 @@ fun bindOperations(
                     if (collected.builtin in setOf(BuiltinResourceOperation.Open, BuiltinResourceOperation.Edit)) {
                         skirout.editor.v1.action.EditorAction.createNavigate(
                             resource =
-                                SkirTypeCodec
-                                    .encode(
-                                        ExpressionNode.Read(ExpressionBindingId("context:subject"), ValuePath()),
-                                    ).getOrThrow(),
+                                ExpressionNode.createInput(
+                                    binding =
+                                        skirout.editor.v1.type_catalog
+                                            .ExpressionBindingId(value = "context:subject"),
+                                    path =
+                                        skirout.editor.v1.type_catalog
+                                            .ValuePath(segments = emptyList()),
+                                ),
                             mode =
                                 if (collected.builtin ==
                                     BuiltinResourceOperation.Open
@@ -190,10 +194,14 @@ fun bindOperations(
                                 skirout.editor.v1.type_catalog
                                     .CapabilityId(value = collected.id.capability.value),
                             targets =
-                                SkirTypeCodec
-                                    .encode(
-                                        ExpressionNode.Read(ExpressionBindingId("context:selection"), ValuePath()),
-                                    ).getOrThrow(),
+                                ExpressionNode.createInput(
+                                    binding =
+                                        skirout.editor.v1.type_catalog
+                                            .ExpressionBindingId(value = "context:selection"),
+                                    path =
+                                        skirout.editor.v1.type_catalog
+                                            .ValuePath(segments = emptyList()),
+                                ),
                             initialInput = null,
                         )
                     }
@@ -356,9 +364,7 @@ private fun validateResourceActions(
             expected: TypeTemplate,
         ) {
             val body =
-                com.typewritermc.types.skir.SkirExpressionCodec
-                    .decode(expression)
-                    .getOrThrow()
+                expression
             val problems =
                 com.typewritermc.presentation.checkPresentationExpression(
                     body,

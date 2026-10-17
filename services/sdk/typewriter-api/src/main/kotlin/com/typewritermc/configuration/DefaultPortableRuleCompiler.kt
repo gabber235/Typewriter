@@ -1,18 +1,19 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.expression.PortableOperationRegistry
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ScalarKind
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.DeclarationDiagnostic
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.BoundDirection
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.SizeBoundMetric
 import java.math.BigDecimal
 
-class DefaultPortableRuleCompiler(
-    private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,
-) : PortableRuleCompiler {
+class DefaultPortableRuleCompiler : PortableRuleCompiler {
     override fun compile(
         rule: OwnedRule,
         subject: CheckedType,
@@ -21,7 +22,6 @@ class DefaultPortableRuleCompiler(
             PortableExpressionChecker(
                 subject::resolve,
                 rule.id.origin.owner,
-                operations,
             ).checkRule(rule.descriptor.predicate, subject)
         return if (diagnostics.isEmpty()) Resolution.Ready(CheckedRule(subject.catalog, rule, subject)) else Resolution.Invalid(diagnostics)
     }
@@ -29,7 +29,7 @@ class DefaultPortableRuleCompiler(
     internal fun validateStructure(rule: OwnedRule): List<DeclarationDiagnostic> =
         PortableExpressionChecker({
             error("Structural checking does not resolve types.")
-        }, rule.id.origin.owner, operations).checkRuleStructure(rule.descriptor.predicate)
+        }, rule.id.origin.owner).checkRuleStructure(rule.descriptor.predicate)
 }
 
 /** Detects contradictory recognized numeric and size bounds, without proving satisfiability of arbitrary predicates. */
@@ -67,31 +67,37 @@ class DefaultPredicateReasoner : PredicateReasoner {
 
     private fun constraints(expression: ExpressionNode): List<Constraint> {
         val predicate =
-            if (expression is ExpressionNode.Or && expression.left.isNullGuard()) expression.right else expression
-        val call = predicate as? ExpressionNode.Call ?: return emptyList()
-        val values = call.arguments.map { (it as? ExpressionNode.Literal)?.value }
-        return when (call.operation.value) {
-            "typewriter.rule.minimum" -> {
-                values
-                    .getOrNull(1)
-                    ?.number()
-                    ?.let {
-                        listOf(Constraint.NumericLower(it, values.getOrNull(2).booleanOrTrue()))
-                    }.orEmpty()
+            if (expression is ExpressionNode.OrWrapper && expression.value.left is ExpressionNode.IsNullWrapper) {
+                expression.value.right
+            } else {
+                expression
+            }
+        return when (predicate) {
+            is ExpressionNode.RuleNumericBoundWrapper -> {
+                val value =
+                    predicate.value.bound
+                        .literalValue()
+                        .number() ?: return emptyList()
+                val inclusive =
+                    predicate.value.inclusive
+                        .literalValue()
+                        .booleanOrTrue()
+                when (predicate.value.direction) {
+                    BoundDirection.MINIMUM -> listOf(Constraint.NumericLower(value, inclusive))
+                    BoundDirection.MAXIMUM -> listOf(Constraint.NumericUpper(value, inclusive))
+                    else -> emptyList()
+                }
             }
 
-            "typewriter.rule.maximum" -> {
-                values
-                    .getOrNull(1)
-                    ?.number()
-                    ?.let {
-                        listOf(Constraint.NumericUpper(it, values.getOrNull(2).booleanOrTrue()))
-                    }.orEmpty()
-            }
-
-            "typewriter.rule.between" -> {
-                val minimum = values.getOrNull(1)?.number()
-                val maximum = values.getOrNull(2)?.number()
+            is ExpressionNode.RuleNumericRangeWrapper -> {
+                val minimum =
+                    predicate.value.minimum
+                        .literalValue()
+                        .number()
+                val maximum =
+                    predicate.value.maximum
+                        .literalValue()
+                        .number()
                 if (minimum == null || maximum == null) {
                     emptyList()
                 } else {
@@ -99,20 +105,17 @@ class DefaultPredicateReasoner : PredicateReasoner {
                 }
             }
 
-            "typewriter.rule.minimumLength", "typewriter.rule.minimumItems" -> {
-                values
-                    .getOrNull(1)
-                    ?.integer()
-                    ?.let { listOf(Constraint.SizeLower(it)) }
-                    .orEmpty()
-            }
-
-            "typewriter.rule.maximumLength", "typewriter.rule.maximumItems" -> {
-                values
-                    .getOrNull(1)
-                    ?.integer()
-                    ?.let { listOf(Constraint.SizeUpper(it)) }
-                    .orEmpty()
+            is ExpressionNode.RuleSizeBoundWrapper -> {
+                if (predicate.value.metric !in setOf(SizeBoundMetric.TEXT_LENGTH, SizeBoundMetric.COLLECTION_ITEMS)) return emptyList()
+                val value =
+                    predicate.value.bound
+                        .literalValue()
+                        .integer() ?: return emptyList()
+                when (predicate.value.direction) {
+                    BoundDirection.MINIMUM -> listOf(Constraint.SizeLower(value))
+                    BoundDirection.MAXIMUM -> listOf(Constraint.SizeUpper(value))
+                    else -> emptyList()
+                }
             }
 
             else -> {
@@ -142,7 +145,10 @@ private sealed interface Constraint {
     ) : Constraint
 }
 
-private fun ExpressionNode.isNullGuard(): Boolean = this is ExpressionNode.Call && operation.value == "typewriter.value.is_null"
+private fun ExpressionNode.literalValue(): DataValue? =
+    (this as? ExpressionNode.LiteralWrapper)?.value?.let {
+        SkirDataValueCodec.decode(it).getOrThrow()
+    }
 
 private fun DataValue?.number(): BigDecimal? =
     when (this) {

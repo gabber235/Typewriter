@@ -262,10 +262,7 @@ skir.PresentationNode _inspectorHostStatus(
 skir.PresentationElement _inspectorRelativeTime(
   skir.ExpressionBindingId binding,
 ) => skir.PresentationElement.createConditional(
-  condition: skir.ExpressionNode.createCall(
-    operation: skir.OperationId(value: "typewriter.value.is_null"),
-    arguments: [_portableRead(binding)],
-  ),
+  condition: skir.ExpressionNode.wrapIsNull(_portableRead(binding)),
   whenTrue: _portableText("${binding.value}.never", _portableLiteral("Never")),
   whenFalse: _inspectorNode(
     "${binding.value}.relative",
@@ -292,10 +289,7 @@ skir.PresentationNode _inspectorMessage(
 ) => _inspectorNode(
   "$id.visible",
   skir.PresentationElement.createConditional(
-    condition: skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: "typewriter.value.neq"),
-      arguments: [_portableRead(binding), _portableLiteral("None")],
-    ),
+    condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.notEqual,left:_portableRead(binding),right:_portableLiteral("None")),
     whenTrue: _inspectorFact(
       id,
       "Message",
@@ -338,10 +332,7 @@ skir.PresentationNode _inspectorWorkload(
           action: skir.EditorAction.wrapLocal(
             skir.LocalEditorAction.createSetValue(
               target: _portableReference(binding),
-              value: skir.ExpressionNode.createCall(
-                operation: skir.OperationId(value: "typewriter.boolean.not"),
-                arguments: [_portableRead(binding)],
-              ),
+              value: skir.ExpressionNode.wrapBooleanNot(_portableRead(binding)),
             ),
           ),
           tooltip: _portableLiteral(label),

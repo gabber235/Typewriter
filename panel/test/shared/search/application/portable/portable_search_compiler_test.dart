@@ -9,7 +9,7 @@ void main() {
     "HTTP context survives mapping into the typed row presentation",
     () async {
       final origin = skir.ExpressionBindingId(value: "response.origin");
-      final row = skir.ExpressionNode.createRead(
+      final row = skir.ExpressionNode.createInput(
         binding: _rowBinding,
         path: editorRootPath,
       );
@@ -463,7 +463,7 @@ _SearchFixture _fixture({
   final generation = skir.CatalogGeneration(value: "catalog:test");
   final catalog = CheckedEditorCatalog(_catalog(generation));
   final chosen = selected ?? skir.DataValue.wrapStringValue("chosen");
-  final rowRead = skir.ExpressionNode.createRead(
+  final rowRead = skir.ExpressionNode.createInput(
     binding: _rowBinding,
     path: skir.ValuePath(segments: const []),
   );
@@ -473,7 +473,7 @@ _SearchFixture _fixture({
     bindingId: _rowBinding,
     key: rowRead,
     selectedValue: selected == null
-        ? skir.ExpressionNode.createRead(
+        ? skir.ExpressionNode.createInput(
             binding: _rowContextBinding,
             path: skir.ValuePath(segments: const []),
           )
@@ -559,7 +559,7 @@ skir.SearchProvider _staticProvider(
   List<String> values, {
   skir.SearchResultMapping? mapping,
 }) {
-  final rowRead = skir.ExpressionNode.createRead(
+  final rowRead = skir.ExpressionNode.createInput(
     binding: _rowBinding,
     path: skir.ValuePath(segments: const []),
   );

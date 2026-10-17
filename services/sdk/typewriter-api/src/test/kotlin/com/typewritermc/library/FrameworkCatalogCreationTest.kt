@@ -653,22 +653,13 @@ private fun WireExpressionNode.evaluate(bindings: Map<WireExpressionBindingId, D
             SkirDataValueCodec.decode(value).getOrThrow()
         }
 
-        is WireExpressionNode.ReadWrapper -> {
+        is WireExpressionNode.InputWrapper -> {
             bindings[value.binding]?.at(value.path)
         }
 
-        is WireExpressionNode.CallWrapper -> {
-            when (value.operation.value) {
-                "typewriter.rule.nonBlank" -> {
-                    DataValue.Boolean(
-                        (value.arguments.single().evaluate(bindings) as? DataValue.StringValue)?.value?.isNotBlank() == true,
-                    )
-                }
-
-                else -> {
-                    error("The material expression uses an unsupported test operation")
-                }
-            }
+        is WireExpressionNode.RuleUnaryWrapper -> {
+            require(value.operation == skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK)
+            DataValue.Boolean((value.source.evaluate(bindings) as? DataValue.StringValue)?.value?.isNotBlank() == true)
         }
 
         is WireExpressionNode.ConditionalWrapper -> {

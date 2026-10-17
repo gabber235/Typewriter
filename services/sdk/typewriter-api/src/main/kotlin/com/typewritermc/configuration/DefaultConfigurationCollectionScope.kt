@@ -11,15 +11,26 @@ import com.typewritermc.discovery.checkedGeneratedScope
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
+import com.typewritermc.expression.LambdaFrame
 import com.typewritermc.expression.MissingPolicy
-import com.typewritermc.expression.OperationId
 import com.typewritermc.expression.field
+import com.typewritermc.expression.inputExpression
+import com.typewritermc.expression.local
 import com.typewritermc.expression.portableRegexValidationError
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
+import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.BoundDirection
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.RegexMatchMode
+import skirout.editor.v1.expression.RuleUnaryOperation
+import skirout.editor.v1.expression.SizeBoundMetric
+import skirout.editor.v1.expression.SizeRangeMetric
+import skirout.editor.v1.expression.TextCompareOperation
+import skirout.editor.v1.expression.TimestampBoundDirection
 import kotlin.reflect.KClass
 
 /**
@@ -76,7 +87,7 @@ internal class RuntimeConfigurationBinding(
 ) {
     fun <Expressions> rule(callback: ConfigurationPredicate<Expressions>): RuleDeclaration {
         val receiver = checkedGeneratedScope<Expressions>(expressions.scope, expressions.create(VALUE_EXPRESSION))
-        return PendingRule(receiver.callback().node)
+        return PendingRule(receiver.callback().toNode())
     }
 
     fun <Value> check(callback: (Value) -> Boolean): RuleDeclaration =
@@ -86,38 +97,31 @@ internal class RuntimeConfigurationBinding(
         }
 
     fun helper(
-        operation: String,
+        operation: ConfigurationRuleHelper,
         arguments: List<Any?>,
         message: String = helperMessage(operation),
     ) {
-        if (operation == "regex") {
+        if (operation == ConfigurationRuleHelper.REGEX) {
             val pattern =
                 arguments.singleOrNull() as? String
                     ?: throw IllegalArgumentException("A regular expression rule requires one text pattern.")
             pattern.portableRegexValidationError()?.let { reason -> throw IllegalArgumentException(reason) }
         }
-        val nodes = listOf(VALUE_EXPRESSION.node) + arguments.map { literal(it, expected, constants) }
-        val predicate = ExpressionNode.Call(OperationId("typewriter.rule.$operation"), nodes)
+        val nodes = listOf(VALUE_EXPRESSION.toNode()) + arguments.map { literal(it, expected, constants) }
+        val predicate = operation.expression(nodes)
         PendingRule(predicate).error(message)
     }
 
     fun <Expressions> uniqueBy(callback: Expressions.() -> Expr<*, MissingPolicy>) {
-        val item = ExpressionBindingId("configured_item_${state.nextRule}")
+        val frame = LambdaFrame(1)
         val factory = nested[FieldPatternSegment.Items]?.expressions ?: GenericValueExpressionsFactory
-        val receiver =
-            checkedGeneratedScope<Expressions>(
-                factory.scope,
-                factory.create(Expr<Any?, MissingPolicy>(ExpressionNode.Read(item, ValuePath()))),
-            )
-        PendingRule(
-            ExpressionNode.Collection(
-                operation = OperationId("typewriter.collection.unique_by"),
-                input = VALUE_EXPRESSION.node,
-                bindings = listOf(item),
-                arguments = emptyList(),
-                body = receiver.callback().node,
-            ),
-        ).error("Collection values must have unique keys")
+        val receiver = checkedGeneratedScope<Expressions>(factory.scope, factory.create(local<Any?>(frame, 0)))
+        val body = receiver.callback()
+        val predicate =
+            Expr<Boolean, com.typewritermc.expression.MayBeMissing> { outer ->
+                ExpressionNode.createUniqueBy(source = VALUE_EXPRESSION.lower(outer), body = body.lower(outer.enter(frame)))
+            }
+        PendingRule(predicate.toNode()).error("Collection values must have unique keys")
     }
 
     fun <Scope> nested(
@@ -175,9 +179,9 @@ internal class RuntimeConfigurationBinding(
             val origin = RuleOrigin(target, state.nextRule++)
             val effectivePredicate =
                 if (skipNull) {
-                    ExpressionNode.Or(
-                        ExpressionNode.Call(OperationId("typewriter.value.is_null"), listOf(VALUE_EXPRESSION.node)),
-                        predicate,
+                    ExpressionNode.createOr(
+                        left = ExpressionNode.IsNullWrapper(VALUE_EXPRESSION.toNode()),
+                        right = predicate,
                     )
                 } else {
                     predicate
@@ -272,113 +276,317 @@ private fun literal(
     expected: TypeTemplate,
     constants: PortableConstantEncoder?,
 ): ExpressionNode =
-    ExpressionNode.Literal(
-        when (value) {
-            null -> {
-                DataValue.Null
-            }
+    ExpressionNode.LiteralWrapper(
+        SkirDataValueCodec
+            .encode(
+                when (value) {
+                    null -> {
+                        DataValue.Null
+                    }
 
-            Unit -> {
-                DataValue.Unit
-            }
+                    Unit -> {
+                        DataValue.Unit
+                    }
 
-            is Boolean -> {
-                DataValue.Boolean(value)
-            }
+                    is Boolean -> {
+                        DataValue.Boolean(value)
+                    }
 
-            is Byte -> {
-                DataValue.Integer(value.toLong().toBigInteger())
-            }
+                    is Byte -> {
+                        DataValue.Integer(value.toLong().toBigInteger())
+                    }
 
-            is Short -> {
-                DataValue.Integer(value.toLong().toBigInteger())
-            }
+                    is Short -> {
+                        DataValue.Integer(value.toLong().toBigInteger())
+                    }
 
-            is Int -> {
-                DataValue.Integer(value.toLong().toBigInteger())
-            }
+                    is Int -> {
+                        DataValue.Integer(value.toLong().toBigInteger())
+                    }
 
-            is Long -> {
-                DataValue.Integer(value.toBigInteger())
-            }
+                    is Long -> {
+                        DataValue.Integer(value.toBigInteger())
+                    }
 
-            is UByte -> {
-                DataValue.Integer(value.toLong().toBigInteger())
-            }
+                    is UByte -> {
+                        DataValue.Integer(value.toLong().toBigInteger())
+                    }
 
-            is UShort -> {
-                DataValue.Integer(value.toLong().toBigInteger())
-            }
+                    is UShort -> {
+                        DataValue.Integer(value.toLong().toBigInteger())
+                    }
 
-            is UInt -> {
-                DataValue.Integer(value.toString().toBigInteger())
-            }
+                    is UInt -> {
+                        DataValue.Integer(value.toString().toBigInteger())
+                    }
 
-            is ULong -> {
-                DataValue.Integer(value.toString().toBigInteger())
-            }
+                    is ULong -> {
+                        DataValue.Integer(value.toString().toBigInteger())
+                    }
 
-            is Float -> {
-                DataValue.Float(value.toDouble())
-            }
+                    is Float -> {
+                        DataValue.Float(value.toDouble())
+                    }
 
-            is Double -> {
-                DataValue.Float(value)
-            }
+                    is Double -> {
+                        DataValue.Float(value)
+                    }
 
-            is java.math.BigInteger -> {
-                DataValue.Integer(value)
-            }
+                    is java.math.BigInteger -> {
+                        DataValue.Integer(value)
+                    }
 
-            is java.math.BigDecimal -> {
-                DataValue.Decimal(value.toPlainString())
-            }
+                    is java.math.BigDecimal -> {
+                        DataValue.Decimal(value.toPlainString())
+                    }
 
-            is String -> {
-                DataValue.StringValue(value)
-            }
+                    is String -> {
+                        DataValue.StringValue(value)
+                    }
 
-            is ByteArray -> {
-                DataValue.Bytes(value)
-            }
+                    is ByteArray -> {
+                        DataValue.Bytes(value)
+                    }
 
-            is kotlin.time.Instant -> {
-                DataValue.Timestamp(value)
-            }
+                    is kotlin.time.Instant -> {
+                        DataValue.Timestamp(value)
+                    }
 
-            is kotlin.time.Duration -> {
-                DataValue.Duration(value)
-            }
+                    is kotlin.time.Duration -> {
+                        DataValue.Duration(value)
+                    }
 
-            else -> {
-                constants?.encode(expected, value)
-                    ?: throw IllegalArgumentException("Unsupported portable rule constant ${value::class.qualifiedName}.")
-            }
-        },
+                    else -> {
+                        constants?.encode(expected, value)
+                            ?: throw IllegalArgumentException("Unsupported portable rule constant ${value::class.qualifiedName}.")
+                    }
+                },
+            ).getOrThrow(),
     )
 
-internal fun helperMessage(name: String): String =
+internal fun helperMessage(name: ConfigurationRuleHelper): String =
     when (name) {
-        "nonEmpty" -> "Value must not be empty"
-        "nonBlank" -> "Text must not be blank"
-        "minimumLength" -> "Value is shorter than allowed"
-        "maximumLength" -> "Value is longer than allowed"
-        "lengthBetween" -> "Value length is outside the allowed range"
-        "singleLine" -> "Text must be on one line"
-        "regex" -> "Text does not match the required pattern"
-        "startsWith" -> "Text does not start with the required prefix"
-        "endsWith" -> "Text does not end with the required suffix"
-        "minimum" -> "Value is below its minimum"
-        "maximum" -> "Value is above its maximum"
-        "between" -> "Value is outside the allowed range"
-        "positive" -> "Value must be positive"
-        "nonNegative" -> "Value must not be negative"
-        "unique" -> "Collection values must be unique"
-        "notNull" -> "Value is required"
+        ConfigurationRuleHelper.NON_EMPTY -> "Value must not be empty"
+        ConfigurationRuleHelper.NON_BLANK -> "Text must not be blank"
+        ConfigurationRuleHelper.MINIMUM_LENGTH -> "Value is shorter than allowed"
+        ConfigurationRuleHelper.MAXIMUM_LENGTH -> "Value is longer than allowed"
+        ConfigurationRuleHelper.LENGTH_BETWEEN -> "Value length is outside the allowed range"
+        ConfigurationRuleHelper.SINGLE_LINE -> "Text must be on one line"
+        ConfigurationRuleHelper.REGEX -> "Text does not match the required pattern"
+        ConfigurationRuleHelper.STARTS_WITH -> "Text does not start with the required prefix"
+        ConfigurationRuleHelper.ENDS_WITH -> "Text does not end with the required suffix"
+        ConfigurationRuleHelper.MINIMUM -> "Value is below its minimum"
+        ConfigurationRuleHelper.MAXIMUM -> "Value is above its maximum"
+        ConfigurationRuleHelper.BETWEEN -> "Value is outside the allowed range"
+        ConfigurationRuleHelper.POSITIVE -> "Value must be positive"
+        ConfigurationRuleHelper.NON_NEGATIVE -> "Value must not be negative"
+        ConfigurationRuleHelper.UNIQUE -> "Collection values must be unique"
+        ConfigurationRuleHelper.NOT_NULL -> "Value is required"
         else -> "Value does not satisfy $name"
     }
 
-private val VALUE_EXPRESSION =
-    Expr<Any?, MissingPolicy>(
-        ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
-    )
+private val VALUE_EXPRESSION = inputExpression<Any?, MissingPolicy>(ExpressionBindingId("configured_value"))
+
+internal enum class ConfigurationRuleHelper {
+    BETWEEN,
+    ENDS_WITH,
+    ITEMS_BETWEEN,
+    LENGTH_BETWEEN,
+    MAXIMUM,
+    MAXIMUM_ITEMS,
+    MAXIMUM_LENGTH,
+    MAXIMUM_LINES,
+    MAXIMUM_SCALE,
+    MINIMUM,
+    MINIMUM_ITEMS,
+    MINIMUM_LENGTH,
+    MINIMUM_LINES,
+    MULTIPLE_OF,
+    NON_BLANK,
+    NON_EMPTY,
+    NON_NEGATIVE,
+    NOT_AFTER,
+    NOT_BEFORE,
+    NOT_NULL,
+    ONE_OF,
+    OPAQUE,
+    POSITIVE,
+    REGEX,
+    SINGLE_LINE,
+    STARTS_WITH,
+    UNIQUE,
+}
+
+private fun ConfigurationRuleHelper.expression(nodes: List<ExpressionNode>): ExpressionNode {
+    val source = nodes.first()
+
+    fun argument(index: Int) = nodes[index + 1]
+    return when (this) {
+        ConfigurationRuleHelper.NON_EMPTY -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_EMPTY, source = source)
+        }
+
+        ConfigurationRuleHelper.NON_BLANK -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_BLANK, source = source)
+        }
+
+        ConfigurationRuleHelper.SINGLE_LINE -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.SINGLE_LINE, source = source)
+        }
+
+        ConfigurationRuleHelper.POSITIVE -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.POSITIVE, source = source)
+        }
+
+        ConfigurationRuleHelper.NON_NEGATIVE -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_NEGATIVE, source = source)
+        }
+
+        ConfigurationRuleHelper.UNIQUE -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.UNIQUE, source = source)
+        }
+
+        ConfigurationRuleHelper.NOT_NULL -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NOT_NULL, source = source)
+        }
+
+        ConfigurationRuleHelper.OPAQUE -> {
+            ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.OPAQUE, source = source)
+        }
+
+        ConfigurationRuleHelper.MINIMUM_LENGTH -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.TEXT_LENGTH,
+                direction = BoundDirection.MINIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.MAXIMUM_LENGTH -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.TEXT_LENGTH,
+                direction = BoundDirection.MAXIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.MINIMUM_LINES -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.TEXT_LINES,
+                direction = BoundDirection.MINIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.MAXIMUM_LINES -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.TEXT_LINES,
+                direction = BoundDirection.MAXIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.MINIMUM_ITEMS -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.COLLECTION_ITEMS,
+                direction = BoundDirection.MINIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.MAXIMUM_ITEMS -> {
+            ExpressionNode.createRuleSizeBound(
+                metric = SizeBoundMetric.COLLECTION_ITEMS,
+                direction = BoundDirection.MAXIMUM,
+                source = source,
+                bound = argument(0),
+            )
+        }
+
+        ConfigurationRuleHelper.LENGTH_BETWEEN -> {
+            ExpressionNode.createRuleSizeRange(
+                metric = SizeRangeMetric.TEXT_LENGTH,
+                source = source,
+                minimum = argument(0),
+                maximum = argument(1),
+            )
+        }
+
+        ConfigurationRuleHelper.ITEMS_BETWEEN -> {
+            ExpressionNode.createRuleSizeRange(
+                metric = SizeRangeMetric.COLLECTION_ITEMS,
+                source = source,
+                minimum = argument(0),
+                maximum = argument(1),
+            )
+        }
+
+        ConfigurationRuleHelper.MINIMUM -> {
+            ExpressionNode.createRuleNumericBound(
+                direction = BoundDirection.MINIMUM,
+                source = source,
+                bound = argument(0),
+                inclusive =
+                    nodes.getOrNull(2) ?: ExpressionNode.LiteralWrapper(
+                        skirout.editor.v1.type_catalog.DataValue
+                            .BooleanWrapper(true),
+                    ),
+            )
+        }
+
+        ConfigurationRuleHelper.MAXIMUM -> {
+            ExpressionNode.createRuleNumericBound(
+                direction = BoundDirection.MAXIMUM,
+                source = source,
+                bound = argument(0),
+                inclusive =
+                    nodes.getOrNull(2) ?: ExpressionNode.LiteralWrapper(
+                        skirout.editor.v1.type_catalog.DataValue
+                            .BooleanWrapper(true),
+                    ),
+            )
+        }
+
+        ConfigurationRuleHelper.BETWEEN -> {
+            ExpressionNode.createRuleNumericRange(source = source, minimum = argument(0), maximum = argument(1))
+        }
+
+        ConfigurationRuleHelper.MULTIPLE_OF -> {
+            ExpressionNode.createRuleMultipleOf(source = source, divisor = argument(0))
+        }
+
+        ConfigurationRuleHelper.MAXIMUM_SCALE -> {
+            ExpressionNode.createRuleMaximumScale(source = source, scale = argument(0))
+        }
+
+        ConfigurationRuleHelper.REGEX -> {
+            ExpressionNode.createRegexTest(mode = RegexMatchMode.FULL_MATCH, source = source, pattern = argument(0))
+        }
+
+        ConfigurationRuleHelper.STARTS_WITH -> {
+            ExpressionNode.createTextCompare(operation = TextCompareOperation.STARTS_WITH, source = source, other = argument(0))
+        }
+
+        ConfigurationRuleHelper.ENDS_WITH -> {
+            ExpressionNode.createTextCompare(operation = TextCompareOperation.ENDS_WITH, source = source, other = argument(0))
+        }
+
+        ConfigurationRuleHelper.NOT_BEFORE -> {
+            ExpressionNode.createRuleTimestampBound(direction = TimestampBoundDirection.NOT_BEFORE, source = source, bound = argument(0))
+        }
+
+        ConfigurationRuleHelper.NOT_AFTER -> {
+            ExpressionNode.createRuleTimestampBound(direction = TimestampBoundDirection.NOT_AFTER, source = source, bound = argument(0))
+        }
+
+        ConfigurationRuleHelper.ONE_OF -> {
+            require(nodes.size >= 2) { "An allowed value rule requires at least one candidate" }
+            ExpressionNode.createRuleOneOf(source = source, firstCandidate = argument(0), remainingCandidates = nodes.drop(2))
+        }
+    }
+}

@@ -7,8 +7,10 @@ void main() {
   test("expression edits enroll reads only after the mutation succeeds", () {
     final fixture = _fixture();
     final read = PortableExpressionRead(
-      skir.ExpressionBindingId(value: "configured_value"),
-      fixture.title.path,
+      source: PortableExpressionReadSource.input(
+        skir.ExpressionBindingId(value: "configured_value"),
+      ),
+      path: fixture.title.path,
       location: fixture.title,
     );
 

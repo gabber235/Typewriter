@@ -4,15 +4,24 @@
     {
       "id": "integer_addition",
       "expression": {
-        "call": "typewriter.number.add",
-        "arguments": [
-          {
-            "integer": "7"
+        "kind": "number_arithmetic",
+        "value": {
+          "operation": "add",
+          "first": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "7"
+            }
           },
-          {
-            "integer": "5"
+          "second": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "5"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -20,26 +29,77 @@
           "integer": "12"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_capture",
       "expression": {
-        "call": "typewriter.regex.capture",
-        "arguments": [
-          {
-            "read": "subject",
-            "path": [
-              "text"
-            ]
+        "kind": "regex_capture",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": [
+                  {
+                    "kind": "field",
+                    "value": {
+                      "name": "text"
+                    }
+                  }
+                ]
+              }
+            }
           },
-          {
-            "string": "Q(\\d+)"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q(\\d+)"
+            }
           },
-          {
-            "integer": "1"
+          "group": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
           }
-        ]
+        }
       },
       "reads": {
         "subject:text": {
@@ -53,23 +113,125 @@
         "evaluatedReads": [
           "subject:text"
         ]
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "regex_capture_subject"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "regex_capture_subject"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "text"
+                  },
+                  "type": {
+                    "kind": "scalar",
+                    "value": "text"
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "regex_capture_subject"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
       }
     },
     {
       "id": "regex_replace",
       "expression": {
-        "call": "typewriter.regex.replace",
-        "arguments": [
-          {
-            "string": "quest 42"
+        "kind": "regex_replace",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "quest 42"
+            }
           },
-          {
-            "string": "\\d+"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "\\d+"
+            }
           },
-          {
-            "string": "ready"
+          "replacement": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "ready"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -77,23 +239,56 @@
           "string": "quest ready"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "invalid_regex_replacement_capture",
       "expression": {
-        "call": "typewriter.regex.replace",
-        "arguments": [
-          {
-            "string": "Q42"
+        "kind": "regex_replace",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q42"
+            }
           },
-          {
-            "string": "Q(\\d+)"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q(\\d+)"
+            }
           },
-          {
-            "string": "$99"
+          "replacement": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "$99"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -102,23 +297,56 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "escaped_regex_replacement",
       "expression": {
-        "call": "typewriter.regex.replace",
-        "arguments": [
-          {
-            "string": "Q42"
+        "kind": "regex_replace",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q42"
+            }
           },
-          {
-            "string": "Q(\\d+)"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q(\\d+)"
+            }
           },
-          {
-            "string": "\\$99"
+          "replacement": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "\\$99"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -126,20 +354,49 @@
           "string": "$99"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "color_alpha",
       "expression": {
-        "call": "typewriter.color.with_alpha",
-        "arguments": [
-          {
-            "integer": "1122867"
+        "kind": "color_with_alpha",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1122867"
+            }
           },
-          {
-            "integer": "128"
+          "alpha": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "128"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -147,22 +404,70 @@
           "integer": "2148606515"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "boolean_short_circuit",
       "expression": {
-        "and": [
-          {
-            "boolean": false
+        "kind": "and",
+        "value": {
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
           },
-          {
-            "read": "subject",
-            "path": [
-              "missing"
-            ]
+          "right": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": [
+                  {
+                    "kind": "field",
+                    "value": {
+                      "name": "missing"
+                    }
+                  }
+                ]
+              }
+            }
           }
-        ]
+        }
       },
       "reads": {
         "subject:missing": {
@@ -174,22 +479,129 @@
           "boolean": false
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "boolean_short_circuit_subject"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "boolean_short_circuit_subject"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "missing"
+                  },
+                  "type": {
+                    "kind": "scalar",
+                    "value": "boolean"
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "boolean_short_circuit_subject"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
       }
     },
     {
       "id": "fallback_on_missing",
       "expression": {
-        "orElse": [
-          {
-            "read": "subject",
-            "path": [
-              "optional"
-            ]
+        "kind": "or_else",
+        "value": {
+          "input": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": [
+                  {
+                    "kind": "field",
+                    "value": {
+                      "name": "optional"
+                    }
+                  }
+                ]
+              }
+            }
           },
-          {
-            "string": "fallback"
+          "fallback": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "fallback"
+            }
           }
-        ]
+        }
       },
       "reads": {
         "subject:optional": {
@@ -203,23 +615,130 @@
         "evaluatedReads": [
           "subject:optional"
         ]
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "fallback_on_missing_subject"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "fallback_on_missing_subject"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "optional"
+                  },
+                  "type": {
+                    "kind": "scalar",
+                    "value": "text"
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "fallback_on_missing_subject"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "invalid_regex",
       "expression": {
-        "call": "typewriter.regex.matches",
-        "arguments": [
-          {
-            "read": "subject",
-            "path": [
-              "text"
-            ]
+        "kind": "regex_test",
+        "value": {
+          "mode": "search",
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": [
+                  {
+                    "kind": "field",
+                    "value": {
+                      "name": "text"
+                    }
+                  }
+                ]
+              }
+            }
           },
-          {
-            "string": "["
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "["
+            }
           }
-        ]
+        }
       },
       "reads": {
         "subject:text": {
@@ -236,17 +755,109 @@
         "evaluatedReads": [
           "subject:text"
         ]
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "invalid_regex_subject"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "invalid_regex_subject"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "text"
+                  },
+                  "type": {
+                    "kind": "scalar",
+                    "value": "text"
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "invalid_regex_subject"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
       }
     },
     {
       "id": "unicode_code_point_length",
       "expression": {
-        "call": "typewriter.text.length",
-        "arguments": [
-          {
-            "string": "A😀B"
+        "kind": "text_length",
+        "value": {
+          "kind": "literal",
+          "value": {
+            "kind": "string_value",
+            "value": "A😀B"
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -254,23 +865,66 @@
           "integer": "3"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "unicode_code_point_substring",
       "expression": {
-        "call": "typewriter.text.substring",
-        "arguments": [
-          {
-            "string": "A😀B"
+        "kind": "text_substring",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "A😀B"
+            }
           },
-          {
-            "integer": "1"
+          "start": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
           },
-          {
-            "integer": "2"
+          "end": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -278,20 +932,51 @@
           "string": "😀"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "mixed_newline_count",
       "expression": {
-        "call": "typewriter.rule.maximumLines",
-        "arguments": [
-          {
-            "string": "first\r\nsecond\nthird"
+        "kind": "rule_size_bound",
+        "value": {
+          "metric": "text_lines",
+          "direction": "maximum",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "first\r\nsecond\nthird"
+            }
           },
-          {
-            "integer": "3"
+          "bound": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -299,20 +984,50 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_search_match",
       "expression": {
-        "call": "typewriter.regex.matches",
-        "arguments": [
-          {
-            "string": "before Q42 after"
+        "kind": "regex_test",
+        "value": {
+          "mode": "search",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "before Q42 after"
+            }
           },
-          {
-            "string": "Q\\d+"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q\\d+"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -320,20 +1035,50 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_rule_full_match",
       "expression": {
-        "call": "typewriter.rule.regex",
-        "arguments": [
-          {
-            "string": "before Q42 after"
+        "kind": "regex_test",
+        "value": {
+          "mode": "full_match",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "before Q42 after"
+            }
           },
-          {
-            "string": "Q\\d+"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Q\\d+"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -341,20 +1086,50 @@
           "boolean": false
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "exact_large_integer_addition",
       "expression": {
-        "call": "typewriter.number.add",
-        "arguments": [
-          {
-            "integer": "18446744073709551616"
+        "kind": "number_arithmetic",
+        "value": {
+          "operation": "add",
+          "first": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "18446744073709551616"
+            }
           },
-          {
-            "integer": "999999999999999999999999999999"
+          "second": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "999999999999999999999999999999"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -362,20 +1137,60 @@
           "integer": "1000000000018446744073709551615"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "canonical_decimal_addition",
       "expression": {
-        "call": "typewriter.number.add",
-        "arguments": [
-          {
-            "decimal": "1.200"
+        "kind": "number_arithmetic",
+        "value": {
+          "operation": "add",
+          "first": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "1.200"
+            }
           },
-          {
-            "decimal": "2.30"
+          "second": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "2.30"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -383,20 +1198,50 @@
           "decimal": "3.5"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "canonical_decimal_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "decimal": "1.2300"
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "1.2300"
+            }
           },
-          {
-            "decimal": "1.23"
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "1.23"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -404,34 +1249,84 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "named_scalar_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "named": {
-              "namespace": "test",
-              "name": "QuestCode",
-              "revision": 1,
-              "payload": {
-                "string": "Q42"
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "actual_type": {
+                  "definition": {
+                    "type_id": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "test",
+                        "name": "QuestCode"
+                      }
+                    },
+                    "revision": 1
+                  }
+                },
+                "payload": {
+                  "kind": "string_value",
+                  "value": "Q42"
+                }
               }
             }
           },
-          {
-            "named": {
-              "namespace": "test",
-              "name": "QuestCode",
-              "revision": 1,
-              "payload": {
-                "string": "Q42"
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "actual_type": {
+                  "definition": {
+                    "type_id": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "test",
+                        "name": "QuestCode"
+                      }
+                    },
+                    "revision": 1
+                  }
+                },
+                "payload": {
+                  "kind": "string_value",
+                  "value": "Q42"
+                }
               }
             }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -439,34 +1334,106 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "test",
+                "name": "QuestCode"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [],
+          "parents": [],
+          "representation": {
+            "kind": "scalar",
+            "value": {
+              "kind": "text"
+            }
+          }
+        }
+      ],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "record_field_order_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "record": {
-              "first": {
-                "string": "A"
-              },
-              "second": {
-                "integer": "2"
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "record",
+              "value": {
+                "fields": [
+                  {
+                    "name": "first",
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  },
+                  {
+                    "name": "second",
+                    "value": {
+                      "kind": "integer",
+                      "value": "2"
+                    }
+                  }
+                ]
               }
             }
           },
-          {
-            "record": {
-              "second": {
-                "integer": "2"
-              },
-              "first": {
-                "string": "A"
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "record",
+              "value": {
+                "fields": [
+                  {
+                    "name": "second",
+                    "value": {
+                      "kind": "integer",
+                      "value": "2"
+                    }
+                  },
+                  {
+                    "name": "first",
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  }
+                ]
               }
             }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -474,46 +1441,85 @@
           "boolean": true
         },
         "evaluatedReads": []
-      }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [
+        "expression_type_inference_failed"
+      ],
+      "inferredType": null
     },
     {
       "id": "list_item_identity_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "list": [
-              {
-                "id": "left.one",
-                "value": {
-                  "string": "A"
-                }
-              },
-              {
-                "id": "left.two",
-                "value": {
-                  "string": "B"
-                }
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "left.one"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "left.two"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "B"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           },
-          {
-            "list": [
-              {
-                "id": "right.one",
-                "value": {
-                  "string": "A"
-                }
-              },
-              {
-                "id": "right.two",
-                "value": {
-                  "string": "B"
-                }
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "right.one"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "right.two"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "B"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -521,46 +1527,92 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "set_item_identity_and_order_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "set": [
-              {
-                "id": "left.one",
-                "value": {
-                  "string": "A"
-                }
-              },
-              {
-                "id": "left.two",
-                "value": {
-                  "string": "B"
-                }
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "set_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "left.one"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "left.two"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "B"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           },
-          {
-            "set": [
-              {
-                "id": "right.two",
-                "value": {
-                  "string": "B"
-                }
-              },
-              {
-                "id": "right.one",
-                "value": {
-                  "string": "A"
-                }
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "set_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "right.two"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "B"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "right.one"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "A"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -568,58 +1620,108 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "map_row_identity_and_order_equality",
       "expression": {
-        "call": "typewriter.value.eq",
-        "arguments": [
-          {
-            "map": [
-              {
-                "id": "left.one",
-                "key": {
-                  "string": "A"
-                },
-                "value": {
-                  "integer": "1"
-                }
-              },
-              {
-                "id": "left.two",
-                "key": {
-                  "string": "B"
-                },
-                "value": {
-                  "integer": "2"
-                }
+        "kind": "value_compare",
+        "value": {
+          "operation": "equal",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "map_value",
+              "value": {
+                "rows": [
+                  {
+                    "id": {
+                      "value": "left.one"
+                    },
+                    "key": {
+                      "kind": "string_value",
+                      "value": "A"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "1"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "left.two"
+                    },
+                    "key": {
+                      "kind": "string_value",
+                      "value": "B"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "2"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           },
-          {
-            "map": [
-              {
-                "id": "right.two",
-                "key": {
-                  "string": "B"
-                },
-                "value": {
-                  "integer": "2"
-                }
-              },
-              {
-                "id": "right.one",
-                "key": {
-                  "string": "A"
-                },
-                "value": {
-                  "integer": "1"
-                }
+          "right": {
+            "kind": "literal",
+            "value": {
+              "kind": "map_value",
+              "value": {
+                "rows": [
+                  {
+                    "id": {
+                      "value": "right.two"
+                    },
+                    "key": {
+                      "kind": "string_value",
+                      "value": "B"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "2"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "right.one"
+                    },
+                    "key": {
+                      "kind": "string_value",
+                      "value": "A"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "1"
+                    }
+                  }
+                ]
               }
-            ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -627,17 +1729,43 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "portable_whitespace_bom_and_nel",
       "expression": {
-        "call": "typewriter.rule.nonBlank",
-        "arguments": [
-          {
-            "string": "﻿"
+        "kind": "rule_unary",
+        "value": {
+          "operation": "non_blank",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "﻿"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -645,17 +1773,44 @@
           "boolean": false
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "dartBinaryRoundTripKnownIssue": "The pinned Dart Skir decoder drops leading U+FEFF from binary string payloads.",
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "portable_whitespace_excludes_information_separator",
       "expression": {
-        "call": "typewriter.rule.nonBlank",
-        "arguments": [
-          {
-            "string": "\u001c"
+        "kind": "rule_unary",
+        "value": {
+          "operation": "non_blank",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "\u001c"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -663,17 +1818,43 @@
           "boolean": true
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "portable_whitespace_trim",
       "expression": {
-        "call": "typewriter.text.trim",
-        "arguments": [
-          {
-            "string": "﻿ value "
+        "kind": "text_unary",
+        "value": {
+          "operation": "trim",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "﻿ value "
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -681,20 +1862,51 @@
           "string": "value"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "dartBinaryRoundTripKnownIssue": "The pinned Dart Skir decoder drops leading U+FEFF from binary string payloads.",
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "decimal_division_precision",
       "expression": {
-        "call": "typewriter.number.divide",
-        "arguments": [
-          {
-            "decimal": "10"
+        "kind": "number_arithmetic",
+        "value": {
+          "operation": "divide",
+          "first": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "10"
+            }
           },
-          {
-            "decimal": "3"
+          "second": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -702,20 +1914,50 @@
           "decimal": "3.333333333333333333333333333333333"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "negative_decimal_division_precision",
       "expression": {
-        "call": "typewriter.number.divide",
-        "arguments": [
-          {
-            "decimal": "-10"
+        "kind": "number_arithmetic",
+        "value": {
+          "operation": "divide",
+          "first": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "-10"
+            }
           },
-          {
-            "decimal": "3"
+          "second": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -723,24 +1965,49 @@
           "decimal": "-3.333333333333333333333333333333333"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "collection_size_with_unfinished_member",
       "expression": {
-        "call": "typewriter.collection.size",
-        "arguments": [
-          {
-            "list": [
-              {
-                "id": "unfinished",
-                "value": {
-                  "unfilled": true
+        "kind": "collection_size",
+        "value": {
+          "kind": "literal",
+          "value": {
+            "kind": "list_value",
+            "value": {
+              "items": [
+                {
+                  "id": {
+                    "value": "unfinished"
+                  },
+                  "value": "unfilled"
                 }
-              }
-            ]
+              ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -748,36 +2015,68 @@
           "integer": "1"
         },
         "evaluatedReads": []
-      }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [
+        "expression_type_inference_failed"
+      ],
+      "inferredType": null
     },
     {
       "id": "collection_known_duplicate_with_unfinished_member",
       "expression": {
-        "call": "typewriter.rule.unique",
-        "arguments": [
-          {
-            "list": [
-              {
-                "id": "first",
-                "value": {
-                  "string": "same"
-                }
-              },
-              {
-                "id": "second",
-                "value": {
-                  "string": "same"
-                }
-              },
-              {
-                "id": "unfinished",
-                "value": {
-                  "unfilled": true
-                }
+        "kind": "rule_unary",
+        "value": {
+          "operation": "unique",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "first"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "same"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "second"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "same"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "unfinished"
+                    },
+                    "value": "unfilled"
+                  }
+                ]
               }
-            ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -785,30 +2084,61 @@
           "boolean": false
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "collection_unknown_uniqueness",
       "expression": {
-        "call": "typewriter.rule.unique",
-        "arguments": [
-          {
-            "list": [
-              {
-                "id": "known",
-                "value": {
-                  "string": "known"
-                }
-              },
-              {
-                "id": "unfinished",
-                "value": {
-                  "unfilled": true
-                }
+        "kind": "rule_unary",
+        "value": {
+          "operation": "unique",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "known"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "known"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "unfinished"
+                    },
+                    "value": "unfilled"
+                  }
+                ]
               }
-            ]
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -816,20 +2146,50 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "unsupported_host_regex",
       "expression": {
-        "call": "typewriter.rule.regex",
-        "arguments": [
-          {
-            "string": "literal"
+        "kind": "regex_test",
+        "value": {
+          "mode": "full_match",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "literal"
+            }
           },
-          {
-            "string": "\\Qliteral\\E"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "\\Qliteral\\E"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -838,23 +2198,56 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "text_empty_replace_uses_code_points",
       "expression": {
-        "call": "typewriter.text.replace",
-        "arguments": [
-          {
-            "string": "😀"
+        "kind": "text_replace",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "😀"
+            }
           },
-          {
-            "string": ""
+          "target": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": ""
+            }
           },
-          {
-            "string": "_"
+          "replacement": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "_"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -862,20 +2255,49 @@
           "string": "_😀_"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "text_empty_split_uses_code_points",
       "expression": {
-        "call": "typewriter.text.split",
-        "arguments": [
-          {
-            "string": "😀x"
+        "kind": "text_split",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "😀x"
+            }
           },
-          {
-            "string": ""
+          "separator": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": ""
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -896,20 +2318,62 @@
           ]
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_exact_end_anchor",
       "expression": {
-        "call": "typewriter.rule.regex",
-        "arguments": [
-          {
-            "string": "a\n"
+        "kind": "regex_test",
+        "value": {
+          "mode": "full_match",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "a\n"
+            }
           },
-          {
-            "string": "a$"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "a$"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -917,23 +2381,56 @@
           "boolean": false
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_empty_match_replacement_uses_code_points",
       "expression": {
-        "call": "typewriter.regex.replace",
-        "arguments": [
-          {
-            "string": "😀x"
+        "kind": "regex_replace",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "😀x"
+            }
           },
-          {
-            "string": ""
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": ""
+            }
           },
-          {
-            "string": "_"
+          "replacement": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "_"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -941,23 +2438,56 @@
           "string": "_😀_x_"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_emoji_capture",
       "expression": {
-        "call": "typewriter.regex.capture",
-        "arguments": [
-          {
-            "string": "A😀B"
+        "kind": "regex_capture",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "A😀B"
+            }
           },
-          {
-            "string": ".(😀)"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": ".(😀)"
+            }
           },
-          {
-            "integer": "1"
+          "group": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -965,20 +2495,50 @@
           "string": "😀"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_quantified_anchor_rejected",
       "expression": {
-        "call": "typewriter.rule.regex",
-        "arguments": [
-          {
-            "string": "a"
+        "kind": "regex_test",
+        "value": {
+          "mode": "full_match",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "a"
+            }
           },
-          {
-            "string": "a$*"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "a$*"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -987,20 +2547,50 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "regex_pathological_work_is_bounded",
       "expression": {
-        "call": "typewriter.regex.matches",
-        "arguments": [
-          {
-            "string": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
+        "kind": "regex_test",
+        "value": {
+          "mode": "search",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaX"
+            }
           },
-          {
-            "string": "a*aa*aa*aa*aa*$"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "a*aa*aa*aa*aa*$"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1009,23 +2599,56 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_large_decimal_ties_even",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "decimal": "9007199254740993.25"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "9007199254740993.25"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1033,23 +2656,56 @@
           "decimal": "9007199254740993"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_negative_ties_even",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "decimal": "-1.25"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "-1.25"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1057,23 +2713,56 @@
           "decimal": "-1"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_negative_floor",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "decimal": "-1.1"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "-1.1"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "Floor"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Floor"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1081,23 +2770,56 @@
           "decimal": "-1.5"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_negative_ceiling",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "decimal": "-1.1"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "-1.1"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "Ceiling"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Ceiling"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1105,23 +2827,56 @@
           "decimal": "-1"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_toward_zero",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "decimal": "-1.9"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "-1.9"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "TowardZero"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "TowardZero"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1129,23 +2884,56 @@
           "decimal": "-1.5"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "decimal"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_unsigned_integer_extreme",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "integer": "18446744073709551615"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "18446744073709551615"
+            }
           },
-          {
-            "integer": "2"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1153,23 +2941,66 @@
           "integer": "18446744073709551616"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_zero_increment",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "integer": "5"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "5"
+            }
           },
-          {
-            "integer": "0"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1178,23 +3009,66 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "round_mixed_family",
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "integer": "5"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "5"
+            }
           },
-          {
-            "decimal": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "0.5"
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1203,23 +3077,54 @@
           "locations": []
         },
         "evaluatedReads": []
-      }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [
+        "numeric_family_mismatch"
+      ],
+      "inferredType": null
     },
     {
       "id": "format_large_decimal_plain",
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "decimal": "9007199254740993.255"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "9007199254740993.255"
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1227,23 +3132,56 @@
           "string": "9007199254740993.26"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "format_large_integer_grouped",
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "integer": "18446744073709551615"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "18446744073709551615"
+            }
           },
-          {
-            "integer": "0"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
           },
-          {
-            "string": "en_US"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "en_US"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1251,23 +3189,56 @@
           "string": "18,446,744,073,709,551,615"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "format_german_exact_decimal",
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "decimal": "9007199254740993.25"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "9007199254740993.25"
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "de_DE"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "de_DE"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1275,23 +3246,56 @@
           "string": "9.007.199.254.740.993,25"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "format_invalid_precision",
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "integer": "1"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
           },
-          {
-            "integer": "21"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "21"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1300,23 +3304,56 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_zero",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "0"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {}
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1324,23 +3361,60 @@
           "string": "0:00.000"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_negative",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "-61250"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": -61250
+                }
+              }
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1348,23 +3422,60 @@
           "string": "-1:01.250"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_subseconds",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "61250"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": 61250
+                }
+              }
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1372,23 +3483,60 @@
           "string": "1:01.25"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_hours",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "3661250"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": 3661250
+                }
+              }
+            }
           },
-          {
-            "string": "HoursMinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "HoursMinutesAndSeconds"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1396,23 +3544,56 @@
           "string": "1:01:01.250"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_invalid_units",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "0"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {}
+            }
           },
-          {
-            "string": "Unknown"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Unknown"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1421,23 +3602,60 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "duration_format_invalid_precision",
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "1"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": 1
+                }
+              }
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "4"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "4"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1446,26 +3664,66 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "timestamp_format_utc",
       "expression": {
-        "call": "typewriter.timestamp.format",
-        "arguments": [
-          {
-            "timestamp": "2026-10-13T12:34:56.123Z"
+        "kind": "timestamp_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "timestamp",
+              "value": {
+                "unix_millis": 1791894896123,
+                "formatted": "2026-10-13T12:34:56.123Z"
+              }
+            }
           },
-          {
-            "string": "yyyy-MM-dd HH:mm:ss.SSS"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "yyyy-MM-dd HH:mm:ss.SSS"
+            }
           },
-          {
-            "string": "UTC"
+          "zone": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "UTC"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1473,26 +3731,66 @@
           "string": "2026-10-13 12:34:56.123"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "timestamp_format_unknown_zone",
       "expression": {
-        "call": "typewriter.timestamp.format",
-        "arguments": [
-          {
-            "timestamp": "2026-10-13T12:34:56.123Z"
+        "kind": "timestamp_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "timestamp",
+              "value": {
+                "unix_millis": 1791894896123,
+                "formatted": "2026-10-13T12:34:56.123Z"
+              }
+            }
           },
-          {
-            "string": "yyyy-MM-dd"
+          "pattern": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "yyyy-MM-dd"
+            }
           },
-          {
-            "string": "Unknown"
+          "zone": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "Unknown"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "reads": {},
       "expected": {
@@ -1501,24 +3799,57 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "numberFormattingRejectsUnboundedExponent",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "decimal": "1e1000000"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "1e1000000"
+            }
           },
-          {
-            "integer": "0"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "failed": {
@@ -1526,24 +3857,50 @@
           "locations": []
         },
         "evaluatedReads": []
-      }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [
+        "invalid_expression_literal"
+      ],
+      "inferredType": null
     },
     {
       "id": "numberFormattingChargesOutputBudget",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "integer": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+            }
           },
-          {
-            "integer": "0"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "failed": {
@@ -1551,72 +3908,181 @@
           "locations": []
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "roundFloatingTiePreservesFamily",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.round_to",
-        "arguments": [
-          {
-            "float": "1.25"
+        "kind": "number_round",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "float",
+              "value": 1.25
+            }
           },
-          {
-            "float": "0.5"
+          "increment": {
+            "kind": "literal",
+            "value": {
+              "kind": "float",
+              "value": 0.5
+            }
           },
-          {
-            "string": "NearestTiesToEven"
+          "rounding": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "NearestTiesToEven"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "available": {
           "float": "1.0"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "float",
+              "value": {
+                "width": "sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "float",
+              "value": {
+                "width": "sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "formatFloatingDecimalTie",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "float": "150.095"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "float",
+              "value": 150.095
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "available": {
           "string": "150.10"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "formatNonFiniteFloatFails",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "float": "NaN"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "float",
+              "value": "NaN"
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "und"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "und"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "failed": {
@@ -1624,25 +4090,51 @@
           "locations": []
         },
         "evaluatedReads": []
-      }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [
+        "invalid_expression_literal"
+      ],
+      "inferredType": null
     },
     {
       "id": "localizedGroupingUsesHostLocaleData",
       "behavior": "Localized presentation follows host locale data. Exact numeric values and und presentation remain portable.",
       "reads": {},
       "expression": {
-        "call": "typewriter.number.format",
-        "arguments": [
-          {
-            "decimal": "1234567.89"
+        "kind": "number_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "decimal",
+              "value": "1234567.89"
+            }
           },
-          {
-            "integer": "2"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "2"
+            }
           },
-          {
-            "string": "hi_IN"
+          "locale": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "hi_IN"
+            }
           }
-        ]
+        }
       },
       "expectedByHost": {
         "kotlin": {
@@ -1657,52 +4149,2928 @@
           },
           "evaluatedReads": []
         }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "formatDurationFiniteMaximum",
       "reads": {},
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "9007199254740991"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": 9007199254740991
+                }
+              }
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "available": {
           "string": "150119987579:00.991"
         },
         "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
       }
     },
     {
       "id": "formatDurationFiniteMinimum",
       "reads": {},
       "expression": {
-        "call": "typewriter.duration.format",
-        "arguments": [
-          {
-            "duration": "-9007199254740991"
+        "kind": "duration_format",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "duration",
+              "value": {
+                "value": {
+                  "milliseconds": -9007199254740991
+                }
+              }
+            }
           },
-          {
-            "string": "MinutesAndSeconds"
+          "units": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "MinutesAndSeconds"
+            }
           },
-          {
-            "integer": "3"
+          "fraction_digits": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "3"
+            }
           }
-        ]
+        }
       },
       "expected": {
         "available": {
           "string": "-150119987579:00.991"
+        },
+        "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_map_changes_item_type",
+      "expression": {
+        "kind": "map",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "a"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "aa"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "b"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "b"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "body": {
+            "kind": "text_length",
+            "value": {
+              "kind": "local",
+              "value": {
+                "depth": 0,
+                "slot": 0,
+                "path": {
+                  "segments": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "a",
+              "value": {
+                "integer": "2"
+              }
+            },
+            {
+              "id": "b",
+              "value": {
+                "integer": "1"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": [
+          "local:0:0"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "list": [
+              {
+                "id": "a",
+                "value": {
+                  "integer": "2"
+                }
+              },
+              {
+                "id": "b",
+                "value": {
+                  "integer": "1"
+                }
+              }
+            ]
+          },
+          "evaluatedReads": []
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_flat_map_changes_item_type",
+      "expression": {
+        "kind": "flat_map",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "a"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "aa"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "b"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "b"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "body": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "x"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "1"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "1:a1:x",
+              "value": {
+                "integer": "1"
+              }
+            },
+            {
+              "id": "1:b1:x",
+              "value": {
+                "integer": "1"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": []
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_group_by_preserves_source_items",
+      "expression": {
+        "kind": "group_by",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "r0"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "red"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "r1"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "red"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "b0"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "blue"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "body": {
+            "kind": "local",
+            "value": {
+              "depth": 0,
+              "slot": 0,
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "map",
+          "value": {
+            "key": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            },
+            "value": {
+              "value": {
+                "kind": "list",
+                "value": {
+                  "value": {
+                    "kind": "nominal",
+                    "value": {
+                      "kind": "scalar",
+                      "value": "text"
+                    }
+                  },
+                  "may_be_missing": false
+                }
+              },
+              "may_be_missing": false
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "map": [
+            {
+              "id": "r0",
+              "key": {
+                "string": "red"
+              },
+              "value": {
+                "list": [
+                  {
+                    "id": "r0",
+                    "value": {
+                      "string": "red"
+                    }
+                  },
+                  {
+                    "id": "r1",
+                    "value": {
+                      "string": "red"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "b0",
+              "key": {
+                "string": "blue"
+              },
+              "value": {
+                "list": [
+                  {
+                    "id": "b0",
+                    "value": {
+                      "string": "blue"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "evaluatedReads": [
+          "local:0:0"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "map": [
+              {
+                "id": "r0",
+                "key": {
+                  "string": "red"
+                },
+                "value": {
+                  "list": [
+                    {
+                      "id": "r0",
+                      "value": {
+                        "string": "red"
+                      }
+                    },
+                    {
+                      "id": "r1",
+                      "value": {
+                        "string": "red"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "b0",
+                "key": {
+                  "string": "blue"
+                },
+                "value": {
+                  "list": [
+                    {
+                      "id": "b0",
+                      "value": {
+                        "string": "blue"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "evaluatedReads": []
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "map",
+          "value": {
+            "key": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            },
+            "value": {
+              "value": {
+                "kind": "list",
+                "value": {
+                  "value": {
+                    "kind": "nominal",
+                    "value": {
+                      "kind": "scalar",
+                      "value": "text"
+                    }
+                  },
+                  "may_be_missing": false
+                }
+              },
+              "may_be_missing": false
+            }
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_group_by_entries_project_keys",
+      "expression": {
+        "kind": "map",
+        "value": {
+          "source": {
+            "kind": "group_by",
+            "value": {
+              "source": {
+                "kind": "literal",
+                "value": {
+                  "kind": "list_value",
+                  "value": {
+                    "items": [
+                      {
+                        "id": {
+                          "value": "r0"
+                        },
+                        "value": {
+                          "kind": "string_value",
+                          "value": "red"
+                        }
+                      },
+                      {
+                        "id": {
+                          "value": "r1"
+                        },
+                        "value": {
+                          "kind": "string_value",
+                          "value": "red"
+                        }
+                      },
+                      {
+                        "id": {
+                          "value": "b0"
+                        },
+                        "value": {
+                          "kind": "string_value",
+                          "value": "blue"
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "body": {
+                "kind": "local",
+                "value": {
+                  "depth": 0,
+                  "slot": 0,
+                  "path": {
+                    "segments": []
+                  }
+                }
+              }
+            }
+          },
+          "body": {
+            "kind": "entry_projection",
+            "value": {
+              "source": {
+                "kind": "local",
+                "value": {
+                  "depth": 0,
+                  "slot": 0,
+                  "path": {
+                    "segments": []
+                  }
+                }
+              },
+              "branch": "key"
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "r0",
+              "value": {
+                "string": "red"
+              }
+            },
+            {
+              "id": "b0",
+              "value": {
+                "string": "blue"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": [
+          "local:0:0",
+          "local:0:0:key"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "list": [
+              {
+                "id": "r0",
+                "value": {
+                  "string": "red"
+                }
+              },
+              {
+                "id": "b0",
+                "value": {
+                  "string": "blue"
+                }
+              }
+            ]
+          },
+          "evaluatedReads": []
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_mapping_access_returns_value",
+      "expression": {
+        "kind": "collection_access",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "index": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "answer"
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "map": [
+            {
+              "id": "row",
+              "key": {
+                "string": "answer"
+              },
+              "value": {
+                "integer": "7"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "map",
+            "value": {
+              "key": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {
+                    "kind": "scalar",
+                    "value": "text"
+                  }
+                },
+                "may_be_missing": false
+              },
+              "value": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {
+                    "kind": "scalar",
+                    "value": {
+                      "kind": "integer",
+                      "value": {
+                        "width": "signed_thirty_two"
+                      }
+                    }
+                  }
+                },
+                "may_be_missing": false
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      }
+    },
+    {
+      "id": "typed_mapping_contains_accepts_key",
+      "expression": {
+        "kind": "collection_contains",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "value": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "answer"
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "map": [
+            {
+              "id": "row",
+              "key": {
+                "string": "answer"
+              },
+              "value": {
+                "integer": "7"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "boolean": true
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "map",
+            "value": {
+              "key": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {
+                    "kind": "scalar",
+                    "value": "text"
+                  }
+                },
+                "may_be_missing": false
+              },
+              "value": {
+                "value": {
+                  "kind": "nominal",
+                  "value": {
+                    "kind": "scalar",
+                    "value": {
+                      "kind": "integer",
+                      "value": {
+                        "width": "signed_thirty_two"
+                      }
+                    }
+                  }
+                },
+                "may_be_missing": false
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_numeric_width_join_keeps_bound_leaf",
+      "expression": {
+        "kind": "conditional",
+        "value": {
+          "test": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          "yes": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "one"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "1"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "no": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": [
+            {
+              "id": "stored",
+              "value": {
+                "integer": "3"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_thirty_two"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "one",
+              "value": {
+                "integer": "1"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": []
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": {
+                    "kind": "integer",
+                    "value": {
+                      "width": "signed_thirty_two"
+                    }
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_thirty_two"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_numeric_width_join_rejects_narrowing",
+      "expression": {
+        "kind": "conditional",
+        "value": {
+          "test": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          },
+          "yes": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "one"
+                    },
+                    "value": {
+                      "kind": "integer",
+                      "value": "1"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "no": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": [
+            {
+              "id": "stored",
+              "value": {
+                "integer": "3"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixteen"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [
+        "incompatible_expression_result_type"
+      ],
+      "expected": {
+        "available": {
+          "list": [
+            {
+              "id": "one",
+              "value": {
+                "integer": "1"
+              }
+            }
+          ]
+        },
+        "evaluatedReads": []
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": {
+                    "kind": "integer",
+                    "value": {
+                      "width": "signed_thirty_two"
+                    }
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_thirty_two"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_fold_nested_capture_uses_outer_accumulator",
+      "expression": {
+        "kind": "fold",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "a"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "aa"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "b"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "b"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "initial": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
+          },
+          "body": {
+            "kind": "collection_access",
+            "value": {
+              "source": {
+                "kind": "map",
+                "value": {
+                  "source": {
+                    "kind": "literal",
+                    "value": {
+                      "kind": "list_value",
+                      "value": {
+                        "items": [
+                          {
+                            "id": {
+                              "value": "unused"
+                            },
+                            "value": {
+                              "kind": "string_value",
+                              "value": "x"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "body": {
+                    "kind": "number_arithmetic",
+                    "value": {
+                      "operation": "add",
+                      "first": {
+                        "kind": "local",
+                        "value": {
+                          "depth": 1,
+                          "slot": 0,
+                          "path": {
+                            "segments": []
+                          }
+                        }
+                      },
+                      "second": {
+                        "kind": "literal",
+                        "value": {
+                          "kind": "integer",
+                          "value": "1"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "index": {
+                "kind": "literal",
+                "value": {
+                  "kind": "integer",
+                  "value": "0"
+                }
+              }
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "integer": "2"
+        },
+        "evaluatedReads": [
+          "local:1:0"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "integer": "2"
+          },
+          "evaluatedReads": []
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      }
+    },
+    {
+      "id": "typed_empty_fallback_uses_collection_context",
+      "expression": {
+        "kind": "map",
+        "value": {
+          "source": {
+            "kind": "or_else",
+            "value": {
+              "input": {
+                "kind": "input",
+                "value": {
+                  "binding": {
+                    "value": "subject"
+                  },
+                  "path": {
+                    "segments": []
+                  }
+                }
+              },
+              "fallback": {
+                "kind": "literal",
+                "value": {
+                  "kind": "list_value",
+                  "value": {
+                    "items": []
+                  }
+                }
+              }
+            }
+          },
+          "body": {
+            "kind": "text_length",
+            "value": {
+              "kind": "local",
+              "value": {
+                "depth": 0,
+                "slot": 0,
+                "path": {
+                  "segments": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "unavailable": true
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "list": []
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": true
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_sixty_four"
+                  }
+                }
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_invalid_local_depth",
+      "expression": {
+        "kind": "local",
+        "value": {
+          "depth": 1,
+          "slot": 0,
+          "path": {
+            "segments": []
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [
+        "invalid_expression_local"
+      ],
+      "expected": {
+        "failed": {
+          "code": "invalid_expression_local",
+          "locations": []
+        },
+        "evaluatedReads": []
+      },
+      "inferredType": null
+    },
+    {
+      "id": "typed_invalid_local_slot",
+      "expression": {
+        "kind": "map",
+        "value": {
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "list_value",
+              "value": {
+                "items": [
+                  {
+                    "id": {
+                      "value": "a"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "aa"
+                    }
+                  },
+                  {
+                    "id": {
+                      "value": "b"
+                    },
+                    "value": {
+                      "kind": "string_value",
+                      "value": "b"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "body": {
+            "kind": "local",
+            "value": {
+              "depth": 0,
+              "slot": 1,
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [
+        "invalid_expression_local"
+      ],
+      "expected": {
+        "failed": {
+          "code": "invalid_expression_local",
+          "locations": []
+        },
+        "evaluatedReads": []
+      },
+      "inferredType": null
+    },
+    {
+      "id": "typed_partial_input_selected_field",
+      "expression": {
+        "kind": "field",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "name": "title"
+        }
+      },
+      "reads": {
+        "subject:title": {
+          "string": "Selected"
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "string": "Selected"
+        },
+        "evaluatedReads": [
+          "subject:title"
+        ]
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "PendingRecord"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [
+            {
+              "key": {
+                "owner": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "PendingRecord"
+                    }
+                  },
+                  "revision": 1
+                },
+                "index": 0
+              },
+              "name": "T",
+              "bounds": []
+            }
+          ],
+          "parents": [],
+          "representation": {
+            "kind": "record",
+            "value": {
+              "abstract": false,
+              "fields": [
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "PendingRecord"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "title"
+                  },
+                  "type": {
+                    "kind": "scalar",
+                    "value": "text"
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                },
+                {
+                  "owner": {
+                    "definition": {
+                      "type_id": {
+                        "kind": "qualified",
+                        "value": {
+                          "namespace": "expression.fixture",
+                          "name": "PendingRecord"
+                        }
+                      },
+                      "revision": 1
+                    },
+                    "name": "payload"
+                  },
+                  "type": {
+                    "kind": "parameter",
+                    "value": {
+                      "owner": {
+                        "type_id": {
+                          "kind": "qualified",
+                          "value": {
+                            "namespace": "expression.fixture",
+                            "name": "PendingRecord"
+                          }
+                        },
+                        "revision": 1
+                      },
+                      "index": 0
+                    }
+                  },
+                  "overrides": [],
+                  "has_constructor_default": false
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "partialBindings": {
+        "subject": {
+          "kind": "pending",
+          "value": {
+            "definition": {
+              "type_id": {
+                "kind": "qualified",
+                "value": {
+                  "namespace": "expression.fixture",
+                  "name": "PendingRecord"
+                }
+              },
+              "revision": 1
+            },
+            "arguments": [
+              "unfilled"
+            ]
+          }
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": true
+      }
+    },
+    {
+      "id": "typed_generic_mapping_alias_access",
+      "expression": {
+        "kind": "collection_access",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "index": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "answer"
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "named": {
+            "namespace": "expression.fixture",
+            "name": "Dictionary",
+            "revision": 1,
+            "arguments": [
+              {
+                "kind": "scalar",
+                "value": "text"
+              },
+              {
+                "kind": "scalar",
+                "value": {
+                  "kind": "integer",
+                  "value": {
+                    "width": "signed_thirty_two"
+                  }
+                }
+              }
+            ],
+            "payload": {
+              "map": [
+                {
+                  "id": "row",
+                  "key": {
+                    "string": "answer"
+                  },
+                  "value": {
+                    "integer": "7"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      },
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "Dictionary"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": [
+                  {
+                    "kind": "scalar",
+                    "value": "text"
+                  },
+                  {
+                    "kind": "scalar",
+                    "value": {
+                      "kind": "integer",
+                      "value": {
+                        "width": "signed_thirty_two"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "typeDefinitions": [
+        {
+          "id": {
+            "type_id": {
+              "kind": "qualified",
+              "value": {
+                "namespace": "expression.fixture",
+                "name": "Dictionary"
+              }
+            },
+            "revision": 1
+          },
+          "parameters": [
+            {
+              "key": {
+                "owner": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "Dictionary"
+                    }
+                  },
+                  "revision": 1
+                },
+                "index": 0
+              },
+              "name": "K",
+              "bounds": []
+            },
+            {
+              "key": {
+                "owner": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression.fixture",
+                      "name": "Dictionary"
+                    }
+                  },
+                  "revision": 1
+                },
+                "index": 1
+              },
+              "name": "V",
+              "bounds": []
+            }
+          ],
+          "parents": [],
+          "representation": {
+            "kind": "mapping",
+            "value": {
+              "key": {
+                "kind": "parameter",
+                "value": {
+                  "owner": {
+                    "type_id": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "expression.fixture",
+                        "name": "Dictionary"
+                      }
+                    },
+                    "revision": 1
+                  },
+                  "index": 0
+                }
+              },
+              "value": {
+                "kind": "parameter",
+                "value": {
+                  "owner": {
+                    "type_id": {
+                      "kind": "qualified",
+                      "value": {
+                        "namespace": "expression.fixture",
+                        "name": "Dictionary"
+                      }
+                    },
+                    "revision": 1
+                  },
+                  "index": 1
+                }
+              }
+            }
+          }
+        }
+      ],
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": true
+      }
+    },
+    {
+      "id": "typed_empty_list_uses_declared_result_context",
+      "expression": {
+        "kind": "literal",
+        "value": {
+          "kind": "list_value",
+          "value": {
+            "items": []
+          }
+        }
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "list": []
+        },
+        "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {},
+      "inferredType": {
+        "value": {
+          "kind": "list",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_empty_map_uses_declared_result_context",
+      "expression": {
+        "kind": "literal",
+        "value": {
+          "kind": "map_value",
+          "value": {
+            "rows": []
+          }
+        }
+      },
+      "reads": {},
+      "expected": {
+        "available": {
+          "map": []
+        },
+        "evaluatedReads": []
+      },
+      "resultType": {
+        "value": {
+          "kind": "map",
+          "value": {
+            "key": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            },
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {},
+      "inferredType": {
+        "value": {
+          "kind": "map",
+          "value": {
+            "key": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            },
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_literal_seeded_fold_retains_declared_step_width",
+      "expression": {
+        "kind": "fold",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "initial": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
+          },
+          "body": {
+            "kind": "local",
+            "value": {
+              "depth": 0,
+              "slot": 1,
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": [
+            {
+              "id": "a",
+              "value": {
+                "integer": "7"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": {
+                    "kind": "integer",
+                    "value": {
+                      "width": "signed_thirty_two"
+                    }
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": [
+          "subject",
+          "local:0:1"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "integer": "7"
+          },
+          "evaluatedReads": [
+            "subject"
+          ]
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_literal_seeded_fold_rejects_declared_result_narrowing",
+      "expression": {
+        "kind": "fold",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "initial": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "0"
+            }
+          },
+          "body": {
+            "kind": "local",
+            "value": {
+              "depth": 0,
+              "slot": 1,
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": [
+            {
+              "id": "a",
+              "value": {
+                "integer": "7"
+              }
+            }
+          ]
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixteen"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [
+        "incompatible_expression_result_type"
+      ],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": {
+                    "kind": "integer",
+                    "value": {
+                      "width": "signed_thirty_two"
+                    }
+                  }
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": [
+          "subject",
+          "local:0:1"
+        ]
+      },
+      "expectedByHost": {
+        "kotlin": {
+          "available": {
+            "integer": "7"
+          },
+          "evaluatedReads": [
+            "subject"
+          ]
+        }
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_thirty_two"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      }
+    },
+    {
+      "id": "typed_empty_find_returns_null",
+      "expression": {
+        "kind": "find",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "body": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": []
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "null": true
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "typed_empty_find_last_returns_null",
+      "expression": {
+        "kind": "find_last",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "body": {
+            "kind": "literal",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": []
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "null": true
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "typed_empty_reduce_returns_null",
+      "expression": {
+        "kind": "reduce",
+        "value": {
+          "source": {
+            "kind": "input",
+            "value": {
+              "binding": {
+                "value": "subject"
+              },
+              "path": {
+                "segments": []
+              }
+            }
+          },
+          "body": {
+            "kind": "local",
+            "value": {
+              "depth": 0,
+              "slot": 0,
+              "path": {
+                "segments": []
+              }
+            }
+          }
+        }
+      },
+      "reads": {
+        "subject": {
+          "list": []
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nullable",
+          "value": {
+            "value": {
+              "kind": "nominal",
+              "value": {
+                "kind": "scalar",
+                "value": "text"
+              }
+            },
+            "may_be_missing": false
+          }
+        },
+        "may_be_missing": false
+      },
+      "checkCodes": [],
+      "bindingTypes": {
+        "subject": {
+          "value": {
+            "kind": "list",
+            "value": {
+              "value": {
+                "kind": "nominal",
+                "value": {
+                  "kind": "scalar",
+                  "value": "text"
+                }
+              },
+              "may_be_missing": false
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "expected": {
+        "available": {
+          "null": true
+        },
+        "evaluatedReads": [
+          "subject"
+        ]
+      }
+    },
+    {
+      "id": "typed_unavailable_input_unused_ignored",
+      "expression": {
+        "kind": "literal",
+        "value": {
+          "kind": "integer",
+          "value": "7"
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "bindingTypes": {
+        "unavailable": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression-fixture",
+                      "name": "UnavailableContext"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "checkCodes": [],
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "typed_unavailable_input_consumed_rejected",
+      "expression": {
+        "kind": "input",
+        "value": {
+          "binding": {
+            "value": "unavailable"
+          },
+          "path": {
+            "segments": []
+          }
+        }
+      },
+      "reads": {
+        "unavailable": {
+          "integer": "7"
+        }
+      },
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": {
+              "kind": "integer",
+              "value": {
+                "width": "signed_sixty_four"
+              }
+            }
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": null,
+      "bindingTypes": {
+        "unavailable": {
+          "value": {
+            "kind": "nominal",
+            "value": {
+              "kind": "named",
+              "value": {
+                "definition": {
+                  "type_id": {
+                    "kind": "qualified",
+                    "value": {
+                      "namespace": "expression-fixture",
+                      "name": "UnavailableContext"
+                    }
+                  },
+                  "revision": 1
+                },
+                "arguments": []
+              }
+            }
+          },
+          "may_be_missing": false
+        }
+      },
+      "checkCodes": [
+        "invalid_expression_type"
+      ],
+      "expected": {
+        "available": {
+          "integer": "7"
+        },
+        "evaluatedReads": [
+          "unavailable"
+        ]
+      }
+    },
+    {
+      "id": "typed_unknown_node_rejected",
+      "expression": "UNKNOWN",
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": null,
+      "checkCodes": [
+        "unknown_expression"
+      ],
+      "expected": {
+        "failed": {
+          "code": "unknown_expression",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "typed_unknown_operation_rejected",
+      "expression": {
+        "kind": "text_unary",
+        "value": {
+          "operation": "UNKNOWN",
+          "source": {
+            "kind": "literal",
+            "value": {
+              "kind": "string_value",
+              "value": "text"
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "text"
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": null,
+      "checkCodes": [
+        "unknown_expression_operation"
+      ],
+      "expected": {
+        "failed": {
+          "code": "unknown_expression_operation",
+          "locations": []
+        },
+        "evaluatedReads": []
+      }
+    },
+    {
+      "id": "typed_missing_required_operand_rejected",
+      "expression": {
+        "kind": "number_compare",
+        "value": {
+          "operation": "greater",
+          "left": {
+            "kind": "literal",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      },
+      "reads": {},
+      "resultType": {
+        "value": {
+          "kind": "nominal",
+          "value": {
+            "kind": "scalar",
+            "value": "boolean"
+          }
+        },
+        "may_be_missing": false
+      },
+      "inferredType": null,
+      "checkCodes": [
+        "unknown_expression"
+      ],
+      "expected": {
+        "failed": {
+          "code": "unknown_expression",
+          "locations": []
         },
         "evaluatedReads": []
       }

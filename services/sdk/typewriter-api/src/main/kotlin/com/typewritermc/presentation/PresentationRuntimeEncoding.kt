@@ -6,6 +6,7 @@ import com.typewritermc.types.DataValue
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.type_catalog.FieldPathSegment
 import java.math.BigInteger
 import skirout.editor.v1.presentation.CrossAxisAlignment as WireCrossAxisAlignment
@@ -32,11 +33,19 @@ internal fun ExpressionBindingId.wire(): WireExpressionBindingId = WireExpressio
 internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNode =
     when (value) {
         is String -> {
-            SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.StringValue(value))).getOrThrow()
+            ExpressionNode.LiteralWrapper(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .encode(DataValue.StringValue(value))
+                    .getOrThrow(),
+            )
         }
 
         is Boolean -> {
-            SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.Boolean(value))).getOrThrow()
+            ExpressionNode.LiteralWrapper(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .encode(DataValue.Boolean(value))
+                    .getOrThrow(),
+            )
         }
 
         is Byte -> {
@@ -68,19 +77,31 @@ internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNod
         }
 
         is ULong -> {
-            SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.Integer(BigInteger(value.toString())))).getOrThrow()
+            ExpressionNode.LiteralWrapper(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .encode(DataValue.Integer(BigInteger(value.toString())))
+                    .getOrThrow(),
+            )
         }
 
         is Float -> {
-            SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.Float(value.toDouble()))).getOrThrow()
+            ExpressionNode.LiteralWrapper(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .encode(DataValue.Float(value.toDouble()))
+                    .getOrThrow(),
+            )
         }
 
         is Double -> {
-            SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.Float(value))).getOrThrow()
+            ExpressionNode.LiteralWrapper(
+                com.typewritermc.types.skir.SkirDataValueCodec
+                    .encode(DataValue.Float(value))
+                    .getOrThrow(),
+            )
         }
 
         is Expr<*, *> -> {
-            SkirTypeCodec.encode(value.node).getOrThrow()
+            value.toNode()
         }
 
         else -> {
@@ -89,7 +110,11 @@ internal fun expression(value: Any?): skirout.editor.v1.expression.ExpressionNod
     }
 
 internal fun integerExpression(value: Long): skirout.editor.v1.expression.ExpressionNode =
-    SkirTypeCodec.encode(ExpressionNode.Literal(DataValue.Integer(BigInteger.valueOf(value)))).getOrThrow()
+    ExpressionNode.LiteralWrapper(
+        com.typewritermc.types.skir.SkirDataValueCodec
+            .encode(DataValue.Integer(BigInteger.valueOf(value)))
+            .getOrThrow(),
+    )
 
 internal fun MainAxisAlignment.wire(): WireMainAxisAlignment =
     when (this) {

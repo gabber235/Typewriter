@@ -9,8 +9,8 @@ import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
+import skirout.editor.v1.expression.ExpressionNode
 
 internal class RealmExpressionRuntime(
     private val budget: EvaluationBudget = EvaluationBudget(maxSteps = 100_000, maxCollectionItems = 100_000),

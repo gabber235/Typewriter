@@ -26,7 +26,7 @@ void main() {
         skir.EditorAction.wrapRealm(
           skir.RealmEditorAction.createCommand(
             capabilityId: capability,
-            payload: skir.ExpressionNode.createRead(
+            payload: skir.ExpressionNode.createInput(
               binding: skir.ExpressionBindingId(value: "context:subject"),
               path: editorRootPath,
             ),
@@ -449,7 +449,7 @@ void main() {
       await dispatcher.dispatch(
         skir.EditorAction.createAuthoring(
           capability: skir.CapabilityId(value: "fixture:prefix"),
-          targets: skir.ExpressionNode.createRead(
+          targets: skir.ExpressionNode.createInput(
             binding: skir.ExpressionBindingId(value: "context:selection"),
             path: editorRootPath,
           ),
@@ -475,7 +475,7 @@ void main() {
       );
       await dispatcher.dispatch(
         skir.EditorAction.createNavigate(
-          resource: skir.ExpressionNode.createRead(
+          resource: skir.ExpressionNode.createInput(
             binding: skir.ExpressionBindingId(value: "context:subject"),
             path: editorRootPath,
           ),

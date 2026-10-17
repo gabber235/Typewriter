@@ -3,7 +3,6 @@ package com.typewritermc.expression
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.configuration.PortableExpressionChecker
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.FloatWidth
 import com.typewritermc.types.ScalarKind
@@ -12,6 +11,7 @@ import com.typewritermc.types.catalog.DefaultCheckedCatalog
 import com.typewritermc.types.catalog.resolve
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.ExpressionNode
 
 val PortableExpressionCheckingTest by testSuite {
     val catalog = DefaultCheckedCatalog(CatalogGeneration("expression mappings"), emptyList())
@@ -22,12 +22,12 @@ val PortableExpressionCheckingTest by testSuite {
     val decimal = TypeUse.Scalar(ScalarKind.Decimal)
     val floating = TypeUse.Scalar(ScalarKind.Float(FloatWidth.FLOAT_32))
 
-    fun read(id: ExpressionBindingId) = ExpressionNode.Read(id, ValuePath())
+    fun read(id: ExpressionBindingId) = testInput(id, ValuePath())
 
-    fun call(
-        id: String,
-        vararg nodes: ExpressionNode,
-    ) = ExpressionNode.Call(OperationId(id), nodes.toList())
+    fun round(vararg nodes: ExpressionNode) = ExpressionNode.createNumberRound(source = nodes[0], increment = nodes[1], rounding = nodes[2])
+
+    fun duration(vararg nodes: ExpressionNode) =
+        ExpressionNode.createDurationFormat(source = nodes[0], units = nodes[1], fractionDigits = nodes[2])
 
     test("unused generic ambient bindings do not postpone concrete candidate checking") {
         val parameterOwner =
@@ -53,7 +53,7 @@ val PortableExpressionCheckingTest by testSuite {
             emptyList()
         com.typewritermc.presentation
             .checkPresentationExpression(
-                call("typewriter.text.trim", read(candidate)),
+                ExpressionNode.createTextUnary(operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM, source = read(candidate)),
                 bindings,
                 concrete,
                 setOf(candidate),
@@ -61,52 +61,51 @@ val PortableExpressionCheckingTest by testSuite {
             ).isNotEmpty() shouldBe
             true
     }
-    test("operation descriptors preserve unsigned widths and missing availability") {
+    test("typed numeric rounding preserves declared unsigned width and missing input") {
         val unsigned = TypeUse.Scalar(ScalarKind.Integer(com.typewritermc.types.IntegerWidth.UNSIGNED_64))
-        val inputs = listOf(ExpressionType(unsigned, false), ExpressionType(unsigned, true), ExpressionType(text, false))
-        SharedOperationSignatures.resolveOrNull(OperationId("typewriter.number.round_to"), inputs)?.result shouldBe
-            ExpressionType(unsigned, true)
-        SharedOperationSignatures.resolveOrNull(
-            OperationId("typewriter.number.round_to"),
-            listOf(ExpressionType(floating, false), ExpressionType(decimal, false), ExpressionType(text, false)),
-        ) shouldBe
-            null
+        val expression = round(read(candidate), read(parent), testLiteral(DataValue.StringValue("Floor")))
+        val inputs = mapOf(candidate to nominalExpressionType(unsigned), parent to nominalExpressionType(unsigned, true))
+        checker.checkExpressionCodes(expression, inputs, nominalExpressionType(unsigned, true)) shouldBe emptyList()
+        checker
+            .checkExpressionCodes(
+                expression,
+                inputs,
+                nominalExpressionType(unsigned),
+            ).contains("expression_result_may_be_missing") shouldBe
+            true
     }
     test("completion preserves decimal candidate family") {
         checker.checkExpressionCodes(
-            call(
-                "typewriter.number.round_to",
+            round(
                 read(candidate),
-                ExpressionNode.Literal(DataValue.Decimal("0.01")),
-                ExpressionNode.Literal(DataValue.StringValue("NearestTiesToEven")),
+                testLiteral(DataValue.Decimal("0.01")),
+                testLiteral(DataValue.StringValue("NearestTiesToEven")),
             ),
-            mapOf(candidate to ExpressionType(decimal, false)),
-            ExpressionType(decimal, false),
+            mapOf(candidate to nominalExpressionType(decimal, false)),
+            nominalExpressionType(decimal, false),
         ) shouldBe emptyList()
     }
     test("completion preserves narrow floating candidate family") {
         checker.checkExpressionCodes(
-            call(
-                "typewriter.number.round_to",
+            round(
                 read(candidate),
-                ExpressionNode.Literal(DataValue.Float(0.5)),
-                ExpressionNode.Literal(DataValue.StringValue("Floor")),
+                testLiteral(DataValue.Float(0.5)),
+                testLiteral(DataValue.StringValue("Floor")),
             ),
-            mapOf(candidate to ExpressionType(floating, false)),
-            ExpressionType(floating, false),
+            mapOf(candidate to nominalExpressionType(floating, false)),
+            nominalExpressionType(floating, false),
         ) shouldBe emptyList()
     }
     test("floating candidates reject decimal increments") {
         checker
             .checkExpressionCodes(
-                call(
-                    "typewriter.number.round_to",
+                round(
                     read(candidate),
-                    ExpressionNode.Literal(DataValue.Decimal("0.5")),
-                    ExpressionNode.Literal(DataValue.StringValue("Floor")),
+                    testLiteral(DataValue.Decimal("0.5")),
+                    testLiteral(DataValue.StringValue("Floor")),
                 ),
-                mapOf(candidate to ExpressionType(floating, false)),
-                ExpressionType(floating, false),
+                mapOf(candidate to nominalExpressionType(floating, false)),
+                nominalExpressionType(floating, false),
             ).isNotEmpty() shouldBe true
     }
     test("completion cannot implicitly narrow another declared source width") {
@@ -114,36 +113,39 @@ val PortableExpressionCheckingTest by testSuite {
         checker
             .checkExpressionCodes(
                 read(parent),
-                mapOf(parent to ExpressionType(wide, false)),
-                ExpressionType(floating, false),
+                mapOf(parent to nominalExpressionType(wide, false)),
+                nominalExpressionType(floating, false),
             ).isNotEmpty() shouldBe
             true
     }
     test("completion requires parent absence to be handled explicitly") {
-        val bindings = mapOf(candidate to ExpressionType(text, false), parent to ExpressionType(text, true))
+        val bindings = mapOf(candidate to nominalExpressionType(text, false), parent to nominalExpressionType(text, true))
         checker
             .checkExpressionCodes(
                 read(parent),
                 bindings,
-                ExpressionType(text, false),
+                nominalExpressionType(text, false),
             ).contains("expression_result_may_be_missing") shouldBe
             true
-        checker.checkExpressionCodes(ExpressionNode.OrElse(read(parent), read(candidate)), bindings, ExpressionType(text, false)) shouldBe
+        checker.checkExpressionCodes(
+            ExpressionNode.createOrElse(input = read(parent), fallback = read(candidate)),
+            bindings,
+            nominalExpressionType(text, false),
+        ) shouldBe
             emptyList()
     }
     test("unknown local candidate aliases cannot escape their scope") {
-        checker.checkExpressionCodes(read(candidate), emptyMap(), ExpressionType(text, false)).isNotEmpty() shouldBe true
+        checker.checkExpressionCodes(read(candidate), emptyMap(), nominalExpressionType(text, false)).isNotEmpty() shouldBe true
     }
     test("duration display uses the shared text operation contract") {
         checker.checkExpressionCodes(
-            call(
-                "typewriter.duration.format",
+            duration(
                 read(candidate),
-                ExpressionNode.Literal(DataValue.StringValue("MinutesAndSeconds")),
-                ExpressionNode.Literal(DataValue.Integer(java.math.BigInteger.ZERO)),
+                testLiteral(DataValue.StringValue("MinutesAndSeconds")),
+                testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
             ),
-            mapOf(candidate to ExpressionType(TypeUse.Scalar(ScalarKind.Duration), false)),
-            ExpressionType(text, false),
+            mapOf(candidate to nominalExpressionType(TypeUse.Scalar(ScalarKind.Duration), false)),
+            nominalExpressionType(text, false),
         ) shouldBe emptyList()
     }
 }

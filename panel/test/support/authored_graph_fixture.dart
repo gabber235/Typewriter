@@ -243,7 +243,7 @@ final class AuthoredGraphFixture {
             ),
             action: skir.EditorAction.createAuthoring(
               capability: skir.CapabilityId(value: operation),
-              targets: skir.ExpressionNode.createRead(
+              targets: skir.ExpressionNode.createInput(
                 binding: skir.ExpressionBindingId(value: "context:selection"),
                 path: editorRootPath,
               ),

@@ -94,11 +94,9 @@ val OperationDeclarationTest by testSuite {
                         skirout.editor.v1.type_catalog
                             .CapabilityId(value = capability.value),
                     payload =
-                        com.typewritermc.types.skir.SkirTypeCodec
-                            .encode(
-                                com.typewritermc.presentation.ExpressionNode
-                                    .Literal(DataValue.StringValue("example")),
-                            ).getOrThrow(),
+                        com.typewritermc.expression
+                            .literal("example")
+                            .toNode(),
                 ),
             )
         val declaration =

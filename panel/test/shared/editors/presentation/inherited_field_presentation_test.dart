@@ -326,7 +326,7 @@ void main() {
                           ..rowBindingId = skir.ExpressionBindingId(
                             value: "shared.row",
                           )
-                          ..key = skir.ExpressionNode.createRead(
+                          ..key = skir.ExpressionNode.createInput(
                             binding: skir.ExpressionBindingId(
                               value: "shared.row",
                             ),
@@ -611,7 +611,7 @@ void main() {
     tester,
   ) async {
     final control = inheritedFieldControl().toMutable()
-      ..label = skir.ExpressionNode.createRead(
+      ..label = skir.ExpressionNode.createInput(
         binding: inheritedConfiguredValue,
         path: editorRootPath.field("message"),
       );

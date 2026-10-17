@@ -46,17 +46,7 @@ abstract class AuthoredRuleProjection with _$AuthoredRuleProjection {
     );
   }
 
-  bool hasOperation(skir.ValueLocation? location, String operation) {
-    if (location == null) return false;
-    return rules[location]?.any(
-          (rule) => switch (rule.descriptor.predicate) {
-            skir.ExpressionNode_callWrapper(:final value) =>
-              value.operation.value == operation,
-            _ => false,
-          },
-        ) ??
-        false;
-  }
+
 }
 
 final class _RuleProjectionBuilder {

@@ -3,7 +3,6 @@ package com.typewritermc.library
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.MissingPolicy
-import com.typewritermc.expression.OperationId
 import com.typewritermc.expression.emptyListExpression
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.gt
@@ -19,7 +18,6 @@ import com.typewritermc.presentation.ConnectorEndpointMarker
 import com.typewritermc.presentation.ConnectorStyle
 import com.typewritermc.presentation.ContainerStyle
 import com.typewritermc.presentation.CrossAxisAlignment
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.GraphNodeScope
 import com.typewritermc.presentation.Layout
 import com.typewritermc.presentation.PresentationBorder
@@ -33,6 +31,8 @@ import com.typewritermc.presentation.projectedCollectionSource
 import com.typewritermc.presentation.withAlpha
 import com.typewritermc.types.Color
 import com.typewritermc.types.ResourceId
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.RuleUnaryOperation
 
 internal fun Layout.inspectorSection(
     id: String,
@@ -184,16 +184,19 @@ internal fun Layout.librarySubjectLayout(
 }
 
 internal fun Expr<String, MissingPolicy>.orIfBlank(fallback: String): Expr<String, Handled> {
-    val fallbackNode = literal(fallback).node
-    val nonBlank =
-        ExpressionNode.Call(
-            OperationId("typewriter.rule.nonBlank"),
-            listOf(node),
+    val source = this
+    val fallbackExpression = literal(fallback)
+    return Expr { environment ->
+        val input = source.lower(environment)
+        val fallbackNode = fallbackExpression.lower(environment)
+        ExpressionNode.createOrElse(
+            input =
+                ExpressionNode.createConditional(
+                    test = ExpressionNode.createRuleUnary(operation = RuleUnaryOperation.NON_BLANK, source = input),
+                    yes = input,
+                    no = fallbackNode,
+                ),
+            fallback = fallbackNode,
         )
-    return Expr(
-        ExpressionNode.OrElse(
-            ExpressionNode.Conditional(nonBlank, node, fallbackNode),
-            fallbackNode,
-        ),
-    )
+    }
 }

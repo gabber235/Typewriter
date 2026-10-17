@@ -76,7 +76,17 @@ extension PortableValueTree on skir.DataValue {
         ?.value;
   }
 
-  PortablePathResult<skir.DataValue> readAt(skir.ValuePath path) {
+  PortablePathResult<skir.DataValue> readAt(skir.ValuePath path) =>
+      _readPath(path, lexicalEntries: false);
+
+  /// Reads structural expression entries while retaining authored map row paths.
+  PortablePathResult<skir.DataValue> readExpressionAt(skir.ValuePath path) =>
+      _readPath(path, lexicalEntries: true);
+
+  PortablePathResult<skir.DataValue> _readPath(
+    skir.ValuePath path, {
+    required bool lexicalEntries,
+  }) {
     Object current = this;
     for (final segment in path.segments) {
       final unwrapped = _unwrapForPath(current);
@@ -84,7 +94,18 @@ extension PortableValueTree on skir.DataValue {
         return PortablePathUnavailable(unwrapped.message);
       }
       current = (unwrapped as PortablePathValue<Object>).value;
-      final next = _readSegment(current, segment);
+      final selected = lexicalEntries && current is skir.DataValue_recordWrapper
+          ? switch (segment) {
+              skir.PathSegment.mapKey => skir.PathSegment.createField(
+                name: "key",
+              ),
+              skir.PathSegment.mapValue => skir.PathSegment.createField(
+                name: "value",
+              ),
+              final original => original,
+            }
+          : segment;
+      final next = _readSegment(current, selected);
       if (next case PortablePathUnavailable<Object>()) {
         return PortablePathUnavailable(next.message);
       }

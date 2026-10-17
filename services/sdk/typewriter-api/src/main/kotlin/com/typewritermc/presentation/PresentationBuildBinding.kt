@@ -2,6 +2,7 @@ package com.typewritermc.presentation
 
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
+import com.typewritermc.expression.children
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.TypeTemplate
@@ -11,6 +12,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.resolve
+import skirout.editor.v1.expression.ExpressionNode
 
 class PresentationBuildBinding(
     val type: CheckedPresentationTemplate,
@@ -511,54 +513,16 @@ internal fun checkPresentationExpression(
     if (applied.values.any { it == null }) return structural
     return checker.checkExpressionCodes(
         body,
-        applied.mapValues { (id, use) -> com.typewritermc.expression.ExpressionType(requireNotNull(use), id !in present) },
-        com.typewritermc.expression.ExpressionType(result.value, false),
+        applied.mapValues { (id, use) -> com.typewritermc.expression.nominalExpressionType(requireNotNull(use), id !in present) },
+        com.typewritermc.expression.nominalExpressionType(result.value, false),
     )
 }
 
 private fun ExpressionNode.referencedBindingIds(): Set<com.typewritermc.expression.ExpressionBindingId> =
     buildSet {
         fun visit(node: ExpressionNode) {
-            when (node) {
-                is ExpressionNode.Literal -> {
-                    Unit
-                }
-
-                is ExpressionNode.Read -> {
-                    add(node.binding)
-                }
-
-                is ExpressionNode.Call -> {
-                    node.arguments.forEach(::visit)
-                }
-
-                is ExpressionNode.And -> {
-                    visit(node.left)
-                    visit(node.right)
-                }
-
-                is ExpressionNode.Or -> {
-                    visit(node.left)
-                    visit(node.right)
-                }
-
-                is ExpressionNode.Conditional -> {
-                    visit(node.test)
-                    visit(node.yes)
-                    visit(node.no)
-                }
-
-                is ExpressionNode.OrElse -> {
-                    visit(node.input)
-                    visit(node.fallback)
-                }
-
-                is ExpressionNode.Collection -> {
-                    visit(node.input)
-                    node.arguments.forEach(::visit)
-                    node.body?.let(::visit)
-                }
-            }
+            if (node is ExpressionNode.InputWrapper) add(com.typewritermc.expression.ExpressionBindingId(node.value.binding.value))
+            node.children().forEach { visit(it.node) }
         }
         visit(this@referencedBindingIds)
     }

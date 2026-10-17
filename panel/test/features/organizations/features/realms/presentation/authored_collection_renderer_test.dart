@@ -48,22 +48,17 @@ void main() {
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createCollectionGraph(
           sourceId: "tags",
-          roots: skir.ExpressionNode.createCollection(
-            operation: skir.OperationId(value: "typewriter.collection.map"),
-            input: skir.ExpressionNode.createRead(
+          roots: skir.ExpressionNode.createMap(
+            source: skir.ExpressionNode.createInput(
               binding: _rootsBinding,
               path: skir.ValuePath(segments: const []),
             ),
-            bindings: [skir.ExpressionBindingId(value: "root.link")],
-            arguments: const [],
-            body: skir.ExpressionNode.createCall(
-              operation: skir.OperationId(value: "typewriter.link.target"),
-              arguments: [
-                skir.ExpressionNode.createRead(
-                  binding: skir.ExpressionBindingId(value: "root.link"),
-                  path: skir.ValuePath(segments: const []),
-                ),
-              ],
+            body: skir.ExpressionNode.wrapLinkTarget(
+              skir.ExpressionNode.createLocal(
+                depth: 0,
+                slot: 0,
+                path: skir.ValuePath(segments: const []),
+              ),
             ),
           ),
           rootSequence: _sequence(rootSlot),
@@ -280,14 +275,12 @@ void main() {
       );
       final color = skir.PresentationColor.wrapValue(
         skir.ExpressionNode.createConditional(
-          test: skir.ExpressionNode.createCall(
-            operation: skir.OperationId(value: "typewriter.value.eq"),
-            arguments: [
-              _read(_rowBinding, "name"),
-              skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapStringValue("Alpha"),
-              ),
-            ],
+          test: skir.ExpressionNode.createValueCompare(
+            operation: skir.ValueCompareOperation.equal,
+            left: _read(_rowBinding, "name"),
+            right: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("Alpha"),
+            ),
           ),
           yes: skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapInteger("4294901760"),
@@ -434,7 +427,7 @@ void main() {
       properties: skir.PresentationProperties.defaultInstance,
       element: skir.PresentationElement.createCollectionGraph(
         sourceId: "tags",
-        roots: skir.ExpressionNode.createRead(
+        roots: skir.ExpressionNode.createInput(
           binding: _rootsBinding,
           path: skir.ValuePath(segments: const []),
         ),
@@ -794,7 +787,7 @@ _fixture({
     rowBindingId: _rowBinding,
     key: projected
         ? _read(_rowBinding, "name")
-        : skir.ExpressionNode.createRead(
+        : skir.ExpressionNode.createInput(
             binding: _resourceBinding,
             path: skir.ValuePath(segments: const []),
           ),
@@ -910,7 +903,7 @@ skir.PresentationNode _graphNode({
     properties: skir.PresentationProperties.defaultInstance,
     element: skir.PresentationElement.createCollectionGraph(
       sourceId: "tags",
-      roots: skir.ExpressionNode.createRead(
+      roots: skir.ExpressionNode.createInput(
         binding: _rootsBinding,
         path: skir.ValuePath(segments: const []),
       ),
@@ -1039,7 +1032,7 @@ skir.EffectiveFieldTemplate _effective(
 );
 
 skir.ExpressionNode _read(skir.ExpressionBindingId id, String field) =>
-    skir.ExpressionNode.createRead(
+    skir.ExpressionNode.createInput(
       binding: id,
       path: skir.ValuePath(
         segments: [skir.PathSegment.createField(name: field)],

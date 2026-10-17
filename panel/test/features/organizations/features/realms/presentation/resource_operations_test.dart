@@ -192,7 +192,7 @@ Future<void> _pump(
           : null,
     ),
     action: skir.EditorAction.createNavigate(
-      resource: skir.ExpressionNode.createRead(
+      resource: skir.ExpressionNode.createInput(
         binding: skir.ExpressionBindingId(value: "context:subject"),
         path: editorRootPath,
       ),

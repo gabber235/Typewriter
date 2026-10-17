@@ -180,7 +180,7 @@ val FieldPresentationInferenceTest by testSuite {
                             control =
                                 fieldControl("name").copy(
                                     label =
-                                        skirout.editor.v1.expression.ExpressionNode.createRead(
+                                        skirout.editor.v1.expression.ExpressionNode.createInput(
                                             binding = ExpressionBindingId(value = "configured_value"),
                                             path = fieldControl("message").binding.path,
                                         ),

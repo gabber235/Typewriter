@@ -138,7 +138,7 @@ internal fun formatPortableTimestamp(values: List<DataValue>): DataValue {
     return DataValue.StringValue(formatter.format(java.time.Instant.parse(timestamp.value.toString())))
 }
 
-private fun DataValue.displayDecimal(): BigDecimal {
+internal fun DataValue.displayDecimal(): BigDecimal {
     val source =
         when (val value = unwrapNamed()) {
             is DataValue.Integer -> {

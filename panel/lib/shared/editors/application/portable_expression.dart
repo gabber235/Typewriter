@@ -4,86 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "portable_expression.freezed.dart";
 part "portable_expression_queries.dart";
+part "portable_expression_model.dart";
+part "portable_expression_scalars.dart";
 part "canonical_read_models.dart";
 part "canonical_read_models.generated.dart";
-
-const authoredPortableOperationIds = <String>{
-  "typewriter.boolean.not",
-  "typewriter.collection.access",
-  "typewriter.collection.contains",
-  "typewriter.collection.size",
-  "typewriter.color.with_alpha",
-  "typewriter.number.add",
-  "typewriter.number.divide",
-  "typewriter.number.gt",
-  "typewriter.number.gte",
-  "typewriter.number.lt",
-  "typewriter.number.lte",
-  "typewriter.number.multiply",
-  "typewriter.number.negate",
-  "typewriter.number.remainder",
-  "typewriter.number.subtract",
-  "typewriter.number.round_to",
-  "typewriter.number.format",
-  "typewriter.duration.format",
-  "typewriter.timestamp.format",
-  "typewriter.link.target",
-  "typewriter.resource.id",
-  "typewriter.resource.value",
-  "typewriter.resource.configuration",
-  "typewriter.value.configuration",
-  "typewriter.catalog.declaration",
-  "typewriter.color.parse",
-  "typewriter.text.value",
-  "typewriter.record.field",
-  "typewriter.regex.capture",
-  "typewriter.regex.matches",
-  "typewriter.regex.replace",
-  "typewriter.rule.between",
-  "typewriter.rule.endsWith",
-  "typewriter.rule.itemsBetween",
-  "typewriter.rule.lengthBetween",
-  "typewriter.rule.maximum",
-  "typewriter.rule.maximumItems",
-  "typewriter.rule.maximumLength",
-  "typewriter.rule.maximumLines",
-  "typewriter.rule.maximumScale",
-  "typewriter.rule.minimum",
-  "typewriter.rule.minimumItems",
-  "typewriter.rule.minimumLength",
-  "typewriter.rule.minimumLines",
-  "typewriter.rule.multipleOf",
-  "typewriter.rule.nonBlank",
-  "typewriter.rule.nonEmpty",
-  "typewriter.rule.nonNegative",
-  "typewriter.rule.notAfter",
-  "typewriter.rule.notBefore",
-  "typewriter.rule.notNull",
-  "typewriter.rule.one_of",
-  "typewriter.rule.opaque",
-  "typewriter.rule.positive",
-  "typewriter.rule.regex",
-  "typewriter.rule.singleLine",
-  "typewriter.rule.startsWith",
-  "typewriter.rule.unique",
-  "typewriter.text.contains",
-  "typewriter.text.ends_with",
-  "typewriter.text.has_line_break",
-  "typewriter.text.interpolate",
-  "typewriter.text.join",
-  "typewriter.text.length",
-  "typewriter.text.lower",
-  "typewriter.text.replace",
-  "typewriter.text.split",
-  "typewriter.text.starts_with",
-  "typewriter.text.substring",
-  "typewriter.text.title",
-  "typewriter.text.trim",
-  "typewriter.text.upper",
-  "typewriter.value.eq",
-  "typewriter.value.is_null",
-  "typewriter.value.neq",
-};
 
 /// Evaluation outcome together with the lexical and resource paths observed.
 /// Unavailable input remains distinct from an invalid expression or exhausted
@@ -109,40 +33,6 @@ final class PortableExpressionFailed extends PortableExpressionResult {
 
   final String code;
   final String message;
-}
-
-/// A read witness collected on the expression branch that actually executed.
-/// [location] connects an addressable lexical value to its authored resource;
-/// action preparation can retain that fact without making display reads writes.
-final class PortableExpressionRead {
-  const PortableExpressionRead(this.binding, this.path, {this.location});
-
-  final skir.ExpressionBindingId binding;
-  final skir.ValuePath path;
-  final skir.ValueLocation? location;
-
-  String get key {
-    final suffix = path.segments
-        .map(
-          (segment) => switch (segment) {
-            skir.PathSegment_fieldWrapper(:final value) => value.name,
-            skir.PathSegment_itemWrapper(:final value) => value.id.value,
-            _ => "?",
-          },
-        )
-        .join(":");
-    return suffix.isEmpty ? binding.value : "${binding.value}:$suffix";
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      other is PortableExpressionRead &&
-      other.binding == binding &&
-      other.path == path &&
-      other.location == location;
-
-  @override
-  int get hashCode => Object.hash(binding, path, location);
 }
 
 final class PortableExpressionBinding {
@@ -199,9 +89,8 @@ final class PortableExpressionEvaluator {
   final PortableExpressionQueries? queries;
   final Map<ExpressionOccurrence, CheckedQueryCall> queryContracts;
   List<int> _occurrence = const [];
-  int _collectionBodyIndex = 1;
   final Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
-  final Map<skir.ExpressionBindingId, PortableExpressionBinding> _locals = {};
+  final _frames = <List<PortableExpressionBinding>>[];
   final Set<PortableExpressionRead> _reads = {};
   var _steps = 0;
   var _collectionItems = 0;
@@ -209,7 +98,7 @@ final class PortableExpressionEvaluator {
 
   PortableExpressionResult evaluate(skir.ExpressionNode node) {
     _reads.clear();
-    _locals.clear();
+    _frames.clear();
     _steps = 0;
     _collectionItems = 0;
     _depth = 0;
@@ -225,6 +114,12 @@ final class PortableExpressionEvaluator {
           List.unmodifiable(_reads),
         ),
       };
+    } on ExpressionProblem catch (failure) {
+      return PortableExpressionFailed(
+        failure.code,
+        "Invalid expression",
+        List.unmodifiable(_reads),
+      );
     } on _ExpressionFailure catch (failure) {
       return PortableExpressionFailed(
         failure.code,
@@ -250,12 +145,22 @@ final class PortableExpressionEvaluator {
         );
       }
       _consumeStep();
-      final projection = node.canonicalLeafProjection;
-      if (projection != null) return _query(projection);
+      final projection = node.readProjection(remainingDepth: 512 - _depth);
+      if (projection != null) return _project(projection);
       return switch (node) {
         skir.ExpressionNode_literalWrapper(:final value) => _Available(value),
-        skir.ExpressionNode_readWrapper(:final value) => _read(value),
-        skir.ExpressionNode_callWrapper(:final value) => _call(value),
+        skir.ExpressionNode_fieldWrapper(:final value) => _field(
+          value.source,
+          skir.PathSegment.createField(name: value.name),
+        ),
+        skir.ExpressionNode_entryProjectionWrapper(:final value) => _field(
+          value.source,
+          switch (value.branch) {
+            skir.EntryBranch.key => skir.PathSegment.mapKey,
+            skir.EntryBranch.value => skir.PathSegment.mapValue,
+            _ => throw const ExpressionProblem("invalid_entry_projection"),
+          },
+        ),
         skir.ExpressionNode_andWrapper(:final value) => _boolean(
           value.left,
           value.right,
@@ -270,13 +175,58 @@ final class PortableExpressionEvaluator {
           value,
         ),
         skir.ExpressionNode_orElseWrapper(:final value) => _orElse(value),
-        skir.ExpressionNode_collectionWrapper(:final value) => _collection(
+        skir.ExpressionNode_anyWrapper(:final value) ||
+        skir.ExpressionNode_allWrapper(:final value) ||
+        skir.ExpressionNode_noneWrapper(:final value) ||
+        skir.ExpressionNode_mapWrapper(:final value) ||
+        skir.ExpressionNode_filterWrapper(:final value) ||
+        skir.ExpressionNode_findWrapper(:final value) ||
+        skir.ExpressionNode_findLastWrapper(:final value) ||
+        skir.ExpressionNode_countWrapper(:final value) ||
+        skir.ExpressionNode_distinctByWrapper(:final value) ||
+        skir.ExpressionNode_groupByWrapper(:final value) ||
+        skir.ExpressionNode_flatMapWrapper(:final value) ||
+        skir.ExpressionNode_uniqueByWrapper(
+          :final value,
+        ) => _unaryCollection(node, value.source, value.body),
+        skir.ExpressionNode_sortByWrapper(:final value) => _unaryCollection(
+          node,
+          value.source,
+          value.key,
+          descending: value.descending,
+          bodyIndex: 2,
+        ),
+        skir.ExpressionNode_foldWrapper(:final value) => _fold(
+          value.source,
+          value.initial,
+          value.body,
+        ),
+        skir.ExpressionNode_reduceWrapper(:final value) => _fold(
+          value.source,
+          null,
+          value.body,
+        ),
+        skir.ExpressionNode_sortWithWrapper(:final value) => _sortWith(value),
+        skir.ExpressionNode_takeWrapper(:final value) => _slice(
           value,
+          take: true,
         ),
-        skir.ExpressionNode_unknown() => throw const _ExpressionFailure(
+        skir.ExpressionNode_skipWrapper(:final value) => _slice(
+          value,
+          take: false,
+        ),
+        skir.ExpressionNode_reverseWrapper(:final value) => _reorder(
+          value,
+          distinct: false,
+        ),
+        skir.ExpressionNode_distinctWrapper(:final value) => _reorder(
+          value,
+          distinct: true,
+        ),
+        skir.ExpressionNode_unknown() => throw const ExpressionProblem(
           "unknown_expression",
-          "The expression variant is unknown",
         ),
+        _ => _scalar(node),
       };
     } finally {
       _depth--;
@@ -293,33 +243,82 @@ final class PortableExpressionEvaluator {
     }
   }
 
-  _Evaluation _read(skir.ExpressionRead read) {
-    final binding = _locals[read.binding] ?? _bindings[read.binding];
+  PortableExpressionBinding _local(skir.ExpressionLocal ref) {
+    if (ref.depth < 0 || ref.slot < 0 || ref.depth >= _frames.length) {
+      throw const ExpressionProblem("invalid_expression_local");
+    }
+    final frame = _frames[_frames.length - 1 - ref.depth];
+    if (ref.slot >= frame.length) {
+      throw const ExpressionProblem("invalid_expression_local");
+    }
+    return frame[ref.slot];
+  }
+
+  _Evaluation _project(ExpressionProjection projection) {
+    for (var i = 0; i < projection.descents; i++) {
+      _consumeStep();
+    }
+    switch (projection.root) {
+      case skir.ExpressionNode_inputWrapper(:final value):
+        final path = skir.ValuePath(
+          segments: [...value.path.segments, ...projection.suffix.segments],
+        );
+        return _readBinding(
+          _bindings[value.binding],
+          path,
+          PortableExpressionReadSource.input(value.binding),
+        );
+      case skir.ExpressionNode_localWrapper(:final value):
+        return _readBinding(
+          _local(value),
+          skir.ValuePath(
+            segments: [...value.path.segments, ...projection.suffix.segments],
+          ),
+          PortableExpressionReadSource.local(value.depth, value.slot),
+        );
+      case skir.ExpressionNode_queryWrapper(:final value):
+        return _query(
+          value,
+          projection.suffix,
+          ExpressionOccurrence(
+            path: [
+              ..._occurrence,
+              for (var i = 0; i < projection.descents; i++) 0,
+            ],
+          ),
+        );
+      default:
+        throw const ExpressionProblem("invalid_projection");
+    }
+  }
+
+  _Evaluation _readBinding(
+    PortableExpressionBinding? binding,
+    skir.ValuePath path,
+    PortableExpressionReadSource source,
+  ) {
+    final origin = binding?.location;
     _reads.add(
       PortableExpressionRead(
-        read.binding,
-        read.path,
-        location: binding?.location == null
-            ? null
-            : skir.ValueLocation(
-                resource: binding!.location!.resource,
-                path: skir.ValuePath(
-                  segments: [
-                    ...binding.location!.path.segments,
-                    ...read.path.segments,
-                  ],
-                ),
-              ),
+        source: source,
+        path: path,
+        location: origin == null ? null : _appendLocation(origin, path),
       ),
     );
     if (binding == null) return const _Unavailable();
-    final root = binding.value;
-    if (read.path.segments.isEmpty) {
-      return root == skir.DataValue.unfilled
-          ? const _Unavailable()
-          : _Available(root);
-    }
-    return switch (root.readAt(read.path)) {
+    return switch (binding.value.readExpressionAt(path)) {
+      PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
+        _Available(value),
+      _ => const _Unavailable(),
+    };
+  }
+
+  _Evaluation _field(skir.ExpressionNode source, skir.PathSegment segment) {
+    final evaluated = _child(source, 0);
+    if (evaluated is _Unavailable) return evaluated;
+    return switch ((evaluated as _Available).value.readExpressionAt(
+      skir.ValuePath(segments: [segment]),
+    )) {
       PortablePathValue(:final value) when value != skir.DataValue.unfilled =>
         _Available(value),
       _ => const _Unavailable(),
@@ -360,423 +359,274 @@ final class PortableExpressionEvaluator {
         : input;
   }
 
-  _Evaluation _call(skir.ExpressionCall call) {
-    final arguments = <skir.DataValue>[];
-    for (final (index, argument) in call.arguments.indexed) {
-      final evaluated = _child(argument, index);
-      if (evaluated is _Unavailable) return evaluated;
-      arguments.add((evaluated as _Available).value);
-    }
-    _validateOperationArity(call.operation.value, arguments.length);
-    if (call.operation.value == "typewriter.rule.unique") {
-      return _unique(arguments.single);
-    }
-    if (call.operation.value == "typewriter.color.parse") {
-      final text = _text(arguments.single).trim();
-      if (text.isEmpty) return const _Unavailable();
-      try {
-        if (!RegExp(r"^#[0-9a-fA-F]{6}$").hasMatch(text)) {
-          throw const FormatException("Invalid RGB color");
-        }
-        return _Available(
-          _namedColor(0xff000000 | int.parse(text.substring(1), radix: 16)),
-        );
-      } on FormatException {
-        throw const _ExpressionFailure(
-          "invalid_color",
-          "The color is not a hexadecimal color",
-        );
-      }
-    }
-    if (call.operation.value == "typewriter.record.field" &&
-        (arguments.first == skir.DataValue.null_ ||
-            arguments.first == skir.DataValue.unfilled)) {
-      return const _Unavailable();
-    }
-    final result = _operation(call.operation.value, arguments);
-    return result == skir.DataValue.unfilled
-        ? const _Unavailable()
-        : _Available(result);
-  }
-
-  _Evaluation _collection(skir.CollectionExpression expression) {
-    final input = _child(expression.input, 0);
-    if (input is _Unavailable) return input;
-    final inputValue = (input as _Available).value;
-    final entries = _collectionEntries(inputValue);
-    final sourceLocation = _sourceLocation(expression.input);
-    final arguments = <skir.DataValue>[];
-    for (final (index, argument) in expression.arguments.indexed) {
-      final result = _child(argument, index + 1);
-      if (result is _Unavailable) return result;
-      final value = (result as _Available).value;
-      if (_containsUnfilled(value)) return const _Unavailable();
-      arguments.add(value);
-    }
-    final previousBodyIndex = _collectionBodyIndex;
-    _collectionBodyIndex = expression.arguments.length + 1;
+  _Evaluation _inFrame(
+    List<PortableExpressionBinding> values,
+    skir.ExpressionNode body,
+    int index,
+  ) {
+    _frames.add(List.unmodifiable(values));
     try {
-      return switch (expression.operation.value) {
-        "typewriter.collection.take" => _takeOrSkip(
-          expression,
-          inputValue,
-          entries,
-          arguments,
-          take: true,
-        ),
-        "typewriter.collection.skip" => _takeOrSkip(
-          expression,
-          inputValue,
-          entries,
-          arguments,
-          take: false,
-        ),
-        "typewriter.collection.reverse" => _reverse(
-          expression,
-          inputValue,
-          entries,
-        ),
-        "typewriter.collection.distinct" => _distinct(
-          expression,
-          inputValue,
-          entries,
-        ),
-        "typewriter.collection.reduce" || "typewriter.collection.fold" => _fold(
-          expression,
-          entries,
-          arguments,
-          sourceLocation,
-        ),
-        "typewriter.collection.sort_with" => _sortWith(
-          expression,
-          inputValue,
-          entries,
-          sourceLocation,
-        ),
-        _ => _collectionWithUnaryBody(
-          expression,
-          inputValue,
-          entries,
-          arguments,
-          sourceLocation,
-        ),
-      };
+      return _child(body, index);
     } finally {
-      _collectionBodyIndex = previousBodyIndex;
+      _frames.removeLast();
     }
   }
 
-  _Evaluation _takeOrSkip(
-    skir.CollectionExpression expression,
-    skir.DataValue input,
-    List<_CollectionEntry> entries,
-    List<skir.DataValue> arguments, {
+  _Evaluation _slice(
+    skir.CollectionSliceExpression expression, {
     required bool take,
   }) {
-    _requireCollectionShape(expression, bindings: 0, arguments: 1, body: false);
-    final count = _nonnegativeCount(arguments.single);
-    _consumeCollectionItems(count < entries.length ? count : entries.length);
+    final source = _child(expression.source, 0);
+    if (source is _Unavailable) return source;
+    final count = _child(expression.count, 1);
+    if (count is _Unavailable) return count;
+    final size = _nonnegativeCount((count as _Available).value);
+    final value = (source as _Available).value;
+    final entries = _collectionEntries(value);
+    _consumeCollectionItems(size < entries.length ? size : entries.length);
     return _Available(
       _reorderCollection(
-        input,
-        take ? entries.take(count).toList() : entries.skip(count).toList(),
+        value,
+        take ? entries.take(size).toList() : entries.skip(size).toList(),
       ),
     );
   }
 
-  _Evaluation _reverse(
-    skir.CollectionExpression expression,
-    skir.DataValue input,
-    List<_CollectionEntry> entries,
-  ) {
-    _requireCollectionShape(expression, bindings: 0, arguments: 0, body: false);
+  _Evaluation _reorder(skir.ExpressionNode source, {required bool distinct}) {
+    final input = _child(source, 0);
+    if (input is _Unavailable) return input;
+    final value = (input as _Available).value;
+    final entries = _collectionEntries(value);
     _consumeCollectionItems(entries.length);
-    return _Available(_reorderCollection(input, entries.reversed.toList()));
-  }
-
-  _Evaluation _distinct(
-    skir.CollectionExpression expression,
-    skir.DataValue input,
-    List<_CollectionEntry> entries,
-  ) {
-    _requireCollectionShape(expression, bindings: 0, arguments: 0, body: false);
-    _consumeCollectionItems(entries.length);
+    if (!distinct) {
+      return _Available(_reorderCollection(value, entries.reversed.toList()));
+    }
     if (entries.any((entry) => _containsUnfilled(entry.value))) {
       return const _Unavailable();
     }
     final seen = <String>{};
     return _Available(
       _reorderCollection(
-        input,
+        value,
         entries.where((entry) => seen.add(_canonical(entry.value))).toList(),
       ),
     );
   }
 
-  _Evaluation _collectionWithUnaryBody(
-    skir.CollectionExpression expression,
-    skir.DataValue input,
-    List<_CollectionEntry> entries,
-    List<skir.DataValue> arguments,
-    skir.ValueLocation? sourceLocation,
-  ) {
-    final operation = expression.operation.value;
-    _requireCollectionShape(
-      expression,
-      bindings: 1,
-      minimumArguments: 0,
-      maximumArguments: operation == "typewriter.collection.sort_by" ? 1 : 0,
-      body: true,
-    );
-    final binding = expression.bindings.single;
-    final body = expression.body!;
+  _Evaluation _unaryCollection(
+    skir.ExpressionNode node,
+    skir.ExpressionNode source,
+    skir.ExpressionNode body, {
+    skir.ExpressionNode? descending,
+    int bodyIndex = 1,
+  }) {
+    final input = _child(source, 0);
+    if (input is _Unavailable) return input;
+    final value = (input as _Available).value;
+    final entries = _collectionEntries(value);
+    var reverse = false;
+    if (descending != null) {
+      final result = _child(descending, 1);
+      if (result is _Unavailable) return result;
+      reverse = _booleanValue((result as _Available).value);
+    }
+    final origin = _sourceLocation(source);
     final results = <(_CollectionEntry, skir.DataValue)>[];
-    var unavailable = false;
+    var missing = false;
     for (final entry in entries) {
       _consumeCollectionItems(1);
-      final result = _evaluateWithLocals({
-        binding: PortableExpressionBinding(
-          value: entry.value,
-          location: sourceLocation == null
-              ? null
-              : _entryLocation(sourceLocation, entry.id),
-        ),
-      }, body);
+      final result = _inFrame(
+        [
+          PortableExpressionBinding(
+            value: entry.value,
+            location: origin == null ? null : _entryLocation(origin, entry.id),
+          ),
+        ],
+        body,
+        bodyIndex,
+      );
       if (result is _Unavailable) {
-        unavailable = true;
+        missing = true;
         continue;
       }
-      final value = (result as _Available).value;
-      if (_containsUnfilled(value)) {
-        unavailable = true;
+      final computed = (result as _Available).value;
+      if (_containsUnfilled(computed)) {
+        missing = true;
         continue;
       }
-      results.add((entry, value));
-      if (operation == "typewriter.collection.any" && _booleanValue(value)) {
+      results.add((entry, computed));
+      if (node is skir.ExpressionNode_anyWrapper && _booleanValue(computed)) {
         return _Available(_bool(true));
       }
-      if (operation == "typewriter.collection.all" && !_booleanValue(value)) {
+      if (node is skir.ExpressionNode_allWrapper && !_booleanValue(computed)) {
         return _Available(_bool(false));
       }
-      if (operation == "typewriter.collection.none" && _booleanValue(value)) {
+      if (node is skir.ExpressionNode_noneWrapper && _booleanValue(computed)) {
         return _Available(_bool(false));
       }
-      if (operation == "typewriter.collection.find" && _booleanValue(value)) {
-        return unavailable ? const _Unavailable() : _Available(entry.value);
+      if (node is skir.ExpressionNode_findWrapper && _booleanValue(computed)) {
+        return missing ? const _Unavailable() : _Available(entry.value);
       }
     }
-    if (operation == "typewriter.collection.unique_by") {
+    if (node is skir.ExpressionNode_uniqueByWrapper) {
       final seen = <String>{};
       for (final result in results) {
         if (!seen.add(_canonical(result.$2))) return _Available(_bool(false));
       }
     }
-    if (unavailable) return const _Unavailable();
-    return switch (operation) {
-      "typewriter.collection.any" => _Available(_bool(false)),
-      "typewriter.collection.all" ||
-      "typewriter.collection.none" => _Available(_bool(true)),
-      "typewriter.collection.unique_by" => _Available(_bool(true)),
-      "typewriter.collection.map" => _Available(
-        skir.DataValue.createListValue(
-          items: [
-            for (final result in results)
-              skir.ListItem(id: result.$1.id, value: result.$2),
-          ],
-        ),
+    if (missing) return const _Unavailable();
+    return _Available(switch (node) {
+      skir.ExpressionNode_anyWrapper() => _bool(false),
+      skir.ExpressionNode_allWrapper() ||
+      skir.ExpressionNode_noneWrapper() ||
+      skir.ExpressionNode_uniqueByWrapper() => _bool(true),
+      skir.ExpressionNode_mapWrapper() => skir.DataValue.createListValue(
+        items: [
+          for (final result in results)
+            skir.ListItem(id: result.$1.id, value: result.$2),
+        ],
       ),
-      "typewriter.collection.filter" => _Available(
-        _reorderCollection(
-          input,
-          results
-              .where((result) => _booleanValue(result.$2))
-              .map((result) => result.$1)
-              .toList(),
-        ),
+      skir.ExpressionNode_filterWrapper() => _reorderCollection(
+        value,
+        results
+            .where((result) => _booleanValue(result.$2))
+            .map((result) => result.$1)
+            .toList(),
       ),
-      "typewriter.collection.find" => _Available(skir.DataValue.null_),
-      "typewriter.collection.find_last" => _Available(
+      skir.ExpressionNode_findWrapper() => skir.DataValue.null_,
+      skir.ExpressionNode_findLastWrapper() =>
         results
                 .where((result) => _booleanValue(result.$2))
                 .lastOrNull
                 ?.$1
                 .value ??
             skir.DataValue.null_,
+      skir.ExpressionNode_countWrapper() => _integerValue(
+        results.where((result) => _booleanValue(result.$2)).length,
       ),
-      "typewriter.collection.count" => _Available(
-        _integerValue(
-          results.where((result) => _booleanValue(result.$2)).length,
-        ),
+      skir.ExpressionNode_distinctByWrapper() => _reorderCollection(
+        value,
+        _distinctEntriesByResult(results),
       ),
-      "typewriter.collection.distinct_by" => _Available(
-        _reorderCollection(input, _distinctEntriesByResult(results)),
+      skir.ExpressionNode_sortByWrapper() => _reorderCollection(
+        value,
+        _sortEntriesByResult(results, descending: reverse),
       ),
-      "typewriter.collection.sort_by" => _Available(
-        _reorderCollection(
-          input,
-          _sortEntriesByResult(
-            results,
-            descending:
-                arguments.singleOrNull != null &&
-                _booleanValue(arguments.single),
-          ),
-        ),
-      ),
-      "typewriter.collection.group_by" => _Available(_groupByKey(results)),
-      "typewriter.collection.flat_map" => _Available(_flatMap(results)),
-      _ => throw _ExpressionFailure(
-        "unknown_collection_operation",
-        "Unknown collection operation $operation",
-      ),
-    };
+      skir.ExpressionNode_groupByWrapper() => _groupByKey(results),
+      skir.ExpressionNode_flatMapWrapper() => _flatMap(results),
+      _ => throw const ExpressionProblem("unknown_expression"),
+    });
   }
 
   _Evaluation _fold(
-    skir.CollectionExpression expression,
-    List<_CollectionEntry> entries,
-    List<skir.DataValue> arguments,
-    skir.ValueLocation? sourceLocation,
+    skir.ExpressionNode source,
+    skir.ExpressionNode? initial,
+    skir.ExpressionNode body,
   ) {
-    final fold = expression.operation.value == "typewriter.collection.fold";
-    _requireCollectionShape(
-      expression,
-      bindings: 2,
-      arguments: fold ? 1 : 0,
-      body: true,
-    );
-    if (!fold && entries.isEmpty) return _Available(skir.DataValue.null_);
-    var accumulator = fold ? arguments.single : entries.first.value;
-    var accumulatorLocation = fold
-        ? _sourceLocation(expression.arguments.single)
-        : sourceLocation == null
-        ? null
-        : _entryLocation(sourceLocation, entries.first.id);
-    final remaining = fold ? entries : entries.skip(1);
-    for (final entry in remaining) {
-      _consumeCollectionItems(1);
-      final result = _evaluateWithLocals({
-        expression.bindings.first: PortableExpressionBinding(
-          value: accumulator,
-          location: accumulatorLocation,
-        ),
-        expression.bindings.last: PortableExpressionBinding(
-          value: entry.value,
-          location: sourceLocation == null
-              ? null
-              : _entryLocation(sourceLocation, entry.id),
-        ),
-      }, expression.body!);
+    final input = _child(source, 0);
+    if (input is _Unavailable) return input;
+    final entries = _collectionEntries((input as _Available).value);
+    final origin = _sourceLocation(source);
+    skir.DataValue accumulator;
+    skir.ValueLocation? accumulatorLocation;
+    if (initial == null) {
+      if (entries.isEmpty) return _Available(skir.DataValue.null_);
+      accumulator = entries.first.value;
+      accumulatorLocation = origin == null
+          ? null
+          : _entryLocation(origin, entries.first.id);
+    } else {
+      final result = _child(initial, 1);
       if (result is _Unavailable) return result;
-      final value = (result as _Available).value;
-      if (_containsUnfilled(value)) return const _Unavailable();
-      accumulator = value;
+      accumulator = (result as _Available).value;
+      accumulatorLocation = _sourceLocation(initial);
+    }
+    if (_containsUnfilled(accumulator)) return const _Unavailable();
+    for (final entry in initial == null ? entries.skip(1) : entries) {
+      _consumeCollectionItems(1);
+      final result = _inFrame(
+        [
+          PortableExpressionBinding(
+            value: accumulator,
+            location: accumulatorLocation,
+          ),
+          PortableExpressionBinding(
+            value: entry.value,
+            location: origin == null ? null : _entryLocation(origin, entry.id),
+          ),
+        ],
+        body,
+        initial == null ? 1 : 2,
+      );
+      if (result is _Unavailable) return result;
+      accumulator = (result as _Available).value;
+      if (_containsUnfilled(accumulator)) return const _Unavailable();
       accumulatorLocation = null;
     }
     return _Available(accumulator);
   }
 
-  _Evaluation _sortWith(
-    skir.CollectionExpression expression,
-    skir.DataValue input,
-    List<_CollectionEntry> entries,
-    skir.ValueLocation? sourceLocation,
-  ) {
-    _requireCollectionShape(expression, bindings: 2, arguments: 0, body: true);
+  _Evaluation _sortWith(skir.SortWithExpression expression) {
+    final input = _child(expression.source, 0);
+    if (input is _Unavailable) return input;
+    final value = (input as _Available).value;
+    final origin = _sourceLocation(expression.source);
     final sorted = <_CollectionEntry>[];
-    for (final entry in entries) {
+    for (final entry in _collectionEntries(value)) {
       var insertion = sorted.length;
       while (insertion > 0) {
         _consumeCollectionItems(2);
         final left = sorted[insertion - 1];
-        final result = _evaluateWithLocals({
-          expression.bindings.first: PortableExpressionBinding(
-            value: left.value,
-            location: sourceLocation == null
-                ? null
-                : _entryLocation(sourceLocation, left.id),
-          ),
-          expression.bindings.last: PortableExpressionBinding(
-            value: entry.value,
-            location: sourceLocation == null
-                ? null
-                : _entryLocation(sourceLocation, entry.id),
-          ),
-        }, expression.body!);
+        final result = _inFrame(
+          [
+            for (final item in [left, entry])
+              PortableExpressionBinding(
+                value: item.value,
+                location: origin == null
+                    ? null
+                    : _entryLocation(origin, item.id),
+              ),
+          ],
+          expression.comparator,
+          1,
+        );
         if (result is _Unavailable) return result;
-        final value = (result as _Available).value;
-        if (_containsUnfilled(value)) return const _Unavailable();
-        if (_number(value).compareTo(_Decimal.zero) <= 0) break;
+        final computed = (result as _Available).value;
+        if (_containsUnfilled(computed)) return const _Unavailable();
+        if (_number(computed).compareTo(_Decimal.zero) <= 0) break;
         insertion--;
       }
       sorted.insert(insertion, entry);
     }
-    return _Available(_reorderCollection(input, sorted));
-  }
-
-  _Evaluation _evaluateWithLocals(
-    Map<skir.ExpressionBindingId, PortableExpressionBinding> values,
-    skir.ExpressionNode body,
-  ) {
-    final previous =
-        <
-          skir.ExpressionBindingId,
-          ({bool present, PortableExpressionBinding? value})
-        >{};
-    for (final entry in values.entries) {
-      previous[entry.key] = (
-        present: _locals.containsKey(entry.key),
-        value: _locals[entry.key],
-      );
-      _locals[entry.key] = entry.value;
-    }
-    try {
-      return _child(body, _collectionBodyIndex);
-    } finally {
-      for (final entry in previous.entries) {
-        if (entry.value.present) {
-          _locals[entry.key] = entry.value.value!;
-        } else {
-          _locals.remove(entry.key);
-        }
-      }
-    }
+    return _Available(_reorderCollection(value, sorted));
   }
 
   skir.ValueLocation? _sourceLocation(skir.ExpressionNode node) {
-    if (node case skir.ExpressionNode_readWrapper(:final value)) {
-      final binding = _locals[value.binding] ?? _bindings[value.binding];
-      final base = binding?.location;
-      if (base == null) return null;
-      return _appendLocation(base, value.path);
-    }
-    return null;
-  }
-
-  void _requireCollectionShape(
-    skir.CollectionExpression expression, {
-    required int bindings,
-    required bool body,
-    int? arguments,
-    int? minimumArguments,
-    int? maximumArguments,
-  }) {
-    final minimum = arguments ?? minimumArguments!;
-    final maximum = arguments ?? maximumArguments!;
-    if (expression.bindings.length != bindings ||
-        expression.arguments.length < minimum ||
-        expression.arguments.length > maximum ||
-        (expression.body != null) != body) {
-      throw _ExpressionFailure(
-        "collection_operation_shape",
-        "Collection operation ${expression.operation.value} has an invalid binding, argument, or body shape",
-      );
-    }
-    if (expression.bindings.toSet().length != expression.bindings.length) {
-      throw const _ExpressionFailure(
-        "duplicate_collection_binding",
-        "Collection expression bindings must be distinct",
-      );
-    }
+    final projection = node.readProjection();
+    if (projection == null) return null;
+    return switch (projection.root) {
+      skir.ExpressionNode_inputWrapper(:final value) =>
+        switch (_bindings[value.binding]?.location) {
+          final origin? => _appendLocation(
+            origin,
+            skir.ValuePath(
+              segments: [...value.path.segments, ...projection.suffix.segments],
+            ),
+          ),
+          _ => null,
+        },
+      skir.ExpressionNode_localWrapper(:final value) => switch (_local(value)
+          .location) {
+        final origin? => _appendLocation(
+          origin,
+          skir.ValuePath(
+            segments: [...value.path.segments, ...projection.suffix.segments],
+          ),
+        ),
+        _ => null,
+      },
+      _ => null,
+    };
   }
 
   void _consumeCollectionItems(int count) {
@@ -797,196 +647,6 @@ final class PortableExpressionEvaluator {
         "The expression exceeded its step limit",
       );
     }
-  }
-
-  skir.DataValue _operation(String id, List<skir.DataValue> values) {
-    if (!authoredPortableOperationIds.contains(id)) {
-      throw _ExpressionFailure(
-        "unknown_operation",
-        "Unknown expression operation $id",
-      );
-    }
-    return switch (id) {
-      "typewriter.value.eq" => _bool(
-        _canonical(values[0]) == _canonical(values[1]),
-      ),
-      "typewriter.value.neq" => _bool(
-        _canonical(values[0]) != _canonical(values[1]),
-      ),
-      "typewriter.value.is_null" => _bool(
-        values.single == skir.DataValue.null_,
-      ),
-      "typewriter.link.target" => _linkTarget(values.single),
-      "typewriter.record.field" => _recordField(values),
-      "typewriter.boolean.not" => _bool(!_booleanValue(values.single)),
-      "typewriter.number.gt" => _bool(_compareNumbers(values) > 0),
-      "typewriter.number.gte" => _bool(_compareNumbers(values) >= 0),
-      "typewriter.number.lt" => _bool(_compareNumbers(values) < 0),
-      "typewriter.number.lte" => _bool(_compareNumbers(values) <= 0),
-      "typewriter.number.add" => _arithmetic(values, _Arithmetic.add),
-      "typewriter.number.subtract" => _arithmetic(values, _Arithmetic.subtract),
-      "typewriter.number.multiply" => _arithmetic(values, _Arithmetic.multiply),
-      "typewriter.number.divide" => _arithmetic(values, _Arithmetic.divide),
-      "typewriter.number.remainder" => _arithmetic(
-        values,
-        _Arithmetic.remainder,
-      ),
-      "typewriter.number.negate" => _arithmetic(values, _Arithmetic.negate),
-      "typewriter.number.round_to" => _roundPortableNumber(values),
-      "typewriter.number.format" => _chargeFormattedValue(
-        _formatPortableNumber(values),
-        _consumeStep,
-      ),
-      "typewriter.duration.format" => _chargeFormattedValue(
-        _formatPortableDuration(values),
-        _consumeStep,
-      ),
-      "typewriter.timestamp.format" => _chargeFormattedValue(
-        _formatPortableTimestamp(values),
-        _consumeStep,
-      ),
-      "typewriter.text.length" => skir.DataValue.wrapInteger(
-        _text(values.single).runes.length.toString(),
-      ),
-      "typewriter.text.has_line_break" => _bool(
-        _hasLineBreak(_text(values.single)),
-      ),
-      "typewriter.text.value" => _string(_text(values.single)),
-      "typewriter.text.trim" => _string(_portableTrim(_text(values.single))),
-      "typewriter.text.lower" => _string(_text(values.single).toLowerCase()),
-      "typewriter.text.upper" => _string(_text(values.single).toUpperCase()),
-      "typewriter.text.title" => _string(_titleCase(_text(values.single))),
-      "typewriter.text.replace" => _string(
-        _boundedLiteralReplace(
-          _text(values[0]),
-          _text(values[1]),
-          _text(values[2]),
-          _consumeStep,
-        ),
-      ),
-      "typewriter.text.split" => _split(values, _consumeCollectionItems),
-      "typewriter.text.join" => _string(
-        _boundedJoin(
-          _collectionValues(values[0]).map(_text),
-          _text(values[1]),
-          _consumeStep,
-        ),
-      ),
-      "typewriter.text.substring" => _substring(values),
-      "typewriter.text.contains" => _bool(
-        _text(values[0]).contains(_text(values[1])),
-      ),
-      "typewriter.text.starts_with" => _bool(
-        _text(values[0]).startsWith(_text(values[1])),
-      ),
-      "typewriter.text.ends_with" => _bool(
-        _text(values[0]).endsWith(_text(values[1])),
-      ),
-      "typewriter.text.interpolate" => _string(
-        _boundedInterpolate(values, _consumeStep),
-      ),
-      "typewriter.regex.matches" => _bool(
-        _regex(values).containsMatchIn(_text(values.first), _consumeStep),
-      ),
-      "typewriter.regex.capture" => _capture(values),
-      "typewriter.regex.replace" => _replaceRegex(values),
-      "typewriter.collection.size" => _integerValue(_size(values.single)),
-      "typewriter.collection.access" => _collectionAccess(values),
-      "typewriter.collection.contains" => _bool(_collectionContains(values)),
-      "typewriter.color.with_alpha" => _withAlpha(values),
-      "typewriter.rule.one_of" => _bool(
-        values
-            .skip(1)
-            .any((value) => _canonical(value) == _canonical(values.first)),
-      ),
-      "typewriter.rule.nonEmpty" => _bool(_size(values.single) > 0),
-      "typewriter.rule.nonBlank" => _bool(
-        _portableTrim(_text(values.single)).isNotEmpty,
-      ),
-      "typewriter.rule.minimumLength" => _bool(
-        _size(values[0]) >= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.maximumLength" => _bool(
-        _size(values[0]) <= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.lengthBetween" => _bool(
-        _betweenInt(
-          _size(values[0]),
-          _integer(values[1]).toInt(),
-          _integer(values[2]).toInt(),
-        ),
-      ),
-      "typewriter.rule.minimumLines" => _bool(
-        _lineCount(_text(values.first)) >= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.maximumLines" => _bool(
-        _lineCount(_text(values.first)) <= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.singleLine" => _bool(
-        !_hasLineBreak(_text(values.single)),
-      ),
-      "typewriter.rule.regex" => _bool(
-        _regex(values).matches(_text(values.first), _consumeStep),
-      ),
-      "typewriter.rule.startsWith" => _bool(
-        _text(values[0]).startsWith(_text(values[1])),
-      ),
-      "typewriter.rule.endsWith" => _bool(
-        _text(values[0]).endsWith(_text(values[1])),
-      ),
-      "typewriter.rule.minimum" => _bool(
-        _booleanValue(values[2])
-            ? _compareNumbers(values) >= 0
-            : _compareNumbers(values) > 0,
-      ),
-      "typewriter.rule.maximum" => _bool(
-        _booleanValue(values[2])
-            ? _compareNumbers(values) <= 0
-            : _compareNumbers(values) < 0,
-      ),
-      "typewriter.rule.between" => _bool(
-        _compareNumber(values[0], values[1]) >= 0 &&
-            _compareNumber(values[0], values[2]) <= 0,
-      ),
-      "typewriter.rule.positive" => _bool(
-        _number(values[0]).compareTo(_Decimal.zero) > 0,
-      ),
-      "typewriter.rule.nonNegative" => _bool(
-        _number(values[0]).compareTo(_Decimal.zero) >= 0,
-      ),
-      "typewriter.rule.multipleOf" => _multipleOf(values),
-      "typewriter.rule.maximumScale" => _bool(
-        _number(values[0]).normalizedScale <= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.minimumItems" => _bool(
-        _size(values[0]) >= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.maximumItems" => _bool(
-        _size(values[0]) <= _integer(values[1]).toInt(),
-      ),
-      "typewriter.rule.itemsBetween" => _bool(
-        _betweenInt(
-          _size(values[0]),
-          _integer(values[1]).toInt(),
-          _integer(values[2]).toInt(),
-        ),
-      ),
-      "typewriter.rule.unique" => throw StateError(
-        "Unique availability is evaluated before operations",
-      ),
-      "typewriter.rule.notNull" => _bool(values.single != skir.DataValue.null_),
-      "typewriter.rule.notBefore" => _bool(
-        _timestamp(values[0]).compareTo(_timestamp(values[1])) >= 0,
-      ),
-      "typewriter.rule.notAfter" => _bool(
-        _timestamp(values[0]).compareTo(_timestamp(values[1])) <= 0,
-      ),
-      "typewriter.rule.opaque" => _bool(
-        ((_integer(values.single) >> 24) & BigInt.from(255)) ==
-            BigInt.from(255),
-      ),
-      _ => throw StateError("Registered operation $id is not implemented"),
-    };
   }
 
   skir.DataValue _arithmetic(
@@ -1408,105 +1068,6 @@ int _compareCodePoints(String left, String right) {
   return left.runes.length.compareTo(right.runes.length);
 }
 
-void _validateOperationArity(String id, int count) {
-  if (!authoredPortableOperationIds.contains(id)) {
-    throw _ExpressionFailure(
-      "unknown_operation",
-      "Unknown expression operation $id",
-    );
-  }
-  if (!portableOperationAcceptsArity(id, count)) {
-    throw _ExpressionFailure(
-      "operation_arity",
-      "Expression operation $id received $count arguments",
-    );
-  }
-}
-
-/// Shares operation arity between catalog checking and the existing evaluator.
-bool portableOperationAcceptsArity(String id, int count) {
-  if (!authoredPortableOperationIds.contains(id)) return false;
-  final (minimum, maximum) = switch (id) {
-    "typewriter.resource.id" ||
-    "typewriter.resource.value" ||
-    "typewriter.resource.configuration" => (1, 2),
-    "typewriter.value.is_null" ||
-    "typewriter.boolean.not" ||
-    "typewriter.number.negate" ||
-    "typewriter.text.length" ||
-    "typewriter.text.has_line_break" ||
-    "typewriter.text.trim" ||
-    "typewriter.text.lower" ||
-    "typewriter.text.upper" ||
-    "typewriter.text.title" ||
-    "typewriter.collection.size" ||
-    "typewriter.rule.nonEmpty" ||
-    "typewriter.link.target" ||
-    "typewriter.value.configuration" ||
-    "typewriter.catalog.declaration" ||
-    "typewriter.color.parse" ||
-    "typewriter.text.value" ||
-    "typewriter.rule.nonBlank" ||
-    "typewriter.rule.singleLine" ||
-    "typewriter.rule.positive" ||
-    "typewriter.rule.nonNegative" ||
-    "typewriter.rule.unique" ||
-    "typewriter.rule.notNull" ||
-    "typewriter.rule.opaque" => (1, 1),
-    "typewriter.value.eq" ||
-    "typewriter.value.neq" ||
-    "typewriter.record.field" ||
-    "typewriter.number.gt" ||
-    "typewriter.number.gte" ||
-    "typewriter.number.lt" ||
-    "typewriter.number.lte" ||
-    "typewriter.text.split" ||
-    "typewriter.text.join" ||
-    "typewriter.text.contains" ||
-    "typewriter.text.starts_with" ||
-    "typewriter.text.ends_with" ||
-    "typewriter.regex.matches" ||
-    "typewriter.collection.access" ||
-    "typewriter.collection.contains" ||
-    "typewriter.color.with_alpha" ||
-    "typewriter.rule.minimumLength" ||
-    "typewriter.rule.maximumLength" ||
-    "typewriter.rule.minimumLines" ||
-    "typewriter.rule.maximumLines" ||
-    "typewriter.rule.regex" ||
-    "typewriter.rule.startsWith" ||
-    "typewriter.rule.endsWith" ||
-    "typewriter.rule.multipleOf" ||
-    "typewriter.rule.maximumScale" ||
-    "typewriter.rule.minimumItems" ||
-    "typewriter.rule.maximumItems" ||
-    "typewriter.rule.notBefore" ||
-    "typewriter.rule.notAfter" => (2, 2),
-    "typewriter.number.round_to" ||
-    "typewriter.number.format" ||
-    "typewriter.duration.format" ||
-    "typewriter.text.replace" ||
-    "typewriter.regex.capture" ||
-    "typewriter.regex.replace" ||
-    "typewriter.rule.lengthBetween" ||
-    "typewriter.rule.minimum" ||
-    "typewriter.rule.maximum" ||
-    "typewriter.rule.between" ||
-    "typewriter.rule.itemsBetween" => (3, 3),
-    "typewriter.text.substring" => (2, 3),
-    "typewriter.number.add" ||
-    "typewriter.number.subtract" ||
-    "typewriter.number.multiply" ||
-    "typewriter.number.divide" ||
-    "typewriter.number.remainder" ||
-    "typewriter.rule.one_of" => (2, null),
-    "typewriter.timestamp.format" => (4, 4),
-    "typewriter.text.interpolate" => (0, null),
-    _ => throw StateError("Registered operation $id has no arity"),
-  };
-  return count >= minimum && (maximum == null || count <= maximum);
-}
-
 enum _Arithmetic { add, subtract, multiply, divide, remainder, negate }
 
 skir.DataValue _bool(bool value) => skir.DataValue.wrapBoolean(value);
@@ -1515,22 +1076,6 @@ skir.DataValue _string(String value) => skir.DataValue.wrapStringValue(value);
 
 skir.DataValue _integerValue(int value) =>
     skir.DataValue.wrapInteger(value.toString());
-
-skir.DataValue _recordField(List<skir.DataValue> values) {
-  final record = switch (_unwrap(values[0])) {
-    skir.DataValue_recordWrapper(:final value) => value,
-    _ => null,
-  };
-  if (record == null) {
-    throw const _ExpressionFailure(
-      "expected_record",
-      "The expression value is not a record",
-    );
-  }
-  final name = _text(values[1]);
-  final field = record.fields.where((field) => field.name == name).firstOrNull;
-  return field?.value ?? skir.DataValue.unfilled;
-}
 
 int _compareNumbers(List<skir.DataValue> values) =>
     _compareNumber(values[0], values[1]);

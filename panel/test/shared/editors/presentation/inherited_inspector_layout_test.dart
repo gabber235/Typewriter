@@ -102,7 +102,7 @@ void main() {
             "source.body",
             skir.PresentationElement.wrapText(
               (skir.TextContent.mutable()
-                    ..value = skir.ExpressionNode.createRead(
+                    ..value = skir.ExpressionNode.createInput(
                       binding: contextId,
                       path: editorRootPath,
                     ))

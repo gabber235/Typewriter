@@ -7,6 +7,7 @@ import com.typewritermc.expression.Handled
 import com.typewritermc.types.TypeTemplate
 import skirout.editor.v1.action.EditorAction
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.PresentationNode
 
 /** Owns completion for one configured scope before its parent captures child nodes. */
@@ -51,13 +52,13 @@ fun <Value> presentationParameter(name: String): PresentationParameter<Value> {
 interface PresentationActionFactory {
     fun set(
         binding: BindingRef,
-        value: com.typewritermc.presentation.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
     ): EditorAction
 
     fun insertAfter(
         binding: BindingRef,
         item: ItemId?,
-        value: com.typewritermc.presentation.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
     ): EditorAction
 
     fun removeItem(
@@ -78,15 +79,15 @@ interface PresentationActionFactory {
 
     fun insertRow(
         binding: BindingRef,
-        key: com.typewritermc.presentation.ExpressionNode,
-        value: com.typewritermc.presentation.ExpressionNode,
+        key: skirout.editor.v1.expression.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
     ): EditorAction
 
     fun updateRow(
         binding: BindingRef,
         row: ItemId,
-        key: com.typewritermc.presentation.ExpressionNode,
-        value: com.typewritermc.presentation.ExpressionNode,
+        key: skirout.editor.v1.expression.ExpressionNode,
+        value: skirout.editor.v1.expression.ExpressionNode,
     ): EditorAction
 
     fun removeRow(
@@ -100,15 +101,15 @@ interface PresentationActionFactory {
     ): EditorAction
 }
 
-fun <V> EditablePresentationInput<V, *>.set(value: Expr<V, Handled>): EditorAction = actions.set(binding, value.node)
+fun <V> EditablePresentationInput<V, *>.set(value: Expr<V, Handled>): EditorAction = actions.set(binding, value.toNode())
 
 fun <Item> EditablePresentationInput<List<Item>, *>.insertAfter(
     item: ItemId?,
     value: Expr<Item, Handled>,
-): EditorAction = actions.insertAfter(binding, item, value.node)
+): EditorAction = actions.insertAfter(binding, item, value.toNode())
 
 fun <Item> EditablePresentationInput<List<Item>, *>.append(value: Expr<Item, Handled>): EditorAction =
-    actions.insertAfter(binding, null, value.node)
+    actions.insertAfter(binding, null, value.toNode())
 
 fun EditablePresentationInput<*, *>.removeItem(item: ItemId): EditorAction = actions.removeItem(binding, item)
 
@@ -122,13 +123,13 @@ fun EditablePresentationInput<*, *>.moveItem(
 fun <K, V> EditablePresentationInput<Map<K, V>, *>.insertRow(
     key: Expr<K, Handled>,
     value: Expr<V, Handled>,
-): EditorAction = actions.insertRow(binding, key.node, value.node)
+): EditorAction = actions.insertRow(binding, key.toNode(), value.toNode())
 
 fun <K, V> EditablePresentationInput<Map<K, V>, *>.updateRow(
     row: ItemId,
     key: Expr<K, Handled>,
     value: Expr<V, Handled>,
-): EditorAction = actions.updateRow(binding, row, key.node, value.node)
+): EditorAction = actions.updateRow(binding, row, key.toNode(), value.toNode())
 
 fun EditablePresentationInput<*, *>.removeRow(row: ItemId): EditorAction = actions.removeRow(binding, row)
 

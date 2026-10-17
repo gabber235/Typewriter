@@ -28,7 +28,7 @@ import com.typewritermc.expression.orElse
 import com.typewritermc.expression.portableExpression
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.presentation.ExpressionNode
+import skirout.editor.v1.expression.ExpressionNode
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.presentation.CollectionProjection
 import com.typewritermc.presentation.DefaultPresentationRuntime
@@ -224,11 +224,11 @@ fun main() {
     check(contractRepresentation.fields.map { it.owner.name } == listOf("stored"))
     val valueRepresentation = StoredValueDefinition.declaration.representation as RepresentationTemplate.Record
     check(valueRepresentation.fields.map { it.owner.name } == listOf("stored"))
-    val source = portableExpression<Any?>(ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath()))
+    val source = com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"))
     val rowExpressions = ExampleRowExpressionsFactory.create(source)
-    check(rowExpressions.title.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("title")))))
-    check(rowExpressions.value.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("value")))))
-    check(rowExpressions.receiverExpression.node == ExpressionNode.Read(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("receiverExpression")))))
+    check(rowExpressions.title.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("title")))).toNode())
+    check(rowExpressions.value.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("value")))).toNode())
+    check(rowExpressions.receiverExpression.toNode() == com.typewritermc.expression.input<Any?>(ExpressionBindingId("fixture"), ValuePath(listOf(com.typewritermc.authoring.PathSegment.Field("receiverExpression")))).toNode())
     val runtime = DefaultPresentationRuntime()
     val artifact = Path.of(requireNotNull(System.getProperty("fixtureArtifact")))
     GeneratedProviderLoader()
@@ -351,7 +351,7 @@ private fun PresentationNode.fixedChildren(): List<PresentationNode> {
 }
 
 private fun skirout.editor.v1.presentation.CollectionGraphElement.rootFieldName(): String {
-    val read = roots as skirout.editor.v1.expression.ExpressionNode.ReadWrapper
+    val read = roots as skirout.editor.v1.expression.ExpressionNode.InputWrapper
     val segment = read.value.path.segments.single() as PathSegment.FieldWrapper
     return segment.value.name
 }

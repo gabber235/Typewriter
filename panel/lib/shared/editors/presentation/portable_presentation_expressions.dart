@@ -3,7 +3,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 extension PortableBindingExpressions on skir.ExpressionBindingId {
-  skir.ExpressionNode readExpression() => skir.ExpressionNode.createRead(
+  skir.ExpressionNode readExpression() => skir.ExpressionNode.createInput(
     binding: this,
     path: skir.ValuePath(segments: const []),
   );
@@ -64,18 +64,12 @@ extension PortableResourceHeading on skir.ExpressionNode {
     return node(
       "visible",
       skir.PresentationElement.createConditional(
-        condition: skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: "typewriter.value.eq"),
-          arguments: [
-            skir.ExpressionNode.createOrElse(
+        condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.equal,left:skir.ExpressionNode.createOrElse(
               input: presentationSelectionCountBindingId.readExpression(),
               fallback: skir.ExpressionNode.wrapLiteral(
                 skir.DataValue.wrapInteger("1"),
               ),
-            ),
-            skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("1")),
-          ],
-        ),
+            ),right:skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("1"))),
         whenTrue: node(
           "content",
           skir.PresentationElement.wrapChildren(
@@ -89,12 +83,7 @@ extension PortableResourceHeading on skir.ExpressionNode {
                     node(
                       "identity.visible",
                       skir.PresentationElement.createConditional(
-                        condition: skir.ExpressionNode.createCall(
-                          operation: skir.OperationId(
-                            value: "typewriter.value.neq",
-                          ),
-                          arguments: [identity, "".portableExpression],
-                        ),
+                        condition: skir.ExpressionNode.createValueCompare(operation: skir.ValueCompareOperation.notEqual,left:identity,right:"".portableExpression),
                         whenTrue: node(
                           "identity",
                           skir.PresentationElement.wrapText(

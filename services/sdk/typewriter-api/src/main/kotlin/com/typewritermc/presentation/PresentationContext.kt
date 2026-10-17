@@ -23,9 +23,7 @@ internal class RuntimePresentationContext(
     private val state: PresentationBuildState,
 ) : PresentationContextExpressions {
     override val selectionCount =
-        Expr<Int, MayBeMissing>(
-            ExpressionNode.Read(ExpressionBindingId("presentation.context.selection_count"), ValuePath()),
-        )
+        com.typewritermc.expression.inputExpression<Int, MayBeMissing>(ExpressionBindingId("presentation.context.selection_count"))
 
     override fun <Value : Any> read(key: PresentationContextKey<Value>): Expr<Value, MayBeMissing> = state.readContext(key)
 }

@@ -143,7 +143,7 @@ void main() {
     final descriptor = _descriptor("base", _base);
     final control =
         (_control("name").toMutable()
-              ..label = skir.ExpressionNode.createRead(
+              ..label = skir.ExpressionNode.createInput(
                 binding: skir.ExpressionBindingId(value: "missing"),
                 path: skir.ValuePath.defaultInstance,
               ))
@@ -556,7 +556,7 @@ void main() {
     );
     final control =
         (_control("name").toMutable()
-              ..label = skir.ExpressionNode.createRead(
+              ..label = skir.ExpressionNode.createInput(
                 binding: skir.ExpressionBindingId(value: "configured_value"),
                 path: _control("sibling").binding.path,
               )

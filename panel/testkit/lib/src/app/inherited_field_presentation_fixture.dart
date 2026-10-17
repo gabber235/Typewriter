@@ -249,16 +249,12 @@ skir.PresentationNode inheritedFieldTextInput(
                     display: null,
                     completion: skir.ExpressionMapping(
                       inputBinding: candidate,
-                      body: skir.ExpressionNode.createCall(
-                        operation: skir.OperationId(
-                          value: "typewriter.text.trim",
+                      body: skir.ExpressionNode.createTextUnary(
+                        operation: skir.TextUnaryOperation.trim,
+                        source: skir.ExpressionNode.createInput(
+                          binding: candidate,
+                          path: editorRootPath,
                         ),
-                        arguments: [
-                          skir.ExpressionNode.createRead(
-                            binding: candidate,
-                            path: editorRootPath,
-                          ),
-                        ],
                       ),
                     ),
                   )

@@ -214,7 +214,7 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     final children = <Widget>[];
     final itemScopes = <PortablePresentationScope>[];
     final source = switch (element.source) {
-      skir.ExpressionNode_readWrapper(:final value) => skir.BindingRef(
+      skir.ExpressionNode_inputWrapper(:final value) => skir.BindingRef(
         bindingId: value.binding,
         path: value.path,
       ),

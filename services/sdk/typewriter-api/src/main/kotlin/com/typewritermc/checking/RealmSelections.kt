@@ -9,9 +9,9 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionFactory
 import com.typewritermc.expression.MissingPolicy
 import com.typewritermc.expression.portableExpression
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
+import skirout.editor.v1.expression.ExpressionNode
 
 sealed interface ResourceTypeMatch {
     data object AnyResource : ResourceTypeMatch
@@ -45,10 +45,8 @@ fun <D, S : Any> compileSelection(
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
 ): TypedSelection<D> {
     val configured =
-        portableExpression<Any?>(
-            ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath()),
-        )
-    return TypedSelection(type, factory.create(configured).predicate().node)
+        com.typewritermc.expression.input<Any?>(ExpressionBindingId("configured_value"))
+    return TypedSelection(type, factory.create(configured).predicate().toNode())
 }
 
 /**

@@ -1,6 +1,9 @@
 use wasmcloud_utils::skir::base::editor::v1::{
     authoring, authoring_facts as facts, binding, catalog, checking,
-    expression::{CollectionExpression, ExpressionCall, ExpressionNode, ExpressionRead},
+    expression::{
+        ExpressionLocal, ExpressionNode, FoldExpression, NumberArithmeticExpression,
+        NumberArithmeticOperation,
+    },
     presentation::{
         AxisChild, AxisChildrenElement, AxisChildrenLayout, BoundControl, ChildrenElement,
         NamedControl, PageGraphDirection, PageGraphElement, PageTimelineElement,
@@ -11,7 +14,7 @@ use wasmcloud_utils::skir::base::editor::v1::{
     type_catalog::{
         ArgumentSelection, AuthoringRecord, DataValue, DeclaredTypeId, EndpointId,
         ExpressionBindingId, FieldPathSegment, FieldValue, ItemId, LinkTarget, LinkValue, ListItem,
-        ListPayload, MapPayload, MapRow, NamedTypeUse, NamedValue, OperationId, PathSegment,
+        ListPayload, MapPayload, MapRow, NamedTypeUse, NamedValue, PathSegment,
         PendingTypeSelection, QualifiedTypeId, RecordPayload, ResourceId, ScalarKind,
         TypeDefinitionId, TypeId, TypeSelection, TypeTemplate, TypeUse, ValuePath,
     },
@@ -307,14 +310,11 @@ fn page_workspaces_preserve_their_field_binding_and_graph_direction() {
 }
 
 #[test]
-fn collection_expressions_preserve_fold_bindings_and_optional_body() {
-    let binding = |value: &str| ExpressionBindingId {
-        value: value.to_owned(),
-        _unrecognized: None,
-    };
-    let read = |value: &str| {
-        ExpressionNode::Read(Box::new(ExpressionRead {
-            binding: binding(value),
+fn collection_expressions_preserve_typed_fold_operands_and_lexical_slots() {
+    let local = |slot| {
+        ExpressionNode::Local(Box::new(ExpressionLocal {
+            depth: 0,
+            slot,
             ..Default::default()
         }))
     };
@@ -329,39 +329,24 @@ fn collection_expressions_preserve_fold_bindings_and_optional_body() {
         }],
         _unrecognized: None,
     }))));
-    let fold = CollectionExpression {
-        operation: OperationId {
-            value: "typewriter.collection.fold".to_owned(),
+    let fold = ExpressionNode::Fold(Box::new(FoldExpression {
+        source: input.clone(),
+        initial: ExpressionNode::Literal(Box::new(DataValue::Integer("0".to_owned()))),
+        body: ExpressionNode::NumberArithmetic(Box::new(NumberArithmeticExpression {
+            operation: NumberArithmeticOperation::Add,
+            first: local(0),
+            second: local(1),
+            remaining: vec![],
             _unrecognized: None,
-        },
-        input: input.clone(),
-        bindings: vec![binding("total"), binding("score")],
-        arguments: vec![ExpressionNode::Literal(Box::new(DataValue::Integer(
-            "0".to_owned(),
-        )))],
-        body: Some(ExpressionNode::Call(Box::new(ExpressionCall {
-            operation: OperationId {
-                value: "typewriter.number.add".to_owned(),
-                _unrecognized: None,
-            },
-            arguments: vec![read("total"), read("score")],
-            _unrecognized: None,
-        }))),
+        })),
         _unrecognized: None,
-    };
-    let reverse = CollectionExpression {
-        operation: OperationId {
-            value: "typewriter.collection.reverse".to_owned(),
-            _unrecognized: None,
-        },
-        input,
-        ..Default::default()
-    };
+    }));
+    let reverse = ExpressionNode::Reverse(Box::new(input));
     for value in [fold, reverse] {
-        let bytes = CollectionExpression::serializer().to_bytes(&value);
-        let decoded = CollectionExpression::serializer()
+        let bytes = ExpressionNode::serializer().to_bytes(&value);
+        let decoded = ExpressionNode::serializer()
             .from_bytes(&bytes, UnrecognizedValues::Drop)
-            .expect("collection expression must decode");
+            .expect("typed collection expression must decode");
         assert_eq!(decoded, value);
     }
 }

@@ -90,14 +90,12 @@ void main() {
         display: null,
         completion: skir.ExpressionMapping(
           inputBinding: candidate,
-          body: skir.ExpressionNode.createCall(
-            operation: skir.OperationId(value: "typewriter.text.trim"),
-            arguments: [
-              skir.ExpressionNode.createRead(
-                binding: candidate,
-                path: skir.ValuePath.defaultInstance,
-              ),
-            ],
+          body: skir.ExpressionNode.createTextUnary(
+            operation: skir.TextUnaryOperation.trim,
+            source: skir.ExpressionNode.createInput(
+              binding: candidate,
+              path: skir.ValuePath.defaultInstance,
+            ),
           ),
         ),
       ),
@@ -176,7 +174,7 @@ void main() {
               display: null,
               completion: skir.ExpressionMapping(
                 inputBinding: configured,
-                body: skir.ExpressionNode.createRead(
+                body: skir.ExpressionNode.createInput(
                   binding: configured,
                   path: skir.ValuePath.defaultInstance,
                 ),
@@ -236,7 +234,7 @@ void main() {
     expect(problems(), contains("missing_choice_custom_mapping"));
     options
       ..queryBindingId = query
-      ..customValue = skir.ExpressionNode.createRead(
+      ..customValue = skir.ExpressionNode.createInput(
         binding: query,
         path: skir.ValuePath.defaultInstance,
       );

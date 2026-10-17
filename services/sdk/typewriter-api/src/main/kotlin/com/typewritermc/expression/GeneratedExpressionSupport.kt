@@ -2,12 +2,21 @@ package com.typewritermc.expression
 
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.presentation.ExpressionNode
+import com.typewritermc.types.Color
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.Ref
 import com.typewritermc.types.RelationshipEndpoint
 import com.typewritermc.types.Resource
 import com.typewritermc.types.ResourceId
+import com.typewritermc.types.ResourceIdDefinition
+import com.typewritermc.types.immutableCopy
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.NumberCompareOperation
+import skirout.editor.v1.expression.TextUnaryOperation
+import skirout.editor.v1.expression.ValueCompareOperation
 import java.math.BigDecimal
 import java.math.BigInteger
 import kotlin.time.Duration
@@ -19,382 +28,547 @@ sealed interface MayBeMissing : MissingPolicy
 
 sealed interface Handled : MayBeMissing
 
-/**
- * Carries a portable expression tree rather than an eagerly read Kotlin value.
- * [T] guides generated receiver APIs and [M] tracks whether missing authored input has been handled by the builder.
- * Catalog checking and runtime evaluation still validate operations, bindings, and available input values.
- */
-class Expr<T, out M : MissingPolicy> internal constructor(
-    val node: ExpressionNode,
+internal class LambdaFrame(
+    val arity: Int,
 )
 
-fun <V> Expr<*, out MissingPolicy>.field(name: String): Expr<V, MayBeMissing> =
-    Expr(
-        when (val expression = node) {
-            is ExpressionNode.Read -> {
-                expression.copy(path = ValuePath(expression.path.segments + PathSegment.Field(name)))
+internal data class ExpressionEnvironment(
+    val frames: List<LambdaFrame> = emptyList(),
+    val depth: Int = 0,
+) {
+    fun descend(): ExpressionEnvironment {
+        require(depth < PortableExpressionLimits.MAX_DEPTH) { "Expression lowering depth exceeded" }
+        return copy(depth = depth + 1)
+    }
+
+    fun enter(frame: LambdaFrame): ExpressionEnvironment = copy(frames = frames + frame)
+
+    fun address(
+        frame: LambdaFrame,
+        slot: Int,
+    ): Int {
+        require(slot in 0 until frame.arity) { "Invalid local expression slot" }
+        return frames.asReversed().indexOfFirst { it === frame }.also {
+            require(it >= 0) { "A local expression escaped its declaring lambda" }
+        }
+    }
+}
+
+/** A reusable authoring expression. Complete programs freeze their captured lexical scope through [toNode]. */
+class Expr<T, out M : MissingPolicy> internal constructor(
+    private val emit: (ExpressionEnvironment) -> ExpressionNode,
+) {
+    internal fun lower(environment: ExpressionEnvironment): ExpressionNode = emit(environment.descend())
+
+    fun toNode(): ExpressionNode = lower(ExpressionEnvironment())
+}
+
+internal fun <T> local(
+    frame: LambdaFrame,
+    slot: Int,
+): Expr<T, MayBeMissing> =
+    Expr { environment ->
+        ExpressionNode.createLocal(
+            depth = environment.address(frame, slot),
+            slot = slot,
+            path =
+                skirout.editor.v1.type_catalog
+                    .ValuePath(segments = emptyList()),
+        )
+    }
+
+internal fun <T, M : MissingPolicy> inputExpression(
+    binding: ExpressionBindingId,
+    path: ValuePath = ValuePath(),
+): Expr<T, M> {
+    val source =
+        skirout.editor.v1.type_catalog
+            .ExpressionBindingId(value = binding.value)
+    val frozenPath = SkirAuthoringValueCodec.encode(path).getOrThrow()
+    return Expr { ExpressionNode.createInput(binding = source, path = frozenPath) }
+}
+
+fun <V> Expr<*, out MissingPolicy>.field(name: String): Expr<V, MayBeMissing> {
+    val source = this
+    val segment =
+        skirout.editor.v1.type_catalog.PathSegment
+            .createField(name = name)
+    return Expr { environment ->
+        when (val expression = source.lower(environment)) {
+            is ExpressionNode.InputWrapper -> {
+                ExpressionNode.InputWrapper(
+                    expression.value.copy(path = expression.value.path.copy(segments = expression.value.path.segments + segment)),
+                )
+            }
+
+            is ExpressionNode.LocalWrapper -> {
+                ExpressionNode.LocalWrapper(
+                    expression.value.copy(path = expression.value.path.copy(segments = expression.value.path.segments + segment)),
+                )
             }
 
             else -> {
-                ExpressionNode.Call(
-                    OperationId("typewriter.record.field"),
-                    listOf(expression, ExpressionNode.Literal(DataValue.StringValue(name))),
-                )
+                ExpressionNode.createField(source = expression, name = name)
             }
-        },
-    )
+        }
+    }
+}
+
+private fun <T, B, O> Expr<out Collection<T>, *>.unaryCollection(
+    make: (ExpressionNode, ExpressionNode) -> ExpressionNode,
+    body: Expr<T, MayBeMissing>.() -> Expr<out B, out MissingPolicy>,
+): Expr<O, MayBeMissing> {
+    val source = this
+    val frame = LambdaFrame(1)
+    val result = local<T>(frame, 0).body()
+    return Expr { outer -> make(source.lower(outer), result.lower(outer.enter(frame))) }
+}
 
 fun <T, S : Any> collectionAny(
     source: Expr<List<T>, out MissingPolicy>,
     factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<Boolean, MayBeMissing> {
-    val item = ExpressionBindingId("item_${source.node.hashCode().toUInt()}")
-    val expressions = factory.create(Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
-    return Expr(
-        ExpressionNode.Collection(
-            OperationId("typewriter.collection.any"),
-            source.node,
-            listOf(item),
-            emptyList(),
-            expressions.predicate().node,
-        ),
-    )
-}
+): Expr<Boolean, MayBeMissing> = source.any { factory.create(this).predicate() }
 
 fun <T, S : Any> collectionFilter(
     source: Expr<List<T>, out MissingPolicy>,
     factory: ExpressionFactory<S>,
     predicate: S.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<List<T>, MayBeMissing> {
-    val item = ExpressionBindingId("item_${source.node.hashCode().toUInt()}")
-    val expressions = factory.create(Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath())))
-    return Expr(
-        ExpressionNode.Collection(
-            OperationId("typewriter.collection.filter"),
-            source.node,
-            listOf(item),
-            emptyList(),
-            expressions.predicate().node,
-        ),
-    )
-}
+): Expr<List<T>, MayBeMissing> = source.filter { factory.create(this).predicate() }
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.any(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<Boolean, MayBeMissing> = unaryCollection<T, Boolean, Boolean>("any", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<Boolean, MayBeMissing> =
+    unaryCollection<T, Boolean, Boolean>({ source, result ->
+        ExpressionNode.createAny(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.all(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<Boolean, MayBeMissing> = unaryCollection<T, Boolean, Boolean>("all", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<Boolean, MayBeMissing> =
+    unaryCollection<T, Boolean, Boolean>({ source, result ->
+        ExpressionNode.createAll(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.none(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<Boolean, MayBeMissing> = unaryCollection<T, Boolean, Boolean>("none", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<Boolean, MayBeMissing> =
+    unaryCollection<T, Boolean, Boolean>({ source, result ->
+        ExpressionNode.createNone(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.count(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<Int, MayBeMissing> = unaryCollection<T, Boolean, Int>("count", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<Int, MayBeMissing> =
+    unaryCollection<T, Boolean, Int>({ source, result ->
+        ExpressionNode.createCount(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.find(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<T?, MayBeMissing> = unaryCollection<T, Boolean, T?>("find", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<T?, MayBeMissing> =
+    unaryCollection<T, Boolean, T?>({ source, result ->
+        ExpressionNode.createFind(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<out Collection<T>, M>.findLast(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<T?, MayBeMissing> = unaryCollection<T, Boolean, T?>("find_last", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<T?, MayBeMissing> =
+    unaryCollection<T, Boolean, T?>({ source, result ->
+        ExpressionNode.createFindLast(source = source, body = result)
+    }, body)
 
 fun <T, M : MissingPolicy> Expr<List<T>, M>.filter(
-    predicate: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
-): Expr<List<T>, MayBeMissing> = unaryCollection<T, Boolean, List<T>>("filter", predicate)
+    body: Expr<T, MayBeMissing>.() -> Expr<Boolean, out MissingPolicy>,
+): Expr<List<T>, MayBeMissing> =
+    unaryCollection<T, Boolean, List<T>>({ source, result ->
+        ExpressionNode.createFilter(source = source, body = result)
+    }, body)
 
 fun <T, R, M : MissingPolicy> Expr<out Collection<T>, M>.map(
-    transform: Expr<T, MayBeMissing>.() -> Expr<R, out MissingPolicy>,
-): Expr<List<R>, MayBeMissing> = unaryCollection<T, R, List<R>>("map", transform)
+    body: Expr<T, MayBeMissing>.() -> Expr<R, out MissingPolicy>,
+): Expr<List<R>, MayBeMissing> =
+    unaryCollection<T, R, List<R>>({ source, result ->
+        ExpressionNode.createMap(source = source, body = result)
+    }, body)
 
 fun <T, R, M : MissingPolicy> Expr<out Collection<T>, M>.flatMap(
-    transform: Expr<T, MayBeMissing>.() -> Expr<out Collection<R>, out MissingPolicy>,
-): Expr<List<R>, MayBeMissing> = unaryCollection<T, Collection<R>, List<R>>("flat_map", transform)
+    body: Expr<T, MayBeMissing>.() -> Expr<out Collection<R>, out MissingPolicy>,
+): Expr<List<R>, MayBeMissing> =
+    unaryCollection<T, Collection<R>, List<R>>({ source, result ->
+        ExpressionNode.createFlatMap(source = source, body = result)
+    }, body)
 
 fun <T, K, M : MissingPolicy> Expr<List<T>, M>.distinctBy(
-    key: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
-): Expr<List<T>, MayBeMissing> = unaryCollection<T, K, List<T>>("distinct_by", key)
+    body: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
+): Expr<List<T>, MayBeMissing> =
+    unaryCollection<T, K, List<T>>({ source, result ->
+        ExpressionNode.createDistinctBy(source = source, body = result)
+    }, body)
+
+fun <T, K, M : MissingPolicy> Expr<out Collection<T>, M>.groupBy(
+    body: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
+): Expr<Map<K, List<T>>, MayBeMissing> =
+    unaryCollection<T, K, Map<K, List<T>>>({ source, result ->
+        ExpressionNode.createGroupBy(source = source, body = result)
+    }, body)
+
+fun <T, K, M : MissingPolicy> Expr<out Collection<T>, M>.uniqueBy(
+    body: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
+): Expr<Boolean, MayBeMissing> =
+    unaryCollection<T, K, Boolean>({ source, result ->
+        ExpressionNode.createUniqueBy(source = source, body = result)
+    }, body)
 
 fun <T, K, M : MissingPolicy> Expr<List<T>, M>.sortedBy(
     descending: Boolean = false,
     key: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
-): Expr<List<T>, MayBeMissing> =
-    unaryCollection<T, K, List<T>>("sort_by", key, listOf(ExpressionNode.Literal(DataValue.Boolean(descending))))
+): Expr<List<T>, MayBeMissing> {
+    val source = this
+    val frame = LambdaFrame(1)
+    val result = local<T>(frame, 0).key()
+    val order = literal(descending)
+    return Expr { outer ->
+        ExpressionNode.createSortBy(
+            source = source.lower(outer),
+            descending = order.lower(outer),
+            key = result.lower(outer.enter(frame)),
+        )
+    }
+}
 
-fun <T, K, M : MissingPolicy> Expr<out Collection<T>, M>.groupBy(
-    key: Expr<T, MayBeMissing>.() -> Expr<K, out MissingPolicy>,
-): Expr<Map<K, List<T>>, MayBeMissing> = unaryCollection<T, K, Map<K, List<T>>>("group_by", key)
+fun <T, M : MissingPolicy> Expr<List<T>, M>.distinct(): Expr<List<T>, M> = Expr { ExpressionNode.DistinctWrapper(lower(it)) }
 
-fun <T, M : MissingPolicy> Expr<List<T>, M>.distinct(): Expr<List<T>, M> = preserveCollection("distinct")
-
-fun <T, M : MissingPolicy> Expr<List<T>, M>.reversed(): Expr<List<T>, M> = preserveCollection("reverse")
+fun <T, M : MissingPolicy> Expr<List<T>, M>.reversed(): Expr<List<T>, M> = Expr { ExpressionNode.ReverseWrapper(lower(it)) }
 
 fun <T, M : MissingPolicy> Expr<List<T>, M>.take(count: Expr<Int, out MissingPolicy>): Expr<List<T>, MayBeMissing> =
-    bodylessCollection<List<T>>("take", listOf(count.node))
+    Expr { ExpressionNode.createTake(source = lower(it), count = count.lower(it)) }
 
 fun <T, M : MissingPolicy> Expr<List<T>, M>.skip(count: Expr<Int, out MissingPolicy>): Expr<List<T>, MayBeMissing> =
-    bodylessCollection<List<T>>("skip", listOf(count.node))
+    Expr { ExpressionNode.createSkip(source = lower(it), count = count.lower(it)) }
 
 fun <T, M : MissingPolicy> Expr<List<T>, M>.reduce(
     combine: (Expr<T, MayBeMissing>, Expr<T, MayBeMissing>) -> Expr<T, out MissingPolicy>,
-): Expr<T?, MayBeMissing> = binaryCollection<T, T, T?>("reduce") { accumulator, item -> combine(accumulator, item) }
+): Expr<T?, MayBeMissing> {
+    val source = this
+    val frame = LambdaFrame(2)
+    val body = combine(local(frame, 0), local(frame, 1))
+    return Expr { outer -> ExpressionNode.createReduce(source = source.lower(outer), body = body.lower(outer.enter(frame))) }
+}
 
 fun <T, R, M : MissingPolicy> Expr<out Collection<T>, M>.fold(
     initial: Expr<R, out MissingPolicy>,
     combine: (Expr<R, MayBeMissing>, Expr<T, MayBeMissing>) -> Expr<R, out MissingPolicy>,
-): Expr<R, MayBeMissing> = binaryCollection<T, R, R>("fold", listOf(initial.node)) { accumulator, item -> combine(accumulator, item) }
+): Expr<R, MayBeMissing> {
+    val source = this
+    val frame = LambdaFrame(2)
+    val body = combine(local(frame, 0), local(frame, 1))
+    return Expr { outer ->
+        ExpressionNode.createFold(
+            source = source.lower(outer),
+            initial = initial.lower(outer),
+            body = body.lower(outer.enter(frame)),
+        )
+    }
+}
 
 fun <T, M : MissingPolicy> Expr<List<T>, M>.sortedWith(
     compare: (Expr<T, MayBeMissing>, Expr<T, MayBeMissing>) -> Expr<out Number, out MissingPolicy>,
-): Expr<List<T>, MayBeMissing> = binaryCollection<T, T, List<T>>("sort_with", body = compare)
-
-private fun <T, B, O> Expr<out Collection<T>, *>.unaryCollection(
-    operation: String,
-    body: Expr<T, MayBeMissing>.() -> Expr<out B, out MissingPolicy>,
-    arguments: List<ExpressionNode> = emptyList(),
-): Expr<O, MayBeMissing> {
-    val item = collectionBinding(operation, 0)
-    val expression = Expr<T, MayBeMissing>(ExpressionNode.Read(item, ValuePath()))
-    return Expr(
-        ExpressionNode.Collection(
-            OperationId("typewriter.collection.$operation"),
-            node,
-            listOf(item),
-            arguments,
-            expression.body().node,
-        ),
-    )
+): Expr<List<T>, MayBeMissing> {
+    val source = this
+    val frame = LambdaFrame(2)
+    val body = compare(local(frame, 0), local(frame, 1))
+    return Expr { outer -> ExpressionNode.createSortWith(source = source.lower(outer), comparator = body.lower(outer.enter(frame))) }
 }
 
-private fun <R> Expr<*, *>.bodylessCollection(
-    operation: String,
-    arguments: List<ExpressionNode> = emptyList(),
-): Expr<R, MayBeMissing> =
-    Expr(ExpressionNode.Collection(OperationId("typewriter.collection.$operation"), node, emptyList(), arguments, null))
-
-private fun <R, M : MissingPolicy> Expr<*, M>.preserveCollection(operation: String): Expr<R, M> =
-    Expr(ExpressionNode.Collection(OperationId("typewriter.collection.$operation"), node, emptyList(), emptyList(), null))
-
-private fun <T, A, O> Expr<out Collection<T>, *>.binaryCollection(
-    operation: String,
-    arguments: List<ExpressionNode> = emptyList(),
-    body: (Expr<A, MayBeMissing>, Expr<T, MayBeMissing>) -> Expr<*, out MissingPolicy>,
-): Expr<O, MayBeMissing> {
-    val first = collectionBinding(operation, 0)
-    val second = collectionBinding(operation, 1)
-    return Expr(
-        ExpressionNode.Collection(
-            OperationId("typewriter.collection.$operation"),
-            node,
-            listOf(first, second),
-            arguments,
-            body(
-                Expr<A, MayBeMissing>(ExpressionNode.Read(first, ValuePath())),
-                Expr(ExpressionNode.Read(second, ValuePath())),
-            ).node,
-        ),
-    )
+/** Imports a closed portable subtree. It cannot capture a local from its future insertion site. */
+fun <T> portableExpression(node: ExpressionNode): Expr<T, MayBeMissing> {
+    node.requireClosedExpression()
+    val frozen = ExpressionNode.serializer.fromBytes(ExpressionNode.serializer.toBytes(node))
+    return Expr { frozen }
 }
 
-private fun Expr<*, *>.collectionBinding(
-    operation: String,
-    slot: Int,
-): ExpressionBindingId = ExpressionBindingId("${operation}_${slot}_${node.hashCode().toUInt()}")
+internal fun <T> portableLiteral(value: DataValue): Expr<T, Handled> {
+    val frozen = SkirDataValueCodec.encode(value.immutableCopy()).getOrThrow()
+    return Expr { ExpressionNode.LiteralWrapper(frozen) }
+}
 
-fun <T> portableExpression(node: ExpressionNode): Expr<T, MayBeMissing> = Expr(node)
-
-fun literal(value: String): Expr<String, Handled> = Expr(ExpressionNode.Literal(DataValue.StringValue(value)))
+fun literal(value: String): Expr<String, Handled> = portableLiteral(DataValue.StringValue(value))
 
 fun literal(value: ResourceId): Expr<ResourceId, Handled> =
-    Expr(ExpressionNode.Literal(DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(value.value))))
+    portableLiteral(DataValue.Named(ResourceIdDefinition.use, DataValue.StringValue(value.value)))
 
-fun <M : MissingPolicy> Expr<*, M>.isNull(): Expr<Boolean, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.value.is_null"), listOf(node)))
+fun literal(value: Boolean): Expr<Boolean, Handled> = portableLiteral(DataValue.Boolean(value))
 
-/** Exposes a checked nominal string representation without changing its text. */
+fun literal(value: Int): Expr<Int, Handled> = portableLiteral(DataValue.Integer(value.toBigInteger()))
+
+fun literal(value: Long): Expr<Long, Handled> = portableLiteral(DataValue.Integer(value.toBigInteger()))
+
+fun literal(value: Float): Expr<Float, Handled> = portableLiteral(DataValue.Float(value.toDouble()))
+
+fun literal(value: Double): Expr<Double, Handled> = portableLiteral(DataValue.Float(value))
+
+fun literal(value: BigInteger): Expr<BigInteger, Handled> = portableLiteral(DataValue.Integer(value))
+
+fun literal(value: BigDecimal): Expr<BigDecimal, Handled> = portableLiteral(DataValue.Decimal(value.toPlainString()))
+
+fun literal(value: Instant): Expr<Instant, Handled> = portableLiteral(DataValue.Timestamp(value))
+
+fun literal(value: Duration): Expr<Duration, Handled> = portableLiteral(DataValue.Duration(value))
+
+fun literal(value: Color): Expr<Color, Handled> = portableLiteral(DataValue.Integer(value.argb.toString().toBigInteger()))
+
+fun <M : MissingPolicy> Expr<*, M>.isNull(): Expr<Boolean, M> = Expr { ExpressionNode.IsNullWrapper(lower(it)) }
+
 fun <M : MissingPolicy> textRepresentation(value: Expr<*, M>): Expr<String, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.text.value"), listOf(value.node)))
+    Expr { ExpressionNode.createTextUnary(operation = TextUnaryOperation.VALUE, source = value.lower(it)) }
 
-fun <M : MissingPolicy> Expr<String, M>.parseColor(): Expr<com.typewritermc.types.Color, MayBeMissing> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.color.parse"), listOf(node)))
+fun <M : MissingPolicy> Expr<String, M>.parseColor(): Expr<Color, MayBeMissing> = Expr { ExpressionNode.ColorParseWrapper(lower(it)) }
 
-fun literal(value: Boolean): Expr<Boolean, Handled> = Expr(ExpressionNode.Literal(DataValue.Boolean(value)))
+fun <M : MissingPolicy> Expr<Boolean, M>.not(): Expr<Boolean, M> = Expr { ExpressionNode.BooleanNotWrapper(lower(it)) }
 
-fun literal(value: Int): Expr<Int, Handled> = Expr(ExpressionNode.Literal(DataValue.Integer(value.toBigInteger())))
+infix fun <M : MissingPolicy> Expr<Boolean, M>.and(other: Expr<Boolean, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createAnd(left = lower(it), right = other.lower(it)) }
 
-fun literal(value: Long): Expr<Long, Handled> = Expr(ExpressionNode.Literal(DataValue.Integer(value.toBigInteger())))
-
-fun literal(value: Float): Expr<Float, Handled> = Expr(ExpressionNode.Literal(DataValue.Float(value.toDouble())))
-
-fun literal(value: Double): Expr<Double, Handled> = Expr(ExpressionNode.Literal(DataValue.Float(value)))
-
-fun literal(value: BigInteger): Expr<BigInteger, Handled> = Expr(ExpressionNode.Literal(DataValue.Integer(value)))
-
-fun literal(value: BigDecimal): Expr<BigDecimal, Handled> = Expr(ExpressionNode.Literal(DataValue.Decimal(value.toPlainString())))
-
-fun literal(value: Instant): Expr<Instant, Handled> = Expr(ExpressionNode.Literal(DataValue.Timestamp(value)))
-
-fun literal(value: Duration): Expr<Duration, Handled> = Expr(ExpressionNode.Literal(DataValue.Duration(value)))
-
-fun <M : MissingPolicy> Expr<Boolean, M>.not(): Expr<Boolean, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.boolean.not"), listOf(node)))
-
-infix fun <M : MissingPolicy> Expr<Boolean, M>.and(other: Expr<Boolean, M>): Expr<Boolean, M> = Expr(ExpressionNode.And(node, other.node))
-
-infix fun <M : MissingPolicy> Expr<Boolean, M>.or(other: Expr<Boolean, M>): Expr<Boolean, M> = Expr(ExpressionNode.Or(node, other.node))
+infix fun <M : MissingPolicy> Expr<Boolean, M>.or(other: Expr<Boolean, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createOr(left = lower(it), right = other.lower(it)) }
 
 infix fun <T, M : MissingPolicy> Expr<T, M>.eq(other: Expr<T, M>): Expr<Boolean, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.value.eq"), listOf(node, other.node)))
+    Expr { ExpressionNode.createValueCompare(operation = ValueCompareOperation.EQUAL, left = lower(it), right = other.lower(it)) }
 
 infix fun <T, M : MissingPolicy> Expr<T, M>.neq(other: Expr<T, M>): Expr<Boolean, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.value.neq"), listOf(node, other.node)))
+    Expr { ExpressionNode.createValueCompare(operation = ValueCompareOperation.NOT_EQUAL, left = lower(it), right = other.lower(it)) }
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gt(value: N): Expr<Boolean, M> = numeric("gt", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gt(value: N): Expr<Boolean, M> {
+    val operand = portableLiteral<N>(numberLiteral(value))
+    return Expr {
+        ExpressionNode.createNumberCompare(
+            operation = NumberCompareOperation.GREATER,
+            left = lower(it),
+            right = operand.lower(it),
+        )
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gte(value: N): Expr<Boolean, M> = numeric("gte", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gt(other: Expr<N, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER, left = lower(it), right = other.lower(it)) }
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lt(value: N): Expr<Boolean, M> = numeric("lt", value)
+@JvmName("UBytegtLiteral")
+infix fun <M : MissingPolicy> Expr<UByte, M>.gt(value: UByte): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(
+            operation = NumberCompareOperation.GREATER,
+            left = lower(it),
+            right = operand.lower(it),
+        )
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lte(value: N): Expr<Boolean, M> = numeric("lte", value)
+@JvmName("UShortgtLiteral")
+infix fun <M : MissingPolicy> Expr<UShort, M>.gt(value: UShort): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(
+            operation = NumberCompareOperation.GREATER,
+            left = lower(it),
+            right = operand.lower(it),
+        )
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gt(other: Expr<N, M>): Expr<Boolean, M> = numeric("gt", other)
+@JvmName("UIntgtLiteral")
+infix fun <M : MissingPolicy> Expr<UInt, M>.gt(value: UInt): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(
+            operation = NumberCompareOperation.GREATER,
+            left = lower(it),
+            right = operand.lower(it),
+        )
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gte(other: Expr<N, M>): Expr<Boolean, M> = numeric("gte", other)
+@JvmName("ULonggtLiteral")
+infix fun <M : MissingPolicy> Expr<ULong, M>.gt(value: ULong): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(
+            operation = NumberCompareOperation.GREATER,
+            left = lower(it),
+            right = operand.lower(it),
+        )
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lt(other: Expr<N, M>): Expr<Boolean, M> = numeric("lt", other)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gte(value: N): Expr<Boolean, M> {
+    val operand = portableLiteral<N>(numberLiteral(value))
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lte(other: Expr<N, M>): Expr<Boolean, M> = numeric("lte", other)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.gte(other: Expr<N, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = other.lower(it)) }
 
-@JvmName("unsignedByteGreaterThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UByte, M>.gte(value: UByte): Expr<Boolean, M> = unsignedNumeric("gte", value)
+@JvmName("UBytegteLiteral")
+infix fun <M : MissingPolicy> Expr<UByte, M>.gte(value: UByte): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedShortGreaterThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UShort, M>.gte(value: UShort): Expr<Boolean, M> = unsignedNumeric("gte", value)
+@JvmName("UShortgteLiteral")
+infix fun <M : MissingPolicy> Expr<UShort, M>.gte(value: UShort): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedIntGreaterThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UInt, M>.gte(value: UInt): Expr<Boolean, M> = unsignedNumeric("gte", value)
+@JvmName("UIntgteLiteral")
+infix fun <M : MissingPolicy> Expr<UInt, M>.gte(value: UInt): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedLongGreaterThanOrEqual")
-infix fun <M : MissingPolicy> Expr<ULong, M>.gte(value: ULong): Expr<Boolean, M> = unsignedNumeric("gte", value)
+@JvmName("ULonggteLiteral")
+infix fun <M : MissingPolicy> Expr<ULong, M>.gte(value: ULong): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.GREATER_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedByteGreaterThan")
-infix fun <M : MissingPolicy> Expr<UByte, M>.gt(value: UByte): Expr<Boolean, M> = unsignedNumeric("gt", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lt(value: N): Expr<Boolean, M> {
+    val operand = portableLiteral<N>(numberLiteral(value))
+    return Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = operand.lower(it)) }
+}
 
-@JvmName("unsignedShortGreaterThan")
-infix fun <M : MissingPolicy> Expr<UShort, M>.gt(value: UShort): Expr<Boolean, M> = unsignedNumeric("gt", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lt(other: Expr<N, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = other.lower(it)) }
 
-@JvmName("unsignedIntGreaterThan")
-infix fun <M : MissingPolicy> Expr<UInt, M>.gt(value: UInt): Expr<Boolean, M> = unsignedNumeric("gt", value)
+@JvmName("UByteltLiteral")
+infix fun <M : MissingPolicy> Expr<UByte, M>.lt(value: UByte): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = operand.lower(it)) }
+}
 
-@JvmName("unsignedLongGreaterThan")
-infix fun <M : MissingPolicy> Expr<ULong, M>.gt(value: ULong): Expr<Boolean, M> = unsignedNumeric("gt", value)
+@JvmName("UShortltLiteral")
+infix fun <M : MissingPolicy> Expr<UShort, M>.lt(value: UShort): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = operand.lower(it)) }
+}
 
-@JvmName("unsignedByteLessThan")
-infix fun <M : MissingPolicy> Expr<UByte, M>.lt(value: UByte): Expr<Boolean, M> = unsignedNumeric("lt", value)
+@JvmName("UIntltLiteral")
+infix fun <M : MissingPolicy> Expr<UInt, M>.lt(value: UInt): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = operand.lower(it)) }
+}
 
-@JvmName("unsignedShortLessThan")
-infix fun <M : MissingPolicy> Expr<UShort, M>.lt(value: UShort): Expr<Boolean, M> = unsignedNumeric("lt", value)
+@JvmName("ULongltLiteral")
+infix fun <M : MissingPolicy> Expr<ULong, M>.lt(value: ULong): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS, left = lower(it), right = operand.lower(it)) }
+}
 
-@JvmName("unsignedIntLessThan")
-infix fun <M : MissingPolicy> Expr<UInt, M>.lt(value: UInt): Expr<Boolean, M> = unsignedNumeric("lt", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lte(value: N): Expr<Boolean, M> {
+    val operand = portableLiteral<N>(numberLiteral(value))
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedLongLessThan")
-infix fun <M : MissingPolicy> Expr<ULong, M>.lt(value: ULong): Expr<Boolean, M> = unsignedNumeric("lt", value)
+infix fun <N : Number, M : MissingPolicy> Expr<N, M>.lte(other: Expr<N, M>): Expr<Boolean, M> =
+    Expr { ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = other.lower(it)) }
 
-@JvmName("unsignedByteLessThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UByte, M>.lte(value: UByte): Expr<Boolean, M> = unsignedNumeric("lte", value)
+@JvmName("UBytelteLiteral")
+infix fun <M : MissingPolicy> Expr<UByte, M>.lte(value: UByte): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedShortLessThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UShort, M>.lte(value: UShort): Expr<Boolean, M> = unsignedNumeric("lte", value)
+@JvmName("UShortlteLiteral")
+infix fun <M : MissingPolicy> Expr<UShort, M>.lte(value: UShort): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedIntLessThanOrEqual")
-infix fun <M : MissingPolicy> Expr<UInt, M>.lte(value: UInt): Expr<Boolean, M> = unsignedNumeric("lte", value)
+@JvmName("UIntlteLiteral")
+infix fun <M : MissingPolicy> Expr<UInt, M>.lte(value: UInt): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-@JvmName("unsignedLongLessThanOrEqual")
-infix fun <M : MissingPolicy> Expr<ULong, M>.lte(value: ULong): Expr<Boolean, M> = unsignedNumeric("lte", value)
+@JvmName("ULonglteLiteral")
+infix fun <M : MissingPolicy> Expr<ULong, M>.lte(value: ULong): Expr<Boolean, M> {
+    val operand = literal(value)
+    return Expr {
+        ExpressionNode.createNumberCompare(operation = NumberCompareOperation.LESS_EQUAL, left = lower(it), right = operand.lower(it))
+    }
+}
 
-val <M : MissingPolicy> Expr<String, M>.length: Expr<Int, M>
-    get() = Expr(ExpressionNode.Call(OperationId("typewriter.text.length"), listOf(node)))
+val <M : MissingPolicy> Expr<String, M>.length: Expr<Int, M> get() = Expr { ExpressionNode.TextLengthWrapper(lower(it)) }
 
-fun <M : MissingPolicy> Expr<String, M>.hasLineBreaks(): Expr<Boolean, M> =
-    Expr(ExpressionNode.Call(OperationId("typewriter.text.has_line_break"), listOf(node)))
+fun <M : MissingPolicy> Expr<String, M>.hasLineBreaks(): Expr<Boolean, M> = Expr { ExpressionNode.TextHasLineBreakWrapper(lower(it)) }
 
-val <T, M : MissingPolicy> Expr<out Collection<T>, M>.size: Expr<Int, M>
-    get() = Expr(ExpressionNode.Call(OperationId("typewriter.collection.size"), listOf(node)))
+val <T, M : MissingPolicy> Expr<out Collection<T>, M>.size: Expr<Int, M> get() = Expr { ExpressionNode.CollectionSizeWrapper(lower(it)) }
 
 @JvmName("orElseNullable")
 fun <T : Any, M : MissingPolicy> Expr<T?, M>.orElse(value: Expr<T, Handled>): Expr<T, Handled> =
-    Expr(ExpressionNode.OrElse(node, value.node))
+    Expr { ExpressionNode.createOrElse(input = lower(it), fallback = value.lower(it)) }
 
 @JvmName("orElseMissing")
-fun <T : Any> Expr<T, MayBeMissing>.orElse(value: Expr<T, Handled>): Expr<T, Handled> = Expr(ExpressionNode.OrElse(node, value.node))
+fun <T : Any> Expr<T, MayBeMissing>.orElse(value: Expr<T, Handled>): Expr<T, Handled> =
+    Expr { ExpressionNode.createOrElse(input = lower(it), fallback = value.lower(it)) }
 
-private fun <N : Number, M : MissingPolicy> Expr<N, M>.numeric(
-    operation: String,
-    value: N,
-): Expr<Boolean, M> =
-    Expr(
-        ExpressionNode.Call(
-            OperationId("typewriter.number.$operation"),
-            listOf(node, ExpressionNode.Literal(numberLiteral(value))),
-        ),
-    )
+val <E : RelationshipEndpoint<*, *>, T : Resource, M : MissingPolicy> Expr<Ref<E, T>, M>.target: Expr<ResourceId, M>
+    get() = Expr { ExpressionNode.LinkTargetWrapper(lower(it)) }
 
-private fun <N : Number, M : MissingPolicy> Expr<N, M>.numeric(
-    operation: String,
-    value: Expr<N, M>,
-): Expr<Boolean, M> =
-    Expr(
-        ExpressionNode.Call(
-            OperationId("typewriter.number.$operation"),
-            listOf(node, value.node),
-        ),
-    )
-
-private fun <N : Any, M : MissingPolicy> Expr<N, M>.unsignedNumeric(
-    operation: String,
-    value: N,
-): Expr<Boolean, M> =
-    Expr(
-        ExpressionNode.Call(
-            OperationId("typewriter.number.$operation"),
-            listOf(node, ExpressionNode.Literal(unsignedLiteral(value))),
-        ),
-    )
-
-private fun unsignedLiteral(value: Any): DataValue.Integer =
-    DataValue.Integer(
-        when (value) {
-            is UByte -> value.toLong().toBigInteger()
-            is UShort -> value.toLong().toBigInteger()
-            is UInt -> value.toString().toBigInteger()
-            is ULong -> value.toString().toBigInteger()
-            else -> throw IllegalArgumentException("Unsupported portable unsigned numeric constant ${value::class.qualifiedName}.")
-        },
-    )
+fun <T> emptyListExpression(): Expr<List<T>, Handled> = portableLiteral(DataValue.ListValue(emptyList()))
 
 private fun numberLiteral(value: Number): DataValue =
     when (value) {
-        is Byte -> DataValue.Integer(value.toLong().toBigInteger())
-        is Short -> DataValue.Integer(value.toLong().toBigInteger())
-        is Int -> DataValue.Integer(value.toBigInteger())
-        is Long -> DataValue.Integer(value.toBigInteger())
-        is Float -> DataValue.Float(value.toDouble())
-        is Double -> DataValue.Float(value)
+        is Byte, is Short, is Int, is Long -> DataValue.Integer(value.toLong().toBigInteger())
+        is Float, is Double -> DataValue.Float(value.toDouble())
         is BigInteger -> DataValue.Integer(value)
         is BigDecimal -> DataValue.Decimal(value.toPlainString())
         else -> throw IllegalArgumentException("Unsupported portable numeric constant ${value::class.qualifiedName}.")
     }
 
-val <E : RelationshipEndpoint<*, *>, T : Resource, M : MissingPolicy> Expr<Ref<E, T>, M>.target: Expr<ResourceId, M>
-    get() = Expr(ExpressionNode.Call(OperationId("typewriter.link.target"), listOf(node)))
+private fun ExpressionNode.requireClosedExpression() {
+    fun visit(
+        node: ExpressionNode,
+        frames: List<Int>,
+        depth: Int,
+    ) {
+        require(depth <= PortableExpressionLimits.MAX_DEPTH) { "Expression depth exceeded" }
+        if (node is ExpressionNode.LocalWrapper) {
+            val local = node.value
+            require(
+                local.depth >= 0 && local.slot >= 0 &&
+                    frames.asReversed().getOrNull(local.depth)?.let { local.slot < it } == true,
+            ) {
+                "invalid_expression_local"
+            }
+        }
+        node.children().forEach { child ->
+            visit(child.node, if (child.frameArity == 0) frames else frames + child.frameArity, depth + 1)
+        }
+    }
+    visit(this, emptyList(), 1)
+}
 
-fun <T> emptyListExpression(): Expr<List<T>, Handled> = Expr(ExpressionNode.Literal(DataValue.ListValue(emptyList())))
-
-fun literal(value: com.typewritermc.types.Color): Expr<com.typewritermc.types.Color, Handled> =
-    Expr(ExpressionNode.Literal(DataValue.Integer(value.argb.toString().toBigInteger())))
+fun <T> input(
+    binding: ExpressionBindingId,
+    path: ValuePath = ValuePath(),
+): Expr<T, MayBeMissing> = inputExpression(binding, path)

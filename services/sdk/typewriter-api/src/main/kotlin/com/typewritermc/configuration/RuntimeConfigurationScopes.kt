@@ -18,7 +18,8 @@ private class RuntimeField<V, E>(
 
     override fun check(predicate: (V) -> Boolean): RuleDeclaration = binding.check(predicate)
 
-    override fun oneOf(values: Iterable<V>) = binding.helper("one_of", values.toList(), "Value must be one of the declared choices")
+    override fun oneOf(values: Iterable<V>) =
+        binding.helper(ConfigurationRuleHelper.ONE_OF, values.toList(), "Value must be one of the declared choices")
 }
 
 private class RuntimeGeneric<T>(
@@ -32,30 +33,30 @@ private class RuntimeText(
     private val binding: RuntimeConfigurationBinding,
 ) : Text,
     Field<String, TextExpressions> by RuntimeField(binding) {
-    override fun nonEmpty() = binding.helper("nonEmpty", listOf())
+    override fun nonEmpty() = binding.helper(ConfigurationRuleHelper.NON_EMPTY, listOf())
 
-    override fun nonBlank() = binding.helper("nonBlank", listOf())
+    override fun nonBlank() = binding.helper(ConfigurationRuleHelper.NON_BLANK, listOf())
 
-    override fun minimumLength(value: Int) = binding.helper("minimumLength", listOf(value))
+    override fun minimumLength(value: Int) = binding.helper(ConfigurationRuleHelper.MINIMUM_LENGTH, listOf(value))
 
-    override fun maximumLength(value: Int) = binding.helper("maximumLength", listOf(value))
+    override fun maximumLength(value: Int) = binding.helper(ConfigurationRuleHelper.MAXIMUM_LENGTH, listOf(value))
 
     override fun lengthBetween(
         minimum: Int,
         maximum: Int,
-    ) = binding.helper("lengthBetween", listOf(minimum, maximum))
+    ) = binding.helper(ConfigurationRuleHelper.LENGTH_BETWEEN, listOf(minimum, maximum))
 
-    override fun minimumLines(value: Int) = binding.helper("minimumLines", listOf(value))
+    override fun minimumLines(value: Int) = binding.helper(ConfigurationRuleHelper.MINIMUM_LINES, listOf(value))
 
-    override fun maximumLines(value: Int) = binding.helper("maximumLines", listOf(value))
+    override fun maximumLines(value: Int) = binding.helper(ConfigurationRuleHelper.MAXIMUM_LINES, listOf(value))
 
-    override fun singleLine() = binding.helper("singleLine", listOf())
+    override fun singleLine() = binding.helper(ConfigurationRuleHelper.SINGLE_LINE, listOf())
 
-    override fun regex(pattern: String) = binding.helper("regex", listOf(pattern))
+    override fun regex(pattern: String) = binding.helper(ConfigurationRuleHelper.REGEX, listOf(pattern))
 
-    override fun startsWith(prefix: String) = binding.helper("startsWith", listOf(prefix))
+    override fun startsWith(prefix: String) = binding.helper(ConfigurationRuleHelper.STARTS_WITH, listOf(prefix))
 
-    override fun endsWith(suffix: String) = binding.helper("endsWith", listOf(suffix))
+    override fun endsWith(suffix: String) = binding.helper(ConfigurationRuleHelper.ENDS_WITH, listOf(suffix))
 }
 
 private class RuntimeNumber<N>(
@@ -65,28 +66,28 @@ private class RuntimeNumber<N>(
     override fun minimum(
         value: N,
         inclusive: Boolean,
-    ) = binding.helper("minimum", listOf(value, inclusive))
+    ) = binding.helper(ConfigurationRuleHelper.MINIMUM, listOf(value, inclusive))
 
     override fun maximum(
         value: N,
         inclusive: Boolean,
-    ) = binding.helper("maximum", listOf(value, inclusive))
+    ) = binding.helper(ConfigurationRuleHelper.MAXIMUM, listOf(value, inclusive))
 
     override fun between(
         minimum: N,
         maximum: N,
-    ) = binding.helper("between", listOf(minimum, maximum))
+    ) = binding.helper(ConfigurationRuleHelper.BETWEEN, listOf(minimum, maximum))
 
-    override fun positive() = binding.helper("positive", listOf())
+    override fun positive() = binding.helper(ConfigurationRuleHelper.POSITIVE, listOf())
 
-    override fun nonNegative() = binding.helper("nonNegative", listOf())
+    override fun nonNegative() = binding.helper(ConfigurationRuleHelper.NON_NEGATIVE, listOf())
 }
 
 private class RuntimeInteger<N>(
     private val binding: RuntimeConfigurationBinding,
 ) : Integer<N>,
     Number<N> by RuntimeNumber(binding) {
-    override fun multipleOf(value: N) = binding.helper("multipleOf", listOf(value))
+    override fun multipleOf(value: N) = binding.helper(ConfigurationRuleHelper.MULTIPLE_OF, listOf(value))
 }
 
 private class RuntimeReal<N>(
@@ -98,18 +99,18 @@ private class RuntimeDecimal(
     private val binding: RuntimeConfigurationBinding,
 ) : Decimal,
     Number<BigDecimal> by RuntimeNumber(binding) {
-    override fun multipleOf(value: BigDecimal) = binding.helper("multipleOf", listOf(value))
+    override fun multipleOf(value: BigDecimal) = binding.helper(ConfigurationRuleHelper.MULTIPLE_OF, listOf(value))
 
-    override fun maximumScale(value: Int) = binding.helper("maximumScale", listOf(value))
+    override fun maximumScale(value: Int) = binding.helper(ConfigurationRuleHelper.MAXIMUM_SCALE, listOf(value))
 }
 
 private class RuntimeBytes(
     private val binding: RuntimeConfigurationBinding,
 ) : Bytes,
     Field<List<Byte>, BytesExpressions> by RuntimeField(binding) {
-    override fun minimumLength(value: Int) = binding.helper("minimumLength", listOf(value))
+    override fun minimumLength(value: Int) = binding.helper(ConfigurationRuleHelper.MINIMUM_LENGTH, listOf(value))
 
-    override fun maximumLength(value: Int) = binding.helper("maximumLength", listOf(value))
+    override fun maximumLength(value: Int) = binding.helper(ConfigurationRuleHelper.MAXIMUM_LENGTH, listOf(value))
 }
 
 private class RuntimeBoolean(
@@ -136,34 +137,34 @@ private class RuntimeTimestamp(
     private val binding: RuntimeConfigurationBinding,
 ) : TimestampField,
     Field<Instant, TimestampExpressions> by RuntimeField(binding) {
-    override fun notBefore(value: Instant) = binding.helper("notBefore", listOf(value))
+    override fun notBefore(value: Instant) = binding.helper(ConfigurationRuleHelper.NOT_BEFORE, listOf(value))
 
-    override fun notAfter(value: Instant) = binding.helper("notAfter", listOf(value))
+    override fun notAfter(value: Instant) = binding.helper(ConfigurationRuleHelper.NOT_AFTER, listOf(value))
 }
 
 private class RuntimeDuration(
     private val binding: RuntimeConfigurationBinding,
 ) : DurationField,
     Field<Duration, DurationExpressions> by RuntimeField(binding) {
-    override fun minimum(value: Duration) = binding.helper("minimum", listOf(value))
+    override fun minimum(value: Duration) = binding.helper(ConfigurationRuleHelper.MINIMUM, listOf(value))
 
-    override fun maximum(value: Duration) = binding.helper("maximum", listOf(value))
+    override fun maximum(value: Duration) = binding.helper(ConfigurationRuleHelper.MAXIMUM, listOf(value))
 
-    override fun nonNegative() = binding.helper("nonNegative", listOf())
+    override fun nonNegative() = binding.helper(ConfigurationRuleHelper.NON_NEGATIVE, listOf())
 }
 
 private class RuntimeColor(
     private val binding: RuntimeConfigurationBinding,
 ) : ColorField,
     Field<com.typewritermc.types.Color, ColorExpressions> by RuntimeField(binding) {
-    override fun opaque() = binding.helper("opaque", listOf())
+    override fun opaque() = binding.helper(ConfigurationRuleHelper.OPAQUE, listOf())
 }
 
 private class RuntimeNullable<V, S>(
     private val binding: RuntimeConfigurationBinding,
 ) : NullableField<V, S>,
     Field<V?, NullableExpressions<V>> by RuntimeField(binding) {
-    override fun notNull() = binding.helper("notNull", emptyList())
+    override fun notNull() = binding.helper(ConfigurationRuleHelper.NOT_NULL, emptyList())
 
     override fun whenPresent(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.Values, samePath = true)
 }
@@ -172,16 +173,16 @@ private class RuntimeCollection<V, E>(
     private val binding: RuntimeConfigurationBinding,
 ) : CollectionField<V, E>,
     Field<V, E> by RuntimeField(binding) {
-    override fun nonEmpty() = binding.helper("nonEmpty", emptyList())
+    override fun nonEmpty() = binding.helper(ConfigurationRuleHelper.NON_EMPTY, emptyList())
 
-    override fun minimumItems(value: Int) = binding.helper("minimumItems", listOf(value))
+    override fun minimumItems(value: Int) = binding.helper(ConfigurationRuleHelper.MINIMUM_ITEMS, listOf(value))
 
-    override fun maximumItems(value: Int) = binding.helper("maximumItems", listOf(value))
+    override fun maximumItems(value: Int) = binding.helper(ConfigurationRuleHelper.MAXIMUM_ITEMS, listOf(value))
 
     override fun itemsBetween(
         minimum: Int,
         maximum: Int,
-    ) = binding.helper("itemsBetween", listOf(minimum, maximum))
+    ) = binding.helper(ConfigurationRuleHelper.ITEMS_BETWEEN, listOf(minimum, maximum))
 }
 
 private class RuntimeList<T, S, E>(
@@ -190,7 +191,7 @@ private class RuntimeList<T, S, E>(
     CollectionField<List<T>, ListExpressions<T>> by RuntimeCollection(binding) {
     override fun items(configure: Configuration<S>) = binding.nested(configure, FieldPatternSegment.Items)
 
-    override fun unique() = binding.helper("unique", emptyList())
+    override fun unique() = binding.helper(ConfigurationRuleHelper.UNIQUE, emptyList())
 
     override fun uniqueBy(key: E.() -> Expr<*, MissingPolicy>) = binding.uniqueBy(key)
 }

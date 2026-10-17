@@ -6,6 +6,7 @@ import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
 import com.typewritermc.types.TypeTemplate
+import skirout.editor.v1.expression.ExpressionNode
 import kotlin.time.Duration
 
 interface SearchInputScope<Value, Row> :
@@ -79,8 +80,8 @@ interface SearchProviderSpec<Row> {
 
 sealed interface SearchDecoration {
     data class Gate(
-        val condition: com.typewritermc.presentation.ExpressionNode,
-        val guidance: com.typewritermc.presentation.ExpressionNode?,
+        val condition: skirout.editor.v1.expression.ExpressionNode,
+        val guidance: skirout.editor.v1.expression.ExpressionNode?,
     ) : SearchDecoration
 
     data class Debounce(
@@ -93,20 +94,20 @@ sealed interface SearchDecoration {
     ) : SearchDecoration
 
     data class Limit(
-        val maximum: com.typewritermc.presentation.ExpressionNode,
+        val maximum: skirout.editor.v1.expression.ExpressionNode,
     ) : SearchDecoration
 
     data object Distinct : SearchDecoration
 
     data class History(
         val key: String,
-        val label: com.typewritermc.presentation.ExpressionNode,
+        val label: skirout.editor.v1.expression.ExpressionNode,
         val capacity: Int,
     ) : SearchDecoration
 
     data class Section(
         val id: String,
-        val label: com.typewritermc.presentation.ExpressionNode,
+        val label: skirout.editor.v1.expression.ExpressionNode,
     ) : SearchDecoration
 
     data class Rank(
@@ -122,7 +123,7 @@ data class SearchRankingField(
 fun <Row> SearchProviderSpec<Row>.gate(
     condition: Expr<Boolean, Handled>,
     guidance: Expr<String, Handled>? = null,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.Gate(condition.node, guidance?.node))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.Gate(condition.toNode(), guidance?.toNode()))
 
 fun <Row> SearchProviderSpec<Row>.debounce(duration: Duration): SearchProviderSpec<Row> = decorate(SearchDecoration.Debounce(duration))
 
@@ -132,7 +133,7 @@ fun <Row> SearchProviderSpec<Row>.cache(
 ): SearchProviderSpec<Row> = decorate(SearchDecoration.Cache(capacity, retainStaleResults))
 
 fun <Row> SearchProviderSpec<Row>.limit(maximum: Expr<Int, Handled>): SearchProviderSpec<Row> =
-    decorate(SearchDecoration.Limit(maximum.node))
+    decorate(SearchDecoration.Limit(maximum.toNode()))
 
 fun <Row> SearchProviderSpec<Row>.distinct(): SearchProviderSpec<Row> = decorate(SearchDecoration.Distinct)
 
@@ -140,12 +141,12 @@ fun <Row> SearchProviderSpec<Row>.history(
     key: String,
     label: Expr<String, Handled>,
     capacity: Int,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.History(key, label.node, capacity))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.History(key, label.toNode(), capacity))
 
 fun <Row> SearchProviderSpec<Row>.section(
     id: String,
     label: Expr<String, Handled>,
-): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label.node))
+): SearchProviderSpec<Row> = decorate(SearchDecoration.Section(id, label.toNode()))
 
 enum class SearchSelectionMode { Single, Multiple }
 
@@ -283,7 +284,7 @@ internal data class DefaultSearchProviderSpec<Row>(
 
     override fun rank(configure: RankingScope<Row>.() -> Unit): SearchProviderSpec<Row> {
         val fields = mutableListOf<SearchRankingField>()
-        val row = Expr<Row, Handled>(ExpressionNode.Read(SEARCH_RESULT_ROW, ValuePath()))
+        val row = com.typewritermc.expression.inputExpression<Row, Handled>(SEARCH_RESULT_ROW)
         val scope =
             object : RankingScope<Row> {
                 override val row = row
@@ -293,7 +294,7 @@ internal data class DefaultSearchProviderSpec<Row>(
                     weight: Int,
                 ) {
                     require(weight > 0) { "Search ranking weight must be positive." }
-                    fields += SearchRankingField(value.node, weight)
+                    fields += SearchRankingField(value.toNode(), weight)
                 }
             }
         scope.configure()
@@ -304,14 +305,14 @@ internal data class DefaultSearchProviderSpec<Row>(
 
 internal object DefaultSearchSources : SearchSources {
     override fun <Row> staticValues(values: Expr<List<Row>, Handled>): SearchProviderSpec<Row> =
-        DefaultSearchProviderSpec(SearchProviderDescription.Static(values.node))
+        DefaultSearchProviderSpec(SearchProviderDescription.Static(values.toNode()))
 
     override fun <Row> collection(
         source: CollectionSource<Row, *>,
         where: PortableRowPredicate<Row>?,
     ): SearchProviderSpec<Row> =
         DefaultSearchProviderSpec(
-            SearchProviderDescription.Collection(source, where?.expression?.node),
+            SearchProviderDescription.Collection(source, where?.expression?.toNode()),
         )
 
     override fun <Row> httpJson(configure: HttpJsonSearchScope<Row>.() -> Unit): SearchProviderSpec<Row> {
@@ -323,7 +324,7 @@ internal object DefaultSearchSources : SearchSources {
     override fun <Payload, Row> realmCallback(
         capability: SearchCapability<Payload, Row>,
         payload: Expr<Payload, Handled>,
-    ): SearchProviderSpec<Row> = DefaultSearchProviderSpec(SearchProviderDescription.RealmCallback(capability.id, payload.node))
+    ): SearchProviderSpec<Row> = DefaultSearchProviderSpec(SearchProviderDescription.RealmCallback(capability.id, payload.toNode()))
 
     override fun <Row> merge(vararg sources: SearchProviderSpec<Row>): SearchProviderSpec<Row> {
         val children = sources.map { it.runtime() }
@@ -333,7 +334,7 @@ internal object DefaultSearchSources : SearchSources {
 }
 
 private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
-    override val query = Expr<String, Handled>(ExpressionNode.Read(SEARCH_QUERY, ValuePath()))
+    override val query = com.typewritermc.expression.inputExpression<String, Handled>(SEARCH_QUERY)
     private var uri: ExpressionNode? = null
     private val parameters = mutableListOf<HttpParameter>()
     private var resultPath: String? = null
@@ -342,7 +343,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
     private var timeout = Duration.parse("10s")
 
     override fun uri(value: Expr<String, Handled>) {
-        uri = value.node
+        uri = value.toNode()
     }
 
     override fun parameter(
@@ -351,7 +352,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
         omitIfEmpty: Boolean,
     ) {
         require(name.isNotBlank()) { "HTTP search parameter name must not be blank." }
-        parameters += HttpParameter(name, value.node, omitIfEmpty)
+        parameters += HttpParameter(name, value.toNode(), omitIfEmpty)
     }
 
     override fun result(
@@ -370,7 +371,7 @@ private class DefaultHttpJsonSearchScope<Row> : HttpJsonSearchScope<Row> {
         require(id.isNotBlank()) { "HTTP search context id must not be blank." }
         val binding = ExpressionBindingId("search_context.$id")
         contexts += HttpContext(binding, path, type)
-        return Expr(ExpressionNode.Read(binding, ValuePath()))
+        return com.typewritermc.expression.inputExpression(binding)
     }
 
     override fun timeout(value: Duration) {

@@ -2333,45 +2333,6 @@ impl ExpressionBindingId {
 }
 
 // ==============================================================================
-// struct OperationId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct OperationId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationId>>,
-}
-
-impl OperationId {
-    pub fn default_ref() -> &'static OperationId {
-        static D: std::sync::LazyLock<OperationId> = std::sync::LazyLock::new(OperationId::default);
-        &D
-    }
-}
-
-impl OperationId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<OperationId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<OperationId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "OperationId",
-                "",
-                |x: &OperationId| &x._unrecognized,
-                |x: &mut OperationId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<OperationId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(OperationId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct RuleOrigin
 // ==============================================================================
 
@@ -5348,19 +5309,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &ExpressionBindingId| &x.value,
                 |x: &mut ExpressionBindingId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<OperationId> =
-                OperationId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &OperationId| &x.value,
-                |x: &mut OperationId, v| x.value = v,
             );
             (*a).finalize();
         }

@@ -5,11 +5,30 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.SkirConversionResult
+import com.typewritermc.types.skir.SkirDataValueCodec
+import com.typewritermc.types.skir.getOrThrow
+import skirout.editor.v1.expression.BoundDirection
+import skirout.editor.v1.expression.ConditionalExpression
+import skirout.editor.v1.expression.EntryBranch
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.ExpressionQuery
+import skirout.editor.v1.expression.NumberArithmeticOperation
+import skirout.editor.v1.expression.NumberCompareOperation
+import skirout.editor.v1.expression.OrElseExpression
+import skirout.editor.v1.expression.RegexMatchMode
+import skirout.editor.v1.expression.RuleUnaryOperation
+import skirout.editor.v1.expression.SizeBoundMetric
+import skirout.editor.v1.expression.SizeRangeMetric
+import skirout.editor.v1.expression.TextCompareOperation
+import skirout.editor.v1.expression.TextUnaryOperation
+import skirout.editor.v1.expression.TimestampBoundDirection
+import skirout.editor.v1.expression.ValueCompareOperation
 import java.math.BigDecimal
 import java.math.MathContext
 import java.util.concurrent.CancellationException
@@ -37,40 +56,6 @@ fun interface ExpressionValueReader {
     fun read(location: ValueLocation): Availability<DataValue>
 }
 
-data class PortableOperationSemantics(
-    val id: OperationId,
-    val minimumArguments: Int,
-    val maximumArguments: Int,
-    val meaning: String,
-)
-
-class PortableOperationRegistry private constructor(
-    definitions: List<OperationDefinition>,
-) {
-    private val definitions = definitions.associateBy(OperationDefinition::semantics).mapKeys { it.key.id }
-
-    val semantics: List<PortableOperationSemantics> = definitions.map(OperationDefinition::semantics)
-
-    fun semantics(id: OperationId): PortableOperationSemantics? = definitions[id]?.semantics
-
-    internal fun evaluate(
-        id: OperationId,
-        arguments: List<DataValue>,
-        consumeStep: () -> Unit,
-        consumeItems: (Int) -> Unit,
-    ): DataValue {
-        val definition = definitions[id] ?: throw OperationFailure("unknown_operation", "Unknown portable operation ${id.value}.")
-        if (arguments.size !in definition.semantics.minimumArguments..definition.semantics.maximumArguments) {
-            throw OperationFailure("operation_arity", "Portable operation ${id.value} received ${arguments.size} arguments.")
-        }
-        return definition.evaluate(arguments, consumeStep, consumeItems)
-    }
-
-    companion object {
-        val Standard: PortableOperationRegistry = PortableOperationRegistry(standardOperations())
-    }
-}
-
 /**
  * Evaluates portable expressions against authored reads with fresh lexical state and accounting budgets per call.
  *
@@ -81,7 +66,6 @@ class PortableOperationRegistry private constructor(
  */
 class DefaultExpressionEvaluator(
     private val reader: ExpressionValueReader,
-    private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,
     private val queries: CanonicalQueryReader? = null,
 ) : ExpressionEvaluator {
     context(reads: AuthoredReads)
@@ -97,8 +81,7 @@ class DefaultExpressionEvaluator(
         bindings: ExpressionBindings,
         budget: EvaluationBudget,
         localValues: Map<ExpressionBindingId, DataValue> = emptyMap(),
-    ): Availability<DataValue> =
-        EvaluatorState(reader, operations, bindings, budget, localValues, queries, program.queries).evaluate(program.body)
+    ): Availability<DataValue> = EvaluatorState(reader, bindings, budget, localValues, queries, program.queries).evaluate(program.body)
 
     context(reads: AuthoredReads)
     override fun evaluateScoped(
@@ -108,7 +91,7 @@ class DefaultExpressionEvaluator(
         budget: EvaluationBudget,
     ): Availability<DataValue> {
         require(localValues.keys.none(bindings.locations::containsKey)) { "Local expression bindings must not replace source bindings." }
-        return EvaluatorState(reader, operations, bindings, budget, localValues).evaluate(expression)
+        return EvaluatorState(reader, bindings, budget, localValues).evaluate(expression)
     }
 }
 
@@ -120,7 +103,6 @@ object PortableExpressionLimits {
 
 private class EvaluatorState(
     private val reader: ExpressionValueReader,
-    private val operations: PortableOperationRegistry,
     private val bindings: ExpressionBindings,
     private val budget: EvaluationBudget,
     initialValues: Map<ExpressionBindingId, DataValue>,
@@ -132,13 +114,13 @@ private class EvaluatorState(
     private var steps = 0L
     private var collectionItems = 0L
     private var depth = 0
-    private val localValues = initialValues.toMutableMap()
-    private val localLocations = mutableMapOf<ExpressionBindingId, ValueLocation>()
+    private val inputValues = initialValues.toMap()
+    private val frames = mutableListOf<List<LocalBinding>>()
     private val observedLocations = linkedSetOf<ValueLocation>()
 
     context(reads: AuthoredReads)
-    fun evaluate(expression: ExpressionNode): Availability<DataValue> =
-        try {
+    fun evaluate(expression: ExpressionNode): Availability<DataValue> {
+        return try {
             depth += 1
             if (depth > PortableExpressionLimits.MAX_DEPTH) {
                 throw OperationFailure(
@@ -147,33 +129,168 @@ private class EvaluatorState(
                 )
             }
             step()
-            when (expression) {
-                is ExpressionNode.Literal -> available(expression.value)
-                is ExpressionNode.Read -> read(expression)
-                is ExpressionNode.Call -> call(expression)
-                is ExpressionNode.And -> boolean(expression.left, expression.right, conjunction = true)
-                is ExpressionNode.Or -> boolean(expression.left, expression.right, conjunction = false)
-                is ExpressionNode.Conditional -> conditional(expression)
-                is ExpressionNode.OrElse -> orElse(expression)
-                is ExpressionNode.Collection -> collection(expression)
+            val projection = projection(expression)
+            if (projection != null) return evaluateProjection(projection)
+            return when (expression) {
+                is ExpressionNode.Unknown -> {
+                    throw OperationFailure("unknown_expression", "Unknown expression node.")
+                }
+
+                is ExpressionNode.LiteralWrapper -> {
+                    available(decodeLiteral(expression.value))
+                }
+
+                is ExpressionNode.AndWrapper -> {
+                    boolean(expression.value.left, expression.value.right, true)
+                }
+
+                is ExpressionNode.OrWrapper -> {
+                    boolean(expression.value.left, expression.value.right, false)
+                }
+
+                is ExpressionNode.ConditionalWrapper -> {
+                    conditional(expression.value)
+                }
+
+                is ExpressionNode.OrElseWrapper -> {
+                    orElse(expression.value)
+                }
+
+                is ExpressionNode.AnyWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.AllWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.NoneWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.MapWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.FilterWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.FindWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.FindLastWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.CountWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.DistinctByWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.GroupByWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.FlatMapWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.UniqueByWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.ReduceWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.body)
+                }
+
+                is ExpressionNode.FoldWrapper -> {
+                    collection(
+                        expression,
+                        expression.value.source,
+                        listOf(expression.value.initial),
+                        expression.value.body,
+                        2,
+                    )
+                }
+
+                is ExpressionNode.SortByWrapper -> {
+                    collection(
+                        expression,
+                        expression.value.source,
+                        listOfNotNull(expression.value.descending),
+                        expression.value.key,
+                        2,
+                    )
+                }
+
+                is ExpressionNode.SortWithWrapper -> {
+                    collection(expression, expression.value.source, body = expression.value.comparator)
+                }
+
+                is ExpressionNode.TakeWrapper -> {
+                    collection(expression, expression.value.source, listOf(expression.value.count))
+                }
+
+                is ExpressionNode.SkipWrapper -> {
+                    collection(expression, expression.value.source, listOf(expression.value.count))
+                }
+
+                is ExpressionNode.ReverseWrapper -> {
+                    collection(expression, expression.value)
+                }
+
+                is ExpressionNode.DistinctWrapper -> {
+                    collection(expression, expression.value)
+                }
+
+                is ExpressionNode.FieldWrapper -> {
+                    field(
+                        expression.value.source,
+                        ValuePath(listOf(PathSegment.Field(expression.value.name))),
+                    )
+                }
+
+                is ExpressionNode.EntryProjectionWrapper -> {
+                    field(
+                        expression.value.source,
+                        ValuePath(listOf(expression.value.branch.pathSegment())),
+                    )
+                }
+
+                else -> {
+                    scalar(expression)
+                }
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (failure: OperationFailure) {
             Availability.Failed(
-                EvaluationDiagnostic(failure.code, failure.message.orEmpty(), (observedLocations + localLocations.values).distinct()),
+                EvaluationDiagnostic(
+                    failure.code,
+                    failure.message.orEmpty(),
+                    (
+                        observedLocations +
+                            frames.flatten().mapNotNull { it.location }
+                    ).distinct(),
+                ),
             )
         } catch (failure: Exception) {
             Availability.Failed(
                 EvaluationDiagnostic(
                     "expression_evaluation_failed",
                     failure.message ?: failure::class.simpleName.orEmpty(),
-                    (observedLocations + localLocations.values).distinct(),
+                    (observedLocations + frames.flatten().mapNotNull { it.location }).distinct(),
                 ),
             )
         } finally {
             depth -= 1
         }
+    }
 
     context(reads: AuthoredReads)
     private fun evaluateAt(
@@ -195,21 +312,101 @@ private class EvaluatorState(
         index: Int,
     ): Availability<DataValue> = evaluateAt(expression, currentOccurrence.child(index))
 
-    context(reads: AuthoredReads)
-    private fun read(expression: ExpressionNode.Read): Availability<DataValue> {
-        val local = localValues[expression.binding]
-        if (local != null) {
-            val value = local.at(expression.path)
-            if (value == DataValue.Unfilled) {
-                val location = localLocations[expression.binding]?.append(expression.path)
-                return Availability.Unavailable(listOfNotNull(location))
+    private data class Projection(
+        val root: ExpressionNode,
+        val path: ValuePath,
+        val occurrence: ExpressionOccurrence,
+        val descents: Int,
+    )
+
+    private fun projection(expression: ExpressionNode): Projection? {
+        var root = expression
+        var occurrence = currentOccurrence
+        val reversed = mutableListOf<PathSegment>()
+        while (true) {
+            if (depth + reversed.size >
+                PortableExpressionLimits.MAX_DEPTH
+            ) {
+                throw OperationFailure("expression_depth_limit", "Projection depth exceeded.")
             }
-            return available(value)
+            when (val node = root) {
+                is ExpressionNode.FieldWrapper -> {
+                    reversed += PathSegment.Field(node.value.name)
+                    root = node.value.source
+                }
+
+                is ExpressionNode.EntryProjectionWrapper -> {
+                    reversed += node.value.branch.pathSegment()
+                    root = node.value.source
+                }
+
+                else -> {
+                    break
+                }
+            }
+            occurrence = occurrence.child(0)
         }
-        val base =
-            bindings.locations[expression.binding]
-                ?: throw OperationFailure("unknown_expression_binding", "Unknown expression binding ${expression.binding.value}.")
-        val location = base.append(expression.path)
+        if (root !is ExpressionNode.InputWrapper && root !is ExpressionNode.LocalWrapper &&
+            root !is ExpressionNode.QueryWrapper
+        ) {
+            return null
+        }
+        return Projection(root, ValuePath(reversed.asReversed()), occurrence, reversed.size)
+    }
+
+    private fun local(
+        depth: Int,
+        slot: Int,
+    ): LocalBinding {
+        if (depth < 0 || slot < 0) throw OperationFailure("invalid_expression_local", "Invalid local address.")
+        return frames.getOrNull(frames.lastIndex - depth)?.getOrNull(slot)
+            ?: throw OperationFailure("invalid_expression_local", "The local address is outside its lambda.")
+    }
+
+    context(reads: AuthoredReads)
+    private fun evaluateProjection(projection: Projection): Availability<DataValue> {
+        repeat(projection.descents) { step() }
+        return when (val root = projection.root) {
+            is ExpressionNode.InputWrapper -> {
+                val binding = ExpressionBindingId(root.value.binding.value)
+                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                val value = inputValues[binding]
+                if (value != null) {
+                    projected(value.at(path))
+                } else {
+                    val base =
+                        bindings.locations[binding]
+                            ?: throw OperationFailure("unknown_expression_binding", "Unknown expression binding ${binding.value}.")
+                    readAt(base.append(path))
+                }
+            }
+
+            is ExpressionNode.LocalWrapper -> {
+                val value = local(root.value.depth, root.value.slot)
+                val path = SkirAuthoringValueCodec.decode(root.value.path).getOrThrow().append(projection.path)
+                value.location?.append(path)?.let { observedLocations += it }
+                val selected = value.value.at(path)
+                if (selected ==
+                    DataValue.Unfilled
+                ) {
+                    Availability.Unavailable(listOfNotNull(value.location?.append(path)))
+                } else {
+                    available(selected)
+                }
+            }
+
+            is ExpressionNode.QueryWrapper -> {
+                canonicalQuery(root.value, projection.path, projection.occurrence)
+            }
+
+            else -> {
+                error("Projection root was not admitted")
+            }
+        }
+    }
+
+    context(reads: AuthoredReads)
+    private fun readAt(location: ValueLocation): Availability<DataValue> {
         observedLocations += location
         return when (val result = reader.read(location)) {
             is Availability.Available -> if (result.value == DataValue.Unfilled) Availability.Unavailable(listOf(location)) else result
@@ -219,21 +416,37 @@ private class EvaluatorState(
     }
 
     context(reads: AuthoredReads)
-    private fun call(expression: ExpressionNode.Call): Availability<DataValue> {
-        canonicalProjection(expression)?.let { return it }
-        if (expression.operation.value == "typewriter.record.field") return recordField(expression)
+    private fun field(
+        source: ExpressionNode,
+        path: ValuePath,
+    ): Availability<DataValue> {
+        val value = child(source, 0)
+        if (value !is Availability.Available) return value
+        if (value.value.unwrapNamed() == DataValue.Null || value.value == DataValue.Unfilled) return Availability.Unavailable(emptyList())
+        return projected(value.value.at(path))
+    }
+
+    context(reads: AuthoredReads)
+    private fun scalar(expression: ExpressionNode): Availability<DataValue> {
+        val operands = expression.children()
         val arguments = mutableListOf<DataValue>()
         val unavailable = linkedSetOf<ValueLocation>()
-        val operation = expression.operation.value
-        for ((index, argument) in expression.arguments.withIndex()) {
-            when (val result = child(argument, index)) {
+        val partialSource =
+            when (expression) {
+                is ExpressionNode.CollectionSizeWrapper -> true
+                is ExpressionNode.RuleUnaryWrapper -> expression.value.operation == RuleUnaryOperation.UNIQUE
+                is ExpressionNode.RuleSizeBoundWrapper -> expression.value.metric == SizeBoundMetric.COLLECTION_ITEMS
+                is ExpressionNode.RuleSizeRangeWrapper -> expression.value.metric == SizeRangeMetric.COLLECTION_ITEMS
+                else -> false
+            }
+        for ((position, operand) in operands.withIndex()) {
+            when (val result = child(operand.node, operand.index)) {
                 is Availability.Available -> {
                     arguments += result.value
-                    if (
-                        result.value.containsUnfilled() &&
-                        !(index == 0 && operation in PARTIAL_COLLECTION_OPERATIONS)
+                    if (result.value.containsUnfilled() &&
+                        !(position == 0 && partialSource)
                     ) {
-                        sourceLocation(argument)?.let(unavailable::add)
+                        sourceLocation(operand.node)?.let(unavailable::add)
                     }
                 }
 
@@ -246,63 +459,51 @@ private class EvaluatorState(
                 }
             }
         }
-        if (operation == "typewriter.collection.access") {
-            return collectionAccess(arguments, sourceLocation(expression.arguments[0]))
-        }
-        if (operation == "typewriter.collection.contains") {
-            return collectionContains(arguments, sourceLocation(expression.arguments[0]))
-        }
-        if (operation == "typewriter.rule.unique") {
-            return collectionUnique(arguments.single(), sourceLocation(expression.arguments[0]))
+        when (expression) {
+            is ExpressionNode.CollectionAccessWrapper -> {
+                return collectionAccess(arguments, sourceLocation(expression.value.source))
+            }
+
+            is ExpressionNode.CollectionContainsWrapper -> {
+                return collectionContains(arguments, sourceLocation(expression.value.source))
+            }
+
+            is ExpressionNode.RuleUnaryWrapper -> {
+                if (expression.value.operation ==
+                    RuleUnaryOperation.UNIQUE
+                ) {
+                    return collectionUnique(arguments.single(), sourceLocation(expression.value.source))
+                }
+            }
+
+            else -> {
+                Unit
+            }
         }
         if (unavailable.isNotEmpty()) return Availability.Unavailable(unavailable.toList())
-        if (
-            arguments.withIndex().any { (index, value) ->
-                value.containsUnfilled() && !(index == 0 && operation in PARTIAL_COLLECTION_OPERATIONS)
-            }
-        ) {
+        if (arguments.withIndex().any { (index, value) -> value.containsUnfilled() && !(index == 0 && partialSource) }) {
             throw OperationFailure("unfilled_expression_value", "An expression operand contains an unfilled value.")
         }
-        return available(operations.evaluate(expression.operation, arguments, ::step, ::consumeItems))
+        return available(scalarValue(expression, arguments, ::step, ::consumeItems))
     }
 
     context(reads: AuthoredReads)
-    private fun recordField(expression: ExpressionNode.Call): Availability<DataValue> {
-        val receiver = child(expression.arguments[0], 0)
-        if (receiver !is Availability.Available) return receiver
-        val value = receiver.value.unwrapNamed()
-        if (value == DataValue.Null || value == DataValue.Unfilled) return Availability.Unavailable(emptyList())
-        val record = value as? DataValue.Record ?: throw OperationFailure("expected_record", "The expression value is not a record.")
-        val key = child(expression.arguments[1], 1)
-        if (key !is Availability.Available) return key
-        val selected =
-            record.fields[text(key.value)] ?: if (receiver.value is DataValue.Named) {
-                throw OperationFailure("record_field_absent", "A complete record is missing a declared field.")
-            } else {
-                return Availability.Unavailable(emptyList())
+    private fun canonicalQuery(
+        expression: ExpressionQuery,
+        suffix: ValuePath,
+        occurrence: ExpressionOccurrence,
+    ): Availability<DataValue> {
+        val operation = expression.kind
+        val fields =
+            suffix.segments.map { segment ->
+                (segment as? PathSegment.Field)?.name
+                    ?: throw OperationFailure("invalid_model_projection", "Canonical model projection requires fields.")
             }
-        return if (selected == DataValue.Unfilled) Availability.Unavailable(emptyList()) else available(selected)
-    }
-
-    context(reads: AuthoredReads)
-    private fun canonicalProjection(expression: ExpressionNode.Call): Availability<DataValue>? {
-        var root = expression
-        var occurrence = currentOccurrence
-        val fields = mutableListOf<String>()
-        while (root.operation.value == "typewriter.record.field" && root.arguments.size == 2) {
-            val key = ((root.arguments[1] as? ExpressionNode.Literal)?.value as? DataValue.StringValue)?.value ?: return null
-            val next = root.arguments[0] as? ExpressionNode.Call ?: return null
-            fields.add(0, key)
-            root = next
-            occurrence = occurrence.child(0)
-        }
-        val operation = CanonicalQueryOperation.from(root.operation.value) ?: return null
-        repeat(fields.size) { step() }
         val contract =
             queryContracts[occurrence] ?: throw OperationFailure("unchecked_query", "Canonical queries require checked lexical contracts.")
-        val source = evaluateAt(root.arguments[0], occurrence.child(0))
+        val source = evaluateAt(expression.sourceExpression(), occurrence.child(0))
         if (source !is Availability.Available) return source
-        if (operation == CanonicalQueryOperation.ValueConfiguration) {
+        if (operation == ExpressionQuery.Kind.VALUE_CONFIGURATION_WRAPPER) {
             val named = source.value as? DataValue.Named ?: return Availability.Unavailable(emptyList())
             return projected(
                 CanonicalReadModels.encode(
@@ -320,7 +521,7 @@ private class EvaluatorState(
         ) {
             throw OperationFailure("query_catalog_mismatch", "Canonical queries must use the authored read catalog.")
         }
-        if (operation == CanonicalQueryOperation.CatalogDeclaration) {
+        if (operation == ExpressionQuery.Kind.CATALOG_DECLARATION_WRAPPER) {
             val selection = CanonicalReadModels.typeSelection.decode(source.value)
             val definition =
                 when (selection) {
@@ -350,12 +551,12 @@ private class EvaluatorState(
                 }
                 com.typewritermc.types.ResourceId(text(named))
             }
-        val path = com.typewritermc.authoring.ValuePath(fields.map(PathSegment::Field))
+        val path = suffix
         val location =
             ValueLocation(
                 id,
                 if (operation ==
-                    CanonicalQueryOperation.ResourceValue
+                    ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER
                 ) {
                     path
                 } else {
@@ -380,15 +581,15 @@ private class EvaluatorState(
             throw OperationFailure("incompatible_resource_reference", "The referenced resource does not match its checked target contract.")
         }
         return when (operation) {
-            CanonicalQueryOperation.ResourceIdentity -> {
+            ExpressionQuery.Kind.RESOURCE_IDENTITY_WRAPPER -> {
                 available(DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(id.value)))
             }
 
-            CanonicalQueryOperation.ResourceConfiguration -> {
+            ExpressionQuery.Kind.RESOURCE_CONFIGURATION_WRAPPER -> {
                 projected(CanonicalReadModels.encode(record.configuration, fields, ::step, ::consumeItems))
             }
 
-            CanonicalQueryOperation.ResourceValue -> {
+            ExpressionQuery.Kind.RESOURCE_VALUE_WRAPPER -> {
                 var payload: DataValue = DataValue.Record(record.fields)
                 for (field in fields) {
                     step()
@@ -621,14 +822,14 @@ private class EvaluatorState(
     }
 
     context(reads: AuthoredReads)
-    private fun conditional(expression: ExpressionNode.Conditional): Availability<DataValue> {
+    private fun conditional(expression: ConditionalExpression): Availability<DataValue> {
         val test = child(expression.test, 0)
         if (test !is Availability.Available) return test
         return if (test.value.boolean()) child(expression.yes, 1) else child(expression.no, 2)
     }
 
     context(reads: AuthoredReads)
-    private fun orElse(expression: ExpressionNode.OrElse): Availability<DataValue> =
+    private fun orElse(expression: OrElseExpression): Availability<DataValue> =
         when (val input = child(expression.input, 0)) {
             is Availability.Available -> {
                 if (input.value == DataValue.Null || input.value == DataValue.Unfilled) child(expression.fallback, 1) else input
@@ -644,101 +845,99 @@ private class EvaluatorState(
         }
 
     context(reads: AuthoredReads)
-    private fun collection(expression: ExpressionNode.Collection): Availability<DataValue> {
+    private fun collection(
+        expression: ExpressionNode,
+        source: ExpressionNode,
+        arguments: List<ExpressionNode> = emptyList(),
+        body: ExpressionNode? = null,
+        bodyIndex: Int = 1,
+    ): Availability<DataValue> {
         val previous = collectionBodyOccurrence
-        collectionBodyOccurrence = currentOccurrence.child(expression.arguments.size + 1)
-        return try {
-            collectionOperation(expression)
+        collectionBodyOccurrence = currentOccurrence.child(bodyIndex)
+        try {
+            val input = child(source, 0)
+            if (input !is Availability.Available) return input
+            val entries = input.value.collectionEntries()
+            val location = sourceLocation(source)
+            val values = mutableListOf<DataValue>()
+            for ((index, argument) in arguments.withIndex()) {
+                when (val result = child(argument, index + 1)) {
+                    is Availability.Available -> {
+                        if (result.value.containsUnfilled()) return Availability.Unavailable(listOfNotNull(sourceLocation(argument)))
+                        values += result.value
+                    }
+
+                    is Availability.Unavailable -> {
+                        return result
+                    }
+
+                    is Availability.Failed -> {
+                        return result
+                    }
+                }
+            }
+            return when (expression.kind) {
+                ExpressionNode.Kind.TAKE_WRAPPER -> {
+                    val count = nonnegativeCount(values.single())
+                    consumeItems(minOf(count, entries.size))
+                    available(input.value.reorder(entries.take(count)))
+                }
+
+                ExpressionNode.Kind.SKIP_WRAPPER -> {
+                    val count = nonnegativeCount(values.single())
+                    consumeItems(minOf(count, entries.size))
+                    available(input.value.reorder(entries.drop(count)))
+                }
+
+                ExpressionNode.Kind.REVERSE_WRAPPER -> {
+                    consumeItems(entries.size)
+                    available(input.value.reorder(entries.reversed()))
+                }
+
+                ExpressionNode.Kind.DISTINCT_WRAPPER -> {
+                    collectionDistinct(input.value, entries, location)
+                }
+
+                ExpressionNode.Kind.FOLD_WRAPPER, ExpressionNode.Kind.REDUCE_WRAPPER -> {
+                    collectionFold(
+                        expression.kind,
+                        requireNotNull(body),
+                        entries,
+                        values,
+                        arguments.singleOrNull()?.let(::sourceLocation),
+                        location,
+                    )
+                }
+
+                ExpressionNode.Kind.SORT_WITH_WRAPPER -> {
+                    collectionSortWith(requireNotNull(body), input.value, entries, location)
+                }
+
+                else -> {
+                    collectionWithUnaryBody(expression.kind, requireNotNull(body), input.value, entries, values, location)
+                }
+            }
         } finally {
             collectionBodyOccurrence = previous
         }
     }
 
     context(reads: AuthoredReads)
-    private fun collectionOperation(expression: ExpressionNode.Collection): Availability<DataValue> {
-        val input = child(expression.input, 0)
-        if (input !is Availability.Available) return input
-        val entries = input.value.collectionEntries()
-        val sourceLocation = sourceLocation(expression.input)
-        val arguments = mutableListOf<DataValue>()
-        expression.arguments.forEachIndexed { index, argument ->
-            when (val result = child(argument, index + 1)) {
-                is Availability.Available -> {
-                    if (result.value.containsUnfilled()) {
-                        return Availability.Unavailable(listOfNotNull(sourceLocation(argument)))
-                    }
-                    arguments += result.value
-                }
-
-                is Availability.Unavailable -> {
-                    return result
-                }
-
-                is Availability.Failed -> {
-                    return result
-                }
-            }
-        }
-        return when (expression.operation.value) {
-            "typewriter.collection.take" -> {
-                requireCollectionShape(expression, bindings = 0, arguments = 1, body = false)
-                val count = nonnegativeCount(arguments.single())
-                consumeItems(minOf(count, entries.size))
-                available(input.value.reorder(entries.take(count)))
-            }
-
-            "typewriter.collection.skip" -> {
-                requireCollectionShape(expression, bindings = 0, arguments = 1, body = false)
-                val count = nonnegativeCount(arguments.single())
-                consumeItems(minOf(count, entries.size))
-                available(input.value.reorder(entries.drop(count)))
-            }
-
-            "typewriter.collection.reverse" -> {
-                requireCollectionShape(expression, bindings = 0, arguments = 0, body = false)
-                consumeItems(entries.size)
-                available(input.value.reorder(entries.reversed()))
-            }
-
-            "typewriter.collection.distinct" -> {
-                requireCollectionShape(expression, bindings = 0, arguments = 0, body = false)
-                collectionDistinct(input.value, entries, sourceLocation)
-            }
-
-            "typewriter.collection.reduce", "typewriter.collection.fold" -> {
-                collectionFold(expression, entries, arguments, sourceLocation)
-            }
-
-            "typewriter.collection.sort_with" -> {
-                collectionSortWith(expression, input.value, entries, sourceLocation)
-            }
-
-            else -> {
-                collectionWithUnaryBody(expression, input.value, entries, arguments, sourceLocation)
-            }
-        }
-    }
-
-    context(reads: AuthoredReads)
     private fun collectionWithUnaryBody(
-        expression: ExpressionNode.Collection,
+        operation: ExpressionNode.Kind,
+        bodyExpression: ExpressionNode,
         input: DataValue,
         entries: List<CollectionEntry>,
         arguments: List<DataValue>,
         sourceLocation: ValueLocation?,
     ): Availability<DataValue> {
-        val operation = expression.operation.value
-        val allowedArguments = if (operation == "typewriter.collection.sort_by") 0..1 else 0..0
-        requireCollectionShape(expression, bindings = 1, arguments = allowedArguments, body = true)
-        val binding = expression.bindings.single()
-        val bodyExpression = requireNotNull(expression.body)
         val results = mutableListOf<Pair<CollectionEntry, DataValue>>()
         val unavailable = linkedSetOf<ValueLocation>()
         for (entry in entries) {
             consumeItems(1)
             val body =
                 evaluateWithLocals(
-                    listOf(LocalBinding(binding, entry.value, sourceLocation?.let(entry::location))),
+                    listOf(LocalBinding(entry.value, sourceLocation?.let(entry::location))),
                     bodyExpression,
                 )
             when (body) {
@@ -748,16 +947,16 @@ private class EvaluatorState(
                         continue
                     }
                     results += entry to body.value
-                    if (operation == "typewriter.collection.any" && body.value.boolean()) {
+                    if (operation == ExpressionNode.Kind.ANY_WRAPPER && body.value.boolean()) {
                         return available(DataValue.Boolean(true))
                     }
-                    if (operation == "typewriter.collection.all" && !body.value.boolean()) {
+                    if (operation == ExpressionNode.Kind.ALL_WRAPPER && !body.value.boolean()) {
                         return available(DataValue.Boolean(false))
                     }
-                    if (operation == "typewriter.collection.none" && body.value.boolean()) {
+                    if (operation == ExpressionNode.Kind.NONE_WRAPPER && body.value.boolean()) {
                         return available(DataValue.Boolean(false))
                     }
-                    if (operation == "typewriter.collection.find" && body.value.boolean()) {
+                    if (operation == ExpressionNode.Kind.FIND_WRAPPER && body.value.boolean()) {
                         if (unavailable.isNotEmpty()) return Availability.Unavailable(unavailable.toList())
                         return available(entry.value)
                     }
@@ -772,51 +971,51 @@ private class EvaluatorState(
                 }
             }
         }
-        if (operation == "typewriter.collection.unique_by") {
+        if (operation == ExpressionNode.Kind.UNIQUE_BY_WRAPPER) {
             val keys = results.map { it.second.canonicalValueKey() }
             if (keys.distinct().size != keys.size) return available(DataValue.Boolean(false))
         }
         if (unavailable.isNotEmpty()) return Availability.Unavailable(unavailable.toList())
         return when (operation) {
-            "typewriter.collection.any" -> {
+            ExpressionNode.Kind.ANY_WRAPPER -> {
                 available(DataValue.Boolean(false))
             }
 
-            "typewriter.collection.all", "typewriter.collection.none" -> {
+            ExpressionNode.Kind.ALL_WRAPPER, ExpressionNode.Kind.NONE_WRAPPER -> {
                 available(DataValue.Boolean(true))
             }
 
-            "typewriter.collection.unique_by" -> {
+            ExpressionNode.Kind.UNIQUE_BY_WRAPPER -> {
                 available(DataValue.Boolean(true))
             }
 
-            "typewriter.collection.map" -> {
+            ExpressionNode.Kind.MAP_WRAPPER -> {
                 available(DataValue.ListValue(results.map { (entry, value) -> ListItem(entry.id, value) }))
             }
 
-            "typewriter.collection.filter" -> {
+            ExpressionNode.Kind.FILTER_WRAPPER -> {
                 val retained = results.filter { it.second.boolean() }.map { it.first }
                 available(input.reorder(retained))
             }
 
-            "typewriter.collection.find" -> {
+            ExpressionNode.Kind.FIND_WRAPPER -> {
                 available(DataValue.Null)
             }
 
-            "typewriter.collection.find_last" -> {
+            ExpressionNode.Kind.FIND_LAST_WRAPPER -> {
                 available(results.lastOrNull { it.second.boolean() }?.first?.value ?: DataValue.Null)
             }
 
-            "typewriter.collection.count" -> {
+            ExpressionNode.Kind.COUNT_WRAPPER -> {
                 available(DataValue.Integer(results.count { it.second.boolean() }.toBigInteger()))
             }
 
-            "typewriter.collection.distinct_by" -> {
+            ExpressionNode.Kind.DISTINCT_BY_WRAPPER -> {
                 val seen = hashSetOf<String>()
                 available(input.reorder(results.filter { seen.add(it.second.canonicalValueKey()) }.map { it.first }))
             }
 
-            "typewriter.collection.sort_by" -> {
+            ExpressionNode.Kind.SORT_BY_WRAPPER -> {
                 val descending = arguments.singleOrNull()?.boolean() ?: false
                 val sorted =
                     results.sortedWith { left, right ->
@@ -826,11 +1025,11 @@ private class EvaluatorState(
                 available(input.reorder(sorted.map { it.first }))
             }
 
-            "typewriter.collection.group_by" -> {
+            ExpressionNode.Kind.GROUP_BY_WRAPPER -> {
                 available(groupByKey(results))
             }
 
-            "typewriter.collection.flat_map" -> {
+            ExpressionNode.Kind.FLAT_MAP_WRAPPER -> {
                 val flattened =
                     results.flatMap { (outer, value) ->
                         value.collectionEntries().map { inner ->
@@ -841,28 +1040,26 @@ private class EvaluatorState(
             }
 
             else -> {
-                throw OperationFailure("unknown_collection_operation", "Unknown collection operation ${expression.operation.value}.")
+                throw OperationFailure("unknown_collection_operation", "Unknown collection operation $operation.")
             }
         }
     }
 
     context(reads: AuthoredReads)
     private fun collectionFold(
-        expression: ExpressionNode.Collection,
+        operation: ExpressionNode.Kind,
+        body: ExpressionNode,
         entries: List<CollectionEntry>,
         arguments: List<DataValue>,
+        initialLocation: ValueLocation?,
         sourceLocation: ValueLocation?,
     ): Availability<DataValue> {
-        val fold = expression.operation.value == "typewriter.collection.fold"
-        requireCollectionShape(expression, bindings = 2, arguments = if (fold) 1 else 0, body = true)
-        val body = requireNotNull(expression.body)
+        val fold = operation == ExpressionNode.Kind.FOLD_WRAPPER
         if (!fold && entries.isEmpty()) return available(DataValue.Null)
         var accumulator = if (fold) arguments.single() else entries.first().value
         var accumulatorLocation =
             if (fold) {
-                this.sourceLocation(
-                    expression.arguments.single(),
-                )
+                initialLocation
             } else {
                 sourceLocation?.let(entries.first()::location)
             }
@@ -872,8 +1069,8 @@ private class EvaluatorState(
             val result =
                 evaluateWithLocals(
                     listOf(
-                        LocalBinding(expression.bindings[0], accumulator, accumulatorLocation),
-                        LocalBinding(expression.bindings[1], entry.value, sourceLocation?.let(entry::location)),
+                        LocalBinding(accumulator, accumulatorLocation),
+                        LocalBinding(entry.value, sourceLocation?.let(entry::location)),
                     ),
                     body,
                 )
@@ -900,12 +1097,11 @@ private class EvaluatorState(
 
     context(reads: AuthoredReads)
     private fun collectionSortWith(
-        expression: ExpressionNode.Collection,
+        body: ExpressionNode,
         input: DataValue,
         entries: List<CollectionEntry>,
         sourceLocation: ValueLocation?,
     ): Availability<DataValue> {
-        requireCollectionShape(expression, bindings = 2, arguments = 0, body = true)
         val sorted = mutableListOf<CollectionEntry>()
         for (entry in entries) {
             var insertion = sorted.size
@@ -915,10 +1111,10 @@ private class EvaluatorState(
                 val comparison =
                     evaluateWithLocals(
                         listOf(
-                            LocalBinding(expression.bindings[0], left.value, sourceLocation?.let(left::location)),
-                            LocalBinding(expression.bindings[1], entry.value, sourceLocation?.let(entry::location)),
+                            LocalBinding(left.value, sourceLocation?.let(left::location)),
+                            LocalBinding(entry.value, sourceLocation?.let(entry::location)),
                         ),
-                        requireNotNull(expression.body),
+                        body,
                     )
                 when (comparison) {
                     is Availability.Available -> {
@@ -964,51 +1160,11 @@ private class EvaluatorState(
         values: List<LocalBinding>,
         body: ExpressionNode,
     ): Availability<DataValue> {
-        val previous =
-            values.associate { binding ->
-                binding.id to
-                    PreviousLocal(
-                        binding.id in localValues,
-                        localValues[binding.id],
-                        binding.id in localLocations,
-                        localLocations[binding.id],
-                    )
-            }
+        frames += values.toList()
         return try {
-            values.forEach { binding ->
-                localValues[binding.id] = binding.value
-                if (binding.location == null) localLocations.remove(binding.id) else localLocations[binding.id] = binding.location
-            }
             evaluateAt(body, collectionBodyOccurrence)
         } finally {
-            previous.forEach { (id, state) ->
-                if (state.hadValue) localValues[id] = requireNotNull(state.value) else localValues.remove(id)
-                if (state.hadLocation) localLocations[id] = requireNotNull(state.location) else localLocations.remove(id)
-            }
-        }
-    }
-
-    private fun requireCollectionShape(
-        expression: ExpressionNode.Collection,
-        bindings: Int,
-        arguments: Int,
-        body: Boolean,
-    ) = requireCollectionShape(expression, bindings, arguments..arguments, body)
-
-    private fun requireCollectionShape(
-        expression: ExpressionNode.Collection,
-        bindings: Int,
-        arguments: IntRange,
-        body: Boolean,
-    ) {
-        if (expression.bindings.size != bindings || expression.arguments.size !in arguments || (expression.body != null) != body) {
-            throw OperationFailure(
-                "collection_operation_shape",
-                "Collection operation ${expression.operation.value} has an invalid binding, argument, or body shape.",
-            )
-        }
-        if (expression.bindings.distinct().size != expression.bindings.size) {
-            throw OperationFailure("duplicate_collection_binding", "Collection expression bindings must be distinct.")
+            frames.removeAt(frames.lastIndex)
         }
     }
 
@@ -1024,26 +1180,30 @@ private class EvaluatorState(
         }
     }
 
-    private fun sourceLocation(expression: ExpressionNode): ValueLocation? =
-        when (expression) {
-            is ExpressionNode.Read -> {
-                (localLocations[expression.binding] ?: bindings.locations[expression.binding])?.append(expression.path)
+    private fun sourceLocation(expression: ExpressionNode): ValueLocation? {
+        val projection = projection(expression) ?: return null
+        return when (val root = projection.root) {
+            is ExpressionNode.InputWrapper -> {
+                bindings.locations[
+                    ExpressionBindingId(
+                        root.value.binding.value,
+                    ),
+                ]?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
+            }
+
+            is ExpressionNode.LocalWrapper -> {
+                local(
+                    root.value.depth,
+                    root.value.slot,
+                ).location?.append(SkirAuthoringValueCodec.decode(root.value.path).getOrThrow())?.append(projection.path)
             }
 
             else -> {
                 null
             }
         }
+    }
 }
-
-private val PARTIAL_COLLECTION_OPERATIONS =
-    setOf(
-        "typewriter.collection.size",
-        "typewriter.rule.minimumItems",
-        "typewriter.rule.maximumItems",
-        "typewriter.rule.itemsBetween",
-        "typewriter.rule.unique",
-    )
 
 context(reads: AuthoredReads)
 fun ExpressionNode.evaluateWith(
@@ -1051,11 +1211,6 @@ fun ExpressionNode.evaluateWith(
     bindings: ExpressionBindings,
     budget: EvaluationBudget,
 ): Availability<DataValue> = evaluator.evaluate(this, bindings, budget)
-
-private data class OperationDefinition(
-    val semantics: PortableOperationSemantics,
-    val evaluate: (List<DataValue>, () -> Unit, (Int) -> Unit) -> DataValue,
-)
 
 internal class OperationFailure(
     val code: String,
@@ -1070,15 +1225,7 @@ private data class CollectionEntry(
 }
 
 private data class LocalBinding(
-    val id: ExpressionBindingId,
     val value: DataValue,
-    val location: ValueLocation?,
-)
-
-private data class PreviousLocal(
-    val hadValue: Boolean,
-    val value: DataValue?,
-    val hadLocation: Boolean,
     val location: ValueLocation?,
 )
 
@@ -1240,249 +1387,415 @@ private fun DataValue.boolean(): Boolean =
 
 private fun available(value: DataValue): Availability<DataValue> = Availability.Available(value)
 
-private fun standardOperations(): List<OperationDefinition> =
-    buildList {
-        CanonicalQueryOperation.entries.forEach { query ->
-            operation(query.id, 1, if (query.name.startsWith("Resource")) 2 else 1, "canonical snapshot read") {
-                throw OperationFailure("unsupported_query", "Canonical queries require a checked program and its supplied observation.")
+private fun scalarValue(
+    node: ExpressionNode,
+    values: List<DataValue>,
+    consumeStep: () -> Unit,
+    consumeItems: (Int) -> Unit,
+): DataValue =
+    when (node) {
+        is ExpressionNode.TextUnaryWrapper -> {
+            when (node.value.operation) {
+                TextUnaryOperation.VALUE -> primitive(values) { DataValue.StringValue(text(it)) }
+                TextUnaryOperation.TRIM -> primitive(values) { DataValue.StringValue(text(it).portableTrim()) }
+                TextUnaryOperation.LOWER -> primitive(values) { DataValue.StringValue(text(it).lowercase()) }
+                TextUnaryOperation.UPPER -> primitive(values) { DataValue.StringValue(text(it).uppercase()) }
+                TextUnaryOperation.TITLE -> primitive(values) { DataValue.StringValue(text(it).titleCase()) }
+                else -> unknownVariant()
             }
         }
-        operation("typewriter.text.value", 1, "text representation") { DataValue.StringValue(text(it)) }
-        operation("typewriter.color.parse", 1, "canonical RGB color") {
-            val value = text(it)
-            if (value.isBlank()) {
-                DataValue.Unfilled
-            } else {
-                val color =
-                    try {
-                        com.typewritermc.types.Color
-                            .parseRgb(value)
-                    } catch (_: IllegalArgumentException) {
-                        throw OperationFailure("invalid_color", "Color text must use hexadecimal RGB syntax.")
+
+        is ExpressionNode.TextCompareWrapper -> {
+            when (node.value.operation) {
+                TextCompareOperation.CONTAINS -> primitive(values) { DataValue.Boolean(text(it[0]).contains(text(it[1]))) }
+                TextCompareOperation.STARTS_WITH -> primitive(values) { DataValue.Boolean(text(it[0]).startsWith(text(it[1]))) }
+                TextCompareOperation.ENDS_WITH -> primitive(values) { DataValue.Boolean(text(it[0]).endsWith(text(it[1]))) }
+                else -> unknownVariant()
+            }
+        }
+
+        is ExpressionNode.ValueCompareWrapper -> {
+            when (node.value.operation) {
+                ValueCompareOperation.EQUAL -> {
+                    primitive(values) {
+                        DataValue.Boolean(it[0].canonicalValueKey() == it[1].canonicalValueKey())
                     }
-                DataValue.Named(com.typewritermc.types.ColorDefinition.use, DataValue.Integer(color.argb.toString().toBigInteger()))
+                }
+
+                ValueCompareOperation.NOT_EQUAL -> {
+                    primitive(values) {
+                        DataValue.Boolean(it[0].canonicalValueKey() != it[1].canonicalValueKey())
+                    }
+                }
+
+                else -> {
+                    unknownVariant()
+                }
             }
         }
-        operation("typewriter.value.eq", 2, "equality") {
-            DataValue.Boolean(it[0].canonicalValueKey() == it[1].canonicalValueKey())
+
+        is ExpressionNode.NumberCompareWrapper -> {
+            when (node.value.operation) {
+                NumberCompareOperation.GREATER -> primitive(values) { DataValue.Boolean(compareNumbers(it) > 0) }
+                NumberCompareOperation.GREATER_EQUAL -> primitive(values) { DataValue.Boolean(compareNumbers(it) >= 0) }
+                NumberCompareOperation.LESS -> primitive(values) { DataValue.Boolean(compareNumbers(it) < 0) }
+                NumberCompareOperation.LESS_EQUAL -> primitive(values) { DataValue.Boolean(compareNumbers(it) <= 0) }
+                else -> unknownVariant()
+            }
         }
-        operation("typewriter.value.neq", 2, "inequality") {
-            DataValue.Boolean(it[0].canonicalValueKey() != it[1].canonicalValueKey())
+
+        is ExpressionNode.NumberArithmeticWrapper -> {
+            when (node.value.operation) {
+                NumberArithmeticOperation.ADD -> primitive(values) { arithmetic(it, Arithmetic.Add) }
+                NumberArithmeticOperation.SUBTRACT -> primitive(values) { arithmetic(it, Arithmetic.Subtract) }
+                NumberArithmeticOperation.MULTIPLY -> primitive(values) { arithmetic(it, Arithmetic.Multiply) }
+                NumberArithmeticOperation.DIVIDE -> primitive(values) { arithmetic(it, Arithmetic.Divide) }
+                NumberArithmeticOperation.REMAINDER -> primitive(values) { arithmetic(it, Arithmetic.Remainder) }
+                else -> unknownVariant()
+            }
         }
-        operation("typewriter.value.is_null", 1, "null test") { DataValue.Boolean(it.single() == DataValue.Null) }
-        operation("typewriter.link.target", 1, "relationship target identity") {
-            val link =
-                it.single().unwrapNamed() as? DataValue.Link
-                    ?: throw OperationFailure("expected_link", "The expression value is not a relationship link.")
-            DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(link.target.resource.value))
+
+        is ExpressionNode.RuleUnaryWrapper -> {
+            when (node.value.operation) {
+                RuleUnaryOperation.NON_EMPTY -> {
+                    primitive(values) { DataValue.Boolean(size(it.single()) > 0) }
+                }
+
+                RuleUnaryOperation.NON_BLANK -> {
+                    primitive(values) { DataValue.Boolean(!text(it).portableIsBlank()) }
+                }
+
+                RuleUnaryOperation.SINGLE_LINE -> {
+                    primitive(values) { DataValue.Boolean(!text(it).hasLineBreak()) }
+                }
+
+                RuleUnaryOperation.POSITIVE -> {
+                    primitive(values) { DataValue.Boolean(number(it[0]) > BigDecimal.ZERO) }
+                }
+
+                RuleUnaryOperation.NON_NEGATIVE -> {
+                    primitive(values) { DataValue.Boolean(number(it[0]) >= BigDecimal.ZERO) }
+                }
+
+                RuleUnaryOperation.UNIQUE -> {
+                    primitive(values) {
+                        val values = it.single().collectionEntries().map { entry -> entry.value.canonicalValueKey() }
+                        DataValue.Boolean(values.distinct().size == values.size)
+                    }
+                }
+
+                RuleUnaryOperation.NOT_NULL -> {
+                    primitive(values) { DataValue.Boolean(it.single() != DataValue.Null) }
+                }
+
+                RuleUnaryOperation.OPAQUE -> {
+                    primitive(values) {
+                        val bits =
+                            (it.single().unwrapNamed() as? DataValue.Integer)?.value
+                                ?: throw OperationFailure("expected_color", "The color representation is not an integer.")
+                        DataValue.Boolean(bits.shiftRight(24).and(java.math.BigInteger.valueOf(255)).toInt() == 255)
+                    }
+                }
+
+                else -> {
+                    unknownVariant()
+                }
+            }
         }
-        operation("typewriter.record.field", 2, "record field access") {
-            val record =
-                it[0].unwrapNamed() as? DataValue.Record
-                    ?: throw OperationFailure("expected_record", "The expression value is not a record.")
-            record.fields[text(it[1])]
-                ?: throw OperationFailure("record_field_absent", "The record field is absent.")
+
+        is ExpressionNode.RegexTestWrapper -> {
+            when (node.value.mode) {
+                RegexMatchMode.SEARCH -> {
+                    primitiveWithSteps(values, consumeStep) { values, consumeStep ->
+                        DataValue.Boolean(regex(values).containsMatchIn(text(values[0]), consumeStep))
+                    }
+                }
+
+                RegexMatchMode.FULL_MATCH -> {
+                    primitiveWithSteps(values, consumeStep) { values, consumeStep ->
+                        DataValue.Boolean(regex(values).matches(text(values), consumeStep))
+                    }
+                }
+
+                else -> {
+                    unknownVariant()
+                }
+            }
         }
-        operation("typewriter.boolean.not", 1, "Boolean negation") { DataValue.Boolean(!it.single().boolean()) }
-        operation("typewriter.number.gt", 2, "numeric greater than") { DataValue.Boolean(compareNumbers(it) > 0) }
-        operation("typewriter.number.gte", 2, "numeric greater than or equal") { DataValue.Boolean(compareNumbers(it) >= 0) }
-        operation("typewriter.number.lt", 2, "numeric less than") { DataValue.Boolean(compareNumbers(it) < 0) }
-        operation("typewriter.number.lte", 2, "numeric less than or equal") { DataValue.Boolean(compareNumbers(it) <= 0) }
-        operation("typewriter.number.add", 2, Int.MAX_VALUE, "numeric addition") { arithmetic(it, Arithmetic.Add) }
-        operation("typewriter.number.subtract", 2, Int.MAX_VALUE, "numeric subtraction") { arithmetic(it, Arithmetic.Subtract) }
-        operation("typewriter.number.multiply", 2, Int.MAX_VALUE, "numeric multiplication") { arithmetic(it, Arithmetic.Multiply) }
-        operation("typewriter.number.divide", 2, Int.MAX_VALUE, "numeric division") { arithmetic(it, Arithmetic.Divide) }
-        operation("typewriter.number.remainder", 2, Int.MAX_VALUE, "numeric remainder") { arithmetic(it, Arithmetic.Remainder) }
-        operation("typewriter.number.negate", 1, "numeric negation") { arithmetic(it, Arithmetic.Negate) }
-        operation("typewriter.number.round_to", 3, "numeric increment rounding") { roundPortableNumber(it) }
-        operationWithBudgets("typewriter.number.format", 3, "exact numeric display") { values, consumeStep, _ ->
-            formatPortableNumber(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+
+        is ExpressionNode.RuleTimestampBoundWrapper -> {
+            when (node.value.direction) {
+                TimestampBoundDirection.NOT_BEFORE -> primitive(values) { DataValue.Boolean(timestamp(it[0]) >= timestamp(it[1])) }
+                TimestampBoundDirection.NOT_AFTER -> primitive(values) { DataValue.Boolean(timestamp(it[0]) <= timestamp(it[1])) }
+                else -> unknownVariant()
+            }
         }
-        operationWithBudgets("typewriter.duration.format", 3, "duration display") { values, consumeStep, _ ->
-            formatPortableDuration(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+
+        is ExpressionNode.RuleNumericBoundWrapper -> {
+            when (node.value.direction) {
+                BoundDirection.MINIMUM -> {
+                    primitive(values) {
+                        DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) >= 0 else compareNumbers(it) > 0)
+                    }
+                }
+
+                BoundDirection.MAXIMUM -> {
+                    primitive(values) {
+                        DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) <= 0 else compareNumbers(it) < 0)
+                    }
+                }
+
+                else -> {
+                    unknownVariant()
+                }
+            }
         }
-        operationWithBudgets("typewriter.timestamp.format", 4, "timestamp display") { values, consumeStep, _ ->
-            formatPortableTimestamp(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+
+        is ExpressionNode.TextLengthWrapper -> {
+            primitive(values) { DataValue.Integer(text(it).codePointCount().toBigInteger()) }
         }
-        operation("typewriter.text.length", 1, "Unicode text length") { DataValue.Integer(text(it).codePointCount().toBigInteger()) }
-        operation("typewriter.text.has_line_break", 1, "text line boundary test") { DataValue.Boolean(text(it).hasLineBreak()) }
-        operation("typewriter.text.trim", 1, "trimmed text") { DataValue.StringValue(text(it).portableTrim()) }
-        operation("typewriter.text.lower", 1, "lowercase text") { DataValue.StringValue(text(it).lowercase()) }
-        operation("typewriter.text.upper", 1, "uppercase text") { DataValue.StringValue(text(it).uppercase()) }
-        operation("typewriter.text.title", 1, "title case text") { DataValue.StringValue(text(it).titleCase()) }
-        operationWithBudgets("typewriter.text.replace", 3, "text replacement") { values, consumeStep, _ ->
-            val source = text(values[0])
-            val target = text(values[1])
-            val replacement = text(values[2])
-            chargeLiteralReplacement(source, target, replacement, consumeStep)
-            DataValue.StringValue(
-                if (target.isEmpty()) {
-                    replaceBetweenCodePoints(source, replacement)
+
+        is ExpressionNode.TextHasLineBreakWrapper -> {
+            primitive(values) { DataValue.Boolean(text(it).hasLineBreak()) }
+        }
+
+        is ExpressionNode.TextReplaceWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
+                val source = text(values[0])
+                val target = text(values[1])
+                val replacement = text(values[2])
+                chargeLiteralReplacement(source, target, replacement, consumeStep)
+                DataValue.StringValue(
+                    if (target.isEmpty()) {
+                        replaceBetweenCodePoints(source, replacement)
+                    } else {
+                        source.replace(target, replacement)
+                    },
+                )
+            }
+        }
+
+        is ExpressionNode.TextSplitWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { values, _, consumeItems ->
+                val source = text(values[0])
+                val separator = text(values[1])
+                consumeItems(literalSplitItemCount(source, separator))
+                val parts = if (separator.isEmpty()) source.splitIntoCodePoints() else source.split(separator)
+                DataValue.ListValue(
+                    parts.mapIndexed { index, value ->
+                        ListItem(com.typewritermc.authoring.ItemId("split.$index"), DataValue.StringValue(value))
+                    },
+                )
+            }
+        }
+
+        is ExpressionNode.TextJoinWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { arguments, consumeStep, _ ->
+                val values = arguments[0].collectionEntries().map { entry -> text(entry.value) }
+                val separator = text(arguments[1])
+                values.forEachIndexed { index, value ->
+                    if (index > 0) chargeCodePoints(separator, consumeStep)
+                    chargeCodePoints(value, consumeStep)
+                }
+                DataValue.StringValue(values.joinToString(separator))
+            }
+        }
+
+        is ExpressionNode.TextSubstringWrapper -> {
+            primitive(values) { substring(it) }
+        }
+
+        is ExpressionNode.RegexCaptureWrapper -> {
+            primitiveWithSteps(values, consumeStep) { values, consumeStep ->
+                val group = integer(values[2])
+                require(group in 0..32) { "Regular expression capture group is out of range." }
+                val input = text(values[0])
+                val match =
+                    regex(values).find(input, consumeStep)
+                        ?: throw OperationFailure("regex_no_match", "The regular expression did not match.")
+                DataValue.StringValue(
+                    match.group(input, group)
+                        ?: throw OperationFailure("regex_group_absent", "The regular expression capture group is absent."),
+                )
+            }
+        }
+
+        is ExpressionNode.RegexReplaceWrapper -> {
+            primitiveWithSteps(values, consumeStep) { values, consumeStep ->
+                val pattern = regex(values)
+                try {
+                    DataValue.StringValue(pattern.replace(text(values[0]), text(values[2]), consumeStep))
+                } catch (_: PortableRegexCompileFailure) {
+                    throw OperationFailure("invalid_regex_replacement", "The regular expression replacement is invalid.")
+                }
+            }
+        }
+
+        is ExpressionNode.IsNullWrapper -> {
+            primitive(values) { DataValue.Boolean(it.single() == DataValue.Null) }
+        }
+
+        is ExpressionNode.LinkTargetWrapper -> {
+            primitive(values) {
+                val link =
+                    it.single().unwrapNamed() as? DataValue.Link
+                        ?: throw OperationFailure("expected_link", "The expression value is not a relationship link.")
+                DataValue.Named(com.typewritermc.types.ResourceIdDefinition.use, DataValue.StringValue(link.target.resource.value))
+            }
+        }
+
+        is ExpressionNode.BooleanNotWrapper -> {
+            primitive(values) { DataValue.Boolean(!it.single().boolean()) }
+        }
+
+        is ExpressionNode.NumberNegateWrapper -> {
+            primitive(values) { arithmetic(it, Arithmetic.Negate) }
+        }
+
+        is ExpressionNode.NumberRoundWrapper -> {
+            primitive(values) { roundPortableNumber(it) }
+        }
+
+        is ExpressionNode.NumberFormatWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
+                formatPortableNumber(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+            }
+        }
+
+        is ExpressionNode.DurationFormatWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
+                formatPortableDuration(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+            }
+        }
+
+        is ExpressionNode.TimestampFormatWrapper -> {
+            primitiveWithBudgets(values, consumeStep, consumeItems) { values, consumeStep, _ ->
+                formatPortableTimestamp(values).also { result -> chargeCodePoints((result as DataValue.StringValue).value, consumeStep) }
+            }
+        }
+
+        is ExpressionNode.CollectionSizeWrapper -> {
+            primitive(values) { DataValue.Integer(size(it.single()).toBigInteger()) }
+        }
+
+        is ExpressionNode.CollectionAccessWrapper -> {
+            primitive(values) { collectionAccess(it) }
+        }
+
+        is ExpressionNode.CollectionContainsWrapper -> {
+            primitive(values) { collectionContains(it) }
+        }
+
+        is ExpressionNode.ColorParseWrapper -> {
+            primitive(values) {
+                val value = text(it)
+                if (value.isBlank()) {
+                    DataValue.Unfilled
                 } else {
-                    source.replace(target, replacement)
-                },
-            )
-        }
-        operationWithBudgets("typewriter.text.split", 2, "text splitting") { values, _, consumeItems ->
-            val source = text(values[0])
-            val separator = text(values[1])
-            consumeItems(literalSplitItemCount(source, separator))
-            val parts = if (separator.isEmpty()) source.splitIntoCodePoints() else source.split(separator)
-            DataValue.ListValue(
-                parts.mapIndexed { index, value ->
-                    ListItem(com.typewritermc.authoring.ItemId("split.$index"), DataValue.StringValue(value))
-                },
-            )
-        }
-        operationWithBudgets("typewriter.text.join", 2, "text joining") { arguments, consumeStep, _ ->
-            val values = arguments[0].collectionEntries().map { entry -> text(entry.value) }
-            val separator = text(arguments[1])
-            values.forEachIndexed { index, value ->
-                if (index > 0) chargeCodePoints(separator, consumeStep)
-                chargeCodePoints(value, consumeStep)
+                    val color =
+                        try {
+                            com.typewritermc.types.Color
+                                .parseRgb(value)
+                        } catch (_: IllegalArgumentException) {
+                            throw OperationFailure("invalid_color", "Color text must use hexadecimal RGB syntax.")
+                        }
+                    DataValue.Named(com.typewritermc.types.ColorDefinition.use, DataValue.Integer(color.argb.toString().toBigInteger()))
+                }
             }
-            DataValue.StringValue(values.joinToString(separator))
         }
-        operation("typewriter.text.substring", 2, 3, "text substring") { substring(it) }
-        operation("typewriter.text.contains", 2, "text containment") { DataValue.Boolean(text(it[0]).contains(text(it[1]))) }
-        operation("typewriter.text.starts_with", 2, "text prefix") { DataValue.Boolean(text(it[0]).startsWith(text(it[1]))) }
-        operation("typewriter.text.ends_with", 2, "text suffix") { DataValue.Boolean(text(it[0]).endsWith(text(it[1]))) }
-        add(
-            OperationDefinition(
-                PortableOperationSemantics(OperationId("typewriter.text.interpolate"), 0, Int.MAX_VALUE, "text interpolation"),
-            ) { values, consumeStep, _ ->
-                val rendered = values.map(DataValue::displayText)
+
+        is ExpressionNode.ColorWithAlphaWrapper -> {
+            primitive(values) { colorWithAlpha(it) }
+        }
+
+        is ExpressionNode.RuleOneOfWrapper -> {
+            primitive(values) { values ->
+                DataValue.Boolean(
+                    values.drop(1).any { it.canonicalValueKey() == values[0].canonicalValueKey() },
+                )
+            }
+        }
+
+        is ExpressionNode.RuleNumericRangeWrapper -> {
+            primitive(values) {
+                DataValue.Boolean(number(it[0]) >= number(it[1]) && number(it[0]) <= number(it[2]))
+            }
+        }
+
+        is ExpressionNode.RuleMultipleOfWrapper -> {
+            primitive(values) {
+                val divisor = number(it[1])
+                DataValue.Boolean(
+                    divisor.compareTo(BigDecimal.ZERO) != 0 && number(it[0]).remainder(divisor).compareTo(BigDecimal.ZERO) == 0,
+                )
+            }
+        }
+
+        is ExpressionNode.RuleMaximumScaleWrapper -> {
+            primitive(values) {
+                DataValue.Boolean(number(it[0]).stripTrailingZeros().scale() <= integer(it[1]))
+            }
+        }
+
+        is ExpressionNode.TextInterpolateWrapper -> {
+            values.map(DataValue::displayText).let { rendered ->
                 rendered.forEach { chargeCodePoints(it, consumeStep) }
-                DataValue.StringValue(rendered.joinToString(separator = ""))
-            },
-        )
-        operationWithSteps("typewriter.regex.matches", 2, "regular expression search") { values, consumeStep ->
-            DataValue.Boolean(regex(values).containsMatchIn(text(values[0]), consumeStep))
-        }
-        operationWithSteps("typewriter.regex.capture", 3, "regular expression capture") { values, consumeStep ->
-            val group = integer(values[2])
-            require(group in 0..32) { "Regular expression capture group is out of range." }
-            val input = text(values[0])
-            val match =
-                regex(values).find(input, consumeStep)
-                    ?: throw OperationFailure("regex_no_match", "The regular expression did not match.")
-            DataValue.StringValue(
-                match.group(input, group)
-                    ?: throw OperationFailure("regex_group_absent", "The regular expression capture group is absent."),
-            )
-        }
-        operationWithSteps("typewriter.regex.replace", 3, "regular expression replacement") { values, consumeStep ->
-            val pattern = regex(values)
-            try {
-                DataValue.StringValue(pattern.replace(text(values[0]), text(values[2]), consumeStep))
-            } catch (_: PortableRegexCompileFailure) {
-                throw OperationFailure("invalid_regex_replacement", "The regular expression replacement is invalid.")
+                DataValue.StringValue(rendered.joinToString(""))
             }
         }
-        operation("typewriter.collection.size", 1, "collection cardinality") { DataValue.Integer(size(it.single()).toBigInteger()) }
-        operation("typewriter.collection.access", 2, "collection access") { collectionAccess(it) }
-        operation("typewriter.collection.contains", 2, "collection containment") { collectionContains(it) }
-        operation("typewriter.color.with_alpha", 2, "color alpha replacement") { colorWithAlpha(it) }
-        operation("typewriter.rule.one_of", 2, Int.MAX_VALUE, "allowed values") { values ->
-            DataValue.Boolean(
-                values.drop(1).any { it.canonicalValueKey() == values[0].canonicalValueKey() },
-            )
+
+        is ExpressionNode.RuleSizeBoundWrapper -> {
+            run {
+                val measured =
+                    when (node.value.metric) {
+                        SizeBoundMetric.TEXT_LENGTH, SizeBoundMetric.COLLECTION_ITEMS -> size(values[0])
+                        SizeBoundMetric.TEXT_LINES -> lineCount(text(values[0]))
+                        else -> unknownVariant()
+                    }
+                DataValue.Boolean(
+                    when (node.value.direction) {
+                        BoundDirection.MINIMUM -> measured >= integer(values[1])
+                        BoundDirection.MAXIMUM -> measured <= integer(values[1])
+                        else -> unknownVariant()
+                    },
+                )
+            }
         }
-        operation("typewriter.rule.nonEmpty", 1, "nonempty value") { DataValue.Boolean(size(it.single()) > 0) }
-        operation("typewriter.rule.nonBlank", 1, "nonblank text") { DataValue.Boolean(!text(it).portableIsBlank()) }
-        operation("typewriter.rule.minimumLength", 2, "minimum value length") { DataValue.Boolean(size(it[0]) >= integer(it[1])) }
-        operation("typewriter.rule.maximumLength", 2, "maximum value length") { DataValue.Boolean(size(it[0]) <= integer(it[1])) }
-        operation("typewriter.rule.lengthBetween", 3, "bounded value length") {
-            DataValue.Boolean(size(it[0]) in integer(it[1])..integer(it[2]))
+
+        is ExpressionNode.RuleSizeRangeWrapper -> {
+            run {
+                when (node.value.metric) {
+                    SizeRangeMetric.TEXT_LENGTH, SizeRangeMetric.COLLECTION_ITEMS -> Unit
+                    else -> unknownVariant()
+                }
+                DataValue.Boolean(size(values[0]) in integer(values[1])..integer(values[2]))
+            }
         }
-        operation("typewriter.rule.minimumLines", 2, "minimum text lines") { DataValue.Boolean(lineCount(text(it)) >= integer(it[1])) }
-        operation("typewriter.rule.maximumLines", 2, "maximum text lines") { DataValue.Boolean(lineCount(text(it)) <= integer(it[1])) }
-        operation("typewriter.rule.singleLine", 1, "single line text") { DataValue.Boolean(!text(it).hasLineBreak()) }
-        operationWithSteps("typewriter.rule.regex", 2, "regular expression match") { values, consumeStep ->
-            DataValue.Boolean(regex(values).matches(text(values), consumeStep))
-        }
-        operation("typewriter.rule.startsWith", 2, "text prefix") { DataValue.Boolean(text(it).startsWith(text(it.drop(1)))) }
-        operation("typewriter.rule.endsWith", 2, "text suffix") { DataValue.Boolean(text(it).endsWith(text(it.drop(1)))) }
-        operation("typewriter.rule.minimum", 3, "numeric minimum") {
-            DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) >= 0 else compareNumbers(it) > 0)
-        }
-        operation("typewriter.rule.maximum", 3, "numeric maximum") {
-            DataValue.Boolean(if (it[2].boolean()) compareNumbers(it) <= 0 else compareNumbers(it) < 0)
-        }
-        operation("typewriter.rule.between", 3, "numeric interval") {
-            DataValue.Boolean(number(it[0]) >= number(it[1]) && number(it[0]) <= number(it[2]))
-        }
-        operation("typewriter.rule.positive", 1, "positive number") { DataValue.Boolean(number(it[0]) > BigDecimal.ZERO) }
-        operation("typewriter.rule.nonNegative", 1, "nonnegative number") { DataValue.Boolean(number(it[0]) >= BigDecimal.ZERO) }
-        operation("typewriter.rule.multipleOf", 2, "numeric multiple") {
-            val divisor = number(it[1])
-            DataValue.Boolean(divisor.compareTo(BigDecimal.ZERO) != 0 && number(it[0]).remainder(divisor).compareTo(BigDecimal.ZERO) == 0)
-        }
-        operation("typewriter.rule.maximumScale", 2, "maximum decimal scale") {
-            DataValue.Boolean(number(it[0]).stripTrailingZeros().scale() <= integer(it[1]))
-        }
-        operation("typewriter.rule.minimumItems", 2, "minimum collection items") { DataValue.Boolean(size(it[0]) >= integer(it[1])) }
-        operation("typewriter.rule.maximumItems", 2, "maximum collection items") { DataValue.Boolean(size(it[0]) <= integer(it[1])) }
-        operation("typewriter.rule.itemsBetween", 3, "bounded collection items") {
-            DataValue.Boolean(size(it[0]) in integer(it[1])..integer(it[2]))
-        }
-        operation("typewriter.rule.unique", 1, "unique collection values") {
-            val values = it.single().collectionEntries().map { entry -> entry.value.canonicalValueKey() }
-            DataValue.Boolean(values.distinct().size == values.size)
-        }
-        operation("typewriter.rule.notNull", 1, "nonnull value") { DataValue.Boolean(it.single() != DataValue.Null) }
-        operation("typewriter.rule.notBefore", 2, "timestamp lower bound") { DataValue.Boolean(timestamp(it[0]) >= timestamp(it[1])) }
-        operation("typewriter.rule.notAfter", 2, "timestamp upper bound") { DataValue.Boolean(timestamp(it[0]) <= timestamp(it[1])) }
-        operation("typewriter.rule.opaque", 1, "opaque color") {
-            val bits =
-                (it.single().unwrapNamed() as? DataValue.Integer)?.value
-                    ?: throw OperationFailure("expected_color", "The color representation is not an integer.")
-            DataValue.Boolean(bits.shiftRight(24).and(java.math.BigInteger.valueOf(255)).toInt() == 255)
+
+        else -> {
+            unknownVariant()
         }
     }
 
-private fun MutableList<OperationDefinition>.operation(
-    id: String,
-    arguments: Int,
-    meaning: String,
-    evaluate: (List<DataValue>) -> DataValue,
-) = operation(id, arguments, arguments, meaning, evaluate)
+private fun unknownVariant(): Nothing = throw OperationFailure("unknown_expression_operation", "Unknown expression operator.")
 
-private fun MutableList<OperationDefinition>.operation(
-    id: String,
-    minimumArguments: Int,
-    maximumArguments: Int,
-    meaning: String,
-    evaluate: (List<DataValue>) -> DataValue,
-) {
-    add(
-        OperationDefinition(
-            PortableOperationSemantics(OperationId(id), minimumArguments, maximumArguments, meaning),
-        ) { values, _, _ -> evaluate(values) },
-    )
-}
+private fun primitive(
+    values: List<DataValue>,
+    body: (List<DataValue>) -> DataValue,
+): DataValue = body(values)
 
-private fun MutableList<OperationDefinition>.operationWithSteps(
-    id: String,
-    arguments: Int,
-    meaning: String,
-    evaluate: (List<DataValue>, () -> Unit) -> DataValue,
-) {
-    add(
-        OperationDefinition(PortableOperationSemantics(OperationId(id), arguments, arguments, meaning)) { values, consumeStep, _ ->
-            evaluate(values, consumeStep)
-        },
-    )
-}
+private fun primitiveWithSteps(
+    values: List<DataValue>,
+    consumeStep: () -> Unit,
+    body: (List<DataValue>, () -> Unit) -> DataValue,
+): DataValue = body(values, consumeStep)
 
-private fun MutableList<OperationDefinition>.operationWithBudgets(
-    id: String,
-    arguments: Int,
-    meaning: String,
-    evaluate: (List<DataValue>, () -> Unit, (Int) -> Unit) -> DataValue,
-) {
-    add(OperationDefinition(PortableOperationSemantics(OperationId(id), arguments, arguments, meaning), evaluate))
-}
+private fun primitiveWithBudgets(
+    values: List<DataValue>,
+    consumeStep: () -> Unit,
+    consumeItems: (Int) -> Unit,
+    body: (List<DataValue>, () -> Unit, (Int) -> Unit) -> DataValue,
+): DataValue = body(values, consumeStep, consumeItems)
 
 private fun compareNumbers(values: List<DataValue>): Int = number(values[0]).compareTo(number(values[1]))
 
@@ -1890,3 +2203,29 @@ private val PORTABLE_WHITESPACE =
         0x3000,
         0xFEFF,
     )
+
+private fun ValuePath.append(other: ValuePath) = ValuePath(segments + other.segments)
+
+private fun EntryBranch.pathSegment(): PathSegment =
+    when (this) {
+        EntryBranch.KEY -> PathSegment.MapKey
+        EntryBranch.VALUE -> PathSegment.MapValue
+        else -> throw OperationFailure("unknown_expression_variant", "Unknown entry branch.")
+    }
+
+private fun decodeLiteral(value: skirout.editor.v1.type_catalog.DataValue): DataValue =
+    when (val decoded = SkirDataValueCodec.decode(value)) {
+        is SkirConversionResult.Success -> {
+            decoded.value
+        }
+
+        is SkirConversionResult.Failure -> {
+            // Retain specific numeric budget failures without admitting malformed scalar payloads.
+            when (value) {
+                is skirout.editor.v1.type_catalog.DataValue.FloatWrapper -> DataValue.Float(value.value).displayDecimal()
+                is skirout.editor.v1.type_catalog.DataValue.DecimalWrapper -> DataValue.Decimal(value.value).displayDecimal()
+                else -> Unit
+            }
+            throw OperationFailure("invalid_expression_literal", decoded.diagnostics.joinToString())
+        }
+    }

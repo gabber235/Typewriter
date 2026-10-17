@@ -136,16 +136,17 @@ BoundPresentationHost _scalarHost({
             ..placeholder = _text("Enter a value"))
           .toFrozen();
   final candidate = skir.ExpressionBindingId(value: "candidate");
-  final read = skir.ExpressionNode.createRead(
+  final read = skir.ExpressionNode.createInput(
     binding: candidate,
     path: editorRootPath,
   );
   final mappings = skir.ValueMappings(
     completion: skir.ExpressionMapping(
       inputBinding: candidate,
-      body: skir.ExpressionNode.createCall(
-        operation: skir.OperationId(value: "typewriter.number.round_to"),
-        arguments: [read, _number(0.5), _text("NearestTiesToEven")],
+      body: skir.ExpressionNode.createNumberRound(
+        source: read,
+        increment: _number(0.5),
+        rounding: _text("NearestTiesToEven"),
       ),
     ),
     display: null,

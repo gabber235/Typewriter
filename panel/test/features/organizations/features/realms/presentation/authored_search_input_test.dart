@@ -115,12 +115,12 @@ void main() {
       bindingId: target,
       path: skir.ValuePath(segments: const []),
     );
-    final rowRead = skir.ExpressionNode.createRead(
+    final rowRead = skir.ExpressionNode.createInput(
       binding: row,
       path: skir.ValuePath(segments: const []),
     );
     final summaryBinding = skir.ExpressionBindingId(value: "summary");
-    final summaryRead = skir.ExpressionNode.createRead(
+    final summaryRead = skir.ExpressionNode.createInput(
       binding: summaryBinding,
       path: skir.ValuePath(segments: const []),
     );
@@ -361,7 +361,7 @@ void main() {
       recommendations: const [],
       roleFallbacks: const [],
     );
-    final rowRead = skir.ExpressionNode.createRead(
+    final rowRead = skir.ExpressionNode.createInput(
       binding: row,
       path: skir.ValuePath(segments: const []),
     );
@@ -578,7 +578,7 @@ void main() {
 skir.SearchControl _pendingControl() {
   final target = skir.ExpressionBindingId(value: "target");
   final row = skir.ExpressionBindingId(value: "row");
-  final rowRead = skir.ExpressionNode.createRead(
+  final rowRead = skir.ExpressionNode.createInput(
     binding: row,
     path: skir.ValuePath(segments: const []),
   );

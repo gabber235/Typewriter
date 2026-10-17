@@ -11,7 +11,10 @@ void main() {
       final catalog = _catalog();
       final first = _document(catalog, "First");
       final second = _document(catalog, "Second");
-      final expression = _field(_query("typewriter.resource.value"), "name");
+      final expression = _field(
+        _query(skir.ExpressionQuery.wrapResourceValue),
+        "name",
+      );
       expect(
         _evaluate(catalog, first, expression).value.authoredString,
         "First",
@@ -29,13 +32,15 @@ void main() {
 
   test("declaration color is read canonically and parsed without sibling projection", () {
     final catalog = _catalog();
-    final configuration = _query("typewriter.resource.configuration");
-    final declaration = _call("typewriter.catalog.declaration", [
-      configuration,
-    ]);
-    final color = _call("typewriter.color.parse", [
+    final configuration = _query(
+      skir.ExpressionQuery.wrapResourceConfiguration,
+    );
+    final declaration = skir.ExpressionNode.wrapQuery(
+      skir.ExpressionQuery.wrapCatalogDeclaration(configuration),
+    );
+    final color = skir.ExpressionNode.wrapColorParse(
       _field(_field(declaration, "display"), "color"),
-    ]);
+    );
     final result = _evaluate(catalog, _document(catalog, "Page"), color);
     expect(
       result.value.authoredPayload,
@@ -60,7 +65,7 @@ void main() {
         ),
       );
       final result = catalog.evaluateExpression(
-        _query("typewriter.resource.value"),
+        _query(skir.ExpressionQuery.wrapResourceValue),
         bindings: _bindings,
         budget: _budget,
         queries: PortableExpressionQueries(
@@ -91,13 +96,15 @@ void main() {
       ),
     );
     final name = _field(
-      _query("typewriter.resource.value", generic: true),
+      _query(skir.ExpressionQuery.wrapResourceValue, generic: true),
       "name",
     );
     expect(_evaluate(catalog, document, name).value.authoredString, "Pending");
-    final declaration = _call("typewriter.catalog.declaration", [
-      _query("typewriter.resource.configuration", generic: true),
-    ]);
+    final declaration = skir.ExpressionNode.wrapQuery(
+      skir.ExpressionQuery.wrapCatalogDeclaration(
+        _query(skir.ExpressionQuery.wrapResourceConfiguration, generic: true),
+      ),
+    );
     expect(
       _evaluate(
         catalog,
@@ -112,7 +119,7 @@ void main() {
     "absent resources remain missing while unsupported capabilities fail",
     () {
       final catalog = _catalog();
-      final expression = _query("typewriter.resource.value");
+      final expression = _query(skir.ExpressionQuery.wrapResourceValue);
       final empty = AuthoringDocument(
         catalog: catalog,
         entries: const {},
@@ -151,9 +158,11 @@ void main() {
     () {
       final catalog = _catalog(display: false);
       final document = _document(catalog, "Page");
-      final declaration = _call("typewriter.catalog.declaration", [
-        _query("typewriter.resource.configuration"),
-      ]);
+      final declaration = skir.ExpressionNode.wrapQuery(
+        skir.ExpressionQuery.wrapCatalogDeclaration(
+          _query(skir.ExpressionQuery.wrapResourceConfiguration),
+        ),
+      );
       final expression = skir.ExpressionNode.createOrElse(
         input: _field(_field(declaration, "display"), "color"),
         fallback: _literal(skir.DataValue.wrapStringValue("fallback")),
@@ -180,9 +189,11 @@ void main() {
     () {
       final catalog = _catalog();
       final document = _document(catalog, "Page");
-      final declaration = _call("typewriter.catalog.declaration", [
-        _query("typewriter.resource.configuration"),
-      ]);
+      final declaration = skir.ExpressionNode.wrapQuery(
+        skir.ExpressionQuery.wrapCatalogDeclaration(
+          _query(skir.ExpressionQuery.wrapResourceConfiguration),
+        ),
+      );
       final result = catalog.evaluateExpression(
         declaration,
         bindings: _bindings,
@@ -286,36 +297,40 @@ void main() {
     );
     final left = skir.ExpressionBindingId(value: "left");
     final right = skir.ExpressionBindingId(value: "right");
-    final item = skir.ExpressionBindingId(value: "item");
     final body = _field(
-      _call("typewriter.resource.value", [
-        skir.ExpressionNode.createRead(binding: item, path: editorRootPath),
-      ]),
+      skir.ExpressionNode.wrapQuery(
+        skir.ExpressionQuery.wrapResourceValue(
+          skir.ResourceQuerySource.wrapReference(
+            skir.ExpressionNode.createLocal(
+              depth: 0,
+              slot: 0,
+              path: editorRootPath,
+            ),
+          ),
+        ),
+      ),
       "name",
     );
     skir.ExpressionNode mapped(skir.ExpressionBindingId source) =>
-        skir.ExpressionNode.createCollection(
-          operation: skir.OperationId(value: "typewriter.collection.map"),
-          input: skir.ExpressionNode.createOrElse(
-            input: skir.ExpressionNode.createRead(
+        skir.ExpressionNode.createMap(
+          source: skir.ExpressionNode.createOrElse(
+            input: skir.ExpressionNode.createInput(
               binding: source,
               path: editorRootPath,
             ),
             fallback: _literal(skir.DataValue.createListValue(items: const [])),
           ),
-          bindings: [item],
-          arguments: const [],
           body: body,
         );
-    skir.ExpressionNode join(skir.ExpressionNode source) => _call(
-      "typewriter.text.join",
-      [source, _literal(skir.DataValue.wrapStringValue(""))],
-    );
+    skir.ExpressionNode join(skir.ExpressionNode source) =>
+        skir.ExpressionNode.createTextJoin(
+          source: source,
+          separator: _literal(skir.DataValue.wrapStringValue("")),
+        );
     final result = catalog.evaluateExpression(
-      _call("typewriter.text.interpolate", [
-        join(mapped(left)),
-        join(mapped(right)),
-      ]),
+      skir.ExpressionNode.createTextInterpolate(
+        parts: [join(mapped(left)), join(mapped(right))],
+      ),
       bindings: {
         left: _referenceBinding(pageRef, _resource),
         right: _referenceBinding(otherRef, other),
@@ -385,12 +400,16 @@ void main() {
       );
       final result = aliasScope.evaluate(
         _field(
-          _call("typewriter.resource.value", [
-            skir.ExpressionNode.createRead(
-              binding: alias,
-              path: editorRootPath,
+          skir.ExpressionNode.wrapQuery(
+            skir.ExpressionQuery.wrapResourceValue(
+              skir.ResourceQuerySource.wrapReference(
+                skir.ExpressionNode.createInput(
+                  binding: alias,
+                  path: editorRootPath,
+                ),
+              ),
             ),
-          ]),
+          ),
           "name",
         ),
       );
@@ -521,7 +540,7 @@ void main() {
           );
           expect(concurrent, isA<EditStaged>());
           final expression = _field(
-            _query("typewriter.resource.value"),
+            _query(skir.ExpressionQuery.wrapResourceValue),
             "name",
           );
           final target = skir.BindingRef(
@@ -655,7 +674,9 @@ void main() {
       );
       final expression = _field(
         _field(
-          _call("typewriter.catalog.declaration", [_literal(encoded)]),
+          skir.ExpressionNode.wrapQuery(
+            skir.ExpressionQuery.wrapCatalogDeclaration(_literal(encoded)),
+          ),
           "display",
         ),
         "name",
@@ -699,7 +720,7 @@ void main() {
       },
     );
     final expression = skir.ExpressionNode.createOrElse(
-      input: _field(_query("typewriter.resource.value"), "name"),
+      input: _field(_query(skir.ExpressionQuery.wrapResourceValue), "name"),
       fallback: _literal(skir.DataValue.wrapStringValue("fallback")),
     );
     final result = catalog.evaluateExpression(
@@ -712,16 +733,16 @@ void main() {
     expect((result as PortableExpressionFailed).code, "invalid_resource_value");
     final malformed = PortableExpressionEvaluator(const {}, budget: _budget)
         .evaluate(
-          _call("typewriter.color.parse", [
+          skir.ExpressionNode.wrapColorParse(
             _literal(skir.DataValue.wrapStringValue("#notrgb")),
-          ]),
+          ),
         );
     expect(malformed, isA<PortableExpressionFailed>());
     final blank = PortableExpressionEvaluator(const {}, budget: _budget)
         .evaluate(
-          _call("typewriter.color.parse", [
+          skir.ExpressionNode.wrapColorParse(
             _literal(skir.DataValue.wrapStringValue(" ")),
-          ]),
+          ),
         );
     expect(blank, isA<PortableExpressionUnavailable>());
   });
@@ -737,7 +758,7 @@ void main() {
       final appearance =
           (skir.ResultAppearance.mutable()
                 ..leading = _textNode(
-                  skir.ExpressionNode.createRead(
+                  skir.ExpressionNode.createInput(
                     binding: missing,
                     path: editorRootPath,
                   ),
@@ -899,12 +920,14 @@ void main() {
       queries: PortableExpressionQueries(catalog: catalog),
     ).withNamedPayload(payload);
     final result = scope.evaluate(
-      _call("typewriter.value.configuration", [
-        skir.ExpressionNode.createRead(
-          binding: configured,
-          path: editorRootPath,
+      skir.ExpressionNode.wrapQuery(
+        skir.ExpressionQuery.wrapValueConfiguration(
+          skir.ExpressionNode.createInput(
+            binding: configured,
+            path: editorRootPath,
+          ),
         ),
-      ]),
+      ),
     );
     expect(result, isA<PortableExpressionAvailable>());
     expect(
@@ -915,8 +938,8 @@ void main() {
     );
     final reads = [
       PortableExpressionRead(
-        configured,
-        _namePath,
+        source: PortableExpressionReadSource.input(configured),
+        path: _namePath,
         location: skir.ValueLocation(resource: _resource, path: _namePath),
       ),
     ];
@@ -986,37 +1009,28 @@ PortableExpressionAvailable _evaluate(
   return result as PortableExpressionAvailable;
 }
 
-skir.ExpressionNode _query(String operation, {bool generic = false}) {
-  final use = skir.TypeUse.createNamed(
-    definition: _page,
-    arguments: generic ? [_text] : const [],
-  );
-  final witness = canonicalReadModels.project(
-    use,
-    skir.TypeUse.serializer.typeDescriptor,
-    const [],
-    () {},
-    (_) {},
-  );
-  return _call(operation, [
-    skir.ExpressionNode.createRead(binding: _id, path: editorRootPath),
-    _literal(witness),
-  ]);
-}
+skir.ExpressionNode _query(
+  skir.ExpressionQuery Function(skir.ResourceQuerySource) query, {
+  bool generic = false,
+}) => skir.ExpressionNode.wrapQuery(
+  query(
+    skir.ResourceQuerySource.createIdentity(
+      identity: skir.ExpressionNode.createInput(
+        binding: _id,
+        path: editorRootPath,
+      ),
+      target: skir.TypeUse.createNamed(
+        definition: _page,
+        arguments: generic ? [_text] : const [],
+      ),
+    ),
+  ),
+);
 
 skir.ExpressionNode _literal(skir.DataValue value) =>
     skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _call(
-  String operation,
-  List<skir.ExpressionNode> arguments,
-) => skir.ExpressionNode.createCall(
-  operation: skir.OperationId(value: operation),
-  arguments: arguments,
-);
-skir.ExpressionNode _field(skir.ExpressionNode value, String name) => _call(
-  "typewriter.record.field",
-  [value, _literal(skir.DataValue.wrapStringValue(name))],
-);
+skir.ExpressionNode _field(skir.ExpressionNode value, String name) =>
+    skir.ExpressionNode.createField(source: value, name: name);
 
 CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
   final name = skir.FieldDeclaration(

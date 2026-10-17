@@ -63,21 +63,20 @@ void main() {
     },
   );
   test("duration formatter rejects raw values outside shared admission", () {
-    final expression = skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: "typewriter.duration.format"),
-      arguments: [
-        skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.createDuration(
-            value: skir.Duration(
-              milliseconds: PortableDurationMilliseconds.maximum + 1,
-            ),
+    final expression = skir.ExpressionNode.createDurationFormat(
+      source: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.createDuration(
+          value: skir.Duration(
+            milliseconds: PortableDurationMilliseconds.maximum + 1,
           ),
         ),
-        skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapStringValue("MinutesAndSeconds"),
-        ),
-        skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("3")),
-      ],
+      ),
+      units: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapStringValue("MinutesAndSeconds"),
+      ),
+      fractionDigits: skir.ExpressionNode.wrapLiteral(
+        skir.DataValue.wrapInteger("3"),
+      ),
     );
     final result = PortableExpressionEvaluator(
       const {},

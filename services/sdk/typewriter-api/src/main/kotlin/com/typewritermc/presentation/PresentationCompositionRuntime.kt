@@ -125,9 +125,7 @@ internal class RuntimePresentationData(
                     val caseScope =
                         object : MatchCaseScope<Subtype>, Layout by layout {
                             override val value =
-                                Expr<Subtype, com.typewritermc.expression.MayBeMissing>(
-                                    ExpressionNode.Read(scopeBinding, ValuePath()),
-                                )
+                                com.typewritermc.expression.inputExpression<Subtype, com.typewritermc.expression.MayBeMissing>(scopeBinding)
                         }
                     state.withTarget(nodes) { caseScope.body() }
                     wireCases +=

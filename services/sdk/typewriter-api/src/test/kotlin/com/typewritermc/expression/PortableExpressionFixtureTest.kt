@@ -11,7 +11,7 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
 import com.typewritermc.checking.TypedSelection
-import com.typewritermc.presentation.ExpressionNode
+import com.typewritermc.configuration.PortableExpressionChecker
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
@@ -19,16 +19,23 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeUse
+import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.skir.SkirAuthoringValueCodec
+import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import skirout.editor.v1.expression.ExpressionNode
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.time.Duration.Companion.milliseconds
@@ -45,7 +52,11 @@ val PortableExpressionFixtureTest by testSuite {
                 },
             )
         val candidate = ExpressionBindingId("candidate")
-        val expression = ExpressionNode.Call(OperationId("typewriter.text.trim"), listOf(ExpressionNode.Read(candidate, ValuePath())))
+        val expression =
+            ExpressionNode.createTextUnary(
+                operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
+                source = testInput(candidate),
+            )
         with(FixtureReads) {
             evaluator.evaluateScoped(
                 expression,
@@ -60,9 +71,11 @@ val PortableExpressionFixtureTest by testSuite {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Local candidates must not read authored storage") })
         val candidate = ExpressionBindingId("candidate")
         val expression =
-            ExpressionNode.Call(
-                OperationId("typewriter.number.divide"),
-                listOf(ExpressionNode.Read(candidate, ValuePath()), ExpressionNode.Literal(DataValue.Integer(java.math.BigInteger.ZERO))),
+            ExpressionNode.createNumberArithmetic(
+                operation = skirout.editor.v1.expression.NumberArithmeticOperation.DIVIDE,
+                first = testInput(candidate),
+                second = testLiteral(DataValue.Integer(java.math.BigInteger.ZERO)),
+                remaining = emptyList(),
             )
         val result =
             with(FixtureReads) {
@@ -87,21 +100,90 @@ val PortableExpressionFixtureTest by testSuite {
                     ExpressionValueReader { location ->
                         val key = location.fixtureKey()
                         observed += key
-                        val configured = configuredReads[key]!!.jsonObject
+                        val exact = configuredReads[key]?.jsonObject
+                        val configured = exact ?: configuredReads.getValue(location.resource.value).jsonObject
                         if (configured["unavailable"]?.jsonPrimitive?.boolean == true) {
                             Availability.Unavailable(listOf(location))
                         } else {
-                            Availability.Available(configured.value())
+                            val value =
+                                if (exact != null) {
+                                    configured.value()
+                                } else {
+                                    location.path.segments.fold(configured.value()) { current, segment ->
+                                        val field =
+                                            segment as? PathSegment.Field ?: error("Fixture root projections require field segments")
+                                        (current.unwrapNamed() as DataValue.Record).fields.getValue(field.name)
+                                    }
+                                }
+                            Availability.Available(value)
                         }
                     },
                 )
             val bindings =
                 ExpressionBindings(
-                    mapOf(
-                        ExpressionBindingId("subject") to ValueLocation(ResourceId("subject"), ValuePath()),
-                    ),
+                    (
+                        (
+                            case["bindingTypes"]?.jsonObject?.keys ?: setOf(
+                                "subject",
+                            )
+                        ) + case["partialBindings"]?.jsonObject.orEmpty().keys
+                    ).associate { name ->
+                        ExpressionBindingId(name) to ValueLocation(ResourceId(name), ValuePath())
+                    },
                 )
-            val result = with(FixtureReads) { evaluator.evaluate(case["expression"]!!.expression(), bindings, EvaluationBudget(100, 100)) }
+            val expression = case["expression"]!!.expression()
+            run {
+                val encodedType = case.getValue("resultType")
+                val definitions =
+                    case["typeDefinitions"]?.jsonArray.orEmpty().map { encoded ->
+                        SkirTypeCodec
+                            .decode(
+                                skirout.editor.v1.type_catalog.TypeDefinition.serializer
+                                    .fromJsonCode(encoded.toString()),
+                            ).getOrThrow()
+                    }
+                val catalog = DefaultCheckedCatalog(FixtureReads.catalog, definitions)
+                val schemas =
+                    case["bindingTypes"]
+                        ?.jsonObject
+                        .orEmpty()
+                        .map { (name, encoded) ->
+                            ExpressionBindingId(name) to
+                                skirout.editor.v1.expression.ExpressionType.serializer
+                                    .fromJsonCode(encoded.toString())
+                        }.toMap()
+                val expectedType =
+                    skirout.editor.v1.expression.ExpressionType.serializer
+                        .fromJsonCode(encodedType.toString())
+                val partial =
+                    case["partialBindings"]
+                        ?.jsonObject
+                        .orEmpty()
+                        .map { (name, encoded) ->
+                            ExpressionBindingId(name) to
+                                SkirAuthoringValueCodec
+                                    .decode(
+                                        skirout.editor.v1.type_catalog.TypeSelection.serializer
+                                            .fromJsonCode(encoded.toString()),
+                                    ).getOrThrow()
+                        }.toMap()
+                var inferred: skirout.editor.v1.expression.ExpressionType? = null
+                PortableExpressionChecker(catalog::resolve, resolvePartial = catalog::resolvePartial)
+                    .checkExpressionCodes(expression, schemas, expectedType, partial, onInferred = { inferred = it }) shouldBe
+                    case.getValue("checkCodes").jsonArray.map { it.jsonPrimitive.content }
+                val encodedInferred = case.getValue("inferredType")
+                val expectedInferred =
+                    if (encodedInferred == JsonNull) {
+                        null
+                    } else {
+                        skirout.editor.v1.expression.ExpressionType.serializer
+                            .fromJsonCode(encodedInferred.toString())
+                    }
+                inferred shouldBe expectedInferred
+            }
+            val roundTrip = ExpressionNode.serializer.fromBytes(ExpressionNode.serializer.toBytes(expression))
+            ExpressionNode.serializer.toJsonCode(roundTrip) shouldBe ExpressionNode.serializer.toJsonCode(expression)
+            val result = with(FixtureReads) { evaluator.evaluate(expression, bindings, EvaluationBudget(100, 100)) }
             val expected = case["expectedByHost"]?.jsonObject?.get("kotlin")?.jsonObject ?: case["expected"]!!.jsonObject
             observed shouldBe expected["evaluatedReads"]!!.jsonArray.map { it.jsonPrimitive.content }
             when {
@@ -135,6 +217,10 @@ private fun fixturePath(): Path =
 
 private fun JsonObject.value(): DataValue =
     when {
+        "null" in this -> {
+            DataValue.Null
+        }
+
         "unfilled" in this -> {
             DataValue.Unfilled
         }
@@ -186,6 +272,13 @@ private fun JsonObject.value(): DataValue =
                             .jsonPrimitive.content
                             .toInt(),
                     ),
+                    named["arguments"]?.jsonArray.orEmpty().map { encoded ->
+                        SkirTypeCodec
+                            .decode(
+                                skirout.editor.v1.type_catalog.TypeUse.serializer
+                                    .fromJsonCode(encoded.toString()),
+                            ).getOrThrow()
+                    },
                 ),
                 named.getValue("payload").jsonObject.value(),
             )
@@ -237,64 +330,14 @@ private fun JsonObject.value(): DataValue =
         }
     }
 
-private fun JsonElement.expression(): ExpressionNode {
-    val value = jsonObject
-    return when {
-        "boolean" in value ||
-            "unfilled" in value ||
-            "integer" in value ||
-            "decimal" in value ||
-            "string" in value ||
-            "duration" in value ||
-            "timestamp" in value ||
-            "float" in value ||
-            "named" in value ||
-            "record" in value ||
-            "list" in value ||
-            "set" in value ||
-            "map" in value -> {
-            ExpressionNode.Literal(value.value())
-        }
-
-        "read" in value -> {
-            ExpressionNode.Read(
-                ExpressionBindingId(value.getValue("read").jsonPrimitive.content),
-                ValuePath(value.getValue("path").jsonArray.map { PathSegment.Field(it.jsonPrimitive.content) }),
-            )
-        }
-
-        "call" in value -> {
-            ExpressionNode.Call(
-                OperationId(value.getValue("call").jsonPrimitive.content),
-                value.getValue("arguments").jsonArray.map(JsonElement::expression),
-            )
-        }
-
-        "and" in value -> {
-            value.binary(ExpressionNode::And)
-        }
-
-        "orElse" in value -> {
-            value.binary(ExpressionNode::OrElse)
-        }
-
-        else -> {
-            error("Unknown fixture expression $value")
-        }
-    }
-}
-
-private fun JsonObject.binary(create: (ExpressionNode, ExpressionNode) -> ExpressionNode): ExpressionNode {
-    val parts = values.single() as JsonArray
-    return create(parts[0].expression(), parts[1].expression())
-}
+private fun JsonElement.expression(): ExpressionNode = ExpressionNode.serializer.fromJsonCode(toString())
 
 private fun ValueLocation.fixtureKey(): String {
     val fields = path.segments.map { (it as PathSegment.Field).name }
     return if (fields.isEmpty()) resource.value else "${resource.value}:${fields.joinToString(".")}"
 }
 
-private object FixtureReads : AuthoredReads {
+internal object FixtureReads : AuthoredReads {
     override val catalog = CatalogGeneration("expression fixture")
     override val readContext = com.typewritermc.authoring.ReadContext(catalog)
 

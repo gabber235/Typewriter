@@ -11,16 +11,82 @@ void main() {
     final document = jsonDecode(source) as Map<String, Object?>;
     final cases = (document["cases"]! as List<Object?>)
         .cast<Map<String, Object?>>();
+    expect(
+      {
+        for (final fixture in cases)
+          if (fixture["dartBinaryRoundTripKnownIssue"] != null) fixture["id"],
+      },
+      {"portable_whitespace_bom_and_nel", "portable_whitespace_trim"},
+      reason: "Only the two deferred leading U+FEFF decoder cases are exempt",
+    );
 
     for (final fixture in cases) {
+      final expression = skir.ExpressionNode.serializer.fromJson(
+        fixture["expression"],
+      );
+      final encoded = skir.ExpressionNode.serializer.toJsonCode(expression);
+      expect(
+        skir.ExpressionNode.serializer.toJsonCode(
+          skir.ExpressionNode.serializer.fromJsonCode(encoded),
+        ),
+        encoded,
+        reason: "${fixture["id"]}: JSON round trip",
+      );
+      // The pinned Dart decoder drops a leading U+FEFF. Its repair is deferred.
+      if (fixture["dartBinaryRoundTripKnownIssue"] == null) {
+        expect(
+          skir.ExpressionNode.serializer.toJsonCode(
+            skir.ExpressionNode.serializer.fromBytes(
+              skir.ExpressionNode.serializer.toBytes(expression),
+            ),
+          ),
+          encoded,
+          reason: "${fixture["id"]}: binary round trip",
+        );
+      }
+      skir.ExpressionType? inferred;
+      final codes = checkPortableExpression(
+        expression,
+        catalog: _fixtureCatalog(fixture),
+        bindings: {
+          for (final entry
+              in (fixture["bindingTypes"] as Map<String, Object?>? ?? const {})
+                  .entries)
+            skir.ExpressionBindingId(value: entry.key): skir
+                .ExpressionType
+                .serializer
+                .fromJson(entry.value),
+        },
+        partialBindings: {
+          for (final entry
+              in (fixture["partialBindings"] as Map<String, Object?>? ??
+                      const {})
+                  .entries)
+            skir.ExpressionBindingId(value: entry.key): skir
+                .TypeSelection
+                .serializer
+                .fromJson(entry.value),
+        },
+        expectedOutput: skir.ExpressionType.serializer.fromJson(
+          fixture["resultType"],
+        ),
+        onInferred: (value) => inferred = value,
+      );
+      expect(codes, fixture["checkCodes"], reason: "${fixture["id"]}: checker");
+      expect(fixture.containsKey("inferredType"), isTrue);
+      expect(
+        inferred,
+        fixture["inferredType"] == null
+            ? null
+            : skir.ExpressionType.serializer.fromJson(fixture["inferredType"]),
+        reason: "${fixture["id"]}: inferred type",
+      );
       final reads = _reads(fixture["reads"]! as Map<String, Object?>);
       final evaluator = PortableExpressionEvaluator(
         reads,
         budget: _budget(maxSteps: 100, maxCollectionItems: 100),
       );
-      final result = evaluator.evaluate(
-        _expression(fixture["expression"]! as Map<String, Object?>),
-      );
+      final result = evaluator.evaluate(expression);
       final byHost = fixture["expectedByHost"] as Map<String, Object?>?;
       final expected =
           (byHost?["dart"] ?? fixture["expected"])! as Map<String, Object?>;
@@ -68,7 +134,7 @@ void main() {
   test("uses ordered short circuit and missing only fallback", () {
     final missing = skir.ExpressionBindingId(value: "missing");
     final evaluator = PortableExpressionEvaluator(const {}, budget: _budget());
-    final unread = skir.ExpressionNode.createRead(
+    final unread = skir.ExpressionNode.createInput(
       binding: missing,
       path: skir.ValuePath(segments: const []),
     );
@@ -86,10 +152,7 @@ void main() {
 
     final failed = evaluator.evaluate(
       skir.ExpressionNode.createOrElse(
-        input: skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: "unknown"),
-          arguments: const [],
-        ),
+        input: skir.ExpressionNode.unknown,
         fallback: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("fallback"),
         ),
@@ -119,7 +182,7 @@ void main() {
     );
 
     final result = evaluator.evaluate(
-      skir.ExpressionNode.createRead(
+      skir.ExpressionNode.createInput(
         binding: skir.ExpressionBindingId(value: "configured_value"),
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: "visible")],
@@ -142,23 +205,6 @@ void main() {
     );
   });
 
-  test("publishes the complete portable operation registry", () {
-    expect(authoredPortableOperationIds, hasLength(75));
-    expect(
-      authoredPortableOperationIds,
-      containsAll(const {
-        "typewriter.rule.minimum",
-        "typewriter.rule.nonEmpty",
-        "typewriter.rule.singleLine",
-        "typewriter.collection.size",
-        "typewriter.number.gt",
-        "typewriter.record.field",
-        "typewriter.link.target",
-        "typewriter.text.interpolate",
-      }),
-    );
-  });
-
   test("evaluates generated helper and rule operations", () {
     final evaluator = PortableExpressionEvaluator(const {}, budget: _budget());
     final collection = skir.DataValue.createListValue(
@@ -177,51 +223,72 @@ void main() {
         ),
       ],
     );
-    final checks = <String, ({List<skir.DataValue> arguments, String value})>{
-      "typewriter.rule.nonEmpty": (
-        arguments: [skir.DataValue.wrapStringValue("value")],
-        value: "boolean:true",
+    final checks = <String, (skir.ExpressionNode, String)>{
+      "nonempty": (
+        skir.ExpressionNode.createRuleUnary(
+          operation: skir.RuleUnaryOperation.nonEmpty,
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("value"),
+          ),
+        ),
+        "boolean:true",
       ),
-      "typewriter.rule.singleLine": (
-        arguments: [skir.DataValue.wrapStringValue("one line")],
-        value: "boolean:true",
+      "single line": (
+        skir.ExpressionNode.createRuleUnary(
+          operation: skir.RuleUnaryOperation.singleLine,
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("one line"),
+          ),
+        ),
+        "boolean:true",
       ),
-      "typewriter.collection.size": (
-        arguments: [collection],
-        value: "integer:1",
+      "size": (
+        skir.ExpressionNode.wrapCollectionSize(
+          skir.ExpressionNode.wrapLiteral(collection),
+        ),
+        "integer:1",
       ),
-      "typewriter.number.gt": (
-        arguments: [
-          skir.DataValue.wrapInteger("9"),
-          skir.DataValue.wrapInteger("4"),
-        ],
-        value: "boolean:true",
+      "greater": (
+        skir.ExpressionNode.createNumberCompare(
+          operation: skir.NumberCompareOperation.greater,
+          left: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("9"),
+          ),
+          right: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("4"),
+          ),
+        ),
+        "boolean:true",
       ),
-      "typewriter.rule.minimum": (
-        arguments: [
-          skir.DataValue.wrapInteger("5"),
-          skir.DataValue.wrapInteger("5"),
-          skir.DataValue.wrapBoolean(true),
-        ],
-        value: "boolean:true",
+      "minimum": (
+        skir.ExpressionNode.createRuleNumericBound(
+          direction: skir.BoundDirection.minimum,
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("5"),
+          ),
+          bound: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapInteger("5"),
+          ),
+          inclusive: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapBoolean(true),
+          ),
+        ),
+        "boolean:true",
       ),
-      "typewriter.record.field": (
-        arguments: [record, skir.DataValue.wrapStringValue("title")],
-        value: "string:Quest",
+      "field": (
+        skir.ExpressionNode.createField(
+          source: skir.ExpressionNode.wrapLiteral(record),
+          name: "title",
+        ),
+        "string:Quest",
       ),
     };
-
     for (final entry in checks.entries) {
-      final result = evaluator.evaluate(
-        skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: entry.key),
-          arguments: entry.value.arguments.map(skir.ExpressionNode.wrapLiteral),
-        ),
-      );
+      final result = evaluator.evaluate(entry.value.$1);
       expect(result, isA<PortableExpressionAvailable>(), reason: entry.key);
       expect(
         _valueKey((result as PortableExpressionAvailable).value),
-        entry.value.value,
+        entry.value.$2,
         reason: entry.key,
       );
     }
@@ -268,7 +335,13 @@ void main() {
         (leftMap, rightMap),
       ]) {
         expect(
-          _booleanCall("typewriter.value.eq", [values.$1, values.$2]),
+          _booleanNode(
+            skir.ExpressionNode.createValueCompare(
+              operation: skir.ValueCompareOperation.equal,
+              left: skir.ExpressionNode.wrapLiteral(values.$1),
+              right: skir.ExpressionNode.wrapLiteral(values.$2),
+            ),
+          ),
           true,
         );
       }
@@ -303,10 +376,12 @@ void main() {
         (rightSet, "set"),
         (rightMap, "map"),
       ]) {
-        final value = _availableCall("typewriter.collection.access", [
-          keyed,
-          lookup.$1,
-        ]);
+        final value = _availableNode(
+          skir.ExpressionNode.createCollectionAccess(
+            source: skir.ExpressionNode.wrapLiteral(keyed),
+            index: skir.ExpressionNode.wrapLiteral(lookup.$1),
+          ),
+        );
         expect(_valueKey(value), "string:${lookup.$2}");
       }
     },
@@ -321,7 +396,11 @@ void main() {
       ),
     );
     expect(
-      _availableCall("typewriter.link.target", [link]),
+      _availableNode(
+        skir.ExpressionNode.wrapLinkTarget(
+          skir.ExpressionNode.wrapLiteral(link),
+        ),
+      ),
       skir.ResourceId(value: "page:first").toExpressionValue(),
     );
   });
@@ -341,28 +420,56 @@ void main() {
     );
 
     expect(
-      _booleanCall("typewriter.value.eq", [link("one"), link("one")]),
+      _booleanNode(
+        skir.ExpressionNode.createValueCompare(
+          operation: skir.ValueCompareOperation.equal,
+          left: skir.ExpressionNode.wrapLiteral(link("one")),
+          right: skir.ExpressionNode.wrapLiteral(link("one")),
+        ),
+      ),
       true,
     );
     expect(
-      _booleanCall("typewriter.value.eq", [link("one"), link("two")]),
+      _booleanNode(
+        skir.ExpressionNode.createValueCompare(
+          operation: skir.ValueCompareOperation.equal,
+          left: skir.ExpressionNode.wrapLiteral(link("one")),
+          right: skir.ExpressionNode.wrapLiteral(link("two")),
+        ),
+      ),
       false,
     );
   });
 
   test("regex replacement preserves escapes and rejects absent captures", () {
-    final escaped = _availableCall("typewriter.regex.replace", [
-      skir.DataValue.wrapStringValue("a"),
-      skir.DataValue.wrapStringValue("(a)"),
-      skir.DataValue.wrapStringValue(r"\$1"),
-    ]);
+    final escaped = _availableNode(
+      skir.ExpressionNode.createRegexReplace(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("a"),
+        ),
+        pattern: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("(a)"),
+        ),
+        replacement: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(r"\$1"),
+        ),
+      ),
+    );
     expect(_valueKey(escaped), r"string:$1");
 
-    final failed = _call("typewriter.regex.replace", [
-      skir.DataValue.wrapStringValue("a"),
-      skir.DataValue.wrapStringValue("(a)"),
-      skir.DataValue.wrapStringValue(r"$99"),
-    ]);
+    final failed = _evaluate(
+      skir.ExpressionNode.createRegexReplace(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("a"),
+        ),
+        pattern: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("(a)"),
+        ),
+        replacement: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(r"$99"),
+        ),
+      ),
+    );
     expect(failed, isA<PortableExpressionFailed>());
     expect(
       (failed as PortableExpressionFailed).code,
@@ -380,10 +487,17 @@ void main() {
       expect(_regexMatches("\u00a0", r"[\s]"), isTrue);
 
       for (final pattern in [r"\v", r"[\v]"]) {
-        final result = _call("typewriter.regex.matches", [
-          skir.DataValue.wrapStringValue("\n"),
-          skir.DataValue.wrapStringValue(pattern),
-        ]);
+        final result = _evaluate(
+          skir.ExpressionNode.createRegexTest(
+            mode: skir.RegexMatchMode.search,
+            source: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("\n"),
+            ),
+            pattern: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(pattern),
+            ),
+          ),
+        );
         expect(result, isA<PortableExpressionFailed>());
         expect(
           (result as PortableExpressionFailed).code,
@@ -395,10 +509,18 @@ void main() {
 
   test("decimal division uses 34 significant digits and half even rounding", () {
     void expectQuotient(String dividend, String divisor, String expected) {
-      final value = _availableCall("typewriter.number.divide", [
-        skir.DataValue.wrapDecimal(dividend),
-        skir.DataValue.wrapDecimal(divisor),
-      ]);
+      final value = _availableNode(
+        skir.ExpressionNode.createNumberArithmetic(
+          operation: skir.NumberArithmeticOperation.divide,
+          first: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapDecimal(dividend),
+          ),
+          second: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapDecimal(divisor),
+          ),
+          remaining: [],
+        ),
+      );
       expect(_valueKey(value), "decimal:$expected");
     }
 
@@ -476,27 +598,20 @@ void main() {
   });
 
   test("charges regex search and replacement output to the step budget", () {
-    skir.ExpressionNode call(String operation, List<String> values) =>
-        skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: operation),
-          arguments: values
-              .map(
-                (value) => skir.ExpressionNode.wrapLiteral(
-                  skir.DataValue.wrapStringValue(value),
-                ),
-              )
-              .toList(),
-        );
-
     final anchorSearch =
         PortableExpressionEvaluator(
           const {},
           budget: _budget(maxSteps: 50),
         ).evaluate(
-          call("typewriter.regex.matches", [
-            List.filled(200, "x").join(),
-            r"^$",
-          ]),
+          skir.ExpressionNode.createRegexTest(
+            mode: skir.RegexMatchMode.search,
+            source: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(List.filled(200, "x").join()),
+            ),
+            pattern: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(r"^$"),
+            ),
+          ),
         );
     expect(anchorSearch, isA<PortableExpressionFailed>());
     expect(
@@ -509,11 +624,19 @@ void main() {
           const {},
           budget: _budget(maxSteps: 30),
         ).evaluate(
-          call("typewriter.regex.replace", [
-            "",
-            "",
-            List.filled(20, "replacement").join(),
-          ]),
+          skir.ExpressionNode.createRegexReplace(
+            source: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(""),
+            ),
+            pattern: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(""),
+            ),
+            replacement: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue(
+                List.filled(20, "replacement").join(),
+              ),
+            ),
+          ),
         );
     expect(replacementOutput, isA<PortableExpressionFailed>());
     expect(
@@ -523,15 +646,8 @@ void main() {
   });
 
   test("bounds text expansion and uses Unicode character boundaries", () {
-    skir.ExpressionNode call(String operation, List<skir.DataValue> values) =>
-        skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: operation),
-          arguments: values.map(skir.ExpressionNode.wrapLiteral),
-        );
-
-    PortableExpressionResult evaluate(
-      String operation,
-      List<skir.DataValue> values, {
+    PortableExpressionResult evaluateNode(
+      skir.ExpressionNode node, {
       int maxSteps = 100,
       int maxCollectionItems = 100,
     }) => PortableExpressionEvaluator(
@@ -540,23 +656,37 @@ void main() {
         maxSteps: maxSteps,
         maxCollectionItems: maxCollectionItems,
       ),
-    ).evaluate(call(operation, values));
+    ).evaluate(node);
 
-    final replaced = evaluate("typewriter.text.replace", [
-      skir.DataValue.wrapStringValue("😀"),
-      skir.DataValue.wrapStringValue(""),
-      skir.DataValue.wrapStringValue("_"),
-    ]);
+    final replaced = evaluateNode(
+      skir.ExpressionNode.createTextReplace(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("😀"),
+        ),
+        target: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(""),
+        ),
+        replacement: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("_"),
+        ),
+      ),
+    );
     expect(replaced, isA<PortableExpressionAvailable>());
     expect(
       _valueKey((replaced as PortableExpressionAvailable).value),
       "string:_😀_",
     );
 
-    final split = evaluate("typewriter.text.split", [
-      skir.DataValue.wrapStringValue("😀x"),
-      skir.DataValue.wrapStringValue(""),
-    ]);
+    final split = evaluateNode(
+      skir.ExpressionNode.createTextSplit(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("😀x"),
+        ),
+        separator: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(""),
+        ),
+      ),
+    );
     expect(split, isA<PortableExpressionAvailable>());
     final splitItems =
         ((split as PortableExpressionAvailable).value
@@ -567,10 +697,16 @@ void main() {
       "string:😀",
       "string:x",
     ]);
-    final emptySplit = evaluate("typewriter.text.split", [
-      skir.DataValue.wrapStringValue(""),
-      skir.DataValue.wrapStringValue(""),
-    ]);
+    final emptySplit = evaluateNode(
+      skir.ExpressionNode.createTextSplit(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(""),
+        ),
+        separator: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(""),
+        ),
+      ),
+    );
     expect(emptySplit, isA<PortableExpressionAvailable>());
     expect(
       ((emptySplit as PortableExpressionAvailable).value
@@ -584,23 +720,42 @@ void main() {
       List.filled(20, "value").join(),
     );
     final amplified = [
-      evaluate("typewriter.text.replace", [
-        skir.DataValue.wrapStringValue("a"),
-        skir.DataValue.wrapStringValue(""),
-        large,
-      ], maxSteps: 30),
-      evaluate("typewriter.text.join", [
-        skir.DataValue.createListValue(
-          items: [
-            skir.ListItem(
-              id: skir.ItemId(value: "only"),
-              value: large,
-            ),
-          ],
+      evaluateNode(
+        skir.ExpressionNode.createTextReplace(
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("a"),
+          ),
+          target: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(""),
+          ),
+          replacement: skir.ExpressionNode.wrapLiteral(large),
         ),
-        skir.DataValue.wrapStringValue(""),
-      ], maxSteps: 30),
-      evaluate("typewriter.text.interpolate", [large], maxSteps: 30),
+        maxSteps: 30,
+      ),
+      evaluateNode(
+        skir.ExpressionNode.createTextJoin(
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.createListValue(
+              items: [
+                skir.ListItem(
+                  id: skir.ItemId(value: "only"),
+                  value: large,
+                ),
+              ],
+            ),
+          ),
+          separator: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(""),
+          ),
+        ),
+        maxSteps: 30,
+      ),
+      evaluateNode(
+        skir.ExpressionNode.createTextInterpolate(
+          parts: [skir.ExpressionNode.wrapLiteral(large)],
+        ),
+        maxSteps: 30,
+      ),
     ];
     for (final result in amplified) {
       expect(result, isA<PortableExpressionFailed>());
@@ -610,10 +765,17 @@ void main() {
       );
     }
 
-    final splitLimit = evaluate("typewriter.text.split", [
-      skir.DataValue.wrapStringValue("😀x"),
-      skir.DataValue.wrapStringValue(""),
-    ], maxCollectionItems: 1);
+    final splitLimit = evaluateNode(
+      skir.ExpressionNode.createTextSplit(
+        source: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue("😀x"),
+        ),
+        separator: skir.ExpressionNode.wrapLiteral(
+          skir.DataValue.wrapStringValue(""),
+        ),
+      ),
+      maxCollectionItems: 1,
+    );
     expect(splitLimit, isA<PortableExpressionFailed>());
     expect(
       (splitLimit as PortableExpressionFailed).code,
@@ -621,26 +783,43 @@ void main() {
     );
   });
 
-  test("validates operation arity and finite scientific notation", () {
-    final comparison = _availableCall("typewriter.number.gt", [
-      skir.DataValue.wrapFloat(1e-8),
-      skir.DataValue.wrapFloat(0),
-    ]);
-    expect(_valueKey(comparison), "boolean:true");
+  test(
+    "rejects malformed typed nodes and accepts finite scientific notation",
+    () {
+      final comparison = _availableNode(
+        skir.ExpressionNode.createNumberCompare(
+          operation: skir.NumberCompareOperation.greater,
+          left: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(1e-8)),
+          right: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(0)),
+        ),
+      );
+      expect(_valueKey(comparison), "boolean:true");
 
-    final missing = _call("typewriter.number.gt", [
-      skir.DataValue.wrapInteger("1"),
-    ]);
-    expect(missing, isA<PortableExpressionFailed>());
-    expect((missing as PortableExpressionFailed).code, "operation_arity");
-
-    final extra = _call("typewriter.boolean.not", [
-      skir.DataValue.wrapBoolean(true),
-      skir.DataValue.wrapBoolean(false),
-    ]);
-    expect(extra, isA<PortableExpressionFailed>());
-    expect((extra as PortableExpressionFailed).code, "operation_arity");
-  });
+      final missing = _evaluate(
+        skir.ExpressionNode.serializer.fromJson({
+          "kind": "number_compare",
+          "value": {
+            "operation": "greater",
+            "left": {
+              "kind": "literal",
+              "value": {"kind": "integer", "value": "1"},
+            },
+          },
+        }),
+      );
+      expect(missing, isA<PortableExpressionFailed>());
+      expect((missing as PortableExpressionFailed).code, "unknown_expression");
+      final unknownOperation = _evaluate(
+        skir.ExpressionNode.createTextUnary(
+          operation: skir.TextUnaryOperation.unknown,
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue("text"),
+          ),
+        ),
+      );
+      expect(unknownOperation, isA<PortableExpressionFailed>());
+    },
+  );
 
   test("deep authored values return a bounded evaluation failure", () {
     final actualType = skir.NamedTypeUse(
@@ -661,7 +840,13 @@ void main() {
       );
     }
 
-    final result = _call("typewriter.value.eq", [value, value]);
+    final result = _evaluate(
+      skir.ExpressionNode.createValueCompare(
+        operation: skir.ValueCompareOperation.equal,
+        left: skir.ExpressionNode.wrapLiteral(value),
+        right: skir.ExpressionNode.wrapLiteral(value),
+      ),
+    );
 
     expect(result, isA<PortableExpressionFailed>());
     expect((result as PortableExpressionFailed).code, "value_depth_limit");
@@ -669,9 +854,14 @@ void main() {
 
   test("uses portable whitespace and partial uniqueness semantics", () {
     for (final whitespace in ["\u0085", "\ufeff", "\u001c"]) {
-      final nonBlank = _availableCall("typewriter.rule.nonBlank", [
-        skir.DataValue.wrapStringValue(whitespace),
-      ]);
+      final nonBlank = _availableNode(
+        skir.ExpressionNode.createRuleUnary(
+          operation: skir.RuleUnaryOperation.nonBlank,
+          source: skir.ExpressionNode.wrapLiteral(
+            skir.DataValue.wrapStringValue(whitespace),
+          ),
+        ),
+      );
       expect(
         _valueKey(nonBlank),
         whitespace == "\u001c" ? "boolean:true" : "boolean:false",
@@ -689,43 +879,51 @@ void main() {
           ],
         );
 
-    final disproved = _call("typewriter.rule.unique", [
-      values([
-        skir.DataValue.wrapStringValue("same"),
-        skir.DataValue.unfilled,
-        skir.DataValue.wrapStringValue("same"),
-      ]),
-    ]);
+    final disproved = _evaluate(
+      skir.ExpressionNode.createRuleUnary(
+        operation: skir.RuleUnaryOperation.unique,
+        source: skir.ExpressionNode.wrapLiteral(
+          values([
+            skir.DataValue.wrapStringValue("same"),
+            skir.DataValue.unfilled,
+            skir.DataValue.wrapStringValue("same"),
+          ]),
+        ),
+      ),
+    );
     expect(disproved, isA<PortableExpressionAvailable>());
     expect(
       _valueKey((disproved as PortableExpressionAvailable).value),
       "boolean:false",
     );
 
-    final unknown = _call("typewriter.rule.unique", [
-      values([
-        skir.DataValue.wrapStringValue("known"),
-        skir.DataValue.unfilled,
-      ]),
-    ]);
+    final unknown = _evaluate(
+      skir.ExpressionNode.createRuleUnary(
+        operation: skir.RuleUnaryOperation.unique,
+        source: skir.ExpressionNode.wrapLiteral(
+          values([
+            skir.DataValue.wrapStringValue("known"),
+            skir.DataValue.unfilled,
+          ]),
+        ),
+      ),
+    );
     expect(unknown, isA<PortableExpressionUnavailable>());
 
-    final size = _availableCall("typewriter.collection.size", [
-      values([skir.DataValue.unfilled]),
-    ]);
+    final size = _availableNode(
+      skir.ExpressionNode.wrapCollectionSize(
+        skir.ExpressionNode.wrapLiteral(values([skir.DataValue.unfilled])),
+      ),
+    );
     expect(_valueKey(size), "integer:1");
   });
 
   test("evaluates the complete collection expression vocabulary", () {
-    final item = skir.ExpressionBindingId(value: "item");
-    final accumulator = skir.ExpressionBindingId(value: "accumulator");
-    final left = skir.ExpressionBindingId(value: "left");
-    final right = skir.ExpressionBindingId(value: "right");
     final input = _list("source", ["3", "1", "2", "1"]);
-    final itemRead = _bindingRead(item);
-    final accumulatorRead = _bindingRead(accumulator);
-    final leftRead = _bindingRead(left);
-    final rightRead = _bindingRead(right);
+    final itemRead = _local(0);
+    final accumulatorRead = _local(0);
+    final leftRead = _local(0);
+    final rightRead = _local(1);
     final one = skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapInteger("1"),
     );
@@ -740,22 +938,17 @@ void main() {
       return result as PortableExpressionAvailable;
     }
 
-    skir.ExpressionNode unary(
-      String operation,
-      skir.ExpressionNode body, {
-      List<skir.ExpressionNode> arguments = const [],
-    }) => _collectionNode(
-      operation,
-      input,
-      bindings: [item],
-      arguments: arguments,
-      body: body,
-    );
-
     expect(
       _valueKey(
         available(
-          unary("any", _callNode("typewriter.number.gt", [itemRead, two])),
+          skir.ExpressionNode.createAny(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberCompare(
+              operation: skir.NumberCompareOperation.greater,
+              left: itemRead,
+              right: two,
+            ),
+          ),
         ).value,
       ),
       "boolean:true",
@@ -763,7 +956,14 @@ void main() {
     expect(
       _valueKey(
         available(
-          unary("all", _callNode("typewriter.number.gt", [itemRead, one])),
+          skir.ExpressionNode.createAll(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberCompare(
+              operation: skir.NumberCompareOperation.greater,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       "boolean:false",
@@ -771,7 +971,14 @@ void main() {
     expect(
       _valueKey(
         available(
-          unary("none", _callNode("typewriter.number.lt", [itemRead, one])),
+          skir.ExpressionNode.createNone(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberCompare(
+              operation: skir.NumberCompareOperation.less,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       "boolean:true",
@@ -779,7 +986,14 @@ void main() {
     expect(
       _valueKey(
         available(
-          unary("count", _callNode("typewriter.value.eq", [itemRead, one])),
+          skir.ExpressionNode.createCount(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createValueCompare(
+              operation: skir.ValueCompareOperation.equal,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       "integer:2",
@@ -787,7 +1001,14 @@ void main() {
     expect(
       _valueKey(
         available(
-          unary("find", _callNode("typewriter.value.eq", [itemRead, one])),
+          skir.ExpressionNode.createFind(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createValueCompare(
+              operation: skir.ValueCompareOperation.equal,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       "integer:1",
@@ -795,7 +1016,14 @@ void main() {
     expect(
       _valueKey(
         available(
-          unary("find_last", _callNode("typewriter.value.eq", [itemRead, one])),
+          skir.ExpressionNode.createFindLast(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createValueCompare(
+              operation: skir.ValueCompareOperation.equal,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       "integer:1",
@@ -803,7 +1031,14 @@ void main() {
     expect(
       _integerItems(
         available(
-          unary("filter", _callNode("typewriter.number.gt", [itemRead, one])),
+          skir.ExpressionNode.createFilter(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberCompare(
+              operation: skir.NumberCompareOperation.greater,
+              left: itemRead,
+              right: one,
+            ),
+          ),
         ).value,
       ),
       [3, 2],
@@ -811,31 +1046,63 @@ void main() {
     expect(
       _integerItems(
         available(
-          unary("map", _callNode("typewriter.number.add", [itemRead, one])),
+          skir.ExpressionNode.createMap(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberArithmetic(
+              operation: skir.NumberArithmeticOperation.add,
+              first: itemRead,
+              second: one,
+              remaining: [],
+            ),
+          ),
         ).value,
       ),
       [4, 2, 3, 2],
     );
-    expect(_integerItems(available(unary("distinct_by", itemRead)).value), [
-      3,
-      1,
-      2,
-    ]);
-    expect(_integerItems(available(unary("sort_by", itemRead)).value), [
-      1,
-      1,
-      2,
-      3,
-    ]);
     expect(
-      _valueKey(available(unary("unique_by", itemRead)).value),
+      _integerItems(
+        available(
+          skir.ExpressionNode.createDistinctBy(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: itemRead,
+          ),
+        ).value,
+      ),
+      [3, 1, 2],
+    );
+    expect(
+      _integerItems(
+        available(
+          skir.ExpressionNode.createSortBy(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            descending: null,
+            key: itemRead,
+          ),
+        ).value,
+      ),
+      [1, 1, 2, 3],
+    );
+    expect(
+      _valueKey(
+        available(
+          skir.ExpressionNode.createUniqueBy(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: itemRead,
+          ),
+        ).value,
+      ),
       "boolean:false",
     );
 
     final groups = available(
-      unary(
-        "group_by",
-        _callNode("typewriter.number.remainder", [itemRead, two]),
+      skir.ExpressionNode.createGroupBy(
+        source: skir.ExpressionNode.wrapLiteral(input),
+        body: skir.ExpressionNode.createNumberArithmetic(
+          operation: skir.NumberArithmeticOperation.remainder,
+          first: itemRead,
+          second: two,
+          remaining: [],
+        ),
       ),
     ).value;
     expect(_groupSizes(groups), {"integer:1": 3, "integer:0": 1});
@@ -854,46 +1121,69 @@ void main() {
     );
     expect(
       _integerItems(
-        available(unary("flat_map", skir.ExpressionNode.wrapLiteral(nested)))
-            .value,
+        available(
+          skir.ExpressionNode.createFlatMap(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.wrapLiteral(nested),
+          ),
+        ).value,
       ),
       [7, 8, 7, 8, 7, 8, 7, 8],
     );
 
-    expect(_integerItems(available(_collectionNode("distinct", input)).value), [
-      3,
-      1,
-      2,
-    ]);
-    expect(_integerItems(available(_collectionNode("reverse", input)).value), [
-      1,
-      2,
-      1,
-      3,
-    ]);
     expect(
       _integerItems(
-        available(_collectionNode("take", input, arguments: [two])).value,
+        available(
+          skir.ExpressionNode.wrapDistinct(
+            skir.ExpressionNode.wrapLiteral(input),
+          ),
+        ).value,
+      ),
+      [3, 1, 2],
+    );
+    expect(
+      _integerItems(
+        available(
+          skir.ExpressionNode.wrapReverse(
+            skir.ExpressionNode.wrapLiteral(input),
+          ),
+        ).value,
+      ),
+      [1, 2, 1, 3],
+    );
+    expect(
+      _integerItems(
+        available(
+          skir.ExpressionNode.createTake(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            count: two,
+          ),
+        ).value,
       ),
       [3, 1],
     );
     expect(
       _integerItems(
-        available(_collectionNode("skip", input, arguments: [two])).value,
+        available(
+          skir.ExpressionNode.createSkip(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            count: two,
+          ),
+        ).value,
       ),
       [2, 1],
     );
     expect(
       _valueKey(
         available(
-          _collectionNode(
-            "reduce",
-            input,
-            bindings: [accumulator, item],
-            body: _callNode("typewriter.number.add", [
-              accumulatorRead,
-              itemRead,
-            ]),
+          skir.ExpressionNode.createReduce(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: skir.ExpressionNode.createNumberArithmetic(
+              operation: skir.NumberArithmeticOperation.add,
+              first: accumulatorRead,
+              second: _local(1),
+              remaining: [],
+            ),
           ),
         ).value,
       ),
@@ -902,17 +1192,17 @@ void main() {
     expect(
       _valueKey(
         available(
-          _collectionNode(
-            "fold",
-            input,
-            bindings: [accumulator, item],
-            arguments: [
-              skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("10")),
-            ],
-            body: _callNode("typewriter.number.add", [
-              accumulatorRead,
-              itemRead,
-            ]),
+          skir.ExpressionNode.createFold(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            initial: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapInteger("10"),
+            ),
+            body: skir.ExpressionNode.createNumberArithmetic(
+              operation: skir.NumberArithmeticOperation.add,
+              first: accumulatorRead,
+              second: _local(1),
+              remaining: [],
+            ),
           ),
         ).value,
       ),
@@ -921,14 +1211,14 @@ void main() {
     expect(
       _integerItems(
         available(
-          _collectionNode(
-            "sort_with",
-            input,
-            bindings: [left, right],
-            body: _callNode("typewriter.number.subtract", [
-              leftRead,
-              rightRead,
-            ]),
+          skir.ExpressionNode.createSortWith(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            comparator: skir.ExpressionNode.createNumberArithmetic(
+              operation: skir.NumberArithmeticOperation.subtract,
+              first: leftRead,
+              second: rightRead,
+              remaining: [],
+            ),
           ),
         ).value,
       ),
@@ -937,18 +1227,21 @@ void main() {
   });
 
   test("collection expressions enforce shape and item budgets", () {
-    final item = skir.ExpressionBindingId(value: "item");
     final input = _list("source", ["3", "1", "2"]);
-    final predicate = _callNode("typewriter.number.gt", [
-      _bindingRead(item),
-      skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("2")),
-    ]);
+    final predicate = skir.ExpressionNode.createNumberCompare(
+      operation: skir.NumberCompareOperation.greater,
+      left: _local(0),
+      right: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("2")),
+    );
     final shortCircuit =
         PortableExpressionEvaluator(
           const {},
           budget: _budget(maxCollectionItems: 1),
         ).evaluate(
-          _collectionNode("any", input, bindings: [item], body: predicate),
+          skir.ExpressionNode.createAny(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: predicate,
+          ),
         );
     expect(shortCircuit, isA<PortableExpressionAvailable>());
 
@@ -957,11 +1250,9 @@ void main() {
           const {},
           budget: _budget(maxCollectionItems: 2),
         ).evaluate(
-          _collectionNode(
-            "map",
-            input,
-            bindings: [item],
-            body: _bindingRead(item),
+          skir.ExpressionNode.createMap(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            body: _local(0),
           ),
         );
     expect(exhausted, isA<PortableExpressionFailed>());
@@ -970,53 +1261,30 @@ void main() {
       "expression_collection_limit",
     );
 
-    final duplicate = PortableExpressionEvaluator(const {}, budget: _budget())
-        .evaluate(
-          _collectionNode(
-            "fold",
-            input,
-            bindings: [item, item],
-            arguments: [
-              skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("0")),
-            ],
-            body: _bindingRead(item),
+    final invalidLocal =
+        PortableExpressionEvaluator(const {}, budget: _budget()).evaluate(
+          skir.ExpressionNode.createFold(
+            source: skir.ExpressionNode.wrapLiteral(input),
+            initial: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapInteger("0"),
+            ),
+            body: _local(2),
           ),
         );
-    expect(duplicate, isA<PortableExpressionFailed>());
+    expect(invalidLocal, isA<PortableExpressionFailed>());
     expect(
-      (duplicate as PortableExpressionFailed).code,
-      "duplicate_collection_binding",
+      (invalidLocal as PortableExpressionFailed).code,
+      "invalid_expression_local",
     );
   });
 }
 
-skir.ExpressionNode _collectionNode(
-  String operation,
-  skir.DataValue input, {
-  List<skir.ExpressionBindingId> bindings = const [],
-  List<skir.ExpressionNode> arguments = const [],
-  skir.ExpressionNode? body,
-}) => skir.ExpressionNode.createCollection(
-  operation: skir.OperationId(value: "typewriter.collection.$operation"),
-  input: skir.ExpressionNode.wrapLiteral(input),
-  bindings: bindings,
-  arguments: arguments,
-  body: body,
-);
-
-skir.ExpressionNode _bindingRead(skir.ExpressionBindingId binding) =>
-    skir.ExpressionNode.createRead(
-      binding: binding,
-      path: skir.ValuePath(segments: const []),
+skir.ExpressionNode _local(int slot, {int depth = 0}) =>
+    skir.ExpressionNode.createLocal(
+      depth: depth,
+      slot: slot,
+      path: skir.ValuePath.defaultInstance,
     );
-
-skir.ExpressionNode _callNode(
-  String operation,
-  List<skir.ExpressionNode> arguments,
-) => skir.ExpressionNode.createCall(
-  operation: skir.OperationId(value: operation),
-  arguments: arguments,
-);
 
 List<int> _integerItems(skir.DataValue value) {
   final list = value as skir.DataValue_listValueWrapper;
@@ -1035,14 +1303,8 @@ Map<String, int> _groupSizes(skir.DataValue value) {
   };
 }
 
-PortableExpressionResult _call(String operation, List<skir.DataValue> values) {
-  return PortableExpressionEvaluator(const {}, budget: _budget()).evaluate(
-    skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: operation),
-      arguments: values.map(skir.ExpressionNode.wrapLiteral),
-    ),
-  );
-}
+PortableExpressionResult _evaluate(skir.ExpressionNode node) =>
+    PortableExpressionEvaluator(const {}, budget: _budget()).evaluate(node);
 
 skir.EvaluationBudget _budget({
   int maxSteps = 10000,
@@ -1052,25 +1314,31 @@ skir.EvaluationBudget _budget({
   maxCollectionItems: maxCollectionItems,
 );
 
-skir.DataValue _availableCall(String operation, List<skir.DataValue> values) {
-  final result = _call(operation, values);
+skir.DataValue _availableNode(skir.ExpressionNode node) {
+  final result = _evaluate(node);
   expect(result, isA<PortableExpressionAvailable>());
   return (result as PortableExpressionAvailable).value;
 }
 
-bool _booleanCall(String operation, List<skir.DataValue> values) {
-  final result = _availableCall(operation, values);
+bool _booleanNode(skir.ExpressionNode node) {
+  final result = _availableNode(node);
   return switch (result) {
     skir.DataValue_booleanWrapper(:final value) => value,
     _ => throw StateError("Expected a Boolean result"),
   };
 }
 
-bool _regexMatches(String input, String pattern) =>
-    _booleanCall("typewriter.regex.matches", [
+bool _regexMatches(String input, String pattern) => _booleanNode(
+  skir.ExpressionNode.createRegexTest(
+    mode: skir.RegexMatchMode.search,
+    source: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapStringValue(input),
+    ),
+    pattern: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapStringValue(pattern),
-    ]);
+    ),
+  ),
+);
 
 skir.DataValue _list(String prefix, List<String> values) {
   return skir.DataValue.createListValue(
@@ -1109,10 +1377,43 @@ skir.DataValue _map(String prefix, List<(String, String)> values) {
   );
 }
 
+CheckedEditorCatalog _fixtureCatalog(Map<String, Object?> fixture) =>
+    CheckedEditorCatalog(
+      (skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
+            ..types = [
+              for (final encoded
+                  in fixture["typeDefinitions"] as List<Object?>? ?? const [])
+                _fixturePublished(
+                  skir.TypeDefinition.serializer.fromJson(encoded),
+                ),
+            ])
+          .toFrozen(),
+    );
+
+skir.PublishedType _fixturePublished(skir.TypeDefinition definition) =>
+    skir.PublishedType(
+      definition: definition,
+      status: skir.DeclarationStatus.ready,
+      effectiveFields: [
+        if (definition.representation
+            case skir.RepresentationTemplate_recordWrapper(:final value))
+          for (final field in value.fields)
+            skir.EffectiveFieldTemplate(
+              key: field.owner.name,
+              owner: field.owner,
+              type: field.type,
+              rules: const [],
+            ),
+      ],
+      ancestorTemplates: definition.parents,
+      display: null,
+    );
+
 Map<skir.ExpressionBindingId, skir.DataValue> _reads(
   Map<String, Object?> source,
 ) {
   final fields = <String, List<skir.FieldValue>>{};
+  final roots = <skir.ExpressionBindingId, skir.DataValue>{};
   for (final entry in source.entries) {
     final separator = entry.key.indexOf(":");
     final binding = separator < 0
@@ -1123,11 +1424,16 @@ Map<skir.ExpressionBindingId, skir.DataValue> _reads(
     final value = encoded["unavailable"] == true
         ? skir.DataValue.unfilled
         : _value(encoded);
+    if (separator < 0) {
+      roots[skir.ExpressionBindingId(value: binding)] = value;
+      continue;
+    }
     fields
         .putIfAbsent(binding, () => [])
         .add(skir.FieldValue(name: field, value: value));
   }
   return {
+    ...roots,
     for (final entry in fields.entries)
       skir.ExpressionBindingId(value: entry.key): skir.DataValue.createRecord(
         fields: entry.value,
@@ -1135,42 +1441,8 @@ Map<skir.ExpressionBindingId, skir.DataValue> _reads(
   };
 }
 
-skir.ExpressionNode _expression(Map<String, Object?> source) {
-  if (source["call"] case final String operation) {
-    return skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: operation),
-      arguments: (source["arguments"]! as List<Object?>)
-          .cast<Map<String, Object?>>()
-          .map(_expression),
-    );
-  }
-  if (source["read"] case final String binding) {
-    return skir.ExpressionNode.createRead(
-      binding: skir.ExpressionBindingId(value: binding),
-      path: skir.ValuePath(
-        segments: [
-          for (final field in (source["path"]! as List<Object?>).cast<String>())
-            skir.PathSegment.createField(name: field),
-        ],
-      ),
-    );
-  }
-  if (source["and"] case final List<Object?> operands) {
-    return skir.ExpressionNode.createAnd(
-      left: _expression(operands[0]! as Map<String, Object?>),
-      right: _expression(operands[1]! as Map<String, Object?>),
-    );
-  }
-  if (source["orElse"] case final List<Object?> operands) {
-    return skir.ExpressionNode.createOrElse(
-      input: _expression(operands[0]! as Map<String, Object?>),
-      fallback: _expression(operands[1]! as Map<String, Object?>),
-    );
-  }
-  return skir.ExpressionNode.wrapLiteral(_value(source));
-}
-
 skir.DataValue _value(Map<String, Object?> source) {
+  if (source["null"] == true) return skir.DataValue.null_;
   if (source["unfilled"] == true) {
     return skir.DataValue.unfilled;
   }
@@ -1209,7 +1481,11 @@ skir.DataValue _value(Map<String, Object?> source) {
           ),
           revision: named["revision"]! as int,
         ),
-        arguments: const [],
+        arguments: [
+          for (final argument
+              in named["arguments"] as List<Object?>? ?? const [])
+            skir.TypeUse.serializer.fromJson(argument),
+        ],
       ),
       payload: _value(named["payload"]! as Map<String, Object?>),
     );

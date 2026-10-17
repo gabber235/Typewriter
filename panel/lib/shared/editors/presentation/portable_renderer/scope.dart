@@ -234,7 +234,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   PortablePresentationBindingSchema? expressionSchema(
     skir.ExpressionNode expression,
   ) {
-    if (expression case skir.ExpressionNode_readWrapper(:final value)
+    if (expression case skir.ExpressionNode_inputWrapper(:final value)
         when value.path.segments.isEmpty) {
       final declared = bindings[value.binding]?.schema;
       if (declared != null) return declared;
@@ -246,7 +246,10 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
       lexicalTypes: bindings.lexicalSchemas,
     )) {
       CheckedExpressionReady(:final program) =>
-        CompletePortablePresentationBinding(program.result.value),
+        switch (program.result.declaredUse()) {
+          final use? => CompletePortablePresentationBinding(use),
+          _ => null,
+        },
       _ => null,
     };
   }
@@ -616,7 +619,7 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
           schema: reference.path.segments.isEmpty
               ? source.schema
               : expressionSchema(
-                      skir.ExpressionNode.createRead(
+                      skir.ExpressionNode.createInput(
                         binding: reference.bindingId,
                         path: reference.path,
                       ),

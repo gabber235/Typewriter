@@ -22,7 +22,7 @@ private fun SearchProviderDescription<*>.wire(
     when (this) {
         is SearchProviderDescription.Static<*> -> {
             skirout.editor.v1.presentation.SearchProvider.createStaticValues(
-                values = SkirTypeCodec.encode(values).getOrThrow(),
+                values = values,
                 result = result,
                 selectors = selectors,
             )
@@ -33,19 +33,19 @@ private fun SearchProviderDescription<*>.wire(
             skirout.editor.v1.presentation.SearchProvider.createCollection(
                 sourceId = source.id,
                 result = result,
-                where = predicate?.let { expression(Expr<Any?, Handled>(it)) },
+                where = predicate?.let { it },
                 selectors = selectors,
             )
         }
 
         is SearchProviderDescription.HttpJson<*> -> {
             skirout.editor.v1.presentation.SearchProvider.createHttpJson(
-                uri = expression(Expr<String, Handled>(uri)),
+                uri = uri,
                 parameters =
                     parameters.map { parameter ->
                         skirout.editor.v1.presentation.HttpQueryParameter(
                             name = parameter.name,
-                            value = expression(Expr<String, Handled>(parameter.value)),
+                            value = parameter.value,
                             omitIfEmpty = parameter.omitIfEmpty,
                         )
                     },
@@ -71,7 +71,7 @@ private fun SearchProviderDescription<*>.wire(
                 capabilityId =
                     skirout.editor.v1.type_catalog
                         .CapabilityId(value = capability.value),
-                payload = expression(Expr<Any?, Handled>(payload)),
+                payload = payload,
                 result = result,
                 selectors = selectors,
             )
@@ -88,8 +88,8 @@ private fun SearchDecoration.wire(child: skirout.editor.v1.presentation.SearchPr
     when (this) {
         is SearchDecoration.Gate -> {
             skirout.editor.v1.presentation.SearchProvider.createGate(
-                condition = expression(Expr<Boolean, Handled>(condition)),
-                guidance = guidance?.let { expression(Expr<String, Handled>(it)) },
+                condition = condition,
+                guidance = guidance?.let { it },
                 child = child,
             )
         }
@@ -111,7 +111,7 @@ private fun SearchDecoration.wire(child: skirout.editor.v1.presentation.SearchPr
 
         is SearchDecoration.Limit -> {
             skirout.editor.v1.presentation.SearchProvider.createLimit(
-                maximum = expression(Expr<Int, Handled>(maximum)),
+                maximum = maximum,
                 child = child,
             )
         }
@@ -124,7 +124,7 @@ private fun SearchDecoration.wire(child: skirout.editor.v1.presentation.SearchPr
         is SearchDecoration.History -> {
             skirout.editor.v1.presentation.SearchProvider.createHistory(
                 historyKey = key,
-                label = expression(Expr<String, Handled>(label)),
+                label = label,
                 capacity = capacity,
                 child = child,
             )
@@ -133,7 +133,7 @@ private fun SearchDecoration.wire(child: skirout.editor.v1.presentation.SearchPr
         is SearchDecoration.Section -> {
             skirout.editor.v1.presentation.SearchProvider.createSection(
                 sectionId = id,
-                label = expression(Expr<String, Handled>(label)),
+                label = label,
                 child = child,
             )
         }
@@ -143,7 +143,7 @@ private fun SearchDecoration.wire(child: skirout.editor.v1.presentation.SearchPr
                 fields =
                     fields.map { field ->
                         skirout.editor.v1.presentation.SearchRankingField(
-                            expression = expression(Expr<Any?, Handled>(field.expression)),
+                            expression = field.expression,
                             weight = field.weight,
                         )
                     },

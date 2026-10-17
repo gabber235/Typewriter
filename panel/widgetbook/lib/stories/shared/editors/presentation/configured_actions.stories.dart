@@ -232,7 +232,7 @@ skir.PresentationNode _actions() {
               "status",
               skir.PresentationElement.wrapText(
                 (skir.TextContent.mutable()
-                      ..value = skir.ExpressionNode.createRead(
+                      ..value = skir.ExpressionNode.createInput(
                         binding: _status,
                         path: editorRootPath,
                       ))

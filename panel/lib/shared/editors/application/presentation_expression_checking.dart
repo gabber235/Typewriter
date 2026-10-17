@@ -64,7 +64,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       skir.ScalarKind.createFloat(width: skir.FloatWidth.sixtyFour),
     );
     skir.ExpressionType type(skir.TypeUse value, [bool missing = true]) =>
-        skir.ExpressionType(value: value, mayBeMissing: missing);
+        nominalType(value, missing);
     skir.TypeUse payload(skir.TypeUse value) {
       if (value case skir.TypeUse_nullableWrapper(:final value)) {
         return payload(value.value);
@@ -84,7 +84,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
 
     skir.ExpressionType? path(skir.ExpressionType source, skir.ValuePath path) {
       if (path.segments.isEmpty) return source;
-      final named = namedUse(source.value);
+      final named = namedUse(source.declaredUse());
       if (named == null) return null;
       final value = valueTypeAt(skir.TypeSelection.wrapComplete(named), path);
       return value == null ? null : type(value, source.mayBeMissing);
@@ -108,14 +108,9 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       if (body == null) return;
       errors.addAll(
         checkPortableExpression(
-          body,
+          body, catalog: this,
           bindings: env,
           expectedOutput: type(payload(expected), missing),
-          resolvePath: expressionPathType,
-          resolveQuery: (call, arguments, scope, occurrence) =>
-              checkCanonicalQuery(call, arguments)?.result,
-          normalizeType: expressionPayloadType,
-          resolveCollectionItem: collectionItemType,
           allowResultNumericWidth: numericWidth,
         ),
       );
@@ -134,7 +129,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           if (selected == null) {
             errors.add("missing_resource_action_context");
           } else {
-            check(value.targets, selected.value, env, missing: false);
+            if (selected.declaredUse() case final use?) check(value.targets, use, env, missing: false);
           }
           final capability = snapshot.capabilities
               .whereType<skir.CapabilityDefinition_authoringWrapper>()
@@ -168,14 +163,9 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       final attempts = [
         for (final contract in contracts)
           checkPortableExpression(
-            body,
+            body, catalog: this,
             bindings: env,
             expectedOutput: type(contract),
-            resolvePath: expressionPathType,
-            resolveQuery: (call, arguments, scope, occurrence) =>
-                checkCanonicalQuery(call, arguments)?.result,
-            normalizeType: expressionPayloadType,
-            resolveCollectionItem: collectionItemType,
             allowResultNumericWidth: true,
           ),
       ];
@@ -551,7 +541,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
       final control = node.boundControl;
       final candidate = control == null
           ? null
-          : binding(control.binding, env)?.value;
+          : binding(control.binding, env)?.declaredUse();
       if (control != null) {
         if (candidate == null) errors.add("unresolved_control_binding_type");
         check(control.label, text, env);
@@ -676,20 +666,15 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
             searchResult(value.result, result, parent);
           case skir.SearchProvider_staticValuesWrapper(:final value):
             skir.ExpressionType? source;
-            checkPortableExpression(
-              value.values,
+            final sourceProblems = checkPortableExpression(
+              value.values, catalog: this,
               bindings: parent,
-              expectedOutput: type(subject),
-              resolvePath: expressionPathType,
-              resolveQuery: (call, arguments, scope, occurrence) =>
-                  checkCanonicalQuery(call, arguments)?.result,
-              normalizeType: expressionPayloadType,
-              resolveCollectionItem: collectionItemType,
               onInferred: (result) => source = result,
             );
+            errors.addAll(sourceProblems);
             searchResult(
               value.result,
-              source == null ? null : collectionItemType(source!.value),
+              source == null ? null : collectionItem(source!)?.declaredUse(),
               parent,
             );
           case skir.SearchProvider_gateWrapper(:final value):
@@ -1000,7 +985,7 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
         case skir.PresentationElement_scopedBindingWrapper(:final value):
           rebound(
             value.child,
-            binding(value.binding, env)?.value,
+            binding(value.binding, env)?.declaredUse(),
             alias: value.scopeBindingId,
           );
         case skir.PresentationElement_typedFieldWrapper():
@@ -1101,20 +1086,15 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           });
         case skir.PresentationElement_repeatedWrapper(:final value):
           skir.ExpressionType? source;
-          checkPortableExpression(
-            value.source,
+          final sourceProblems = checkPortableExpression(
+            value.source, catalog: this,
             bindings: env,
-            expectedOutput: type(subject),
-            resolvePath: expressionPathType,
-            resolveQuery: (call, arguments, scope, occurrence) =>
-                checkCanonicalQuery(call, arguments)?.result,
-            normalizeType: expressionPayloadType,
-            resolveCollectionItem: collectionItemType,
             onInferred: (result) => source = result,
           );
+          errors.addAll(sourceProblems);
           rebound(
             value.presentation.item,
-            source == null ? null : collectionItemType(source!.value),
+            source == null ? null : collectionItem(source!)?.declaredUse(),
             alias: value.itemBindingId,
           );
         default:

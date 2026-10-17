@@ -41,11 +41,12 @@ import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.expression.PortableExpressionLimits
 import com.typewritermc.expression.eq
 import com.typewritermc.expression.literal
+import com.typewritermc.expression.testInput
+import com.typewritermc.expression.testLiteral
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationProvider
@@ -77,6 +78,7 @@ import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import skirout.editor.v1.expression.ExpressionNode
 import kotlin.reflect.KClass
 
 val SdkRuntimeConformanceTest by testSuite {
@@ -108,6 +110,16 @@ val SdkRuntimeConformanceTest by testSuite {
         }
     }
 
+    fun localNode(path: com.typewritermc.authoring.ValuePath) =
+        ExpressionNode.createLocal(
+            depth = 0,
+            slot = 0,
+            path =
+                com.typewritermc.types.skir.SkirAuthoringValueCodec
+                    .encode(path)
+                    .getOrThrow(),
+        )
+
     test("portable evaluation short circuits fallback and preserves named scalar semantics") {
         val location = com.typewritermc.authoring.ValueLocation(ResourceId("expression:test"), com.typewritermc.authoring.ValuePath())
         val binding = ExpressionBindingId("value")
@@ -122,26 +134,30 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val bindings = ExpressionBindings(mapOf(binding to location))
         val budget = EvaluationBudget(100, 100)
-        val read = ExpressionNode.Read(binding, com.typewritermc.authoring.ValuePath())
+        val read = testInput(binding, com.typewritermc.authoring.ValuePath())
 
         with(EmptyReads) {
-            evaluator.evaluate(ExpressionNode.And(ExpressionNode.Literal(DataValue.Boolean(false)), read), bindings, budget) shouldBe
+            evaluator.evaluate(
+                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = read),
+                bindings,
+                budget,
+            ) shouldBe
                 Availability.Available(DataValue.Boolean(false))
             reads shouldBe 0
             evaluator.evaluate(
-                ExpressionNode.OrElse(read, ExpressionNode.Literal(DataValue.StringValue("fallback"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("fallback"))),
                 bindings,
                 budget,
             ) shouldBe Availability.Available(DataValue.StringValue("fallback"))
             result = DataValue.Named(TEST_CODE_USE, DataValue.StringValue("chapter")).available()
             evaluator.evaluate(
-                ExpressionNode.Call(com.typewritermc.expression.OperationId("typewriter.rule.nonBlank"), listOf(read)),
+                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK, source = read),
                 bindings,
                 budget,
             ) shouldBe Availability.Available(DataValue.Boolean(true))
             result = Availability.Failed(EvaluationDiagnostic("read_failed", "broken", listOf(location)))
             evaluator.evaluate(
-                ExpressionNode.OrElse(read, ExpressionNode.Literal(DataValue.StringValue("hidden"))),
+                ExpressionNode.createOrElse(input = read, fallback = testLiteral(DataValue.StringValue("hidden"))),
                 bindings,
                 budget,
             ) shouldBe result
@@ -149,16 +165,16 @@ val SdkRuntimeConformanceTest by testSuite {
     }
 
     test("portable evaluation bounds expression depth without evaluating a short circuited branch") {
-        var nested: ExpressionNode = ExpressionNode.Literal(DataValue.Boolean(true))
+        var nested: ExpressionNode = testLiteral(DataValue.Boolean(true))
         repeat(PortableExpressionLimits.MAX_DEPTH + 1) {
-            nested = ExpressionNode.And(ExpressionNode.Literal(DataValue.Boolean(true)), nested)
+            nested = ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(true)), right = nested)
         }
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
         with(EmptyReads) {
             val failed = evaluator.evaluate(nested, ExpressionBindings(emptyMap()), EvaluationBudget(100_000, 100))
             (failed as Availability.Failed).diagnostic.code shouldBe "expression_depth_limit"
             evaluator.evaluate(
-                ExpressionNode.And(ExpressionNode.Literal(DataValue.Boolean(false)), nested),
+                ExpressionNode.createAnd(left = testLiteral(DataValue.Boolean(false)), right = nested),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(100_000, 100),
             ) shouldBe Availability.Available(DataValue.Boolean(false))
@@ -168,29 +184,33 @@ val SdkRuntimeConformanceTest by testSuite {
     test("portable whitespace includes Unicode whitespace and BOM but excludes information separator") {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
 
-        fun call(
-            operation: String,
-            value: String,
-        ) = ExpressionNode.Call(
-            com.typewritermc.expression.OperationId(operation),
-            listOf(ExpressionNode.Literal(DataValue.StringValue(value))),
-        )
+        fun nonBlank(value: String) =
+            ExpressionNode.createRuleUnary(
+                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_BLANK,
+                source = testLiteral(DataValue.StringValue(value)),
+            )
+
+        fun trim(value: String) =
+            ExpressionNode.createTextUnary(
+                operation = skirout.editor.v1.expression.TextUnaryOperation.TRIM,
+                source = testLiteral(DataValue.StringValue(value)),
+            )
 
         with(EmptyReads) {
             listOf("\uFEFF", "\u0085", "\u00A0", "\u2007").forEach { whitespace ->
                 evaluator.evaluate(
-                    call("typewriter.rule.nonBlank", whitespace),
+                    nonBlank(whitespace),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(10, 0),
                 ) shouldBe Availability.Available(DataValue.Boolean(false))
             }
             evaluator.evaluate(
-                call("typewriter.rule.nonBlank", "\u001C"),
+                nonBlank("\u001C"),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(10, 0),
             ) shouldBe Availability.Available(DataValue.Boolean(true))
             evaluator.evaluate(
-                call("typewriter.text.trim", "\uFEFF value \u0085"),
+                trim("\uFEFF value \u0085"),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(10, 0),
             ) shouldBe Availability.Available(DataValue.StringValue("value"))
@@ -228,9 +248,10 @@ val SdkRuntimeConformanceTest by testSuite {
         fun fullMatch(
             value: String,
             pattern: String,
-        ) = ExpressionNode.Call(
-            com.typewritermc.expression.OperationId("typewriter.rule.regex"),
-            listOf(ExpressionNode.Literal(DataValue.StringValue(value)), ExpressionNode.Literal(DataValue.StringValue(pattern))),
+        ) = ExpressionNode.createRegexTest(
+            mode = skirout.editor.v1.expression.RegexMatchMode.FULL_MATCH,
+            source = testLiteral(DataValue.StringValue(value)),
+            pattern = testLiteral(DataValue.StringValue(pattern)),
         )
 
         with(EmptyReads) {
@@ -250,18 +271,29 @@ val SdkRuntimeConformanceTest by testSuite {
     test("portable regular expressions charge search and replacement output to the step budget") {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
 
-        fun call(
-            operation: String,
-            vararg values: String,
-        ) = ExpressionNode.Call(
-            com.typewritermc.expression.OperationId(operation),
-            values.map { ExpressionNode.Literal(DataValue.StringValue(it)) },
+        fun search(
+            source: String,
+            pattern: String,
+        ) = ExpressionNode.createRegexTest(
+            mode = skirout.editor.v1.expression.RegexMatchMode.SEARCH,
+            source = testLiteral(DataValue.StringValue(source)),
+            pattern = testLiteral(DataValue.StringValue(pattern)),
+        )
+
+        fun replace(
+            source: String,
+            pattern: String,
+            replacement: String,
+        ) = ExpressionNode.createRegexReplace(
+            source = testLiteral(DataValue.StringValue(source)),
+            pattern = testLiteral(DataValue.StringValue(pattern)),
+            replacement = testLiteral(DataValue.StringValue(replacement)),
         )
 
         with(EmptyReads) {
             val anchorSearch =
                 evaluator.evaluate(
-                    call("typewriter.regex.matches", "x".repeat(200), "^$"),
+                    search("x".repeat(200), "^$"),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(50, 0),
                 )
@@ -269,7 +301,7 @@ val SdkRuntimeConformanceTest by testSuite {
 
             val replacementOutput =
                 evaluator.evaluate(
-                    call("typewriter.regex.replace", "", "", "replacement".repeat(20)),
+                    replace("", "", "replacement".repeat(20)),
                     ExpressionBindings(emptyMap()),
                     EvaluationBudget(30, 0),
                 )
@@ -281,28 +313,59 @@ val SdkRuntimeConformanceTest by testSuite {
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("No reads expected") })
 
         context(reads: AuthoredReads)
-        fun call(
-            operation: String,
+        fun replace(
             values: List<DataValue>,
             budget: EvaluationBudget = EvaluationBudget(100, 100),
         ): Availability<DataValue> =
             evaluator.evaluate(
-                ExpressionNode.Call(
-                    com.typewritermc.expression.OperationId(operation),
-                    values.map(ExpressionNode::Literal),
+                ExpressionNode.createTextReplace(
+                    source = testLiteral(values[0]),
+                    target = testLiteral(values[1]),
+                    replacement = testLiteral(values[2]),
                 ),
                 ExpressionBindings(emptyMap()),
                 budget,
             )
 
+        context(reads: AuthoredReads)
+        fun split(
+            values: List<DataValue>,
+            budget: EvaluationBudget = EvaluationBudget(100, 100),
+        ): Availability<DataValue> =
+            evaluator.evaluate(
+                ExpressionNode.createTextSplit(source = testLiteral(values[0]), separator = testLiteral(values[1])),
+                ExpressionBindings(emptyMap()),
+                budget,
+            )
+
+        context(reads: AuthoredReads)
+        fun join(
+            values: List<DataValue>,
+            budget: EvaluationBudget = EvaluationBudget(100, 100),
+        ): Availability<DataValue> =
+            evaluator.evaluate(
+                ExpressionNode.createTextJoin(source = testLiteral(values[0]), separator = testLiteral(values[1])),
+                ExpressionBindings(emptyMap()),
+                budget,
+            )
+
+        context(reads: AuthoredReads)
+        fun interpolate(
+            values: List<DataValue>,
+            budget: EvaluationBudget = EvaluationBudget(100, 100),
+        ): Availability<DataValue> =
+            evaluator.evaluate(
+                ExpressionNode.createTextInterpolate(parts = values.map(::testLiteral)),
+                ExpressionBindings(emptyMap()),
+                budget,
+            )
+
         with(EmptyReads) {
-            call(
-                "typewriter.text.replace",
+            replace(
                 listOf(DataValue.StringValue("😀"), DataValue.StringValue(""), DataValue.StringValue("_")),
             ) shouldBe Availability.Available(DataValue.StringValue("_😀_"))
 
-            call(
-                "typewriter.text.split",
+            split(
                 listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
             ) shouldBe
                 Availability.Available(
@@ -319,20 +382,17 @@ val SdkRuntimeConformanceTest by testSuite {
                         ),
                     ),
                 )
-            call(
-                "typewriter.text.split",
+            split(
                 listOf(DataValue.StringValue(""), DataValue.StringValue("")),
             ) shouldBe Availability.Available(DataValue.ListValue(emptyList()))
 
             val large = DataValue.StringValue("value".repeat(20))
             listOf(
-                call(
-                    "typewriter.text.replace",
+                replace(
                     listOf(DataValue.StringValue("a"), DataValue.StringValue(""), large),
                     EvaluationBudget(30, 100),
                 ),
-                call(
-                    "typewriter.text.join",
+                join(
                     listOf(
                         DataValue.ListValue(
                             listOf(com.typewritermc.types.ListItem(com.typewritermc.authoring.ItemId("only"), large)),
@@ -341,8 +401,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                     EvaluationBudget(30, 100),
                 ),
-                call(
-                    "typewriter.text.interpolate",
+                interpolate(
                     listOf(large),
                     EvaluationBudget(30, 100),
                 ),
@@ -351,8 +410,7 @@ val SdkRuntimeConformanceTest by testSuite {
             }
 
             val splitLimit =
-                call(
-                    "typewriter.text.split",
+                split(
                     listOf(DataValue.StringValue("😀x"), DataValue.StringValue("")),
                     EvaluationBudget(100, 1),
                 )
@@ -373,10 +431,10 @@ val SdkRuntimeConformanceTest by testSuite {
             )
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
         val bindings = ExpressionBindings(mapOf(binding to location))
-        val input = ExpressionNode.Read(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
         with(EmptyReads) {
             evaluator.evaluate(
-                ExpressionNode.Call(com.typewritermc.expression.OperationId("typewriter.rule.unique"), listOf(input)),
+                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
                 EvaluationBudget(100, 10),
             ) shouldBe Availability.Available(DataValue.Boolean(false))
@@ -390,13 +448,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.Collection(
-                    com.typewritermc.expression.OperationId("typewriter.collection.unique_by"),
-                    input,
-                    listOf(item),
-                    emptyList(),
-                    ExpressionNode.Read(item, com.typewritermc.authoring.ValuePath()),
-                ),
+                ExpressionNode.createUniqueBy(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
                 bindings,
                 EvaluationBudget(100, 10),
             ) shouldBe
@@ -432,12 +484,12 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.Call(com.typewritermc.expression.OperationId("typewriter.collection.size"), listOf(input)),
+                ExpressionNode.CollectionSizeWrapper(input),
                 bindings,
                 EvaluationBudget(100, 10),
             ) shouldBe Availability.Available(DataValue.Integer(3.toBigInteger()))
             evaluator.evaluate(
-                ExpressionNode.Call(com.typewritermc.expression.OperationId("typewriter.rule.unique"), listOf(input)),
+                ExpressionNode.createRuleUnary(operation = skirout.editor.v1.expression.RuleUnaryOperation.UNIQUE, source = input),
                 bindings,
                 EvaluationBudget(100, 10),
             ) shouldBe Availability.Available(DataValue.Boolean(false))
@@ -451,20 +503,17 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.Collection(
-                    com.typewritermc.expression.OperationId("typewriter.collection.any"),
-                    input,
-                    listOf(item),
-                    emptyList(),
-                    ExpressionNode.Read(
-                        item,
-                        com.typewritermc.authoring.ValuePath(
-                            listOf(
-                                com.typewritermc.authoring.PathSegment
-                                    .Field("valid"),
+                ExpressionNode.createAny(
+                    source = input,
+                    body =
+                        localNode(
+                            com.typewritermc.authoring.ValuePath(
+                                listOf(
+                                    com.typewritermc.authoring.PathSegment
+                                        .Field("valid"),
+                                ),
                             ),
                         ),
-                    ),
                 ),
                 bindings,
                 EvaluationBudget(100, 10),
@@ -493,13 +542,7 @@ val SdkRuntimeConformanceTest by testSuite {
                     ),
                 )
             evaluator.evaluate(
-                ExpressionNode.Collection(
-                    com.typewritermc.expression.OperationId("typewriter.collection.any"),
-                    input,
-                    listOf(item),
-                    emptyList(),
-                    ExpressionNode.Read(item, com.typewritermc.authoring.ValuePath()),
-                ),
+                ExpressionNode.createAny(source = input, body = localNode(com.typewritermc.authoring.ValuePath())),
                 bindings,
                 EvaluationBudget(100, 1),
             ) shouldBe Availability.Available(DataValue.Boolean(true))
@@ -511,13 +554,9 @@ val SdkRuntimeConformanceTest by testSuite {
         val binding = ExpressionBindingId("map")
         var value: DataValue = DataValue.MapValue(emptyList())
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { value.available() })
-        val input = ExpressionNode.Read(binding, com.typewritermc.authoring.ValuePath())
+        val input = testInput(binding, com.typewritermc.authoring.ValuePath())
 
-        fun access(key: DataValue) =
-            ExpressionNode.Call(
-                com.typewritermc.expression.OperationId("typewriter.collection.access"),
-                listOf(input, ExpressionNode.Literal(key)),
-            )
+        fun access(key: DataValue) = ExpressionNode.createCollectionAccess(source = input, index = testLiteral(key))
 
         value =
             DataValue.MapValue(
@@ -1217,7 +1256,7 @@ val SdkRuntimeConformanceTest by testSuite {
             mutableListOf(
                 com.typewritermc.configuration.OwnedRule(
                     com.typewritermc.configuration.RuleId(com.typewritermc.configuration.RuleOrigin(id, 0), 0),
-                    com.typewritermc.configuration.RuleDescriptor(ExpressionNode.Literal(DataValue.Boolean(true))),
+                    com.typewritermc.configuration.RuleDescriptor(testLiteral(DataValue.Boolean(true))),
                     com.typewritermc.checking.DiagnosticTemplate(
                         "valid",
                         "valid",

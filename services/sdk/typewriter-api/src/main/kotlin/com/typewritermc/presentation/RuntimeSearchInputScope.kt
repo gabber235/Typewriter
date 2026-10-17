@@ -4,6 +4,7 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.Handled
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
 import skirout.editor.v1.presentation.PresentationElement
 import skirout.editor.v1.presentation.PresentationNode
@@ -16,7 +17,7 @@ internal class RuntimeSearchInputScope<Value, Row>(
     TextEntryAppearanceScope by common.appearance(),
     InputContentScope by common.content(state, author),
     PopupAppearanceScope by common.popup() {
-    override val query = Expr<String, Handled>(ExpressionNode.Read(SEARCH_QUERY, ValuePath()))
+    override val query = com.typewritermc.expression.inputExpression<String, Handled>(SEARCH_QUERY)
     override val sources: SearchSources = SearchSources
     private val selectors = mutableListOf<skirout.editor.v1.presentation.SearchSelectorDefinition>()
     private var result: skirout.editor.v1.presentation.SearchResultMapping? = null
@@ -55,7 +56,7 @@ internal class RuntimeSearchInputScope<Value, Row>(
                             multiplicity = multiplicity.wire(),
                             color = color,
                         )
-                    return Expr(ExpressionNode.Read(binding, ValuePath()))
+                    return com.typewritermc.expression.inputExpression(binding)
                 }
             }
         scope.configure()
@@ -154,7 +155,7 @@ internal class RuntimeSearchInputScope<Value, Row>(
 private class RuntimeSearchResultScope<Value, Row>(
     private val state: PresentationBuildState,
 ) : SearchResultScope<Value, Row> {
-    override val row = Expr<Row, Handled>(ExpressionNode.Read(SEARCH_RESULT_ROW, ValuePath()))
+    override val row = com.typewritermc.expression.inputExpression<Row, Handled>(SEARCH_RESULT_ROW)
     private var key: skirout.editor.v1.expression.ExpressionNode? = null
     private var selectedValue: skirout.editor.v1.expression.ExpressionNode? = null
     private var presentation: PresentationNode? = null

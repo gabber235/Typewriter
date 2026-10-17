@@ -51,7 +51,7 @@ internal class RuntimePresentationBuildScope(
     override fun registerExpressions(factory: ExpressionFactory<*>) = state.expressions.register(factory)
 
     override fun <S : Any> expressions(scope: KClass<S>): S =
-        state.expressions.create(scope, Expr<Any?, MayBeMissing>(ExpressionNode.Read(CONFIGURED_VALUE, ValuePath())))
+        state.expressions.create(scope, com.typewritermc.expression.inputExpression<Any?, MayBeMissing>(CONFIGURED_VALUE))
 
     override fun conditional(
         condition: Expr<Boolean, Handled>,

@@ -156,33 +156,10 @@ final _serviceNameMappings =
     (skir.ValueMappings.mutable()
           ..completion = skir.ExpressionMapping(
             inputBinding: _serviceNameCandidate,
-            body: skir.ExpressionNode.createCall(
-              operation: skir.OperationId(value: "typewriter.regex.replace"),
-              arguments: [
-                skir.ExpressionNode.createCall(
-                  operation: skir.OperationId(
-                    value: "typewriter.regex.replace",
-                  ),
-                  arguments: [
-                    skir.ExpressionNode.createCall(
-                      operation: skir.OperationId(
-                        value: "typewriter.text.lower",
-                      ),
-                      arguments: [
-                        skir.ExpressionNode.createRead(
+            body: skir.ExpressionNode.createRegexReplace(source:skir.ExpressionNode.createRegexReplace(source:skir.ExpressionNode.createTextUnary(operation:skir.TextUnaryOperation.lower,source:skir.ExpressionNode.createInput(
                           binding: _serviceNameCandidate,
                           path: editorRootPath,
-                        ),
-                      ],
-                    ),
-                    _portableLiteral(r"[\s\-]+"),
-                    _portableLiteral("_"),
-                  ],
-                ),
-                _portableLiteral("[^a-z0-9_]"),
-                _portableLiteral(""),
-              ],
-            ),
+                        )),pattern:_portableLiteral(r"[\s\-]+"),replacement:_portableLiteral("_")),pattern:_portableLiteral("[^a-z0-9_]"),replacement:_portableLiteral("")),
           ))
         .toFrozen();
 final _serviceNameFilters = [
@@ -290,7 +267,7 @@ skir.BindingRef _portableReference(skir.ExpressionBindingId bindingId) =>
     );
 
 skir.ExpressionNode _portableRead(skir.ExpressionBindingId bindingId) =>
-    skir.ExpressionNode.createRead(
+    skir.ExpressionNode.createInput(
       binding: bindingId,
       path: skir.ValuePath(segments: const []),
     );

@@ -2,32 +2,73 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Checks portable expressions under declared source and temporary candidate types.
-/// Failures of a valid expression at evaluation remain separate runtime feedback.
-/// Caller resolvers supply catalog paths and canonical query contracts. The
-/// checker visits both conditional branches, unlike runtime evaluation.
-/// Numeric literals can adopt an operand width within the same numeric family;
-/// enabling [allowResultNumericWidth] also relaxes the final result width.
+/// Checks one expression against one catalog and lexical input environment.
+/// Frames and literal coercion evidence belong to this invocation. Invalid
+/// expressions return their primary diagnostic; callers aggregate siblings.
+/// External schemas are admitted when read. Unused presentation context does
+/// not constrain an expression that only reads a selected value.
 List<String> checkPortableExpression(
   skir.ExpressionNode body, {
+  required CheckedEditorCatalog catalog,
   required Map<skir.ExpressionBindingId, skir.ExpressionType> bindings,
+  Map<skir.ExpressionBindingId, skir.TypeSelection> partialBindings = const {},
   skir.ExpressionType? expectedOutput,
-  skir.ExpressionType? Function(skir.ExpressionType, skir.ValuePath)?
-  resolvePath,
-  skir.TypeUse Function(skir.TypeUse)? normalizeType,
-  skir.TypeUse? Function(skir.TypeUse)? resolveCollectionItem,
-  void Function(skir.ExpressionType?)? onInferred,
   bool allowResultNumericWidth = false,
-  skir.ExpressionType? Function(
-    skir.ExpressionCall,
-    List<skir.ExpressionType>,
-    Map<skir.ExpressionBindingId, skir.ExpressionType>,
-    List<int>,
-  )?
-  resolveQuery,
-  skir.ExpressionType? Function(skir.ExpressionRead)? resolveBinding,
+  void Function(skir.ExpressionType?)? onInferred,
+  Map<ExpressionOccurrence, CheckedQueryCall>? queryContracts,
 }) {
-  final errors = <String>[];
+  final checker = _PortableExpressionChecker(
+    catalog,
+    Map.unmodifiable(bindings),
+    Map.unmodifiable(partialBindings),
+    expectedOutput: expectedOutput,
+  );
+  try {
+    if (expectedOutput != null) checker.validateType(expectedOutput);
+    final result = expectedOutput == null
+        ? checker.infer(body)
+        : checker.contextualEmpty(body, expectedOutput) ?? checker.infer(body);
+    onInferred?.call(result);
+    final errors = <String>[];
+    if (expectedOutput != null) {
+      if (!checker.compatible(result, expectedOutput) &&
+          !(allowResultNumericWidth &&
+              checker.sameNumericFamily(result, expectedOutput))) {
+        errors.add("incompatible_expression_result_type");
+      }
+      if (result.mayBeMissing && !expectedOutput.mayBeMissing) {
+        errors.add("expression_result_may_be_missing");
+      }
+    }
+    // Invalid programs do not leak partial query contracts into the cache.
+    if (errors.isEmpty) queryContracts?.addAll(checker.queryContracts);
+    return List.unmodifiable(errors);
+  } on ExpressionProblem catch (error) {
+    onInferred?.call(null);
+    return [error.code];
+  } finally {
+    checker.frames.clear();
+    checker.literalTypes.clear();
+    checker.queryContracts.clear();
+  }
+}
+
+final class _PortableExpressionChecker {
+  _PortableExpressionChecker(
+    this.catalog,
+    this.inputs,
+    this.partialInputs, {
+    this.expectedOutput,
+  });
+  final CheckedEditorCatalog catalog;
+  final Map<skir.ExpressionBindingId, skir.ExpressionType> inputs;
+  final Map<skir.ExpressionBindingId, skir.TypeSelection> partialInputs;
+  final skir.ExpressionType? expectedOutput;
+  final frames = <List<skir.ExpressionType>>[];
+  final literalTypes = HashSet<skir.ExpressionType>.identity();
+  final queryContracts = <ExpressionOccurrence, CheckedQueryCall>{};
+  int depth = 0;
+  List<int> occurrence = <int>[];
   final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
   final boolean = skir.TypeUse.wrapScalar(skir.ScalarKind.boolean);
   final integer = skir.TypeUse.wrapScalar(
@@ -38,72 +79,247 @@ List<String> checkPortableExpression(
   );
   final decimal = skir.TypeUse.wrapScalar(skir.ScalarKind.decimal);
 
-  final literalTypes = HashSet<skir.ExpressionType>.identity();
-  skir.ExpressionType type(
-    skir.TypeUse use, [
-    bool missing = false,
-    bool literal = false,
-  ]) {
-    final result = skir.ExpressionType(value: use, mayBeMissing: missing);
-    if (literal) literalTypes.add(result);
-    return result;
+  skir.ExpressionType inferChild(skir.ExpressionNode node, int child) {
+    if (++depth > 512) throw const ExpressionProblem("expression_check_limit");
+    final previous = occurrence;
+    occurrence = [...previous, child];
+    try {
+      return infer(node);
+    } finally {
+      occurrence = previous;
+      depth--;
+    }
   }
 
-  String? family(skir.TypeUse use) => switch (normalizeType?.call(use) ?? use) {
-    skir.TypeUse_scalarWrapper(value: skir.ScalarKind_integerWrapper()) =>
-      "integer",
-    skir.TypeUse_scalarWrapper(value: skir.ScalarKind_floatWrapper()) =>
-      "float",
-    skir.TypeUse_scalarWrapper(value: final scalar)
-        when scalar == skir.ScalarKind.decimal =>
-      "decimal",
-    _ => null,
-  };
-  bool matches(skir.ExpressionType actual, skir.ExpressionType expected) =>
-      actual.value == expected.value ||
-      (normalizeType != null &&
-          normalizeType(actual.value) == normalizeType(expected.value)) ||
-      ((literalTypes.contains(actual) || literalTypes.contains(expected)) &&
-          family(actual.value) != null &&
-          family(actual.value) == family(expected.value));
-  skir.TypeUse listOf(skir.TypeUse item) => skir.TypeUse.createNamed(
-    definition: skir.TypeDefinitionId(
-      typeId: skir.TypeId.createQualified(
-        namespace: "typewriter",
-        name: "List",
-      ),
-      revision: 1,
-    ),
-    arguments: [item],
-  );
-  skir.ExpressionType? itemType(skir.ExpressionType source) {
-    if (resolveCollectionItem != null) {
-      final item = resolveCollectionItem(source.value);
-      if (item != null) return type(item, source.mayBeMissing);
-      if (source.value case skir.TypeUse_namedWrapper(:final value)
-          when value.definition.typeId is skir.TypeId_qualifiedWrapper &&
-              (value.definition.typeId as skir.TypeId_qualifiedWrapper)
-                      .value
-                      .namespace ==
-                  "typewriter" &&
-              {"List", "Set"}.contains(
-                (value.definition.typeId as skir.TypeId_qualifiedWrapper)
-                    .value
-                    .name,
-              ) &&
-              value.arguments.length == 1) {
-        return type(value.arguments.first, source.mayBeMissing);
-      }
-      return null;
+  T inFrame<T>(List<skir.ExpressionType> values, T Function() body) {
+    frames.add(List.unmodifiable(values));
+    try {
+      return body();
+    } finally {
+      frames.removeLast();
     }
-    if (source.value case skir.TypeUse_namedWrapper(:final value)
-        when value.arguments.isNotEmpty) {
-      return type(value.arguments.first, source.mayBeMissing);
-    }
-    return null;
   }
 
-  bool emptyCollection(skir.ExpressionNode node) => switch (node) {
+  skir.ExpressionType local(skir.ExpressionLocal ref) {
+    if (ref.depth < 0 || ref.slot < 0 || ref.depth >= frames.length) {
+      throw const ExpressionProblem("invalid_expression_local");
+    }
+    final frame = frames[frames.length - 1 - ref.depth];
+    if (ref.slot >= frame.length) {
+      throw const ExpressionProblem("invalid_expression_local");
+    }
+    return readTypePath(frame[ref.slot], ref.path);
+  }
+
+  skir.ExpressionType inferInput(skir.ExpressionInput value) {
+    final partial = partialInputs[value.binding];
+    if (partial != null) {
+      final use = catalog.valueTypeAt(partial, value.path);
+      if (use == null) throw const ExpressionProblem("invalid_expression_path");
+      return nominalType(use, true);
+    }
+    final input = inputs[value.binding];
+    if (input == null) {
+      throw const ExpressionProblem("unknown_expression_binding");
+    }
+    validateType(input);
+    return readTypePath(input, value.path);
+  }
+
+  void validateType(skir.ExpressionType type) {
+    switch (type.value) {
+      case skir.ExpressionValueType_nominalWrapper(:final value):
+        if (!catalog.isReadyTypeUse(value)) {
+          throw const ExpressionProblem("invalid_expression_type");
+        }
+      case skir.ExpressionValueType_listWrapper(:final value) ||
+          skir.ExpressionValueType_nullableWrapper(:final value):
+        validateType(value);
+      case skir.ExpressionValueType_mapWrapper(:final value) ||
+          skir.ExpressionValueType_entryWrapper(:final value):
+        validateType(value.key);
+        validateType(value.value);
+      case skir.ExpressionValueType.nullValue:
+        break;
+      default:
+        throw const ExpressionProblem("invalid_expression_type");
+    }
+  }
+
+  skir.ExpressionType infer(skir.ExpressionNode node) {
+    final projection = node.readProjection(remainingDepth: 512 - depth);
+    if (projection != null) return inferProjection(projection);
+    switch (node) {
+      case skir.ExpressionNode_literalWrapper(:final value):
+        return inferLiteral(value);
+      case skir.ExpressionNode_fieldWrapper(:final value):
+        return readTypePath(
+          inferChild(value.source, 0),
+          editorRootPath.field(value.name),
+        );
+      case skir.ExpressionNode_entryProjectionWrapper(:final value):
+        final segment = switch (value.branch) {
+          skir.EntryBranch.key => skir.PathSegment.mapKey,
+          skir.EntryBranch.value => skir.PathSegment.mapValue,
+          _ => throw const ExpressionProblem("invalid_entry_projection"),
+        };
+        return readTypePath(
+          inferChild(value.source, 0),
+          skir.ValuePath(segments: [segment]),
+        );
+      case skir.ExpressionNode_andWrapper(:final value) ||
+          skir.ExpressionNode_orWrapper(:final value):
+        final left = inferChild(value.left, 0);
+        final right = inferChild(value.right, 1);
+        requireScalar(left, boolean);
+        requireScalar(right, boolean);
+        return nominalType(boolean, left.mayBeMissing || right.mayBeMissing);
+      case skir.ExpressionNode_conditionalWrapper(:final value):
+        final test = inferChild(value.test, 0);
+        requireScalar(test, boolean);
+        var yes = isEmptyLiteral(value.yes) ? null : inferChild(value.yes, 1);
+        var no = isEmptyLiteral(value.no) ? null : inferChild(value.no, 2);
+        if (yes == null && no != null) yes = contextualEmpty(value.yes, no);
+        if (no == null && yes != null) no = contextualEmpty(value.no, yes);
+        if (yes == null || no == null) {
+          throw const ExpressionProblem("expression_type_inference_failed");
+        }
+        return withMissing(
+          join(yes, no),
+          test.mayBeMissing || yes.mayBeMissing || no.mayBeMissing,
+        );
+      case skir.ExpressionNode_orElseWrapper(:final value):
+        final input = inferChild(value.input, 0);
+        final fallback =
+            contextualEmpty(value.fallback, input) ??
+            inferChild(value.fallback, 1);
+        final shape = canonicalShape(input);
+        if (shape.value == skir.ExpressionValueType.nullValue) return fallback;
+        final nonnull = shape.value is skir.ExpressionValueType_nullableWrapper
+            ? (shape.value as skir.ExpressionValueType_nullableWrapper).value
+            : shape;
+        final joined = join(withMissing(nonnull, false), fallback);
+        return input.mayBeMissing ||
+                shape.value is skir.ExpressionValueType_nullableWrapper
+            ? withMissing(joined, fallback.mayBeMissing)
+            : withMissing(input, false);
+      case skir.ExpressionNode_mapWrapper(:final value):
+        return inferUnary(value, (_, body, missing) => listType(body, missing));
+      case skir.ExpressionNode_flatMapWrapper(:final value):
+        return inferUnary(
+          value,
+          (_, body, missing) => listType(requireItem(body), missing),
+        );
+      case skir.ExpressionNode_groupByWrapper(:final value):
+        return inferUnary(
+          value,
+          (item, key, missing) => mapType(key, listType(item), missing),
+        );
+      case skir.ExpressionNode_foldWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final initial = inferChild(value.initial, 1);
+        final body = inFrame([
+          initial,
+          requireItem(source),
+        ], () => inferChild(value.body, 2));
+        if (!compatible(body, initial)) {
+          throw const ExpressionProblem("incompatible_expression_accumulator");
+        }
+        return withMissing(
+          join(initial, body),
+          source.mayBeMissing || initial.mayBeMissing || body.mayBeMissing,
+        );
+      case skir.ExpressionNode_reduceWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final item = requireItem(source);
+        final body = inFrame([item, item], () => inferChild(value.body, 1));
+        if (!compatible(body, item)) {
+          throw const ExpressionProblem("incompatible_expression_accumulator");
+        }
+        return nullableType(join(item, body))
+            .withMissing(source.mayBeMissing || body.mayBeMissing);
+      case skir.ExpressionNode_sortWithWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final item = requireItem(source);
+        final result = inFrame([
+          item,
+          item,
+        ], () => inferChild(value.comparator, 1));
+        requireNumber(result);
+        return withMissing(source, source.mayBeMissing || result.mayBeMissing);
+      case skir.ExpressionNode_sortByWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final item = requireItem(source);
+        var missing = source.mayBeMissing;
+        if (value.descending case final direction?) {
+          final type = inferChild(direction, 1);
+          requireScalar(type, boolean);
+          missing |= type.mayBeMissing;
+        }
+        final key = inFrame([item], () => inferChild(value.key, 2));
+        final use = nominalUse(key);
+        if (use == null ||
+            !(family(use) != null ||
+                {
+                  text,
+                  boolean,
+                  skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
+                  skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
+                }.contains(catalog.expressionPayloadType(use)))) {
+          throw const ExpressionProblem("invalid_expression_operand_type");
+        }
+        return withMissing(source, missing || key.mayBeMissing);
+      case skir.ExpressionNode_anyWrapper(:final value) ||
+          skir.ExpressionNode_allWrapper(:final value) ||
+          skir.ExpressionNode_noneWrapper(:final value) ||
+          skir.ExpressionNode_filterWrapper(:final value) ||
+          skir.ExpressionNode_findWrapper(:final value) ||
+          skir.ExpressionNode_findLastWrapper(:final value) ||
+          skir.ExpressionNode_countWrapper(:final value) ||
+          skir.ExpressionNode_distinctByWrapper(:final value) ||
+          skir.ExpressionNode_uniqueByWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final item = requireItem(source);
+        final body = inFrame([item], () => inferChild(value.body, 1));
+        final missing = source.mayBeMissing || body.mayBeMissing;
+        if (node is! skir.ExpressionNode_distinctByWrapper &&
+            node is! skir.ExpressionNode_uniqueByWrapper) {
+          requireScalar(body, boolean);
+        }
+        if (node is skir.ExpressionNode_anyWrapper ||
+            node is skir.ExpressionNode_allWrapper ||
+            node is skir.ExpressionNode_noneWrapper ||
+            node is skir.ExpressionNode_uniqueByWrapper) {
+          return nominalType(boolean, missing);
+        }
+        if (node is skir.ExpressionNode_countWrapper) {
+          return nominalType(integer, missing);
+        }
+        if (node is skir.ExpressionNode_findWrapper ||
+            node is skir.ExpressionNode_findLastWrapper) {
+          return withMissing(nullableType(item), missing);
+        }
+        return withMissing(source, missing);
+      case skir.ExpressionNode_takeWrapper(:final value) ||
+          skir.ExpressionNode_skipWrapper(:final value):
+        final source = inferChild(value.source, 0);
+        final count = inferChild(value.count, 1);
+        requireItem(source);
+        requireInteger(count);
+        return withMissing(source, source.mayBeMissing || count.mayBeMissing);
+      case skir.ExpressionNode_reverseWrapper(:final value) ||
+          skir.ExpressionNode_distinctWrapper(:final value):
+        final source = inferChild(value, 0);
+        requireItem(source);
+        return source;
+      case skir.ExpressionNode_unknown():
+        throw const ExpressionProblem("unknown_expression");
+      default:
+        return inferScalar(node);
+    }
+  }
+
+  bool isEmptyLiteral(skir.ExpressionNode node) => switch (node) {
     skir.ExpressionNode_literalWrapper(
       value: skir.DataValue_listValueWrapper(:final value),
     ) =>
@@ -112,611 +328,818 @@ List<String> checkPortableExpression(
       value: skir.DataValue_setValueWrapper(:final value),
     ) =>
       value.items.isEmpty,
+    skir.ExpressionNode_literalWrapper(
+      value: skir.DataValue_mapValueWrapper(:final value),
+    ) =>
+      value.rows.isEmpty,
     _ => false,
   };
 
-  late skir.ExpressionType? Function(
-    skir.ExpressionNode,
-    Map<skir.ExpressionBindingId, skir.ExpressionType>,
-    List<int>,
-  )
-  infer;
-  infer = (node, scope, occurrence) {
-    switch (node) {
-      case skir.ExpressionNode_literalWrapper(:final value):
-        if (value case skir.DataValue_namedWrapper(:final value)) {
-          return type(skir.TypeUse.wrapNamed(value.actualType), false, true);
-        }
-        final items = switch (value) {
-          skir.DataValue_listValueWrapper(:final value) => value.items.map(
-            (item) => item.value,
-          ),
-          skir.DataValue_setValueWrapper(:final value) => value.items.map(
-            (item) => item.value,
-          ),
-          _ => null,
-        };
-        if (items != null) {
-          final actual = items
-              .map(
-                (item) => infer(
-                  skir.ExpressionNode.wrapLiteral(item),
-                  scope,
-                  occurrence,
-                ),
-              )
-              .toList();
-          if (actual.isEmpty || actual.any((item) => item == null)) return null;
-          if (actual.skip(1).any((item) => !matches(actual.first!, item!))) {
-            errors.add("incompatible_expression_collection_items");
-          }
-          return type(listOf(actual.first!.value));
-        }
-        return switch (value.authoredPayload) {
-          skir.DataValue_integerWrapper() => type(integer, false, true),
-          skir.DataValue_floatWrapper() => type(floating, false, true),
-          skir.DataValue_decimalWrapper() => type(decimal, false, true),
-          skir.DataValue_stringValueWrapper() => type(text),
-          skir.DataValue_booleanWrapper() => type(boolean),
-          skir.DataValue_durationWrapper() => type(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
-          ),
-          skir.DataValue_timestampWrapper() => type(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
-          ),
-          skir.DataValue_bytesWrapper() => type(
-            skir.TypeUse.wrapScalar(skir.ScalarKind.bytes),
-          ),
-          final value when value == skir.DataValue.unfilled => type(
-            expectedOutput?.value ?? text,
-            true,
-          ),
-          _ => null,
-        };
-      case skir.ExpressionNode_readWrapper(:final value):
-        final source = scope[value.binding];
-        final resolvedBinding = resolveBinding?.call(value);
-        if (resolvedBinding != null) return resolvedBinding;
-        if (source == null) {
-          errors.add("unknown_expression_binding");
-          return null;
-        }
-        if (value.path.segments.isEmpty) {
-          return type(source.value, source.mayBeMissing);
-        }
-        final resolved = resolvePath?.call(source, value.path);
-        if (resolved == null) errors.add("invalid_expression_path");
-        return resolved == null
-            ? null
-            : type(resolved.value, resolved.mayBeMissing);
-      case skir.ExpressionNode_callWrapper(:final value):
-        final id = value.operation.value;
-        if (!portableOperationAcceptsArity(id, value.arguments.length)) {
-          errors.add(
-            authoredPortableOperationIds.contains(id)
-                ? "invalid_expression_operation_arity"
-                : "unknown_expression_operation",
-          );
-          return null;
-        }
-        final arguments = [
-          for (final (index, argument) in value.arguments.indexed)
-            infer(argument, scope, [...occurrence, index]),
-        ];
-        if (arguments.any((argument) => argument == null)) return null;
-        final nominal = arguments.cast<skir.ExpressionType>();
-        if (CanonicalQueryOperation.fromId(id) != null) {
-          final query = resolveQuery?.call(value, nominal, scope, occurrence);
-          if (query == null) errors.add("invalid_canonical_query");
-          return query;
-        }
-        if (id == "typewriter.record.field") {
-          if (nominal.length != 2) return null;
-          if (value.arguments.elementAt(1)
-              case skir.ExpressionNode_literalWrapper(
-                value: skir.DataValue_stringValueWrapper(value: final field),
-              )) {
-            final result = resolvePath?.call(
-              nominal[0],
-              skir.ValuePath(
-                segments: [skir.PathSegment.createField(name: field)],
-              ),
-            );
-            if (result == null) errors.add("invalid_expression_field");
-            return result;
-          }
-          errors.add("dynamic_expression_field_type");
-          return null;
-        }
-        if (id == "typewriter.link.target") {
-          return type(
-            skir.TypeUse.wrapNamed(frameworkResourceIdUse),
-            nominal.first.mayBeMissing,
-          );
-        }
-        final actual = [
-          for (final value in nominal)
-            type(
-              normalizeType?.call(value.value) ?? value.value,
-              value.mayBeMissing,
-              literalTypes.contains(value),
-            ),
-        ];
-        final missing = actual.any((argument) => argument.mayBeMissing);
-        bool inputs(List<skir.TypeUse?> expected) {
-          if (actual.length != expected.length) {
-            errors.add("invalid_expression_operation_arity");
-            return false;
-          }
-          for (var index = 0; index < expected.length; index++) {
-            if (expected[index] != null &&
-                actual[index].value != expected[index]) {
-              errors.add("invalid_expression_operand_type");
-            }
-          }
-          return true;
-        }
-        if (!authoredPortableOperationIds.contains(id)) {
-          errors.add("unknown_expression_operation");
-          return null;
-        }
-        if (id == "typewriter.number.round_to" ||
-            id == "typewriter.number.negate" ||
-            {
-              "typewriter.number.add",
-              "typewriter.number.subtract",
-              "typewriter.number.multiply",
-              "typewriter.number.divide",
-              "typewriter.number.remainder",
-            }.contains(id)) {
-          final numeric = id == "typewriter.number.round_to"
-              ? actual.take(2).toList()
-              : actual;
-          final minimum = id == "typewriter.number.negate" ? 1 : 2;
-          if (actual.length < minimum ||
-              (id == "typewriter.number.round_to" && actual.length != 3) ||
-              (id == "typewriter.number.negate" && actual.length != 1)) {
-            errors.add("invalid_expression_operation_arity");
-            return null;
-          }
-          if (numeric.any((input) => family(input.value) == null) ||
-              numeric.any(
-                (input) => family(input.value) != family(numeric.first.value),
-              )) {
-            errors.add("numeric_family_mismatch");
-          }
-          if (id == "typewriter.number.round_to" && actual[2].value != text) {
-            errors.add("invalid_expression_operand_type");
-          }
-          for (final operand in numeric.skip(1)) {
-            if (!matches(numeric.first, operand)) {
-              errors.add("incompatible_expression_types");
-            }
-          }
-          var result = numeric.first.value;
-          for (var index = 0; index < numeric.length; index++) {
-            if (value.arguments.elementAt(index)
-                is! skir.ExpressionNode_literalWrapper) {
-              result = numeric[index].value;
-              break;
-            }
-          }
-          return type(result, missing, numeric.every(literalTypes.contains));
-        }
-        if (id == "typewriter.number.format") {
-          if (inputs([null, null, text]) &&
-              (family(actual[0].value) == null ||
-                  family(actual[1].value) != "integer")) {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(text, missing);
-        }
-        if (id == "typewriter.duration.format") {
-          if (inputs([
-                skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
-                text,
-                null,
-              ]) &&
-              family(actual[2].value) != "integer") {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(text, missing);
-        }
-        if (id == "typewriter.timestamp.format") {
-          inputs([
-            skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
-            text,
-            text,
-            text,
-          ]);
-          return type(text, missing);
-        }
-        if ({
-          "typewriter.text.value",
-          "typewriter.text.trim",
-          "typewriter.text.lower",
-          "typewriter.text.upper",
-          "typewriter.text.title",
-        }.contains(id)) {
-          inputs([text]);
-          return type(text, missing);
-        }
-        if ({
-          "typewriter.text.replace",
-          "typewriter.regex.replace",
-        }.contains(id)) {
-          inputs([text, text, text]);
-          return type(text, missing);
-        }
-        if (id == "typewriter.color.parse") {
-          inputs([text]);
-          return type(skir.TypeUse.wrapNamed(expressionColorUse), true);
-        }
-        if (id == "typewriter.text.interpolate") return type(text, missing);
-        if (id == "typewriter.text.length") {
-          inputs([text]);
-          return type(integer, missing);
-        }
-        if (id == "typewriter.text.has_line_break") {
-          inputs([text]);
-          return type(boolean, missing);
-        }
-        if ({
-          "typewriter.text.contains",
-          "typewriter.text.starts_with",
-          "typewriter.text.ends_with",
-          "typewriter.regex.matches",
-        }.contains(id)) {
-          inputs([text, text]);
-          return type(boolean, missing);
-        }
-        if (id == "typewriter.regex.capture") {
-          if (inputs([text, text, null]) &&
-              family(actual[2].value) != "integer") {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(text, missing);
-        }
-        if (id == "typewriter.text.substring") {
-          if (actual.length < 2 || actual.length > 3) {
-            errors.add("invalid_expression_operation_arity");
-          }
-          if (actual.isNotEmpty && actual.first.value != text ||
-              actual.skip(1).any((input) => family(input.value) != "integer")) {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(text, missing);
-        }
-        if (id == "typewriter.text.split") {
-          inputs([text, text]);
-          return type(listOf(text), missing);
-        }
-        if (id == "typewriter.text.join") {
-          if (inputs([null, text]) && itemType(actual[0])?.value != text) {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(text, missing);
-        }
-        if (id == "typewriter.boolean.not") {
-          inputs([boolean]);
-          return type(boolean, missing);
-        }
-        if ({
-          "typewriter.number.gt",
-          "typewriter.number.gte",
-          "typewriter.number.lt",
-          "typewriter.number.lte",
-        }.contains(id)) {
-          if (inputs([null, null]) &&
-              actual.any((input) => family(input.value) == null)) {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(boolean, missing);
-        }
-        if ({"typewriter.value.eq", "typewriter.value.neq"}.contains(id)) {
-          if (inputs([null, null]) && !matches(actual[0], actual[1])) {
-            errors.add("incompatible_expression_types");
-          }
-          return type(boolean, missing);
-        }
-        if (id == "typewriter.value.is_null") {
-          inputs([null]);
-          return type(boolean, missing);
-        }
-        if (id == "typewriter.collection.size") {
-          inputs([null]);
-          if (actual.isNotEmpty && itemType(actual.first) == null) {
-            errors.add("expression_collection_expected");
-          }
-          return type(integer, missing);
-        }
-        if (id == "typewriter.collection.access") {
-          inputs([null, null]);
-          final item = itemType(actual[0]);
-          if (item == null) errors.add("expression_collection_expected");
-          return item;
-        }
-        if (id == "typewriter.collection.contains") {
-          inputs([null, null]);
-          final item = itemType(actual[0]);
-          if (item == null) {
-            errors.add("expression_collection_expected");
-          } else if (!matches(actual[1], item)) {
-            errors.add("incompatible_expression_types");
-          }
-          return type(boolean, missing);
-        }
-        if (id == "typewriter.color.with_alpha") {
-          if (actual.any((argument) => family(argument.value) != "integer")) {
-            errors.add("invalid_expression_operand_type");
-          }
-          return type(
-            actual.first.value,
-            missing,
-            actual.every(literalTypes.contains),
-          );
-        }
-        if (id.startsWith("typewriter.rule.")) {
-          final kinds = _ruleExpressionInputKinds[id];
-          if (kinds == null) {
-            errors.add("unsupported_expression_operation_type");
-            return null;
-          }
-          for (var index = 0; index < actual.length; index++) {
-            final kind = index < kinds.length ? kinds[index] : "Any";
-            final use = actual[index].value;
-            final accepted = switch (kind) {
-              "Any" => true,
-              "Boolean" => use == boolean,
-              "Text" => use == text,
-              "Integer" => family(use) == "integer",
-              "Number" => family(use) != null,
-              "Timestamp" =>
-                use == skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
-              "Sized" =>
-                use == text ||
-                    use == skir.TypeUse.wrapScalar(skir.ScalarKind.bytes) ||
-                    itemType(actual[index]) != null,
-              "Collection" => itemType(actual[index]) != null,
-              _ => false,
-            };
-            if (!accepted) errors.add("invalid_expression_operand_type");
-          }
-          return type(boolean, missing);
-        }
-        errors.add("unsupported_expression_operation_type");
-        return null;
-      case skir.ExpressionNode_andWrapper(:final value):
-      case skir.ExpressionNode_orWrapper(:final value):
-        final left = infer(value.left, scope, [...occurrence, 0]);
-        final right = infer(value.right, scope, [...occurrence, 1]);
-        if (left?.value != boolean || right?.value != boolean) {
-          errors.add("invalid_boolean_operand");
-        }
-        return type(
-          boolean,
-          (left?.mayBeMissing ?? true) || (right?.mayBeMissing ?? true),
-        );
-      case skir.ExpressionNode_conditionalWrapper(:final value):
-        final test = infer(value.test, scope, [...occurrence, 0]);
-        if (test?.value != boolean) {
-          errors.add("invalid_boolean_operand");
-        }
-        var yes = emptyCollection(value.yes)
-            ? null
-            : infer(value.yes, scope, [...occurrence, 1]);
-        var no = emptyCollection(value.no)
-            ? null
-            : infer(value.no, scope, [...occurrence, 2]);
-        if (yes == null &&
-            no != null &&
-            emptyCollection(value.yes) &&
-            itemType(no) != null) {
-          yes = type(no.value, false, true);
-        }
-        if (no == null &&
-            yes != null &&
-            emptyCollection(value.no) &&
-            itemType(yes) != null) {
-          no = type(yes.value, false, true);
-        }
-        if (yes == null || no == null) return null;
-        if (!matches(yes, no)) errors.add("incompatible_expression_types");
-        return type(
-          literalTypes.contains(yes) && !literalTypes.contains(no)
-              ? no.value
-              : yes.value,
-          yes.mayBeMissing || no.mayBeMissing,
-          literalTypes.contains(yes) && literalTypes.contains(no),
-        );
-      case skir.ExpressionNode_orElseWrapper(:final value):
-        final input = infer(value.input, scope, [...occurrence, 0]);
-        final fallback =
-            input != null &&
-                emptyCollection(value.fallback) &&
-                itemType(input) != null
-            ? type(input.value, false, true)
-            : infer(value.fallback, scope, [...occurrence, 1]);
-        if (input == null || fallback == null) return null;
-        if (!matches(input, fallback)) {
-          errors.add("incompatible_expression_types");
-        }
-        return type(
-          literalTypes.contains(input) && !literalTypes.contains(fallback)
-              ? fallback.value
-              : input.value,
-          input.mayBeMissing && fallback.mayBeMissing,
-          literalTypes.contains(input) && literalTypes.contains(fallback),
-        );
-      case skir.ExpressionNode_collectionWrapper(:final value):
-        final input = infer(value.input, scope, [...occurrence, 0]);
-        if (input == null) return null;
-        final item = itemType(input);
-        if (item == null) {
-          errors.add("expression_collection_expected");
-          return null;
-        }
-        final local = Map<skir.ExpressionBindingId, skir.ExpressionType>.of(
-          scope,
-        );
-        for (final binding in value.bindings) {
-          if (binding.value.startsWith("context:")) {
-            errors.add("reserved_context_binding");
-          }
-          if (local.containsKey(binding)) {
-            errors.add("duplicate_expression_binding");
-          }
-          local[binding] = item;
-        }
-        final id = value.operation.value;
-        final shape = _portableCollectionShapes[id];
-        if (shape == null) {
-          errors.add("unknown_expression_operation");
-          return null;
-        }
-        if (value.bindings.length != shape.$1 ||
-            value.arguments.length < shape.$2 ||
-            value.arguments.length > shape.$3 ||
-            (value.body != null) != shape.$4) {
-          errors.add("invalid_expression_collection_shape");
-          return null;
-        }
-        final body = value.body == null
-            ? null
-            : infer(value.body!, local, [
-                ...occurrence,
-                value.arguments.length + 1,
-              ]);
-        final arguments = [
-          for (final (index, argument) in value.arguments.indexed)
-            infer(argument, scope, [...occurrence, index + 1]),
-        ];
-        if ({
-              "typewriter.collection.any",
-              "typewriter.collection.all",
-              "typewriter.collection.none",
-              "typewriter.collection.filter",
-              "typewriter.collection.find",
-              "typewriter.collection.find_last",
-              "typewriter.collection.count",
-            }.contains(id) &&
-            body?.value != boolean) {
-          errors.add("invalid_expression_collection_predicate");
-        }
-        if ({
-              "typewriter.collection.take",
-              "typewriter.collection.skip",
-            }.contains(id) &&
-            (arguments.isEmpty ||
-                arguments.first == null ||
-                family(arguments.first!.value) != "integer")) {
-          errors.add("invalid_expression_operand_type");
-        }
-        if ({
-          "typewriter.collection.any",
-          "typewriter.collection.all",
-          "typewriter.collection.none",
-          "typewriter.collection.unique_by",
-        }.contains(id)) {
-          return type(
-            boolean,
-            input.mayBeMissing || (body?.mayBeMissing ?? false),
-          );
-        }
-        if (id == "typewriter.collection.count") {
-          return type(integer, input.mayBeMissing);
-        }
-        if (id == "typewriter.collection.map") {
-          return body == null
-              ? null
-              : type(
-                  listOf(body.value),
-                  input.mayBeMissing || body.mayBeMissing,
-                );
-        }
-        if (id == "typewriter.collection.find" ||
-            id == "typewriter.collection.find_last" ||
-            id == "typewriter.collection.reduce") {
-          return type(item.value, true);
-        }
-        if (id == "typewriter.collection.fold") {
-          return value.arguments.isEmpty
-              ? null
-              : infer(value.arguments.first, scope, [...occurrence, 1]);
-        }
-        return input;
-      default:
-        errors.add("unknown_expression_node");
-        return null;
+  skir.ExpressionType? contextualEmpty(
+    skir.ExpressionNode node,
+    skir.ExpressionType context,
+  ) {
+    if (!isEmptyLiteral(node)) return null;
+    if (depth >= 512) throw const ExpressionProblem("expression_check_limit");
+    var shape = canonicalShape(context);
+    if (shape.value case skir.ExpressionValueType_nullableWrapper(
+      :final value,
+    )) {
+      shape = canonicalShape(value);
     }
-  };
-  final result = infer(body, Map.of(bindings), const []);
-  onInferred?.call(result);
-  if (result == null) {
-    errors.add("expression_type_inference_failed");
-  } else if (expectedOutput != null) {
-    if (!matches(result, expectedOutput) &&
-        !(allowResultNumericWidth &&
-            family(result.value) != null &&
-            family(result.value) == family(expectedOutput.value))) {
-      errors.add("incompatible_expression_result_type");
+    final literal = (node as skir.ExpressionNode_literalWrapper).value;
+    if (literal is skir.DataValue_listValueWrapper &&
+        shape.value is skir.ExpressionValueType_listWrapper) {
+      return listType(
+        (shape.value as skir.ExpressionValueType_listWrapper).value,
+      );
     }
-    if (result.mayBeMissing && !expectedOutput.mayBeMissing) {
-      errors.add("expression_result_may_be_missing");
+    if (literal is skir.DataValue_mapValueWrapper) {
+      final mapping = catalog.expressionMapping(shape);
+      if (mapping != null) return mapType(mapping.key, mapping.value);
+    }
+    if (literal is skir.DataValue_setValueWrapper &&
+        shape.value is skir.ExpressionValueType_nominalWrapper) {
+      final use =
+          (shape.value as skir.ExpressionValueType_nominalWrapper).value;
+      if (use is skir.TypeUse_namedWrapper &&
+          use.value.definition ==
+              (standardUse(
+                "Set",
+                const [],
+              ) as skir.TypeUse_namedWrapper).value.definition) {
+        return withMissing(shape, false);
+      }
+    }
+    return null;
+  }
+
+  skir.ExpressionType inferLiteral(skir.DataValue value) {
+    if (++depth > 512) throw const ExpressionProblem("expression_check_limit");
+    try {
+      return _inferLiteral(value);
+    } finally {
+      depth--;
     }
   }
-  return List.unmodifiable(errors.toSet());
+
+  skir.ExpressionType _inferLiteral(skir.DataValue value) {
+    final validScalar = switch (value) {
+      skir.DataValue_integerWrapper(:final value) =>
+        RegExp(r"^[+-]?[0-9]+$").hasMatch(value) &&
+            BigInt.tryParse(value) != null,
+      skir.DataValue_floatWrapper(:final value) => value.isFinite,
+      skir.DataValue_decimalWrapper() => admitsPortableScalarValue(
+        skir.ScalarKind.decimal,
+        value,
+      ),
+      _ => true,
+    };
+    if (!validScalar) {
+      throw const ExpressionProblem("invalid_expression_literal");
+    }
+    if (value case skir.DataValue_namedWrapper(:final value)) {
+      final type = nominalType(skir.TypeUse.wrapNamed(value.actualType));
+      validateType(type);
+      return type;
+    }
+    if (value == skir.DataValue.null_) {
+      return skir.ExpressionType(
+        value: skir.ExpressionValueType.nullValue,
+        mayBeMissing: false,
+      );
+    }
+    if (value == skir.DataValue.unfilled) {
+      if (expectedOutput case final expected?) {
+        return withMissing(expected, true);
+      }
+      throw const ExpressionProblem("expression_type_inference_failed");
+    }
+    return switch (value) {
+      skir.DataValue_integerWrapper() => numericLiteral(integer),
+      skir.DataValue_floatWrapper() => numericLiteral(floating),
+      skir.DataValue_decimalWrapper() => numericLiteral(decimal),
+      skir.DataValue_stringValueWrapper() => nominalType(text),
+      skir.DataValue_booleanWrapper() => nominalType(boolean),
+      skir.DataValue_durationWrapper() => nominalType(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
+      ),
+      skir.DataValue_timestampWrapper() => nominalType(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
+      ),
+      skir.DataValue_bytesWrapper() => nominalType(
+        skir.TypeUse.wrapScalar(skir.ScalarKind.bytes),
+      ),
+      skir.DataValue_listValueWrapper(:final value) => inferLiteralItems(
+        value.items.map((v) => v.value).toList(),
+      ),
+      skir.DataValue_setValueWrapper(:final value) => inferSetItems(
+        value.items.map((v) => v.value).toList(),
+      ),
+      skir.DataValue_mapValueWrapper(:final value) => inferMapRows(
+        value.rows.toList(),
+      ),
+      _ => throw const ExpressionProblem("expression_type_inference_failed"),
+    };
+  }
+
+  skir.ExpressionType inferLiteralItems(List<skir.DataValue> values) {
+    final populated = values
+        .where((value) => value != skir.DataValue.unfilled)
+        .toList();
+    if (populated.isEmpty) {
+      throw const ExpressionProblem("expression_type_inference_failed");
+    }
+    var item = inferLiteral(populated.first);
+    for (final next in populated.skip(1)) {
+      item = join(item, inferLiteral(next));
+    }
+    if (populated.length != values.length) item = withMissing(item, true);
+    return listType(item);
+  }
+
+  skir.ExpressionType inferSetItems(List<skir.DataValue> values) {
+    final list = inferLiteralItems(values);
+    final item = (list.value as skir.ExpressionValueType_listWrapper).value
+        .declaredUse();
+    if (item == null) {
+      throw const ExpressionProblem("expression_type_inference_failed");
+    }
+    return nominalType(standardUse("Set", [item]));
+  }
+
+  skir.ExpressionType inferMapRows(List<skir.MapRow> rows) {
+    if (rows.isEmpty) {
+      throw const ExpressionProblem("expression_type_inference_failed");
+    }
+    var key = inferLiteral(rows.first.key);
+    var value = inferLiteral(rows.first.value);
+    for (final row in rows.skip(1)) {
+      key = join(key, inferLiteral(row.key));
+      value = join(value, inferLiteral(row.value));
+    }
+    return mapType(key, value);
+  }
+
+  skir.ExpressionType numericLiteral(skir.TypeUse type) {
+    final result = nominalType(type);
+    literalTypes.add(result);
+    return result;
+  }
+
+  skir.ExpressionType inferUnary(
+    skir.UnaryCollectionExpression value,
+    skir.ExpressionType Function(skir.ExpressionType, skir.ExpressionType, bool)
+    result,
+  ) {
+    final source = inferChild(value.source, 0);
+    final item = requireItem(source);
+    final body = inFrame([item], () => inferChild(value.body, 1));
+    return result(item, body, source.mayBeMissing || body.mayBeMissing);
+  }
+
+  skir.ExpressionType requireItem(skir.ExpressionType source) =>
+      catalog.collectionItem(source) ??
+      (throw const ExpressionProblem("expression_collection_expected"));
+  skir.TypeUse? nominalUse(skir.ExpressionType type) => switch (type.value) {
+    skir.ExpressionValueType_nominalWrapper(:final value) => value,
+    _ => null,
+  };
+  void requireScalar(skir.ExpressionType actual, skir.TypeUse expected) {
+    final use = nominalUse(actual);
+    if (use == null ||
+        catalog.expressionPayloadType(use) !=
+            catalog.expressionPayloadType(expected)) {
+      throw const ExpressionProblem("invalid_expression_operand_type");
+    }
+  }
+
+  void requireNumber(skir.ExpressionType type) {
+    if (family(nominalUse(type)) == null) {
+      throw const ExpressionProblem("invalid_expression_operand_type");
+    }
+  }
+
+  void requireInteger(skir.ExpressionType type) {
+    if (family(nominalUse(type)) != "integer") {
+      throw const ExpressionProblem("invalid_expression_operand_type");
+    }
+  }
+
+  String? family(skir.TypeUse? use) => use == null
+      ? null
+      : switch (catalog.expressionPayloadType(use)) {
+          skir.TypeUse_scalarWrapper(value: skir.ScalarKind_integerWrapper()) =>
+            "integer",
+          skir.TypeUse_scalarWrapper(value: skir.ScalarKind_floatWrapper()) =>
+            "float",
+          skir.TypeUse_scalarWrapper(value: final kind)
+              when kind == skir.ScalarKind.decimal =>
+            "decimal",
+          _ => null,
+        };
+  bool sameNumericFamily(skir.ExpressionType a, skir.ExpressionType b) =>
+      family(nominalUse(a)) != null &&
+      family(nominalUse(a)) == family(nominalUse(b));
+  skir.ExpressionType withMissing(skir.ExpressionType type, bool missing) {
+    if (type.mayBeMissing == missing) return type;
+    final result = type.withMissing(missing);
+    if (literalTypes.contains(type)) literalTypes.add(result);
+    return result;
+  }
+
+  skir.ExpressionType canonicalShape(skir.ExpressionType source) {
+    if (source.value is! skir.ExpressionValueType_nominalWrapper) return source;
+    final use = (source.value as skir.ExpressionValueType_nominalWrapper).value;
+    if (use case skir.TypeUse_nullableWrapper(:final value)) {
+      return skir.ExpressionType(
+        value: skir.ExpressionValueType.wrapNullable(nominalType(value.value)),
+        mayBeMissing: source.mayBeMissing,
+      );
+    }
+    if (use is! skir.TypeUse_namedWrapper ||
+        use.value.definition.revision != 1) {
+      return source;
+    }
+    final id = use.value.definition.typeId;
+    if (id is! skir.TypeId_qualifiedWrapper ||
+        id.value.namespace != "typewriter") {
+      return source;
+    }
+    final args = use.value.arguments.toList();
+    if (id.value.name == "List" && args.length == 1) {
+      return listType(nominalType(args[0]), source.mayBeMissing);
+    }
+    if (id.value.name == "Map" && args.length == 2) {
+      return mapType(
+        nominalType(args[0]),
+        nominalType(args[1]),
+        source.mayBeMissing,
+      );
+    }
+    return source;
+  }
+
+  bool compatible(skir.ExpressionType actual, skir.ExpressionType expected) {
+    final a = canonicalShape(actual);
+    final e = canonicalShape(expected);
+    switch ((a.value, e.value)) {
+      case (final av, final ev)
+          when av == skir.ExpressionValueType.nullValue &&
+              ev == skir.ExpressionValueType.nullValue:
+        return true;
+      case (final av, skir.ExpressionValueType_nullableWrapper())
+          when av == skir.ExpressionValueType.nullValue:
+        return true;
+      case (final av, _) when av == skir.ExpressionValueType.nullValue:
+        return false;
+      case (
+        skir.ExpressionValueType_nullableWrapper(value: final av),
+        skir.ExpressionValueType_nullableWrapper(value: final ev),
+      ):
+        return compatible(av, ev);
+      case (skir.ExpressionValueType_nullableWrapper(), _):
+        return false;
+      case (_, skir.ExpressionValueType_nullableWrapper(value: final ev)):
+        return compatible(a, ev);
+      case (
+        skir.ExpressionValueType_listWrapper(value: final av),
+        skir.ExpressionValueType_listWrapper(value: final ev),
+      ):
+        return compatible(av, ev);
+      case (
+        skir.ExpressionValueType_mapWrapper(value: final av),
+        skir.ExpressionValueType_mapWrapper(value: final ev),
+      ):
+      case (
+        skir.ExpressionValueType_entryWrapper(value: final av),
+        skir.ExpressionValueType_entryWrapper(value: final ev),
+      ):
+        return compatible(av.key, ev.key) && compatible(av.value, ev.value);
+      case (
+        skir.ExpressionValueType_nominalWrapper(value: final av),
+        skir.ExpressionValueType_nominalWrapper(value: final ev),
+      ):
+        final an = catalog.expressionPayloadType(av);
+        final en = catalog.expressionPayloadType(ev);
+        return av == ev ||
+            an == en ||
+            ((literalTypes.contains(actual) ||
+                    literalTypes.contains(expected)) &&
+                family(an) != null &&
+                family(an) == family(en));
+      default:
+        return false;
+    }
+  }
+
+  skir.ExpressionType nullableType(skir.ExpressionType type) =>
+      type.value == skir.ExpressionValueType.nullValue ||
+          type.value is skir.ExpressionValueType_nullableWrapper
+      ? type
+      : skir.ExpressionType(
+          value: skir.ExpressionValueType.wrapNullable(
+            withMissing(type, false),
+          ),
+          mayBeMissing: type.mayBeMissing,
+        );
+  skir.ExpressionType join(
+    skir.ExpressionType left,
+    skir.ExpressionType right,
+  ) {
+    final a = canonicalShape(left);
+    final b = canonicalShape(right);
+    final missing = left.mayBeMissing || right.mayBeMissing;
+    if (a.value == skir.ExpressionValueType.nullValue) {
+      return withMissing(nullableType(b), missing);
+    }
+    if (b.value == skir.ExpressionValueType.nullValue) {
+      return withMissing(nullableType(a), missing);
+    }
+    final ac = a.value is skir.ExpressionValueType_nullableWrapper
+        ? (a.value as skir.ExpressionValueType_nullableWrapper).value
+        : a;
+    final bc = b.value is skir.ExpressionValueType_nullableWrapper
+        ? (b.value as skir.ExpressionValueType_nullableWrapper).value
+        : b;
+    if (!compatible(ac, bc)) {
+      throw const ExpressionProblem("incompatible_expression_types");
+    }
+    var result = switch ((ac.value, bc.value)) {
+      (
+        skir.ExpressionValueType_listWrapper(value: final av),
+        skir.ExpressionValueType_listWrapper(value: final bv),
+      ) =>
+        listType(join(av, bv)),
+      (
+        skir.ExpressionValueType_mapWrapper(value: final av),
+        skir.ExpressionValueType_mapWrapper(value: final bv),
+      ) =>
+        mapType(join(av.key, bv.key), join(av.value, bv.value)),
+      (
+        skir.ExpressionValueType_entryWrapper(value: final av),
+        skir.ExpressionValueType_entryWrapper(value: final bv),
+      ) =>
+        entryType(join(av.key, bv.key), join(av.value, bv.value)),
+      _ => literalTypes.contains(ac) && !literalTypes.contains(bc) ? bc : ac,
+    };
+    if (a.value is skir.ExpressionValueType_nullableWrapper ||
+        b.value is skir.ExpressionValueType_nullableWrapper) {
+      result = nullableType(result);
+    }
+    return withMissing(result, missing);
+  }
+
+  skir.ExpressionType readTypePath(
+    skir.ExpressionType source,
+    skir.ValuePath path,
+  ) {
+    var current = source;
+    var missing = source.mayBeMissing;
+    for (final segment in path.segments) {
+      current = canonicalShape(current);
+      while (current.value is skir.ExpressionValueType_nullableWrapper) {
+        current =
+            (current.value as skir.ExpressionValueType_nullableWrapper).value;
+        missing = true; // Reading through an actual null is unavailable, not a null field.
+      }
+      if (current.value case skir.ExpressionValueType_entryWrapper(
+        :final value,
+      )) {
+        current = switch (segment) {
+          final s when s == skir.PathSegment.mapKey => value.key,
+          final s when s == skir.PathSegment.mapValue => value.value,
+          _ => throw const ExpressionProblem("invalid_expression_path"),
+        };
+      } else if (segment is skir.PathSegment_itemWrapper) {
+        current = requireItem(current);
+        // A selected item ID can be absent even in a present collection.
+        missing = true;
+      } else if (current.value is skir.ExpressionValueType_nominalWrapper) {
+        final resolved = catalog.expressionPathType(
+          current,
+          skir.ValuePath(segments: [segment]),
+        );
+        if (resolved == null) {
+          throw const ExpressionProblem("invalid_expression_path");
+        }
+        current = resolved;
+      } else {
+        throw const ExpressionProblem("invalid_expression_path");
+      }
+      missing = missing || current.mayBeMissing;
+    }
+    return withMissing(current, missing);
+  }
+
+  skir.ExpressionType inferProjection(ExpressionProjection p) {
+    switch (p.root) {
+      case skir.ExpressionNode_inputWrapper(:final value):
+        return inferInput(
+          skir.ExpressionInput(
+            binding: value.binding,
+            path: skir.ValuePath(
+              segments: [...value.path.segments, ...p.suffix.segments],
+            ),
+          ),
+        );
+      case skir.ExpressionNode_localWrapper(:final value):
+        return local(
+          skir.ExpressionLocal(
+            depth: value.depth,
+            slot: value.slot,
+            path: skir.ValuePath(
+              segments: [...value.path.segments, ...p.suffix.segments],
+            ),
+          ),
+        );
+      case skir.ExpressionNode_queryWrapper(:final value):
+        final previous = occurrence;
+        occurrence = [...previous, for (var i = 0; i < p.descents; i++) 0];
+        try {
+          return readTypePath(inferQuery(value), p.suffix);
+        } finally {
+          occurrence = previous;
+        }
+      default:
+        throw const ExpressionProblem("invalid_projection");
+    }
+  }
+
+  CheckedQueryCall checkResourceQuery(
+    skir.ExpressionQuery query,
+    skir.ResourceQuerySource source,
+    ExpressionOccurrence occurrence,
+  ) {
+    late skir.TypeUse target;
+    late bool reference;
+    switch (source) {
+      case skir.ResourceQuerySource_referenceWrapper(:final value):
+        final input = inferChild(value, 0);
+        if (input.value is! skir.ExpressionValueType_nominalWrapper) {
+          throw const ExpressionProblem("invalid_canonical_query");
+        }
+        final use =
+            (input.value as skir.ExpressionValueType_nominalWrapper).value;
+        final named = catalog.namedUse(use);
+        final repr = named == null
+            ? null
+            : catalog.published(named.definition)?.definition.representation;
+        if (repr is! skir.RepresentationTemplate_linkWrapper) {
+          throw const ExpressionProblem("invalid_canonical_query");
+        }
+        final resolved = catalog.applyTemplate(
+          repr.value.target,
+          skir.TypeSelection.wrapComplete(named!),
+        );
+        if (resolved == null) {
+          throw const ExpressionProblem("invalid_canonical_query");
+        }
+        target = resolved;
+        reference = true;
+      case skir.ResourceQuerySource_identityWrapper(:final value):
+        final input = inferChild(value.identity, 0);
+        if (input.value !=
+                skir.ExpressionValueType.wrapNominal(
+                  skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+                ) ||
+            value.target is! skir.TypeUse_namedWrapper ||
+            !catalog.isReadyApplication(
+              (value.target as skir.TypeUse_namedWrapper).value,
+            )) {
+          throw const ExpressionProblem("invalid_canonical_query");
+        }
+        target = value.target;
+        reference = false;
+      default:
+        throw const ExpressionProblem("invalid_canonical_query");
+    }
+    final result = switch (query) {
+      skir.ExpressionQuery_resourceIdentityWrapper() => nominalType(
+        skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+        true,
+      ),
+      skir.ExpressionQuery_resourceValueWrapper() => nominalType(target, true),
+      skir.ExpressionQuery_resourceConfigurationWrapper() => nominalType(
+        canonicalReadModels.typeSelectionUse,
+        true,
+      ),
+      _ => throw const ExpressionProblem("invalid_canonical_query"),
+    };
+    final contract = CheckedQueryCall(
+      query: query,
+      targetType: target,
+      result: result,
+      sourceIsReference: reference,
+    );
+    queryContracts[occurrence] = contract;
+    return contract;
+  }
+
+  skir.ExpressionType inferQuery(skir.ExpressionQuery query) {
+    switch (query) {
+      case skir.ExpressionQuery_resourceIdentityWrapper(:final value):
+      case skir.ExpressionQuery_resourceValueWrapper(:final value):
+      case skir.ExpressionQuery_resourceConfigurationWrapper(:final value):
+        return checkResourceQuery(
+          query,
+          value,
+          ExpressionOccurrence(path: occurrence),
+        ).result;
+      case skir.ExpressionQuery_valueConfigurationWrapper(:final value):
+        inferChild(value, 0); // Preserve current admission; runtime named value may be unavailable.
+        final result = nominalType(canonicalReadModels.typeSelectionUse, true);
+        queryContracts[ExpressionOccurrence(
+          path: occurrence,
+        )] = CheckedQueryCall(
+          query: query,
+          targetType: null,
+          result: result,
+          sourceIsReference: false,
+        );
+        return result;
+      case skir.ExpressionQuery_catalogDeclarationWrapper(:final value):
+        final input = inferChild(value, 0);
+        if (input.value is! skir.ExpressionValueType_nominalWrapper ||
+            !catalog.isReadableAs(
+              (input.value as skir.ExpressionValueType_nominalWrapper).value,
+              canonicalReadModels.typeSelectionUse,
+            )) {
+          throw const ExpressionProblem("invalid_canonical_query");
+        }
+        final result = nominalType(canonicalReadModels.publishedTypeUse, true);
+        queryContracts[ExpressionOccurrence(
+          path: occurrence,
+        )] = CheckedQueryCall(
+          query: query,
+          targetType: null,
+          result: result,
+          sourceIsReference: false,
+        );
+        return result;
+      default:
+        throw const ExpressionProblem("unknown_query");
+    }
+  }
+
+  skir.ExpressionType inferScalar(skir.ExpressionNode node) {
+    final operands = node.scalarOperands;
+    if (operands == null) throw const ExpressionProblem("unknown_expression");
+    final values = [
+      for (final (index, value) in operands.indexed) inferChild(value, index),
+    ];
+    final missing = values.any((value) => value.mayBeMissing);
+    void allScalar(skir.TypeUse type) {
+      for (final value in values) {
+        requireScalar(value, type);
+      }
+    }
+
+    void allNumeric() {
+      for (final value in values) {
+        requireNumber(value);
+      }
+      if (values
+          .skip(1)
+          .any(
+            (v) => family(nominalUse(v)) != family(nominalUse(values.first)),
+          )) {
+        throw const ExpressionProblem("numeric_family_mismatch");
+      }
+    }
+
+    skir.ExpressionType boolResult() => nominalType(boolean, missing);
+    skir.ExpressionType textResult() => nominalType(text, missing);
+    switch (node) {
+      case skir.ExpressionNode_textUnaryWrapper(:final value):
+        if (value.operation == skir.TextUnaryOperation.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allScalar(text);
+        return textResult();
+      case skir.ExpressionNode_textCompareWrapper(:final value):
+        if (value.operation == skir.TextCompareOperation.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allScalar(text);
+        return boolResult();
+      case skir.ExpressionNode_textLengthWrapper():
+        allScalar(text);
+        return nominalType(integer, missing);
+      case skir.ExpressionNode_textHasLineBreakWrapper():
+        allScalar(text);
+        return boolResult();
+      case skir.ExpressionNode_textReplaceWrapper() ||
+          skir.ExpressionNode_regexReplaceWrapper():
+        allScalar(text);
+        return textResult();
+      case skir.ExpressionNode_textSplitWrapper():
+        allScalar(text);
+        return listType(nominalType(text), missing);
+      case skir.ExpressionNode_textJoinWrapper():
+        requireScalar(requireItem(values[0]), text);
+        requireScalar(values[1], text);
+        return textResult();
+      case skir.ExpressionNode_textSubstringWrapper():
+        requireScalar(values[0], text);
+        for (final v in values.skip(1)) {
+          requireInteger(v);
+        }
+        return textResult();
+      case skir.ExpressionNode_textInterpolateWrapper():
+        return textResult();
+      case skir.ExpressionNode_regexTestWrapper(:final value):
+        if (value.mode == skir.RegexMatchMode.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allScalar(text);
+        return boolResult();
+      case skir.ExpressionNode_regexCaptureWrapper():
+        requireScalar(values[0], text);
+        requireScalar(values[1], text);
+        requireInteger(values[2]);
+        return textResult();
+      case skir.ExpressionNode_valueCompareWrapper(:final value):
+        if (value.operation == skir.ValueCompareOperation.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        if (!compatible(values[0], values[1])) {
+          throw const ExpressionProblem("incompatible_expression_types");
+        }
+        return boolResult();
+      case skir.ExpressionNode_isNullWrapper():
+        return boolResult();
+      case skir.ExpressionNode_linkTargetWrapper():
+        return nominalType(
+          skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+          missing,
+        );
+      case skir.ExpressionNode_booleanNotWrapper():
+        allScalar(boolean);
+        return boolResult();
+      case skir.ExpressionNode_numberArithmeticWrapper(:final value):
+        if (value.operation == skir.NumberArithmeticOperation.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allNumeric();
+        var result = values.first;
+        for (final value in values.skip(1)) {
+          result = join(result, value);
+        }
+        return withMissing(result, missing);
+      case skir.ExpressionNode_numberNegateWrapper():
+        allNumeric();
+        return withMissing(values.single, missing);
+      case skir.ExpressionNode_numberCompareWrapper(:final value):
+        if (value.operation == skir.NumberCompareOperation.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allNumeric();
+        return boolResult();
+      case skir.ExpressionNode_numberRoundWrapper():
+        requireNumber(values[0]);
+        requireNumber(values[1]);
+        requireScalar(values[2], text);
+        if (family(nominalUse(values[0])) != family(nominalUse(values[1]))) {
+          throw const ExpressionProblem("numeric_family_mismatch");
+        }
+        if (!compatible(values[0], values[1])) {
+          throw const ExpressionProblem("incompatible_expression_types");
+        }
+        return withMissing(join(values[0], values[1]), missing);
+      case skir.ExpressionNode_numberFormatWrapper():
+        requireNumber(values[0]);
+        requireInteger(values[1]);
+        requireScalar(values[2], text);
+        return textResult();
+      case skir.ExpressionNode_durationFormatWrapper():
+        requireScalar(
+          values[0],
+          skir.TypeUse.wrapScalar(skir.ScalarKind.duration),
+        );
+        requireScalar(values[1], text);
+        requireInteger(values[2]);
+        return textResult();
+      case skir.ExpressionNode_timestampFormatWrapper():
+        requireScalar(
+          values[0],
+          skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp),
+        );
+        for (final v in values.skip(1)) {
+          requireScalar(v, text);
+        }
+        return textResult();
+      case skir.ExpressionNode_collectionSizeWrapper():
+        requireItem(values[0]);
+        return nominalType(integer, missing);
+      case skir.ExpressionNode_collectionAccessWrapper():
+        final mapping = catalog.expressionMapping(values[0]);
+        if (mapping != null) {
+          if (!compatible(values[1], mapping.key)) {
+            throw const ExpressionProblem("invalid_expression_operand_type");
+          }
+          return withMissing(mapping.value, true);
+        }
+        requireInteger(values[1]);
+        return withMissing(requireItem(values[0]), true);
+      case skir.ExpressionNode_collectionContainsWrapper():
+        final mapping = catalog.expressionMapping(values[0]);
+        final expected = mapping?.key ?? requireItem(values[0]);
+        if (!compatible(values[1], expected)) {
+          throw const ExpressionProblem("incompatible_expression_types");
+        }
+        return boolResult();
+      case skir.ExpressionNode_colorParseWrapper():
+        allScalar(text);
+        return nominalType(skir.TypeUse.wrapNamed(expressionColorUse), true);
+      case skir.ExpressionNode_colorWithAlphaWrapper():
+        for (final v in values) {
+          requireInteger(v);
+        }
+        return withMissing(values.first, missing);
+      case skir.ExpressionNode_ruleUnaryWrapper(:final value):
+        switch (value.operation) {
+          case skir.RuleUnaryOperation.nonEmpty:
+            requireSized(values.single);
+          case skir.RuleUnaryOperation.nonBlank ||
+              skir.RuleUnaryOperation.singleLine:
+            allScalar(text);
+          case skir.RuleUnaryOperation.positive ||
+              skir.RuleUnaryOperation.nonNegative:
+            allNumeric();
+          case skir.RuleUnaryOperation.unique:
+            requireItem(values.single);
+          case skir.RuleUnaryOperation.notNull:
+            break;
+          case skir.RuleUnaryOperation.opaque:
+            requireInteger(values.single);
+          default:
+            throw const ExpressionProblem("unknown_expression_operation");
+        }
+        return boolResult();
+      case skir.ExpressionNode_ruleOneOfWrapper():
+        return boolResult();
+      case skir.ExpressionNode_ruleSizeBoundWrapper(:final value):
+        if (value.direction == skir.BoundDirection.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        switch (value.metric) {
+          case skir.SizeBoundMetric.textLength ||
+              skir.SizeBoundMetric.textLines:
+            requireScalar(values[0], text);
+          case skir.SizeBoundMetric.collectionItems:
+            requireItem(values[0]);
+          default:
+            throw const ExpressionProblem("unknown_expression_operation");
+        }
+        requireInteger(values[1]);
+        return boolResult();
+      case skir.ExpressionNode_ruleSizeRangeWrapper(:final value):
+        switch (value.metric) {
+          case skir.SizeRangeMetric.textLength:
+            requireScalar(values[0], text);
+          case skir.SizeRangeMetric.collectionItems:
+            requireItem(values[0]);
+          default:
+            throw const ExpressionProblem("unknown_expression_operation");
+        }
+        requireInteger(values[1]);
+        requireInteger(values[2]);
+        return boolResult();
+      case skir.ExpressionNode_ruleNumericBoundWrapper(:final value):
+        if (value.direction == skir.BoundDirection.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        requireNumber(values[0]);
+        requireNumber(values[1]);
+        requireScalar(values[2], boolean);
+        return boolResult();
+      case skir.ExpressionNode_ruleNumericRangeWrapper():
+        allNumeric();
+        return boolResult();
+      case skir.ExpressionNode_ruleMultipleOfWrapper():
+        allNumeric();
+        return boolResult();
+      case skir.ExpressionNode_ruleMaximumScaleWrapper():
+        requireNumber(values[0]);
+        requireInteger(values[1]);
+        return boolResult();
+      case skir.ExpressionNode_ruleTimestampBoundWrapper(:final value):
+        if (value.direction == skir.TimestampBoundDirection.unknown) {
+          throw const ExpressionProblem("unknown_expression_operation");
+        }
+        allScalar(skir.TypeUse.wrapScalar(skir.ScalarKind.timestamp));
+        return boolResult();
+      default:
+        throw const ExpressionProblem("unknown_expression");
+    }
+  }
+
+  void requireSized(skir.ExpressionType type) {
+    final use = nominalUse(type);
+    if (use == text || use == skir.TypeUse.wrapScalar(skir.ScalarKind.bytes)) {
+      return;
+    }
+    requireItem(type);
+  }
 }
-
-const _ruleExpressionInputKinds = <String, List<String>>{
-  "typewriter.rule.one_of": ["Any"],
-  "typewriter.rule.nonEmpty": ["Sized"],
-  "typewriter.rule.nonBlank": ["Text"],
-  "typewriter.rule.minimumLength": ["Sized", "Integer"],
-  "typewriter.rule.maximumLength": ["Sized", "Integer"],
-  "typewriter.rule.lengthBetween": ["Sized", "Integer", "Integer"],
-  "typewriter.rule.minimumLines": ["Text", "Integer"],
-  "typewriter.rule.maximumLines": ["Text", "Integer"],
-  "typewriter.rule.singleLine": ["Text"],
-  "typewriter.rule.regex": ["Text", "Text"],
-  "typewriter.rule.startsWith": ["Text", "Text"],
-  "typewriter.rule.endsWith": ["Text", "Text"],
-  "typewriter.rule.minimum": ["Number", "Number", "Boolean"],
-  "typewriter.rule.maximum": ["Number", "Number", "Boolean"],
-  "typewriter.rule.between": ["Number", "Number", "Number"],
-  "typewriter.rule.positive": ["Number"],
-  "typewriter.rule.nonNegative": ["Number"],
-  "typewriter.rule.multipleOf": ["Number", "Number"],
-  "typewriter.rule.maximumScale": ["Number", "Integer"],
-  "typewriter.rule.minimumItems": ["Collection", "Integer"],
-  "typewriter.rule.maximumItems": ["Collection", "Integer"],
-  "typewriter.rule.itemsBetween": ["Collection", "Integer", "Integer"],
-  "typewriter.rule.unique": ["Collection"],
-  "typewriter.rule.notNull": ["Any"],
-  "typewriter.rule.notBefore": ["Timestamp", "Timestamp"],
-  "typewriter.rule.notAfter": ["Timestamp", "Timestamp"],
-  "typewriter.rule.opaque": ["Integer"],
-};
-
-const _portableCollectionShapes = <String, (int, int, int, bool)>{
-  "typewriter.collection.any": (1, 0, 0, true),
-  "typewriter.collection.all": (1, 0, 0, true),
-  "typewriter.collection.none": (1, 0, 0, true),
-  "typewriter.collection.map": (1, 0, 0, true),
-  "typewriter.collection.filter": (1, 0, 0, true),
-  "typewriter.collection.find": (1, 0, 0, true),
-  "typewriter.collection.find_last": (1, 0, 0, true),
-  "typewriter.collection.count": (1, 0, 0, true),
-  "typewriter.collection.distinct_by": (1, 0, 0, true),
-  "typewriter.collection.group_by": (1, 0, 0, true),
-  "typewriter.collection.flat_map": (1, 0, 0, true),
-  "typewriter.collection.unique_by": (1, 0, 0, true),
-  "typewriter.collection.sort_by": (1, 0, 1, true),
-  "typewriter.collection.sort_with": (2, 0, 0, true),
-  "typewriter.collection.reduce": (2, 0, 0, true),
-  "typewriter.collection.fold": (2, 1, 1, true),
-  "typewriter.collection.take": (0, 1, 1, false),
-  "typewriter.collection.skip": (0, 1, 1, false),
-  "typewriter.collection.reverse": (0, 0, 0, false),
-  "typewriter.collection.distinct": (0, 0, 0, false),
-};

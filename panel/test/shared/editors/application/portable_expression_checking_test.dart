@@ -4,6 +4,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
+  final catalog = CheckedEditorCatalog(
+    skir.EditorCatalogWireSnapshot.defaultInstance,
+  );
   final candidate = skir.ExpressionBindingId(value: "candidate");
   final parent = skir.ExpressionBindingId(value: "parent");
   final text = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
@@ -12,28 +15,29 @@ void main() {
     skir.ScalarKind.createFloat(width: skir.FloatWidth.thirtyTwo),
   );
   skir.ExpressionType type(skir.TypeUse value, [bool missing = false]) =>
-      skir.ExpressionType(value: value, mayBeMissing: missing);
+      skir.ExpressionType(
+        value: skir.ExpressionValueType.wrapNominal(value),
+        mayBeMissing: missing,
+      );
   skir.ExpressionNode read(skir.ExpressionBindingId binding) =>
-      skir.ExpressionNode.createRead(
+      skir.ExpressionNode.createInput(
         binding: binding,
         path: skir.ValuePath.defaultInstance,
       );
   skir.ExpressionNode literal(skir.DataValue value) =>
       skir.ExpressionNode.wrapLiteral(value);
   skir.ExpressionNode round(skir.ExpressionNode value, skir.DataValue step) =>
-      skir.ExpressionNode.createCall(
-        operation: skir.OperationId(value: "typewriter.number.round_to"),
-        arguments: [
-          value,
-          literal(step),
-          literal(skir.DataValue.wrapStringValue("NearestTiesToEven")),
-        ],
+      skir.ExpressionNode.createNumberRound(
+        source: value,
+        increment: literal(step),
+        rounding: literal(skir.DataValue.wrapStringValue("NearestTiesToEven")),
       );
 
   test("completion preserves candidate families and rejects mixing", () {
     expect(
       checkPortableExpression(
         round(read(candidate), skir.DataValue.wrapDecimal("0.01")),
+        catalog: catalog,
         bindings: {candidate: type(decimal)},
         expectedOutput: type(decimal),
       ),
@@ -42,6 +46,7 @@ void main() {
     expect(
       checkPortableExpression(
         round(read(candidate), skir.DataValue.wrapFloat(0.5)),
+        catalog: catalog,
         bindings: {candidate: type(floating)},
         expectedOutput: type(floating),
       ),
@@ -50,6 +55,7 @@ void main() {
     expect(
       checkPortableExpression(
         round(read(candidate), skir.DataValue.wrapDecimal("0.5")),
+        catalog: catalog,
         bindings: {candidate: type(floating)},
         expectedOutput: type(floating),
       ),
@@ -63,6 +69,7 @@ void main() {
     expect(
       checkPortableExpression(
         read(parent),
+        catalog: catalog,
         bindings: {parent: type(wide)},
         expectedOutput: type(floating),
       ),
@@ -71,6 +78,7 @@ void main() {
     expect(
       checkPortableExpression(
         read(parent),
+        catalog: catalog,
         bindings: {parent: type(wide)},
         expectedOutput: type(floating),
         allowResultNumericWidth: true,
@@ -83,6 +91,7 @@ void main() {
     expect(
       checkPortableExpression(
         read(parent),
+        catalog: catalog,
         bindings: bindings,
         expectedOutput: type(text),
       ),
@@ -94,6 +103,7 @@ void main() {
           input: read(parent),
           fallback: read(candidate),
         ),
+        catalog: catalog,
         bindings: bindings,
         expectedOutput: type(text),
       ),
@@ -104,36 +114,39 @@ void main() {
     expect(
       checkPortableExpression(
         read(candidate),
+        catalog: catalog,
         bindings: const {},
         expectedOutput: type(text),
       ),
       contains("unknown_expression_binding"),
     );
   });
-  test("unknown operation and wrong arity fail admission", () {
-    final unknown = skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: "unknown"),
-      arguments: const [],
+  test("unknown operation and missing operands fail admission", () {
+    final unknown = skir.ExpressionNode.createTextUnary(
+      operation: skir.TextUnaryOperation.unknown,
+      source: literal(skir.DataValue.wrapStringValue("value")),
     );
     expect(
       checkPortableExpression(
         unknown,
+        catalog: catalog,
         bindings: const {},
         expectedOutput: type(text),
       ),
       contains("unknown_expression_operation"),
     );
-    final wrongArity = skir.ExpressionNode.createCall(
-      operation: skir.OperationId(value: "typewriter.text.trim"),
-      arguments: const [],
-    );
+    final omittedOperand = skir.ExpressionNode.serializer.fromJson({
+      "kind": "text_unary",
+      "value": {"operation": "trim"},
+    });
     expect(
       checkPortableExpression(
-        wrongArity,
+        omittedOperand,
+        catalog: catalog,
         bindings: const {},
         expectedOutput: type(text),
       ),
-      contains("invalid_expression_operation_arity"),
+      contains("unknown_expression"),
     );
   });
 }

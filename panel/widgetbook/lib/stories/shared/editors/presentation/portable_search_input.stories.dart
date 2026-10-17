@@ -79,7 +79,7 @@ final class _SearchInputStory extends StatefulWidget {
 final class _SearchInputStoryState extends State<_SearchInputStory> {
   static final _target = skir.ExpressionBindingId(value: "target");
   static final _row = skir.ExpressionBindingId(value: "row");
-  static final _rowRead = skir.ExpressionNode.createRead(
+  static final _rowRead = skir.ExpressionNode.createInput(
     binding: _row,
     path: skir.ValuePath(segments: const []),
   );
@@ -227,7 +227,7 @@ final class _SearchInputStoryState extends State<_SearchInputStory> {
       element: skir.PresentationElement.wrapSearchInput(
         (_control(richRows: widget.richRows).toMutable()
               ..customValue = widget.customValue
-                  ? skir.ExpressionNode.createRead(
+                  ? skir.ExpressionNode.createInput(
                       binding: _control().queryBindingId,
                       path: editorRootPath,
                     )

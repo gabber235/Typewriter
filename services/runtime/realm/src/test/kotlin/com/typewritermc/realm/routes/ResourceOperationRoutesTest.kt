@@ -253,13 +253,10 @@ private class CoreOperationsFixture(
                                             value = BuiltinResourceOperation.Delete.id.capability.value,
                                         ),
                                     targets =
-                                        com.typewritermc.types.skir.SkirTypeCodec
-                                            .encode(
-                                                com.typewritermc.presentation.ExpressionNode.Read(
-                                                    com.typewritermc.expression.ExpressionBindingId("context:selection"),
-                                                    ValuePath(),
-                                                ),
-                                            ).getOrThrow(),
+                                        com.typewritermc.expression
+                                            .input<Any?>(
+                                                com.typewritermc.expression.ExpressionBindingId("context:selection"),
+                                            ).toNode(),
                                     initialInput = null,
                                 ),
                             ),

@@ -4,6 +4,7 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import com.typewritermc.expression.literal
+import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BorderOverride as WireBorderOverride
 import skirout.editor.v1.presentation.BoundControl as WireBoundControl
 import skirout.editor.v1.presentation.BytesControl as WireBytesControl
@@ -240,7 +241,7 @@ internal class RuntimeValueMappings<V>(
         body: ValueExpressionScope<V>.() -> Expr<R, Handled>,
     ): WireExpressionMapping {
         val input = state.bindingId("input.$purpose")
-        val receiver = RuntimeValueExpressionScope<V>(Expr(ExpressionNode.Read(input, ValuePath())))
+        val receiver = RuntimeValueExpressionScope<V>(com.typewritermc.expression.inputExpression(input))
         val result = receiver.body()
         val output =
             if (purpose ==
@@ -251,7 +252,7 @@ internal class RuntimeValueMappings<V>(
             } else {
                 payload
             }
-        state.checkMapping(result.node, input, payload, output)
+        state.checkMapping(result.toNode(), input, payload, output)
         return WireExpressionMapping(inputBinding = input.wire(), body = expression(result))
     }
 }
@@ -922,23 +923,17 @@ private class RuntimeColorInputScope(
     }
 
     override fun offeredSwatches(value: List<com.typewritermc.types.Color>) {
-        options.offeredSwatches =
-            expression(
-                Expr<List<com.typewritermc.types.Color>, Handled>(
-                    ExpressionNode.Literal(
-                        com.typewritermc.types.DataValue.ListValue(
-                            value.mapIndexed { index, color ->
-                                com.typewritermc.types.ListItem(
-                                    com.typewritermc.authoring.ItemId("swatch.$index"),
-                                    literal(color).node.let {
-                                        (it as ExpressionNode.Literal).value
-                                    },
-                                )
-                            },
-                        ),
-                    ),
-                ),
+        val colors =
+            com.typewritermc.types.DataValue.ListValue(
+                value.mapIndexed { index, color ->
+                    com.typewritermc.types.ListItem(
+                        com.typewritermc.authoring.ItemId("swatch.$index"),
+                        com.typewritermc.types.DataValue
+                            .Integer(color.argb.toString().toBigInteger()),
+                    )
+                },
             )
+        options.offeredSwatches = expression(com.typewritermc.expression.portableLiteral<List<com.typewritermc.types.Color>>(colors))
     }
 
     override fun offeredSwatches(value: Expr<List<com.typewritermc.types.Color>, Handled>) {
@@ -1103,7 +1098,7 @@ internal class RuntimeSelectInputScope<V>(
     InputContentScope by content,
     PopupAppearanceScope by popup {
     private val queryId = state.bindingId("select.query")
-    override val query = Expr<String, Handled>(ExpressionNode.Read(queryId, ValuePath()))
+    override val query = com.typewritermc.expression.inputExpression<String, Handled>(queryId)
     private val overrides = linkedMapOf<String, WireChoiceOptionAppearance.Mutable>()
 
     init {

@@ -77,19 +77,6 @@ extension PortableLexicalSchemas
   });
 }
 
-enum CanonicalQueryOperation {
-  resourceIdentity("typewriter.resource.id"),
-  resourceValue("typewriter.resource.value"),
-  resourceConfiguration("typewriter.resource.configuration"),
-  valueConfiguration("typewriter.value.configuration"),
-  catalogDeclaration("typewriter.catalog.declaration");
-
-  const CanonicalQueryOperation(this.id);
-  final String id;
-  static CanonicalQueryOperation? fromId(String id) =>
-      values.where((value) => value.id == id).firstOrNull;
-}
-
 @freezed
 abstract class ExpressionOccurrence with _$ExpressionOccurrence {
   const factory ExpressionOccurrence({required List<int> path}) =
@@ -99,7 +86,7 @@ abstract class ExpressionOccurrence with _$ExpressionOccurrence {
 @freezed
 abstract class CheckedQueryCall with _$CheckedQueryCall {
   const factory CheckedQueryCall({
-    required CanonicalQueryOperation operation,
+    required skir.ExpressionQuery query,
     required skir.TypeUse? targetType,
     required skir.ExpressionType result,
     required bool sourceIsReference,
@@ -124,46 +111,6 @@ sealed class CheckedExpressionResult with _$CheckedExpressionResult {
     required String code,
     required String message,
   }) = CheckedExpressionInvalid;
-}
-
-@freezed
-abstract class CanonicalLeafProjection with _$CanonicalLeafProjection {
-  const factory CanonicalLeafProjection({
-    required skir.ExpressionCall root,
-    required List<String> fields,
-  }) = _CanonicalLeafProjection;
-}
-
-extension CanonicalExpressionProjection on skir.ExpressionNode {
-  CanonicalLeafProjection? get canonicalLeafProjection {
-    final fields = <String>[];
-    var current = this;
-    while (true) {
-      if (current is! skir.ExpressionNode_callWrapper) break;
-      final value = current.value;
-      if (value.operation.value != "typewriter.record.field" ||
-          value.arguments.length != 2) {
-        break;
-      }
-      if (fields.length >= 512) return null;
-      if (value.arguments.elementAt(1) case skir.ExpressionNode_literalWrapper(
-        value: skir.DataValue_stringValueWrapper(value: final field),
-      )) {
-        fields.add(field);
-        current = value.arguments.elementAt(0);
-      } else {
-        return null;
-      }
-    }
-    if (current case skir.ExpressionNode_callWrapper(:final value)
-        when CanonicalQueryOperation.fromId(value.operation.value) != null) {
-      return CanonicalLeafProjection(
-        root: value,
-        fields: fields.reversed.toList(),
-      );
-    }
-    return null;
-  }
 }
 
 skir.DataValue _namedColor(int value) => skir.DataValue.createNamed(
@@ -213,183 +160,179 @@ extension _CanonicalQueryEvaluation on PortableExpressionEvaluator {
     }
   }
 
-  _Evaluation _query(CanonicalLeafProjection projection) {
-    final root = projection.root;
-    final rootPath = [
-      ..._occurrence,
-      for (var i = 0; i < projection.fields.length; i++) 0,
-    ];
-    final contract = queryContracts[ExpressionOccurrence(path: rootPath)];
+  _Evaluation _query(
+    skir.ExpressionQuery query,
+    skir.ValuePath path,
+    ExpressionOccurrence occurrence,
+  ) {
+    final contract = queryContracts[occurrence];
     if (contract == null) {
       throw const _ExpressionFailure(
         "unchecked_query",
-        "Canonical queries require a checked expression program",
-      );
-    }
-    final environment = queries;
-    final operation = contract.operation;
-    if (operation != CanonicalQueryOperation.valueConfiguration &&
-        environment == null) {
-      throw const _ExpressionFailure(
-        "unsupported_query",
-        "This expression has no canonical query observation",
+        "Query requires a checked program",
       );
     }
     final previous = _occurrence;
-    _occurrence = rootPath;
+    _occurrence = occurrence.path;
     try {
-      // Each skipped field call and literal still consumes its normal steps.
-      for (var i = 0; i < projection.fields.length; i++) {
-        _consumeStep();
-        _consumeStep();
-      }
-      final input = _child(root.arguments.first, 0);
-      if (input is _Unavailable) return input;
-      final source = (input as _Available).value;
-      if (source == skir.DataValue.unfilled || source == skir.DataValue.null_) {
-        return const _Unavailable();
-      }
-      if (root.arguments.length == 2) {
-        final witness = _child(root.arguments.elementAt(1), 1);
-        if (witness is _Unavailable) return witness;
-      }
-      Object native;
-      skir.ReflectiveTypeDescriptor<dynamic>? descriptor;
-      if (operation == CanonicalQueryOperation.valueConfiguration) {
-        if (source case skir.DataValue_namedWrapper(:final value)) {
-          native = skir.TypeSelection.wrapComplete(value.actualType);
-          descriptor = skir.TypeSelection.serializer.typeDescriptor;
-        } else {
-          return const _Unavailable();
-        }
-      } else if (operation == CanonicalQueryOperation.catalogDeclaration) {
-        final selection = canonicalReadModels.decodeTypeSelection(source);
-        final definition = switch (selection) {
-          skir.TypeSelection_completeWrapper(:final value) => value.definition,
-          skir.TypeSelection_pendingWrapper(:final value) => value.definition,
-          _ => throw const _ExpressionFailure(
-            "invalid_type_selection",
-            "The canonical type selection is unknown",
-          ),
-        };
-        final declaration = environment!.declaration(definition);
-        if (declaration == null) {
-          return const _Unavailable();
-        }
-        native = declaration;
-        descriptor = skir.PublishedType.serializer.typeDescriptor;
-      } else {
-        if (environment!.authored == null) {
-          throw const _ExpressionFailure(
-            "unsupported_query",
-            "Resource queries need an authoring observation",
-          );
-        }
-        final id = contract.sourceIsReference
-            ? switch (_unwrap(source)) {
-                skir.DataValue_linkWrapper(:final value) =>
-                  value.target.resource,
-                _ => throw const _ExpressionFailure(
-                  "expected_link",
-                  "The canonical resource query expected a relationship",
-                ),
-              }
-            : skir.ResourceId(value: _text(source));
-        final fields = projection.fields;
-        final path = skir.ValuePath(
-          segments: [
-            for (final field in fields)
-              skir.PathSegment.createField(name: field),
-          ],
-        );
-        _reads.add(
-          PortableExpressionRead(
-            skir.ExpressionBindingId(value: "query.resource"),
-            path,
-            location: skir.ValueLocation(
-              resource: id,
-              path: operation == CanonicalQueryOperation.resourceValue
-                  ? path
-                  : editorRootPath,
-            ),
-          ),
-        );
-        final record = environment.resource(id);
-        if (record == null) return const _Unavailable();
-        final expected = contract.targetType;
-        if (expected != null &&
-            !_querySelectionMatches(
-              environment.catalog,
-              record.configuration,
-              expected,
-            )) {
-          return const _Unavailable();
-        }
-        if (operation == CanonicalQueryOperation.resourceIdentity) {
-          return _Available(id.toExpressionValue());
-        }
-        if (operation == CanonicalQueryOperation.resourceValue) {
-          final payload = skir.DataValue.createRecord(fields: record.fields);
-          final result = fields.isEmpty
-              ? PortablePathValue(payload)
-              : payload.readAt(path);
-          if (result case PortablePathValue(:final value)) {
-            if (value == skir.DataValue.unfilled) return const _Unavailable();
-            final selection = record.configuration;
-            final schema = fields.isEmpty
-                ? switch (selection) {
-                    skir.TypeSelection_completeWrapper(:final value) =>
-                      skir.TypeUse.wrapNamed(value),
-                    _ => null,
-                  }
-                : environment.catalog.valueTypeAt(selection, path);
-            if (schema == null && fields.isNotEmpty) {
-              return const _Unavailable();
-            }
-            final actual =
-                fields.isEmpty &&
-                    selection is skir.TypeSelection_completeWrapper
-                ? skir.DataValue.createNamed(
-                    actualType: selection.value,
-                    payload: payload,
-                  )
-                : value;
-            _chargeCanonicalValue(actual, 0);
-            if (schema != null &&
-                environment.catalog
-                    .inspectPortableValue(schema, actual)
-                    .structuralProblems
-                    .isNotEmpty) {
-              throw const _ExpressionFailure(
-                "invalid_resource_value",
-                "The resource value does not match its checked schema",
-              );
-            }
-            return actual == skir.DataValue.null_
-                ? const _Unavailable()
-                : _Available(actual);
+      switch (query) {
+        case skir.ExpressionQuery_valueConfigurationWrapper(:final value):
+          final source = _child(value, 0);
+          if (source is _Unavailable) return source;
+          final actual = (source as _Available).value;
+          if (actual is! skir.DataValue_namedWrapper) {
+            return const _Unavailable();
           }
-          if (record.configuration is skir.TypeSelection_completeWrapper) {
+          return _projectNative(
+            skir.TypeSelection.wrapComplete(actual.value.actualType),
+            skir.TypeSelection.serializer.typeDescriptor,
+            path,
+          );
+        case skir.ExpressionQuery_catalogDeclarationWrapper(:final value):
+          final source = _child(value, 0);
+          if (source is _Unavailable) return source;
+          final selection = canonicalReadModels.decodeTypeSelection(
+            (source as _Available).value,
+          );
+          final definition = switch (selection) {
+            skir.TypeSelection_completeWrapper(:final value) =>
+              value.definition,
+            skir.TypeSelection_pendingWrapper(:final value) => value.definition,
+            _ => throw const _ExpressionFailure(
+              "invalid_type_selection",
+              "Unknown type selection",
+            ),
+          };
+          final native = queries?.declaration(definition);
+          if (native == null) return const _Unavailable();
+          return _projectNative(
+            native,
+            skir.PublishedType.serializer.typeDescriptor,
+            path,
+          );
+        case skir.ExpressionQuery_resourceIdentityWrapper(:final value):
+        case skir.ExpressionQuery_resourceValueWrapper(:final value):
+        case skir.ExpressionQuery_resourceConfigurationWrapper(:final value):
+          final sourceNode = switch (value) {
+            skir.ResourceQuerySource_referenceWrapper(:final value) => value,
+            skir.ResourceQuerySource_identityWrapper(:final value) =>
+              value.identity,
+            _ => throw const _ExpressionFailure(
+              "invalid_query_source",
+              "Unknown resource source",
+            ),
+          };
+          final source = _child(sourceNode, 0);
+          if (source is _Unavailable) return source;
+          final actual = (source as _Available).value;
+          if (actual == skir.DataValue.unfilled ||
+              actual == skir.DataValue.null_) {
+            return const _Unavailable();
+          }
+          final id = contract.sourceIsReference
+              ? switch (_unwrap(actual)) {
+                  skir.DataValue_linkWrapper(:final value) =>
+                    value.target.resource,
+                  _ => throw const _ExpressionFailure(
+                    "expected_link",
+                    "Expected resource reference",
+                  ),
+                }
+              : skir.ResourceId(value: _text(actual));
+          final environment = queries;
+          if (environment?.authored == null) {
             throw const _ExpressionFailure(
-              "invalid_resource_value",
-              "The complete resource is missing a declared field",
+              "unsupported_query",
+              "Resource query needs an authoring observation",
             );
           }
-          return const _Unavailable();
-        }
-        native = record.configuration;
-        descriptor = skir.TypeSelection.serializer.typeDescriptor;
+          _reads.add(
+            PortableExpressionRead(
+              source: PortableExpressionReadSource.query(occurrence),
+              path: path,
+              location: skir.ValueLocation(
+                resource: id,
+                path: query is skir.ExpressionQuery_resourceValueWrapper
+                    ? path
+                    : editorRootPath,
+              ),
+            ),
+          );
+          final record = environment!.resource(id);
+          if (record == null ||
+              !_querySelectionMatches(
+                environment.catalog,
+                record.configuration,
+                contract.targetType!,
+              )) {
+            return const _Unavailable();
+          }
+          if (query is skir.ExpressionQuery_resourceIdentityWrapper) {
+            return _Available(id.toExpressionValue());
+          }
+          if (query is skir.ExpressionQuery_resourceConfigurationWrapper) {
+            return _projectNative(
+              record.configuration,
+              skir.TypeSelection.serializer.typeDescriptor,
+              path,
+            );
+          }
+          final payload = skir.DataValue.createRecord(fields: record.fields);
+          final selected = path.segments.isEmpty
+              ? PortablePathValue(payload)
+              : payload.readAt(path);
+          if (selected is! PortablePathValue<skir.DataValue>) {
+            if (record.configuration is skir.TypeSelection_completeWrapper) {
+              throw const _ExpressionFailure(
+                "invalid_resource_value",
+                "The complete resource is missing a declared field",
+              );
+            }
+            return const _Unavailable();
+          }
+          if (selected.value == skir.DataValue.unfilled ||
+              selected.value == skir.DataValue.null_) {
+            return const _Unavailable();
+          }
+          final schema = path.segments.isEmpty
+              ? switch (record.configuration) {
+                  skir.TypeSelection_completeWrapper(:final value) =>
+                    skir.TypeUse.wrapNamed(value),
+                  _ => null,
+                }
+              : environment.catalog.valueTypeAt(record.configuration, path);
+          if (schema == null && path.segments.isNotEmpty) {
+            return const _Unavailable();
+          }
+          final result =
+              path.segments.isEmpty &&
+                  record.configuration is skir.TypeSelection_completeWrapper
+              ? skir.DataValue.createNamed(
+                  actualType:
+                      (record.configuration
+                              as skir.TypeSelection_completeWrapper)
+                          .value,
+                  payload: payload,
+                )
+              : selected.value;
+          _chargeCanonicalValue(result, 0);
+          if (schema != null &&
+              environment.catalog
+                  .inspectPortableValue(schema, result)
+                  .structuralProblems
+                  .isNotEmpty) {
+            throw const _ExpressionFailure(
+              "invalid_resource_value",
+              "Resource projection does not match its checked schema",
+            );
+          }
+          return _Available(result);
+        default:
+          throw const _ExpressionFailure(
+            "unknown_query",
+            "Unknown query variant",
+          );
       }
-      final value = canonicalReadModels.project(
-        native,
-        descriptor,
-        projection.fields,
-        _consumeStep,
-        _consumeCollectionItems,
-      );
-      return value == skir.DataValue.null_ || value == skir.DataValue.unfilled
-          ? const _Unavailable()
-          : _Available(value);
     } on FormatException catch (error) {
       throw _ExpressionFailure("invalid_canonical_value", error.message);
     } on TypeError catch (error) {
@@ -399,6 +342,33 @@ extension _CanonicalQueryEvaluation on PortableExpressionEvaluator {
     } finally {
       _occurrence = previous;
     }
+  }
+
+  _Evaluation _projectNative(
+    Object native,
+    skir.ReflectiveTypeDescriptor<dynamic> descriptor,
+    skir.ValuePath path,
+  ) {
+    final fields = <String>[];
+    for (final segment in path.segments) {
+      if (segment is! skir.PathSegment_fieldWrapper) {
+        throw const _ExpressionFailure(
+          "invalid_model_projection",
+          "Native model projection requires field segments",
+        );
+      }
+      fields.add(segment.value.name);
+    }
+    final result = canonicalReadModels.project(
+      native,
+      descriptor,
+      fields,
+      _consumeStep,
+      _consumeCollectionItems,
+    );
+    return result == skir.DataValue.unfilled || result == skir.DataValue.null_
+        ? const _Unavailable()
+        : _Available(result);
   }
 }
 
@@ -443,31 +413,20 @@ final class PortableExpressionPrograms {
     skir.ExpressionType? inferred;
     final errors = checkPortableExpression(
       body,
+      catalog: catalog,
       bindings: {
         for (final entry in lexicalTypes.entries)
           if (entry.value case CompletePortablePresentationBinding(:final use))
-            entry.key: skir.ExpressionType(value: use, mayBeMissing: true),
+            entry.key: nominalType(use, true),
       },
-      resolveBinding: (read) {
-        final schema = lexicalTypes[read.binding];
-        if (schema case PartialPortablePresentationBinding(:final selection)) {
-          final use = catalog.valueTypeAt(selection, read.path);
-          return use == null
-              ? null
-              : skir.ExpressionType(value: use, mayBeMissing: true);
-        }
-        return null;
+      partialBindings: {
+        for (final entry in lexicalTypes.entries)
+          if (entry.value case PartialPortablePresentationBinding(
+            :final selection,
+          ))
+            entry.key: selection,
       },
-      resolvePath: catalog.expressionPathType,
-      normalizeType: catalog.expressionPayloadType,
-      resolveCollectionItem: catalog.collectionItemType,
-      resolveQuery: (call, arguments, scope, occurrence) {
-        final contract = catalog.checkCanonicalQuery(call, arguments);
-        if (contract != null) {
-          contracts[ExpressionOccurrence(path: occurrence)] = contract;
-        }
-        return contract?.result;
-      },
+      queryContracts: contracts,
       onInferred: (value) => inferred = value,
     );
     if (errors.isNotEmpty || inferred == null) {
@@ -550,122 +509,21 @@ extension PortableCheckedEvaluation on CheckedEditorCatalog {
     skir.ValuePath path,
   ) {
     if (path.segments.isEmpty) return source;
-    final named = namedUse(source.value);
+    if (source.value is! skir.ExpressionValueType_nominalWrapper) return null;
+    final named = namedUse(
+      (source.value as skir.ExpressionValueType_nominalWrapper).value,
+    );
     if (named == null) return null;
     final use = valueTypeAt(skir.TypeSelection.wrapComplete(named), path);
-    return use == null
-        ? null
-        : skir.ExpressionType(value: use, mayBeMissing: true);
-  }
-
-  CheckedQueryCall? checkCanonicalQuery(
-    skir.ExpressionCall call,
-    List<skir.ExpressionType> arguments,
-  ) {
-    final operation = CanonicalQueryOperation.fromId(call.operation.value);
-    if (operation == null) return null;
-    skir.TypeUse? target;
-    var reference = false;
-    if ({
-      CanonicalQueryOperation.resourceIdentity,
-      CanonicalQueryOperation.resourceValue,
-      CanonicalQueryOperation.resourceConfiguration,
-    }.contains(operation)) {
-      if (arguments.length == 2) {
-        if (arguments.first.value !=
-            skir.TypeUse.wrapNamed(frameworkResourceIdUse)) {
-          return null;
-        }
-        final witness = call.arguments.elementAt(1);
-        if (witness is! skir.ExpressionNode_literalWrapper) return null;
-        final witnessType = namedUse(arguments.elementAt(1).value);
-        if (witnessType == null ||
-            !isReadyApplication(witnessType) ||
-            !isReadableAs(
-              arguments.elementAt(1).value,
-              canonicalReadModels.typeUseUse,
-            )) {
-          return null;
-        }
-        try {
-          target = canonicalReadModels.decodeTypeUse(witness.value);
-        } on FormatException {
-          return null;
-        } on _ExpressionFailure {
-          return null;
-        }
-        if (target is! skir.TypeUse_namedWrapper ||
-            !isReadyApplication(target.value)) {
-          return null;
-        }
-      } else if (arguments.length == 1) {
-        final use = namedUse(arguments.single.value);
-        if (use == null) return null;
-        final representation = published(use.definition)
-            ?.definition
-            .representation;
-        if (representation is! skir.RepresentationTemplate_linkWrapper) {
-          return null;
-        }
-        target = applyTemplate(
-          representation.value.target,
-          skir.TypeSelection.wrapComplete(use),
-        );
-        if (target == null) return null;
-        reference = true;
-      } else {
-        return null;
-      }
-    } else if (arguments.length != 1) {
-      return null;
-    } else if (operation == CanonicalQueryOperation.catalogDeclaration &&
-        !isReadableAs(
-          arguments.single.value,
-          canonicalReadModels.typeSelectionUse,
-        )) {
-      return null;
-    }
-    final result = switch (operation) {
-      CanonicalQueryOperation.resourceIdentity => skir.TypeUse.wrapNamed(
-        frameworkResourceIdUse,
-      ),
-      CanonicalQueryOperation.resourceValue => target!,
-      CanonicalQueryOperation.resourceConfiguration ||
-      CanonicalQueryOperation.valueConfiguration =>
-        canonicalReadModels.typeSelectionUse,
-      CanonicalQueryOperation.catalogDeclaration =>
-        canonicalReadModels.publishedTypeUse,
-    };
-    return CheckedQueryCall(
-      operation: operation,
-      targetType: target,
-      result: skir.ExpressionType(value: result, mayBeMissing: true),
-      sourceIsReference: reference,
-    );
+    return use == null ? null : nominalType(use, true);
   }
 }
 
 extension CanonicalQueryPresence on skir.ExpressionNode {
-  bool get hasCanonicalQueries => switch (this) {
-    skir.ExpressionNode_callWrapper(:final value) =>
-      CanonicalQueryOperation.fromId(value.operation.value) != null ||
-          value.arguments.any((node) => node.hasCanonicalQueries),
-    skir.ExpressionNode_andWrapper(:final value) =>
-      value.left.hasCanonicalQueries || value.right.hasCanonicalQueries,
-    skir.ExpressionNode_orWrapper(:final value) =>
-      value.left.hasCanonicalQueries || value.right.hasCanonicalQueries,
-    skir.ExpressionNode_conditionalWrapper(:final value) =>
-      value.test.hasCanonicalQueries ||
-          value.yes.hasCanonicalQueries ||
-          value.no.hasCanonicalQueries,
-    skir.ExpressionNode_orElseWrapper(:final value) =>
-      value.input.hasCanonicalQueries || value.fallback.hasCanonicalQueries,
-    skir.ExpressionNode_collectionWrapper(:final value) =>
-      value.input.hasCanonicalQueries ||
-          value.arguments.any((node) => node.hasCanonicalQueries) ||
-          (value.body?.hasCanonicalQueries ?? false),
-    _ => false,
-  };
+  bool get hasCanonicalQueries =>
+      this is skir.ExpressionNode_queryWrapper ||
+      (this is! skir.ExpressionNode_unknown &&
+          children.any((child) => child.hasCanonicalQueries));
 }
 
 bool _querySelectionMatches(
@@ -704,3 +562,94 @@ final expressionColorUse = skir.NamedTypeUse(
   ),
   arguments: const [],
 );
+
+extension ExpressionTypes on CheckedEditorCatalog {
+  skir.ExpressionMappingType? expressionMapping(skir.ExpressionType source) {
+    if (source.value case skir.ExpressionValueType_mapWrapper(:final value)) {
+      return value;
+    }
+    if (source.value is! skir.ExpressionValueType_nominalWrapper) return null;
+    final named = namedUse(
+      (source.value as skir.ExpressionValueType_nominalWrapper).value,
+    );
+    if (named == null) return null;
+    final representation = published(named.definition)
+        ?.definition
+        .representation;
+    if (representation case skir.RepresentationTemplate_mappingWrapper(
+      :final value,
+    )) {
+      final owner = skir.TypeSelection.wrapComplete(named);
+      final key = applyTemplate(value.key, owner);
+      final item = applyTemplate(value.value, owner);
+      return key == null || item == null
+          ? null
+          : skir.ExpressionMappingType(
+              key: nominalType(key),
+              value: nominalType(item),
+            );
+    }
+    final id = named.definition.typeId;
+    if (id is skir.TypeId_qualifiedWrapper &&
+        id.value.namespace == "typewriter" &&
+        id.value.name == "Map" &&
+        named.definition.revision == 1 &&
+        named.arguments.length == 2) {
+      return skir.ExpressionMappingType(
+        key: nominalType(named.arguments.first),
+        value: nominalType(named.arguments.last),
+      );
+    }
+    return null;
+  }
+
+  skir.ExpressionType? collectionItem(skir.ExpressionType source) {
+    final mapping = expressionMapping(source);
+    if (mapping != null) return entryType(mapping.key, mapping.value);
+    switch (source.value) {
+      case skir.ExpressionValueType_listWrapper(:final value):
+        return value;
+      case skir.ExpressionValueType_nominalWrapper(:final value):
+        final named = namedUse(value);
+        if (named == null) return null;
+        final representation = published(named.definition)
+            ?.definition
+            .representation;
+        if (representation case skir.RepresentationTemplate_sequenceWrapper(
+          :final value,
+        )) {
+          final item = applyTemplate(
+            value.item,
+            skir.TypeSelection.wrapComplete(named),
+          );
+          return item == null ? null : nominalType(item);
+        }
+        return canonicalBuiltinItem(source);
+      default:
+        return null;
+    }
+  }
+}
+
+skir.ExpressionType? canonicalBuiltinItem(skir.ExpressionType source) {
+  if (source.value is! skir.ExpressionValueType_nominalWrapper) return null;
+  final use = (source.value as skir.ExpressionValueType_nominalWrapper).value;
+  if (use is! skir.TypeUse_namedWrapper || use.value.definition.revision != 1) {
+    return null;
+  }
+  final id = use.value.definition.typeId;
+  if (id is! skir.TypeId_qualifiedWrapper ||
+      id.value.namespace != "typewriter") {
+    return null;
+  }
+  final args = use.value.arguments.toList();
+  if ({"List", "Set"}.contains(id.value.name) && args.length == 1) {
+    return nominalType(args.single);
+  }
+  if (id.value.name == "Map" && args.length == 2) {
+    return entryType(nominalType(args[0]), nominalType(args[1]));
+  }
+  return null;
+}
+// Arbitrary extension containers take the checked representation substitution
+// branch shown above. This fallback only recognizes canonical v1 constructors.

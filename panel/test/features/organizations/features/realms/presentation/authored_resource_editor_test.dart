@@ -552,31 +552,23 @@ void main() {
         value: "context:test.page.caller",
       );
       final callerType = skir.TypeUse.wrapNamed(frameworkResourceIdUse);
-      final witness = canonicalReadModels.project(
-        skir.TypeUse.createNamed(definition: childType, arguments: const []),
-        skir.TypeUse.serializer.typeDescriptor,
-        const [],
-        () {},
-        (_) {},
-      );
       final fallback = skir.ExpressionNode.createOrElse(
-        input: skir.ExpressionNode.createCall(
-          operation: skir.OperationId(value: "typewriter.record.field"),
-          arguments: [
-            skir.ExpressionNode.createCall(
-              operation: skir.OperationId(value: "typewriter.resource.value"),
-              arguments: [
-                skir.ExpressionNode.createRead(
+        input: skir.ExpressionNode.createField(
+          source: skir.ExpressionNode.wrapQuery(
+            skir.ExpressionQuery.wrapResourceValue(
+              skir.ResourceQuerySource.createIdentity(
+                identity: skir.ExpressionNode.createInput(
                   binding: caller,
                   path: editorRootPath,
                 ),
-                skir.ExpressionNode.wrapLiteral(witness),
-              ],
+                target: skir.TypeUse.createNamed(
+                  definition: childType,
+                  arguments: const [],
+                ),
+              ),
             ),
-            skir.ExpressionNode.wrapLiteral(
-              skir.DataValue.wrapStringValue("title"),
-            ),
-          ],
+          ),
+          name: "title",
         ),
         fallback: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("No caller supplied"),
@@ -1355,20 +1347,18 @@ _numericFixture({
             skir.OwnedRule(
               id: ruleId,
               descriptor: skir.RuleDescriptor(
-                predicate: skir.ExpressionNode.createCall(
-                  operation: skir.OperationId(value: "typewriter.rule.minimum"),
-                  arguments: [
-                    skir.ExpressionNode.createRead(
-                      binding: configured,
-                      path: skir.ValuePath(segments: const []),
-                    ),
-                    skir.ExpressionNode.wrapLiteral(
-                      skir.DataValue.wrapInteger(minimum.toString()),
-                    ),
-                    skir.ExpressionNode.wrapLiteral(
-                      skir.DataValue.wrapBoolean(true),
-                    ),
-                  ],
+                predicate: skir.ExpressionNode.createRuleNumericBound(
+                  direction: skir.BoundDirection.minimum,
+                  source: skir.ExpressionNode.createInput(
+                    binding: configured,
+                    path: skir.ValuePath(segments: const []),
+                  ),
+                  bound: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapInteger(minimum.toString()),
+                  ),
+                  inclusive: skir.ExpressionNode.wrapLiteral(
+                    skir.DataValue.wrapBoolean(true),
+                  ),
                 ),
               ),
               diagnostic: skir.DiagnosticTemplate(
@@ -1482,7 +1472,7 @@ _fixture({
     nodeId: "message.header",
     properties: skir.PresentationProperties.defaultInstance,
     element: skir.PresentationElement.createText(
-      value: skir.ExpressionNode.createRead(
+      value: skir.ExpressionNode.createInput(
         binding: configuredValueBindingId,
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: fieldName)],
@@ -1720,16 +1710,12 @@ _fixture({
                   skir.OwnedRule(
                     id: titleRule,
                     descriptor: skir.RuleDescriptor(
-                      predicate: skir.ExpressionNode.createCall(
-                        operation: skir.OperationId(
-                          value: "typewriter.rule.nonBlank",
+                      predicate: skir.ExpressionNode.createRuleUnary(
+                        operation: skir.RuleUnaryOperation.nonBlank,
+                        source: skir.ExpressionNode.createInput(
+                          binding: configuredValueBindingId,
+                          path: skir.ValuePath(segments: const []),
                         ),
-                        arguments: [
-                          skir.ExpressionNode.createRead(
-                            binding: configuredValueBindingId,
-                            path: skir.ValuePath(segments: const []),
-                          ),
-                        ],
                       ),
                     ),
                     diagnostic: skir.DiagnosticTemplate(

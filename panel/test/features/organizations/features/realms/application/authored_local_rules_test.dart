@@ -530,18 +530,14 @@ _nestedRuleFixture({
             skir.OwnedRule(
               id: ruleId,
               descriptor: skir.RuleDescriptor(
-                predicate: skir.ExpressionNode.createCall(
-                  operation: skir.OperationId(
-                    value: "typewriter.rule.positive",
-                  ),
-                  arguments: [
-                    skir.ExpressionNode.createRead(
-                      binding: skir.ExpressionBindingId(
-                        value: "configured_value",
-                      ),
-                      path: skir.ValuePath(segments: const []),
+                predicate: skir.ExpressionNode.createRuleUnary(
+                  operation: skir.RuleUnaryOperation.positive,
+                  source: skir.ExpressionNode.createInput(
+                    binding: skir.ExpressionBindingId(
+                      value: "configured_value",
                     ),
-                  ],
+                    path: skir.ValuePath(segments: const []),
+                  ),
                 ),
               ),
               diagnostic: skir.DiagnosticTemplate(

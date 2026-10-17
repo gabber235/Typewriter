@@ -48,6 +48,9 @@ import com.typewritermc.types.catalog.Resolution
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import skirout.editor.v1.expression.ExpressionNode
+import skirout.editor.v1.expression.ExpressionQuery
+import skirout.editor.v1.expression.ResourceQuerySource
 
 val CanonicalQueryTest by testSuite {
     test("generated canonical adapters preserve pending arguments and stay out of authored declarations") {
@@ -64,7 +67,7 @@ val CanonicalQueryTest by testSuite {
         val resource =
             RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
                 .resource(literal(ResourceId("result")), QueryResource::class)
-        val body = resource.value.field<String>("name").node
+        val body = resource.value.field<String>("name").toNode()
         val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Text))
         val record =
             AuthoringRecord(
@@ -84,7 +87,9 @@ val CanonicalQueryTest by testSuite {
         val resource =
             RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
                 .resource(literal(ResourceId("result")), QueryResource::class)
-        val body = resource.type.display.color.node
+        val body =
+            resource.type.display.color
+                .toNode()
         val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Text))
         val record =
             AuthoringRecord(
@@ -110,7 +115,7 @@ val CanonicalQueryTest by testSuite {
         val resource =
             RuntimePresentationQueries(mapOf(QueryResource::class to TypeTemplate.Named(queryTypeId)))
                 .resource(literal(ResourceId("result")), QueryResource::class)
-        val body = (resource.id eq literal(ResourceId("result"))).node
+        val body = (resource.id eq literal(ResourceId("result"))).toNode()
         val program = queryProgram(body, TypeUse.Scalar(ScalarKind.Boolean))
         val record =
             AuthoringRecord(
@@ -137,11 +142,11 @@ val CanonicalQueryTest by testSuite {
                 .resource(literal(ResourceId("result")), QueryResource::class)
         val evaluator = DefaultExpressionEvaluator(ExpressionValueReader { error("Unexpected authored value read") })
         with(QueryReads) {
-            evaluator.evaluate(resource.id.node, ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
+            evaluator.evaluate(resource.id.toNode(), ExpressionBindings(emptyMap()), EvaluationBudget(100, 100))
         }.shouldBeInstanceOf<Availability.Failed>()
         with(QueryReads) {
             evaluator.evaluateChecked(
-                queryProgram(resource.id.node, ResourceIdDefinition.use),
+                queryProgram(resource.id.toNode(), ResourceIdDefinition.use),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(100, 100),
             )
@@ -152,19 +157,18 @@ val CanonicalQueryTest by testSuite {
         val binding = ExpressionBindingId("reference")
         val reference =
             portableExpression<Ref<QueryEndpoint, QueryResource>>(
-                com.typewritermc.presentation.ExpressionNode
-                    .Read(binding, ValuePath()),
+                testInput(binding),
             )
         val body =
             reference.resource.value
                 .field<String>("name")
-                .node
+                .toNode()
         val program =
             (
                 PortableExpressionChecker(queryCatalog::resolve).checkProgram(
                     body,
-                    mapOf(binding to ExpressionType(TypeUse.Named(queryLinkId), false)),
-                    ExpressionType(TypeUse.Scalar(ScalarKind.Text), true),
+                    mapOf(binding to nominalExpressionType(TypeUse.Named(queryLinkId), false)),
+                    nominalExpressionType(TypeUse.Scalar(ScalarKind.Text), true),
                     queryTypeId,
                 ) as Resolution.Ready
             ).value
@@ -212,7 +216,7 @@ val CanonicalQueryTest by testSuite {
                         mapOf(ResourceId("result") to record),
                     ),
             ).evaluateChecked(
-                queryProgram(resource.value.node, TypeUse.Named(queryTypeId)),
+                queryProgram(resource.value.toNode(), TypeUse.Named(queryTypeId)),
                 ExpressionBindings(emptyMap()),
                 EvaluationBudget(3, 100),
             )
@@ -221,43 +225,35 @@ val CanonicalQueryTest by testSuite {
     test("identical query syntax retains each collection binder target contract") {
         val first = ExpressionBindingId("first")
         val second = ExpressionBindingId("second")
-        val item = ExpressionBindingId("item")
 
-        fun read(binding: ExpressionBindingId) =
-            com.typewritermc.presentation.ExpressionNode
-                .Read(binding, ValuePath())
+        fun read(binding: ExpressionBindingId) = testInput(binding)
         val query =
-            com.typewritermc.presentation.ExpressionNode
-                .Call(OperationId("typewriter.resource.id"), listOf(read(item)))
-        val predicate =
-            com.typewritermc.presentation.ExpressionNode.Call(
-                OperationId("typewriter.boolean.not"),
-                listOf(
-                    com.typewritermc.presentation.ExpressionNode
-                        .Call(OperationId("typewriter.value.is_null"), listOf(query)),
+            ExpressionNode.QueryWrapper(
+                ExpressionQuery.ResourceIdentityWrapper(
+                    ResourceQuerySource.ReferenceWrapper(
+                        ExpressionNode.createLocal(
+                            depth = 0,
+                            slot = 0,
+                            path =
+                                skirout.editor.v1.type_catalog
+                                    .ValuePath(segments = emptyList()),
+                        ),
+                    ),
                 ),
             )
+        val predicate = ExpressionNode.BooleanNotWrapper(ExpressionNode.IsNullWrapper(query))
 
-        fun any(binding: ExpressionBindingId) =
-            com.typewritermc.presentation.ExpressionNode.Collection(
-                OperationId("typewriter.collection.any"),
-                read(binding),
-                listOf(item),
-                emptyList(),
-                predicate,
-            )
-        val body =
-            com.typewritermc.presentation.ExpressionNode
-                .And(any(first), any(second))
+        fun any(binding: ExpressionBindingId) = ExpressionNode.createAny(source = read(binding), body = predicate)
+        val body = ExpressionNode.createAnd(left = any(first), right = any(second))
         val program =
             (
                 PortableExpressionChecker(queryCatalog::resolve).checkProgram(
                     body,
                     mapOf(
-                        first to ExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(queryLinkId))), false),
-                        second to ExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(otherQueryLinkId))), false),
+                        first to nominalExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(queryLinkId))), false),
+                        second to nominalExpressionType(TypeUse.Named(StandardTypes.list, listOf(TypeUse.Named(otherQueryLinkId))), false),
                     ),
-                    ExpressionType(TypeUse.Scalar(ScalarKind.Boolean), true),
+                    nominalExpressionType(TypeUse.Scalar(ScalarKind.Boolean), true),
                     queryTypeId,
                 ) as Resolution.Ready
             ).value
@@ -342,13 +338,13 @@ private val queryCatalog =
     )
 
 private fun queryProgram(
-    body: com.typewritermc.presentation.ExpressionNode,
+    body: ExpressionNode,
     output: TypeUse,
 ): CheckedExpressionProgram =
     (
         PortableExpressionChecker(
             queryCatalog::resolve,
-        ).checkProgram(body, emptyMap(), ExpressionType(output, true), queryTypeId) as Resolution.Ready
+        ).checkProgram(body, emptyMap(), nominalExpressionType(output, true), queryTypeId) as Resolution.Ready
     ).value
 
 private class QueryObservation(

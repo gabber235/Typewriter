@@ -169,7 +169,7 @@ skir.PresentationNode _text(String id, String field) => skir.PresentationNode(
   nodeId: id,
   properties: skir.PresentationProperties.defaultInstance,
   element: skir.PresentationElement.createText(
-    value: skir.ExpressionNode.createRead(
+    value: skir.ExpressionNode.createInput(
       binding: configuredValueBindingId,
       path: skir.ValuePath(
         segments: [skir.PathSegment.createField(name: field)],

@@ -1223,8 +1223,8 @@ final class AuthoredPresentationHost extends ChangeNotifier
           context,
           reads: [
             PortableExpressionRead(
-              value.target.bindingId,
-              skir.ValuePath(
+              source: PortableExpressionReadSource.input(value.target.bindingId),
+              path: skir.ValuePath(
                 segments: [
                   ...value.target.path.segments,
                   skir.PathSegment.createItem(id: source.id),

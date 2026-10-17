@@ -1607,7 +1607,7 @@ void main() {
           item: _node(
             "hierarchy.item",
             skir.PresentationElement.createText(
-              value: skir.ExpressionNode.createRead(
+              value: skir.ExpressionNode.createInput(
                 binding: itemBinding,
                 path: skir.ValuePath(segments: const []),
               ),
@@ -1870,7 +1870,7 @@ _linkCollectionFixture({
   final appearanceText = _node(
     "node.reference.name",
     skir.PresentationElement.createText(
-      value: skir.ExpressionNode.createRead(
+      value: skir.ExpressionNode.createInput(
         binding: _configuredBindingId,
         path: skir.ValuePath(
           segments: [skir.PathSegment.createField(name: "name")],
@@ -1964,7 +1964,7 @@ _linkCollectionFixture({
     sourceId: "nodes",
     rowType: rootTemplate,
     rowBindingId: collectionRowBinding,
-    key: skir.ExpressionNode.createRead(
+    key: skir.ExpressionNode.createInput(
       binding: collectionResourceBinding,
       path: skir.ValuePath(segments: const []),
     ),

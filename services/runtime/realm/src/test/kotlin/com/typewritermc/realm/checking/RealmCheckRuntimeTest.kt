@@ -36,12 +36,10 @@ import com.typewritermc.discovery.OwnedProviderRegistry
 import com.typewritermc.discovery.ProviderLease
 import com.typewritermc.discovery.ProviderOrigin
 import com.typewritermc.expression.ExpressionBindingId
-import com.typewritermc.expression.OperationId
 import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -76,6 +74,7 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import skirout.editor.v1.expression.ExpressionNode
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -310,7 +309,10 @@ val RealmCheckRuntimeTest by testSuite {
                             select(
                                 TypedSelection(
                                     TestDraftType(ResourceTypeMatch.Definition(TEST_TYPE)),
-                                    ExpressionNode.Literal(DataValue.Boolean(true)),
+                                    ExpressionNode.LiteralWrapper(
+                                        skirout.editor.v1.type_catalog.DataValue
+                                            .BooleanWrapper(true),
+                                    ),
                                 ),
                             )
                             check(Availability.Available(false)) { it }
@@ -360,9 +362,12 @@ val RealmCheckRuntimeTest by testSuite {
                     id = RuleId(origin, 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.Call(
-                                OperationId("typewriter.rule.nonEmpty"),
-                                listOf(ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath())),
+                            ExpressionNode.createRuleUnary(
+                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                source =
+                                    com.typewritermc.expression
+                                        .input<Any?>(ExpressionBindingId("configured_value"))
+                                        .toNode(),
                             ),
                         ),
                     diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
@@ -594,9 +599,12 @@ val RealmCheckRuntimeTest by testSuite {
                     id = RuleId(origin, 0),
                     descriptor =
                         RuleDescriptor(
-                            ExpressionNode.Call(
-                                OperationId("typewriter.rule.nonEmpty"),
-                                listOf(ExpressionNode.Read(ExpressionBindingId("configured_value"), ValuePath())),
+                            ExpressionNode.createRuleUnary(
+                                operation = skirout.editor.v1.expression.RuleUnaryOperation.NON_EMPTY,
+                                source =
+                                    com.typewritermc.expression
+                                        .input<Any?>(ExpressionBindingId("configured_value"))
+                                        .toNode(),
                             ),
                         ),
                     diagnostic = DiagnosticTemplate("name_empty", "Name must not be empty.", DiagnosticSeverity.Error, listOf(path)),
@@ -917,9 +925,9 @@ private object TestResourceNativeBindingFactory : NativeBindingFactory {
             nativeClass = TestNativeResource::class,
             fields =
                 listOf(
-                    GeneratedNativeField("name", arguments.resolver.bind(TEXT_USE), TestNativeResource::name),
-                    GeneratedNativeField("count", arguments.resolver.bind(INT_USE), TestNativeResource::count),
-                    GeneratedNativeField("numbers", arguments.resolver.bind(LIST_USE), TestNativeResource::numbers),
+                    GeneratedNativeField("name", { arguments.resolver.bind(TEXT_USE) }, TestNativeResource::name),
+                    GeneratedNativeField("count", { arguments.resolver.bind(INT_USE) }, TestNativeResource::count),
+                    GeneratedNativeField("numbers", { arguments.resolver.bind(LIST_USE) }, TestNativeResource::numbers),
                 ),
             construct = { fields ->
                 TestNativeResource(

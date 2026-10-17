@@ -3,6 +3,7 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.Expr
 import com.typewritermc.expression.Handled
 import skirout.editor.v1.binding.BindingRef
+import skirout.editor.v1.expression.ExpressionNode
 
 internal class RuntimeHeaderScope(
     private val state: PresentationBuildState,

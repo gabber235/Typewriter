@@ -285,7 +285,7 @@ void main() {
     final fixture = _SearchFixture();
     fixture.control =
         (fixture.control.toMutable()
-              ..customValue = skir.ExpressionNode.createRead(
+              ..customValue = skir.ExpressionNode.createInput(
                 binding: _SearchFixture.query,
                 path: editorRootPath,
               ))
@@ -379,7 +379,7 @@ final class _SearchFixture {
   static final target = skir.ExpressionBindingId(value: "target");
   static final row = skir.ExpressionBindingId(value: "row");
   static final query = skir.ExpressionBindingId(value: "query");
-  static final rowRead = skir.ExpressionNode.createRead(
+  static final rowRead = skir.ExpressionNode.createInput(
     binding: row,
     path: editorRootPath,
   );

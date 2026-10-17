@@ -190,7 +190,7 @@ final class CollectionEditorScenario extends ChangeNotifier {
           (skir.PresentationHeader.mutable()
                 ..title = skir.PresentationHeaderTitle.wrapText(
                   title ??
-                      skir.ExpressionNode.createRead(
+                      skir.ExpressionNode.createInput(
                         binding: itemBinding,
                         path: editorRootPath.field("name"),
                       ),

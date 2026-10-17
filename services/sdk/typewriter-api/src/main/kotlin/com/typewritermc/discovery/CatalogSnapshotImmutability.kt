@@ -5,7 +5,6 @@ import com.typewritermc.checking.DiagnosticTemplate
 import com.typewritermc.configuration.ConfigurationRecipe
 import com.typewritermc.configuration.OwnedRule
 import com.typewritermc.configuration.RelativeFieldPattern
-import com.typewritermc.presentation.ExpressionNode
 import com.typewritermc.presentation.PresentationDescriptor
 import com.typewritermc.presentation.PresentationMaterial
 import com.typewritermc.presentation.PresentationTarget
@@ -105,56 +104,11 @@ private fun ConfigurationRecipe.immutableCopy(): ConfigurationRecipe =
 
 private fun OwnedRule.immutableCopy(): OwnedRule =
     copy(
-        descriptor = descriptor.copy(predicate = descriptor.predicate.immutableCopy()),
         diagnostic = diagnostic.immutableCopy(),
     )
 
 private fun DiagnosticTemplate.immutableCopy(): DiagnosticTemplate =
     copy(targets = targets.immutableListCopy(RelativeFieldPattern::immutableCopy))
-
-private fun ExpressionNode.immutableCopy(): ExpressionNode =
-    when (this) {
-        is ExpressionNode.Literal -> {
-            copy(value = value.immutableCopy())
-        }
-
-        is ExpressionNode.Read -> {
-            copy(path = path.copy(segments = path.segments.immutableListCopy()))
-        }
-
-        is ExpressionNode.Call -> {
-            copy(arguments = arguments.immutableListCopy(ExpressionNode::immutableCopy))
-        }
-
-        is ExpressionNode.And -> {
-            copy(left = left.immutableCopy(), right = right.immutableCopy())
-        }
-
-        is ExpressionNode.Or -> {
-            copy(left = left.immutableCopy(), right = right.immutableCopy())
-        }
-
-        is ExpressionNode.Conditional -> {
-            copy(
-                test = test.immutableCopy(),
-                yes = yes.immutableCopy(),
-                no = no.immutableCopy(),
-            )
-        }
-
-        is ExpressionNode.OrElse -> {
-            copy(input = input.immutableCopy(), fallback = fallback.immutableCopy())
-        }
-
-        is ExpressionNode.Collection -> {
-            copy(
-                input = input.immutableCopy(),
-                bindings = bindings.immutableListCopy(),
-                arguments = arguments.immutableListCopy(ExpressionNode::immutableCopy),
-                body = body?.immutableCopy(),
-            )
-        }
-    }
 
 private fun EndpointBindingTemplate.immutableCopy(): EndpointBindingTemplate =
     copy(

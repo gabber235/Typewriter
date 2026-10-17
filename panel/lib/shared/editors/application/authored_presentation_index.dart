@@ -447,7 +447,7 @@ extension AuthoredPresentationBindings on skir.PresentationNode {
         }
       case skir.PresentationElement_repeatedWrapper(:final value):
         final source = switch (value.source) {
-          skir.ExpressionNode_readWrapper(:final value) => aliases.resolve(
+          skir.ExpressionNode_inputWrapper(:final value) => aliases.resolve(
             skir.BindingRef(bindingId: value.binding, path: value.path),
           ),
           _ => null,

@@ -1,8 +1,9 @@
 package com.typewritermc.configuration
 
 import com.typewritermc.checking.DiagnosticTemplate
-import com.typewritermc.presentation.ExpressionNode
+import com.typewritermc.expression.ExpressionNodeSerializer
 import kotlinx.serialization.Serializable
+import skirout.editor.v1.expression.ExpressionNode
 
 @Serializable
 data class RuleId(
@@ -12,6 +13,7 @@ data class RuleId(
 
 @Serializable
 data class RuleDescriptor(
+    @Serializable(with = ExpressionNodeSerializer::class)
     val predicate: ExpressionNode,
 )
 

@@ -200,26 +200,26 @@ void main() {
     (tester) async {
       final id = skir.ExpressionBindingId(value: "number");
       final candidate = skir.ExpressionBindingId(value: "candidate");
-      final read = skir.ExpressionNode.createRead(
+      final read = skir.ExpressionNode.createInput(
         binding: candidate,
         path: editorRootPath,
       );
       final mappings = skir.ValueMappings(
         completion: skir.ExpressionMapping(
           inputBinding: candidate,
-          body: _call("typewriter.number.round_to", [
-            read,
-            _literal(skir.DataValue.wrapFloat(0.5)),
-            _text("NearestTiesToEven"),
-          ]),
+          body: skir.ExpressionNode.createNumberRound(
+            source: read,
+            increment: _literal(skir.DataValue.wrapFloat(0.5)),
+            rounding: _text("NearestTiesToEven"),
+          ),
         ),
         display: skir.ExpressionMapping(
           inputBinding: candidate,
-          body: _call("typewriter.number.format", [
-            read,
-            _literal(skir.DataValue.wrapInteger("2")),
-            _text("en_US"),
-          ]),
+          body: skir.ExpressionNode.createNumberFormat(
+            source: read,
+            fractionDigits: _literal(skir.DataValue.wrapInteger("2")),
+            locale: _text("en_US"),
+          ),
         ),
       );
       final control =
@@ -325,14 +325,14 @@ void main() {
                 display: null,
                 completion: skir.ExpressionMapping(
                   inputBinding: candidate,
-                  body: _call("typewriter.number.round_to", [
-                    skir.ExpressionNode.createRead(
+                  body: skir.ExpressionNode.createNumberRound(
+                    source: skir.ExpressionNode.createInput(
                       binding: candidate,
                       path: editorRootPath,
                     ),
-                    _literal(skir.DataValue.wrapFloat(0.1)),
-                    _text("NearestTiesToEven"),
-                  ]),
+                    increment: _literal(skir.DataValue.wrapFloat(0.1)),
+                    rounding: _text("NearestTiesToEven"),
+                  ),
                 ),
               ))
             .toFrozen();
@@ -597,7 +597,7 @@ void main() {
             appearance:
                 (skir.InputAppearance.mutable()
                       ..iconColor = skir.PresentationColor.wrapValue(
-                        skir.ExpressionNode.createRead(
+                        skir.ExpressionNode.createInput(
                           binding: configured,
                           path: editorRootPath,
                         ),
@@ -698,10 +698,3 @@ skir.PresentationNode _column(List<skir.PresentationNode> children) => _node(
 
 skir.ExpressionNode _literal(skir.DataValue value) =>
     skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _call(
-  String operation,
-  List<skir.ExpressionNode> arguments,
-) => skir.ExpressionNode.createCall(
-  operation: skir.OperationId(value: operation),
-  arguments: arguments,
-);

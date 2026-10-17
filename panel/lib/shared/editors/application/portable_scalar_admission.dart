@@ -283,16 +283,11 @@ skir.DataValue? stepPortableNumericValue({
         const {},
         budget: skir.EvaluationBudget(maxSteps: 100, maxCollectionItems: 0),
       ).evaluate(
-        skir.ExpressionNode.createCall(
-          operation: skir.OperationId(
-            value: direction > 0
-                ? "typewriter.number.add"
-                : "typewriter.number.subtract",
-          ),
-          arguments: [
-            skir.ExpressionNode.wrapLiteral(current),
-            skir.ExpressionNode.wrapLiteral(step),
-          ],
+        skir.ExpressionNode.createNumberArithmetic(
+          operation: direction > 0 ? skir.NumberArithmeticOperation.add : skir.NumberArithmeticOperation.subtract,
+          first: skir.ExpressionNode.wrapLiteral(current),
+          second: skir.ExpressionNode.wrapLiteral(step),
+          remaining: const [],
         ),
       );
   if (result is! PortableExpressionAvailable) return null;

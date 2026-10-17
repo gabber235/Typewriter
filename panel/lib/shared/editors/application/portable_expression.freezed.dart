@@ -50,7 +50,7 @@ String toString() {
 
 class _PortableExpressionQueries extends PortableExpressionQueries {
   const _PortableExpressionQueries({required this.catalog, required this.authored}): super._();
-
+  
 
 @override final  CheckedEditorCatalog catalog;
 @override final  PortableAuthoringView? authored;
@@ -281,7 +281,7 @@ return $default(_that.path);case _:
 
 class _ExpressionOccurrence implements ExpressionOccurrence {
   const _ExpressionOccurrence({required  List<int> path}): _path = path;
-
+  
 
  final  List<int> _path;
 @override List<int> get path {
@@ -353,7 +353,7 @@ as List<int>,
 /// @nodoc
 mixin _$CheckedQueryCall {
 
- CanonicalQueryOperation get operation; skir.TypeUse? get targetType; skir.ExpressionType get result; bool get sourceIsReference;
+ skir.ExpressionQuery get query; skir.TypeUse? get targetType; skir.ExpressionType get result; bool get sourceIsReference;
 /// Create a copy of CheckedQueryCall
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -365,20 +365,20 @@ $CheckedQueryCallCopyWith<CheckedQueryCall> get copyWith => _$CheckedQueryCallCo
 @override
 bool operator ==(Object other) {
   final _this = this as CheckedQueryCall;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckedQueryCall&&(identical(other.operation, _this.operation) || other.operation == _this.operation)&&(identical(other.targetType, _this.targetType) || other.targetType == _this.targetType)&&(identical(other.result, _this.result) || other.result == _this.result)&&(identical(other.sourceIsReference, _this.sourceIsReference) || other.sourceIsReference == _this.sourceIsReference));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckedQueryCall&&(identical(other.query, _this.query) || other.query == _this.query)&&(identical(other.targetType, _this.targetType) || other.targetType == _this.targetType)&&(identical(other.result, _this.result) || other.result == _this.result)&&(identical(other.sourceIsReference, _this.sourceIsReference) || other.sourceIsReference == _this.sourceIsReference));
 }
 
 
 @override
 int get hashCode {
   final _this = this as CheckedQueryCall;
-  return Object.hash(runtimeType,_this.operation,_this.targetType,_this.result,_this.sourceIsReference);
+  return Object.hash(runtimeType,_this.query,_this.targetType,_this.result,_this.sourceIsReference);
 }
 
 @override
 String toString() {
   final _this = this as CheckedQueryCall;
-  return 'CheckedQueryCall(operation: ${_this.operation}, targetType: ${_this.targetType}, result: ${_this.result}, sourceIsReference: ${_this.sourceIsReference})';
+  return 'CheckedQueryCall(query: ${_this.query}, targetType: ${_this.targetType}, result: ${_this.result}, sourceIsReference: ${_this.sourceIsReference})';
 }
 
 
@@ -389,7 +389,7 @@ abstract mixin class $CheckedQueryCallCopyWith<$Res>  {
   factory $CheckedQueryCallCopyWith(CheckedQueryCall value, $Res Function(CheckedQueryCall) _then) = _$CheckedQueryCallCopyWithImpl;
 @useResult
 $Res call({
- CanonicalQueryOperation operation, skir.TypeUse? targetType, skir.ExpressionType result, bool sourceIsReference
+ skir.ExpressionQuery query, skir.TypeUse? targetType, skir.ExpressionType result, bool sourceIsReference
 });
 
 
@@ -406,10 +406,10 @@ class _$CheckedQueryCallCopyWithImpl<$Res>
 
 /// Create a copy of CheckedQueryCall
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? operation = null,Object? targetType = freezed,Object? result = null,Object? sourceIsReference = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? query = null,Object? targetType = freezed,Object? result = null,Object? sourceIsReference = null,}) {
   return _then(CheckedQueryCall(
-operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
-as CanonicalQueryOperation,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
+query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+as skir.ExpressionQuery,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
 as skir.TypeUse?,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as skir.ExpressionType,sourceIsReference: null == sourceIsReference ? _self.sourceIsReference : sourceIsReference // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -497,10 +497,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( CanonicalQueryOperation operation,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ExpressionQuery query,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CheckedQueryCall() when $default != null:
-return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsReference);case _:
+return $default(_that.query,_that.targetType,_that.result,_that.sourceIsReference);case _:
   return orElse();
 
 }
@@ -518,10 +518,10 @@ return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsRefe
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( CanonicalQueryOperation operation,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ExpressionQuery query,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)  $default,) {final _that = this;
 switch (_that) {
 case _CheckedQueryCall():
-return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsReference);case _:
+return $default(_that.query,_that.targetType,_that.result,_that.sourceIsReference);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -538,10 +538,10 @@ return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsRefe
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( CanonicalQueryOperation operation,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ExpressionQuery query,  skir.TypeUse? targetType,  skir.ExpressionType result,  bool sourceIsReference)?  $default,) {final _that = this;
 switch (_that) {
 case _CheckedQueryCall() when $default != null:
-return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsReference);case _:
+return $default(_that.query,_that.targetType,_that.result,_that.sourceIsReference);case _:
   return null;
 
 }
@@ -553,10 +553,10 @@ return $default(_that.operation,_that.targetType,_that.result,_that.sourceIsRefe
 
 
 class _CheckedQueryCall implements CheckedQueryCall {
-  const _CheckedQueryCall({required this.operation, required this.targetType, required this.result, required this.sourceIsReference});
+  const _CheckedQueryCall({required this.query, required this.targetType, required this.result, required this.sourceIsReference});
+  
 
-
-@override final  CanonicalQueryOperation operation;
+@override final  skir.ExpressionQuery query;
 @override final  skir.TypeUse? targetType;
 @override final  skir.ExpressionType result;
 @override final  bool sourceIsReference;
@@ -571,18 +571,18 @@ _$CheckedQueryCallCopyWith<_CheckedQueryCall> get copyWith => __$CheckedQueryCal
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckedQueryCall&&(identical(other.operation, operation) || other.operation == operation)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.result, result) || other.result == result)&&(identical(other.sourceIsReference, sourceIsReference) || other.sourceIsReference == sourceIsReference));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CheckedQueryCall&&(identical(other.query, query) || other.query == query)&&(identical(other.targetType, targetType) || other.targetType == targetType)&&(identical(other.result, result) || other.result == result)&&(identical(other.sourceIsReference, sourceIsReference) || other.sourceIsReference == sourceIsReference));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,operation,targetType,result,sourceIsReference);
+    return Object.hash(runtimeType,query,targetType,result,sourceIsReference);
 }
 
 @override
 String toString() {
-    return 'CheckedQueryCall(operation: $operation, targetType: $targetType, result: $result, sourceIsReference: $sourceIsReference)';
+    return 'CheckedQueryCall(query: $query, targetType: $targetType, result: $result, sourceIsReference: $sourceIsReference)';
 }
 
 
@@ -593,7 +593,7 @@ abstract mixin class _$CheckedQueryCallCopyWith<$Res> implements $CheckedQueryCa
   factory _$CheckedQueryCallCopyWith(_CheckedQueryCall value, $Res Function(_CheckedQueryCall) _then) = __$CheckedQueryCallCopyWithImpl;
 @override @useResult
 $Res call({
- CanonicalQueryOperation operation, skir.TypeUse? targetType, skir.ExpressionType result, bool sourceIsReference
+ skir.ExpressionQuery query, skir.TypeUse? targetType, skir.ExpressionType result, bool sourceIsReference
 });
 
 
@@ -610,10 +610,10 @@ class __$CheckedQueryCallCopyWithImpl<$Res>
 
 /// Create a copy of CheckedQueryCall
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? operation = null,Object? targetType = freezed,Object? result = null,Object? sourceIsReference = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? query = null,Object? targetType = freezed,Object? result = null,Object? sourceIsReference = null,}) {
   return _then(_CheckedQueryCall(
-operation: null == operation ? _self.operation : operation // ignore: cast_nullable_to_non_nullable
-as CanonicalQueryOperation,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
+query: null == query ? _self.query : query // ignore: cast_nullable_to_non_nullable
+as skir.ExpressionQuery,targetType: freezed == targetType ? _self.targetType : targetType // ignore: cast_nullable_to_non_nullable
 as skir.TypeUse?,result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
 as skir.ExpressionType,sourceIsReference: null == sourceIsReference ? _self.sourceIsReference : sourceIsReference // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -826,7 +826,7 @@ return $default(_that.body,_that.result,_that.queries);case _:
 
 class _CheckedExpressionProgram implements CheckedExpressionProgram {
   const _CheckedExpressionProgram({required this.body, required this.result, required  Map<ExpressionOccurrence, CheckedQueryCall> queries}): _queries = queries;
-
+  
 
 @override final  skir.ExpressionNode body;
 @override final  skir.ExpressionType result;
@@ -1064,7 +1064,7 @@ return invalid(_that.code,_that.message);case _:
 
 class CheckedExpressionReady implements CheckedExpressionResult {
   const CheckedExpressionReady(this.program);
-
+  
 
  final  CheckedExpressionProgram program;
 
@@ -1129,7 +1129,7 @@ as CheckedExpressionProgram,
 @override
 @pragma('vm:prefer-inline')
 $CheckedExpressionProgramCopyWith<$Res> get program {
-
+  
   return $CheckedExpressionProgramCopyWith<$Res>(_self.program, (value) {
     return _then(_self.copyWith(program: value));
   });
@@ -1141,7 +1141,7 @@ $CheckedExpressionProgramCopyWith<$Res> get program {
 
 class CheckedExpressionInvalid implements CheckedExpressionResult {
   const CheckedExpressionInvalid({required this.code, required this.message});
-
+  
 
  final  String code;
  final  String message;
@@ -1200,279 +1200,6 @@ class _$CheckedExpressionInvalidCopyWithImpl<$Res>
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-mixin _$CanonicalLeafProjection {
-
- skir.ExpressionCall get root; List<String> get fields;
-/// Create a copy of CanonicalLeafProjection
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$CanonicalLeafProjectionCopyWith<CanonicalLeafProjection> get copyWith => _$CanonicalLeafProjectionCopyWithImpl<CanonicalLeafProjection>(this as CanonicalLeafProjection, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  final _this = this as CanonicalLeafProjection;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CanonicalLeafProjection&&(identical(other.root, _this.root) || other.root == _this.root)&&const DeepCollectionEquality().equals(other.fields, _this.fields));
-}
-
-
-@override
-int get hashCode {
-  final _this = this as CanonicalLeafProjection;
-  return Object.hash(runtimeType,_this.root,const DeepCollectionEquality().hash(_this.fields));
-}
-
-@override
-String toString() {
-  final _this = this as CanonicalLeafProjection;
-  return 'CanonicalLeafProjection(root: ${_this.root}, fields: ${_this.fields})';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $CanonicalLeafProjectionCopyWith<$Res>  {
-  factory $CanonicalLeafProjectionCopyWith(CanonicalLeafProjection value, $Res Function(CanonicalLeafProjection) _then) = _$CanonicalLeafProjectionCopyWithImpl;
-@useResult
-$Res call({
- skir.ExpressionCall root, List<String> fields
-});
-
-
-
-
-}
-/// @nodoc
-class _$CanonicalLeafProjectionCopyWithImpl<$Res>
-    implements $CanonicalLeafProjectionCopyWith<$Res> {
-  _$CanonicalLeafProjectionCopyWithImpl(this._self, this._then);
-
-  final CanonicalLeafProjection _self;
-  final $Res Function(CanonicalLeafProjection) _then;
-
-/// Create a copy of CanonicalLeafProjection
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? root = null,Object? fields = null,}) {
-  return _then(CanonicalLeafProjection(
-root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
-as skir.ExpressionCall,fields: null == fields ? _self.fields : fields // ignore: cast_nullable_to_non_nullable
-as List<String>,
-  ));
-}
-
-}
-
-
-/// Adds pattern-matching-related methods to [CanonicalLeafProjection].
-extension CanonicalLeafProjectionPatterns on CanonicalLeafProjection {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _CanonicalLeafProjection value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _CanonicalLeafProjection value)  $default,){
-final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _CanonicalLeafProjection value)?  $default,){
-final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ExpressionCall root,  List<String> fields)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection() when $default != null:
-return $default(_that.root,_that.fields);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ExpressionCall root,  List<String> fields)  $default,) {final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection():
-return $default(_that.root,_that.fields);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ExpressionCall root,  List<String> fields)?  $default,) {final _that = this;
-switch (_that) {
-case _CanonicalLeafProjection() when $default != null:
-return $default(_that.root,_that.fields);case _:
-  return null;
-
-}
-}
-
-}
-
-/// @nodoc
-
-
-class _CanonicalLeafProjection implements CanonicalLeafProjection {
-  const _CanonicalLeafProjection({required this.root, required  List<String> fields}): _fields = fields;
-
-
-@override final  skir.ExpressionCall root;
- final  List<String> _fields;
-@override List<String> get fields {
-  if (_fields is EqualUnmodifiableListView) return _fields;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_fields);
-}
-
-
-/// Create a copy of CanonicalLeafProjection
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$CanonicalLeafProjectionCopyWith<_CanonicalLeafProjection> get copyWith => __$CanonicalLeafProjectionCopyWithImpl<_CanonicalLeafProjection>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CanonicalLeafProjection&&(identical(other.root, root) || other.root == root)&&const DeepCollectionEquality().equals(other.fields, _fields));
-}
-
-
-@override
-int get hashCode {
-    return Object.hash(runtimeType,root,const DeepCollectionEquality().hash(_fields));
-}
-
-@override
-String toString() {
-    return 'CanonicalLeafProjection(root: $root, fields: $fields)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$CanonicalLeafProjectionCopyWith<$Res> implements $CanonicalLeafProjectionCopyWith<$Res> {
-  factory _$CanonicalLeafProjectionCopyWith(_CanonicalLeafProjection value, $Res Function(_CanonicalLeafProjection) _then) = __$CanonicalLeafProjectionCopyWithImpl;
-@override @useResult
-$Res call({
- skir.ExpressionCall root, List<String> fields
-});
-
-
-
-
-}
-/// @nodoc
-class __$CanonicalLeafProjectionCopyWithImpl<$Res>
-    implements _$CanonicalLeafProjectionCopyWith<$Res> {
-  __$CanonicalLeafProjectionCopyWithImpl(this._self, this._then);
-
-  final _CanonicalLeafProjection _self;
-  final $Res Function(_CanonicalLeafProjection) _then;
-
-/// Create a copy of CanonicalLeafProjection
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? root = null,Object? fields = null,}) {
-  return _then(_CanonicalLeafProjection(
-root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
-as skir.ExpressionCall,fields: null == fields ? _self._fields : fields // ignore: cast_nullable_to_non_nullable
-as List<String>,
   ));
 }
 
@@ -1681,7 +1408,7 @@ return $default(_that.body,_that.lexicalTypes);case _:
 
 class __ExpressionProgramKey implements _ExpressionProgramKey {
   const __ExpressionProgramKey({required this.body, required  Map<skir.ExpressionBindingId, PortablePresentationBindingSchema> lexicalTypes}): _lexicalTypes = lexicalTypes;
-
+  
 
 @override final  skir.ExpressionNode body;
  final  Map<skir.ExpressionBindingId, PortablePresentationBindingSchema> _lexicalTypes;
@@ -1746,6 +1473,1209 @@ class __$_ExpressionProgramKeyCopyWithImpl<$Res>
 body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as skir.ExpressionNode,lexicalTypes: null == lexicalTypes ? _self._lexicalTypes : lexicalTypes // ignore: cast_nullable_to_non_nullable
 as Map<skir.ExpressionBindingId, PortablePresentationBindingSchema>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$PortableExpressionReadSource {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionReadSource);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'PortableExpressionReadSource()';
+}
+
+
+}
+
+/// @nodoc
+class $PortableExpressionReadSourceCopyWith<$Res>  {
+$PortableExpressionReadSourceCopyWith(PortableExpressionReadSource _, $Res Function(PortableExpressionReadSource) __);
+}
+
+
+/// Adds pattern-matching-related methods to [PortableExpressionReadSource].
+extension PortableExpressionReadSourcePatterns on PortableExpressionReadSource {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( InputReadSource value)?  input,TResult Function( LocalReadSource value)?  local,TResult Function( QueryReadSource value)?  query,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case InputReadSource() when input != null:
+return input(_that);case LocalReadSource() when local != null:
+return local(_that);case QueryReadSource() when query != null:
+return query(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( InputReadSource value)  input,required TResult Function( LocalReadSource value)  local,required TResult Function( QueryReadSource value)  query,}){
+final _that = this;
+switch (_that) {
+case InputReadSource():
+return input(_that);case LocalReadSource():
+return local(_that);case QueryReadSource():
+return query(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( InputReadSource value)?  input,TResult? Function( LocalReadSource value)?  local,TResult? Function( QueryReadSource value)?  query,}){
+final _that = this;
+switch (_that) {
+case InputReadSource() when input != null:
+return input(_that);case LocalReadSource() when local != null:
+return local(_that);case QueryReadSource() when query != null:
+return query(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.ExpressionBindingId binding)?  input,TResult Function( int depth,  int slot)?  local,TResult Function( ExpressionOccurrence occurrence)?  query,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case InputReadSource() when input != null:
+return input(_that.binding);case LocalReadSource() when local != null:
+return local(_that.depth,_that.slot);case QueryReadSource() when query != null:
+return query(_that.occurrence);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.ExpressionBindingId binding)  input,required TResult Function( int depth,  int slot)  local,required TResult Function( ExpressionOccurrence occurrence)  query,}) {final _that = this;
+switch (_that) {
+case InputReadSource():
+return input(_that.binding);case LocalReadSource():
+return local(_that.depth,_that.slot);case QueryReadSource():
+return query(_that.occurrence);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.ExpressionBindingId binding)?  input,TResult? Function( int depth,  int slot)?  local,TResult? Function( ExpressionOccurrence occurrence)?  query,}) {final _that = this;
+switch (_that) {
+case InputReadSource() when input != null:
+return input(_that.binding);case LocalReadSource() when local != null:
+return local(_that.depth,_that.slot);case QueryReadSource() when query != null:
+return query(_that.occurrence);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class InputReadSource implements PortableExpressionReadSource {
+  const InputReadSource(this.binding);
+  
+
+ final  skir.ExpressionBindingId binding;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$InputReadSourceCopyWith<InputReadSource> get copyWith => _$InputReadSourceCopyWithImpl<InputReadSource>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is InputReadSource&&(identical(other.binding, binding) || other.binding == binding));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,binding);
+}
+
+@override
+String toString() {
+    return 'PortableExpressionReadSource.input(binding: $binding)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $InputReadSourceCopyWith<$Res> implements $PortableExpressionReadSourceCopyWith<$Res> {
+  factory $InputReadSourceCopyWith(InputReadSource value, $Res Function(InputReadSource) _then) = _$InputReadSourceCopyWithImpl;
+@useResult
+$Res call({
+ skir.ExpressionBindingId binding
+});
+
+
+
+
+}
+/// @nodoc
+class _$InputReadSourceCopyWithImpl<$Res>
+    implements $InputReadSourceCopyWith<$Res> {
+  _$InputReadSourceCopyWithImpl(this._self, this._then);
+
+  final InputReadSource _self;
+  final $Res Function(InputReadSource) _then;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? binding = null,}) {
+  return _then(InputReadSource(
+null == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
+as skir.ExpressionBindingId,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class LocalReadSource implements PortableExpressionReadSource {
+  const LocalReadSource(this.depth, this.slot);
+  
+
+ final  int depth;
+ final  int slot;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$LocalReadSourceCopyWith<LocalReadSource> get copyWith => _$LocalReadSourceCopyWithImpl<LocalReadSource>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is LocalReadSource&&(identical(other.depth, depth) || other.depth == depth)&&(identical(other.slot, slot) || other.slot == slot));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,depth,slot);
+}
+
+@override
+String toString() {
+    return 'PortableExpressionReadSource.local(depth: $depth, slot: $slot)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $LocalReadSourceCopyWith<$Res> implements $PortableExpressionReadSourceCopyWith<$Res> {
+  factory $LocalReadSourceCopyWith(LocalReadSource value, $Res Function(LocalReadSource) _then) = _$LocalReadSourceCopyWithImpl;
+@useResult
+$Res call({
+ int depth, int slot
+});
+
+
+
+
+}
+/// @nodoc
+class _$LocalReadSourceCopyWithImpl<$Res>
+    implements $LocalReadSourceCopyWith<$Res> {
+  _$LocalReadSourceCopyWithImpl(this._self, this._then);
+
+  final LocalReadSource _self;
+  final $Res Function(LocalReadSource) _then;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? depth = null,Object? slot = null,}) {
+  return _then(LocalReadSource(
+null == depth ? _self.depth : depth // ignore: cast_nullable_to_non_nullable
+as int,null == slot ? _self.slot : slot // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class QueryReadSource implements PortableExpressionReadSource {
+  const QueryReadSource(this.occurrence);
+  
+
+ final  ExpressionOccurrence occurrence;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$QueryReadSourceCopyWith<QueryReadSource> get copyWith => _$QueryReadSourceCopyWithImpl<QueryReadSource>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is QueryReadSource&&(identical(other.occurrence, occurrence) || other.occurrence == occurrence));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,occurrence);
+}
+
+@override
+String toString() {
+    return 'PortableExpressionReadSource.query(occurrence: $occurrence)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $QueryReadSourceCopyWith<$Res> implements $PortableExpressionReadSourceCopyWith<$Res> {
+  factory $QueryReadSourceCopyWith(QueryReadSource value, $Res Function(QueryReadSource) _then) = _$QueryReadSourceCopyWithImpl;
+@useResult
+$Res call({
+ ExpressionOccurrence occurrence
+});
+
+
+$ExpressionOccurrenceCopyWith<$Res> get occurrence;
+
+}
+/// @nodoc
+class _$QueryReadSourceCopyWithImpl<$Res>
+    implements $QueryReadSourceCopyWith<$Res> {
+  _$QueryReadSourceCopyWithImpl(this._self, this._then);
+
+  final QueryReadSource _self;
+  final $Res Function(QueryReadSource) _then;
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? occurrence = null,}) {
+  return _then(QueryReadSource(
+null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
+as ExpressionOccurrence,
+  ));
+}
+
+/// Create a copy of PortableExpressionReadSource
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ExpressionOccurrenceCopyWith<$Res> get occurrence {
+  
+  return $ExpressionOccurrenceCopyWith<$Res>(_self.occurrence, (value) {
+    return _then(_self.copyWith(occurrence: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$PortableExpressionRead {
+
+ PortableExpressionReadSource get source; skir.ValuePath get path; skir.ValueLocation? get location;
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExpressionReadCopyWith<PortableExpressionRead> get copyWith => _$PortableExpressionReadCopyWithImpl<PortableExpressionRead>(this as PortableExpressionRead, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortableExpressionRead;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionRead&&(identical(other.source, _this.source) || other.source == _this.source)&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.location, _this.location) || other.location == _this.location));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortableExpressionRead;
+  return Object.hash(runtimeType,_this.source,_this.path,_this.location);
+}
+
+@override
+String toString() {
+  final _this = this as PortableExpressionRead;
+  return 'PortableExpressionRead(source: ${_this.source}, path: ${_this.path}, location: ${_this.location})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExpressionReadCopyWith<$Res>  {
+  factory $PortableExpressionReadCopyWith(PortableExpressionRead value, $Res Function(PortableExpressionRead) _then) = _$PortableExpressionReadCopyWithImpl;
+@useResult
+$Res call({
+ PortableExpressionReadSource source, skir.ValuePath path, skir.ValueLocation? location
+});
+
+
+$PortableExpressionReadSourceCopyWith<$Res> get source;
+
+}
+/// @nodoc
+class _$PortableExpressionReadCopyWithImpl<$Res>
+    implements $PortableExpressionReadCopyWith<$Res> {
+  _$PortableExpressionReadCopyWithImpl(this._self, this._then);
+
+  final PortableExpressionRead _self;
+  final $Res Function(PortableExpressionRead) _then;
+
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? path = null,Object? location = freezed,}) {
+  return _then(PortableExpressionRead(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as PortableExpressionReadSource,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as skir.ValuePath,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
+  ));
+}
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableExpressionReadSourceCopyWith<$Res> get source {
+  
+  return $PortableExpressionReadSourceCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}
+}
+
+
+/// Adds pattern-matching-related methods to [PortableExpressionRead].
+extension PortableExpressionReadPatterns on PortableExpressionRead {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _PortableExpressionRead value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _PortableExpressionRead() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _PortableExpressionRead value)  $default,){
+final _that = this;
+switch (_that) {
+case _PortableExpressionRead():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _PortableExpressionRead value)?  $default,){
+final _that = this;
+switch (_that) {
+case _PortableExpressionRead() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( PortableExpressionReadSource source,  skir.ValuePath path,  skir.ValueLocation? location)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _PortableExpressionRead() when $default != null:
+return $default(_that.source,_that.path,_that.location);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( PortableExpressionReadSource source,  skir.ValuePath path,  skir.ValueLocation? location)  $default,) {final _that = this;
+switch (_that) {
+case _PortableExpressionRead():
+return $default(_that.source,_that.path,_that.location);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( PortableExpressionReadSource source,  skir.ValuePath path,  skir.ValueLocation? location)?  $default,) {final _that = this;
+switch (_that) {
+case _PortableExpressionRead() when $default != null:
+return $default(_that.source,_that.path,_that.location);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _PortableExpressionRead extends PortableExpressionRead {
+  const _PortableExpressionRead({required this.source, required this.path, this.location}): super._();
+  
+
+@override final  PortableExpressionReadSource source;
+@override final  skir.ValuePath path;
+@override final  skir.ValueLocation? location;
+
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PortableExpressionReadCopyWith<_PortableExpressionRead> get copyWith => __$PortableExpressionReadCopyWithImpl<_PortableExpressionRead>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PortableExpressionRead&&(identical(other.source, source) || other.source == source)&&(identical(other.path, path) || other.path == path)&&(identical(other.location, location) || other.location == location));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,source,path,location);
+}
+
+@override
+String toString() {
+    return 'PortableExpressionRead(source: $source, path: $path, location: $location)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PortableExpressionReadCopyWith<$Res> implements $PortableExpressionReadCopyWith<$Res> {
+  factory _$PortableExpressionReadCopyWith(_PortableExpressionRead value, $Res Function(_PortableExpressionRead) _then) = __$PortableExpressionReadCopyWithImpl;
+@override @useResult
+$Res call({
+ PortableExpressionReadSource source, skir.ValuePath path, skir.ValueLocation? location
+});
+
+
+@override $PortableExpressionReadSourceCopyWith<$Res> get source;
+
+}
+/// @nodoc
+class __$PortableExpressionReadCopyWithImpl<$Res>
+    implements _$PortableExpressionReadCopyWith<$Res> {
+  __$PortableExpressionReadCopyWithImpl(this._self, this._then);
+
+  final _PortableExpressionRead _self;
+  final $Res Function(_PortableExpressionRead) _then;
+
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? path = null,Object? location = freezed,}) {
+  return _then(_PortableExpressionRead(
+source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
+as PortableExpressionReadSource,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
+as skir.ValuePath,location: freezed == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as skir.ValueLocation?,
+  ));
+}
+
+/// Create a copy of PortableExpressionRead
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$PortableExpressionReadSourceCopyWith<$Res> get source {
+  
+  return $PortableExpressionReadSourceCopyWith<$Res>(_self.source, (value) {
+    return _then(_self.copyWith(source: value));
+  });
+}
+}
+
+/// @nodoc
+mixin _$ExpressionProblem {
+
+ String get code;
+/// Create a copy of ExpressionProblem
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ExpressionProblemCopyWith<ExpressionProblem> get copyWith => _$ExpressionProblemCopyWithImpl<ExpressionProblem>(this as ExpressionProblem, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ExpressionProblem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExpressionProblem&&(identical(other.code, _this.code) || other.code == _this.code));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as ExpressionProblem;
+  return Object.hash(runtimeType,_this.code);
+}
+
+@override
+String toString() {
+  final _this = this as ExpressionProblem;
+  return 'ExpressionProblem(code: ${_this.code})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ExpressionProblemCopyWith<$Res>  {
+  factory $ExpressionProblemCopyWith(ExpressionProblem value, $Res Function(ExpressionProblem) _then) = _$ExpressionProblemCopyWithImpl;
+@useResult
+$Res call({
+ String code
+});
+
+
+
+
+}
+/// @nodoc
+class _$ExpressionProblemCopyWithImpl<$Res>
+    implements $ExpressionProblemCopyWith<$Res> {
+  _$ExpressionProblemCopyWithImpl(this._self, this._then);
+
+  final ExpressionProblem _self;
+  final $Res Function(ExpressionProblem) _then;
+
+/// Create a copy of ExpressionProblem
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,}) {
+  return _then(ExpressionProblem(
+null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ExpressionProblem].
+extension ExpressionProblemPatterns on ExpressionProblem {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ExpressionProblem value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ExpressionProblem() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ExpressionProblem value)  $default,){
+final _that = this;
+switch (_that) {
+case _ExpressionProblem():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ExpressionProblem value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ExpressionProblem() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ExpressionProblem() when $default != null:
+return $default(_that.code);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code)  $default,) {final _that = this;
+switch (_that) {
+case _ExpressionProblem():
+return $default(_that.code);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code)?  $default,) {final _that = this;
+switch (_that) {
+case _ExpressionProblem() when $default != null:
+return $default(_that.code);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ExpressionProblem implements ExpressionProblem {
+  const _ExpressionProblem(this.code);
+  
+
+@override final  String code;
+
+/// Create a copy of ExpressionProblem
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ExpressionProblemCopyWith<_ExpressionProblem> get copyWith => __$ExpressionProblemCopyWithImpl<_ExpressionProblem>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExpressionProblem&&(identical(other.code, code) || other.code == code));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,code);
+}
+
+@override
+String toString() {
+    return 'ExpressionProblem(code: $code)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ExpressionProblemCopyWith<$Res> implements $ExpressionProblemCopyWith<$Res> {
+  factory _$ExpressionProblemCopyWith(_ExpressionProblem value, $Res Function(_ExpressionProblem) _then) = __$ExpressionProblemCopyWithImpl;
+@override @useResult
+$Res call({
+ String code
+});
+
+
+
+
+}
+/// @nodoc
+class __$ExpressionProblemCopyWithImpl<$Res>
+    implements _$ExpressionProblemCopyWith<$Res> {
+  __$ExpressionProblemCopyWithImpl(this._self, this._then);
+
+  final _ExpressionProblem _self;
+  final $Res Function(_ExpressionProblem) _then;
+
+/// Create a copy of ExpressionProblem
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,}) {
+  return _then(_ExpressionProblem(
+null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+mixin _$ExpressionProjection {
+
+ skir.ExpressionNode get root; skir.ValuePath get suffix; int get descents;
+/// Create a copy of ExpressionProjection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ExpressionProjectionCopyWith<ExpressionProjection> get copyWith => _$ExpressionProjectionCopyWithImpl<ExpressionProjection>(this as ExpressionProjection, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ExpressionProjection;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExpressionProjection&&(identical(other.root, _this.root) || other.root == _this.root)&&(identical(other.suffix, _this.suffix) || other.suffix == _this.suffix)&&(identical(other.descents, _this.descents) || other.descents == _this.descents));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as ExpressionProjection;
+  return Object.hash(runtimeType,_this.root,_this.suffix,_this.descents);
+}
+
+@override
+String toString() {
+  final _this = this as ExpressionProjection;
+  return 'ExpressionProjection(root: ${_this.root}, suffix: ${_this.suffix}, descents: ${_this.descents})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ExpressionProjectionCopyWith<$Res>  {
+  factory $ExpressionProjectionCopyWith(ExpressionProjection value, $Res Function(ExpressionProjection) _then) = _$ExpressionProjectionCopyWithImpl;
+@useResult
+$Res call({
+ skir.ExpressionNode root, skir.ValuePath suffix, int descents
+});
+
+
+
+
+}
+/// @nodoc
+class _$ExpressionProjectionCopyWithImpl<$Res>
+    implements $ExpressionProjectionCopyWith<$Res> {
+  _$ExpressionProjectionCopyWithImpl(this._self, this._then);
+
+  final ExpressionProjection _self;
+  final $Res Function(ExpressionProjection) _then;
+
+/// Create a copy of ExpressionProjection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? root = null,Object? suffix = null,Object? descents = null,}) {
+  return _then(ExpressionProjection(
+root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
+as skir.ExpressionNode,suffix: null == suffix ? _self.suffix : suffix // ignore: cast_nullable_to_non_nullable
+as skir.ValuePath,descents: null == descents ? _self.descents : descents // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ExpressionProjection].
+extension ExpressionProjectionPatterns on ExpressionProjection {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ExpressionProjection value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ExpressionProjection() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ExpressionProjection value)  $default,){
+final _that = this;
+switch (_that) {
+case _ExpressionProjection():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ExpressionProjection value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ExpressionProjection() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( skir.ExpressionNode root,  skir.ValuePath suffix,  int descents)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ExpressionProjection() when $default != null:
+return $default(_that.root,_that.suffix,_that.descents);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( skir.ExpressionNode root,  skir.ValuePath suffix,  int descents)  $default,) {final _that = this;
+switch (_that) {
+case _ExpressionProjection():
+return $default(_that.root,_that.suffix,_that.descents);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( skir.ExpressionNode root,  skir.ValuePath suffix,  int descents)?  $default,) {final _that = this;
+switch (_that) {
+case _ExpressionProjection() when $default != null:
+return $default(_that.root,_that.suffix,_that.descents);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class _ExpressionProjection implements ExpressionProjection {
+  const _ExpressionProjection({required this.root, required this.suffix, required this.descents});
+  
+
+@override final  skir.ExpressionNode root;
+@override final  skir.ValuePath suffix;
+@override final  int descents;
+
+/// Create a copy of ExpressionProjection
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ExpressionProjectionCopyWith<_ExpressionProjection> get copyWith => __$ExpressionProjectionCopyWithImpl<_ExpressionProjection>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExpressionProjection&&(identical(other.root, root) || other.root == root)&&(identical(other.suffix, suffix) || other.suffix == suffix)&&(identical(other.descents, descents) || other.descents == descents));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,root,suffix,descents);
+}
+
+@override
+String toString() {
+    return 'ExpressionProjection(root: $root, suffix: $suffix, descents: $descents)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ExpressionProjectionCopyWith<$Res> implements $ExpressionProjectionCopyWith<$Res> {
+  factory _$ExpressionProjectionCopyWith(_ExpressionProjection value, $Res Function(_ExpressionProjection) _then) = __$ExpressionProjectionCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.ExpressionNode root, skir.ValuePath suffix, int descents
+});
+
+
+
+
+}
+/// @nodoc
+class __$ExpressionProjectionCopyWithImpl<$Res>
+    implements _$ExpressionProjectionCopyWith<$Res> {
+  __$ExpressionProjectionCopyWithImpl(this._self, this._then);
+
+  final _ExpressionProjection _self;
+  final $Res Function(_ExpressionProjection) _then;
+
+/// Create a copy of ExpressionProjection
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? root = null,Object? suffix = null,Object? descents = null,}) {
+  return _then(_ExpressionProjection(
+root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
+as skir.ExpressionNode,suffix: null == suffix ? _self.suffix : suffix // ignore: cast_nullable_to_non_nullable
+as skir.ValuePath,descents: null == descents ? _self.descents : descents // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
