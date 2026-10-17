@@ -134,21 +134,21 @@ func (m *Typewriter) PanelTest(
 	return m.panelContainer(source).
 		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithWorkdir("/workspace/panel").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
 func (m *Typewriter) PanelTestKitTest(source *dagger.Workspace) *dagger.Container {
 	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/testkit").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
 func (m *Typewriter) PanelWidgetbookTest(source *dagger.Workspace) *dagger.Container {
 	return m.panelContainer(source).
 		WithWorkdir("/workspace/panel/widgetbook").
-		WithExec([]string{"flutter", "test", "--no-pub"})
+		WithExec([]string{"flutter", "test", "--no-pub", "--concurrency=2"})
 }
 
 // +check
@@ -197,6 +197,7 @@ authorization {
 			"flutter",
 			"test",
 			"--no-pub",
+			"--concurrency=2",
 			"test/infrastructure/messaging/nats_core_client_integration_test.dart",
 			"test/infrastructure/messaging/nats_native_authorization_integration_test.dart",
 		})

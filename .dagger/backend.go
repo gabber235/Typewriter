@@ -56,6 +56,7 @@ func (m *Typewriter) backendContainer(source *dagger.Workspace, cacheScope strin
 		).
 		WithMountedCache(backendCacheRoot, lockedCache(cachePrefix+"-target-v3")).
 		WithEnvVariable("CARGO_TARGET_DIR", backendTarget).
+		WithEnvVariable("CARGO_BUILD_JOBS", "2").
 		WithEnvVariable("CARGO_INCREMENTAL", "0").
 		WithEnvVariable("CARGO_PROFILE_DEV_DEBUG", "0").
 		WithEnvVariable("CARGO_PROFILE_TEST_DEBUG", "0")

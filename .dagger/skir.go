@@ -17,6 +17,7 @@ func (m *Typewriter) transportGeneratorContainer(source *dagger.Directory) *dagg
 		From("rust:1.95-bookworm").
 		WithDirectory("/generator", source.Directory("services/protocol/transport-generator")).
 		WithWorkdir("/generator").
+		WithEnvVariable("CARGO_BUILD_JOBS", "2").
 		WithMountedCache("/usr/local/cargo/registry", lockedCache("transport-generator-cargo-registry")).
 		WithMountedCache("/usr/local/cargo/git", lockedCache("transport-generator-cargo-git"))
 }

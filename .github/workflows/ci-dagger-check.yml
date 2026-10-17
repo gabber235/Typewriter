@@ -28,22 +28,72 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  check:
+  discover:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      checks: ${{ steps.list.outputs.checks }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-
+      - name: Install Dagger
+        uses: dagger/dagger-for-github@v8.4.1
+        with:
+          version: 0.21.8
       - name: Create environment file
         run: cp .env.example .env
+      - name: Discover annotated Dagger checks
+        id: list
+        shell: bash
+        env:
+          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
+        run: |
+          query='{ currentWorkspace { checks(noGenerate: true) { list { name } } } }'
+          checks="$(dagger query <<< "$query" |
+            jq -ce '.currentWorkspace.checks.list | map(.name) | select(length > 0)')"
+          printf 'checks=%s\n' "$checks" >> "$GITHUB_OUTPUT"
 
-      - name: Run Dagger checks
+  workers:
+    name: Dagger (${{ matrix.check }})
+    needs: discover
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        check: ${{ fromJSON(needs.discover.outputs.checks) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Create environment file
+        run: cp .env.example .env
+      - name: Run Dagger check
         uses: dagger/dagger-for-github@v8.4.1
         with:
           version: 0.21.8
           cloud-token: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           verb: check
-          args: --no-generate
+          args: --no-generate ${{ matrix.check }}
+
+  check:
+    name: check
+    if: ${{ always() }}
+    needs: [discover, workers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require discovery and every worker to succeed
+        env:
+          DISCOVERY_RESULT: ${{ needs.discover.result }}
+          WORKERS_RESULT: ${{ needs.workers.result }}
+        run: |
+          test "$DISCOVERY_RESULT" = success
+          test "$WORKERS_RESULT" = success
