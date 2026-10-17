@@ -12,7 +12,6 @@ dependencies {
     api(libs.kotlin.coroutines.core)
     implementation(libs.kotlin.reflect)
     ksp(project(":typewriter-codegen"))
-    testImplementation(libs.bundles.basic.test)
     testImplementation(libs.kotlin.serialize.json)
 }
 

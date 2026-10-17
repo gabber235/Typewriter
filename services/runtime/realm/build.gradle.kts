@@ -26,7 +26,6 @@ dependencies {
     testImplementation(project(":file-transfer"))
     testImplementation(project(":telemetry"))
     testImplementation(project(":loader-api"))
-    testImplementation(libs.mockk)
     testImplementation(libs.kotlin.coroutines.test)
 }
 

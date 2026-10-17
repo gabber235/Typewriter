@@ -69,7 +69,7 @@ val ImprintPluginTest by testSuite {
         fixture.writeBuild(
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             typewriter {
@@ -103,7 +103,7 @@ val ImprintPluginTest by testSuite {
         fixture.writeBuild(
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             dependencies {
@@ -131,7 +131,7 @@ val ImprintPluginTest by testSuite {
         fixture.writeBuild(
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             dependencies {
@@ -373,7 +373,7 @@ val ImprintPluginTest by testSuite {
             "extension",
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             typewriter {
@@ -506,7 +506,7 @@ val ImprintPluginTest by testSuite {
             "extension",
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             typewriter {
@@ -554,7 +554,7 @@ val ImprintPluginTest by testSuite {
             "extension",
             """
             plugins {
-                kotlin("jvm") version "2.4.10"
+                kotlin("jvm") version "2.4.21"
                 id("com.typewritermc.imprint")
             }
             typewriter {

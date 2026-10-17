@@ -10,7 +10,7 @@ import java.util.Base64
 plugins {
     id("com.typewritermc.basic-conventions")
     id("com.typewritermc.imprint")
-    id("xyz.jpenilla.run-paper") version "3.0.1"
+    id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
 val loaderPlugin =
@@ -51,7 +51,6 @@ dependencies {
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))
     loaderPlugin(project(":loader-distribution"))
-    testImplementation(libs.kotlin.coroutines.test)
 }
 
 runPaper {
@@ -59,7 +58,8 @@ runPaper {
 }
 
 private fun RunServer.configurePaperRuntime(configurationFile: String) {
-    minecraftVersion("26.2")
+    minecraftVersion("26.3")
+    build(200)
     javaLauncher.set(
         javaToolchains.launcherFor {
             languageVersion.set(JavaLanguageVersion.of(25))

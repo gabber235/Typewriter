@@ -2,6 +2,10 @@
 
 `services/` is one Gradle multiproject build. `build-logic` and `imprint` are the only included builds because Gradle needs both while configuring normal projects.
 
+Services compile and run on Java 21. Paper API compilation targets Minecraft 1.21.4, the minimum supported server version.
+The development server uses Paper 26.3 build 200 with its own Java 25 launcher. Its newer runtime does not raise the
+minimum Java or Paper API version for the plugin.
+
 ## Project ownership
 
 - `protocol` owns generated Kotlin Skir contracts.

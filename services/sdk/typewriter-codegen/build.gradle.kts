@@ -11,5 +11,4 @@ dependencies {
     implementation(libs.kotlinpoet.ksp)
     implementation(libs.kotlin.serialize.cbor)
     testImplementation(libs.mockk)
-    testImplementation(libs.bundles.basic.test)
 }

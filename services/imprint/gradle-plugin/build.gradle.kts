@@ -12,7 +12,7 @@ dependencies {
     implementation(libs.ksp.gradle.plugin)
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.semver)
-    implementation("com.gradleup.shadow:shadow-gradle-plugin:9.4.1")
+    implementation("com.gradleup.shadow:shadow-gradle-plugin:9.6.1")
     testImplementation(gradleTestKit())
 }
 

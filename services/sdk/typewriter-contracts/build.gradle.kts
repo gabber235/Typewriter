@@ -13,5 +13,4 @@ dependencies {
     api(libs.kotlin.serialize.core)
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
-    testImplementation(libs.bundles.basic.test)
 }
