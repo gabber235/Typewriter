@@ -651,7 +651,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
             target: skir.LinkTarget(resource: target, opposite: opposite),
           ),
           resourceProjection: resource,
-          graph: _graphPlacement(record.authoredField("placement")),
+          graph: _graphPlacement(record),
         ),
       );
     }
@@ -697,8 +697,7 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) => _pageEdit(context, "Move graph nodes", (operation) {
     for (final change in changes) {
-      _writePageInteger(operation, change.resource, "x", change.x);
-      _writePageInteger(operation, change.resource, "y", change.y);
+      operation.moveGraphPlacement(change.resource, change.x, change.y);
     }
   });
 
@@ -708,8 +707,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) => _pageEdit(context, "Resize graph nodes", (operation) {
     for (final change in changes) {
-      _writePageInteger(operation, change.resource, "width", change.width);
-      _writePageInteger(operation, change.resource, "height", change.height);
+      operation.resizeGraphPlacement(
+        change.resource,
+        change.width,
+        change.height,
+      );
     }
   });
 
@@ -719,30 +721,11 @@ final class AuthoredPresentationHost extends ChangeNotifier
     required PortableInvocationContext context,
   }) => _pageEdit(context, "Move timeline elements", (operation) {
     for (final change in changes) {
-      final placement = operation
-          .resource(change.resource)
-          ?.authoredField("placement");
-      if (placement?.authoredField("frame") != null) {
-        _writePageInteger(
-          operation,
-          change.resource,
-          "frame",
-          change.startFrame,
-        );
-      } else {
-        _writePageInteger(
-          operation,
-          change.resource,
-          "startFrame",
-          change.startFrame,
-        );
-        _writePageInteger(
-          operation,
-          change.resource,
-          "endFrame",
-          change.endFrame,
-        );
-      }
+      operation.moveTimelinePlacement(
+        change.resource,
+        change.startFrame,
+        change.endFrame,
+      );
     }
   });
 
@@ -770,15 +753,17 @@ final class AuthoredPresentationHost extends ChangeNotifier
     return _stage(label, apply, independent: true);
   }
 
-  PortablePageGraphPlacement? _graphPlacement(skir.DataValue? value) {
-    final x = value?.authoredField("x")?.authoredInteger?.toInt();
-    final y = value?.authoredField("y")?.authoredInteger?.toInt();
-    final width = value?.authoredField("width")?.authoredInteger?.toInt();
-    final height = value?.authoredField("height")?.authoredInteger?.toInt();
-    if (x == null || y == null || width == null || height == null) return null;
-    if (width <= 0 || height <= 0) return null;
-    return PortablePageGraphPlacement(x: x, y: y, width: width, height: height);
-  }
+  PortablePageGraphPlacement? _graphPlacement(skir.AuthoringRecord record) =>
+      switch (record.placement(authored.catalog)) {
+        ReadyPlacement(placement: final GraphPlacement value) =>
+          PortablePageGraphPlacement(
+            x: value.x,
+            y: value.y,
+            width: value.width,
+            height: value.height,
+          ),
+        _ => null,
+      };
 
   String _linkOccurrenceKey(
     skir.LinkProjection link,
@@ -831,38 +816,19 @@ final class AuthoredPresentationHost extends ChangeNotifier
     }
   }
 
-  PortableTimelinePlacement? _timelinePlacement(skir.AuthoringRecord record) {
-    final placementType = authored.catalog
-        .fields(record.configuration)
-        .where((field) => field.template.key == "placement")
-        .firstOrNull
-        ?.type;
-    if (placementType == null) return null;
-    final placement = record.authoredField("placement");
-    if (authored.catalog.isReadableAs(
-      placementType,
-      _timelineKeyframePlacement,
-    )) {
-      final frame = placement?.authoredField("frame")?.authoredInteger?.toInt();
-      return frame == null || frame < 0
-          ? null
-          : PortableTimelineKeyframe(frame);
-    }
-    if (!authored.catalog.isReadableAs(
-      placementType,
-      _timelineSegmentPlacement,
-    )) {
-      return null;
-    }
-    final start = placement
-        ?.authoredField("startFrame")
-        ?.authoredInteger
-        ?.toInt();
-    final end = placement?.authoredField("endFrame")?.authoredInteger?.toInt();
-    return start == null || end == null || start < 0 || end < start
-        ? null
-        : PortableTimelineSegment(start, end);
-  }
+  PortableTimelinePlacement? _timelinePlacement(skir.AuthoringRecord record) =>
+      switch (record.placement(authored.catalog)) {
+        ReadyPlacement(placement: TimelineKeyframePlacement(:final frame)) =>
+          PortableTimelineKeyframe(frame),
+        ReadyPlacement(
+          placement: TimelineSegmentPlacement(
+            :final startFrame,
+            :final endFrame,
+          ),
+        ) =>
+          PortableTimelineSegment(startFrame, endFrame),
+        _ => null,
+      };
 
   PortableTimelineCueProjection? _timelineCue(
     skir.ResourceId resource,
@@ -885,33 +851,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
       label: _resourceLabel(record) ?? resource.value,
       placement: placement,
       children: children,
-    );
-  }
-
-  void _writePageInteger(
-    AuthoringEdit operation,
-    skir.ResourceId resource,
-    String field,
-    int value,
-  ) {
-    final location = skir.ValueLocation(
-      resource: resource,
-      path: skir.ValuePath(
-        segments: [
-          skir.PathSegment.createField(name: "placement"),
-          skir.PathSegment.createField(name: field),
-        ],
-      ),
-    );
-    final current = operation.read(location);
-    if (current is! PortablePathValue<skir.DataValue>) {
-      throw StateError("The resource placement is unavailable");
-    }
-    operation.set(
-      location,
-      current.value.withAuthoredPayload(
-        skir.DataValue.wrapInteger(value.toString()),
-      ),
     );
   }
 
@@ -1569,20 +1508,6 @@ final class AuthoredPresentationHost extends ChangeNotifier
 }
 
 final _timelineCueResource = skir.ResourceDefinitionId(value: "typewriter.cue");
-final _timelineSegmentPlacement = _declaredPresentationType(
-  "54e38e56871243d2ae747ed6c0083381",
-);
-final _timelineKeyframePlacement = _declaredPresentationType(
-  "e0369811aac94bf6a291f65d1c719e1b",
-);
-
-skir.TypeUse _declaredPresentationType(String id) => skir.TypeUse.createNamed(
-  definition: skir.TypeDefinitionId(
-    typeId: skir.TypeId.createDeclared(value: id),
-    revision: 1,
-  ),
-  arguments: const [],
-);
 
 final class _AuthoredActionValue {
   const _AuthoredActionValue(this.value, this.reads);

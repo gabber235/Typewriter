@@ -192,7 +192,7 @@ _PageFixture _pageFixture() {
   final pageType = _qualified("Page");
   final entryType = _qualified("Entry");
   final cueType = _qualified("Cue");
-  final graphPlacementType = _qualified("GraphPlacement");
+  final graphPlacementType = graphPlacementTypeRef;
   final segmentPlacementType = skir.TypeDefinitionId(
     typeId: skir.TypeId.createDeclared(
       value: "54e38e56871243d2ae747ed6c0083381",

@@ -17,13 +17,14 @@ void main() {
     );
     skir.PublishedType published(
       skir.TypeDefinitionId id,
-      Map<String, skir.TypeTemplate> fields,
-    ) => skir.PublishedType(
+      Map<String, skir.TypeTemplate> fields, {
+      List<skir.NamedTypeTemplate> parents = const [],
+    }) => skir.PublishedType(
       display: null,
       definition: skir.TypeDefinition(
         id: id,
         parameters: const [],
-        parents: const [],
+        parents: parents,
         representation: skir.RepresentationTemplate.createRecord(
           abstract_: false,
           fields: [
@@ -47,7 +48,18 @@ void main() {
             rules: const [],
           ),
       ],
-      ancestorTemplates: const [],
+      ancestorTemplates: parents,
+    );
+    final refined = skir.TypeDefinitionId(
+      typeId: skir.TypeId.createQualified(
+        namespace: "test",
+        name: "TintedGraphPlacement",
+      ),
+      revision: 1,
+    );
+    final parent = skir.NamedTypeTemplate(
+      definition: graphPlacementTypeRef,
+      arguments: const [],
     );
     final snapshot = skir.EditorCatalogWireSnapshot.defaultInstance.toMutable()
       ..types = [
@@ -60,6 +72,14 @@ void main() {
         published(graphPlacementTypeRef, {
           for (final key in ["x", "y", "width", "height"]) key: integer,
         }),
+        published(
+          refined,
+          {
+            for (final key in ["x", "y", "width", "height"]) key: integer,
+            "tint": skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+          },
+          parents: [parent],
+        ),
       ];
     final catalog = CheckedEditorCatalog(snapshot.toFrozen());
     final configuration = catalog.beginSelection(root);
@@ -81,7 +101,28 @@ void main() {
                   fields: [
                     skir.FieldValue(
                       name: "placement",
-                      value: placement.toAuthoredValue(),
+                      value: id == existing
+                          ? placement.toAuthoredValue()
+                          : skir.DataValue.createNamed(
+                              actualType: skir.NamedTypeUse(
+                                definition: refined,
+                                arguments: const [],
+                              ),
+                              payload: skir.DataValue.createRecord(
+                                fields: [
+                                  ...placement
+                                      .toAuthoredValue()
+                                      .authoredRecord!
+                                      .fields,
+                                  skir.FieldValue(
+                                    name: "tint",
+                                    value: skir.DataValue.wrapStringValue(
+                                      "blue",
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -95,12 +136,34 @@ void main() {
             configuration: configuration,
           ),
         );
-    final before = draft.resource(existing)!.graphGridRect!;
-    final after = draft.resource(created)!.graphGridRect!;
+    final before = draft.resource(existing)!.graphRect(catalog)!;
+    final after = draft.resource(created)!.graphRect(catalog)!;
     expect(before, placement.gridRect);
     expect(after.overlaps(before, gap: 1), isFalse);
     expect(after.width, placement.width);
     expect(after.height, placement.height);
+    final createdPlacement = draft
+        .resource(created)!
+        .authoredField("placement")!;
+    expect(createdPlacement.authoredActualType!.definition, refined);
+    expect(createdPlacement.authoredField("tint")!.authoredString, "blue");
+    final count = draft.operationCount;
+    expect(() => draft.resizeGraphPlacement(created, 0, 4), throwsStateError);
+    expect(draft.operationCount, count);
+    expect(draft.resource(created)!.graphRect(catalog), after);
+    final unfinished = skir.DataValue.createNamed(
+      actualType: skir.NamedTypeUse(
+        definition: graphPlacementTypeRef,
+        arguments: const [],
+      ),
+      payload: skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(name: "x", value: skir.DataValue.unfilled),
+          for (final key in ["y", "width", "height"]) _integerField(key, 1),
+        ],
+      ),
+    ).readPlacement(catalog);
+    expect(unfinished, PlacementReading.unfinished(editorRootPath.field("x")));
   });
 
   final graphValue = skir.DataValue.createRecord(
@@ -113,15 +176,22 @@ void main() {
   );
 
   test("placement variants are selected by declared type identity", () {
-    final placement = skir.DataValue.createNamed(
-      actualType: skir.NamedTypeUse(
-        definition: placementTypeRefs.graph,
-        arguments: const [],
-      ),
-      payload: graphValue,
-    ).toPlacement();
+    final placement =
+        skir.DataValue.createNamed(
+          actualType: skir.NamedTypeUse(
+            definition: graphPlacementTypeRef,
+            arguments: const [],
+          ),
+          payload: graphValue,
+        ).readPlacement(
+          CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance),
+        );
 
-    expect(placement, GraphPlacement(x: 1, y: 2, width: 3, height: 4));
+    expect(placement, isA<ReadyPlacement>());
+    expect(
+      (placement as ReadyPlacement).placement,
+      GraphPlacement(x: 1, y: 2, width: 3, height: 4),
+    );
   });
 
   test("placement decoding rejects an unknown type with a familiar shape", () {
@@ -133,11 +203,13 @@ void main() {
     );
 
     expect(
-      () => skir.DataValue.createNamed(
+      skir.DataValue.createNamed(
         actualType: skir.NamedTypeUse(definition: unknown, arguments: const []),
         payload: graphValue,
-      ).toPlacement(),
-      throwsArgumentError,
+      ).readPlacement(
+        CheckedEditorCatalog(skir.EditorCatalogWireSnapshot.defaultInstance),
+      ),
+      isA<UnavailablePlacement>(),
     );
   });
 }

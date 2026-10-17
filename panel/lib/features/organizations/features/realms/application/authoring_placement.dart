@@ -28,19 +28,6 @@ final timelineKeyframePlacementTypeRef = skir.TypeDefinitionId(
   revision: 1,
 );
 
-const placementTypeRefs = PlacementTypeReferences();
-
-final class PlacementTypeReferences {
-  const PlacementTypeReferences();
-
-  skir.TypeDefinitionId get root => placementRootTypeRef;
-  skir.TypeDefinitionId get graph => graphPlacementTypeRef;
-  skir.TypeDefinitionId get timelineEntry => timelineEntryPlacementTypeRef;
-  skir.TypeDefinitionId get timelineSegment => timelineSegmentPlacementTypeRef;
-  skir.TypeDefinitionId get timelineKeyframe =>
-      timelineKeyframePlacementTypeRef;
-}
-
 @freezed
 sealed class Placement with _$Placement {
   const factory Placement.graph({
@@ -67,19 +54,8 @@ sealed class Placement with _$Placement {
   };
 
   skir.DataValue toAuthoredValue() {
-    switch (this) {
-      case GraphPlacement(:final width, :final height)
-          when width <= 0 || height <= 0:
-        throw ArgumentError("Graph placement dimensions must be positive");
-      case TimelineEntryPlacement(:final trackIndex) when trackIndex < 0:
-        throw ArgumentError("Timeline track index must not be negative");
-      case TimelineSegmentPlacement(:final startFrame, :final endFrame)
-          when startFrame < 0 || endFrame < startFrame:
-        throw ArgumentError("Timeline segment frames are invalid");
-      case TimelineKeyframePlacement(:final frame) when frame < 0:
-        throw ArgumentError("Timeline keyframe must not be negative");
-      default:
-    }
+    final invalid = problem;
+    if (invalid != null) throw ArgumentError(invalid);
     final fields = switch (this) {
       GraphPlacement(:final x, :final y, :final width, :final height) => {
         "x": x,
@@ -111,40 +87,108 @@ sealed class Placement with _$Placement {
   }
 }
 
-extension AuthoredPlacementDecoding on skir.DataValue {
-  Placement toPlacement() {
-    final value = this;
-    final named = value is skir.DataValue_namedWrapper ? value.value : null;
-    final fields = named?.payload.authoredRecord?.fields;
-    if (named == null || fields == null) {
-      throw ArgumentError("Placement must be polymorphic record data");
+@freezed
+sealed class PlacementReading with _$PlacementReading {
+  const factory PlacementReading.ready({
+    required Placement placement,
+    required skir.DataValue authored,
+  }) = ReadyPlacement;
+  const factory PlacementReading.unfinished(skir.ValuePath path) =
+      UnfinishedPlacement;
+  const factory PlacementReading.unavailable(String message) =
+      UnavailablePlacement;
+}
+
+extension CatalogPlacementReading on skir.DataValue {
+  PlacementReading readPlacement(CheckedEditorCatalog catalog) {
+    if (this == skir.DataValue.unfilled) {
+      return PlacementReading.unfinished(editorRootPath);
     }
-    int number(String key) => fields
-        .singleWhere((field) => field.name == key)
-        .value
-        .authoredInteger!
-        .toInt();
-    return switch (named.actualType.definition) {
-      final type when type == placementTypeRefs.graph => GraphPlacement(
-        x: number("x"),
-        y: number("y"),
-        width: number("width"),
-        height: number("height"),
-      ),
-      final type when type == placementTypeRefs.timelineEntry =>
-        TimelineEntryPlacement(trackIndex: number("trackIndex")),
-      final type when type == placementTypeRefs.timelineSegment =>
-        TimelineSegmentPlacement(
-          startFrame: number("startFrame"),
-          endFrame: number("endFrame"),
-        ),
-      final type when type == placementTypeRefs.timelineKeyframe =>
-        TimelineKeyframePlacement(frame: number("frame")),
-      _ => throw ArgumentError(
-        "Unknown placement concrete type ${named.actualType.definition}",
-      ),
-    };
+    final original = this;
+    if (original is! skir.DataValue_namedWrapper) {
+      return const PlacementReading.unavailable(
+        "Placement must be named record data",
+      );
+    }
+    final actual = skir.TypeUse.wrapNamed(original.value.actualType);
+    final candidates =
+        [
+              graphPlacementTypeRef,
+              timelineEntryPlacementTypeRef,
+              timelineSegmentPlacementTypeRef,
+              timelineKeyframePlacementTypeRef,
+            ]
+            .where(
+              (type) => catalog.isReadableAs(
+                actual,
+                skir.TypeUse.createNamed(definition: type, arguments: const []),
+              ),
+            )
+            .toList();
+    if (candidates.length != 1) {
+      return const PlacementReading.unavailable(
+        "Placement has no unique supported nominal form",
+      );
+    }
+    final target = candidates.single;
+    final fields = target == graphPlacementTypeRef
+        ? ["x", "y", "width", "height"]
+        : target == timelineEntryPlacementTypeRef
+        ? ["trackIndex"]
+        : target == timelineSegmentPlacementTypeRef
+        ? ["startFrame", "endFrame"]
+        : ["frame"];
+    final numbers = <String, int>{};
+    for (final field in fields) {
+      final value = original.authoredField(field);
+      if (value == null || value == skir.DataValue.unfilled) {
+        return PlacementReading.unfinished(editorRootPath.field(field));
+      }
+      final integer = value.authoredInteger;
+      final number = integer == null ? null : int.tryParse(integer.toString());
+      if (number == null || BigInt.from(number) != integer) {
+        return PlacementReading.unavailable(
+          "Placement field $field is not an exactly representable integer",
+        );
+      }
+      numbers[field] = number;
+    }
+    final placement = target == graphPlacementTypeRef
+        ? Placement.graph(
+            x: numbers["x"]!,
+            y: numbers["y"]!,
+            width: numbers["width"]!,
+            height: numbers["height"]!,
+          )
+        : target == timelineEntryPlacementTypeRef
+        ? Placement.timelineEntry(trackIndex: numbers["trackIndex"]!)
+        : target == timelineSegmentPlacementTypeRef
+        ? Placement.timelineSegment(
+            startFrame: numbers["startFrame"]!,
+            endFrame: numbers["endFrame"]!,
+          )
+        : Placement.timelineKeyframe(frame: numbers["frame"]!);
+    final problem = placement.problem;
+    return problem == null
+        ? PlacementReading.ready(placement: placement, authored: original)
+        : PlacementReading.unavailable(problem);
   }
+}
+
+extension PlacementValidity on Placement {
+  String? get problem => switch (this) {
+    GraphPlacement(:final width, :final height)
+        when width <= 0 || height <= 0 =>
+      "Graph dimensions must be positive",
+    TimelineEntryPlacement(:final trackIndex) when trackIndex < 0 =>
+      "Track index must not be negative",
+    TimelineSegmentPlacement(:final startFrame, :final endFrame)
+        when startFrame < 0 || endFrame < startFrame =>
+      "Timeline range is invalid",
+    TimelineKeyframePlacement(:final frame) when frame < 0 =>
+      "Keyframe must not be negative",
+    _ => null,
+  };
 }
 
 extension GraphPlacementGeometry on GraphPlacement {
@@ -152,29 +196,148 @@ extension GraphPlacementGeometry on GraphPlacement {
       GraphGridRect(x: x, y: y, width: width, height: height);
 }
 
-extension AuthoredGraphPlacement on skir.AuthoringRecord {
-  GraphGridRect? get graphGridRect {
-    final placement = authoredField("placement");
-    if (placement?.authoredActualType?.definition != graphPlacementTypeRef) {
-      return null;
+extension AuthoredPlacementReading on skir.AuthoringRecord {
+  PlacementReading placement(CheckedEditorCatalog catalog) {
+    final expected = catalog
+        .fields(configuration)
+        .where((field) => field.template.key == "placement")
+        .firstOrNull
+        ?.type;
+    if (expected == null) {
+      return const PlacementReading.unavailable(
+        "Placement type is unavailable",
+      );
     }
-    final values = [
-      for (final name in ["x", "y", "width", "height"])
-        placement?.authoredField(name)?.authoredInteger?.toInt(),
-    ];
-    if (values.any((value) => value == null) ||
-        values[2]! <= 0 ||
-        values[3]! <= 0) {
-      return null;
+    final value = authoredField("placement");
+    if (value == null || value == skir.DataValue.unfilled) {
+      return PlacementReading.unfinished(elementPlacementPath);
     }
-    return (placement!.toPlacement() as GraphPlacement).gridRect;
+    final actual = value.authoredActualType;
+    if (actual == null ||
+        !catalog.isReadableAs(skir.TypeUse.wrapNamed(actual), expected)) {
+      return const PlacementReading.unavailable(
+        "Placement does not match the resource field type",
+      );
+    }
+    return switch (value.readPlacement(catalog)) {
+      UnfinishedPlacement(:final path) => PlacementReading.unfinished(
+        skir.ValuePath(
+          segments: [...elementPlacementPath.segments, ...path.segments],
+        ),
+      ),
+      final reading => reading,
+    };
   }
+
+  GraphGridRect? graphRect(CheckedEditorCatalog catalog) =>
+      switch (placement(catalog)) {
+        ReadyPlacement(placement: final GraphPlacement graph) => graph.gridRect,
+        _ => null,
+      };
+}
+
+extension PlacementEdits on AuthoringEdit {
+  void _patchPlacement(
+    skir.ResourceId id,
+    Map<String, int> Function(Placement) fields,
+  ) {
+    final checked =
+        catalog ?? (throw StateError("The editor catalog is unavailable"));
+    final record = resource(id) ?? (throw StateError("The resource is absent"));
+    final reading = record.placement(checked);
+    if (reading is! ReadyPlacement) {
+      throw StateError(switch (reading) {
+        UnfinishedPlacement() => "Placement is unfinished",
+        UnavailablePlacement(:final message) => message,
+        _ => "Placement is unavailable",
+      });
+    }
+    final updates = fields(reading.placement);
+    var candidate = reading.authored;
+    for (final update in updates.entries) {
+      final relative = editorRootPath.field(update.key);
+      final before = candidate.editorValueAt(relative);
+      if (before == null) throw StateError("The placement field is absent");
+      final replaced = candidate.replaceAt(
+        relative,
+        before.withAuthoredPayload(
+          skir.DataValue.wrapInteger(update.value.toString()),
+        ),
+      );
+      if (replaced is! PortablePathValue<skir.DataValue>) {
+        throw StateError("The placement patch is unavailable");
+      }
+      candidate = replaced.value;
+    }
+    final candidateRecord =
+        (record.toMutable()
+              ..fields = [
+                for (final field in record.fields)
+                  if (field.name == "placement")
+                    skir.FieldValue(name: field.name, value: candidate)
+                  else
+                    field,
+              ])
+            .toFrozen();
+    final checkedCandidate = candidateRecord.placement(checked);
+    if (checkedCandidate is! ReadyPlacement) {
+      throw StateError("The proposed placement is invalid");
+    }
+    // Only changed numeric fields become intent. Keep original named wrappers,
+    // extension fields and unrelated coordinates intact.
+    for (final update in updates.entries) {
+      final location = skir.ValueLocation(
+        resource: id,
+        path: elementPlacementPath.field(update.key),
+      );
+      final existing = read(location);
+      if (existing is! PortablePathValue<skir.DataValue>) {
+        throw StateError("The placement field is unavailable");
+      }
+      final outcome = set(
+        location,
+        existing.value.withAuthoredPayload(
+          skir.DataValue.wrapInteger(update.value.toString()),
+        ),
+      );
+      if (outcome case PortablePathUnavailable(:final message)) {
+        throw StateError(message);
+      }
+    }
+  }
+
+  void moveGraphPlacement(skir.ResourceId id, int x, int y) => _patchPlacement(
+    id,
+    (placement) => switch (placement) {
+      GraphPlacement() => {"x": x, "y": y},
+      _ => throw StateError("This resource has no graph placement"),
+    },
+  );
+  void resizeGraphPlacement(skir.ResourceId id, int width, int height) =>
+      _patchPlacement(
+        id,
+        (placement) => switch (placement) {
+          GraphPlacement() => {"width": width, "height": height},
+          _ => throw StateError("This resource has no graph placement"),
+        },
+      );
+  void moveTimelinePlacement(skir.ResourceId id, int start, int end) =>
+      _patchPlacement(
+        id,
+        (placement) => switch (placement) {
+          TimelineKeyframePlacement() => {"frame": start},
+          TimelineSegmentPlacement() => {"startFrame": start, "endFrame": end},
+          _ => throw StateError("This resource has no timeline cue placement"),
+        },
+      );
 }
 
 extension CreatedResourcePlacement on AuthoringEdit {
   void placeCreatedResource(ResourceCreationRequest request) {
     if (request.supplied.any((field) => field.name == "placement")) return;
-    final original = resource(request.id)?.graphGridRect;
+    final checked =
+        catalog ?? (throw StateError("The editor catalog is unavailable"));
+    final original = resource(request.id)?.graphRect(checked);
     if (original == null) return;
     final document = toDocument();
     final relations = document.relations;
@@ -191,30 +354,12 @@ extension CreatedResourcePlacement on AuthoringEdit {
         .placeGroup(
           obstacles: [
             for (final id in siblings)
-              if (id != request.id) ?resource(id)?.graphGridRect,
+              if (id != request.id) ?resource(id)?.graphRect(checked),
           ],
           group: [original],
           anchor: original.center,
         )
         .single;
-    for (final field in [("x", rect.x), ("y", rect.y)]) {
-      final location = skir.ValueLocation(
-        resource: request.id,
-        path: elementPlacementPath.field(field.$1),
-      );
-      final current = read(location);
-      if (current is! PortablePathValue<skir.DataValue>) {
-        throw StateError("The resource placement is unavailable");
-      }
-      final result = set(
-        location,
-        current.value.withAuthoredPayload(
-          skir.DataValue.wrapInteger(field.$2.toString()),
-        ),
-      );
-      if (result case PortablePathUnavailable(:final message)) {
-        throw EditPreparationFailure(message);
-      }
-    }
+    moveGraphPlacement(request.id, rect.x, rect.y);
   }
 }
