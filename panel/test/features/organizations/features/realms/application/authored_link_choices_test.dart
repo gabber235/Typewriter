@@ -199,7 +199,7 @@ void main() {
     await tester.pumpWidget(
       _linkControl(fixture, editing: editing, source: source),
     );
-    await tester.tap(find.text("Add link"));
+    await tester.tap(find.byTooltip("Add link"));
     await tester.pumpAndSettle();
     await tester.tap(
       find.byKey(
