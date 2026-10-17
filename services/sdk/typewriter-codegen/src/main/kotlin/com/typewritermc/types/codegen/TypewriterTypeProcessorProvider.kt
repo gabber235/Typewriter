@@ -1286,7 +1286,7 @@ $decodeCases
                     val fieldBindings =
                         nativeFields.joinToString(",\n") { field ->
                             "                com.typewritermc.types.GeneratedNativeField(" +
-                                "${field.name.kotlinLiteral()}, arguments.resolver.bind(${field.use}), " +
+                                "${field.name.kotlinLiteral()}, { arguments.resolver.bind(${field.use}) }, " +
                                 "{ value -> value.${field.propertyName} })"
                         }
                     val constructor =

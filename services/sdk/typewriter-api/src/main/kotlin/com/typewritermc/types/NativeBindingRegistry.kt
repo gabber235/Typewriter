@@ -76,6 +76,7 @@ interface PortableValueStorage {
  *
  * Bindings are cached by concrete type and reject checked types from another generation. Deferred bindings allow
  * recursive record factories to refer to themselves during construction, but fail if used before initialization.
+ * Nullable and container child bindings resolve only when a value or signature needs them.
  * Concrete definitions without a native factory retain [PortableValue] content; abstract records dispatch through
  * the actual authored type. Native sets and maps reject duplicates that their Kotlin containers would discard.
  */
@@ -184,7 +185,7 @@ class FactoryNativeBindingRegistry(
             }
 
             is TypeUse.Nullable -> {
-                NullableNativeBinding(actual, use, binding(resolve(use.value)))
+                NullableNativeBinding(actual, use) { binding(resolve(use.value)) }
             }
 
             is TypeUse.Named -> {
@@ -232,15 +233,19 @@ class FactoryNativeBindingRegistry(
     ): NativeBinding<*>? =
         when (val representation = actual.schema.representation) {
             is ResolvedRepresentation.Sequence -> {
-                val item = binding(resolve(representation.item))
                 when (representation.kind) {
-                    CollectionKind.List -> ListNativeBinding(use, actual, item)
-                    CollectionKind.Set -> SetNativeBinding(use, actual, item)
+                    CollectionKind.List -> ListNativeBinding(use, actual) { binding(resolve(representation.item)) }
+                    CollectionKind.Set -> SetNativeBinding(use, actual) { binding(resolve(representation.item)) }
                 }
             }
 
             is ResolvedRepresentation.Mapping -> {
-                MapNativeBinding(use, actual, binding(resolve(representation.key)), binding(resolve(representation.value)))
+                MapNativeBinding(
+                    use,
+                    actual,
+                    resolveKey = { binding(resolve(representation.key)) },
+                    resolveValue = { binding(resolve(representation.value)) },
+                )
             }
 
             is ResolvedRepresentation.Link -> {
@@ -540,10 +545,11 @@ private class ScalarNativeBinding(
 private class NullableNativeBinding(
     override val checked: CheckedType,
     override val actualType: TypeUse.Nullable,
-    private val inner: NativeBinding<*>,
+    resolveInner: () -> NativeBinding<*>,
 ) : NativeBinding<Any?>,
     CheckedNativeBinding {
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    private val inner by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveInner)
     override val signature: String get() = "nullable(${inner.signature})"
 
     override fun encode(value: Any?): DataValue = if (value == null) DataValue.Null else inner.encodeAny(value)
@@ -554,10 +560,11 @@ private class NullableNativeBinding(
 private class ListNativeBinding(
     override val actualType: TypeUse.Named,
     override val checked: CheckedType,
-    private val item: NativeBinding<*>,
+    resolveItem: () -> NativeBinding<*>,
 ) : NativeBinding<List<*>>,
     CheckedNativeBinding {
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    private val item by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveItem)
     override val signature: String get() = "list(${item.signature})"
 
     override fun encode(value: List<*>): DataValue =
@@ -579,10 +586,11 @@ private class ListNativeBinding(
 private class SetNativeBinding(
     override val actualType: TypeUse.Named,
     override val checked: CheckedType,
-    private val item: NativeBinding<*>,
+    resolveItem: () -> NativeBinding<*>,
 ) : NativeBinding<Set<*>>,
     CheckedNativeBinding {
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    private val item by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveItem)
     override val signature: String get() = "set(${item.signature})"
 
     override fun encode(value: Set<*>): DataValue =
@@ -603,7 +611,7 @@ private class SetNativeBinding(
         if (authored.map(DataValue::canonicalValueKey).distinct().size != authored.size) {
             throw NativeBindingException("duplicate_set_value", "A native Set cannot preserve duplicate authored values.")
         }
-        val decoded = authored.map(item::decodeAuthoredAny)
+        val decoded = authored.map { row -> item.decodeAuthoredAny(row) }
         if (decoded.distinct().size != decoded.size) {
             throw NativeBindingException("duplicate_set_value", "A native Set cannot preserve duplicate authored values.")
         }
@@ -614,11 +622,13 @@ private class SetNativeBinding(
 private class MapNativeBinding(
     override val actualType: TypeUse.Named,
     override val checked: CheckedType,
-    private val key: NativeBinding<*>,
-    private val value: NativeBinding<*>,
+    resolveKey: () -> NativeBinding<*>,
+    resolveValue: () -> NativeBinding<*>,
 ) : NativeBinding<Map<*, *>>,
     CheckedNativeBinding {
     override val provider: NativeBindingId = FRAMEWORK_NATIVE_BINDING
+    private val key by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveKey)
+    private val value by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveValue)
     override val signature: String get() = "map(${key.signature},${value.signature})"
 
     override fun encode(value: Map<*, *>): DataValue =

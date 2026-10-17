@@ -1625,7 +1625,7 @@ private object TestTextMessageNativeBindingFactory : NativeBindingFactory {
             provider = provider,
             signature = "test.text_message",
             nativeClass = TestTextMessage::class,
-            fields = listOf(GeneratedNativeField("text", arguments.resolver.bind(TEXT_USE), TestTextMessage::text)),
+            fields = listOf(GeneratedNativeField("text", { arguments.resolver.bind(TEXT_USE) }, TestTextMessage::text)),
             construct = { TestTextMessage(it.getValue("text") as String) },
         )
 }
@@ -1643,7 +1643,7 @@ private object TestTranslationMessageNativeBindingFactory : NativeBindingFactory
             provider = provider,
             signature = "test.translation_message",
             nativeClass = TestTranslationMessage::class,
-            fields = listOf(GeneratedNativeField("key", arguments.resolver.bind(TEXT_USE), TestTranslationMessage::key)),
+            fields = listOf(GeneratedNativeField("key", { arguments.resolver.bind(TEXT_USE) }, TestTranslationMessage::key)),
             construct = { TestTranslationMessage(it.getValue("key") as String) },
         )
 }
@@ -1663,9 +1663,9 @@ private object TestMessageActionNativeBindingFactory : NativeBindingFactory {
             nativeClass = TestMessageAction::class,
             fields =
                 listOf(
-                    GeneratedNativeField("message", arguments.resolver.bind(TEST_MESSAGE_USE), TestMessageAction::message),
-                    GeneratedNativeField("messages", arguments.resolver.bind(TEST_MESSAGE_LIST_USE), TestMessageAction::messages),
-                    GeneratedNativeField("optional", arguments.resolver.bind(TEST_OPTIONAL_MESSAGE_USE), TestMessageAction::optional),
+                    GeneratedNativeField("message", { arguments.resolver.bind(TEST_MESSAGE_USE) }, TestMessageAction::message),
+                    GeneratedNativeField("messages", { arguments.resolver.bind(TEST_MESSAGE_LIST_USE) }, TestMessageAction::messages),
+                    GeneratedNativeField("optional", { arguments.resolver.bind(TEST_OPTIONAL_MESSAGE_USE) }, TestMessageAction::optional),
                 ),
             construct =
                 {
@@ -1696,8 +1696,8 @@ private object TestTreeNativeBindingFactory : NativeBindingFactory {
             nativeClass = TestTree::class,
             fields =
                 listOf(
-                    GeneratedNativeField<TestTree<*>>("value", arguments.bindings.single()) { it.value },
-                    GeneratedNativeField<TestTree<*>>("children", arguments.resolver.bind(childrenUse)) { it.children },
+                    GeneratedNativeField<TestTree<*>>("value", { arguments.bindings.single() }) { it.value },
+                    GeneratedNativeField<TestTree<*>>("children", { arguments.resolver.bind(childrenUse) }) { it.children },
                 ),
             construct =
                 {
@@ -1724,7 +1724,7 @@ private object TestIdentityKeyNativeBindingFactory : NativeBindingFactory {
             provider = provider,
             signature = "test.identity_key",
             nativeClass = TestIdentityKey::class,
-            fields = listOf(GeneratedNativeField("value", arguments.resolver.bind(TEXT_USE), TestIdentityKey::value)),
+            fields = listOf(GeneratedNativeField("value", { arguments.resolver.bind(TEXT_USE) }, TestIdentityKey::value)),
             construct = { TestIdentityKey(it.getValue("value") as String) },
         )
 }

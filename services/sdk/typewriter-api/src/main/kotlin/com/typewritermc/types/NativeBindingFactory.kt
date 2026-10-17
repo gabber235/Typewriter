@@ -23,11 +23,14 @@ fun interface NativeBindingResolver {
     fun bind(type: TypeUse): NativeBinding<*>
 }
 
-data class GeneratedNativeField<T>(
+/** Resolves its native binding on first access, so recursive field applications need not expand during construction. */
+class GeneratedNativeField<T>(
     val name: String,
-    val binding: NativeBinding<*>,
+    resolveBinding: () -> NativeBinding<*>,
     val read: (T) -> Any?,
-)
+) {
+    val binding: NativeBinding<*> by lazy(LazyThreadSafetyMode.SYNCHRONIZED, resolveBinding)
+}
 
 class GeneratedRecordNativeBinding<T>(
     override val checked: CheckedType,
