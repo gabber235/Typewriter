@@ -29,7 +29,7 @@ func backendTestCommand(args ...string) []string {
 	command := append([]string{componentTestXtask}, args...)
 	return append([]string{
 		"sh", "-c",
-		`status=0; cargo build --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
+		`status=0; cargo build --locked --manifest-path backend/tests/component/Cargo.toml -p component-test-xtask && "$@" || status=$?; ` + cleanupBackendTarget + ` || exit $?; exit "$status"`,
 		"backend-test",
 	}, command...)
 }
@@ -73,7 +73,7 @@ func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container
 	return m.backendContainer(source, "unit-test").
 		WithFile("/usr/local/bin/nats-server", backendNatsServer()).
 		WithExec(withBackendTargetCleanup(
-			"cargo", "test", "--manifest-path", "backend/Cargo.toml",
+			"cargo", "test", "--locked", "--manifest-path", "backend/Cargo.toml",
 			"--workspace", "--no-fail-fast", "--jobs", "2",
 		))
 }
@@ -82,7 +82,7 @@ func (m *Typewriter) BackendUnitTest(source *dagger.Workspace) *dagger.Container
 func (m *Typewriter) BackendSupportTest(source *dagger.Workspace) *dagger.Container {
 	return m.backendContainer(source, "support-test").
 		WithExec(withBackendTargetCleanup(
-			"cargo", "test", "--manifest-path", "backend/tests/component/Cargo.toml",
+			"cargo", "test", "--locked", "--manifest-path", "backend/tests/component/Cargo.toml",
 			"--workspace", "--exclude", "typewriter-component-tests", "--no-fail-fast", "--jobs", "2",
 		))
 }
