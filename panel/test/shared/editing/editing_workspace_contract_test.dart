@@ -125,6 +125,152 @@ void _contract<S, E>(
     void stage(String value) =>
         owner.stage(id, change(owner.document, value)).requireAccepted();
 
+    test(
+      "settled operation groups retire while reusable controls survive",
+      () async {
+        for (var index = 0; index < 100; index++) {
+          final operation = owner.createGroup(
+            label: "Move $index",
+            lifetime: EditGroupLifetime.operation,
+            policy: EditorCommitPolicy.applyResource,
+          );
+          owner
+              .stage(operation, change(owner.document, "Move $index"))
+              .requireAccepted();
+          await owner.save(operation);
+          expect(() => owner.group(operation), throwsStateError);
+        }
+        stage("Next form edit");
+        await control.apply();
+        expect(control.canEdit, isTrue);
+        expect(owner.submissionId(id), isNotNull);
+        expect(read(owner.confirmed), "Next form edit");
+      },
+    );
+
+    test(
+      "a retained operation control pins settled identity until disposed",
+      () async {
+        final operation = owner.createGroup(
+          label: "Move",
+          lifetime: EditGroupLifetime.operation,
+          policy: EditorCommitPolicy.applyResource,
+        );
+        final retained = owner.group(operation);
+        owner
+            .stage(operation, change(owner.document, "Move"))
+            .requireAccepted();
+        await retained.apply();
+        expect(retained.canEdit, isTrue);
+        expect(owner.submissionId(operation), isNotNull);
+        retained.dispose();
+        expect(() => owner.group(operation), throwsStateError);
+      },
+    );
+
+    test("a rollback hold retains discarded operation identity and restores intent", () {
+      final operation = owner.createGroup(
+        label: "Move",
+        lifetime: EditGroupLifetime.operation,
+        policy: EditorCommitPolicy.applyResource,
+      );
+      owner.stage(operation, change(owner.document, "Move")).requireAccepted();
+      final hold = owner.holdStage();
+      expect(owner.discard(operation), isTrue);
+      owner.retireIdleGroups();
+      expect(owner.disposeEmptyGroup(operation), isFalse);
+      hold.rollback();
+      hold.release();
+      expect(read(owner.document), "Move");
+      expect(owner.canSave(operation), isTrue);
+      owner.discard(operation);
+      expect(() => owner.group(operation), throwsStateError);
+    });
+
+    test(
+      "uncertain operations retain their delivery and recovery identity",
+      () async {
+        final operation = owner.createGroup(
+          label: "Move",
+          lifetime: EditGroupLifetime.operation,
+          policy: EditorCommitPolicy.applyResource,
+        );
+        owner
+            .stage(operation, change(owner.document, "Move"))
+            .requireAccepted();
+        final reply = boundary.reply = Completer();
+        final saving = owner.save(operation);
+        await boundary.started.future;
+        reply.complete(
+          SubmissionUncertain(
+            message: "Reply lost",
+            cause: StateError("Reply lost"),
+            stackTrace: StackTrace.current,
+          ),
+        );
+        await saving;
+        owner.retireIdleGroups();
+        final retained = owner.group(operation);
+        expect(retained.state.hasSubmittedWork, isTrue);
+        expect(owner.submissionId(operation), isNotNull);
+        retained.dispose();
+        expect(owner.disposeEmptyGroup(operation), isFalse);
+      },
+    );
+
+    test("operation identity survives a frozen prefix until its later tail settles", () async {
+      final operation = owner.createGroup(
+        label: "Move",
+        lifetime: EditGroupLifetime.operation,
+        policy: EditorCommitPolicy.applyResource,
+        admission: EditWriteAdmission.allowWhileSubmitted,
+      );
+      owner.stage(operation, change(owner.document, "Move")).requireAccepted();
+      final reply = boundary.reply = Completer();
+      final saving = owner.save(operation);
+      await boundary.started.future;
+      owner.stage(operation, change(owner.document, "Later")).requireAccepted();
+      reply.complete(
+        SubmissionConfirmed(
+          EditConfirmed(accepted(boundary.captures.single.proposed)),
+        ),
+      );
+      await saving;
+      expect(owner.canSave(operation), isTrue);
+      expect(read(owner.document), "Later");
+      await owner.save(operation);
+      expect(() => owner.group(operation), throwsStateError);
+      expect(read(owner.confirmed), "Later");
+    });
+
+    test(
+      "acknowledged operation remains until refresh succeeds then retires",
+      () async {
+        final operation = owner.createGroup(
+          label: "Move",
+          lifetime: EditGroupLifetime.operation,
+          policy: EditorCommitPolicy.applyResource,
+        );
+        owner
+            .stage(operation, change(owner.document, "Move"))
+            .requireAccepted();
+        final reply = boundary.reply = Completer();
+        final refresh = boundary.refreshReply = Completer();
+        final saving = owner.save(operation);
+        await boundary.started.future;
+        reply.complete(const SubmissionConfirmed(EditAccepted()));
+        await boundary.observing.future;
+        refresh.completeError(StateError("Refresh failed"));
+        await saving;
+        expect(owner.canRetry(operation), isTrue);
+        expect(owner.disposeEmptyGroup(operation), isFalse);
+        boundary.current = accepted(boundary.captures.single.proposed);
+        await owner.retry(operation);
+        expect(() => owner.group(operation), throwsStateError);
+        expect(read(owner.confirmed), "Move");
+      },
+    );
+
     test("failed independent operations release their empty group", () {
       final independent = owner.createGroup(label: "Resource operation");
       expect(owner.disposeEmptyGroup(independent), isTrue);

@@ -36,11 +36,13 @@ extension EditGroupControls<S> on EditGroup<S> {
 /// A disposable view of one group. It owns no draft or persistence state.
 final class EditGroupControl<S, E> extends ChangeNotifier
     implements EditControl, EditApplyControl {
-  EditGroupControl(this.workspace, this.id) {
+  EditGroupControl(this.workspace, this.id)
+    : _lease = workspace.retainGroup(id) {
     workspace.addListener(_changed);
   }
   final EditingWorkspace<S, E> workspace;
   final EditGroupId id;
+  final WorkLease _lease;
   @override
   Iterable<EditApplyRequest> get applyRequests => [workspace.applyRequest(id)];
   bool _closed = false;
@@ -82,6 +84,7 @@ final class EditGroupControl<S, E> extends ChangeNotifier
     if (_closed) return;
     _closed = true;
     workspace.removeListener(_changed);
+    _lease.release();
     super.dispose();
   }
 }

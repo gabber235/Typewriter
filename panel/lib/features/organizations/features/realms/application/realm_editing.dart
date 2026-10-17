@@ -83,17 +83,25 @@ final class RealmEditing implements Listenable {
     EditGroupId? group,
     AuthoringDocument? from,
   }) {
-    final id = group ?? workspace.createGroup(label: label, policy: policy);
-    if (!workspace.canEdit(id)) {
-      return const EditStageResult.rejected("Authoring is not ready", null);
-    }
+    final id =
+        group ??
+        workspace.createGroup(
+          label: label,
+          policy: policy,
+          lifetime: EditGroupLifetime.operation,
+        );
     try {
+      if (!workspace.canEdit(id)) {
+        return const EditStageResult.rejected("Authoring is not ready", null);
+      }
       final branch = AuthoringEdit.fromDocument(from ?? document);
       apply(branch);
       branch.requireValid();
       return workspace.stage(id, branch.capture(), label: label);
     } on Object catch (error) {
       return EditStageResult.rejected(error.toString(), error);
+    } finally {
+      if (group == null) workspace.retireIdleGroups();
     }
   }
 
@@ -103,17 +111,31 @@ final class RealmEditing implements Listenable {
     EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
     EditGroupId? group,
     AuthoringDocument? from,
-  }) => workspace.prepare(
-    group ?? workspace.createGroup(label: label, policy: policy),
-    (observation) async {
-      final branch = AuthoringEdit.fromDocument(observation);
-      await apply(branch);
-      branch.requireValid();
-      return branch.capture();
-    },
-    from: from,
-    label: label,
-  );
+  }) async {
+    final id =
+        group ??
+        workspace.createGroup(
+          label: label,
+          policy: policy,
+          lifetime: EditGroupLifetime.operation,
+        );
+    try {
+      return await workspace.prepare(
+        id,
+        (observation) async {
+          final branch = AuthoringEdit.fromDocument(observation);
+          await apply(branch);
+          branch.requireValid();
+          return branch.capture();
+        },
+        from: from,
+        label: label,
+      );
+    } finally {
+      if (group == null) workspace.retireIdleGroups();
+    }
+  }
+
   EditStageResult stagePrepared({
     required EditGroupId group,
     required String label,

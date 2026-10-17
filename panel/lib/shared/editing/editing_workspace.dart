@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+enum EditGroupLifetime { reusable, operation }
+
 /// Owns the ordered local edit journal for one persistence boundary.
 ///
 /// [model] interprets observations and replays semantic edits. Confirmed state
@@ -63,6 +65,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   EditGroupId createGroup({
     required String label,
     Object? key,
+    EditGroupLifetime lifetime = EditGroupLifetime.reusable,
     EditorCommitPolicy policy = EditorCommitPolicy.autosaveChanges,
     EditWriteAdmission admission = EditWriteAdmission.allowWhileSending,
     EditRepairAdmission repair = EditRepairAdmission.preserveBlockedIntent,
@@ -70,6 +73,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     EditCommitAdmission commits = EditCommitAdmission.completeGroup,
   }) {
     if (_closed) throw StateError("The editing workspace is closed");
+    if (key != null && lifetime != EditGroupLifetime.reusable) {
+      throw ArgumentError("Keyed editing groups must be reusable");
+    }
     final id = key == null
         ? EditGroupId(++_identity)
         : _forms.putIfAbsent(key, () => EditGroupId(++_identity));
@@ -83,9 +89,11 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         observations,
         commits,
         label,
+        lifetime,
       ),
     );
-    if (group.policy != policy ||
+    if (group.lifetime != lifetime ||
+        group.policy != policy ||
         group.admission != admission ||
         group.repair != repair ||
         group.observations != observations ||
@@ -99,10 +107,19 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   /// Failed preparation can allocate a group without publishing an edit.
   bool disposeEmptyGroup(EditGroupId id) {
     final group = _groups[id];
-    if (group == null ||
+    if (_closed ||
+        _saving != null ||
+        _preparations != 0 ||
+        _notificationHolds != 0 ||
+        group == null ||
+        group.controls != 0 ||
+        group.phase.submitted ||
         group.frozen.isNotEmpty ||
         _operations.any((operation) => operation.group == id) ||
-        _interactions.values.any((interaction) => interaction.group == id)) {
+        _interactions.values.any((interaction) => interaction.group == id) ||
+        _groups.values.any(
+          (other) => _groupDependencies(other.id).contains(id),
+        )) {
       return false;
     }
     _tasks.remove(id)?.cancel();
@@ -111,6 +128,47 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     _groups.remove(id);
     _rebuild();
     return true;
+  }
+
+  /// Retires settled independent work after its save, preparation and rollback
+  /// owners release it. The submission journal retains its own feedback records.
+  void retireIdleGroups() {
+    if (_closed ||
+        _saving != null ||
+        _preparations != 0 ||
+        _notificationHolds != 0) {
+      return;
+    }
+    final referenced = {
+      for (final operation in _operations) operation.group,
+      for (final interaction in _interactions.values) interaction.group,
+      for (final group in _groups.values) ..._groupDependencies(group.id),
+    };
+    for (final group in _groups.values.toList()) {
+      if (group.lifetime != EditGroupLifetime.operation ||
+          group.controls != 0 ||
+          referenced.contains(group.id) ||
+          group.frozen.isNotEmpty ||
+          group.phase.submitted) {
+        continue;
+      }
+      _tasks.remove(group.id)?.cancel();
+      _requested.remove(group.id);
+      _groups.remove(group.id);
+    }
+  }
+
+  WorkLease retainGroup(EditGroupId id) {
+    final group = _groups[id];
+    if (_closed || group == null) {
+      throw StateError("The editing group is unavailable");
+    }
+    group.controls++;
+    return WorkLease(() {
+      if (_closed || !identical(_groups[id], group)) return;
+      group.controls--;
+      retireIdleGroups();
+    });
   }
 
   EditGroupControl<S, E> group(EditGroupId id) {
@@ -230,6 +288,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     } finally {
       _preparations--;
       _notify();
+      retireIdleGroups();
     }
   }
 
@@ -520,6 +579,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       }
     }
     _notify();
+    retireIdleGroups();
   }
 
   void _schedule(EditGroupId id, {Duration? delay}) {
@@ -547,6 +607,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
       final deferred = _deferredConfirmed;
       _deferredConfirmed = null;
       if (deferred != null) acceptConfirmed(deferred);
+      retireIdleGroups();
     });
   }
 
@@ -585,6 +646,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
         );
         if (ready != null) unawaited(save(ready));
       }
+      retireIdleGroups();
       completion.complete();
     });
   }
@@ -655,6 +717,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
           ..phase = EditGroupPhase.rejected(message, result);
       } else {
         group.phase = EditGroupPhase.uncertain(result);
+      }
+      if (!group.phase.submitted && group.submission?.sending != true) {
+        group.submission = null;
       }
       _rebuild();
       return;
@@ -731,6 +796,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
                       ),
                 );
     }
+    if (!group.phase.submitted && group.submission?.sending != true) {
+      group.submission = null;
+    }
     _rebuild();
     if (group.phase is EditGroupDirty<S> &&
         !_requested.contains(group.id) &&
@@ -763,7 +831,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     group
       ..frozen = {}
       ..phase = const EditGroupPhase.dirty()
-      ..attempts = 0;
+      ..attempts = 0
+      ..submission = null;
     _install(admission.observation);
     _rebuild();
   }
@@ -783,7 +852,8 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
           );
           group
             ..frozen = {}
-            ..phase = const EditGroupPhase.dirty();
+            ..phase = const EditGroupPhase.dirty()
+            ..submission = null;
         }
       }
       _install(observation);
@@ -1146,7 +1216,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   bool hasSubmittedWork(EditGroupId id) =>
       _groups[id]?.phase.submitted ?? false;
   bool hasLaterEdits(EditGroupId id) => hasSubmittedWork(id) && canDiscard(id);
-  Object? submissionId(EditGroupId id) => _groups[id]?.submission?.id;
+  Object? submissionId(EditGroupId id) => _groups[id]?.lastSubmissionId;
   List<E> edits(EditGroupId id) => List.unmodifiable(
     _operations
         .where((operation) => operation.group == id)
@@ -1200,6 +1270,7 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
           _notificationPending = false;
           _notify();
         }
+        retireIdleGroups();
       },
     );
   }
@@ -1237,7 +1308,11 @@ final class _LiveEditGroup<S> {
     this.observations,
     this.commits,
     this.label,
+    this.lifetime,
   );
+  final EditGroupLifetime lifetime;
+  int controls = 0;
+  Object? lastSubmissionId;
   final EditGroupId id;
   final EditorCommitPolicy policy;
   final EditWriteAdmission admission;
@@ -1422,7 +1497,9 @@ final class _WorkspacePreparedApply<S, E> implements EditPreparedApply {
       }
       return;
     }
-    group.submission = submission;
+    group
+      ..submission = submission
+      ..lastSubmissionId = submission.id;
     final result = await submission.run();
     if (!workspace._closed) await workspace._settle(group, result);
   }

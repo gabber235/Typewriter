@@ -235,6 +235,7 @@ final class ResourceOperationRunner {
             final before = workspace.document;
             final group = workspace.workspace.createGroup(
               label: label,
+              lifetime: EditGroupLifetime.operation,
               commits: EditCommitAdmission.requiredDependencies,
             );
             final staged = workspace.stagePrepared(
