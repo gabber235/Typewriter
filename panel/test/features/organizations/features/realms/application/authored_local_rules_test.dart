@@ -140,7 +140,13 @@ void main() {
       expect(document.bindings.containsKey(configuredValueBindingId), isFalse);
       expect(
         document.bindings[presentationSubjectIdentifierBindingId]!.value,
-        skir.DataValue.wrapStringValue(fixture.resource.value),
+        fixture.resource.toExpressionValue(),
+      );
+      expect(
+        document.bindings[presentationSubjectIdentifierBindingId]!.schema,
+        CompletePortablePresentationBinding(
+          skir.TypeUse.wrapNamed(frameworkResourceIdUse),
+        ),
       );
       expect(
         document.diagnostics
@@ -219,11 +225,23 @@ void main() {
     );
     addTearDown(host.dispose);
     final document = host.document;
+    expect(
+      host.projectResource(
+        fixture.resource,
+        context: PortableInvocationContext(
+          catalogGeneration: document.catalog.snapshot.generation,
+          bindings: const {},
+        ),
+      ),
+      isNull,
+    );
     final projected = host.projectResource(
       fixture.resource,
       context: PortableInvocationContext(
         catalogGeneration: document.catalog.snapshot.generation,
         bindings: const {},
+        queries: document.queries,
+        resourceDiagnostics: document.resourceDiagnostics,
       ),
     );
     expect(document.diagnostics, hasLength(2));
