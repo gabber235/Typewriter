@@ -15,12 +15,7 @@ dependencies:
     path: ../
   typewriter_testkit:
     path: ../testkit
-  hooks_riverpod: 3.4.3
-  flutter_animate:
   faker:
-  flutter_hooks:
-  iconify_flutter_plus:
-  pub_semver:
 
 dependency_overrides:
   nats_core:
@@ -28,8 +23,6 @@ dependency_overrides:
       url: https://github.com/gabber235/nats.dart.git
       ref: 50231b430d1f5f37226ac36da30dd22c1c1859d9
       path: packages/nats_core
-  riverpod: 3.4.3
-  riverpod_annotation: 4.0.7
 
 dev_dependencies:
   flutter_test:

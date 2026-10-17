@@ -11,21 +11,13 @@ dependencies:
     sdk: flutter
   typewriter_panel:
     path: ../
-  hooks_riverpod: 3.4.3
-  riverpod_annotation: 4.0.7
-  flutter_animate:
   faker:
-  pub_semver:
-  collection:
-  iconify_flutter_plus: ^1.0.4
-  riverpod: 3.4.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
   build_runner:
   flutter_lints:
   riverpod_generator:
-  riverpod_lint:
 
 dependency_overrides:
   nats_core:

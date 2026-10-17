@@ -293,10 +293,10 @@ packages:
     dependency: transitive
     description:
       name: dart_style
-      sha256: "82ade9fc4273f29ed673e33166944465225b4f7fc5d4aaef48605cc751c18fc1"
+      sha256: a0e4f65339b31eb6a9e6a12e14b4682a48d46fbc54a82f4a702396fbdbac63a7
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.13"
+    version: "3.1.14"
   dartastic_opentelemetry:
     dependency: "direct main"
     description:
@@ -386,7 +386,7 @@ packages:
     source: hosted
     version: "7.0.1"
   fixnum:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: fixnum
       sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
@@ -601,10 +601,10 @@ packages:
     dependency: transitive
     description:
       name: grpc
-      sha256: "86be3a7d39ad865b214a7370021ac80e68939238b507730de6d97fc662cb2723"
+      sha256: "0cde49bc17f6b1e96c374ad1b5d389816cc8ade2015f24294eaa76193de87090"
       url: "https://pub.dev"
     source: hosted
-    version: "5.1.0"
+    version: "5.2.0"
   hex:
     dependency: transitive
     description:
@@ -984,7 +984,7 @@ packages:
     source: hosted
     version: "3.0.1"
   oidc_core:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: oidc_core
       sha256: ba12f2b23c05f54f3f7fa22498386e96fde9c099c2e91a5bc3d0050b4f335d48
@@ -1339,18 +1339,18 @@ packages:
     dependency: transitive
     description:
       name: shared_preferences_android
-      sha256: "1e12aafe408aa50da80edfd679a2a6bf63ba7ab37c7fa98286da459a757b3399"
+      sha256: b90caa27669d5f3ef9918d55343b44000f088ee9d4685ed822310848004c793e
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.28"
+    version: "2.5.0"
   shared_preferences_foundation:
     dependency: transitive
     description:
       name: shared_preferences_foundation
-      sha256: "2ec3934efa51e46117f23031cc141b8fc878e8525b94ec1ea4f7f586cf1b47ea"
+      sha256: c2c02dd59bd7b3bb6bfb77aa7ad4a7886b24ee40e95dcaea754b83274b567ff5
       url: "https://pub.dev"
     source: hosted
-    version: "2.5.7"
+    version: "2.6.0"
   shared_preferences_linux:
     dependency: transitive
     description:
@@ -1387,10 +1387,10 @@ packages:
     dependency: transitive
     description:
       name: shelf
-      sha256: e7dd780a7ffb623c57850b33f43309312fc863fb6aa3d276a754bb299839ef12
+      sha256: e75e9cf311d7fd712048038cc17c25199c38536c20330d53e7db058b543d5a48
       url: "https://pub.dev"
     source: hosted
-    version: "1.4.2"
+    version: "1.4.3"
   shelf_web_socket:
     dependency: transitive
     description:
@@ -1648,10 +1648,10 @@ packages:
     dependency: transitive
     description:
       name: vector_graphics_compiler
-      sha256: "670a59098f5c4c9f8eab25edba4f72e1bc8172b428b012339ac892eb31c68f2b"
+      sha256: a8e2c19796144da2f81bcc96dad1bb19c4677b561c452081b97ee737b9faed65
       url: "https://pub.dev"
     source: hosted
-    version: "1.3.1"
+    version: "1.3.2"
   vector_math:
     dependency: "direct main"
     description:
@@ -1664,10 +1664,10 @@ packages:
     dependency: transitive
     description:
       name: vm_service
-      sha256: "5f37239c4851efcef929cea7824e76df7f2f0970aef85d66bbc430afa40e72f0"
+      sha256: "89b11d62e1040ee681af3b4f1c97a803ecbf010c6e8b9c5896ee5b08c3bf7b78"
       url: "https://pub.dev"
     source: hosted
-    version: "15.3.0"
+    version: "15.4.0"
   watcher:
     dependency: transitive
     description:

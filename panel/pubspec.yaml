@@ -28,7 +28,6 @@ dependencies:
   dotted_border: ^3.1.0
   duration: ^4.0.3
   expandable_page_view: ^1.2.0
-  fixnum: ^1.1.0
   flutter_animate: ^4.5.2
   flutter_hooks: ^0.21.2
   flutter_reorderable_grid_view: ^5.7.0
@@ -44,7 +43,6 @@ dependencies:
   localstorage: ^6.0.0
   material_color_utilities:
   oidc: ^5.0.2
-  oidc_core: ^4.0.0
   oidc_default_store: ^2.0.0
   okcolor: ^1.1.0
   petitparser: ^7.0.2
