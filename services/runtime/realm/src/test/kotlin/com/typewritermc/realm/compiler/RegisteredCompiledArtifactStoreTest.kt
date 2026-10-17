@@ -16,12 +16,13 @@ import com.typewritermc.services.libs.filetransfer.blob.BlobWriteSession
 import com.typewritermc.services.libs.filetransfer.blob.TransferId
 import com.typewritermc.types.ResourceId
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 
 val RegisteredCompiledArtifactStoreTest by testSuite {
     test("publication outputs are complete and reuse verified payload blobs") {
         val blobs = InMemoryBlobEndpoint()
-        val store = RegisteredCompiledArtifactStore(blobs)
+        val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
         val firstArtifact = 'a'.compiledArtifact("first")
         val first = store.store(PublicationId("first"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
         val second = store.store(PublicationId("second"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
@@ -33,6 +34,43 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         third.formatRevision shouldBe com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
         val empty = store.store(PublicationId("empty"), CatalogGeneration("catalog"), "implementation", emptySet(), emptyList())
         empty.outputs shouldBe emptyList()
+    }
+    test("unchanged selected output restores missing exact bytes without a new publication") {
+        val blobs = InMemoryBlobEndpoint()
+        val pins = TestPublicationRetention()
+        val store = RegisteredCompiledArtifactStore(blobs, pins)
+        val artifact = 'a'.compiledArtifact("root")
+        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(artifact))
+        store.selected(selected)
+        val digest =
+            selected.outputs
+                .single()
+                .blob.digest
+        blobs.remove(ArtifactDigest(com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256, digest.value))
+        store.restoreSelected(selected, listOf(artifact))
+        (
+            blobs.metadata(
+                ArtifactDigest(com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256, digest.value),
+            ) is BlobResult.Success
+        ) shouldBe
+            true
+        pins.selected shouldBe "selected"
+    }
+    test("missing selected output cannot be silently replaced by semantically equal different bytes") {
+        val blobs = InMemoryBlobEndpoint()
+        val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
+        val artifact = 'a'.compiledArtifact("root")
+        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(artifact))
+        val digest =
+            ArtifactDigest(
+                com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
+                selected.outputs
+                    .single()
+                    .blob.digest.value,
+            )
+        blobs.remove(digest)
+        shouldThrow<IllegalStateException> { store.restoreSelected(selected, listOf(artifact.copy(payload = byteArrayOf(2)))) }
+        blobs.metadata(digest) shouldBe BlobResult.NotFound
     }
 }
 
@@ -54,6 +92,10 @@ internal class InMemoryBlobEndpoint : BlobEndpoint {
 
     private val blobs = mutableMapOf<ArtifactDigest, ByteArray>()
     private val writes = mutableMapOf<TransferId, PendingWrite>()
+
+    fun remove(digest: ArtifactDigest) {
+        blobs.remove(digest)
+    }
 
     override suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata> =
         blobs[digest]?.let { BlobResult.Success(BlobMetadata(digest, it.size.toLong())) } ?: BlobResult.NotFound
@@ -98,5 +140,29 @@ internal class InMemoryBlobEndpoint : BlobEndpoint {
         }
         blobs[pending.expected.digest] = pending.bytes
         return BlobResult.Success(pending.expected)
+    }
+}
+
+internal class TestPublicationRetention : com.typewritermc.loader.api.artifact.PublicationBlobRetention {
+    val publications = mutableMapOf<String, Set<ArtifactDigest>>()
+    var selected: String? = null
+
+    override suspend fun protect(
+        publication: String,
+        digests: Set<ArtifactDigest>,
+    ) {
+        check(publications[publication]?.let { it == digests } != false)
+        publications[publication] = digests
+    }
+
+    override suspend fun selected(publication: String) {
+        check(publication in publications)
+        selected = publication
+    }
+
+    override suspend fun reconcile(selected: com.typewritermc.loader.api.artifact.PublicationBlobRoots?) {
+        publications.clear()
+        this.selected = selected?.publication
+        selected?.let { publications[it.publication] = it.digests }
     }
 }

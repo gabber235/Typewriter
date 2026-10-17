@@ -108,6 +108,47 @@ val RealmPublicationCoordinatorTest by testSuite {
         fixture.attempts.started shouldBe 1
         fixture.close()
     }
+    test("unchanged assessment cannot repair or report an obsolete selected publication") {
+        runTest {
+            val fixture = PublicationFixture()
+            try {
+                val first = fixture.release().content
+                val digest =
+                    ArtifactDigest(
+                        com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,
+                        first.outputs
+                            .single()
+                            .blob.digest.value,
+                    )
+                fixture.blobs.remove(digest)
+                val assessing = CompletableDeferred<Unit>()
+                val resume = CompletableDeferred<Unit>()
+                fixture.onEvaluate = {
+                    assessing.complete(Unit)
+                    resume.await()
+                }
+                val refresh = async { fixture.publisher.refresh() }
+                assessing.await()
+                val replacement = first.copy(publication = PublicationId("replacement"), outputs = emptyList())
+                fixture.attempts.install(replacement)
+                val requests = fixture.blobRequests
+                resume.complete(Unit)
+                refresh.await()
+
+                fixture.blobRequests shouldBe requests
+                fixture.blobs.metadata(digest) shouldBe BlobResult.NotFound
+                fixture.attempts.selected() shouldBe replacement
+                fixture.publisher.views.value.status
+                    .shouldBeInstanceOf<PublicationStatus.Checking>()
+
+                fixture.onEvaluate = null
+                fixture.publisher.refresh()
+                fixture.ready().baseline shouldBe PublicationBaseline.Selected(replacement.publication)
+            } finally {
+                fixture.close()
+            }
+        }
+    }
     test("initial empty content stays empty while removing the last root is a release") {
         val fixture = PublicationFixture(initial = emptyMap())
         fixture.publisher.refresh()
@@ -304,8 +345,8 @@ internal class PublicationFixture(
     var blobRequests = 0
     var captureFailure = false
     var findings = emptyList<com.typewritermc.realm.checking.FindingSet>()
-    var onEvaluate: (() -> Unit)? = null
-    private val blobs = InMemoryBlobEndpoint()
+    var onEvaluate: (suspend () -> Unit)? = null
+    val blobs = InMemoryBlobEndpoint()
     val publisher =
         RealmPublicationCoordinator(
             object : PublicationAcceptance {
@@ -329,6 +370,7 @@ internal class PublicationFixture(
                         return blobs.metadata(digest)
                     }
                 },
+                TestPublicationRetention(),
             ),
             object : EngineImplementationSource {
                 override fun capture() = engineInputs

@@ -8,6 +8,7 @@ import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
 import com.typewritermc.configuration.RuleOrigin
+import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.repository.conflicts
@@ -134,7 +135,22 @@ internal class RealmPublicationCoordinator(
 
     fun currentAttempt(): PublicationAttempt? = latest
 
-    suspend fun recoverInterrupted() = attempts.interruptUnfinished()
+    private suspend fun restoreIfStillSelected(
+        expected: PublishedContent,
+        compiled: List<CompiledArtifact>,
+    ): Boolean =
+        gate.withLock {
+            if (synchronized(lock) { closed }) return@withLock false
+            if (results.selected() != expected) return@withLock false
+            artifacts.restoreSelected(expected, compiled)
+            true
+        }
+
+    suspend fun recoverInterrupted() =
+        gate.withLock {
+            attempts.interruptUnfinished()
+            artifacts.reconcile(results.selected())
+        }
 
     fun start(
         scope: kotlinx.coroutines.CoroutineScope,
@@ -245,6 +261,10 @@ internal class RealmPublicationCoordinator(
                     } else {
                         when (val comparison = PublicationComparison.between(selected, successful, inputs)) {
                             PublicationComparison.Unchanged -> {
+                                if (selected != null && !restoreIfStillSelected(selected, successful)) {
+                                    invalidate()
+                                    return@withLock
+                                }
                                 selected?.let { PublicationStatus.Current(it.publication, notices) }
                                     ?: PublicationStatus.Empty(notices)
                             }
@@ -369,6 +389,7 @@ internal class RealmPublicationCoordinator(
                 announce(PublicationState.Blocked(blockers.all.map { it.diagnostic }))
                 return PublicationResult.Blocked(blockers)
             }
+            artifacts.selected(content)
             announce(PublicationState.Complete)
             return PublicationResult.Activated(id, content)
         } catch (failure: Throwable) {

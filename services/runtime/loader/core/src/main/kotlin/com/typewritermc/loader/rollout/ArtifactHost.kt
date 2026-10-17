@@ -94,7 +94,7 @@ class ArtifactHost(
     private val scope: CoroutineScope,
 ) {
     private val artifactsRoot = workDirectory.resolve("artifacts")
-    private val localBlobs = FileDigestBlobStore(artifactsRoot, telemetry = service.telemetry)
+    private val localBlobs = service.artifactBlobs
     private val candidates = FileCandidateRepository(artifactsRoot)
     private val inbox = ArtifactInboxReconciler(artifactsRoot, localBlobs, candidates, telemetry = service.telemetry)
     private val lifecycle = Mutex()
@@ -269,6 +269,12 @@ internal class AssignmentRuntime(
     override var status: ParticipantStatus? = null
         private set
 
+    private val publicationRetention =
+        if (RuntimePlacement.REALM in assignment.roles) {
+            localBlobs.publicationRetention(assignment.realmId.value)
+        } else {
+            null
+        }
     private val mutableMessaging = MutableStateFlow<HostedMessagingSession?>(null)
     private val sharedArtifacts = localShared ?: ReconnectingSharedArtifactAccess(assignment.realmId.value, mutableMessaging)
     private val projections = BlobProjectionRepository(sharedArtifacts)
@@ -278,6 +284,7 @@ internal class AssignmentRuntime(
             serviceId,
             workDirectory,
             object : HostedRuntimeHost {
+                override val publicationRetention = this@AssignmentRuntime.publicationRetention
                 override val messaging: StateFlow<HostedMessagingSession?> = mutableMessaging.asStateFlow()
                 override val openTelemetry: OpenTelemetry = openTelemetry
                 override val sharedArtifacts: SharedArtifactAccess = this@AssignmentRuntime.sharedArtifacts

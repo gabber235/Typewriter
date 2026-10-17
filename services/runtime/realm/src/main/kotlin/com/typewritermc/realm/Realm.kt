@@ -124,7 +124,11 @@ internal class Realm(
                 RealmPublicationCoordinator(
                     acceptance = AuthoringAcceptance(snapshotStore, checkRuntime),
                     attempts = SurrealPublicationAttemptStore(connected),
-                    artifacts = RegisteredCompiledArtifactStore(host.sharedArtifacts),
+                    artifacts =
+                        RegisteredCompiledArtifactStore(
+                            host.sharedArtifacts,
+                            requireNotNull(host.publicationRetention) { "Realm needs publication retention" },
+                        ),
                     engine = engine,
                     compilation = compilation,
                     results = compiledContent,

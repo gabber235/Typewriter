@@ -44,6 +44,7 @@ internal class DefaultLoaderServiceFactory(
         val blobs = FileDigestBlobStore(artifactsRoot, telemetry = telemetry)
         val shared = ConcurrentHashMap<String, SharedArtifactService>()
         return RegistrarLoaderService(
+            blobs,
             service,
             openTelemetry,
             telemetry,

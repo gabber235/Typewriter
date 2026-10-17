@@ -72,7 +72,7 @@ val ArtifactHostStartupTest by testSuite {
                     ArtifactHost(
                         ServiceId("host"),
                         workDirectory,
-                        StartupLoaderService(),
+                        StartupLoaderService(artifactsRoot),
                         ArtifactHostAssignmentSource {
                             flow {
                                 firstAssignmentDigests.complete(
@@ -122,7 +122,10 @@ private fun writeStartupJar(
     }
 }
 
-private class StartupLoaderService : LoaderService {
+private class StartupLoaderService(
+    root: Path,
+) : LoaderService {
+    override val artifactBlobs = FileDigestBlobStore(root)
     override val states = MutableStateFlow(RegistrarSnapshot(0, 0, RegistrarState.Idle))
     override val openTelemetry = OpenTelemetry.noop()
     override val telemetry = openTelemetry.serviceTelemetry("host-startup-test")

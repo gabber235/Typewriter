@@ -64,6 +64,23 @@ val RegisteredCompiledContentRepositoryTest by testSuite {
             results.selected() shouldBe first
         }
     }
+    test("recovery fences an unfinished installation and preserves the prior selection") {
+        publicationDatabase().use { database ->
+            val original = SurrealPublicationAttemptStore(database)
+            val recovery = SurrealPublicationAttemptStore(database)
+            val results = SurrealRegisteredCompiledContentRepository(database)
+            val selected = testPublishedContent("selected", "first")
+            original.start(selected.publication, selected.catalog, testEngineInputs())
+            original.phase(selected.publication, PublicationState.Activating)
+            original.install(selected)
+            val unfinished = testPublishedContent("unfinished", "second")
+            original.start(unfinished.publication, unfinished.catalog, testEngineInputs())
+            original.phase(unfinished.publication, PublicationState.Activating)
+            recovery.interruptUnfinished()
+            shouldThrow<IllegalStateException> { original.install(unfinished) }
+            results.selected() shouldBe selected
+        }
+    }
     test("blocked findings remain structured and preserve the selected result") {
         publicationDatabase().use { database ->
             val attempts = SurrealPublicationAttemptStore(database)

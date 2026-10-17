@@ -459,6 +459,9 @@ private class RealmLifecycleFixture(
         get() = sharedArtifacts.completedWrites
     private val host =
         object : HostedRuntimeHost {
+            override val publicationRetention =
+                com.typewritermc.realm.compiler
+                    .TestPublicationRetention()
             override val messaging = this@RealmLifecycleFixture.messaging
             override val openTelemetry = telemetry.openTelemetry
             override val sharedArtifacts = this@RealmLifecycleFixture.sharedArtifacts

@@ -238,6 +238,9 @@ data class HostedMessagingSession(
  * rather than retaining a communicator indefinitely. Telemetry and shared artifact access remain host owned.
  */
 interface HostedRuntimeHost {
+    val publicationRetention: com.typewritermc.loader.api.artifact.PublicationBlobRetention?
+        get() = null
+
     val messaging: StateFlow<HostedMessagingSession?>
     val openTelemetry: OpenTelemetry
     val sharedArtifacts: SharedArtifactAccess
