@@ -232,6 +232,8 @@ sealed interface RealmCapabilityProvider {
 }
 
 interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
+    override val descriptor: RealmCapabilityDescriptor.Search
+
     fun invoke(
         context: RealmSearchContext,
         runtime: RealmCapabilityRuntime,
@@ -241,6 +243,8 @@ interface RealmSearchCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
+    override val descriptor: RealmCapabilityDescriptor.Computation
+
     suspend fun invoke(
         context: RealmComputationContext,
         runtime: RealmCapabilityRuntime,
@@ -249,6 +253,8 @@ interface RealmComputationCapabilityProvider : RealmCapabilityProvider {
 }
 
 interface RealmCommandCapabilityProvider : RealmCapabilityProvider {
+    override val descriptor: RealmCapabilityDescriptor.Command
+
     suspend fun invoke(
         context: RealmCommandContext,
         runtime: RealmCapabilityRuntime,

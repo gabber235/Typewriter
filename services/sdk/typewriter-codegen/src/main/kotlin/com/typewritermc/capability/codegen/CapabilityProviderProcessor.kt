@@ -233,6 +233,12 @@ private data class CapabilityDeclaration(
                 CapabilityKind.Computation -> "com.typewritermc.capability.RealmComputationCapabilityProvider"
                 CapabilityKind.Command -> "com.typewritermc.capability.RealmCommandCapabilityProvider"
             }
+        val descriptorType =
+            when (kind) {
+                CapabilityKind.Search -> "com.typewritermc.capability.RealmCapabilityDescriptor.Search"
+                CapabilityKind.Computation -> "com.typewritermc.capability.RealmCapabilityDescriptor.Computation"
+                CapabilityKind.Command -> "com.typewritermc.capability.RealmCapabilityDescriptor.Command"
+            }
         val invocation =
             when (kind) {
                 CapabilityKind.Search -> {
@@ -245,7 +251,7 @@ private data class CapabilityDeclaration(
     ): com.typewritermc.capability.RealmSearch<com.typewritermc.types.DataValue> {
         val decoded = runtime.decode<$requestKotlinType>(descriptor.requestType, payload)
         return with(context) { handler.$functionName(com.typewritermc.capability.RealmSearchRequest(decoded, query)) }
-            .mapValues { runtime.encode((descriptor as com.typewritermc.capability.RealmCapabilityDescriptor.Search).resultType, it) }
+            .mapValues { runtime.encode(descriptor.resultType, it) }
     }
 """
                 }
@@ -259,7 +265,7 @@ private data class CapabilityDeclaration(
     ): com.typewritermc.types.DataValue {
         val decoded = runtime.decode<$requestKotlinType>(descriptor.requestType, payload)
         val result = with(context) { handler.$functionName(decoded) }
-        return runtime.encode((descriptor as com.typewritermc.capability.RealmCapabilityDescriptor.Computation).resultType, result)
+        return runtime.encode(descriptor.resultType, result)
     }
 """
                 }
@@ -286,7 +292,7 @@ val ${functionName}Capability: $referenceType = $referenceValue
 
 class $factoryName : com.typewritermc.discovery.GeneratedCapabilityProvider {
     private val id = com.typewritermc.capability.CapabilityId(${id.kotlinLiteral()})
-    override val descriptor: com.typewritermc.capability.RealmCapabilityDescriptor = $descriptor
+    override val descriptor: $descriptorType = $descriptor
 
     override fun bind(
         resolver: com.typewritermc.discovery.CapabilityOwnerResolver,
@@ -296,7 +302,7 @@ class $factoryName : com.typewritermc.discovery.GeneratedCapabilityProvider {
 
 private class $providerName(
     private val handler: $ownerName,
-    override val descriptor: com.typewritermc.capability.RealmCapabilityDescriptor,
+    override val descriptor: $descriptorType,
 ) : $providerInterface {
 $invocation
 }

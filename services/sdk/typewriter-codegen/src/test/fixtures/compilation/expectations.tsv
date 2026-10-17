@@ -24,3 +24,4 @@ ambiguous_inherited_accessor	cases	reject	Ambiguous inherited authoring field ti
 resource_operations	positive	accept	BUILD SUCCESSFUL
 operation_availability_write	cases	reject	No context argument
 operation_projection_mismatch	cases	reject	projection arguments must match
+capability_descriptor_mismatch	cases	reject	[Tt]ype of .*descriptor.*RealmCapabilityDescriptor[.]Computation.*not a subtype.*RealmCapabilityDescriptor[.]Command
