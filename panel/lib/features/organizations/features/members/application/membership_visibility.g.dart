@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'membership_visibility.dart';
 
@@ -6,11 +6,22 @@ part of 'membership_visibility.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Hides declined requests and revoked codes only while their commands send.
+///
+/// The canonical collections remain intact. When sending ends, visibility
+/// follows confirmed collection events and expiry instead of an optimistic
+/// deletion that would need to be rolled back.
 
 @ProviderFor(pendingMembershipRemovals)
 final pendingMembershipRemovalsProvider = PendingMembershipRemovalsProvider._();
+
+/// Hides declined requests and revoked codes only while their commands send.
+///
+/// The canonical collections remain intact. When sending ends, visibility
+/// follows confirmed collection events and expiry instead of an optimistic
+/// deletion that would need to be rolled back.
 
 final class PendingMembershipRemovalsProvider
     extends
@@ -20,6 +31,11 @@ final class PendingMembershipRemovalsProvider
           Set<(MembershipRemovalKind, skir.RecordId)>
         >
     with $Provider<Set<(MembershipRemovalKind, skir.RecordId)>> {
+  /// Hides declined requests and revoked codes only while their commands send.
+  ///
+  /// The canonical collections remain intact. When sending ends, visibility
+  /// follows confirmed collection events and expiry instead of an optimistic
+  /// deletion that would need to be rolled back.
   PendingMembershipRemovalsProvider._()
     : super(
         from: null,
@@ -60,14 +76,28 @@ final class PendingMembershipRemovalsProvider
 }
 
 String _$pendingMembershipRemovalsHash() =>
-    r'530dd3ec6ba6ec8da8749a95b0a1007523c295b1';
+    r'fc403fa4da6f2a770b8fbc8292b97e3f96d7a960';
+
+/// Shared display clock refreshed at the next observed membership expiry.
+///
+/// Visibility providers own and cancel their timers. This local clock filters
+/// presentation; server commands still decide whether a request or code is valid.
 
 @ProviderFor(membershipDisplayTime)
 final membershipDisplayTimeProvider = MembershipDisplayTimeProvider._();
 
+/// Shared display clock refreshed at the next observed membership expiry.
+///
+/// Visibility providers own and cancel their timers. This local clock filters
+/// presentation; server commands still decide whether a request or code is valid.
+
 final class MembershipDisplayTimeProvider
     extends $FunctionalProvider<DateTime, DateTime, DateTime>
     with $Provider<DateTime> {
+  /// Shared display clock refreshed at the next observed membership expiry.
+  ///
+  /// Visibility providers own and cancel their timers. This local clock filters
+  /// presentation; server commands still decide whether a request or code is valid.
   MembershipDisplayTimeProvider._()
     : super(
         from: null,
@@ -102,7 +132,7 @@ final class MembershipDisplayTimeProvider
 }
 
 String _$membershipDisplayTimeHash() =>
-    r'd23c285f05966d93ad41e67221d9ad6c32a83cbd';
+    r'84e173663f0703f2e9e80089e1dd942831c766f1';
 
 @ProviderFor(visibleOrganizationJoinRequests)
 final visibleOrganizationJoinRequestsProvider =
@@ -152,7 +182,7 @@ final class VisibleOrganizationJoinRequestsProvider
 }
 
 String _$visibleOrganizationJoinRequestsHash() =>
-    r'f453ec6ca2c3c2c6cbaaeae0389a59f9c46e0eec';
+    r'f70f8c301cedf4346078b4c8d5b889e3ef64195d';
 
 @ProviderFor(visibleOrganizationJoinCodes)
 final visibleOrganizationJoinCodesProvider =
@@ -202,4 +232,4 @@ final class VisibleOrganizationJoinCodesProvider
 }
 
 String _$visibleOrganizationJoinCodesHash() =>
-    r'28ed25a8befd9be3594986146b32d6fa263e2fbd';
+    r'bcd43890f3ab05b76238e5d6c59a0f4803e8d731';

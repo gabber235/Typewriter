@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'authoring_search_context.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$CreationReferenceConstraint {
 
  List<skir.EndpointId> get route; skir.ResourceId get target;
 /// Create a copy of CreationReferenceConstraint
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CreationReferenceConstraintCopyWith<CreationReferenceConstraint> get copyWith => _$CreationReferenceConstraintCopyWithImpl<CreationReferenceConstraint>(this as CreationReferenceConstraint, _$identity);
@@ -67,7 +67,7 @@ class _$CreationReferenceConstraintCopyWithImpl<$Res>
   final $Res Function(CreationReferenceConstraint) _then;
 
 /// Create a copy of CreationReferenceConstraint
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? route = null,Object? target = null,}) {
   return _then(CreationReferenceConstraint(
 route: null == route ? _self.route : route // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as skir.ResourceId,
 }
 
 
-/// Adds pattern matching related methods to [CreationReferenceConstraint].
+/// Adds pattern-matching-related methods to [CreationReferenceConstraint].
 extension CreationReferenceConstraintPatterns on CreationReferenceConstraint {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.route,_that.target);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return $default(_that.route,_that.target);case _:
 
 class _CreationReferenceConstraint implements CreationReferenceConstraint {
   const _CreationReferenceConstraint({required  List<skir.EndpointId> route, required this.target}): _route = route;
-
+  
 
  final  List<skir.EndpointId> _route;
 @override List<skir.EndpointId> get route {
@@ -226,7 +226,7 @@ class _CreationReferenceConstraint implements CreationReferenceConstraint {
 @override final  skir.ResourceId target;
 
 /// Create a copy of CreationReferenceConstraint
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CreationReferenceConstraintCopyWith<_CreationReferenceConstraint> get copyWith => __$CreationReferenceConstraintCopyWithImpl<_CreationReferenceConstraint>(this, _$identity);
@@ -273,7 +273,7 @@ class __$CreationReferenceConstraintCopyWithImpl<$Res>
   final $Res Function(_CreationReferenceConstraint) _then;
 
 /// Create a copy of CreationReferenceConstraint
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? route = null,Object? target = null,}) {
   return _then(_CreationReferenceConstraint(
 route: null == route ? _self._route : route // ignore: cast_nullable_to_non_nullable
@@ -290,7 +290,7 @@ mixin _$CreationContext {
 
  List<CreationReferenceConstraint> get constraints; List<skir.ResourceId> get preferredResources;
 /// Create a copy of CreationContext
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CreationContextCopyWith<CreationContext> get copyWith => _$CreationContextCopyWithImpl<CreationContext>(this as CreationContext, _$identity);
@@ -340,7 +340,7 @@ class _$CreationContextCopyWithImpl<$Res>
   final $Res Function(CreationContext) _then;
 
 /// Create a copy of CreationContext
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? constraints = null,Object? preferredResources = null,}) {
   return _then(CreationContext(
 constraints: null == constraints ? _self.constraints : constraints // ignore: cast_nullable_to_non_nullable
@@ -352,7 +352,7 @@ as List<skir.ResourceId>,
 }
 
 
-/// Adds pattern matching related methods to [CreationContext].
+/// Adds pattern-matching-related methods to [CreationContext].
 extension CreationContextPatterns on CreationContext {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -375,7 +375,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -438,7 +438,7 @@ return $default(_that.constraints,_that.preferredResources);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -487,7 +487,7 @@ return $default(_that.constraints,_that.preferredResources);case _:
 
 class _CreationContext extends CreationContext {
   const _CreationContext({ List<CreationReferenceConstraint> constraints = const [],  List<skir.ResourceId> preferredResources = const []}): _constraints = constraints,_preferredResources = preferredResources,super._();
-
+  
 
  final  List<CreationReferenceConstraint> _constraints;
 @override@JsonKey() List<CreationReferenceConstraint> get constraints {
@@ -505,7 +505,7 @@ class _CreationContext extends CreationContext {
 
 
 /// Create a copy of CreationContext
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CreationContextCopyWith<_CreationContext> get copyWith => __$CreationContextCopyWithImpl<_CreationContext>(this, _$identity);
@@ -552,7 +552,7 @@ class __$CreationContextCopyWithImpl<$Res>
   final $Res Function(_CreationContext) _then;
 
 /// Create a copy of CreationContext
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? constraints = null,Object? preferredResources = null,}) {
   return _then(_CreationContext(
 constraints: null == constraints ? _self._constraints : constraints // ignore: cast_nullable_to_non_nullable

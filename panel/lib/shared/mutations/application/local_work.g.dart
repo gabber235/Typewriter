@@ -98,7 +98,7 @@ final class LocalWorkProvider
   }
 }
 
-String _$localWorkHash() => r'6ba53f5b1ce91a41c2f67b533652360c0fb7c4e1';
+String _$localWorkHash() => r'c983aa1f9516dfe57d9456978c93cf3fc6be825e';
 
 /// Stable command owner that privately replaces work when its scope changes.
 ///

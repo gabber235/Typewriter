@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'value_edit_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$ValueEditDocument {
 
  EditorSnapshot get metadata; skir.DataValue get value; Object? get identity; bool get exists;
 /// Create a copy of ValueEditDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ValueEditDocumentCopyWith<ValueEditDocument> get copyWith => _$ValueEditDocumentCopyWithImpl<ValueEditDocument>(this as ValueEditDocument, _$identity);
@@ -67,7 +67,7 @@ class _$ValueEditDocumentCopyWithImpl<$Res>
   final $Res Function(ValueEditDocument) _then;
 
 /// Create a copy of ValueEditDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? metadata = null,Object? value = null,Object? identity = freezed,Object? exists = null,}) {
   return _then(ValueEditDocument(
 metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
@@ -80,7 +80,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [ValueEditDocument].
+/// Adds pattern-matching-related methods to [ValueEditDocument].
 extension ValueEditDocumentPatterns on ValueEditDocument {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -103,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return $default(_that.metadata,_that.value,_that.identity,_that.exists);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -215,7 +215,7 @@ return $default(_that.metadata,_that.value,_that.identity,_that.exists);case _:
 
 class _ValueEditDocument extends ValueEditDocument {
   const _ValueEditDocument({required this.metadata, required this.value, this.identity, this.exists = true}): super._();
-
+  
 
 @override final  EditorSnapshot metadata;
 @override final  skir.DataValue value;
@@ -223,7 +223,7 @@ class _ValueEditDocument extends ValueEditDocument {
 @override@JsonKey() final  bool exists;
 
 /// Create a copy of ValueEditDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ValueEditDocumentCopyWith<_ValueEditDocument> get copyWith => __$ValueEditDocumentCopyWithImpl<_ValueEditDocument>(this, _$identity);
@@ -270,7 +270,7 @@ class __$ValueEditDocumentCopyWithImpl<$Res>
   final $Res Function(_ValueEditDocument) _then;
 
 /// Create a copy of ValueEditDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? metadata = null,Object? value = null,Object? identity = freezed,Object? exists = null,}) {
   return _then(_ValueEditDocument(
 metadata: null == metadata ? _self.metadata : metadata // ignore: cast_nullable_to_non_nullable
@@ -288,7 +288,7 @@ mixin _$ValueEdit {
 
  ValueEditDocument get baseline; skir.DataValue get proposed; Set<skir.ValuePath> get paths; List<EditorStructuralMutation> get mutations;
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ValueEditCopyWith<ValueEdit> get copyWith => _$ValueEditCopyWithImpl<ValueEdit>(this as ValueEdit, _$identity);
@@ -338,7 +338,7 @@ class _$ValueEditCopyWithImpl<$Res>
   final $Res Function(ValueEdit) _then;
 
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? baseline = null,Object? proposed = null,Object? paths = null,Object? mutations = null,}) {
   return _then(ValueEdit(
 baseline: null == baseline ? _self.baseline : baseline // ignore: cast_nullable_to_non_nullable
@@ -349,11 +349,11 @@ as List<EditorStructuralMutation>,
   ));
 }
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ValueEditDocumentCopyWith<$Res> get baseline {
-
+  
   return $ValueEditDocumentCopyWith<$Res>(_self.baseline, (value) {
     return _then(_self.copyWith(baseline: value));
   });
@@ -361,7 +361,7 @@ $ValueEditDocumentCopyWith<$Res> get baseline {
 }
 
 
-/// Adds pattern matching related methods to [ValueEdit].
+/// Adds pattern-matching-related methods to [ValueEdit].
 extension ValueEditPatterns on ValueEdit {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -384,7 +384,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -447,7 +447,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -496,7 +496,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 
 class _ValueEdit implements ValueEdit {
   const _ValueEdit({required this.baseline, required this.proposed, required  Set<skir.ValuePath> paths,  List<EditorStructuralMutation> mutations = const []}): _paths = paths,_mutations = mutations;
-
+  
 
 @override final  ValueEditDocument baseline;
 @override final  skir.DataValue proposed;
@@ -516,7 +516,7 @@ class _ValueEdit implements ValueEdit {
 
 
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ValueEditCopyWith<_ValueEdit> get copyWith => __$ValueEditCopyWithImpl<_ValueEdit>(this, _$identity);
@@ -563,7 +563,7 @@ class __$ValueEditCopyWithImpl<$Res>
   final $Res Function(_ValueEdit) _then;
 
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? baseline = null,Object? proposed = null,Object? paths = null,Object? mutations = null,}) {
   return _then(_ValueEdit(
 baseline: null == baseline ? _self.baseline : baseline // ignore: cast_nullable_to_non_nullable
@@ -575,11 +575,11 @@ as List<EditorStructuralMutation>,
 }
 
 /// Create a copy of ValueEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ValueEditDocumentCopyWith<$Res> get baseline {
-
+  
   return $ValueEditDocumentCopyWith<$Res>(_self.baseline, (value) {
     return _then(_self.copyWith(baseline: value));
   });
@@ -591,7 +591,7 @@ mixin _$ValueConflictEvidence {
 
  Map<skir.ValuePath, EditorPathConflict> get paths; TypedMutationResult? get response; List<EditorDiagnostic> get diagnostics;
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ValueConflictEvidenceCopyWith<ValueConflictEvidence> get copyWith => _$ValueConflictEvidenceCopyWithImpl<ValueConflictEvidence>(this as ValueConflictEvidence, _$identity);
@@ -641,7 +641,7 @@ class _$ValueConflictEvidenceCopyWithImpl<$Res>
   final $Res Function(ValueConflictEvidence) _then;
 
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? paths = null,Object? response = freezed,Object? diagnostics = null,}) {
   return _then(ValueConflictEvidence(
 paths: null == paths ? _self.paths : paths // ignore: cast_nullable_to_non_nullable
@@ -651,7 +651,7 @@ as List<EditorDiagnostic>,
   ));
 }
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $TypedMutationResultCopyWith<$Res>? get response {
@@ -666,7 +666,7 @@ $TypedMutationResultCopyWith<$Res>? get response {
 }
 
 
-/// Adds pattern matching related methods to [ValueConflictEvidence].
+/// Adds pattern-matching-related methods to [ValueConflictEvidence].
 extension ValueConflictEvidencePatterns on ValueConflictEvidence {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -689,7 +689,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -752,7 +752,7 @@ return $default(_that.paths,_that.response,_that.diagnostics);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -801,7 +801,7 @@ return $default(_that.paths,_that.response,_that.diagnostics);case _:
 
 class _ValueConflictEvidence extends ValueConflictEvidence {
   const _ValueConflictEvidence({ Map<skir.ValuePath, EditorPathConflict> paths = const {}, this.response,  List<EditorDiagnostic> diagnostics = const []}): _paths = paths,_diagnostics = diagnostics,super._();
-
+  
 
  final  Map<skir.ValuePath, EditorPathConflict> _paths;
 @override@JsonKey() Map<skir.ValuePath, EditorPathConflict> get paths {
@@ -820,7 +820,7 @@ class _ValueConflictEvidence extends ValueConflictEvidence {
 
 
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ValueConflictEvidenceCopyWith<_ValueConflictEvidence> get copyWith => __$ValueConflictEvidenceCopyWithImpl<_ValueConflictEvidence>(this, _$identity);
@@ -867,7 +867,7 @@ class __$ValueConflictEvidenceCopyWithImpl<$Res>
   final $Res Function(_ValueConflictEvidence) _then;
 
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? paths = null,Object? response = freezed,Object? diagnostics = null,}) {
   return _then(_ValueConflictEvidence(
 paths: null == paths ? _self._paths : paths // ignore: cast_nullable_to_non_nullable
@@ -878,7 +878,7 @@ as List<EditorDiagnostic>,
 }
 
 /// Create a copy of ValueConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $TypedMutationResultCopyWith<$Res>? get response {

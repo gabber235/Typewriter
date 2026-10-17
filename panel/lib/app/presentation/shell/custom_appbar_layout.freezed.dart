@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'custom_appbar_layout.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$AppBarItemMeasurement {
 
  AppBarItemPolicy get policy; double get width;
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AppBarItemMeasurementCopyWith<AppBarItemMeasurement> get copyWith => _$AppBarItemMeasurementCopyWithImpl<AppBarItemMeasurement>(this as AppBarItemMeasurement, _$identity);
@@ -67,7 +67,7 @@ class _$AppBarItemMeasurementCopyWithImpl<$Res>
   final $Res Function(AppBarItemMeasurement) _then;
 
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? policy = null,Object? width = null,}) {
   return _then(AppBarItemMeasurement(
 policy: null == policy ? _self.policy : policy // ignore: cast_nullable_to_non_nullable
@@ -76,11 +76,11 @@ as double,
   ));
 }
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemPolicyCopyWith<$Res> get policy {
-
+  
   return $AppBarItemPolicyCopyWith<$Res>(_self.policy, (value) {
     return _then(_self.copyWith(policy: value));
   });
@@ -88,7 +88,7 @@ $AppBarItemPolicyCopyWith<$Res> get policy {
 }
 
 
-/// Adds pattern matching related methods to [AppBarItemMeasurement].
+/// Adds pattern-matching-related methods to [AppBarItemMeasurement].
 extension AppBarItemMeasurementPatterns on AppBarItemMeasurement {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -111,7 +111,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -174,7 +174,7 @@ return $default(_that.policy,_that.width);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -223,13 +223,13 @@ return $default(_that.policy,_that.width);case _:
 
 class _AppBarItemMeasurement extends AppBarItemMeasurement {
   const _AppBarItemMeasurement({required this.policy, required this.width}): super._();
-
+  
 
 @override final  AppBarItemPolicy policy;
 @override final  double width;
 
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AppBarItemMeasurementCopyWith<_AppBarItemMeasurement> get copyWith => __$AppBarItemMeasurementCopyWithImpl<_AppBarItemMeasurement>(this, _$identity);
@@ -276,7 +276,7 @@ class __$AppBarItemMeasurementCopyWithImpl<$Res>
   final $Res Function(_AppBarItemMeasurement) _then;
 
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? policy = null,Object? width = null,}) {
   return _then(_AppBarItemMeasurement(
 policy: null == policy ? _self.policy : policy // ignore: cast_nullable_to_non_nullable
@@ -286,11 +286,11 @@ as double,
 }
 
 /// Create a copy of AppBarItemMeasurement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemPolicyCopyWith<$Res> get policy {
-
+  
   return $AppBarItemPolicyCopyWith<$Res>(_self.policy, (value) {
     return _then(_self.copyWith(policy: value));
   });
@@ -327,7 +327,7 @@ $AppBarItemAllocationCopyWith(AppBarItemAllocation _, $Res Function(AppBarItemAl
 }
 
 
-/// Adds pattern matching related methods to [AppBarItemAllocation].
+/// Adds pattern-matching-related methods to [AppBarItemAllocation].
 extension AppBarItemAllocationPatterns on AppBarItemAllocation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -351,7 +351,7 @@ return visible(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -414,7 +414,7 @@ return visible(_that.extent);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -462,7 +462,7 @@ return visible(_that.extent);case _:
 
 class HiddenAppBarAllocation extends AppBarItemAllocation {
   const HiddenAppBarAllocation(): super._();
-
+  
 
 
 
@@ -494,12 +494,12 @@ String toString() {
 
 class VisibleAppBarAllocation extends AppBarItemAllocation {
   const VisibleAppBarAllocation(this.extent): super._();
-
+  
 
  final  double extent;
 
 /// Create a copy of AppBarItemAllocation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $VisibleAppBarAllocationCopyWith<VisibleAppBarAllocation> get copyWith => _$VisibleAppBarAllocationCopyWithImpl<VisibleAppBarAllocation>(this, _$identity);
@@ -546,7 +546,7 @@ class _$VisibleAppBarAllocationCopyWithImpl<$Res>
   final $Res Function(VisibleAppBarAllocation) _then;
 
 /// Create a copy of AppBarItemAllocation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? extent = null,}) {
   return _then(VisibleAppBarAllocation(
 null == extent ? _self.extent : extent // ignore: cast_nullable_to_non_nullable
@@ -562,7 +562,7 @@ mixin _$AppBarFit {
 
  double get contentWidth; double get navigationWidth; AppBarItemAllocation get primary; List<AppBarItemAllocation> get actions;
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AppBarFitCopyWith<AppBarFit> get copyWith => _$AppBarFitCopyWithImpl<AppBarFit>(this as AppBarFit, _$identity);
@@ -612,7 +612,7 @@ class _$AppBarFitCopyWithImpl<$Res>
   final $Res Function(AppBarFit) _then;
 
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? contentWidth = null,Object? navigationWidth = null,Object? primary = null,Object? actions = null,}) {
   return _then(AppBarFit(
 contentWidth: null == contentWidth ? _self.contentWidth : contentWidth // ignore: cast_nullable_to_non_nullable
@@ -623,11 +623,11 @@ as List<AppBarItemAllocation>,
   ));
 }
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemAllocationCopyWith<$Res> get primary {
-
+  
   return $AppBarItemAllocationCopyWith<$Res>(_self.primary, (value) {
     return _then(_self.copyWith(primary: value));
   });
@@ -635,7 +635,7 @@ $AppBarItemAllocationCopyWith<$Res> get primary {
 }
 
 
-/// Adds pattern matching related methods to [AppBarFit].
+/// Adds pattern-matching-related methods to [AppBarFit].
 extension AppBarFitPatterns on AppBarFit {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -658,7 +658,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -721,7 +721,7 @@ return $default(_that.contentWidth,_that.navigationWidth,_that.primary,_that.act
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -770,7 +770,7 @@ return $default(_that.contentWidth,_that.navigationWidth,_that.primary,_that.act
 
 class _AppBarFit extends AppBarFit {
   const _AppBarFit({required this.contentWidth, required this.navigationWidth, required this.primary, required  List<AppBarItemAllocation> actions}): _actions = actions,super._();
-
+  
 
 @override final  double contentWidth;
 @override final  double navigationWidth;
@@ -784,7 +784,7 @@ class _AppBarFit extends AppBarFit {
 
 
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AppBarFitCopyWith<_AppBarFit> get copyWith => __$AppBarFitCopyWithImpl<_AppBarFit>(this, _$identity);
@@ -831,7 +831,7 @@ class __$AppBarFitCopyWithImpl<$Res>
   final $Res Function(_AppBarFit) _then;
 
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? contentWidth = null,Object? navigationWidth = null,Object? primary = null,Object? actions = null,}) {
   return _then(_AppBarFit(
 contentWidth: null == contentWidth ? _self.contentWidth : contentWidth // ignore: cast_nullable_to_non_nullable
@@ -843,11 +843,11 @@ as List<AppBarItemAllocation>,
 }
 
 /// Create a copy of AppBarFit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemAllocationCopyWith<$Res> get primary {
-
+  
   return $AppBarItemAllocationCopyWith<$Res>(_self.primary, (value) {
     return _then(_self.copyWith(primary: value));
   });
@@ -859,7 +859,7 @@ mixin _$AppBarMeasurements {
 
  double get navigationWidth; AppBarItemMeasurement get primary; List<AppBarItemMeasurement> get actions;
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AppBarMeasurementsCopyWith<AppBarMeasurements> get copyWith => _$AppBarMeasurementsCopyWithImpl<AppBarMeasurements>(this as AppBarMeasurements, _$identity);
@@ -909,7 +909,7 @@ class _$AppBarMeasurementsCopyWithImpl<$Res>
   final $Res Function(AppBarMeasurements) _then;
 
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? navigationWidth = null,Object? primary = null,Object? actions = null,}) {
   return _then(AppBarMeasurements(
 navigationWidth: null == navigationWidth ? _self.navigationWidth : navigationWidth // ignore: cast_nullable_to_non_nullable
@@ -919,11 +919,11 @@ as List<AppBarItemMeasurement>,
   ));
 }
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemMeasurementCopyWith<$Res> get primary {
-
+  
   return $AppBarItemMeasurementCopyWith<$Res>(_self.primary, (value) {
     return _then(_self.copyWith(primary: value));
   });
@@ -931,7 +931,7 @@ $AppBarItemMeasurementCopyWith<$Res> get primary {
 }
 
 
-/// Adds pattern matching related methods to [AppBarMeasurements].
+/// Adds pattern-matching-related methods to [AppBarMeasurements].
 extension AppBarMeasurementsPatterns on AppBarMeasurements {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -954,7 +954,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1017,7 +1017,7 @@ return $default(_that.navigationWidth,_that.primary,_that.actions);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1066,7 +1066,7 @@ return $default(_that.navigationWidth,_that.primary,_that.actions);case _:
 
 class _AppBarMeasurements extends AppBarMeasurements {
   const _AppBarMeasurements({required this.navigationWidth, required this.primary, required  List<AppBarItemMeasurement> actions}): _actions = actions,super._();
-
+  
 
 @override final  double navigationWidth;
 @override final  AppBarItemMeasurement primary;
@@ -1079,7 +1079,7 @@ class _AppBarMeasurements extends AppBarMeasurements {
 
 
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AppBarMeasurementsCopyWith<_AppBarMeasurements> get copyWith => __$AppBarMeasurementsCopyWithImpl<_AppBarMeasurements>(this, _$identity);
@@ -1126,7 +1126,7 @@ class __$AppBarMeasurementsCopyWithImpl<$Res>
   final $Res Function(_AppBarMeasurements) _then;
 
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? navigationWidth = null,Object? primary = null,Object? actions = null,}) {
   return _then(_AppBarMeasurements(
 navigationWidth: null == navigationWidth ? _self.navigationWidth : navigationWidth // ignore: cast_nullable_to_non_nullable
@@ -1137,11 +1137,11 @@ as List<AppBarItemMeasurement>,
 }
 
 /// Create a copy of AppBarMeasurements
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AppBarItemMeasurementCopyWith<$Res> get primary {
-
+  
   return $AppBarItemMeasurementCopyWith<$Res>(_self.primary, (value) {
     return _then(_self.copyWith(primary: value));
   });

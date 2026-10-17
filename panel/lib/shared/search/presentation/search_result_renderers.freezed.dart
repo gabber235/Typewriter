@@ -84,7 +84,7 @@ as ShortcutActivator?,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -227,7 +227,7 @@ return $default(_that.result,_that.selected,_that.focused,_that.loading,_that.on
 
 class _SearchResultRowContext implements SearchResultRowContext {
   const _SearchResultRowContext({required this.result, required this.selected, required this.focused, required this.loading, required this.onTap, this.shortcutActivator});
-
+  
 
 @override final  SearchResult result;
 @override final  bool selected;
@@ -302,7 +302,7 @@ as ShortcutActivator?,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -376,7 +376,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -525,7 +525,7 @@ return error(_that.result,_that.message);case _:
 
 class SearchResultPreviewContextLoading implements SearchResultPreviewContext {
   const SearchResultPreviewContextLoading({required this.result});
-
+  
 
 @override final  SearchResult result;
 
@@ -590,7 +590,7 @@ as SearchResult,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -602,7 +602,7 @@ $SearchResultCopyWith<$Res> get result {
 
 class SearchResultPreviewContextData implements SearchResultPreviewContext {
   const SearchResultPreviewContextData({required this.result, required this.data});
-
+  
 
 @override final  SearchResult result;
  final  Object data;
@@ -668,7 +668,7 @@ as SearchResult,data: null == data ? _self.data : data ,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -680,7 +680,7 @@ $SearchResultCopyWith<$Res> get result {
 
 class SearchResultPreviewContextError implements SearchResultPreviewContext {
   const SearchResultPreviewContextError({required this.result, required this.message}): assert(message != "", 'Message must not be empty.');
-
+  
 
 @override final  SearchResult result;
  final  String message;
@@ -747,7 +747,7 @@ as String,
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });

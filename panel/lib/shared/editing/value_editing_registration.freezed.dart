@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'value_editing_registration.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$ValueEditingRegistration {
 
  Object get targetId; String get label; ValueEditPersistence get persistence; EditorSnapshot get snapshot; EditorCommitPolicy get commitPolicy; EditObservationAdmission get observations; PortablePresentationHostBuilder? get portablePresentation; VoidCallback Function(EditingWorkspace<ValueEditDocument, ValueEdit>)? get observe;
 /// Create a copy of ValueEditingRegistration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ValueEditingRegistrationCopyWith<ValueEditingRegistration> get copyWith => _$ValueEditingRegistrationCopyWithImpl<ValueEditingRegistration>(this as ValueEditingRegistration, _$identity);
@@ -67,7 +67,7 @@ class _$ValueEditingRegistrationCopyWithImpl<$Res>
   final $Res Function(ValueEditingRegistration) _then;
 
 /// Create a copy of ValueEditingRegistration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? targetId = null,Object? label = null,Object? persistence = null,Object? snapshot = null,Object? commitPolicy = null,Object? observations = null,Object? portablePresentation = freezed,Object? observe = freezed,}) {
   return _then(ValueEditingRegistration(
 targetId: null == targetId ? _self.targetId : targetId ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -84,7 +84,7 @@ as VoidCallback Function(EditingWorkspace<ValueEditDocument, ValueEdit>)?,
 }
 
 
-/// Adds pattern matching related methods to [ValueEditingRegistration].
+/// Adds pattern-matching-related methods to [ValueEditingRegistration].
 extension ValueEditingRegistrationPatterns on ValueEditingRegistration {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -107,7 +107,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -170,7 +170,7 @@ return $default(_that.targetId,_that.label,_that.persistence,_that.snapshot,_tha
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -219,7 +219,7 @@ return $default(_that.targetId,_that.label,_that.persistence,_that.snapshot,_tha
 
 class _ValueEditingRegistration extends ValueEditingRegistration {
   const _ValueEditingRegistration({required this.targetId, required this.label, required this.persistence, required this.snapshot, this.commitPolicy = EditorCommitPolicy.autosaveChanges, this.observations = EditObservationAdmission.rebase, this.portablePresentation, this.observe}): super._();
-
+  
 
 @override final  Object targetId;
 @override final  String label;
@@ -231,7 +231,7 @@ class _ValueEditingRegistration extends ValueEditingRegistration {
 @override final  VoidCallback Function(EditingWorkspace<ValueEditDocument, ValueEdit>)? observe;
 
 /// Create a copy of ValueEditingRegistration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ValueEditingRegistrationCopyWith<_ValueEditingRegistration> get copyWith => __$ValueEditingRegistrationCopyWithImpl<_ValueEditingRegistration>(this, _$identity);
@@ -278,7 +278,7 @@ class __$ValueEditingRegistrationCopyWithImpl<$Res>
   final $Res Function(_ValueEditingRegistration) _then;
 
 /// Create a copy of ValueEditingRegistration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? targetId = null,Object? label = null,Object? persistence = null,Object? snapshot = null,Object? commitPolicy = null,Object? observations = null,Object? portablePresentation = freezed,Object? observe = freezed,}) {
   return _then(_ValueEditingRegistration(
 targetId: null == targetId ? _self.targetId : targetId ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable

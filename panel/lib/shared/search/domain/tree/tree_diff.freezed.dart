@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'tree_diff.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$SearchTreeDiff {
 
  List<SearchTreeRemoval> get removals; List<SearchTreeInsertion> get insertions;
 /// Create a copy of SearchTreeDiff
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeDiffCopyWith<SearchTreeDiff> get copyWith => _$SearchTreeDiffCopyWithImpl<SearchTreeDiff>(this as SearchTreeDiff, _$identity);
@@ -67,7 +67,7 @@ class _$SearchTreeDiffCopyWithImpl<$Res>
   final $Res Function(SearchTreeDiff) _then;
 
 /// Create a copy of SearchTreeDiff
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? removals = null,Object? insertions = null,}) {
   return _then(SearchTreeDiff(
 removals: null == removals ? _self.removals : removals // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as List<SearchTreeInsertion>,
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeDiff].
+/// Adds pattern-matching-related methods to [SearchTreeDiff].
 extension SearchTreeDiffPatterns on SearchTreeDiff {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.removals,_that.insertions);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return $default(_that.removals,_that.insertions);case _:
 
 class _SearchTreeDiff implements SearchTreeDiff {
   const _SearchTreeDiff({required  List<SearchTreeRemoval> removals, required  List<SearchTreeInsertion> insertions}): _removals = removals,_insertions = insertions;
-
+  
 
  final  List<SearchTreeRemoval> _removals;
 @override List<SearchTreeRemoval> get removals {
@@ -232,7 +232,7 @@ class _SearchTreeDiff implements SearchTreeDiff {
 
 
 /// Create a copy of SearchTreeDiff
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchTreeDiffCopyWith<_SearchTreeDiff> get copyWith => __$SearchTreeDiffCopyWithImpl<_SearchTreeDiff>(this, _$identity);
@@ -279,7 +279,7 @@ class __$SearchTreeDiffCopyWithImpl<$Res>
   final $Res Function(_SearchTreeDiff) _then;
 
 /// Create a copy of SearchTreeDiff
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? removals = null,Object? insertions = null,}) {
   return _then(_SearchTreeDiff(
 removals: null == removals ? _self._removals : removals // ignore: cast_nullable_to_non_nullable
@@ -296,7 +296,7 @@ mixin _$SearchTreeRemoval {
 
  int get index; SearchTreeRow get row;
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeRemovalCopyWith<SearchTreeRemoval> get copyWith => _$SearchTreeRemovalCopyWithImpl<SearchTreeRemoval>(this as SearchTreeRemoval, _$identity);
@@ -346,7 +346,7 @@ class _$SearchTreeRemovalCopyWithImpl<$Res>
   final $Res Function(SearchTreeRemoval) _then;
 
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? index = null,Object? row = null,}) {
   return _then(SearchTreeRemoval(
 index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
@@ -355,11 +355,11 @@ as SearchTreeRow,
   ));
 }
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchTreeRowCopyWith<$Res> get row {
-
+  
   return $SearchTreeRowCopyWith<$Res>(_self.row, (value) {
     return _then(_self.copyWith(row: value));
   });
@@ -367,7 +367,7 @@ $SearchTreeRowCopyWith<$Res> get row {
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeRemoval].
+/// Adds pattern-matching-related methods to [SearchTreeRemoval].
 extension SearchTreeRemovalPatterns on SearchTreeRemoval {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -390,7 +390,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -453,7 +453,7 @@ return $default(_that.index,_that.row);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -502,13 +502,13 @@ return $default(_that.index,_that.row);case _:
 
 class _SearchTreeRemoval implements SearchTreeRemoval {
   const _SearchTreeRemoval({required this.index, required this.row});
-
+  
 
 @override final  int index;
 @override final  SearchTreeRow row;
 
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchTreeRemovalCopyWith<_SearchTreeRemoval> get copyWith => __$SearchTreeRemovalCopyWithImpl<_SearchTreeRemoval>(this, _$identity);
@@ -555,7 +555,7 @@ class __$SearchTreeRemovalCopyWithImpl<$Res>
   final $Res Function(_SearchTreeRemoval) _then;
 
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? index = null,Object? row = null,}) {
   return _then(_SearchTreeRemoval(
 index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
@@ -565,11 +565,11 @@ as SearchTreeRow,
 }
 
 /// Create a copy of SearchTreeRemoval
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchTreeRowCopyWith<$Res> get row {
-
+  
   return $SearchTreeRowCopyWith<$Res>(_self.row, (value) {
     return _then(_self.copyWith(row: value));
   });
@@ -581,7 +581,7 @@ mixin _$SearchTreeInsertion {
 
  int get index; SearchTreeRow get row;
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeInsertionCopyWith<SearchTreeInsertion> get copyWith => _$SearchTreeInsertionCopyWithImpl<SearchTreeInsertion>(this as SearchTreeInsertion, _$identity);
@@ -631,7 +631,7 @@ class _$SearchTreeInsertionCopyWithImpl<$Res>
   final $Res Function(SearchTreeInsertion) _then;
 
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? index = null,Object? row = null,}) {
   return _then(SearchTreeInsertion(
 index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
@@ -640,11 +640,11 @@ as SearchTreeRow,
   ));
 }
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchTreeRowCopyWith<$Res> get row {
-
+  
   return $SearchTreeRowCopyWith<$Res>(_self.row, (value) {
     return _then(_self.copyWith(row: value));
   });
@@ -652,7 +652,7 @@ $SearchTreeRowCopyWith<$Res> get row {
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeInsertion].
+/// Adds pattern-matching-related methods to [SearchTreeInsertion].
 extension SearchTreeInsertionPatterns on SearchTreeInsertion {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -675,7 +675,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -738,7 +738,7 @@ return $default(_that.index,_that.row);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -787,13 +787,13 @@ return $default(_that.index,_that.row);case _:
 
 class _SearchTreeInsertion implements SearchTreeInsertion {
   const _SearchTreeInsertion({required this.index, required this.row});
-
+  
 
 @override final  int index;
 @override final  SearchTreeRow row;
 
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchTreeInsertionCopyWith<_SearchTreeInsertion> get copyWith => __$SearchTreeInsertionCopyWithImpl<_SearchTreeInsertion>(this, _$identity);
@@ -840,7 +840,7 @@ class __$SearchTreeInsertionCopyWithImpl<$Res>
   final $Res Function(_SearchTreeInsertion) _then;
 
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? index = null,Object? row = null,}) {
   return _then(_SearchTreeInsertion(
 index: null == index ? _self.index : index // ignore: cast_nullable_to_non_nullable
@@ -850,11 +850,11 @@ as SearchTreeRow,
 }
 
 /// Create a copy of SearchTreeInsertion
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchTreeRowCopyWith<$Res> get row {
-
+  
   return $SearchTreeRowCopyWith<$Res>(_self.row, (value) {
     return _then(_self.copyWith(row: value));
   });

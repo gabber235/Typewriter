@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'nats_connection.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$NatsConnectionSettings {
 
  String get url; String get token; UserInfo get user; skir.GetSentinelCredentialsResponse_Success get sentinel; skir.RecordId? get organization;
 /// Create a copy of NatsConnectionSettings
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NatsConnectionSettingsCopyWith<NatsConnectionSettings> get copyWith => _$NatsConnectionSettingsCopyWithImpl<NatsConnectionSettings>(this as NatsConnectionSettings, _$identity);
@@ -62,7 +62,7 @@ class _$NatsConnectionSettingsCopyWithImpl<$Res>
   final $Res Function(NatsConnectionSettings) _then;
 
 /// Create a copy of NatsConnectionSettings
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? url = null,Object? token = null,Object? user = null,Object? sentinel = null,Object? organization = freezed,}) {
   return _then(NatsConnectionSettings(
 url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -77,7 +77,7 @@ as skir.RecordId?,
 }
 
 
-/// Adds pattern matching methods to [NatsConnectionSettings].
+/// Adds pattern-matching-related methods to [NatsConnectionSettings].
 extension NatsConnectionSettingsPatterns on NatsConnectionSettings {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -100,7 +100,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method resembling `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -163,7 +163,7 @@ return $default(_that.url,_that.token,_that.user,_that.sentinel,_that.organizati
 
 }
 }
-/// A method resembling `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -212,7 +212,7 @@ return $default(_that.url,_that.token,_that.user,_that.sentinel,_that.organizati
 
 class _NatsConnectionSettings extends NatsConnectionSettings {
   const _NatsConnectionSettings({required this.url, required this.token, required this.user, required this.sentinel, required this.organization}): super._();
-
+  
 
 @override final  String url;
 @override final  String token;
@@ -221,7 +221,7 @@ class _NatsConnectionSettings extends NatsConnectionSettings {
 @override final  skir.RecordId? organization;
 
 /// Create a copy of NatsConnectionSettings
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$NatsConnectionSettingsCopyWith<_NatsConnectionSettings> get copyWith => __$NatsConnectionSettingsCopyWithImpl<_NatsConnectionSettings>(this, _$identity);
@@ -264,7 +264,7 @@ class __$NatsConnectionSettingsCopyWithImpl<$Res>
   final $Res Function(_NatsConnectionSettings) _then;
 
 /// Create a copy of NatsConnectionSettings
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? url = null,Object? token = null,Object? user = null,Object? sentinel = null,Object? organization = freezed,}) {
   return _then(_NatsConnectionSettings(
 url: null == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -284,7 +284,7 @@ mixin _$RealmAccess {
 
  Set<skir.RecordId> get realms;
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RealmAccessCopyWith<_RealmAccess> get copyWith => __$RealmAccessCopyWithImpl<_RealmAccess>(this as _RealmAccess, _$identity);
@@ -334,7 +334,7 @@ class __$RealmAccessCopyWithImpl<$Res>
   final $Res Function(_RealmAccess) _then;
 
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? realms = null,}) {
   return _then(_self.copyWith(
 realms: null == realms ? _self.realms : realms // ignore: cast_nullable_to_non_nullable
@@ -345,7 +345,7 @@ as Set<skir.RecordId>,
 }
 
 
-/// Adds pattern matching methods to [_RealmAccess].
+/// Adds pattern-matching-related methods to [_RealmAccess].
 extension _RealmAccessPatterns on _RealmAccess {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -369,7 +369,7 @@ return exact(_that);case _:
 
 }
 }
-/// A method resembling `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -432,7 +432,7 @@ return exact(_that.realms);case _:
 
 }
 }
-/// A method resembling `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -480,7 +480,7 @@ return exact(_that.realms);case _:
 
 class _RequiredRealmAccess extends _RealmAccess {
   const _RequiredRealmAccess( Set<skir.RecordId> realms): _realms = realms,super._();
-
+  
 
  final  Set<skir.RecordId> _realms;
 @override Set<skir.RecordId> get realms {
@@ -491,7 +491,7 @@ class _RequiredRealmAccess extends _RealmAccess {
 
 
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RequiredRealmAccessCopyWith<_RequiredRealmAccess> get copyWith => __$RequiredRealmAccessCopyWithImpl<_RequiredRealmAccess>(this, _$identity);
@@ -538,7 +538,7 @@ class __$RequiredRealmAccessCopyWithImpl<$Res>
   final $Res Function(_RequiredRealmAccess) _then;
 
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? realms = null,}) {
   return _then(_RequiredRealmAccess(
 null == realms ? _self._realms : realms // ignore: cast_nullable_to_non_nullable
@@ -554,7 +554,7 @@ as Set<skir.RecordId>,
 
 class _ExactRealmAccess extends _RealmAccess {
   const _ExactRealmAccess( Set<skir.RecordId> realms): _realms = realms,super._();
-
+  
 
  final  Set<skir.RecordId> _realms;
 @override Set<skir.RecordId> get realms {
@@ -565,7 +565,7 @@ class _ExactRealmAccess extends _RealmAccess {
 
 
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ExactRealmAccessCopyWith<_ExactRealmAccess> get copyWith => __$ExactRealmAccessCopyWithImpl<_ExactRealmAccess>(this, _$identity);
@@ -612,7 +612,7 @@ class __$ExactRealmAccessCopyWithImpl<$Res>
   final $Res Function(_ExactRealmAccess) _then;
 
 /// Create a copy of _RealmAccess
-/// with the given fields replaced by parameter values that are not null.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? realms = null,}) {
   return _then(_ExactRealmAccess(
 null == realms ? _self._realms : realms // ignore: cast_nullable_to_non_nullable

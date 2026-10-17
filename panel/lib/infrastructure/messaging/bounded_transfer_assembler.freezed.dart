@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'bounded_transfer_assembler.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $BoundedTransferStateCopyWith(BoundedTransferState _, $Res Function(BoundedTrans
 }
 
 
-/// Adds pattern matching related methods to [BoundedTransferState].
+/// Adds pattern-matching-related methods to [BoundedTransferState].
 extension BoundedTransferStatePatterns on BoundedTransferState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return complete(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return complete(_that.bytes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -177,7 +177,7 @@ return complete(_that.bytes);case _:
 
 class BoundedTransferPending implements BoundedTransferState {
   const BoundedTransferPending();
-
+  
 
 
 
@@ -209,12 +209,12 @@ String toString() {
 
 class BoundedTransferComplete implements BoundedTransferState {
   const BoundedTransferComplete(this.bytes);
-
+  
 
  final  Uint8List bytes;
 
 /// Create a copy of BoundedTransferState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BoundedTransferCompleteCopyWith<BoundedTransferComplete> get copyWith => _$BoundedTransferCompleteCopyWithImpl<BoundedTransferComplete>(this, _$identity);
@@ -261,7 +261,7 @@ class _$BoundedTransferCompleteCopyWithImpl<$Res>
   final $Res Function(BoundedTransferComplete) _then;
 
 /// Create a copy of BoundedTransferState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? bytes = null,}) {
   return _then(BoundedTransferComplete(
 null == bytes ? _self.bytes : bytes // ignore: cast_nullable_to_non_nullable

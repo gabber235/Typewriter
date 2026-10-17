@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_presentation_renderer.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $EditorSelectionCopyWith(EditorSelection _, $Res Function(EditorSelection) __);
 }
 
 
-/// Adds pattern matching related methods to [EditorSelection].
+/// Adds pattern-matching-related methods to [EditorSelection].
 extension EditorSelectionPatterns on EditorSelection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return failed(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return failed(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -177,7 +177,7 @@ return failed(_that.message);case _:
 
 class ReadyEditorSelection implements EditorSelection {
   const ReadyEditorSelection({required this.node, required this.scope, this.fieldAssociation, this.guidance});
-
+  
 
  final  skir.PresentationNode node;
  final  PortablePresentationScope scope;
@@ -185,7 +185,7 @@ class ReadyEditorSelection implements EditorSelection {
  final  ScopedEditorGuidance? guidance;
 
 /// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReadyEditorSelectionCopyWith<ReadyEditorSelection> get copyWith => _$ReadyEditorSelectionCopyWithImpl<ReadyEditorSelection>(this, _$identity);
@@ -232,7 +232,7 @@ class _$ReadyEditorSelectionCopyWithImpl<$Res>
   final $Res Function(ReadyEditorSelection) _then;
 
 /// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? node = null,Object? scope = null,Object? fieldAssociation = freezed,Object? guidance = freezed,}) {
   return _then(ReadyEditorSelection(
 node: null == node ? _self.node : node // ignore: cast_nullable_to_non_nullable
@@ -244,16 +244,16 @@ as ScopedEditorGuidance?,
 }
 
 /// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
 }/// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
@@ -265,7 +265,7 @@ $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
     return _then(_self.copyWith(fieldAssociation: value));
   });
 }/// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ScopedEditorGuidanceCopyWith<$Res>? get guidance {
@@ -284,12 +284,12 @@ $ScopedEditorGuidanceCopyWith<$Res>? get guidance {
 
 class FailedEditorSelection implements EditorSelection {
   const FailedEditorSelection(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $FailedEditorSelectionCopyWith<FailedEditorSelection> get copyWith => _$FailedEditorSelectionCopyWithImpl<FailedEditorSelection>(this, _$identity);
@@ -336,7 +336,7 @@ class _$FailedEditorSelectionCopyWithImpl<$Res>
   final $Res Function(FailedEditorSelection) _then;
 
 /// Create a copy of EditorSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(FailedEditorSelection(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -352,7 +352,7 @@ mixin _$ScopedEditorGuidance {
 
  skir.BoundControl get control; PortablePresentationScope get scope;
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ScopedEditorGuidanceCopyWith<ScopedEditorGuidance> get copyWith => _$ScopedEditorGuidanceCopyWithImpl<ScopedEditorGuidance>(this as ScopedEditorGuidance, _$identity);
@@ -402,7 +402,7 @@ class _$ScopedEditorGuidanceCopyWithImpl<$Res>
   final $Res Function(ScopedEditorGuidance) _then;
 
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? control = null,Object? scope = null,}) {
   return _then(ScopedEditorGuidance(
 control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
@@ -411,11 +411,11 @@ as PortablePresentationScope,
   ));
 }
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -423,7 +423,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [ScopedEditorGuidance].
+/// Adds pattern-matching-related methods to [ScopedEditorGuidance].
 extension ScopedEditorGuidancePatterns on ScopedEditorGuidance {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -446,7 +446,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -509,7 +509,7 @@ return $default(_that.control,_that.scope);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -558,13 +558,13 @@ return $default(_that.control,_that.scope);case _:
 
 class _ScopedEditorGuidance extends ScopedEditorGuidance {
   const _ScopedEditorGuidance({required this.control, required this.scope}): super._();
-
+  
 
 @override final  skir.BoundControl control;
 @override final  PortablePresentationScope scope;
 
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ScopedEditorGuidanceCopyWith<_ScopedEditorGuidance> get copyWith => __$ScopedEditorGuidanceCopyWithImpl<_ScopedEditorGuidance>(this, _$identity);
@@ -611,7 +611,7 @@ class __$ScopedEditorGuidanceCopyWithImpl<$Res>
   final $Res Function(_ScopedEditorGuidance) _then;
 
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? control = null,Object? scope = null,}) {
   return _then(_ScopedEditorGuidance(
 control: null == control ? _self.control : control // ignore: cast_nullable_to_non_nullable
@@ -621,11 +621,11 @@ as PortablePresentationScope,
 }
 
 /// Create a copy of ScopedEditorGuidance
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -637,7 +637,7 @@ mixin _$ScopedCollectionHeader {
 
  PortablePresentationScope get scope; skir.PresentationHeader? get header; List<_SuppliedHeaderControl> get controls;
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ScopedCollectionHeaderCopyWith<_ScopedCollectionHeader> get copyWith => __$ScopedCollectionHeaderCopyWithImpl<_ScopedCollectionHeader>(this as _ScopedCollectionHeader, _$identity);
@@ -687,7 +687,7 @@ class __$ScopedCollectionHeaderCopyWithImpl<$Res>
   final $Res Function(_ScopedCollectionHeader) _then;
 
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? scope = null,Object? header = freezed,Object? controls = null,}) {
   return _then(_ScopedCollectionHeader(
 scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
@@ -697,11 +697,11 @@ as List<_SuppliedHeaderControl>,
   ));
 }
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -709,7 +709,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [_ScopedCollectionHeader].
+/// Adds pattern-matching-related methods to [_ScopedCollectionHeader].
 extension _ScopedCollectionHeaderPatterns on _ScopedCollectionHeader {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -732,7 +732,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -795,7 +795,7 @@ return $default(_that.scope,_that.header,_that.controls);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -844,7 +844,7 @@ return $default(_that.scope,_that.header,_that.controls);case _:
 
 class __ScopedCollectionHeader implements _ScopedCollectionHeader {
   const __ScopedCollectionHeader({required this.scope, this.header,  List<_SuppliedHeaderControl> controls = const []}): _controls = controls;
-
+  
 
 @override final  PortablePresentationScope scope;
 @override final  skir.PresentationHeader? header;
@@ -857,7 +857,7 @@ class __ScopedCollectionHeader implements _ScopedCollectionHeader {
 
 
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_ScopedCollectionHeaderCopyWith<__ScopedCollectionHeader> get copyWith => __$_ScopedCollectionHeaderCopyWithImpl<__ScopedCollectionHeader>(this, _$identity);
@@ -904,7 +904,7 @@ class __$_ScopedCollectionHeaderCopyWithImpl<$Res>
   final $Res Function(__ScopedCollectionHeader) _then;
 
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? scope = null,Object? header = freezed,Object? controls = null,}) {
   return _then(__ScopedCollectionHeader(
 scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
@@ -915,11 +915,11 @@ as List<_SuppliedHeaderControl>,
 }
 
 /// Create a copy of _ScopedCollectionHeader
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -931,7 +931,7 @@ mixin _$CollectionEditorContinuation {
 
  AuthoredBindingAddress get owner; PortablePresentationScope get scope; CollectionEntryLayout get layout; Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget)?) get render; Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? get renderIntrinsicBody;
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionEditorContinuationCopyWith<_CollectionEditorContinuation> get copyWith => __$CollectionEditorContinuationCopyWithImpl<_CollectionEditorContinuation>(this as _CollectionEditorContinuation, _$identity);
@@ -981,7 +981,7 @@ class __$CollectionEditorContinuationCopyWithImpl<$Res>
   final $Res Function(_CollectionEditorContinuation) _then;
 
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? owner = null,Object? scope = null,Object? layout = null,Object? render = null,Object? renderIntrinsicBody = freezed,}) {
   return _then(_CollectionEditorContinuation(
 owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
@@ -993,20 +993,20 @@ as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget
   ));
 }
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
 }/// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -1014,7 +1014,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [_CollectionEditorContinuation].
+/// Adds pattern-matching-related methods to [_CollectionEditorContinuation].
 extension _CollectionEditorContinuationPatterns on _CollectionEditorContinuation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1037,7 +1037,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1100,7 +1100,7 @@ return $default(_that.owner,_that.scope,_that.layout,_that.render,_that.renderIn
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1149,7 +1149,7 @@ return $default(_that.owner,_that.scope,_that.layout,_that.render,_that.renderIn
 
 class __CollectionEditorContinuation extends _CollectionEditorContinuation {
   const __CollectionEditorContinuation({required this.owner, required this.scope, required this.layout, required this.render, this.renderIntrinsicBody}): super._();
-
+  
 
 @override final  AuthoredBindingAddress owner;
 @override final  PortablePresentationScope scope;
@@ -1158,7 +1158,7 @@ class __CollectionEditorContinuation extends _CollectionEditorContinuation {
 @override final  Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget))? renderIntrinsicBody;
 
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionEditorContinuationCopyWith<__CollectionEditorContinuation> get copyWith => __$_CollectionEditorContinuationCopyWithImpl<__CollectionEditorContinuation>(this, _$identity);
@@ -1205,7 +1205,7 @@ class __$_CollectionEditorContinuationCopyWithImpl<$Res>
   final $Res Function(__CollectionEditorContinuation) _then;
 
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? owner = null,Object? scope = null,Object? layout = null,Object? render = null,Object? renderIntrinsicBody = freezed,}) {
   return _then(__CollectionEditorContinuation(
 owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
@@ -1218,20 +1218,20 @@ as Widget Function(BuildContext, Widget Function(_ScopedCollectionHeader, Widget
 }
 
 /// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
 }/// Create a copy of _CollectionEditorContinuation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -1243,7 +1243,7 @@ mixin _$PreparedNode {
 
  PortablePresentationScope get scope; bool get available;
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PreparedNodeCopyWith<PreparedNode> get copyWith => _$PreparedNodeCopyWithImpl<PreparedNode>(this as PreparedNode, _$identity);
@@ -1293,7 +1293,7 @@ class _$PreparedNodeCopyWithImpl<$Res>
   final $Res Function(PreparedNode) _then;
 
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? scope = null,Object? available = null,}) {
   return _then(PreparedNode(
 scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
@@ -1302,11 +1302,11 @@ as bool,
   ));
 }
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -1314,7 +1314,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [PreparedNode].
+/// Adds pattern-matching-related methods to [PreparedNode].
 extension PreparedNodePatterns on PreparedNode {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1337,7 +1337,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1400,7 +1400,7 @@ return $default(_that.scope,_that.available);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1449,13 +1449,13 @@ return $default(_that.scope,_that.available);case _:
 
 class _PreparedNode implements PreparedNode {
   const _PreparedNode({required this.scope, required this.available});
-
+  
 
 @override final  PortablePresentationScope scope;
 @override final  bool available;
 
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PreparedNodeCopyWith<_PreparedNode> get copyWith => __$PreparedNodeCopyWithImpl<_PreparedNode>(this, _$identity);
@@ -1502,7 +1502,7 @@ class __$PreparedNodeCopyWithImpl<$Res>
   final $Res Function(_PreparedNode) _then;
 
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? scope = null,Object? available = null,}) {
   return _then(_PreparedNode(
 scope: null == scope ? _self.scope : scope // ignore: cast_nullable_to_non_nullable
@@ -1512,11 +1512,11 @@ as bool,
 }
 
 /// Create a copy of PreparedNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -1553,7 +1553,7 @@ _$CollectionCommandCopyWith(_CollectionCommand _, $Res Function(_CollectionComma
 }
 
 
-/// Adds pattern matching related methods to [_CollectionCommand].
+/// Adds pattern-matching-related methods to [_CollectionCommand].
 extension _CollectionCommandPatterns on _CollectionCommand {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1579,7 +1579,7 @@ return disconnect(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1648,7 +1648,7 @@ return disconnect(_that.occurrence);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1700,13 +1700,13 @@ return disconnect(_that.occurrence);case _:
 
 class _RemoveListCommand implements _CollectionCommand {
   const _RemoveListCommand(this.target, this.item);
-
+  
 
  final  PortableDiagnosticTarget target;
  final  skir.ItemId item;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RemoveListCommandCopyWith<_RemoveListCommand> get copyWith => __$RemoveListCommandCopyWithImpl<_RemoveListCommand>(this, _$identity);
@@ -1753,7 +1753,7 @@ class __$RemoveListCommandCopyWithImpl<$Res>
   final $Res Function(_RemoveListCommand) _then;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? item = null,}) {
   return _then(_RemoveListCommand(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1763,11 +1763,11 @@ as skir.ItemId,
 }
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1779,13 +1779,13 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _RemoveMapCommand implements _CollectionCommand {
   const _RemoveMapCommand(this.target, this.row);
-
+  
 
  final  PortableDiagnosticTarget target;
  final  skir.ItemId row;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RemoveMapCommandCopyWith<_RemoveMapCommand> get copyWith => __$RemoveMapCommandCopyWithImpl<_RemoveMapCommand>(this, _$identity);
@@ -1832,7 +1832,7 @@ class __$RemoveMapCommandCopyWithImpl<$Res>
   final $Res Function(_RemoveMapCommand) _then;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? row = null,}) {
   return _then(_RemoveMapCommand(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -1842,11 +1842,11 @@ as skir.ItemId,
 }
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1858,12 +1858,12 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _ReorderCommand implements _CollectionCommand {
   const _ReorderCommand(this.item);
-
+  
 
  final  PortableDiagnosticTarget item;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ReorderCommandCopyWith<_ReorderCommand> get copyWith => __$ReorderCommandCopyWithImpl<_ReorderCommand>(this, _$identity);
@@ -1910,7 +1910,7 @@ class __$ReorderCommandCopyWithImpl<$Res>
   final $Res Function(_ReorderCommand) _then;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? item = null,}) {
   return _then(_ReorderCommand(
 null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
@@ -1919,11 +1919,11 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get item {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.item, (value) {
     return _then(_self.copyWith(item: value));
   });
@@ -1935,12 +1935,12 @@ $PortableDiagnosticTargetCopyWith<$Res> get item {
 
 class _DisconnectCommand implements _CollectionCommand {
   const _DisconnectCommand(this.occurrence);
-
+  
 
  final  skir.LinkOccurrence occurrence;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$DisconnectCommandCopyWith<_DisconnectCommand> get copyWith => __$DisconnectCommandCopyWithImpl<_DisconnectCommand>(this, _$identity);
@@ -1987,7 +1987,7 @@ class __$DisconnectCommandCopyWithImpl<$Res>
   final $Res Function(_DisconnectCommand) _then;
 
 /// Create a copy of _CollectionCommand
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? occurrence = null,}) {
   return _then(_DisconnectCommand(
 null == occurrence ? _self.occurrence : occurrence // ignore: cast_nullable_to_non_nullable
@@ -2003,7 +2003,7 @@ mixin _$ScopedHeaderDeclaration {
 
  skir.HeaderItem get item; PortablePresentationScope get scope;
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ScopedHeaderDeclarationCopyWith<_ScopedHeaderDeclaration> get copyWith => __$ScopedHeaderDeclarationCopyWithImpl<_ScopedHeaderDeclaration>(this as _ScopedHeaderDeclaration, _$identity);
@@ -2053,7 +2053,7 @@ class __$ScopedHeaderDeclarationCopyWithImpl<$Res>
   final $Res Function(_ScopedHeaderDeclaration) _then;
 
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? item = null,Object? scope = null,}) {
   return _then(_ScopedHeaderDeclaration(
 item: null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
@@ -2062,11 +2062,11 @@ as PortablePresentationScope,
   ));
 }
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -2074,7 +2074,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [_ScopedHeaderDeclaration].
+/// Adds pattern-matching-related methods to [_ScopedHeaderDeclaration].
 extension _ScopedHeaderDeclarationPatterns on _ScopedHeaderDeclaration {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2097,7 +2097,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2160,7 +2160,7 @@ return $default(_that.item,_that.scope);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2209,13 +2209,13 @@ return $default(_that.item,_that.scope);case _:
 
 class __ScopedHeaderDeclaration implements _ScopedHeaderDeclaration {
   const __ScopedHeaderDeclaration({required this.item, required this.scope});
-
+  
 
 @override final  skir.HeaderItem item;
 @override final  PortablePresentationScope scope;
 
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_ScopedHeaderDeclarationCopyWith<__ScopedHeaderDeclaration> get copyWith => __$_ScopedHeaderDeclarationCopyWithImpl<__ScopedHeaderDeclaration>(this, _$identity);
@@ -2262,7 +2262,7 @@ class __$_ScopedHeaderDeclarationCopyWithImpl<$Res>
   final $Res Function(__ScopedHeaderDeclaration) _then;
 
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? item = null,Object? scope = null,}) {
   return _then(__ScopedHeaderDeclaration(
 item: null == item ? _self.item : item // ignore: cast_nullable_to_non_nullable
@@ -2272,11 +2272,11 @@ as PortablePresentationScope,
 }
 
 /// Create a copy of _ScopedHeaderDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -2288,7 +2288,7 @@ mixin _$SuppliedHeaderControl {
 
  WidgetBuilder get build; _CollectionCommand? get command;
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SuppliedHeaderControlCopyWith<_SuppliedHeaderControl> get copyWith => __$SuppliedHeaderControlCopyWithImpl<_SuppliedHeaderControl>(this as _SuppliedHeaderControl, _$identity);
@@ -2338,7 +2338,7 @@ class __$SuppliedHeaderControlCopyWithImpl<$Res>
   final $Res Function(_SuppliedHeaderControl) _then;
 
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? build = null,Object? command = freezed,}) {
   return _then(_SuppliedHeaderControl(
 build: null == build ? _self.build : build // ignore: cast_nullable_to_non_nullable
@@ -2347,7 +2347,7 @@ as _CollectionCommand?,
   ));
 }
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 _$CollectionCommandCopyWith<$Res>? get command {
@@ -2362,7 +2362,7 @@ _$CollectionCommandCopyWith<$Res>? get command {
 }
 
 
-/// Adds pattern matching related methods to [_SuppliedHeaderControl].
+/// Adds pattern-matching-related methods to [_SuppliedHeaderControl].
 extension _SuppliedHeaderControlPatterns on _SuppliedHeaderControl {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2385,7 +2385,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2448,7 +2448,7 @@ return $default(_that.build,_that.command);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2497,13 +2497,13 @@ return $default(_that.build,_that.command);case _:
 
 class __SuppliedHeaderControl implements _SuppliedHeaderControl {
   const __SuppliedHeaderControl({required this.build, this.command});
-
+  
 
 @override final  WidgetBuilder build;
 @override final  _CollectionCommand? command;
 
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_SuppliedHeaderControlCopyWith<__SuppliedHeaderControl> get copyWith => __$_SuppliedHeaderControlCopyWithImpl<__SuppliedHeaderControl>(this, _$identity);
@@ -2550,7 +2550,7 @@ class __$_SuppliedHeaderControlCopyWithImpl<$Res>
   final $Res Function(__SuppliedHeaderControl) _then;
 
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? build = null,Object? command = freezed,}) {
   return _then(__SuppliedHeaderControl(
 build: null == build ? _self.build : build // ignore: cast_nullable_to_non_nullable
@@ -2560,7 +2560,7 @@ as _CollectionCommand?,
 }
 
 /// Create a copy of _SuppliedHeaderControl
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 _$CollectionCommandCopyWith<$Res>? get command {
@@ -2579,7 +2579,7 @@ mixin _$RemovalFocusIntent {
 
  Object get token; skir.ItemId get row; FocusNode get origin; Set<FocusNode> get fallbackScopes; int get index; bool get applied; bool get observedRemoval; bool get recoveryQueued;
 /// Create a copy of _RemovalFocusIntent
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RemovalFocusIntentCopyWith<_RemovalFocusIntent> get copyWith => __$RemovalFocusIntentCopyWithImpl<_RemovalFocusIntent>(this as _RemovalFocusIntent, _$identity);
@@ -2629,7 +2629,7 @@ class __$RemovalFocusIntentCopyWithImpl<$Res>
   final $Res Function(_RemovalFocusIntent) _then;
 
 /// Create a copy of _RemovalFocusIntent
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,Object? index = null,Object? applied = null,Object? observedRemoval = null,Object? recoveryQueued = null,}) {
   return _then(_RemovalFocusIntent(
 token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
@@ -2646,7 +2646,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [_RemovalFocusIntent].
+/// Adds pattern-matching-related methods to [_RemovalFocusIntent].
 extension _RemovalFocusIntentPatterns on _RemovalFocusIntent {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2669,7 +2669,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2732,7 +2732,7 @@ return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes,_that.in
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2781,7 +2781,7 @@ return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes,_that.in
 
 class __RemovalFocusIntent implements _RemovalFocusIntent {
   const __RemovalFocusIntent({required this.token, required this.row, required this.origin, required  Set<FocusNode> fallbackScopes, required this.index, this.applied = false, this.observedRemoval = false, this.recoveryQueued = false}): _fallbackScopes = fallbackScopes;
-
+  
 
 @override final  Object token;
 @override final  skir.ItemId row;
@@ -2799,7 +2799,7 @@ class __RemovalFocusIntent implements _RemovalFocusIntent {
 @override@JsonKey() final  bool recoveryQueued;
 
 /// Create a copy of _RemovalFocusIntent
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_RemovalFocusIntentCopyWith<__RemovalFocusIntent> get copyWith => __$_RemovalFocusIntentCopyWithImpl<__RemovalFocusIntent>(this, _$identity);
@@ -2846,7 +2846,7 @@ class __$_RemovalFocusIntentCopyWithImpl<$Res>
   final $Res Function(__RemovalFocusIntent) _then;
 
 /// Create a copy of _RemovalFocusIntent
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,Object? index = null,Object? applied = null,Object? observedRemoval = null,Object? recoveryQueued = null,}) {
   return _then(__RemovalFocusIntent(
 token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
@@ -2868,7 +2868,7 @@ mixin _$LiveCollectionSource {
 
  PortablePresentationHost get host; skir.BindingRef get source; AuthoredBindingAddress get owner; skir.CatalogGeneration get generation; Object? get lifetime;
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$LiveCollectionSourceCopyWith<_LiveCollectionSource> get copyWith => __$LiveCollectionSourceCopyWithImpl<_LiveCollectionSource>(this as _LiveCollectionSource, _$identity);
@@ -2918,7 +2918,7 @@ class __$LiveCollectionSourceCopyWithImpl<$Res>
   final $Res Function(_LiveCollectionSource) _then;
 
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? host = null,Object? source = null,Object? owner = null,Object? generation = null,Object? lifetime = freezed,}) {
   return _then(_LiveCollectionSource(
 host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
@@ -2929,11 +2929,11 @@ as skir.CatalogGeneration,lifetime: freezed == lifetime ? _self.lifetime : lifet
   ));
 }
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -2941,7 +2941,7 @@ $AuthoredBindingAddressCopyWith<$Res> get owner {
 }
 
 
-/// Adds pattern matching related methods to [_LiveCollectionSource].
+/// Adds pattern-matching-related methods to [_LiveCollectionSource].
 extension _LiveCollectionSourcePatterns on _LiveCollectionSource {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2964,7 +2964,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3027,7 +3027,7 @@ return $default(_that.host,_that.source,_that.owner,_that.generation,_that.lifet
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3076,7 +3076,7 @@ return $default(_that.host,_that.source,_that.owner,_that.generation,_that.lifet
 
 class __LiveCollectionSource extends _LiveCollectionSource {
   const __LiveCollectionSource({required this.host, required this.source, required this.owner, required this.generation, required this.lifetime}): super._();
-
+  
 
 @override final  PortablePresentationHost host;
 @override final  skir.BindingRef source;
@@ -3085,7 +3085,7 @@ class __LiveCollectionSource extends _LiveCollectionSource {
 @override final  Object? lifetime;
 
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_LiveCollectionSourceCopyWith<__LiveCollectionSource> get copyWith => __$_LiveCollectionSourceCopyWithImpl<__LiveCollectionSource>(this, _$identity);
@@ -3132,7 +3132,7 @@ class __$_LiveCollectionSourceCopyWithImpl<$Res>
   final $Res Function(__LiveCollectionSource) _then;
 
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? host = null,Object? source = null,Object? owner = null,Object? generation = null,Object? lifetime = freezed,}) {
   return _then(__LiveCollectionSource(
 host: null == host ? _self.host : host // ignore: cast_nullable_to_non_nullable
@@ -3144,11 +3144,11 @@ as skir.CatalogGeneration,lifetime: freezed == lifetime ? _self.lifetime : lifet
 }
 
 /// Create a copy of _LiveCollectionSource
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -3160,7 +3160,7 @@ mixin _$CollectionActionOrigin {
 
  Object get token; skir.ItemId get row; FocusNode get origin; Set<FocusNode> get fallbackScopes;
 /// Create a copy of _CollectionActionOrigin
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionActionOriginCopyWith<_CollectionActionOrigin> get copyWith => __$CollectionActionOriginCopyWithImpl<_CollectionActionOrigin>(this as _CollectionActionOrigin, _$identity);
@@ -3210,7 +3210,7 @@ class __$CollectionActionOriginCopyWithImpl<$Res>
   final $Res Function(_CollectionActionOrigin) _then;
 
 /// Create a copy of _CollectionActionOrigin
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,}) {
   return _then(_CollectionActionOrigin(
 token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
@@ -3223,7 +3223,7 @@ as Set<FocusNode>,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionActionOrigin].
+/// Adds pattern-matching-related methods to [_CollectionActionOrigin].
 extension _CollectionActionOriginPatterns on _CollectionActionOrigin {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3246,7 +3246,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3309,7 +3309,7 @@ return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3358,7 +3358,7 @@ return $default(_that.token,_that.row,_that.origin,_that.fallbackScopes);case _:
 
 class __CollectionActionOrigin implements _CollectionActionOrigin {
   const __CollectionActionOrigin({required this.token, required this.row, required this.origin, required  Set<FocusNode> fallbackScopes}): _fallbackScopes = fallbackScopes;
-
+  
 
 @override final  Object token;
 @override final  skir.ItemId row;
@@ -3372,7 +3372,7 @@ class __CollectionActionOrigin implements _CollectionActionOrigin {
 
 
 /// Create a copy of _CollectionActionOrigin
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionActionOriginCopyWith<__CollectionActionOrigin> get copyWith => __$_CollectionActionOriginCopyWithImpl<__CollectionActionOrigin>(this, _$identity);
@@ -3419,7 +3419,7 @@ class __$_CollectionActionOriginCopyWithImpl<$Res>
   final $Res Function(__CollectionActionOrigin) _then;
 
 /// Create a copy of _CollectionActionOrigin
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? token = null,Object? row = null,Object? origin = null,Object? fallbackScopes = null,}) {
   return _then(__CollectionActionOrigin(
 token: null == token ? _self.token : token ,row: null == row ? _self.row : row // ignore: cast_nullable_to_non_nullable
@@ -3437,7 +3437,7 @@ mixin _$CollectionGraphOccurrence {
 
  String get canonicalKey; List<String> get path; List<_CollectionGraphOccurrence> get children;
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphOccurrenceCopyWith<_CollectionGraphOccurrence> get copyWith => __$CollectionGraphOccurrenceCopyWithImpl<_CollectionGraphOccurrence>(this as _CollectionGraphOccurrence, _$identity);
@@ -3487,7 +3487,7 @@ class __$CollectionGraphOccurrenceCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphOccurrence) _then;
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
   return _then(_CollectionGraphOccurrence(
 canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
@@ -3500,7 +3500,7 @@ as List<_CollectionGraphOccurrence>,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphOccurrence].
+/// Adds pattern-matching-related methods to [_CollectionGraphOccurrence].
 extension _CollectionGraphOccurrencePatterns on _CollectionGraphOccurrence {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3523,7 +3523,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3586,7 +3586,7 @@ return $default(_that.canonicalKey,_that.path,_that.children);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3635,7 +3635,7 @@ return $default(_that.canonicalKey,_that.path,_that.children);case _:
 
 class __CollectionGraphOccurrence implements _CollectionGraphOccurrence {
   const __CollectionGraphOccurrence({required this.canonicalKey, required  List<String> path, required  List<_CollectionGraphOccurrence> children}): _path = path,_children = children;
-
+  
 
 @override final  String canonicalKey;
  final  List<String> _path;
@@ -3654,7 +3654,7 @@ class __CollectionGraphOccurrence implements _CollectionGraphOccurrence {
 
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphOccurrenceCopyWith<__CollectionGraphOccurrence> get copyWith => __$_CollectionGraphOccurrenceCopyWithImpl<__CollectionGraphOccurrence>(this, _$identity);
@@ -3701,7 +3701,7 @@ class __$_CollectionGraphOccurrenceCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphOccurrence) _then;
 
 /// Create a copy of _CollectionGraphOccurrence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? canonicalKey = null,Object? path = null,Object? children = null,}) {
   return _then(__CollectionGraphOccurrence(
 canonicalKey: null == canonicalKey ? _self.canonicalKey : canonicalKey // ignore: cast_nullable_to_non_nullable
@@ -3719,7 +3719,7 @@ mixin _$CollectionGraphProjection {
 
  List<_CollectionGraphOccurrence> get roots; bool get truncated;
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphProjectionCopyWith<_CollectionGraphProjection> get copyWith => __$CollectionGraphProjectionCopyWithImpl<_CollectionGraphProjection>(this as _CollectionGraphProjection, _$identity);
@@ -3769,7 +3769,7 @@ class __$CollectionGraphProjectionCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphProjection) _then;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? roots = null,Object? truncated = null,}) {
   return _then(_CollectionGraphProjection(
 roots: null == roots ? _self.roots : roots // ignore: cast_nullable_to_non_nullable
@@ -3781,7 +3781,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphProjection].
+/// Adds pattern-matching-related methods to [_CollectionGraphProjection].
 extension _CollectionGraphProjectionPatterns on _CollectionGraphProjection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3804,7 +3804,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3867,7 +3867,7 @@ return $default(_that.roots,_that.truncated);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3916,7 +3916,7 @@ return $default(_that.roots,_that.truncated);case _:
 
 class __CollectionGraphProjection implements _CollectionGraphProjection {
   const __CollectionGraphProjection({required  List<_CollectionGraphOccurrence> roots, required this.truncated}): _roots = roots;
-
+  
 
  final  List<_CollectionGraphOccurrence> _roots;
 @override List<_CollectionGraphOccurrence> get roots {
@@ -3928,7 +3928,7 @@ class __CollectionGraphProjection implements _CollectionGraphProjection {
 @override final  bool truncated;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphProjectionCopyWith<__CollectionGraphProjection> get copyWith => __$_CollectionGraphProjectionCopyWithImpl<__CollectionGraphProjection>(this, _$identity);
@@ -3975,7 +3975,7 @@ class __$_CollectionGraphProjectionCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphProjection) _then;
 
 /// Create a copy of _CollectionGraphProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? roots = null,Object? truncated = null,}) {
   return _then(__CollectionGraphProjection(
 roots: null == roots ? _self._roots : roots // ignore: cast_nullable_to_non_nullable
@@ -3992,7 +3992,7 @@ mixin _$CollectionGraphOccurrenceKey {
 
  Object get graph; Map<skir.ExpressionBindingId, Object> get invocation; List<String> get path;
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CollectionGraphOccurrenceKeyCopyWith<_CollectionGraphOccurrenceKey> get copyWith => __$CollectionGraphOccurrenceKeyCopyWithImpl<_CollectionGraphOccurrenceKey>(this as _CollectionGraphOccurrenceKey, _$identity);
@@ -4042,7 +4042,7 @@ class __$CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
   final $Res Function(_CollectionGraphOccurrenceKey) _then;
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
   return _then(_CollectionGraphOccurrenceKey(
 graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self.invocation : invocation // ignore: cast_nullable_to_non_nullable
@@ -4054,7 +4054,7 @@ as List<String>,
 }
 
 
-/// Adds pattern matching related methods to [_CollectionGraphOccurrenceKey].
+/// Adds pattern-matching-related methods to [_CollectionGraphOccurrenceKey].
 extension _CollectionGraphOccurrenceKeyPatterns on _CollectionGraphOccurrenceKey {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4077,7 +4077,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4140,7 +4140,7 @@ return $default(_that.graph,_that.invocation,_that.path);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4189,7 +4189,7 @@ return $default(_that.graph,_that.invocation,_that.path);case _:
 
 class __CollectionGraphOccurrenceKey implements _CollectionGraphOccurrenceKey {
   const __CollectionGraphOccurrenceKey({required this.graph, required  Map<skir.ExpressionBindingId, Object> invocation, required  List<String> path}): _invocation = invocation,_path = path;
-
+  
 
 @override final  Object graph;
  final  Map<skir.ExpressionBindingId, Object> _invocation;
@@ -4208,7 +4208,7 @@ class __CollectionGraphOccurrenceKey implements _CollectionGraphOccurrenceKey {
 
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_CollectionGraphOccurrenceKeyCopyWith<__CollectionGraphOccurrenceKey> get copyWith => __$_CollectionGraphOccurrenceKeyCopyWithImpl<__CollectionGraphOccurrenceKey>(this, _$identity);
@@ -4255,7 +4255,7 @@ class __$_CollectionGraphOccurrenceKeyCopyWithImpl<$Res>
   final $Res Function(__CollectionGraphOccurrenceKey) _then;
 
 /// Create a copy of _CollectionGraphOccurrenceKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? graph = null,Object? invocation = null,Object? path = null,}) {
   return _then(__CollectionGraphOccurrenceKey(
 graph: null == graph ? _self.graph : graph ,invocation: null == invocation ? _self._invocation : invocation // ignore: cast_nullable_to_non_nullable
@@ -4272,7 +4272,7 @@ mixin _$PortableAppearanceLayer {
 
  skir.InputAppearance get appearance; Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget;
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableAppearanceLayerCopyWith<PortableAppearanceLayer> get copyWith => _$PortableAppearanceLayerCopyWithImpl<PortableAppearanceLayer>(this as PortableAppearanceLayer, _$identity);
@@ -4322,7 +4322,7 @@ class _$PortableAppearanceLayerCopyWithImpl<$Res>
   final $Res Function(PortableAppearanceLayer) _then;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appearance = null,Object? bindings = null,Object? budget = null,}) {
   return _then(PortableAppearanceLayer(
 appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
@@ -4335,7 +4335,7 @@ as skir.EvaluationBudget,
 }
 
 
-/// Adds pattern matching related methods to [PortableAppearanceLayer].
+/// Adds pattern-matching-related methods to [PortableAppearanceLayer].
 extension PortableAppearanceLayerPatterns on PortableAppearanceLayer {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4358,7 +4358,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4421,7 +4421,7 @@ return $default(_that.appearance,_that.bindings,_that.budget);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4470,7 +4470,7 @@ return $default(_that.appearance,_that.bindings,_that.budget);case _:
 
 class _PortableAppearanceLayer implements PortableAppearanceLayer {
   const _PortableAppearanceLayer({required this.appearance, required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget}): _bindings = bindings;
-
+  
 
 @override final  skir.InputAppearance appearance;
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
@@ -4483,7 +4483,7 @@ class _PortableAppearanceLayer implements PortableAppearanceLayer {
 @override final  skir.EvaluationBudget budget;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAppearanceLayerCopyWith<_PortableAppearanceLayer> get copyWith => __$PortableAppearanceLayerCopyWithImpl<_PortableAppearanceLayer>(this, _$identity);
@@ -4530,7 +4530,7 @@ class __$PortableAppearanceLayerCopyWithImpl<$Res>
   final $Res Function(_PortableAppearanceLayer) _then;
 
 /// Create a copy of PortableAppearanceLayer
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? appearance = null,Object? bindings = null,Object? budget = null,}) {
   return _then(_PortableAppearanceLayer(
 appearance: null == appearance ? _self.appearance : appearance // ignore: cast_nullable_to_non_nullable
@@ -4548,7 +4548,7 @@ mixin _$PortableControlStyle {
 
  InputDecoration get decoration; TextStyle get valueStyle; TextStyle get labelStyle; TextStyle get descriptionStyle; TextAlign get alignment; double get iconSize; Color? get iconColor; EdgeInsetsGeometry? get padding; bool? get dense;
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableControlStyleCopyWith<_PortableControlStyle> get copyWith => __$PortableControlStyleCopyWithImpl<_PortableControlStyle>(this as _PortableControlStyle, _$identity);
@@ -4598,7 +4598,7 @@ class __$PortableControlStyleCopyWithImpl<$Res>
   final $Res Function(_PortableControlStyle) _then;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? decoration = null,Object? valueStyle = null,Object? labelStyle = null,Object? descriptionStyle = null,Object? alignment = null,Object? iconSize = null,Object? iconColor = freezed,Object? padding = freezed,Object? dense = freezed,}) {
   return _then(_PortableControlStyle(
 decoration: null == decoration ? _self.decoration : decoration // ignore: cast_nullable_to_non_nullable
@@ -4617,7 +4617,7 @@ as bool?,
 }
 
 
-/// Adds pattern matching related methods to [_PortableControlStyle].
+/// Adds pattern-matching-related methods to [_PortableControlStyle].
 extension _PortableControlStylePatterns on _PortableControlStyle {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4640,7 +4640,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4703,7 +4703,7 @@ return $default(_that.decoration,_that.valueStyle,_that.labelStyle,_that.descrip
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -4752,7 +4752,7 @@ return $default(_that.decoration,_that.valueStyle,_that.labelStyle,_that.descrip
 
 class _ResolvedPortableControlStyle implements _PortableControlStyle {
   const _ResolvedPortableControlStyle({required this.decoration, required this.valueStyle, required this.labelStyle, required this.descriptionStyle, required this.alignment, required this.iconSize, this.iconColor, this.padding, this.dense});
-
+  
 
 @override final  InputDecoration decoration;
 @override final  TextStyle valueStyle;
@@ -4765,7 +4765,7 @@ class _ResolvedPortableControlStyle implements _PortableControlStyle {
 @override final  bool? dense;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ResolvedPortableControlStyleCopyWith<_ResolvedPortableControlStyle> get copyWith => __$ResolvedPortableControlStyleCopyWithImpl<_ResolvedPortableControlStyle>(this, _$identity);
@@ -4812,7 +4812,7 @@ class __$ResolvedPortableControlStyleCopyWithImpl<$Res>
   final $Res Function(_ResolvedPortableControlStyle) _then;
 
 /// Create a copy of _PortableControlStyle
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? decoration = null,Object? valueStyle = null,Object? labelStyle = null,Object? descriptionStyle = null,Object? alignment = null,Object? iconSize = null,Object? iconColor = freezed,Object? padding = freezed,Object? dense = freezed,}) {
   return _then(_ResolvedPortableControlStyle(
 decoration: null == decoration ? _self.decoration : decoration // ignore: cast_nullable_to_non_nullable
@@ -4861,7 +4861,7 @@ $PortableOperationKeyCopyWith(PortableOperationKey _, $Res Function(PortableOper
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationKey].
+/// Adds pattern-matching-related methods to [PortableOperationKey].
 extension PortableOperationKeyPatterns on PortableOperationKey {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -4889,7 +4889,7 @@ return status(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -4964,7 +4964,7 @@ return status();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -5020,12 +5020,12 @@ return status();case _:
 
 class _PortableWriteKey implements PortableOperationKey {
   const _PortableWriteKey(this.target);
-
+  
 
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableWriteKeyCopyWith<_PortableWriteKey> get copyWith => __$PortableWriteKeyCopyWithImpl<_PortableWriteKey>(this, _$identity);
@@ -5072,7 +5072,7 @@ class __$PortableWriteKeyCopyWithImpl<$Res>
   final $Res Function(_PortableWriteKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableWriteKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -5081,11 +5081,11 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -5097,12 +5097,12 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _PortableExecuteKey implements PortableOperationKey {
   const _PortableExecuteKey(this.action);
-
+  
 
  final  skir.EditorAction action;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableExecuteKeyCopyWith<_PortableExecuteKey> get copyWith => __$PortableExecuteKeyCopyWithImpl<_PortableExecuteKey>(this, _$identity);
@@ -5149,7 +5149,7 @@ class __$PortableExecuteKeyCopyWithImpl<$Res>
   final $Res Function(_PortableExecuteKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? action = null,}) {
   return _then(_PortableExecuteKey(
 null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
@@ -5165,12 +5165,12 @@ as skir.EditorAction,
 
 class _PortableAddItemKey implements PortableOperationKey {
   const _PortableAddItemKey(this.target);
-
+  
 
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAddItemKeyCopyWith<_PortableAddItemKey> get copyWith => __$PortableAddItemKeyCopyWithImpl<_PortableAddItemKey>(this, _$identity);
@@ -5217,7 +5217,7 @@ class __$PortableAddItemKeyCopyWithImpl<$Res>
   final $Res Function(_PortableAddItemKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableAddItemKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -5226,11 +5226,11 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -5242,12 +5242,12 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _PortableAddMapRowKey implements PortableOperationKey {
   const _PortableAddMapRowKey(this.target);
-
+  
 
  final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAddMapRowKeyCopyWith<_PortableAddMapRowKey> get copyWith => __$PortableAddMapRowKeyCopyWithImpl<_PortableAddMapRowKey>(this, _$identity);
@@ -5294,7 +5294,7 @@ class __$PortableAddMapRowKeyCopyWithImpl<$Res>
   final $Res Function(_PortableAddMapRowKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,}) {
   return _then(_PortableAddMapRowKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -5303,11 +5303,11 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -5319,13 +5319,13 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _PortableMappingKey implements PortableOperationKey {
   const _PortableMappingKey(this.target, {required this.completion});
-
+  
 
  final  PortableDiagnosticTarget target;
  final  bool completion;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableMappingKeyCopyWith<_PortableMappingKey> get copyWith => __$PortableMappingKeyCopyWithImpl<_PortableMappingKey>(this, _$identity);
@@ -5372,7 +5372,7 @@ class __$PortableMappingKeyCopyWithImpl<$Res>
   final $Res Function(_PortableMappingKey) _then;
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? completion = null,}) {
   return _then(_PortableMappingKey(
 null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -5382,11 +5382,11 @@ as bool,
 }
 
 /// Create a copy of PortableOperationKey
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -5398,7 +5398,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 
 class _PortableStatusKey implements PortableOperationKey {
   const _PortableStatusKey();
-
+  
 
 
 
@@ -5430,7 +5430,7 @@ mixin _$PortableOperationOutcome {
 
  Object get request; PortableDiagnosticObservation? get input; bool get pending; List<PortablePresentationDiagnostic> get diagnostics;
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableOperationOutcomeCopyWith<PortableOperationOutcome> get copyWith => _$PortableOperationOutcomeCopyWithImpl<PortableOperationOutcome>(this as PortableOperationOutcome, _$identity);
@@ -5480,7 +5480,7 @@ class _$PortableOperationOutcomeCopyWithImpl<$Res>
   final $Res Function(PortableOperationOutcome) _then;
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? request = null,Object? input = freezed,Object? pending = null,Object? diagnostics = null,}) {
   return _then(PortableOperationOutcome(
 request: null == request ? _self.request : request ,input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
@@ -5490,7 +5490,7 @@ as List<PortablePresentationDiagnostic>,
   ));
 }
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<$Res>? get input {
@@ -5505,7 +5505,7 @@ $PortableDiagnosticObservationCopyWith<$Res>? get input {
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationOutcome].
+/// Adds pattern-matching-related methods to [PortableOperationOutcome].
 extension PortableOperationOutcomePatterns on PortableOperationOutcome {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -5528,7 +5528,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -5591,7 +5591,7 @@ return $default(_that.request,_that.input,_that.pending,_that.diagnostics);case 
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -5640,7 +5640,7 @@ return $default(_that.request,_that.input,_that.pending,_that.diagnostics);case 
 
 class _PortableOperationOutcome implements PortableOperationOutcome {
   const _PortableOperationOutcome({required this.request, this.input, this.pending = false,  List<PortablePresentationDiagnostic> diagnostics = const []}): _diagnostics = diagnostics;
-
+  
 
 @override final  Object request;
 @override final  PortableDiagnosticObservation? input;
@@ -5654,7 +5654,7 @@ class _PortableOperationOutcome implements PortableOperationOutcome {
 
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableOperationOutcomeCopyWith<_PortableOperationOutcome> get copyWith => __$PortableOperationOutcomeCopyWithImpl<_PortableOperationOutcome>(this, _$identity);
@@ -5701,7 +5701,7 @@ class __$PortableOperationOutcomeCopyWithImpl<$Res>
   final $Res Function(_PortableOperationOutcome) _then;
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? request = null,Object? input = freezed,Object? pending = null,Object? diagnostics = null,}) {
   return _then(_PortableOperationOutcome(
 request: null == request ? _self.request : request ,input: freezed == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
@@ -5712,7 +5712,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 /// Create a copy of PortableOperationOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<$Res>? get input {
@@ -5731,7 +5731,7 @@ mixin _$PortableOperationState {
 
  Map<PortableOperationKey, PortableOperationOutcome> get outcomes;
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableOperationStateCopyWith<PortableOperationState> get copyWith => _$PortableOperationStateCopyWithImpl<PortableOperationState>(this as PortableOperationState, _$identity);
@@ -5781,7 +5781,7 @@ class _$PortableOperationStateCopyWithImpl<$Res>
   final $Res Function(PortableOperationState) _then;
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? outcomes = null,}) {
   return _then(PortableOperationState(
 outcomes: null == outcomes ? _self.outcomes : outcomes // ignore: cast_nullable_to_non_nullable
@@ -5792,7 +5792,7 @@ as Map<PortableOperationKey, PortableOperationOutcome>,
 }
 
 
-/// Adds pattern matching related methods to [PortableOperationState].
+/// Adds pattern-matching-related methods to [PortableOperationState].
 extension PortableOperationStatePatterns on PortableOperationState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -5815,7 +5815,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -5878,7 +5878,7 @@ return $default(_that.outcomes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -5927,7 +5927,7 @@ return $default(_that.outcomes);case _:
 
 class _PortableOperationState extends PortableOperationState {
   const _PortableOperationState({ Map<PortableOperationKey, PortableOperationOutcome> outcomes = const {}}): _outcomes = outcomes,super._();
-
+  
 
  final  Map<PortableOperationKey, PortableOperationOutcome> _outcomes;
 @override@JsonKey() Map<PortableOperationKey, PortableOperationOutcome> get outcomes {
@@ -5938,7 +5938,7 @@ class _PortableOperationState extends PortableOperationState {
 
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableOperationStateCopyWith<_PortableOperationState> get copyWith => __$PortableOperationStateCopyWithImpl<_PortableOperationState>(this, _$identity);
@@ -5985,7 +5985,7 @@ class __$PortableOperationStateCopyWithImpl<$Res>
   final $Res Function(_PortableOperationState) _then;
 
 /// Create a copy of PortableOperationState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? outcomes = null,}) {
   return _then(_PortableOperationState(
 outcomes: null == outcomes ? _self._outcomes : outcomes // ignore: cast_nullable_to_non_nullable
@@ -6001,7 +6001,7 @@ mixin _$PortableDiagnosticObservation {
 
  PortableDiagnosticTarget get target; skir.DataValue? get value;
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticObservationCopyWith<PortableDiagnosticObservation> get copyWith => _$PortableDiagnosticObservationCopyWithImpl<PortableDiagnosticObservation>(this as PortableDiagnosticObservation, _$identity);
@@ -6051,7 +6051,7 @@ class _$PortableDiagnosticObservationCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticObservation) _then;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? target = null,Object? value = freezed,}) {
   return _then(PortableDiagnosticObservation(
 target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -6060,11 +6060,11 @@ as skir.DataValue?,
   ));
 }
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -6072,7 +6072,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticObservation].
+/// Adds pattern-matching-related methods to [PortableDiagnosticObservation].
 extension PortableDiagnosticObservationPatterns on PortableDiagnosticObservation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -6095,7 +6095,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -6158,7 +6158,7 @@ return $default(_that.target,_that.value);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -6207,13 +6207,13 @@ return $default(_that.target,_that.value);case _:
 
 class _PortableDiagnosticObservation extends PortableDiagnosticObservation {
   const _PortableDiagnosticObservation({required this.target, required this.value}): super._();
-
+  
 
 @override final  PortableDiagnosticTarget target;
 @override final  skir.DataValue? value;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticObservationCopyWith<_PortableDiagnosticObservation> get copyWith => __$PortableDiagnosticObservationCopyWithImpl<_PortableDiagnosticObservation>(this, _$identity);
@@ -6260,7 +6260,7 @@ class __$PortableDiagnosticObservationCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticObservation) _then;
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? target = null,Object? value = freezed,}) {
   return _then(_PortableDiagnosticObservation(
 target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -6270,11 +6270,11 @@ as skir.DataValue?,
 }
 
 /// Create a copy of PortableDiagnosticObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -6286,7 +6286,7 @@ mixin _$PortableDiagnosticNode {
 
  PortableDiagnosticNodeKind get kind; Object? get parent; List<PortableDiagnosticObservation> get observations; List<PortablePresentationDiagnostic> get diagnostics; PortableDiagnosticFallback get diagnosticFallback;
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticNodeCopyWith<PortableDiagnosticNode> get copyWith => _$PortableDiagnosticNodeCopyWithImpl<PortableDiagnosticNode>(this as PortableDiagnosticNode, _$identity);
@@ -6336,7 +6336,7 @@ class _$PortableDiagnosticNodeCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticNode) _then;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -6350,7 +6350,7 @@ as PortableDiagnosticFallback,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticNode].
+/// Adds pattern-matching-related methods to [PortableDiagnosticNode].
 extension PortableDiagnosticNodePatterns on PortableDiagnosticNode {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -6373,7 +6373,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -6436,7 +6436,7 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_th
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -6485,7 +6485,7 @@ return $default(_that.kind,_that.parent,_that.observations,_that.diagnostics,_th
 
 class _PortableDiagnosticNode extends PortableDiagnosticNode {
   const _PortableDiagnosticNode({required this.kind, this.parent,  List<PortableDiagnosticObservation> observations = const [],  List<PortablePresentationDiagnostic> diagnostics = const [], this.diagnosticFallback = PortableDiagnosticFallback.presentation}): _observations = observations,_diagnostics = diagnostics,super._();
-
+  
 
 @override final  PortableDiagnosticNodeKind kind;
 @override final  Object? parent;
@@ -6506,7 +6506,7 @@ class _PortableDiagnosticNode extends PortableDiagnosticNode {
 @override@JsonKey() final  PortableDiagnosticFallback diagnosticFallback;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticNodeCopyWith<_PortableDiagnosticNode> get copyWith => __$PortableDiagnosticNodeCopyWithImpl<_PortableDiagnosticNode>(this, _$identity);
@@ -6553,7 +6553,7 @@ class __$PortableDiagnosticNodeCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticNode) _then;
 
 /// Create a copy of PortableDiagnosticNode
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? parent = freezed,Object? observations = null,Object? diagnostics = null,Object? diagnosticFallback = null,}) {
   return _then(_PortableDiagnosticNode(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -6572,7 +6572,7 @@ mixin _$PortableDiagnosticPresentation {
 
  Map<Object, PortableDiagnosticNode> get nodes;
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticPresentationCopyWith<PortableDiagnosticPresentation> get copyWith => _$PortableDiagnosticPresentationCopyWithImpl<PortableDiagnosticPresentation>(this as PortableDiagnosticPresentation, _$identity);
@@ -6622,7 +6622,7 @@ class _$PortableDiagnosticPresentationCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticPresentation) _then;
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? nodes = null,}) {
   return _then(PortableDiagnosticPresentation(
 nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -6633,7 +6633,7 @@ as Map<Object, PortableDiagnosticNode>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticPresentation].
+/// Adds pattern-matching-related methods to [PortableDiagnosticPresentation].
 extension PortableDiagnosticPresentationPatterns on PortableDiagnosticPresentation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -6656,7 +6656,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -6719,7 +6719,7 @@ return $default(_that.nodes);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -6768,7 +6768,7 @@ return $default(_that.nodes);case _:
 
 class _PortableDiagnosticPresentation extends PortableDiagnosticPresentation {
   const _PortableDiagnosticPresentation({ Map<Object, PortableDiagnosticNode> nodes = const {}}): _nodes = nodes,super._();
-
+  
 
  final  Map<Object, PortableDiagnosticNode> _nodes;
 @override@JsonKey() Map<Object, PortableDiagnosticNode> get nodes {
@@ -6779,7 +6779,7 @@ class _PortableDiagnosticPresentation extends PortableDiagnosticPresentation {
 
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticPresentationCopyWith<_PortableDiagnosticPresentation> get copyWith => __$PortableDiagnosticPresentationCopyWithImpl<_PortableDiagnosticPresentation>(this, _$identity);
@@ -6826,7 +6826,7 @@ class __$PortableDiagnosticPresentationCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticPresentation) _then;
 
 /// Create a copy of PortableDiagnosticPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? nodes = null,}) {
   return _then(_PortableDiagnosticPresentation(
 nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -6842,7 +6842,7 @@ mixin _$PortableDiagnosticSummary {
 
  List<PortablePresentationDiagnostic> get direct; List<PortablePresentationDiagnostic> get descendants;
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticSummaryCopyWith<PortableDiagnosticSummary> get copyWith => _$PortableDiagnosticSummaryCopyWithImpl<PortableDiagnosticSummary>(this as PortableDiagnosticSummary, _$identity);
@@ -6892,7 +6892,7 @@ class _$PortableDiagnosticSummaryCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticSummary) _then;
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? direct = null,Object? descendants = null,}) {
   return _then(PortableDiagnosticSummary(
 direct: null == direct ? _self.direct : direct // ignore: cast_nullable_to_non_nullable
@@ -6904,7 +6904,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticSummary].
+/// Adds pattern-matching-related methods to [PortableDiagnosticSummary].
 extension PortableDiagnosticSummaryPatterns on PortableDiagnosticSummary {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -6927,7 +6927,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -6990,7 +6990,7 @@ return $default(_that.direct,_that.descendants);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -7039,7 +7039,7 @@ return $default(_that.direct,_that.descendants);case _:
 
 class _PortableDiagnosticSummary extends PortableDiagnosticSummary {
   const _PortableDiagnosticSummary({ List<PortablePresentationDiagnostic> direct = const [],  List<PortablePresentationDiagnostic> descendants = const []}): _direct = direct,_descendants = descendants,super._();
-
+  
 
  final  List<PortablePresentationDiagnostic> _direct;
 @override@JsonKey() List<PortablePresentationDiagnostic> get direct {
@@ -7057,7 +7057,7 @@ class _PortableDiagnosticSummary extends PortableDiagnosticSummary {
 
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticSummaryCopyWith<_PortableDiagnosticSummary> get copyWith => __$PortableDiagnosticSummaryCopyWithImpl<_PortableDiagnosticSummary>(this, _$identity);
@@ -7104,7 +7104,7 @@ class __$PortableDiagnosticSummaryCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticSummary) _then;
 
 /// Create a copy of PortableDiagnosticSummary
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? direct = null,Object? descendants = null,}) {
   return _then(_PortableDiagnosticSummary(
 direct: null == direct ? _self._direct : direct // ignore: cast_nullable_to_non_nullable
@@ -7121,7 +7121,7 @@ mixin _$PortableDiagnosticPlacement {
 
  Map<Object, PortableDiagnosticSummary> get summaries; List<PortablePresentationDiagnostic> get general; List<PortablePresentationDiagnostic> get unplaced;
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableDiagnosticPlacementCopyWith<PortableDiagnosticPlacement> get copyWith => _$PortableDiagnosticPlacementCopyWithImpl<PortableDiagnosticPlacement>(this as PortableDiagnosticPlacement, _$identity);
@@ -7171,7 +7171,7 @@ class _$PortableDiagnosticPlacementCopyWithImpl<$Res>
   final $Res Function(PortableDiagnosticPlacement) _then;
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(PortableDiagnosticPlacement(
 summaries: null == summaries ? _self.summaries : summaries // ignore: cast_nullable_to_non_nullable
@@ -7184,7 +7184,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticPlacement].
+/// Adds pattern-matching-related methods to [PortableDiagnosticPlacement].
 extension PortableDiagnosticPlacementPatterns on PortableDiagnosticPlacement {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -7207,7 +7207,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -7270,7 +7270,7 @@ return $default(_that.summaries,_that.general,_that.unplaced);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -7319,7 +7319,7 @@ return $default(_that.summaries,_that.general,_that.unplaced);case _:
 
 class _PortableDiagnosticPlacement extends PortableDiagnosticPlacement {
   const _PortableDiagnosticPlacement({ Map<Object, PortableDiagnosticSummary> summaries = const {},  List<PortablePresentationDiagnostic> general = const [],  List<PortablePresentationDiagnostic> unplaced = const []}): _summaries = summaries,_general = general,_unplaced = unplaced,super._();
-
+  
 
  final  Map<Object, PortableDiagnosticSummary> _summaries;
 @override@JsonKey() Map<Object, PortableDiagnosticSummary> get summaries {
@@ -7344,7 +7344,7 @@ class _PortableDiagnosticPlacement extends PortableDiagnosticPlacement {
 
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableDiagnosticPlacementCopyWith<_PortableDiagnosticPlacement> get copyWith => __$PortableDiagnosticPlacementCopyWithImpl<_PortableDiagnosticPlacement>(this, _$identity);
@@ -7391,7 +7391,7 @@ class __$PortableDiagnosticPlacementCopyWithImpl<$Res>
   final $Res Function(_PortableDiagnosticPlacement) _then;
 
 /// Create a copy of PortableDiagnosticPlacement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? summaries = null,Object? general = null,Object? unplaced = null,}) {
   return _then(_PortableDiagnosticPlacement(
 summaries: null == summaries ? _self._summaries : summaries // ignore: cast_nullable_to_non_nullable
@@ -7409,7 +7409,7 @@ mixin _$PortableControlValidationIdentity {
 
  Object get owner; PortableDiagnosticTarget get target;
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableControlValidationIdentityCopyWith<PortableControlValidationIdentity> get copyWith => _$PortableControlValidationIdentityCopyWithImpl<PortableControlValidationIdentity>(this as PortableControlValidationIdentity, _$identity);
@@ -7459,7 +7459,7 @@ class _$PortableControlValidationIdentityCopyWithImpl<$Res>
   final $Res Function(PortableControlValidationIdentity) _then;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? owner = null,Object? target = null,}) {
   return _then(PortableControlValidationIdentity(
 owner: null == owner ? _self.owner : owner ,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -7467,11 +7467,11 @@ as PortableDiagnosticTarget,
   ));
 }
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -7479,7 +7479,7 @@ $PortableDiagnosticTargetCopyWith<$Res> get target {
 }
 
 
-/// Adds pattern matching related methods to [PortableControlValidationIdentity].
+/// Adds pattern-matching-related methods to [PortableControlValidationIdentity].
 extension PortableControlValidationIdentityPatterns on PortableControlValidationIdentity {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -7502,7 +7502,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -7565,7 +7565,7 @@ return $default(_that.owner,_that.target);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -7614,13 +7614,13 @@ return $default(_that.owner,_that.target);case _:
 
 class _PortableControlValidationIdentity implements PortableControlValidationIdentity {
   const _PortableControlValidationIdentity({required this.owner, required this.target});
-
+  
 
 @override final  Object owner;
 @override final  PortableDiagnosticTarget target;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableControlValidationIdentityCopyWith<_PortableControlValidationIdentity> get copyWith => __$PortableControlValidationIdentityCopyWithImpl<_PortableControlValidationIdentity>(this, _$identity);
@@ -7667,7 +7667,7 @@ class __$PortableControlValidationIdentityCopyWithImpl<$Res>
   final $Res Function(_PortableControlValidationIdentity) _then;
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? owner = null,Object? target = null,}) {
   return _then(_PortableControlValidationIdentity(
 owner: null == owner ? _self.owner : owner ,target: null == target ? _self.target : target // ignore: cast_nullable_to_non_nullable
@@ -7676,11 +7676,11 @@ as PortableDiagnosticTarget,
 }
 
 /// Create a copy of PortableControlValidationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableDiagnosticTargetCopyWith<$Res> get target {
-
+  
   return $PortableDiagnosticTargetCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -7692,7 +7692,7 @@ mixin _$ResolvedFieldAssociation {
 
  String? get label; String? get description; String? get semanticLabel; ScopedControlPrefix? get prefix;
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ResolvedFieldAssociationCopyWith<ResolvedFieldAssociation> get copyWith => _$ResolvedFieldAssociationCopyWithImpl<ResolvedFieldAssociation>(this as ResolvedFieldAssociation, _$identity);
@@ -7742,7 +7742,7 @@ class _$ResolvedFieldAssociationCopyWithImpl<$Res>
   final $Res Function(ResolvedFieldAssociation) _then;
 
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? label = freezed,Object? description = freezed,Object? semanticLabel = freezed,Object? prefix = freezed,}) {
   return _then(ResolvedFieldAssociation(
 label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -7753,7 +7753,7 @@ as ScopedControlPrefix?,
   ));
 }
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ScopedControlPrefixCopyWith<$Res>? get prefix {
@@ -7768,7 +7768,7 @@ $ScopedControlPrefixCopyWith<$Res>? get prefix {
 }
 
 
-/// Adds pattern matching related methods to [ResolvedFieldAssociation].
+/// Adds pattern-matching-related methods to [ResolvedFieldAssociation].
 extension ResolvedFieldAssociationPatterns on ResolvedFieldAssociation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -7791,7 +7791,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -7854,7 +7854,7 @@ return $default(_that.label,_that.description,_that.semanticLabel,_that.prefix);
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -7903,7 +7903,7 @@ return $default(_that.label,_that.description,_that.semanticLabel,_that.prefix);
 
 class _ResolvedFieldAssociation extends ResolvedFieldAssociation {
   const _ResolvedFieldAssociation({this.label, this.description, this.semanticLabel, this.prefix}): super._();
-
+  
 
 @override final  String? label;
 @override final  String? description;
@@ -7911,7 +7911,7 @@ class _ResolvedFieldAssociation extends ResolvedFieldAssociation {
 @override final  ScopedControlPrefix? prefix;
 
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ResolvedFieldAssociationCopyWith<_ResolvedFieldAssociation> get copyWith => __$ResolvedFieldAssociationCopyWithImpl<_ResolvedFieldAssociation>(this, _$identity);
@@ -7958,7 +7958,7 @@ class __$ResolvedFieldAssociationCopyWithImpl<$Res>
   final $Res Function(_ResolvedFieldAssociation) _then;
 
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? label = freezed,Object? description = freezed,Object? semanticLabel = freezed,Object? prefix = freezed,}) {
   return _then(_ResolvedFieldAssociation(
 label: freezed == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -7970,7 +7970,7 @@ as ScopedControlPrefix?,
 }
 
 /// Create a copy of ResolvedFieldAssociation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ScopedControlPrefixCopyWith<$Res>? get prefix {
@@ -7989,7 +7989,7 @@ mixin _$ScopedControlPrefix {
 
  skir.PresentationNode get node; PortablePresentationScope get scope;
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ScopedControlPrefixCopyWith<ScopedControlPrefix> get copyWith => _$ScopedControlPrefixCopyWithImpl<ScopedControlPrefix>(this as ScopedControlPrefix, _$identity);
@@ -8039,7 +8039,7 @@ class _$ScopedControlPrefixCopyWithImpl<$Res>
   final $Res Function(ScopedControlPrefix) _then;
 
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? node = null,Object? scope = null,}) {
   return _then(ScopedControlPrefix(
 node: null == node ? _self.node : node // ignore: cast_nullable_to_non_nullable
@@ -8048,11 +8048,11 @@ as PortablePresentationScope,
   ));
 }
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -8060,7 +8060,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [ScopedControlPrefix].
+/// Adds pattern-matching-related methods to [ScopedControlPrefix].
 extension ScopedControlPrefixPatterns on ScopedControlPrefix {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -8083,7 +8083,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -8146,7 +8146,7 @@ return $default(_that.node,_that.scope);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -8195,13 +8195,13 @@ return $default(_that.node,_that.scope);case _:
 
 class _ScopedControlPrefix extends ScopedControlPrefix {
   const _ScopedControlPrefix({required this.node, required this.scope}): super._();
-
+  
 
 @override final  skir.PresentationNode node;
 @override final  PortablePresentationScope scope;
 
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ScopedControlPrefixCopyWith<_ScopedControlPrefix> get copyWith => __$ScopedControlPrefixCopyWithImpl<_ScopedControlPrefix>(this, _$identity);
@@ -8248,7 +8248,7 @@ class __$ScopedControlPrefixCopyWithImpl<$Res>
   final $Res Function(_ScopedControlPrefix) _then;
 
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? node = null,Object? scope = null,}) {
   return _then(_ScopedControlPrefix(
 node: null == node ? _self.node : node // ignore: cast_nullable_to_non_nullable
@@ -8258,11 +8258,11 @@ as PortablePresentationScope,
 }
 
 /// Create a copy of ScopedControlPrefix
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -8274,7 +8274,7 @@ mixin _$PortableRecordFieldOwner {
 
  skir.TypeSelection get type; String get field; AuthoredBindingAddress get address; PortablePresentationScope get scope;
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableRecordFieldOwnerCopyWith<PortableRecordFieldOwner> get copyWith => _$PortableRecordFieldOwnerCopyWithImpl<PortableRecordFieldOwner>(this as PortableRecordFieldOwner, _$identity);
@@ -8324,7 +8324,7 @@ class _$PortableRecordFieldOwnerCopyWithImpl<$Res>
   final $Res Function(PortableRecordFieldOwner) _then;
 
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? type = null,Object? field = null,Object? address = null,Object? scope = null,}) {
   return _then(PortableRecordFieldOwner(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -8335,20 +8335,20 @@ as PortablePresentationScope,
   ));
 }
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get address {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.address, (value) {
     return _then(_self.copyWith(address: value));
   });
 }/// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -8356,7 +8356,7 @@ $PortablePresentationScopeCopyWith<$Res> get scope {
 }
 
 
-/// Adds pattern matching related methods to [PortableRecordFieldOwner].
+/// Adds pattern-matching-related methods to [PortableRecordFieldOwner].
 extension PortableRecordFieldOwnerPatterns on PortableRecordFieldOwner {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -8379,7 +8379,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -8442,7 +8442,7 @@ return $default(_that.type,_that.field,_that.address,_that.scope);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -8491,7 +8491,7 @@ return $default(_that.type,_that.field,_that.address,_that.scope);case _:
 
 class _PortableRecordFieldOwner implements PortableRecordFieldOwner {
   const _PortableRecordFieldOwner({required this.type, required this.field, required this.address, required this.scope});
-
+  
 
 @override final  skir.TypeSelection type;
 @override final  String field;
@@ -8499,7 +8499,7 @@ class _PortableRecordFieldOwner implements PortableRecordFieldOwner {
 @override final  PortablePresentationScope scope;
 
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableRecordFieldOwnerCopyWith<_PortableRecordFieldOwner> get copyWith => __$PortableRecordFieldOwnerCopyWithImpl<_PortableRecordFieldOwner>(this, _$identity);
@@ -8546,7 +8546,7 @@ class __$PortableRecordFieldOwnerCopyWithImpl<$Res>
   final $Res Function(_PortableRecordFieldOwner) _then;
 
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? type = null,Object? field = null,Object? address = null,Object? scope = null,}) {
   return _then(_PortableRecordFieldOwner(
 type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -8558,20 +8558,20 @@ as PortablePresentationScope,
 }
 
 /// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get address {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.address, (value) {
     return _then(_self.copyWith(address: value));
   });
 }/// Create a copy of PortableRecordFieldOwner
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<$Res> get scope {
-
+  
   return $PortablePresentationScopeCopyWith<$Res>(_self.scope, (value) {
     return _then(_self.copyWith(scope: value));
   });
@@ -8583,7 +8583,7 @@ mixin _$ActiveFieldPresentation {
 
  EditorFieldPresentationIdentity get identity; AuthoredBindingAddress get owner;
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ActiveFieldPresentationCopyWith<ActiveFieldPresentation> get copyWith => _$ActiveFieldPresentationCopyWithImpl<ActiveFieldPresentation>(this as ActiveFieldPresentation, _$identity);
@@ -8633,7 +8633,7 @@ class _$ActiveFieldPresentationCopyWithImpl<$Res>
   final $Res Function(ActiveFieldPresentation) _then;
 
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? identity = null,Object? owner = null,}) {
   return _then(ActiveFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -8642,20 +8642,20 @@ as AuthoredBindingAddress,
   ));
 }
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
 }/// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -8663,7 +8663,7 @@ $AuthoredBindingAddressCopyWith<$Res> get owner {
 }
 
 
-/// Adds pattern matching related methods to [ActiveFieldPresentation].
+/// Adds pattern-matching-related methods to [ActiveFieldPresentation].
 extension ActiveFieldPresentationPatterns on ActiveFieldPresentation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -8686,7 +8686,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -8749,7 +8749,7 @@ return $default(_that.identity,_that.owner);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -8798,13 +8798,13 @@ return $default(_that.identity,_that.owner);case _:
 
 class _ActiveFieldPresentation implements ActiveFieldPresentation {
   const _ActiveFieldPresentation({required this.identity, required this.owner});
-
+  
 
 @override final  EditorFieldPresentationIdentity identity;
 @override final  AuthoredBindingAddress owner;
 
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ActiveFieldPresentationCopyWith<_ActiveFieldPresentation> get copyWith => __$ActiveFieldPresentationCopyWithImpl<_ActiveFieldPresentation>(this, _$identity);
@@ -8851,7 +8851,7 @@ class __$ActiveFieldPresentationCopyWithImpl<$Res>
   final $Res Function(_ActiveFieldPresentation) _then;
 
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? identity = null,Object? owner = null,}) {
   return _then(_ActiveFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -8861,20 +8861,20 @@ as AuthoredBindingAddress,
 }
 
 /// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
 }/// Create a copy of ActiveFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -8886,7 +8886,7 @@ mixin _$PortableAuthoredPart {
 
  String get nodeId; skir.PresentationPartElement get part; AuthoredBindingAddress? get owner;
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableAuthoredPartCopyWith<PortableAuthoredPart> get copyWith => _$PortableAuthoredPartCopyWithImpl<PortableAuthoredPart>(this as PortableAuthoredPart, _$identity);
@@ -8936,7 +8936,7 @@ class _$PortableAuthoredPartCopyWithImpl<$Res>
   final $Res Function(PortableAuthoredPart) _then;
 
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? nodeId = null,Object? part = null,Object? owner = freezed,}) {
   return _then(PortableAuthoredPart(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
@@ -8946,7 +8946,7 @@ as AuthoredBindingAddress?,
   ));
 }
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res>? get owner {
@@ -8961,7 +8961,7 @@ $AuthoredBindingAddressCopyWith<$Res>? get owner {
 }
 
 
-/// Adds pattern matching related methods to [PortableAuthoredPart].
+/// Adds pattern-matching-related methods to [PortableAuthoredPart].
 extension PortableAuthoredPartPatterns on PortableAuthoredPart {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -8984,7 +8984,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -9047,7 +9047,7 @@ return $default(_that.nodeId,_that.part,_that.owner);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -9096,14 +9096,14 @@ return $default(_that.nodeId,_that.part,_that.owner);case _:
 
 class _PortableAuthoredPart implements PortableAuthoredPart {
   const _PortableAuthoredPart({required this.nodeId, required this.part, required this.owner});
-
+  
 
 @override final  String nodeId;
 @override final  skir.PresentationPartElement part;
 @override final  AuthoredBindingAddress? owner;
 
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableAuthoredPartCopyWith<_PortableAuthoredPart> get copyWith => __$PortableAuthoredPartCopyWithImpl<_PortableAuthoredPart>(this, _$identity);
@@ -9150,7 +9150,7 @@ class __$PortableAuthoredPartCopyWithImpl<$Res>
   final $Res Function(_PortableAuthoredPart) _then;
 
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? nodeId = null,Object? part = null,Object? owner = freezed,}) {
   return _then(_PortableAuthoredPart(
 nodeId: null == nodeId ? _self.nodeId : nodeId // ignore: cast_nullable_to_non_nullable
@@ -9161,7 +9161,7 @@ as AuthoredBindingAddress?,
 }
 
 /// Create a copy of PortableAuthoredPart
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res>? get owner {
@@ -9180,7 +9180,7 @@ mixin _$PortableInspectorClaims {
 
  Set<String> get editedFields; Set<String> get reservedFields; Set<String> get excludedFields; Set<skir.PresentationPartId> get parts; Map<String, String> get problems;
 /// Create a copy of PortableInspectorClaims
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableInspectorClaimsCopyWith<PortableInspectorClaims> get copyWith => _$PortableInspectorClaimsCopyWithImpl<PortableInspectorClaims>(this as PortableInspectorClaims, _$identity);
@@ -9230,7 +9230,7 @@ class _$PortableInspectorClaimsCopyWithImpl<$Res>
   final $Res Function(PortableInspectorClaims) _then;
 
 /// Create a copy of PortableInspectorClaims
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? editedFields = null,Object? reservedFields = null,Object? excludedFields = null,Object? parts = null,Object? problems = null,}) {
   return _then(PortableInspectorClaims(
 editedFields: null == editedFields ? _self.editedFields : editedFields // ignore: cast_nullable_to_non_nullable
@@ -9245,7 +9245,7 @@ as Map<String, String>,
 }
 
 
-/// Adds pattern matching related methods to [PortableInspectorClaims].
+/// Adds pattern-matching-related methods to [PortableInspectorClaims].
 extension PortableInspectorClaimsPatterns on PortableInspectorClaims {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -9268,7 +9268,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -9331,7 +9331,7 @@ return $default(_that.editedFields,_that.reservedFields,_that.excludedFields,_th
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -9380,7 +9380,7 @@ return $default(_that.editedFields,_that.reservedFields,_that.excludedFields,_th
 
 class _PortableInspectorClaims implements PortableInspectorClaims {
   const _PortableInspectorClaims({ Set<String> editedFields = const {},  Set<String> reservedFields = const {},  Set<String> excludedFields = const {},  Set<skir.PresentationPartId> parts = const {},  Map<String, String> problems = const {}}): _editedFields = editedFields,_reservedFields = reservedFields,_excludedFields = excludedFields,_parts = parts,_problems = problems;
-
+  
 
  final  Set<String> _editedFields;
 @override@JsonKey() Set<String> get editedFields {
@@ -9419,7 +9419,7 @@ class _PortableInspectorClaims implements PortableInspectorClaims {
 
 
 /// Create a copy of PortableInspectorClaims
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableInspectorClaimsCopyWith<_PortableInspectorClaims> get copyWith => __$PortableInspectorClaimsCopyWithImpl<_PortableInspectorClaims>(this, _$identity);
@@ -9466,7 +9466,7 @@ class __$PortableInspectorClaimsCopyWithImpl<$Res>
   final $Res Function(_PortableInspectorClaims) _then;
 
 /// Create a copy of PortableInspectorClaims
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? editedFields = null,Object? reservedFields = null,Object? excludedFields = null,Object? parts = null,Object? problems = null,}) {
   return _then(_PortableInspectorClaims(
 editedFields: null == editedFields ? _self._editedFields : editedFields // ignore: cast_nullable_to_non_nullable
@@ -9486,7 +9486,7 @@ mixin _$PortableInspectorFrame {
 
  AuthoredBindingAddress get owner; skir.TypeSelection get actualType; skir.PresentationTarget get sourceTarget; skir.PresentationId get source; PortableInspectorClaims get higher;
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableInspectorFrameCopyWith<PortableInspectorFrame> get copyWith => _$PortableInspectorFrameCopyWithImpl<PortableInspectorFrame>(this as PortableInspectorFrame, _$identity);
@@ -9536,7 +9536,7 @@ class _$PortableInspectorFrameCopyWithImpl<$Res>
   final $Res Function(PortableInspectorFrame) _then;
 
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? owner = null,Object? actualType = null,Object? sourceTarget = null,Object? source = null,Object? higher = null,}) {
   return _then(PortableInspectorFrame(
 owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
@@ -9548,20 +9548,20 @@ as PortableInspectorClaims,
   ));
 }
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
 }/// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableInspectorClaimsCopyWith<$Res> get higher {
-
+  
   return $PortableInspectorClaimsCopyWith<$Res>(_self.higher, (value) {
     return _then(_self.copyWith(higher: value));
   });
@@ -9569,7 +9569,7 @@ $PortableInspectorClaimsCopyWith<$Res> get higher {
 }
 
 
-/// Adds pattern matching related methods to [PortableInspectorFrame].
+/// Adds pattern-matching-related methods to [PortableInspectorFrame].
 extension PortableInspectorFramePatterns on PortableInspectorFrame {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -9592,7 +9592,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -9655,7 +9655,7 @@ return $default(_that.owner,_that.actualType,_that.sourceTarget,_that.source,_th
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -9704,7 +9704,7 @@ return $default(_that.owner,_that.actualType,_that.sourceTarget,_that.source,_th
 
 class _PortableInspectorFrame implements PortableInspectorFrame {
   const _PortableInspectorFrame({required this.owner, required this.actualType, required this.sourceTarget, required this.source, this.higher = const PortableInspectorClaims()});
-
+  
 
 @override final  AuthoredBindingAddress owner;
 @override final  skir.TypeSelection actualType;
@@ -9713,7 +9713,7 @@ class _PortableInspectorFrame implements PortableInspectorFrame {
 @override@JsonKey() final  PortableInspectorClaims higher;
 
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableInspectorFrameCopyWith<_PortableInspectorFrame> get copyWith => __$PortableInspectorFrameCopyWithImpl<_PortableInspectorFrame>(this, _$identity);
@@ -9760,7 +9760,7 @@ class __$PortableInspectorFrameCopyWithImpl<$Res>
   final $Res Function(_PortableInspectorFrame) _then;
 
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? owner = null,Object? actualType = null,Object? sourceTarget = null,Object? source = null,Object? higher = null,}) {
   return _then(_PortableInspectorFrame(
 owner: null == owner ? _self.owner : owner // ignore: cast_nullable_to_non_nullable
@@ -9773,20 +9773,20 @@ as PortableInspectorClaims,
 }
 
 /// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
 }/// Create a copy of PortableInspectorFrame
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableInspectorClaimsCopyWith<$Res> get higher {
-
+  
   return $PortableInspectorClaimsCopyWith<$Res>(_self.higher, (value) {
     return _then(_self.copyWith(higher: value));
   });
@@ -9798,7 +9798,7 @@ mixin _$ActiveInspectorLayout {
 
  skir.PresentationId get source; AuthoredBindingAddress get owner;
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ActiveInspectorLayoutCopyWith<ActiveInspectorLayout> get copyWith => _$ActiveInspectorLayoutCopyWithImpl<ActiveInspectorLayout>(this as ActiveInspectorLayout, _$identity);
@@ -9848,7 +9848,7 @@ class _$ActiveInspectorLayoutCopyWithImpl<$Res>
   final $Res Function(ActiveInspectorLayout) _then;
 
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? owner = null,}) {
   return _then(ActiveInspectorLayout(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
@@ -9857,11 +9857,11 @@ as AuthoredBindingAddress,
   ));
 }
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -9869,7 +9869,7 @@ $AuthoredBindingAddressCopyWith<$Res> get owner {
 }
 
 
-/// Adds pattern matching related methods to [ActiveInspectorLayout].
+/// Adds pattern-matching-related methods to [ActiveInspectorLayout].
 extension ActiveInspectorLayoutPatterns on ActiveInspectorLayout {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -9892,7 +9892,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -9955,7 +9955,7 @@ return $default(_that.source,_that.owner);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -10004,13 +10004,13 @@ return $default(_that.source,_that.owner);case _:
 
 class _ActiveInspectorLayout implements ActiveInspectorLayout {
   const _ActiveInspectorLayout({required this.source, required this.owner});
-
+  
 
 @override final  skir.PresentationId source;
 @override final  AuthoredBindingAddress owner;
 
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ActiveInspectorLayoutCopyWith<_ActiveInspectorLayout> get copyWith => __$ActiveInspectorLayoutCopyWithImpl<_ActiveInspectorLayout>(this, _$identity);
@@ -10057,7 +10057,7 @@ class __$ActiveInspectorLayoutCopyWithImpl<$Res>
   final $Res Function(_ActiveInspectorLayout) _then;
 
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? owner = null,}) {
   return _then(_ActiveInspectorLayout(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
@@ -10067,11 +10067,11 @@ as AuthoredBindingAddress,
 }
 
 /// Create a copy of ActiveInspectorLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -10083,7 +10083,7 @@ mixin _$ActivePartPresentation {
 
  skir.PresentationPartId get key; AuthoredBindingAddress get owner; skir.PresentationRole get role;
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ActivePartPresentationCopyWith<ActivePartPresentation> get copyWith => _$ActivePartPresentationCopyWithImpl<ActivePartPresentation>(this as ActivePartPresentation, _$identity);
@@ -10133,7 +10133,7 @@ class _$ActivePartPresentationCopyWithImpl<$Res>
   final $Res Function(ActivePartPresentation) _then;
 
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? owner = null,Object? role = null,}) {
   return _then(ActivePartPresentation(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -10143,11 +10143,11 @@ as skir.PresentationRole,
   ));
 }
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -10155,7 +10155,7 @@ $AuthoredBindingAddressCopyWith<$Res> get owner {
 }
 
 
-/// Adds pattern matching related methods to [ActivePartPresentation].
+/// Adds pattern-matching-related methods to [ActivePartPresentation].
 extension ActivePartPresentationPatterns on ActivePartPresentation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -10178,7 +10178,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -10241,7 +10241,7 @@ return $default(_that.key,_that.owner,_that.role);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -10290,14 +10290,14 @@ return $default(_that.key,_that.owner,_that.role);case _:
 
 class _ActivePartPresentation implements ActivePartPresentation {
   const _ActivePartPresentation({required this.key, required this.owner, required this.role});
-
+  
 
 @override final  skir.PresentationPartId key;
 @override final  AuthoredBindingAddress owner;
 @override final  skir.PresentationRole role;
 
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ActivePartPresentationCopyWith<_ActivePartPresentation> get copyWith => __$ActivePartPresentationCopyWithImpl<_ActivePartPresentation>(this, _$identity);
@@ -10344,7 +10344,7 @@ class __$ActivePartPresentationCopyWithImpl<$Res>
   final $Res Function(_ActivePartPresentation) _then;
 
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? owner = null,Object? role = null,}) {
   return _then(_ActivePartPresentation(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -10355,11 +10355,11 @@ as skir.PresentationRole,
 }
 
 /// Create a copy of ActivePartPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get owner {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.owner, (value) {
     return _then(_self.copyWith(owner: value));
   });
@@ -10371,7 +10371,7 @@ mixin _$AuthoredLinkDecision {
 
  PortableLinkPlan get plan; PortableLinkTargetChoice get target; PortableLinkCounterpartRequest get counterpart;
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredLinkDecisionCopyWith<_AuthoredLinkDecision> get copyWith => __$AuthoredLinkDecisionCopyWithImpl<_AuthoredLinkDecision>(this as _AuthoredLinkDecision, _$identity);
@@ -10421,7 +10421,7 @@ class __$AuthoredLinkDecisionCopyWithImpl<$Res>
   final $Res Function(_AuthoredLinkDecision) _then;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
   return _then(_AuthoredLinkDecision(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
@@ -10431,29 +10431,29 @@ as PortableLinkCounterpartRequest,
   ));
 }
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
-
+  
   return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
-
+  
   return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
-
+  
   return $PortableLinkCounterpartRequestCopyWith<$Res>(_self.counterpart, (value) {
     return _then(_self.copyWith(counterpart: value));
   });
@@ -10461,7 +10461,7 @@ $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
 }
 
 
-/// Adds pattern matching related methods to [_AuthoredLinkDecision].
+/// Adds pattern-matching-related methods to [_AuthoredLinkDecision].
 extension _AuthoredLinkDecisionPatterns on _AuthoredLinkDecision {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -10484,7 +10484,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -10547,7 +10547,7 @@ return $default(_that.plan,_that.target,_that.counterpart);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -10596,14 +10596,14 @@ return $default(_that.plan,_that.target,_that.counterpart);case _:
 
 class __AuthoredLinkDecision implements _AuthoredLinkDecision {
   const __AuthoredLinkDecision({required this.plan, required this.target, required this.counterpart});
-
+  
 
 @override final  PortableLinkPlan plan;
 @override final  PortableLinkTargetChoice target;
 @override final  PortableLinkCounterpartRequest counterpart;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_AuthoredLinkDecisionCopyWith<__AuthoredLinkDecision> get copyWith => __$_AuthoredLinkDecisionCopyWithImpl<__AuthoredLinkDecision>(this, _$identity);
@@ -10650,7 +10650,7 @@ class __$_AuthoredLinkDecisionCopyWithImpl<$Res>
   final $Res Function(__AuthoredLinkDecision) _then;
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? plan = null,Object? target = null,Object? counterpart = null,}) {
   return _then(__AuthoredLinkDecision(
 plan: null == plan ? _self.plan : plan // ignore: cast_nullable_to_non_nullable
@@ -10661,29 +10661,29 @@ as PortableLinkCounterpartRequest,
 }
 
 /// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
-
+  
   return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
-
+  
   return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkDecision
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkCounterpartRequestCopyWith<$Res> get counterpart {
-
+  
   return $PortableLinkCounterpartRequestCopyWith<$Res>(_self.counterpart, (value) {
     return _then(_self.copyWith(counterpart: value));
   });
@@ -10695,7 +10695,7 @@ mixin _$AuthoredLinkChoice {
 
  String get id; String get widgetKey; PortableLinkPlan get plan; PortableLinkTargetChoice get target; _AuthoredLinkChoiceKind get kind; String get label; String get typeLabel; String get subtitle; String get searchText; _AuthoredCollectionRow? get row; skir.PresentationCollectionDefinition? get definition; skir.LinkOccurrence? get occurrence; PortableNewCounterpartChoice? get slot; skir.ValueLocation? get collection; String? get disabledReason;
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredLinkChoiceCopyWith<_AuthoredLinkChoice> get copyWith => __$AuthoredLinkChoiceCopyWithImpl<_AuthoredLinkChoice>(this as _AuthoredLinkChoice, _$identity);
@@ -10745,7 +10745,7 @@ class __$AuthoredLinkChoiceCopyWithImpl<$Res>
   final $Res Function(_AuthoredLinkChoice) _then;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
   return _then(_AuthoredLinkChoice(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -10767,25 +10767,25 @@ as String?,
   ));
 }
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
-
+  
   return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
-
+  
   return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
@@ -10800,7 +10800,7 @@ $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
 }
 
 
-/// Adds pattern matching related methods to [_AuthoredLinkChoice].
+/// Adds pattern-matching-related methods to [_AuthoredLinkChoice].
 extension _AuthoredLinkChoicePatterns on _AuthoredLinkChoice {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -10823,7 +10823,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -10886,7 +10886,7 @@ return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_tha
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -10935,7 +10935,7 @@ return $default(_that.id,_that.widgetKey,_that.plan,_that.target,_that.kind,_tha
 
 class __AuthoredLinkChoice implements _AuthoredLinkChoice {
   const __AuthoredLinkChoice({required this.id, required this.widgetKey, required this.plan, required this.target, required this.kind, required this.label, required this.typeLabel, required this.subtitle, required this.searchText, this.row, this.definition, this.occurrence, this.slot, this.collection, this.disabledReason});
-
+  
 
 @override final  String id;
 @override final  String widgetKey;
@@ -10954,7 +10954,7 @@ class __AuthoredLinkChoice implements _AuthoredLinkChoice {
 @override final  String? disabledReason;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_AuthoredLinkChoiceCopyWith<__AuthoredLinkChoice> get copyWith => __$_AuthoredLinkChoiceCopyWithImpl<__AuthoredLinkChoice>(this, _$identity);
@@ -11001,7 +11001,7 @@ class __$_AuthoredLinkChoiceCopyWithImpl<$Res>
   final $Res Function(__AuthoredLinkChoice) _then;
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? widgetKey = null,Object? plan = null,Object? target = null,Object? kind = null,Object? label = null,Object? typeLabel = null,Object? subtitle = null,Object? searchText = null,Object? row = freezed,Object? definition = freezed,Object? occurrence = freezed,Object? slot = freezed,Object? collection = freezed,Object? disabledReason = freezed,}) {
   return _then(__AuthoredLinkChoice(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -11024,25 +11024,25 @@ as String?,
 }
 
 /// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<$Res> get plan {
-
+  
   return $PortableLinkPlanCopyWith<$Res>(_self.plan, (value) {
     return _then(_self.copyWith(plan: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<$Res> get target {
-
+  
   return $PortableLinkTargetChoiceCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
 }/// Create a copy of _AuthoredLinkChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<$Res>? get slot {
@@ -11061,7 +11061,7 @@ mixin _$PortablePresentationScope {
 
  Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableOperationResults get operations; List<PortableAppearanceLayer> get appearanceLayers; Map<skir.ExpressionBindingId, AuthoredBindingAddress> get authoredAliases; AuthoredPresentationIndex? get authoredIndex; AuthoredPresentationIndex? get independentAuthoredIndex; List<PortableAuthoredPart> get authoredParts; PortableInspectorFrame? get inspectorFrame; Set<ActiveInspectorLayout> get activeInspectorLayouts; Set<ActivePartPresentation> get activeParts; bool get readOnly; bool get enabled; Stream<skir.RealmPresentationSearchUpdate> Function(skir.RealmPresentationSearchRequest request)? get watchSearch; ValueChanged<String>? get reportStatus; CheckedEditorCatalog? get catalog; PortableExpressionQueries? get queries; ResourceDiagnosticReader get resourceDiagnostics; skir.ResourceId? get resource; String? get searchHistoryNamespace; ValueChanged<skir.ResourceId>? get openResource; skir.PresentationRole? get role; skir.PresentationMaterial? get material; Set<skir.PresentationId> get activePresentations; Set<ActiveFieldPresentation> get activeFieldPresentations; skir.BoundControl? get associatedControl; ResolvedFieldAssociation? get fieldAssociation; Map<String, skir.PresentationNode> get slots; Map<String, PortableSlotBuilder> get slotBuilders; PortablePresentationHost? get host; Map<skir.ExpressionBindingId, PortableBindingSetter> get projectedWriters;
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortablePresentationScopeCopyWith<PortablePresentationScope> get copyWith => _$PortablePresentationScopeCopyWithImpl<PortablePresentationScope>(this as PortablePresentationScope, _$identity);
@@ -11111,7 +11111,7 @@ class _$PortablePresentationScopeCopyWithImpl<$Res>
   final $Res Function(PortablePresentationScope) _then;
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
   return _then(PortablePresentationScope(
 bindings: null == bindings ? _self.bindings : bindings // ignore: cast_nullable_to_non_nullable
@@ -11149,7 +11149,7 @@ as Map<skir.ExpressionBindingId, PortableBindingSetter>,
   ));
 }
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
@@ -11161,7 +11161,7 @@ $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
     return _then(_self.copyWith(authoredIndex: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex {
@@ -11173,7 +11173,7 @@ $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex {
     return _then(_self.copyWith(independentAuthoredIndex: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame {
@@ -11185,7 +11185,7 @@ $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame {
     return _then(_self.copyWith(inspectorFrame: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
@@ -11206,7 +11206,7 @@ $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {
 
 class _PortablePresentationScope extends PortablePresentationScope {
   const _PortablePresentationScope({required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.operations, required  List<PortableAppearanceLayer> appearanceLayers, required  Map<skir.ExpressionBindingId, AuthoredBindingAddress> authoredAliases, required this.authoredIndex, required this.independentAuthoredIndex, required  List<PortableAuthoredPart> authoredParts, required this.inspectorFrame, required  Set<ActiveInspectorLayout> activeInspectorLayouts, required  Set<ActivePartPresentation> activeParts, required this.readOnly, required this.enabled, required this.watchSearch, required this.reportStatus, required this.catalog, required this.queries, required this.resourceDiagnostics, required this.resource, required this.searchHistoryNamespace, required this.openResource, required this.role, required this.material, required  Set<skir.PresentationId> activePresentations, required  Set<ActiveFieldPresentation> activeFieldPresentations, required this.associatedControl, required this.fieldAssociation, required  Map<String, skir.PresentationNode> slots, required  Map<String, PortableSlotBuilder> slotBuilders, required this.host, required  Map<skir.ExpressionBindingId, PortableBindingSetter> projectedWriters}): _bindings = bindings,_appearanceLayers = appearanceLayers,_authoredAliases = authoredAliases,_authoredParts = authoredParts,_activeInspectorLayouts = activeInspectorLayouts,_activeParts = activeParts,_activePresentations = activePresentations,_activeFieldPresentations = activeFieldPresentations,_slots = slots,_slotBuilders = slotBuilders,_projectedWriters = projectedWriters,super._();
-
+  
 
  final  Map<skir.ExpressionBindingId, PortableExpressionBinding> _bindings;
 @override Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings {
@@ -11307,7 +11307,7 @@ class _PortablePresentationScope extends PortablePresentationScope {
 
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortablePresentationScopeCopyWith<_PortablePresentationScope> get copyWith => __$PortablePresentationScopeCopyWithImpl<_PortablePresentationScope>(this, _$identity);
@@ -11354,7 +11354,7 @@ class __$PortablePresentationScopeCopyWithImpl<$Res>
   final $Res Function(_PortablePresentationScope) _then;
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? bindings = null,Object? budget = null,Object? operations = null,Object? appearanceLayers = null,Object? authoredAliases = null,Object? authoredIndex = freezed,Object? independentAuthoredIndex = freezed,Object? authoredParts = null,Object? inspectorFrame = freezed,Object? activeInspectorLayouts = null,Object? activeParts = null,Object? readOnly = null,Object? enabled = null,Object? watchSearch = freezed,Object? reportStatus = freezed,Object? catalog = freezed,Object? queries = freezed,Object? resourceDiagnostics = null,Object? resource = freezed,Object? searchHistoryNamespace = freezed,Object? openResource = freezed,Object? role = freezed,Object? material = freezed,Object? activePresentations = null,Object? activeFieldPresentations = null,Object? associatedControl = freezed,Object? fieldAssociation = freezed,Object? slots = null,Object? slotBuilders = null,Object? host = freezed,Object? projectedWriters = null,}) {
   return _then(_PortablePresentationScope(
 bindings: null == bindings ? _self._bindings : bindings // ignore: cast_nullable_to_non_nullable
@@ -11393,7 +11393,7 @@ as Map<skir.ExpressionBindingId, PortableBindingSetter>,
 }
 
 /// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
@@ -11405,7 +11405,7 @@ $AuthoredPresentationIndexCopyWith<$Res>? get authoredIndex {
     return _then(_self.copyWith(authoredIndex: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex {
@@ -11417,7 +11417,7 @@ $AuthoredPresentationIndexCopyWith<$Res>? get independentAuthoredIndex {
     return _then(_self.copyWith(independentAuthoredIndex: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame {
@@ -11429,7 +11429,7 @@ $PortableInspectorFrameCopyWith<$Res>? get inspectorFrame {
     return _then(_self.copyWith(inspectorFrame: value));
   });
 }/// Create a copy of PortablePresentationScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResolvedFieldAssociationCopyWith<$Res>? get fieldAssociation {

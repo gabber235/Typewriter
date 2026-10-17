@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'tree_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$SearchTreeRow {
 
  String get key; int get depth;
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeRowCopyWith<SearchTreeRow> get copyWith => _$SearchTreeRowCopyWithImpl<SearchTreeRow>(this as SearchTreeRow, _$identity);
@@ -67,7 +67,7 @@ class _$SearchTreeRowCopyWithImpl<$Res>
   final $Res Function(SearchTreeRow) _then;
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? depth = null,}) {
   return _then(_self.copyWith(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as int,
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeRow].
+/// Adds pattern-matching-related methods to [SearchTreeRow].
 extension SearchTreeRowPatterns on SearchTreeRow {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -103,7 +103,7 @@ return result(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return result(_that.key,_that.depth,_that.result,_that.shortcutNumber);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return result(_that.key,_that.depth,_that.result,_that.shortcutNumber);case _:
 
 class SearchTreeSectionRow implements SearchTreeRow {
   const SearchTreeSectionRow({required this.key, required this.depth, required this.id, required this.title, required this.subtitle, required this.expanded, required this.resultCount, required this.topLevel});
-
+  
 
 @override final  String key;
 @override final  int depth;
@@ -226,7 +226,7 @@ class SearchTreeSectionRow implements SearchTreeRow {
  final  bool topLevel;
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeSectionRowCopyWith<SearchTreeSectionRow> get copyWith => _$SearchTreeSectionRowCopyWithImpl<SearchTreeSectionRow>(this, _$identity);
@@ -273,7 +273,7 @@ class _$SearchTreeSectionRowCopyWithImpl<$Res>
   final $Res Function(SearchTreeSectionRow) _then;
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? depth = null,Object? id = null,Object? title = null,Object? subtitle = freezed,Object? expanded = null,Object? resultCount = null,Object? topLevel = null,}) {
   return _then(SearchTreeSectionRow(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -296,7 +296,7 @@ as bool,
 
 class SearchTreeResultRow implements SearchTreeRow {
   const SearchTreeResultRow({required this.key, required this.depth, required this.result, required this.shortcutNumber});
-
+  
 
 @override final  String key;
 @override final  int depth;
@@ -304,7 +304,7 @@ class SearchTreeResultRow implements SearchTreeRow {
  final  int? shortcutNumber;
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeResultRowCopyWith<SearchTreeResultRow> get copyWith => _$SearchTreeResultRowCopyWithImpl<SearchTreeResultRow>(this, _$identity);
@@ -351,7 +351,7 @@ class _$SearchTreeResultRowCopyWithImpl<$Res>
   final $Res Function(SearchTreeResultRow) _then;
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? depth = null,Object? result = null,Object? shortcutNumber = freezed,}) {
   return _then(SearchTreeResultRow(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -363,11 +363,11 @@ as int?,
 }
 
 /// Create a copy of SearchTreeRow
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-
+  
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -379,7 +379,7 @@ mixin _$SearchTreeTopLevelGroup {
 
  SearchTreeSectionRow? get section; List<SearchTreeRow> get rows;
 /// Create a copy of SearchTreeTopLevelGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeTopLevelGroupCopyWith<SearchTreeTopLevelGroup> get copyWith => _$SearchTreeTopLevelGroupCopyWithImpl<SearchTreeTopLevelGroup>(this as SearchTreeTopLevelGroup, _$identity);
@@ -429,7 +429,7 @@ class _$SearchTreeTopLevelGroupCopyWithImpl<$Res>
   final $Res Function(SearchTreeTopLevelGroup) _then;
 
 /// Create a copy of SearchTreeTopLevelGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? section = freezed,Object? rows = null,}) {
   return _then(SearchTreeTopLevelGroup(
 section: freezed == section ? _self.section : section // ignore: cast_nullable_to_non_nullable
@@ -441,7 +441,7 @@ as List<SearchTreeRow>,
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeTopLevelGroup].
+/// Adds pattern-matching-related methods to [SearchTreeTopLevelGroup].
 extension SearchTreeTopLevelGroupPatterns on SearchTreeTopLevelGroup {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -464,7 +464,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -527,7 +527,7 @@ return $default(_that.section,_that.rows);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -576,7 +576,7 @@ return $default(_that.section,_that.rows);case _:
 
 class _SearchTreeTopLevelGroup implements SearchTreeTopLevelGroup {
   const _SearchTreeTopLevelGroup({required this.section, required  List<SearchTreeRow> rows}): _rows = rows;
-
+  
 
 @override final  SearchTreeSectionRow? section;
  final  List<SearchTreeRow> _rows;
@@ -588,7 +588,7 @@ class _SearchTreeTopLevelGroup implements SearchTreeTopLevelGroup {
 
 
 /// Create a copy of SearchTreeTopLevelGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchTreeTopLevelGroupCopyWith<_SearchTreeTopLevelGroup> get copyWith => __$SearchTreeTopLevelGroupCopyWithImpl<_SearchTreeTopLevelGroup>(this, _$identity);
@@ -635,7 +635,7 @@ class __$SearchTreeTopLevelGroupCopyWithImpl<$Res>
   final $Res Function(_SearchTreeTopLevelGroup) _then;
 
 /// Create a copy of SearchTreeTopLevelGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? section = freezed,Object? rows = null,}) {
   return _then(_SearchTreeTopLevelGroup(
 section: freezed == section ? _self.section : section // ignore: cast_nullable_to_non_nullable
@@ -652,7 +652,7 @@ mixin _$SearchTreeViewModel {
 
  List<SearchTreeTopLevelGroup> get groups; int get rowCount;
 /// Create a copy of SearchTreeViewModel
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchTreeViewModelCopyWith<SearchTreeViewModel> get copyWith => _$SearchTreeViewModelCopyWithImpl<SearchTreeViewModel>(this as SearchTreeViewModel, _$identity);
@@ -702,7 +702,7 @@ class _$SearchTreeViewModelCopyWithImpl<$Res>
   final $Res Function(SearchTreeViewModel) _then;
 
 /// Create a copy of SearchTreeViewModel
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? groups = null,Object? rowCount = null,}) {
   return _then(SearchTreeViewModel(
 groups: null == groups ? _self.groups : groups // ignore: cast_nullable_to_non_nullable
@@ -714,7 +714,7 @@ as int,
 }
 
 
-/// Adds pattern matching related methods to [SearchTreeViewModel].
+/// Adds pattern-matching-related methods to [SearchTreeViewModel].
 extension SearchTreeViewModelPatterns on SearchTreeViewModel {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -737,7 +737,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -800,7 +800,7 @@ return $default(_that.groups,_that.rowCount);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -849,7 +849,7 @@ return $default(_that.groups,_that.rowCount);case _:
 
 class _SearchTreeViewModel implements SearchTreeViewModel {
   const _SearchTreeViewModel({required  List<SearchTreeTopLevelGroup> groups, required this.rowCount}): _groups = groups;
-
+  
 
  final  List<SearchTreeTopLevelGroup> _groups;
 @override List<SearchTreeTopLevelGroup> get groups {
@@ -861,7 +861,7 @@ class _SearchTreeViewModel implements SearchTreeViewModel {
 @override final  int rowCount;
 
 /// Create a copy of SearchTreeViewModel
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchTreeViewModelCopyWith<_SearchTreeViewModel> get copyWith => __$SearchTreeViewModelCopyWithImpl<_SearchTreeViewModel>(this, _$identity);
@@ -908,7 +908,7 @@ class __$SearchTreeViewModelCopyWithImpl<$Res>
   final $Res Function(_SearchTreeViewModel) _then;
 
 /// Create a copy of SearchTreeViewModel
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? groups = null,Object? rowCount = null,}) {
   return _then(_SearchTreeViewModel(
 groups: null == groups ? _self._groups : groups // ignore: cast_nullable_to_non_nullable

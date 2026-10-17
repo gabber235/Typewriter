@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'resource_operations.dart';
 
@@ -6,7 +6,7 @@ part of 'resource_operations.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Resolves one complete operation set against a coherent working observation.
 
@@ -72,7 +72,7 @@ final class ResourceOperationsProvider
 }
 
 String _$resourceOperationsHash() =>
-    r'c75ed862bf514ab3e6e38ef3fc1995bd94f778e9';
+    r'922713453e17075a0a5df641f9fa42778ec0a477';
 
 /// Resolves one complete operation set against a coherent working observation.
 
@@ -171,7 +171,7 @@ final class ResourceDropAvailableProvider
 }
 
 String _$resourceDropAvailableHash() =>
-    r'884012dfd63e95ae830e5650ddb87a0e332f0afc';
+    r'8434e09a288392c5e48807938124bd75bc89540a';
 
 /// Hover checks share preparation with activation and never stage their result.
 

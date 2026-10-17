@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_named_control.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$PortableNamedPayload {
 
  skir.BindingRef get reference; skir.NamedTypeUse get actualType; skir.DataValue get value; skir.ValueLocation get location; Map<skir.ExpressionBindingId, PortableExpressionBinding> get bindings; skir.EvaluationBudget get budget; PortableBindingSetter get setBinding;
 /// Create a copy of PortableNamedPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableNamedPayloadCopyWith<PortableNamedPayload> get copyWith => _$PortableNamedPayloadCopyWithImpl<PortableNamedPayload>(this as PortableNamedPayload, _$identity);
@@ -67,7 +67,7 @@ class _$PortableNamedPayloadCopyWithImpl<$Res>
   final $Res Function(PortableNamedPayload) _then;
 
 /// Create a copy of PortableNamedPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? bindings = null,Object? budget = null,Object? setBinding = null,}) {
   return _then(PortableNamedPayload(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
@@ -84,7 +84,7 @@ as PortableBindingSetter,
 }
 
 
-/// Adds pattern matching related methods to [PortableNamedPayload].
+/// Adds pattern-matching-related methods to [PortableNamedPayload].
 extension PortableNamedPayloadPatterns on PortableNamedPayload {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -107,7 +107,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -170,7 +170,7 @@ return $default(_that.reference,_that.actualType,_that.value,_that.location,_tha
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -219,7 +219,7 @@ return $default(_that.reference,_that.actualType,_that.value,_that.location,_tha
 
 class _PortableNamedPayload extends PortableNamedPayload {
   const _PortableNamedPayload({required this.reference, required this.actualType, required this.value, required this.location, required  Map<skir.ExpressionBindingId, PortableExpressionBinding> bindings, required this.budget, required this.setBinding}): _bindings = bindings,super._();
-
+  
 
 @override final  skir.BindingRef reference;
 @override final  skir.NamedTypeUse actualType;
@@ -236,7 +236,7 @@ class _PortableNamedPayload extends PortableNamedPayload {
 @override final  PortableBindingSetter setBinding;
 
 /// Create a copy of PortableNamedPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableNamedPayloadCopyWith<_PortableNamedPayload> get copyWith => __$PortableNamedPayloadCopyWithImpl<_PortableNamedPayload>(this, _$identity);
@@ -283,7 +283,7 @@ class __$PortableNamedPayloadCopyWithImpl<$Res>
   final $Res Function(_PortableNamedPayload) _then;
 
 /// Create a copy of PortableNamedPayload
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? reference = null,Object? actualType = null,Object? value = null,Object? location = null,Object? bindings = null,Object? budget = null,Object? setBinding = null,}) {
   return _then(_PortableNamedPayload(
 reference: null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable

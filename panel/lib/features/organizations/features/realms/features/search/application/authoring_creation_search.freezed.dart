@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'authoring_creation_search.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$AuthoringCreationOption {
 
  skir.ResourceDefinitionId get definition; skir.TypeSelection get configuration; String get label; skir.TypeDisplay? get display; SearchQueryContext get query; String? get disabledReason;
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringCreationOptionCopyWith<AuthoringCreationOption> get copyWith => _$AuthoringCreationOptionCopyWithImpl<AuthoringCreationOption>(this as AuthoringCreationOption, _$identity);
@@ -67,7 +67,7 @@ class _$AuthoringCreationOptionCopyWithImpl<$Res>
   final $Res Function(AuthoringCreationOption) _then;
 
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? definition = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
   return _then(AuthoringCreationOption(
 definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
@@ -80,11 +80,11 @@ as String?,
   ));
 }
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-
+  
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });
@@ -92,7 +92,7 @@ $SearchQueryContextCopyWith<$Res> get query {
 }
 
 
-/// Adds pattern matching related methods to [AuthoringCreationOption].
+/// Adds pattern-matching-related methods to [AuthoringCreationOption].
 extension AuthoringCreationOptionPatterns on AuthoringCreationOption {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -115,7 +115,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -178,7 +178,7 @@ return $default(_that.definition,_that.configuration,_that.label,_that.display,_
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -227,7 +227,7 @@ return $default(_that.definition,_that.configuration,_that.label,_that.display,_
 
 class _AuthoringCreationOption extends AuthoringCreationOption {
   const _AuthoringCreationOption({required this.definition, required this.configuration, required this.label, this.display, this.query = SearchQueryContext.empty, this.disabledReason}): super._();
-
+  
 
 @override final  skir.ResourceDefinitionId definition;
 @override final  skir.TypeSelection configuration;
@@ -237,7 +237,7 @@ class _AuthoringCreationOption extends AuthoringCreationOption {
 @override final  String? disabledReason;
 
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringCreationOptionCopyWith<_AuthoringCreationOption> get copyWith => __$AuthoringCreationOptionCopyWithImpl<_AuthoringCreationOption>(this, _$identity);
@@ -284,7 +284,7 @@ class __$AuthoringCreationOptionCopyWithImpl<$Res>
   final $Res Function(_AuthoringCreationOption) _then;
 
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? definition = null,Object? configuration = null,Object? label = null,Object? display = freezed,Object? query = null,Object? disabledReason = freezed,}) {
   return _then(_AuthoringCreationOption(
 definition: null == definition ? _self.definition : definition // ignore: cast_nullable_to_non_nullable
@@ -298,11 +298,11 @@ as String?,
 }
 
 /// Create a copy of AuthoringCreationOption
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res> get query {
-
+  
   return $SearchQueryContextCopyWith<$Res>(_self.query, (value) {
     return _then(_self.copyWith(query: value));
   });

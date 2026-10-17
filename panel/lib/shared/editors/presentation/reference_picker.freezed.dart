@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'reference_picker.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$ReferencePickerCandidate<T extends Object> {
 
  String get id; T get value; String get label; String get description; String get searchText; skir.TypeDisplay? get display; String? get disabledReason;
 /// Create a copy of ReferencePickerCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReferencePickerCandidateCopyWith<T, ReferencePickerCandidate<T>> get copyWith => _$ReferencePickerCandidateCopyWithImpl<T, ReferencePickerCandidate<T>>(this as ReferencePickerCandidate<T>, _$identity);
@@ -67,7 +67,7 @@ class _$ReferencePickerCandidateCopyWithImpl<T extends Object,$Res>
   final $Res Function(ReferencePickerCandidate<T>) _then;
 
 /// Create a copy of ReferencePickerCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? value = null,Object? label = null,Object? description = null,Object? searchText = null,Object? display = freezed,Object? disabledReason = freezed,}) {
   return _then(ReferencePickerCandidate(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -84,7 +84,7 @@ as String?,
 }
 
 
-/// Adds pattern matching related methods to [ReferencePickerCandidate].
+/// Adds pattern-matching-related methods to [ReferencePickerCandidate].
 extension ReferencePickerCandidatePatterns<T extends Object> on ReferencePickerCandidate<T> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -107,7 +107,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -170,7 +170,7 @@ return $default(_that.id,_that.value,_that.label,_that.description,_that.searchT
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -219,7 +219,7 @@ return $default(_that.id,_that.value,_that.label,_that.description,_that.searchT
 
 class _ReferencePickerCandidate<T extends Object> implements ReferencePickerCandidate<T> {
   const _ReferencePickerCandidate({required this.id, required this.value, required this.label, this.description = "", this.searchText = "", this.display, this.disabledReason});
-
+  
 
 @override final  String id;
 @override final  T value;
@@ -230,7 +230,7 @@ class _ReferencePickerCandidate<T extends Object> implements ReferencePickerCand
 @override final  String? disabledReason;
 
 /// Create a copy of ReferencePickerCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ReferencePickerCandidateCopyWith<T, _ReferencePickerCandidate<T>> get copyWith => __$ReferencePickerCandidateCopyWithImpl<T, _ReferencePickerCandidate<T>>(this, _$identity);
@@ -277,7 +277,7 @@ class __$ReferencePickerCandidateCopyWithImpl<T extends Object,$Res>
   final $Res Function(_ReferencePickerCandidate<T>) _then;
 
 /// Create a copy of ReferencePickerCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? value = null,Object? label = null,Object? description = null,Object? searchText = null,Object? display = freezed,Object? disabledReason = freezed,}) {
   return _then(_ReferencePickerCandidate<T>(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable

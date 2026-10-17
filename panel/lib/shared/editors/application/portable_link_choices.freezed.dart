@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_link_choices.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $PortableLinkPlanResultCopyWith(PortableLinkPlanResult _, $Res Function(Portable
 }
 
 
-/// Adds pattern matching related methods to [PortableLinkPlanResult].
+/// Adds pattern-matching-related methods to [PortableLinkPlanResult].
 extension PortableLinkPlanResultPatterns on PortableLinkPlanResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return unavailable(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return unavailable(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -177,7 +177,7 @@ return unavailable(_that.message);case _:
 
 class PortableLinkPlanReady implements PortableLinkPlanResult {
   const PortableLinkPlanReady( List<PortableLinkPlan> plans): _plans = plans;
-
+  
 
  final  List<PortableLinkPlan> _plans;
  List<PortableLinkPlan> get plans {
@@ -188,7 +188,7 @@ class PortableLinkPlanReady implements PortableLinkPlanResult {
 
 
 /// Create a copy of PortableLinkPlanResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableLinkPlanReadyCopyWith<PortableLinkPlanReady> get copyWith => _$PortableLinkPlanReadyCopyWithImpl<PortableLinkPlanReady>(this, _$identity);
@@ -235,7 +235,7 @@ class _$PortableLinkPlanReadyCopyWithImpl<$Res>
   final $Res Function(PortableLinkPlanReady) _then;
 
 /// Create a copy of PortableLinkPlanResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? plans = null,}) {
   return _then(PortableLinkPlanReady(
 null == plans ? _self._plans : plans // ignore: cast_nullable_to_non_nullable
@@ -251,12 +251,12 @@ as List<PortableLinkPlan>,
 
 class PortableLinkPlanUnavailable implements PortableLinkPlanResult {
   const PortableLinkPlanUnavailable(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of PortableLinkPlanResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableLinkPlanUnavailableCopyWith<PortableLinkPlanUnavailable> get copyWith => _$PortableLinkPlanUnavailableCopyWithImpl<PortableLinkPlanUnavailable>(this, _$identity);
@@ -303,7 +303,7 @@ class _$PortableLinkPlanUnavailableCopyWithImpl<$Res>
   final $Res Function(PortableLinkPlanUnavailable) _then;
 
 /// Create a copy of PortableLinkPlanResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(PortableLinkPlanUnavailable(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -319,7 +319,7 @@ mixin _$PortableLinkPlan {
 
  skir.LinkOccurrence get source; skir.RelationContract get relation; skir.EndpointDefinition get opposite; skir.TypeUse get targetType; List<PortableLinkTargetChoice> get targets;
 /// Create a copy of PortableLinkPlan
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableLinkPlanCopyWith<PortableLinkPlan> get copyWith => _$PortableLinkPlanCopyWithImpl<PortableLinkPlan>(this as PortableLinkPlan, _$identity);
@@ -369,7 +369,7 @@ class _$PortableLinkPlanCopyWithImpl<$Res>
   final $Res Function(PortableLinkPlan) _then;
 
 /// Create a copy of PortableLinkPlan
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? source = null,Object? relation = null,Object? opposite = null,Object? targetType = null,Object? targets = null,}) {
   return _then(PortableLinkPlan(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
@@ -384,7 +384,7 @@ as List<PortableLinkTargetChoice>,
 }
 
 
-/// Adds pattern matching related methods to [PortableLinkPlan].
+/// Adds pattern-matching-related methods to [PortableLinkPlan].
 extension PortableLinkPlanPatterns on PortableLinkPlan {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -407,7 +407,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -470,7 +470,7 @@ return $default(_that.source,_that.relation,_that.opposite,_that.targetType,_tha
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -519,7 +519,7 @@ return $default(_that.source,_that.relation,_that.opposite,_that.targetType,_tha
 
 class _PortableLinkPlan implements PortableLinkPlan {
   const _PortableLinkPlan({required this.source, required this.relation, required this.opposite, required this.targetType, required  List<PortableLinkTargetChoice> targets}): _targets = targets;
-
+  
 
 @override final  skir.LinkOccurrence source;
 @override final  skir.RelationContract relation;
@@ -534,7 +534,7 @@ class _PortableLinkPlan implements PortableLinkPlan {
 
 
 /// Create a copy of PortableLinkPlan
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableLinkPlanCopyWith<_PortableLinkPlan> get copyWith => __$PortableLinkPlanCopyWithImpl<_PortableLinkPlan>(this, _$identity);
@@ -581,7 +581,7 @@ class __$PortableLinkPlanCopyWithImpl<$Res>
   final $Res Function(_PortableLinkPlan) _then;
 
 /// Create a copy of PortableLinkPlan
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? source = null,Object? relation = null,Object? opposite = null,Object? targetType = null,Object? targets = null,}) {
   return _then(_PortableLinkPlan(
 source: null == source ? _self.source : source // ignore: cast_nullable_to_non_nullable
@@ -601,7 +601,7 @@ mixin _$PortableLinkTargetChoice {
 
  skir.ResourceId get resource; bool get automaticCounterpart; List<skir.LinkOccurrence> get existing; List<PortableNewCounterpartChoice> get creatable; List<skir.ValueLocation> get collections; String? get disabledReason;
 /// Create a copy of PortableLinkTargetChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableLinkTargetChoiceCopyWith<PortableLinkTargetChoice> get copyWith => _$PortableLinkTargetChoiceCopyWithImpl<PortableLinkTargetChoice>(this as PortableLinkTargetChoice, _$identity);
@@ -651,7 +651,7 @@ class _$PortableLinkTargetChoiceCopyWithImpl<$Res>
   final $Res Function(PortableLinkTargetChoice) _then;
 
 /// Create a copy of PortableLinkTargetChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? resource = null,Object? automaticCounterpart = null,Object? existing = null,Object? creatable = null,Object? collections = null,Object? disabledReason = freezed,}) {
   return _then(PortableLinkTargetChoice(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
@@ -667,7 +667,7 @@ as String?,
 }
 
 
-/// Adds pattern matching related methods to [PortableLinkTargetChoice].
+/// Adds pattern-matching-related methods to [PortableLinkTargetChoice].
 extension PortableLinkTargetChoicePatterns on PortableLinkTargetChoice {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -690,7 +690,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -753,7 +753,7 @@ return $default(_that.resource,_that.automaticCounterpart,_that.existing,_that.c
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -802,7 +802,7 @@ return $default(_that.resource,_that.automaticCounterpart,_that.existing,_that.c
 
 class _PortableLinkTargetChoice implements PortableLinkTargetChoice {
   const _PortableLinkTargetChoice({required this.resource, required this.automaticCounterpart, required  List<skir.LinkOccurrence> existing, required  List<PortableNewCounterpartChoice> creatable,  List<skir.ValueLocation> collections = const [], this.disabledReason}): _existing = existing,_creatable = creatable,_collections = collections;
-
+  
 
 @override final  skir.ResourceId resource;
 @override final  bool automaticCounterpart;
@@ -830,7 +830,7 @@ class _PortableLinkTargetChoice implements PortableLinkTargetChoice {
 @override final  String? disabledReason;
 
 /// Create a copy of PortableLinkTargetChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableLinkTargetChoiceCopyWith<_PortableLinkTargetChoice> get copyWith => __$PortableLinkTargetChoiceCopyWithImpl<_PortableLinkTargetChoice>(this, _$identity);
@@ -877,7 +877,7 @@ class __$PortableLinkTargetChoiceCopyWithImpl<$Res>
   final $Res Function(_PortableLinkTargetChoice) _then;
 
 /// Create a copy of PortableLinkTargetChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? automaticCounterpart = null,Object? existing = null,Object? creatable = null,Object? collections = null,Object? disabledReason = freezed,}) {
   return _then(_PortableLinkTargetChoice(
 resource: null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
@@ -898,7 +898,7 @@ mixin _$PortableNewCounterpartChoice {
 
  skir.ValueLocation get containing; skir.TypeSelection get selection;
 /// Create a copy of PortableNewCounterpartChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<PortableNewCounterpartChoice> get copyWith => _$PortableNewCounterpartChoiceCopyWithImpl<PortableNewCounterpartChoice>(this as PortableNewCounterpartChoice, _$identity);
@@ -948,7 +948,7 @@ class _$PortableNewCounterpartChoiceCopyWithImpl<$Res>
   final $Res Function(PortableNewCounterpartChoice) _then;
 
 /// Create a copy of PortableNewCounterpartChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? containing = null,Object? selection = null,}) {
   return _then(PortableNewCounterpartChoice(
 containing: null == containing ? _self.containing : containing // ignore: cast_nullable_to_non_nullable
@@ -960,7 +960,7 @@ as skir.TypeSelection,
 }
 
 
-/// Adds pattern matching related methods to [PortableNewCounterpartChoice].
+/// Adds pattern-matching-related methods to [PortableNewCounterpartChoice].
 extension PortableNewCounterpartChoicePatterns on PortableNewCounterpartChoice {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -983,7 +983,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1046,7 +1046,7 @@ return $default(_that.containing,_that.selection);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1095,13 +1095,13 @@ return $default(_that.containing,_that.selection);case _:
 
 class _PortableNewCounterpartChoice implements PortableNewCounterpartChoice {
   const _PortableNewCounterpartChoice({required this.containing, required this.selection});
-
+  
 
 @override final  skir.ValueLocation containing;
 @override final  skir.TypeSelection selection;
 
 /// Create a copy of PortableNewCounterpartChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortableNewCounterpartChoiceCopyWith<_PortableNewCounterpartChoice> get copyWith => __$PortableNewCounterpartChoiceCopyWithImpl<_PortableNewCounterpartChoice>(this, _$identity);
@@ -1148,7 +1148,7 @@ class __$PortableNewCounterpartChoiceCopyWithImpl<$Res>
   final $Res Function(_PortableNewCounterpartChoice) _then;
 
 /// Create a copy of PortableNewCounterpartChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? containing = null,Object? selection = null,}) {
   return _then(_PortableNewCounterpartChoice(
 containing: null == containing ? _self.containing : containing // ignore: cast_nullable_to_non_nullable
@@ -1165,7 +1165,7 @@ mixin _$ResolvedReference {
 
  skir.ConnectIntent get connection; List<ReferenceMaterialization> get materializations;
 /// Create a copy of ResolvedReference
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ResolvedReferenceCopyWith<ResolvedReference> get copyWith => _$ResolvedReferenceCopyWithImpl<ResolvedReference>(this as ResolvedReference, _$identity);
@@ -1215,7 +1215,7 @@ class _$ResolvedReferenceCopyWithImpl<$Res>
   final $Res Function(ResolvedReference) _then;
 
 /// Create a copy of ResolvedReference
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? connection = null,Object? materializations = null,}) {
   return _then(ResolvedReference(
 connection: null == connection ? _self.connection : connection // ignore: cast_nullable_to_non_nullable
@@ -1227,7 +1227,7 @@ as List<ReferenceMaterialization>,
 }
 
 
-/// Adds pattern matching related methods to [ResolvedReference].
+/// Adds pattern-matching-related methods to [ResolvedReference].
 extension ResolvedReferencePatterns on ResolvedReference {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1250,7 +1250,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1313,7 +1313,7 @@ return $default(_that.connection,_that.materializations);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1362,7 +1362,7 @@ return $default(_that.connection,_that.materializations);case _:
 
 class _ResolvedReference implements ResolvedReference {
   const _ResolvedReference({required this.connection,  List<ReferenceMaterialization> materializations = const []}): _materializations = materializations;
-
+  
 
 @override final  skir.ConnectIntent connection;
  final  List<ReferenceMaterialization> _materializations;
@@ -1374,7 +1374,7 @@ class _ResolvedReference implements ResolvedReference {
 
 
 /// Create a copy of ResolvedReference
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ResolvedReferenceCopyWith<_ResolvedReference> get copyWith => __$ResolvedReferenceCopyWithImpl<_ResolvedReference>(this, _$identity);
@@ -1421,7 +1421,7 @@ class __$ResolvedReferenceCopyWithImpl<$Res>
   final $Res Function(_ResolvedReference) _then;
 
 /// Create a copy of ResolvedReference
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? connection = null,Object? materializations = null,}) {
   return _then(_ResolvedReference(
 connection: null == connection ? _self.connection : connection // ignore: cast_nullable_to_non_nullable
@@ -1463,7 +1463,7 @@ $ReferenceMaterializationCopyWith(ReferenceMaterialization _, $Res Function(Refe
 }
 
 
-/// Adds pattern matching related methods to [ReferenceMaterialization].
+/// Adds pattern-matching-related methods to [ReferenceMaterialization].
 extension ReferenceMaterializationPatterns on ReferenceMaterialization {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1488,7 +1488,7 @@ return preparedRecord(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1554,7 +1554,7 @@ return preparedRecord(_that.at,_that.request,_that.prepared);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1604,12 +1604,12 @@ return preparedRecord(_that.at,_that.request,_that.prepared);case _:
 
 class ReferenceValueInsertion implements ReferenceMaterialization {
   const ReferenceValueInsertion(this.intent);
-
+  
 
  final  skir.InsertIntent intent;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReferenceValueInsertionCopyWith<ReferenceValueInsertion> get copyWith => _$ReferenceValueInsertionCopyWithImpl<ReferenceValueInsertion>(this, _$identity);
@@ -1656,7 +1656,7 @@ class _$ReferenceValueInsertionCopyWithImpl<$Res>
   final $Res Function(ReferenceValueInsertion) _then;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? intent = null,}) {
   return _then(ReferenceValueInsertion(
 null == intent ? _self.intent : intent // ignore: cast_nullable_to_non_nullable
@@ -1672,7 +1672,7 @@ as skir.InsertIntent,
 
 class PreparedReferenceInsertion implements ReferenceMaterialization {
   const PreparedReferenceInsertion({required this.at, required this.after, required this.item, required this.request, required this.prepared});
-
+  
 
  final  skir.ValueLocation at;
  final  skir.ItemId? after;
@@ -1681,7 +1681,7 @@ class PreparedReferenceInsertion implements ReferenceMaterialization {
  final  skir.PreparedValue prepared;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PreparedReferenceInsertionCopyWith<PreparedReferenceInsertion> get copyWith => _$PreparedReferenceInsertionCopyWithImpl<PreparedReferenceInsertion>(this, _$identity);
@@ -1728,7 +1728,7 @@ class _$PreparedReferenceInsertionCopyWithImpl<$Res>
   final $Res Function(PreparedReferenceInsertion) _then;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? at = null,Object? after = freezed,Object? item = null,Object? request = null,Object? prepared = null,}) {
   return _then(PreparedReferenceInsertion(
 at: null == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
@@ -1748,14 +1748,14 @@ as skir.PreparedValue,
 
 class PreparedReferenceRecord implements ReferenceMaterialization {
   const PreparedReferenceRecord({required this.at, required this.request, required this.prepared});
-
+  
 
  final  skir.ValueLocation at;
  final  skir.ValuePreparationRequest request;
  final  skir.PreparedValue prepared;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PreparedReferenceRecordCopyWith<PreparedReferenceRecord> get copyWith => _$PreparedReferenceRecordCopyWithImpl<PreparedReferenceRecord>(this, _$identity);
@@ -1802,7 +1802,7 @@ class _$PreparedReferenceRecordCopyWithImpl<$Res>
   final $Res Function(PreparedReferenceRecord) _then;
 
 /// Create a copy of ReferenceMaterialization
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? at = null,Object? request = null,Object? prepared = null,}) {
   return _then(PreparedReferenceRecord(
 at: null == at ? _self.at : at // ignore: cast_nullable_to_non_nullable
@@ -1845,7 +1845,7 @@ $ReferenceChoiceCopyWith(ReferenceChoice _, $Res Function(ReferenceChoice) __);
 }
 
 
-/// Adds pattern matching related methods to [ReferenceChoice].
+/// Adds pattern-matching-related methods to [ReferenceChoice].
 extension ReferenceChoicePatterns on ReferenceChoice {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1870,7 +1870,7 @@ return createCounterpart(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1936,7 +1936,7 @@ return createCounterpart(_that.slot);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1986,12 +1986,12 @@ return createCounterpart(_that.slot);case _:
 
 class ExistingReference implements ReferenceChoice {
   const ExistingReference(this.reference);
-
+  
 
  final  ResolvedReference reference;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ExistingReferenceCopyWith<ExistingReference> get copyWith => _$ExistingReferenceCopyWithImpl<ExistingReference>(this, _$identity);
@@ -2038,7 +2038,7 @@ class _$ExistingReferenceCopyWithImpl<$Res>
   final $Res Function(ExistingReference) _then;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? reference = null,}) {
   return _then(ExistingReference(
 null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
@@ -2047,11 +2047,11 @@ as ResolvedReference,
 }
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResolvedReferenceCopyWith<$Res> get reference {
-
+  
   return $ResolvedReferenceCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -2063,12 +2063,12 @@ $ResolvedReferenceCopyWith<$Res> get reference {
 
 class NewResourceReference implements ReferenceChoice {
   const NewResourceReference(this.template);
-
+  
 
  final  ResourceCreationTemplate template;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NewResourceReferenceCopyWith<NewResourceReference> get copyWith => _$NewResourceReferenceCopyWithImpl<NewResourceReference>(this, _$identity);
@@ -2115,7 +2115,7 @@ class _$NewResourceReferenceCopyWithImpl<$Res>
   final $Res Function(NewResourceReference) _then;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? template = null,}) {
   return _then(NewResourceReference(
 null == template ? _self.template : template // ignore: cast_nullable_to_non_nullable
@@ -2124,11 +2124,11 @@ as ResourceCreationTemplate,
 }
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResourceCreationTemplateCopyWith<$Res> get template {
-
+  
   return $ResourceCreationTemplateCopyWith<$Res>(_self.template, (value) {
     return _then(_self.copyWith(template: value));
   });
@@ -2140,12 +2140,12 @@ $ResourceCreationTemplateCopyWith<$Res> get template {
 
 class NewEmbeddedCounterpart implements ReferenceChoice {
   const NewEmbeddedCounterpart(this.slot);
-
+  
 
  final  PortableNewCounterpartChoice slot;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NewEmbeddedCounterpartCopyWith<NewEmbeddedCounterpart> get copyWith => _$NewEmbeddedCounterpartCopyWithImpl<NewEmbeddedCounterpart>(this, _$identity);
@@ -2192,7 +2192,7 @@ class _$NewEmbeddedCounterpartCopyWithImpl<$Res>
   final $Res Function(NewEmbeddedCounterpart) _then;
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? slot = null,}) {
   return _then(NewEmbeddedCounterpart(
 null == slot ? _self.slot : slot // ignore: cast_nullable_to_non_nullable
@@ -2201,11 +2201,11 @@ as PortableNewCounterpartChoice,
 }
 
 /// Create a copy of ReferenceChoice
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PortableNewCounterpartChoiceCopyWith<$Res> get slot {
-
+  
   return $PortableNewCounterpartChoiceCopyWith<$Res>(_self.slot, (value) {
     return _then(_self.copyWith(slot: value));
   });

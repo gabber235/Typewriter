@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'services.dart';
 
@@ -6,7 +6,7 @@ part of 'services.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Owns the organization scoped canonical service identity projection.
 ///
@@ -248,8 +248,8 @@ final class CanonicalServiceFamily extends $Family
 
 /// Owns the live organization topology projection.
 ///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// The projection combines the topology watch with canonical configuration
+/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -266,8 +266,8 @@ final organizationTopologyControllerProvider =
 
 /// Owns the live organization topology projection.
 ///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// The projection combines the topology watch with canonical configuration
+/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -285,8 +285,8 @@ final class OrganizationTopologyControllerProvider
         > {
   /// Owns the live organization topology projection.
   ///
-  /// The projection combines the topology watch with committed configuration
-  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// The projection combines the topology watch with canonical configuration
+  /// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
   /// and applied configuration revisions alongside host runtime observations.
   /// Snapshots and configuration changes own child membership. Runtime reports
   /// update observed state only and cannot create or revive child resources. A
@@ -338,8 +338,8 @@ String _$organizationTopologyControllerHash() =>
 
 /// Owns the live organization topology projection.
 ///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// The projection combines the topology watch with canonical configuration
+/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A
@@ -370,8 +370,8 @@ final class OrganizationTopologyControllerFamily extends $Family
 
   /// Owns the live organization topology projection.
   ///
-  /// The projection combines the topology watch with committed configuration
-  /// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+  /// The projection combines the topology watch with canonical configuration
+  /// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
   /// and applied configuration revisions alongside host runtime observations.
   /// Snapshots and configuration changes own child membership. Runtime reports
   /// update observed state only and cannot create or revive child resources. A
@@ -394,8 +394,8 @@ final class OrganizationTopologyControllerFamily extends $Family
 
 /// Owns the live organization topology projection.
 ///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// The projection combines the topology watch with canonical configuration
+/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A

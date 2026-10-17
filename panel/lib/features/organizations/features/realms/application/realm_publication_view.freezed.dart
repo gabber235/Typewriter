@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'realm_publication_view.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $PublicationObservationCopyWith(PublicationObservation _, $Res Function(Publicat
 }
 
 
-/// Adds pattern matching related methods to [PublicationObservation].
+/// Adds pattern-matching-related methods to [PublicationObservation].
 extension PublicationObservationPatterns on PublicationObservation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -67,7 +67,7 @@ return unavailable(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -133,7 +133,7 @@ return unavailable(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -183,12 +183,12 @@ return unavailable(_that.message);case _:
 
 class FetchingPublicationObservation implements PublicationObservation {
   const FetchingPublicationObservation(this.expected);
-
+  
 
  final  skir.PublicationViewId expected;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $FetchingPublicationObservationCopyWith<FetchingPublicationObservation> get copyWith => _$FetchingPublicationObservationCopyWithImpl<FetchingPublicationObservation>(this, _$identity);
@@ -235,7 +235,7 @@ class _$FetchingPublicationObservationCopyWithImpl<$Res>
   final $Res Function(FetchingPublicationObservation) _then;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? expected = null,}) {
   return _then(FetchingPublicationObservation(
 null == expected ? _self.expected : expected // ignore: cast_nullable_to_non_nullable
@@ -251,12 +251,12 @@ as skir.PublicationViewId,
 
 class AvailablePublicationObservation implements PublicationObservation {
   const AvailablePublicationObservation(this.view);
-
+  
 
  final  skir.PublicationView view;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AvailablePublicationObservationCopyWith<AvailablePublicationObservation> get copyWith => _$AvailablePublicationObservationCopyWithImpl<AvailablePublicationObservation>(this, _$identity);
@@ -303,7 +303,7 @@ class _$AvailablePublicationObservationCopyWithImpl<$Res>
   final $Res Function(AvailablePublicationObservation) _then;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? view = null,}) {
   return _then(AvailablePublicationObservation(
 null == view ? _self.view : view // ignore: cast_nullable_to_non_nullable
@@ -319,12 +319,12 @@ as skir.PublicationView,
 
 class UnavailablePublicationObservation implements PublicationObservation {
   const UnavailablePublicationObservation(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $UnavailablePublicationObservationCopyWith<UnavailablePublicationObservation> get copyWith => _$UnavailablePublicationObservationCopyWithImpl<UnavailablePublicationObservation>(this, _$identity);
@@ -371,7 +371,7 @@ class _$UnavailablePublicationObservationCopyWithImpl<$Res>
   final $Res Function(UnavailablePublicationObservation) _then;
 
 /// Create a copy of PublicationObservation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(UnavailablePublicationObservation(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -412,7 +412,7 @@ $RealmPublicationViewCopyWith(RealmPublicationView _, $Res Function(RealmPublica
 }
 
 
-/// Adds pattern matching related methods to [RealmPublicationView].
+/// Adds pattern-matching-related methods to [RealmPublicationView].
 extension RealmPublicationViewPatterns on RealmPublicationView {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -443,7 +443,7 @@ return uncertain(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -527,7 +527,7 @@ return uncertain(_that.message,_that.display);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -589,12 +589,12 @@ return uncertain(_that.message,_that.display);case _:
 
 class EmptyRealmPublication extends RealmPublicationView {
   const EmptyRealmPublication(this.data): super._();
-
+  
 
  final  skir.PublicationStatus_Empty data;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EmptyRealmPublicationCopyWith<EmptyRealmPublication> get copyWith => _$EmptyRealmPublicationCopyWithImpl<EmptyRealmPublication>(this, _$identity);
@@ -641,7 +641,7 @@ class _$EmptyRealmPublicationCopyWithImpl<$Res>
   final $Res Function(EmptyRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(EmptyRealmPublication(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -657,12 +657,12 @@ as skir.PublicationStatus_Empty,
 
 class CurrentRealmPublication extends RealmPublicationView {
   const CurrentRealmPublication(this.data): super._();
-
+  
 
  final  skir.PublicationStatus_Current data;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CurrentRealmPublicationCopyWith<CurrentRealmPublication> get copyWith => _$CurrentRealmPublicationCopyWithImpl<CurrentRealmPublication>(this, _$identity);
@@ -709,7 +709,7 @@ class _$CurrentRealmPublicationCopyWithImpl<$Res>
   final $Res Function(CurrentRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(CurrentRealmPublication(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -725,13 +725,13 @@ as skir.PublicationStatus_Current,
 
 class ReadyRealmPublication extends RealmPublicationView {
   const ReadyRealmPublication(this.data, this.command): super._();
-
+  
 
  final  skir.PublicationStatus_Ready data;
  final  RealmPublishCommand command;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ReadyRealmPublicationCopyWith<ReadyRealmPublication> get copyWith => _$ReadyRealmPublicationCopyWithImpl<ReadyRealmPublication>(this, _$identity);
@@ -778,7 +778,7 @@ class _$ReadyRealmPublicationCopyWithImpl<$Res>
   final $Res Function(ReadyRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,Object? command = null,}) {
   return _then(ReadyRealmPublication(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -795,12 +795,12 @@ as RealmPublishCommand,
 
 class BlockedRealmPublication extends RealmPublicationView {
   const BlockedRealmPublication(this.data): super._();
-
+  
 
  final  skir.PublicationStatus_Blocked data;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $BlockedRealmPublicationCopyWith<BlockedRealmPublication> get copyWith => _$BlockedRealmPublicationCopyWithImpl<BlockedRealmPublication>(this, _$identity);
@@ -847,7 +847,7 @@ class _$BlockedRealmPublicationCopyWithImpl<$Res>
   final $Res Function(BlockedRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(BlockedRealmPublication(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -863,12 +863,12 @@ as skir.PublicationStatus_Blocked,
 
 class CheckingRealmPublication extends RealmPublicationView {
   const CheckingRealmPublication({this.display}): super._();
-
+  
 
  final  skir.PublicationStatus? display;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CheckingRealmPublicationCopyWith<CheckingRealmPublication> get copyWith => _$CheckingRealmPublicationCopyWithImpl<CheckingRealmPublication>(this, _$identity);
@@ -915,7 +915,7 @@ class _$CheckingRealmPublicationCopyWithImpl<$Res>
   final $Res Function(CheckingRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? display = freezed,}) {
   return _then(CheckingRealmPublication(
 display: freezed == display ? _self.display : display // ignore: cast_nullable_to_non_nullable
@@ -931,12 +931,12 @@ as skir.PublicationStatus?,
 
 class PublishingRealmPublication extends RealmPublicationView {
   const PublishingRealmPublication(this.data): super._();
-
+  
 
  final  skir.PublicationStatus_Publishing data;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PublishingRealmPublicationCopyWith<PublishingRealmPublication> get copyWith => _$PublishingRealmPublicationCopyWithImpl<PublishingRealmPublication>(this, _$identity);
@@ -983,7 +983,7 @@ class _$PublishingRealmPublicationCopyWithImpl<$Res>
   final $Res Function(PublishingRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(PublishingRealmPublication(
 null == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
@@ -999,13 +999,13 @@ as skir.PublicationStatus_Publishing,
 
 class UnavailableRealmPublication extends RealmPublicationView {
   const UnavailableRealmPublication(this.message, {this.display}): super._();
-
+  
 
  final  String message;
  final  skir.PublicationStatus? display;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $UnavailableRealmPublicationCopyWith<UnavailableRealmPublication> get copyWith => _$UnavailableRealmPublicationCopyWithImpl<UnavailableRealmPublication>(this, _$identity);
@@ -1052,7 +1052,7 @@ class _$UnavailableRealmPublicationCopyWithImpl<$Res>
   final $Res Function(UnavailableRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? display = freezed,}) {
   return _then(UnavailableRealmPublication(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -1069,12 +1069,12 @@ as skir.PublicationStatus?,
 
 class RequestActiveRealmPublication extends RealmPublicationView {
   const RequestActiveRealmPublication({this.display}): super._();
-
+  
 
  final  skir.PublicationStatus? display;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RequestActiveRealmPublicationCopyWith<RequestActiveRealmPublication> get copyWith => _$RequestActiveRealmPublicationCopyWithImpl<RequestActiveRealmPublication>(this, _$identity);
@@ -1121,7 +1121,7 @@ class _$RequestActiveRealmPublicationCopyWithImpl<$Res>
   final $Res Function(RequestActiveRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? display = freezed,}) {
   return _then(RequestActiveRealmPublication(
 display: freezed == display ? _self.display : display // ignore: cast_nullable_to_non_nullable
@@ -1137,13 +1137,13 @@ as skir.PublicationStatus?,
 
 class UncertainRealmPublication extends RealmPublicationView {
   const UncertainRealmPublication(this.message, {this.display}): super._();
-
+  
 
  final  String message;
  final  skir.PublicationStatus? display;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $UncertainRealmPublicationCopyWith<UncertainRealmPublication> get copyWith => _$UncertainRealmPublicationCopyWithImpl<UncertainRealmPublication>(this, _$identity);
@@ -1190,7 +1190,7 @@ class _$UncertainRealmPublicationCopyWithImpl<$Res>
   final $Res Function(UncertainRealmPublication) _then;
 
 /// Create a copy of RealmPublicationView
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? display = freezed,}) {
   return _then(UncertainRealmPublication(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

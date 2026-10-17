@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'realm_edit_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$OperationWorkspaceCapture {
 
  AuthoringDocument get document; skir.OperationWorkingContext get context; int get revision;
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $OperationWorkspaceCaptureCopyWith<OperationWorkspaceCapture> get copyWith => _$OperationWorkspaceCaptureCopyWithImpl<OperationWorkspaceCapture>(this as OperationWorkspaceCapture, _$identity);
@@ -67,7 +67,7 @@ class _$OperationWorkspaceCaptureCopyWithImpl<$Res>
   final $Res Function(OperationWorkspaceCapture) _then;
 
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? document = null,Object? context = null,Object? revision = null,}) {
   return _then(OperationWorkspaceCapture(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
@@ -77,11 +77,11 @@ as int,
   ));
 }
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get document {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.document, (value) {
     return _then(_self.copyWith(document: value));
   });
@@ -89,7 +89,7 @@ $AuthoringDocumentCopyWith<$Res> get document {
 }
 
 
-/// Adds pattern matching related methods to [OperationWorkspaceCapture].
+/// Adds pattern-matching-related methods to [OperationWorkspaceCapture].
 extension OperationWorkspaceCapturePatterns on OperationWorkspaceCapture {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -112,7 +112,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -175,7 +175,7 @@ return $default(_that.document,_that.context,_that.revision);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -224,14 +224,14 @@ return $default(_that.document,_that.context,_that.revision);case _:
 
 class _OperationWorkspaceCapture implements OperationWorkspaceCapture {
   const _OperationWorkspaceCapture({required this.document, required this.context, required this.revision});
-
+  
 
 @override final  AuthoringDocument document;
 @override final  skir.OperationWorkingContext context;
 @override final  int revision;
 
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$OperationWorkspaceCaptureCopyWith<_OperationWorkspaceCapture> get copyWith => __$OperationWorkspaceCaptureCopyWithImpl<_OperationWorkspaceCapture>(this, _$identity);
@@ -278,7 +278,7 @@ class __$OperationWorkspaceCaptureCopyWithImpl<$Res>
   final $Res Function(_OperationWorkspaceCapture) _then;
 
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? document = null,Object? context = null,Object? revision = null,}) {
   return _then(_OperationWorkspaceCapture(
 document: null == document ? _self.document : document // ignore: cast_nullable_to_non_nullable
@@ -289,11 +289,11 @@ as int,
 }
 
 /// Create a copy of OperationWorkspaceCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get document {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.document, (value) {
     return _then(_self.copyWith(document: value));
   });
@@ -305,7 +305,7 @@ mixin _$RealmPreparedEdit {
 
  skir.PreparedEdit get request; List<LocatedInitializationFinding> get findings;
 /// Create a copy of RealmPreparedEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RealmPreparedEditCopyWith<RealmPreparedEdit> get copyWith => _$RealmPreparedEditCopyWithImpl<RealmPreparedEdit>(this as RealmPreparedEdit, _$identity);
@@ -355,7 +355,7 @@ class _$RealmPreparedEditCopyWithImpl<$Res>
   final $Res Function(RealmPreparedEdit) _then;
 
 /// Create a copy of RealmPreparedEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? request = null,Object? findings = null,}) {
   return _then(RealmPreparedEdit(
 request: null == request ? _self.request : request // ignore: cast_nullable_to_non_nullable
@@ -367,7 +367,7 @@ as List<LocatedInitializationFinding>,
 }
 
 
-/// Adds pattern matching related methods to [RealmPreparedEdit].
+/// Adds pattern-matching-related methods to [RealmPreparedEdit].
 extension RealmPreparedEditPatterns on RealmPreparedEdit {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -390,7 +390,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -453,7 +453,7 @@ return $default(_that.request,_that.findings);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -502,7 +502,7 @@ return $default(_that.request,_that.findings);case _:
 
 class _RealmPreparedEdit implements RealmPreparedEdit {
   const _RealmPreparedEdit({required this.request,  List<LocatedInitializationFinding> findings = const []}): _findings = findings;
-
+  
 
 @override final  skir.PreparedEdit request;
  final  List<LocatedInitializationFinding> _findings;
@@ -514,7 +514,7 @@ class _RealmPreparedEdit implements RealmPreparedEdit {
 
 
 /// Create a copy of RealmPreparedEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RealmPreparedEditCopyWith<_RealmPreparedEdit> get copyWith => __$RealmPreparedEditCopyWithImpl<_RealmPreparedEdit>(this, _$identity);
@@ -561,7 +561,7 @@ class __$RealmPreparedEditCopyWithImpl<$Res>
   final $Res Function(_RealmPreparedEdit) _then;
 
 /// Create a copy of RealmPreparedEdit
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? request = null,Object? findings = null,}) {
   return _then(_RealmPreparedEdit(
 request: null == request ? _self.request : request // ignore: cast_nullable_to_non_nullable
@@ -603,7 +603,7 @@ $ResourceCounterpartResolutionCopyWith(ResourceCounterpartResolution _, $Res Fun
 }
 
 
-/// Adds pattern matching related methods to [ResourceCounterpartResolution].
+/// Adds pattern-matching-related methods to [ResourceCounterpartResolution].
 extension ResourceCounterpartResolutionPatterns on ResourceCounterpartResolution {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -628,7 +628,7 @@ return invalid(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -694,7 +694,7 @@ return invalid(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -744,12 +744,12 @@ return invalid(_that.message);case _:
 
 class ResolvedResourceCounterpart implements ResourceCounterpartResolution {
   const ResolvedResourceCounterpart(this.location);
-
+  
 
  final  skir.ValueLocation location;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ResolvedResourceCounterpartCopyWith<ResolvedResourceCounterpart> get copyWith => _$ResolvedResourceCounterpartCopyWithImpl<ResolvedResourceCounterpart>(this, _$identity);
@@ -796,7 +796,7 @@ class _$ResolvedResourceCounterpartCopyWithImpl<$Res>
   final $Res Function(ResolvedResourceCounterpart) _then;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? location = null,}) {
   return _then(ResolvedResourceCounterpart(
 null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
@@ -812,12 +812,12 @@ as skir.ValueLocation,
 
 class ResourceCounterpartChoiceRequired implements ResourceCounterpartResolution {
   const ResourceCounterpartChoiceRequired(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ResourceCounterpartChoiceRequiredCopyWith<ResourceCounterpartChoiceRequired> get copyWith => _$ResourceCounterpartChoiceRequiredCopyWithImpl<ResourceCounterpartChoiceRequired>(this, _$identity);
@@ -864,7 +864,7 @@ class _$ResourceCounterpartChoiceRequiredCopyWithImpl<$Res>
   final $Res Function(ResourceCounterpartChoiceRequired) _then;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(ResourceCounterpartChoiceRequired(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -880,12 +880,12 @@ as String,
 
 class InvalidResourceCounterpart implements ResourceCounterpartResolution {
   const InvalidResourceCounterpart(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidResourceCounterpartCopyWith<InvalidResourceCounterpart> get copyWith => _$InvalidResourceCounterpartCopyWithImpl<InvalidResourceCounterpart>(this, _$identity);
@@ -932,7 +932,7 @@ class _$InvalidResourceCounterpartCopyWithImpl<$Res>
   final $Res Function(InvalidResourceCounterpart) _then;
 
 /// Create a copy of ResourceCounterpartResolution
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(InvalidResourceCounterpart(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -948,7 +948,7 @@ mixin _$AuthoringCompositionFailure {
 
  List<skir.ExpectationConflict> get conflicts;
 /// Create a copy of AuthoringCompositionFailure
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringCompositionFailureCopyWith<AuthoringCompositionFailure> get copyWith => _$AuthoringCompositionFailureCopyWithImpl<AuthoringCompositionFailure>(this as AuthoringCompositionFailure, _$identity);
@@ -998,7 +998,7 @@ class _$AuthoringCompositionFailureCopyWithImpl<$Res>
   final $Res Function(AuthoringCompositionFailure) _then;
 
 /// Create a copy of AuthoringCompositionFailure
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? conflicts = null,}) {
   return _then(AuthoringCompositionFailure(
 null == conflicts ? _self.conflicts : conflicts // ignore: cast_nullable_to_non_nullable
@@ -1009,7 +1009,7 @@ as List<skir.ExpectationConflict>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringCompositionFailure].
+/// Adds pattern-matching-related methods to [AuthoringCompositionFailure].
 extension AuthoringCompositionFailurePatterns on AuthoringCompositionFailure {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1032,7 +1032,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1095,7 +1095,7 @@ return $default(_that.conflicts);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1144,7 +1144,7 @@ return $default(_that.conflicts);case _:
 
 class _AuthoringCompositionFailure implements AuthoringCompositionFailure {
   const _AuthoringCompositionFailure( List<skir.ExpectationConflict> conflicts): _conflicts = conflicts;
-
+  
 
  final  List<skir.ExpectationConflict> _conflicts;
 @override List<skir.ExpectationConflict> get conflicts {
@@ -1155,7 +1155,7 @@ class _AuthoringCompositionFailure implements AuthoringCompositionFailure {
 
 
 /// Create a copy of AuthoringCompositionFailure
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringCompositionFailureCopyWith<_AuthoringCompositionFailure> get copyWith => __$AuthoringCompositionFailureCopyWithImpl<_AuthoringCompositionFailure>(this, _$identity);
@@ -1202,7 +1202,7 @@ class __$AuthoringCompositionFailureCopyWithImpl<$Res>
   final $Res Function(_AuthoringCompositionFailure) _then;
 
 /// Create a copy of AuthoringCompositionFailure
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? conflicts = null,}) {
   return _then(_AuthoringCompositionFailure(
 null == conflicts ? _self._conflicts : conflicts // ignore: cast_nullable_to_non_nullable
@@ -1218,7 +1218,7 @@ mixin _$AuthoringConflictEvidence {
 
  List<skir.ExpectationConflict> get facts; List<EditorDiagnostic> get diagnostics;
 /// Create a copy of AuthoringConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringConflictEvidenceCopyWith<AuthoringConflictEvidence> get copyWith => _$AuthoringConflictEvidenceCopyWithImpl<AuthoringConflictEvidence>(this as AuthoringConflictEvidence, _$identity);
@@ -1268,7 +1268,7 @@ class _$AuthoringConflictEvidenceCopyWithImpl<$Res>
   final $Res Function(AuthoringConflictEvidence) _then;
 
 /// Create a copy of AuthoringConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? facts = null,Object? diagnostics = null,}) {
   return _then(AuthoringConflictEvidence(
 facts: null == facts ? _self.facts : facts // ignore: cast_nullable_to_non_nullable
@@ -1280,7 +1280,7 @@ as List<EditorDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringConflictEvidence].
+/// Adds pattern-matching-related methods to [AuthoringConflictEvidence].
 extension AuthoringConflictEvidencePatterns on AuthoringConflictEvidence {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1303,7 +1303,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1366,7 +1366,7 @@ return $default(_that.facts,_that.diagnostics);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1415,7 +1415,7 @@ return $default(_that.facts,_that.diagnostics);case _:
 
 class _AuthoringConflictEvidence implements AuthoringConflictEvidence {
   const _AuthoringConflictEvidence({required  List<skir.ExpectationConflict> facts,  List<EditorDiagnostic> diagnostics = const []}): _facts = facts,_diagnostics = diagnostics;
-
+  
 
  final  List<skir.ExpectationConflict> _facts;
 @override List<skir.ExpectationConflict> get facts {
@@ -1433,7 +1433,7 @@ class _AuthoringConflictEvidence implements AuthoringConflictEvidence {
 
 
 /// Create a copy of AuthoringConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringConflictEvidenceCopyWith<_AuthoringConflictEvidence> get copyWith => __$AuthoringConflictEvidenceCopyWithImpl<_AuthoringConflictEvidence>(this, _$identity);
@@ -1480,7 +1480,7 @@ class __$AuthoringConflictEvidenceCopyWithImpl<$Res>
   final $Res Function(_AuthoringConflictEvidence) _then;
 
 /// Create a copy of AuthoringConflictEvidence
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? facts = null,Object? diagnostics = null,}) {
   return _then(_AuthoringConflictEvidence(
 facts: null == facts ? _self._facts : facts // ignore: cast_nullable_to_non_nullable
@@ -1497,7 +1497,7 @@ mixin _$AuthoringDocument {
 
  CheckedEditorCatalog get catalog; Map<skir.ResourceId, skir.AuthoringResource> get entries; List<skir.LinkProjection> get links; int get revision; skir.AuthoringObservationId? get confirmedObservation; List<LocatedInitializationFinding> get initializationFindings;
 /// Create a copy of AuthoringDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<AuthoringDocument> get copyWith => _$AuthoringDocumentCopyWithImpl<AuthoringDocument>(this as AuthoringDocument, _$identity);
@@ -1547,7 +1547,7 @@ class _$AuthoringDocumentCopyWithImpl<$Res>
   final $Res Function(AuthoringDocument) _then;
 
 /// Create a copy of AuthoringDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? confirmedObservation = freezed,Object? initializationFindings = null,}) {
   return _then(AuthoringDocument(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
@@ -1563,7 +1563,7 @@ as List<LocatedInitializationFinding>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringDocument].
+/// Adds pattern-matching-related methods to [AuthoringDocument].
 extension AuthoringDocumentPatterns on AuthoringDocument {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1586,7 +1586,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1649,7 +1649,7 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.con
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1698,7 +1698,7 @@ return $default(_that.catalog,_that.entries,_that.links,_that.revision,_that.con
 
 class _AuthoringDocument extends AuthoringDocument {
   const _AuthoringDocument({required this.catalog, required  Map<skir.ResourceId, skir.AuthoringResource> entries, required  List<skir.LinkProjection> links, this.revision = 0, this.confirmedObservation,  List<LocatedInitializationFinding> initializationFindings = const []}): _entries = entries,_links = links,_initializationFindings = initializationFindings,super._();
-
+  
 
 @override final  CheckedEditorCatalog catalog;
  final  Map<skir.ResourceId, skir.AuthoringResource> _entries;
@@ -1726,7 +1726,7 @@ class _AuthoringDocument extends AuthoringDocument {
 
 
 /// Create a copy of AuthoringDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringDocumentCopyWith<_AuthoringDocument> get copyWith => __$AuthoringDocumentCopyWithImpl<_AuthoringDocument>(this, _$identity);
@@ -1773,7 +1773,7 @@ class __$AuthoringDocumentCopyWithImpl<$Res>
   final $Res Function(_AuthoringDocument) _then;
 
 /// Create a copy of AuthoringDocument
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? catalog = null,Object? entries = null,Object? links = null,Object? revision = null,Object? confirmedObservation = freezed,Object? initializationFindings = null,}) {
   return _then(_AuthoringDocument(
 catalog: null == catalog ? _self.catalog : catalog // ignore: cast_nullable_to_non_nullable
@@ -1794,7 +1794,7 @@ mixin _$AuthoringScope {
 
  skir.RecordId get organizationId; skir.RecordId get realmId;
 /// Create a copy of AuthoringScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringScopeCopyWith<AuthoringScope> get copyWith => _$AuthoringScopeCopyWithImpl<AuthoringScope>(this as AuthoringScope, _$identity);
@@ -1844,7 +1844,7 @@ class _$AuthoringScopeCopyWithImpl<$Res>
   final $Res Function(AuthoringScope) _then;
 
 /// Create a copy of AuthoringScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? organizationId = null,Object? realmId = null,}) {
   return _then(AuthoringScope(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
@@ -1856,7 +1856,7 @@ as skir.RecordId,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringScope].
+/// Adds pattern-matching-related methods to [AuthoringScope].
 extension AuthoringScopePatterns on AuthoringScope {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1879,7 +1879,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1942,7 +1942,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1991,13 +1991,13 @@ return $default(_that.organizationId,_that.realmId);case _:
 
 class _AuthoringScope implements AuthoringScope {
   const _AuthoringScope({required this.organizationId, required this.realmId});
-
+  
 
 @override final  skir.RecordId organizationId;
 @override final  skir.RecordId realmId;
 
 /// Create a copy of AuthoringScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringScopeCopyWith<_AuthoringScope> get copyWith => __$AuthoringScopeCopyWithImpl<_AuthoringScope>(this, _$identity);
@@ -2044,7 +2044,7 @@ class __$AuthoringScopeCopyWithImpl<$Res>
   final $Res Function(_AuthoringScope) _then;
 
 /// Create a copy of AuthoringScope
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? organizationId = null,Object? realmId = null,}) {
   return _then(_AuthoringScope(
 organizationId: null == organizationId ? _self.organizationId : organizationId // ignore: cast_nullable_to_non_nullable
@@ -2061,7 +2061,7 @@ mixin _$LocatedInitializationFinding {
 
  skir.ValueLocation get location; skir.InitializationDiagnostic get diagnostic; skir.DiagnosticEvidence get evidence;
 /// Create a copy of LocatedInitializationFinding
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LocatedInitializationFindingCopyWith<LocatedInitializationFinding> get copyWith => _$LocatedInitializationFindingCopyWithImpl<LocatedInitializationFinding>(this as LocatedInitializationFinding, _$identity);
@@ -2111,7 +2111,7 @@ class _$LocatedInitializationFindingCopyWithImpl<$Res>
   final $Res Function(LocatedInitializationFinding) _then;
 
 /// Create a copy of LocatedInitializationFinding
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? location = null,Object? diagnostic = null,Object? evidence = null,}) {
   return _then(LocatedInitializationFinding(
 location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
@@ -2124,7 +2124,7 @@ as skir.DiagnosticEvidence,
 }
 
 
-/// Adds pattern matching related methods to [LocatedInitializationFinding].
+/// Adds pattern-matching-related methods to [LocatedInitializationFinding].
 extension LocatedInitializationFindingPatterns on LocatedInitializationFinding {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2147,7 +2147,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2210,7 +2210,7 @@ return $default(_that.location,_that.diagnostic,_that.evidence);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2259,14 +2259,14 @@ return $default(_that.location,_that.diagnostic,_that.evidence);case _:
 
 class _LocatedInitializationFinding implements LocatedInitializationFinding {
   const _LocatedInitializationFinding({required this.location, required this.diagnostic, required this.evidence});
-
+  
 
 @override final  skir.ValueLocation location;
 @override final  skir.InitializationDiagnostic diagnostic;
 @override final  skir.DiagnosticEvidence evidence;
 
 /// Create a copy of LocatedInitializationFinding
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$LocatedInitializationFindingCopyWith<_LocatedInitializationFinding> get copyWith => __$LocatedInitializationFindingCopyWithImpl<_LocatedInitializationFinding>(this, _$identity);
@@ -2313,7 +2313,7 @@ class __$LocatedInitializationFindingCopyWithImpl<$Res>
   final $Res Function(_LocatedInitializationFinding) _then;
 
 /// Create a copy of LocatedInitializationFinding
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? location = null,Object? diagnostic = null,Object? evidence = null,}) {
   return _then(_LocatedInitializationFinding(
 location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
@@ -2331,7 +2331,7 @@ mixin _$AuthoringFacts {
 
  Map<skir.ResourceId, skir.AuthoringRecord> get resources; List<skir.LinkProjection> get links;
 /// Create a copy of AuthoringFacts
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringFactsCopyWith<AuthoringFacts> get copyWith => _$AuthoringFactsCopyWithImpl<AuthoringFacts>(this as AuthoringFacts, _$identity);
@@ -2381,7 +2381,7 @@ class _$AuthoringFactsCopyWithImpl<$Res>
   final $Res Function(AuthoringFacts) _then;
 
 /// Create a copy of AuthoringFacts
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? resources = null,Object? links = null,}) {
   return _then(AuthoringFacts(
 resources: null == resources ? _self.resources : resources // ignore: cast_nullable_to_non_nullable
@@ -2393,7 +2393,7 @@ as List<skir.LinkProjection>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringFacts].
+/// Adds pattern-matching-related methods to [AuthoringFacts].
 extension AuthoringFactsPatterns on AuthoringFacts {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2416,7 +2416,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2479,7 +2479,7 @@ return $default(_that.resources,_that.links);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2528,7 +2528,7 @@ return $default(_that.resources,_that.links);case _:
 
 class _AuthoringFacts extends AuthoringFacts {
   const _AuthoringFacts({required  Map<skir.ResourceId, skir.AuthoringRecord> resources, required  List<skir.LinkProjection> links}): _resources = resources,_links = links,super._();
-
+  
 
  final  Map<skir.ResourceId, skir.AuthoringRecord> _resources;
 @override Map<skir.ResourceId, skir.AuthoringRecord> get resources {
@@ -2546,7 +2546,7 @@ class _AuthoringFacts extends AuthoringFacts {
 
 
 /// Create a copy of AuthoringFacts
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringFactsCopyWith<_AuthoringFacts> get copyWith => __$AuthoringFactsCopyWithImpl<_AuthoringFacts>(this, _$identity);
@@ -2593,7 +2593,7 @@ class __$AuthoringFactsCopyWithImpl<$Res>
   final $Res Function(_AuthoringFacts) _then;
 
 /// Create a copy of AuthoringFacts
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? resources = null,Object? links = null,}) {
   return _then(_AuthoringFacts(
 resources: null == resources ? _self._resources : resources // ignore: cast_nullable_to_non_nullable
@@ -2610,7 +2610,7 @@ mixin _$AuthoringConflictReview {
 
  EditGroupId get group; Set<int> get operations; List<RealmPreparedEdit> get edits; AuthoringDocument get saved; AuthoringDocument get original; AuthoringDocument get beforeGroup; AuthoringDocument get proposal; List<skir.EditExpectation> get reviewedFacts; AuthoringConflictEvidence get evidence; List<EditorDiagnostic> get diagnostics;
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringConflictReviewCopyWith<AuthoringConflictReview> get copyWith => _$AuthoringConflictReviewCopyWithImpl<AuthoringConflictReview>(this as AuthoringConflictReview, _$identity);
@@ -2660,7 +2660,7 @@ class _$AuthoringConflictReviewCopyWithImpl<$Res>
   final $Res Function(AuthoringConflictReview) _then;
 
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? group = null,Object? operations = null,Object? edits = null,Object? saved = null,Object? original = null,Object? beforeGroup = null,Object? proposal = null,Object? reviewedFacts = null,Object? evidence = null,Object? diagnostics = null,}) {
   return _then(AuthoringConflictReview(
 group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -2677,56 +2677,56 @@ as List<EditorDiagnostic>,
   ));
 }
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get group {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
     return _then(_self.copyWith(group: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get saved {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.saved, (value) {
     return _then(_self.copyWith(saved: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get original {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.original, (value) {
     return _then(_self.copyWith(original: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get beforeGroup {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.beforeGroup, (value) {
     return _then(_self.copyWith(beforeGroup: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get proposal {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.proposal, (value) {
     return _then(_self.copyWith(proposal: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringConflictEvidenceCopyWith<$Res> get evidence {
-
+  
   return $AuthoringConflictEvidenceCopyWith<$Res>(_self.evidence, (value) {
     return _then(_self.copyWith(evidence: value));
   });
@@ -2734,7 +2734,7 @@ $AuthoringConflictEvidenceCopyWith<$Res> get evidence {
 }
 
 
-/// Adds pattern matching related methods to [AuthoringConflictReview].
+/// Adds pattern-matching-related methods to [AuthoringConflictReview].
 extension AuthoringConflictReviewPatterns on AuthoringConflictReview {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2757,7 +2757,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2820,7 +2820,7 @@ return $default(_that.group,_that.operations,_that.edits,_that.saved,_that.origi
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2869,7 +2869,7 @@ return $default(_that.group,_that.operations,_that.edits,_that.saved,_that.origi
 
 class _AuthoringConflictReview extends AuthoringConflictReview {
   const _AuthoringConflictReview({required this.group, required  Set<int> operations, required  List<RealmPreparedEdit> edits, required this.saved, required this.original, required this.beforeGroup, required this.proposal, required  List<skir.EditExpectation> reviewedFacts, required this.evidence,  List<EditorDiagnostic> diagnostics = const []}): _operations = operations,_edits = edits,_reviewedFacts = reviewedFacts,_diagnostics = diagnostics,super._();
-
+  
 
 @override final  EditGroupId group;
  final  Set<int> _operations;
@@ -2907,7 +2907,7 @@ class _AuthoringConflictReview extends AuthoringConflictReview {
 
 
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringConflictReviewCopyWith<_AuthoringConflictReview> get copyWith => __$AuthoringConflictReviewCopyWithImpl<_AuthoringConflictReview>(this, _$identity);
@@ -2954,7 +2954,7 @@ class __$AuthoringConflictReviewCopyWithImpl<$Res>
   final $Res Function(_AuthoringConflictReview) _then;
 
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? group = null,Object? operations = null,Object? edits = null,Object? saved = null,Object? original = null,Object? beforeGroup = null,Object? proposal = null,Object? reviewedFacts = null,Object? evidence = null,Object? diagnostics = null,}) {
   return _then(_AuthoringConflictReview(
 group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -2972,56 +2972,56 @@ as List<EditorDiagnostic>,
 }
 
 /// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get group {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
     return _then(_self.copyWith(group: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get saved {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.saved, (value) {
     return _then(_self.copyWith(saved: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get original {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.original, (value) {
     return _then(_self.copyWith(original: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get beforeGroup {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.beforeGroup, (value) {
     return _then(_self.copyWith(beforeGroup: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringDocumentCopyWith<$Res> get proposal {
-
+  
   return $AuthoringDocumentCopyWith<$Res>(_self.proposal, (value) {
     return _then(_self.copyWith(proposal: value));
   });
 }/// Create a copy of AuthoringConflictReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoringConflictEvidenceCopyWith<$Res> get evidence {
-
+  
   return $AuthoringConflictEvidenceCopyWith<$Res>(_self.evidence, (value) {
     return _then(_self.copyWith(evidence: value));
   });

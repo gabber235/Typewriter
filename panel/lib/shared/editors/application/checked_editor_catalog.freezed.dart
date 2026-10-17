@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'checked_editor_catalog.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$EditorFieldPresentationIdentity {
 
  skir.PresentationId get provider; skir.TypeTemplate get subject; skir.PresentationRole get role; String get field; String get nodeId;
 /// Create a copy of EditorFieldPresentationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<EditorFieldPresentationIdentity> get copyWith => _$EditorFieldPresentationIdentityCopyWithImpl<EditorFieldPresentationIdentity>(this as EditorFieldPresentationIdentity, _$identity);
@@ -67,7 +67,7 @@ class _$EditorFieldPresentationIdentityCopyWithImpl<$Res>
   final $Res Function(EditorFieldPresentationIdentity) _then;
 
 /// Create a copy of EditorFieldPresentationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? provider = null,Object? subject = null,Object? role = null,Object? field = null,Object? nodeId = null,}) {
   return _then(EditorFieldPresentationIdentity(
 provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
@@ -82,7 +82,7 @@ as String,
 }
 
 
-/// Adds pattern matching related methods to [EditorFieldPresentationIdentity].
+/// Adds pattern-matching-related methods to [EditorFieldPresentationIdentity].
 extension EditorFieldPresentationIdentityPatterns on EditorFieldPresentationIdentity {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -105,7 +105,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -168,7 +168,7 @@ return $default(_that.provider,_that.subject,_that.role,_that.field,_that.nodeId
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -217,7 +217,7 @@ return $default(_that.provider,_that.subject,_that.role,_that.field,_that.nodeId
 
 class _EditorFieldPresentationIdentity implements EditorFieldPresentationIdentity {
   const _EditorFieldPresentationIdentity({required this.provider, required this.subject, required this.role, required this.field, required this.nodeId});
-
+  
 
 @override final  skir.PresentationId provider;
 @override final  skir.TypeTemplate subject;
@@ -226,7 +226,7 @@ class _EditorFieldPresentationIdentity implements EditorFieldPresentationIdentit
 @override final  String nodeId;
 
 /// Create a copy of EditorFieldPresentationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditorFieldPresentationIdentityCopyWith<_EditorFieldPresentationIdentity> get copyWith => __$EditorFieldPresentationIdentityCopyWithImpl<_EditorFieldPresentationIdentity>(this, _$identity);
@@ -273,7 +273,7 @@ class __$EditorFieldPresentationIdentityCopyWithImpl<$Res>
   final $Res Function(_EditorFieldPresentationIdentity) _then;
 
 /// Create a copy of EditorFieldPresentationIdentity
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? provider = null,Object? subject = null,Object? role = null,Object? field = null,Object? nodeId = null,}) {
   return _then(_EditorFieldPresentationIdentity(
 provider: null == provider ? _self.provider : provider // ignore: cast_nullable_to_non_nullable
@@ -318,7 +318,7 @@ $EditorFieldPresentationSelectionCopyWith(EditorFieldPresentationSelection _, $R
 }
 
 
-/// Adds pattern matching related methods to [EditorFieldPresentationSelection].
+/// Adds pattern-matching-related methods to [EditorFieldPresentationSelection].
 extension EditorFieldPresentationSelectionPatterns on EditorFieldPresentationSelection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -344,7 +344,7 @@ return missing(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -413,7 +413,7 @@ return missing();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -465,14 +465,14 @@ return missing();case _:
 
 class SelectedEditorFieldPresentation implements EditorFieldPresentationSelection {
   const SelectedEditorFieldPresentation({required this.identity, required this.material, required this.node});
-
+  
 
  final  EditorFieldPresentationIdentity identity;
  final  skir.PresentationMaterial material;
  final  skir.PresentationNode node;
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SelectedEditorFieldPresentationCopyWith<SelectedEditorFieldPresentation> get copyWith => _$SelectedEditorFieldPresentationCopyWithImpl<SelectedEditorFieldPresentation>(this, _$identity);
@@ -519,7 +519,7 @@ class _$SelectedEditorFieldPresentationCopyWithImpl<$Res>
   final $Res Function(SelectedEditorFieldPresentation) _then;
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? identity = null,Object? material = null,Object? node = null,}) {
   return _then(SelectedEditorFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -530,11 +530,11 @@ as skir.PresentationNode,
 }
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
@@ -546,7 +546,7 @@ $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
 
 class ConflictingEditorFieldPresentation implements EditorFieldPresentationSelection {
   const ConflictingEditorFieldPresentation({required  List<EditorFieldPresentationIdentity> candidates}): _candidates = candidates;
-
+  
 
  final  List<EditorFieldPresentationIdentity> _candidates;
  List<EditorFieldPresentationIdentity> get candidates {
@@ -557,7 +557,7 @@ class ConflictingEditorFieldPresentation implements EditorFieldPresentationSelec
 
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ConflictingEditorFieldPresentationCopyWith<ConflictingEditorFieldPresentation> get copyWith => _$ConflictingEditorFieldPresentationCopyWithImpl<ConflictingEditorFieldPresentation>(this, _$identity);
@@ -604,7 +604,7 @@ class _$ConflictingEditorFieldPresentationCopyWithImpl<$Res>
   final $Res Function(ConflictingEditorFieldPresentation) _then;
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? candidates = null,}) {
   return _then(ConflictingEditorFieldPresentation(
 candidates: null == candidates ? _self._candidates : candidates // ignore: cast_nullable_to_non_nullable
@@ -620,13 +620,13 @@ as List<EditorFieldPresentationIdentity>,
 
 class InvalidEditorFieldPresentation implements EditorFieldPresentationSelection {
   const InvalidEditorFieldPresentation({required this.identity, required this.diagnostic});
-
+  
 
  final  EditorFieldPresentationIdentity identity;
  final  String diagnostic;
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidEditorFieldPresentationCopyWith<InvalidEditorFieldPresentation> get copyWith => _$InvalidEditorFieldPresentationCopyWithImpl<InvalidEditorFieldPresentation>(this, _$identity);
@@ -673,7 +673,7 @@ class _$InvalidEditorFieldPresentationCopyWithImpl<$Res>
   final $Res Function(InvalidEditorFieldPresentation) _then;
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? identity = null,Object? diagnostic = null,}) {
   return _then(InvalidEditorFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -683,11 +683,11 @@ as String,
 }
 
 /// Create a copy of EditorFieldPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
@@ -699,7 +699,7 @@ $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
 
 class MissingEditorFieldPresentation implements EditorFieldPresentationSelection {
   const MissingEditorFieldPresentation();
-
+  
 
 
 
@@ -731,7 +731,7 @@ mixin _$CheckedFieldPresentation {
 
  EditorFieldPresentationIdentity get identity; skir.PresentationMaterial get material;
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CheckedFieldPresentationCopyWith<_CheckedFieldPresentation> get copyWith => __$CheckedFieldPresentationCopyWithImpl<_CheckedFieldPresentation>(this as _CheckedFieldPresentation, _$identity);
@@ -781,7 +781,7 @@ class __$CheckedFieldPresentationCopyWithImpl<$Res>
   final $Res Function(_CheckedFieldPresentation) _then;
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? identity = null,Object? material = null,}) {
   return _then(_self.copyWith(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -790,11 +790,11 @@ as skir.PresentationMaterial,
   ));
 }
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
@@ -802,7 +802,7 @@ $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
 }
 
 
-/// Adds pattern matching related methods to [_CheckedFieldPresentation].
+/// Adds pattern-matching-related methods to [_CheckedFieldPresentation].
 extension _CheckedFieldPresentationPatterns on _CheckedFieldPresentation {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -826,7 +826,7 @@ return invalid(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -889,7 +889,7 @@ return invalid(_that.identity,_that.material,_that.diagnostic);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -937,14 +937,14 @@ return invalid(_that.identity,_that.material,_that.diagnostic);case _:
 
 class _ValidFieldPresentation implements _CheckedFieldPresentation {
   const _ValidFieldPresentation({required this.identity, required this.material, required this.node});
-
+  
 
 @override final  EditorFieldPresentationIdentity identity;
 @override final  skir.PresentationMaterial material;
  final  skir.PresentationNode node;
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$ValidFieldPresentationCopyWith<_ValidFieldPresentation> get copyWith => __$ValidFieldPresentationCopyWithImpl<_ValidFieldPresentation>(this, _$identity);
@@ -991,7 +991,7 @@ class __$ValidFieldPresentationCopyWithImpl<$Res>
   final $Res Function(_ValidFieldPresentation) _then;
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? identity = null,Object? material = null,Object? node = null,}) {
   return _then(_ValidFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -1002,11 +1002,11 @@ as skir.PresentationNode,
 }
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
@@ -1018,14 +1018,14 @@ $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
 
 class _InvalidFieldPresentation implements _CheckedFieldPresentation {
   const _InvalidFieldPresentation({required this.identity, required this.material, required this.diagnostic});
-
+  
 
 @override final  EditorFieldPresentationIdentity identity;
 @override final  skir.PresentationMaterial material;
  final  String diagnostic;
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$InvalidFieldPresentationCopyWith<_InvalidFieldPresentation> get copyWith => __$InvalidFieldPresentationCopyWithImpl<_InvalidFieldPresentation>(this, _$identity);
@@ -1072,7 +1072,7 @@ class __$InvalidFieldPresentationCopyWithImpl<$Res>
   final $Res Function(_InvalidFieldPresentation) _then;
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? identity = null,Object? material = null,Object? diagnostic = null,}) {
   return _then(_InvalidFieldPresentation(
 identity: null == identity ? _self.identity : identity // ignore: cast_nullable_to_non_nullable
@@ -1083,11 +1083,11 @@ as String,
 }
 
 /// Create a copy of _CheckedFieldPresentation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditorFieldPresentationIdentityCopyWith<$Res> get identity {
-
+  
   return $EditorFieldPresentationIdentityCopyWith<$Res>(_self.identity, (value) {
     return _then(_self.copyWith(identity: value));
   });
@@ -1099,7 +1099,7 @@ mixin _$FieldPresentationCandidate {
 
  skir.PresentationDescriptor get descriptor; _CheckedFieldPresentation get reference;
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$FieldPresentationCandidateCopyWith<_FieldPresentationCandidate> get copyWith => __$FieldPresentationCandidateCopyWithImpl<_FieldPresentationCandidate>(this as _FieldPresentationCandidate, _$identity);
@@ -1149,7 +1149,7 @@ class __$FieldPresentationCandidateCopyWithImpl<$Res>
   final $Res Function(_FieldPresentationCandidate) _then;
 
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? descriptor = null,Object? reference = null,}) {
   return _then(_FieldPresentationCandidate(
 descriptor: null == descriptor ? _self.descriptor : descriptor // ignore: cast_nullable_to_non_nullable
@@ -1158,11 +1158,11 @@ as _CheckedFieldPresentation,
   ));
 }
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 _$CheckedFieldPresentationCopyWith<$Res> get reference {
-
+  
   return _$CheckedFieldPresentationCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1170,7 +1170,7 @@ _$CheckedFieldPresentationCopyWith<$Res> get reference {
 }
 
 
-/// Adds pattern matching related methods to [_FieldPresentationCandidate].
+/// Adds pattern-matching-related methods to [_FieldPresentationCandidate].
 extension _FieldPresentationCandidatePatterns on _FieldPresentationCandidate {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1193,7 +1193,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1256,7 +1256,7 @@ return $default(_that.descriptor,_that.reference);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1305,13 +1305,13 @@ return $default(_that.descriptor,_that.reference);case _:
 
 class __FieldPresentationCandidate implements _FieldPresentationCandidate {
   const __FieldPresentationCandidate({required this.descriptor, required this.reference});
-
+  
 
 @override final  skir.PresentationDescriptor descriptor;
 @override final  _CheckedFieldPresentation reference;
 
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$_FieldPresentationCandidateCopyWith<__FieldPresentationCandidate> get copyWith => __$_FieldPresentationCandidateCopyWithImpl<__FieldPresentationCandidate>(this, _$identity);
@@ -1358,7 +1358,7 @@ class __$_FieldPresentationCandidateCopyWithImpl<$Res>
   final $Res Function(__FieldPresentationCandidate) _then;
 
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? descriptor = null,Object? reference = null,}) {
   return _then(__FieldPresentationCandidate(
 descriptor: null == descriptor ? _self.descriptor : descriptor // ignore: cast_nullable_to_non_nullable
@@ -1368,11 +1368,11 @@ as _CheckedFieldPresentation,
 }
 
 /// Create a copy of _FieldPresentationCandidate
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 _$CheckedFieldPresentationCopyWith<$Res> get reference {
-
+  
   return _$CheckedFieldPresentationCopyWith<$Res>(_self.reference, (value) {
     return _then(_self.copyWith(reference: value));
   });
@@ -1384,7 +1384,7 @@ mixin _$CheckedInheritableLayout {
 
  Map<String, skir.PresentationNode> get nodes; Set<String> get inheritableNodes; int get remainderCount; Set<String> get canonicalFields; Set<skir.PresentationPartId> get declaredParts; String? get diagnostic;
 /// Create a copy of CheckedInheritableLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CheckedInheritableLayoutCopyWith<CheckedInheritableLayout> get copyWith => _$CheckedInheritableLayoutCopyWithImpl<CheckedInheritableLayout>(this as CheckedInheritableLayout, _$identity);
@@ -1434,7 +1434,7 @@ class _$CheckedInheritableLayoutCopyWithImpl<$Res>
   final $Res Function(CheckedInheritableLayout) _then;
 
 /// Create a copy of CheckedInheritableLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? nodes = null,Object? inheritableNodes = null,Object? remainderCount = null,Object? canonicalFields = null,Object? declaredParts = null,Object? diagnostic = freezed,}) {
   return _then(CheckedInheritableLayout(
 nodes: null == nodes ? _self.nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -1450,7 +1450,7 @@ as String?,
 }
 
 
-/// Adds pattern matching related methods to [CheckedInheritableLayout].
+/// Adds pattern-matching-related methods to [CheckedInheritableLayout].
 extension CheckedInheritableLayoutPatterns on CheckedInheritableLayout {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1473,7 +1473,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1536,7 +1536,7 @@ return $default(_that.nodes,_that.inheritableNodes,_that.remainderCount,_that.ca
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1585,7 +1585,7 @@ return $default(_that.nodes,_that.inheritableNodes,_that.remainderCount,_that.ca
 
 class _CheckedInheritableLayout implements CheckedInheritableLayout {
   const _CheckedInheritableLayout({required  Map<String, skir.PresentationNode> nodes, required  Set<String> inheritableNodes, required this.remainderCount, required  Set<String> canonicalFields, required  Set<skir.PresentationPartId> declaredParts, this.diagnostic}): _nodes = nodes,_inheritableNodes = inheritableNodes,_canonicalFields = canonicalFields,_declaredParts = declaredParts;
-
+  
 
  final  Map<String, skir.PresentationNode> _nodes;
 @override Map<String, skir.PresentationNode> get nodes {
@@ -1619,7 +1619,7 @@ class _CheckedInheritableLayout implements CheckedInheritableLayout {
 @override final  String? diagnostic;
 
 /// Create a copy of CheckedInheritableLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CheckedInheritableLayoutCopyWith<_CheckedInheritableLayout> get copyWith => __$CheckedInheritableLayoutCopyWithImpl<_CheckedInheritableLayout>(this, _$identity);
@@ -1666,7 +1666,7 @@ class __$CheckedInheritableLayoutCopyWithImpl<$Res>
   final $Res Function(_CheckedInheritableLayout) _then;
 
 /// Create a copy of CheckedInheritableLayout
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? nodes = null,Object? inheritableNodes = null,Object? remainderCount = null,Object? canonicalFields = null,Object? declaredParts = null,Object? diagnostic = freezed,}) {
   return _then(_CheckedInheritableLayout(
 nodes: null == nodes ? _self._nodes : nodes // ignore: cast_nullable_to_non_nullable
@@ -1712,7 +1712,7 @@ $EditorInspectorLayoutSelectionCopyWith(EditorInspectorLayoutSelection _, $Res F
 }
 
 
-/// Adds pattern matching related methods to [EditorInspectorLayoutSelection].
+/// Adds pattern-matching-related methods to [EditorInspectorLayoutSelection].
 extension EditorInspectorLayoutSelectionPatterns on EditorInspectorLayoutSelection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1738,7 +1738,7 @@ return missing(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1807,7 +1807,7 @@ return missing();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1859,7 +1859,7 @@ return missing();case _:
 
 class SelectedEditorInspectorLayout implements EditorInspectorLayoutSelection {
   const SelectedEditorInspectorLayout({required this.descriptor, required this.material, required  Set<String> inheritableNodes}): _inheritableNodes = inheritableNodes;
-
+  
 
  final  skir.PresentationDescriptor descriptor;
  final  skir.PresentationMaterial material;
@@ -1872,7 +1872,7 @@ class SelectedEditorInspectorLayout implements EditorInspectorLayoutSelection {
 
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SelectedEditorInspectorLayoutCopyWith<SelectedEditorInspectorLayout> get copyWith => _$SelectedEditorInspectorLayoutCopyWithImpl<SelectedEditorInspectorLayout>(this, _$identity);
@@ -1919,7 +1919,7 @@ class _$SelectedEditorInspectorLayoutCopyWithImpl<$Res>
   final $Res Function(SelectedEditorInspectorLayout) _then;
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? descriptor = null,Object? material = null,Object? inheritableNodes = null,}) {
   return _then(SelectedEditorInspectorLayout(
 descriptor: null == descriptor ? _self.descriptor : descriptor // ignore: cast_nullable_to_non_nullable
@@ -1937,7 +1937,7 @@ as Set<String>,
 
 class ConflictingEditorInspectorLayout implements EditorInspectorLayoutSelection {
   const ConflictingEditorInspectorLayout({required  List<skir.PresentationId> candidates}): _candidates = candidates;
-
+  
 
  final  List<skir.PresentationId> _candidates;
  List<skir.PresentationId> get candidates {
@@ -1948,7 +1948,7 @@ class ConflictingEditorInspectorLayout implements EditorInspectorLayoutSelection
 
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ConflictingEditorInspectorLayoutCopyWith<ConflictingEditorInspectorLayout> get copyWith => _$ConflictingEditorInspectorLayoutCopyWithImpl<ConflictingEditorInspectorLayout>(this, _$identity);
@@ -1995,7 +1995,7 @@ class _$ConflictingEditorInspectorLayoutCopyWithImpl<$Res>
   final $Res Function(ConflictingEditorInspectorLayout) _then;
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? candidates = null,}) {
   return _then(ConflictingEditorInspectorLayout(
 candidates: null == candidates ? _self._candidates : candidates // ignore: cast_nullable_to_non_nullable
@@ -2011,12 +2011,12 @@ as List<skir.PresentationId>,
 
 class InvalidEditorInspectorLayout implements EditorInspectorLayoutSelection {
   const InvalidEditorInspectorLayout({required this.diagnostic});
-
+  
 
  final  String diagnostic;
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidEditorInspectorLayoutCopyWith<InvalidEditorInspectorLayout> get copyWith => _$InvalidEditorInspectorLayoutCopyWithImpl<InvalidEditorInspectorLayout>(this, _$identity);
@@ -2063,7 +2063,7 @@ class _$InvalidEditorInspectorLayoutCopyWithImpl<$Res>
   final $Res Function(InvalidEditorInspectorLayout) _then;
 
 /// Create a copy of EditorInspectorLayoutSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostic = null,}) {
   return _then(InvalidEditorInspectorLayout(
 diagnostic: null == diagnostic ? _self.diagnostic : diagnostic // ignore: cast_nullable_to_non_nullable
@@ -2079,7 +2079,7 @@ as String,
 
 class MissingEditorInspectorLayout implements EditorInspectorLayoutSelection {
   const MissingEditorInspectorLayout();
-
+  
 
 
 
@@ -2111,7 +2111,7 @@ mixin _$EditorPartDeclaration {
 
  skir.PresentationMaterial get material; skir.PresentationNode get body;
 /// Create a copy of EditorPartDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditorPartDeclarationCopyWith<EditorPartDeclaration> get copyWith => _$EditorPartDeclarationCopyWithImpl<EditorPartDeclaration>(this as EditorPartDeclaration, _$identity);
@@ -2161,7 +2161,7 @@ class _$EditorPartDeclarationCopyWithImpl<$Res>
   final $Res Function(EditorPartDeclaration) _then;
 
 /// Create a copy of EditorPartDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? material = null,Object? body = null,}) {
   return _then(EditorPartDeclaration(
 material: null == material ? _self.material : material // ignore: cast_nullable_to_non_nullable
@@ -2173,7 +2173,7 @@ as skir.PresentationNode,
 }
 
 
-/// Adds pattern matching related methods to [EditorPartDeclaration].
+/// Adds pattern-matching-related methods to [EditorPartDeclaration].
 extension EditorPartDeclarationPatterns on EditorPartDeclaration {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2196,7 +2196,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2259,7 +2259,7 @@ return $default(_that.material,_that.body);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2308,13 +2308,13 @@ return $default(_that.material,_that.body);case _:
 
 class _EditorPartDeclaration implements EditorPartDeclaration {
   const _EditorPartDeclaration({required this.material, required this.body});
-
+  
 
 @override final  skir.PresentationMaterial material;
 @override final  skir.PresentationNode body;
 
 /// Create a copy of EditorPartDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditorPartDeclarationCopyWith<_EditorPartDeclaration> get copyWith => __$EditorPartDeclarationCopyWithImpl<_EditorPartDeclaration>(this, _$identity);
@@ -2361,7 +2361,7 @@ class __$EditorPartDeclarationCopyWithImpl<$Res>
   final $Res Function(_EditorPartDeclaration) _then;
 
 /// Create a copy of EditorPartDeclaration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? material = null,Object? body = null,}) {
   return _then(_EditorPartDeclaration(
 material: null == material ? _self.material : material // ignore: cast_nullable_to_non_nullable
@@ -2403,7 +2403,7 @@ $EditorPartPresentationSelectionCopyWith(EditorPartPresentationSelection _, $Res
 }
 
 
-/// Adds pattern matching related methods to [EditorPartPresentationSelection].
+/// Adds pattern-matching-related methods to [EditorPartPresentationSelection].
 extension EditorPartPresentationSelectionPatterns on EditorPartPresentationSelection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2429,7 +2429,7 @@ return missing(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2498,7 +2498,7 @@ return missing();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2550,7 +2550,7 @@ return missing();case _:
 
 class SelectedEditorPartPresentation implements EditorPartPresentationSelection {
   const SelectedEditorPartPresentation({required this.key, required this.material, required this.body, required  Set<String> editedFields, required  Set<String> fallbackFields, required  Set<skir.PresentationPartId> claimedParts}): _editedFields = editedFields,_fallbackFields = fallbackFields,_claimedParts = claimedParts;
-
+  
 
  final  skir.PresentationPartId key;
  final  skir.PresentationMaterial material;
@@ -2578,7 +2578,7 @@ class SelectedEditorPartPresentation implements EditorPartPresentationSelection 
 
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SelectedEditorPartPresentationCopyWith<SelectedEditorPartPresentation> get copyWith => _$SelectedEditorPartPresentationCopyWithImpl<SelectedEditorPartPresentation>(this, _$identity);
@@ -2625,7 +2625,7 @@ class _$SelectedEditorPartPresentationCopyWithImpl<$Res>
   final $Res Function(SelectedEditorPartPresentation) _then;
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? material = null,Object? body = null,Object? editedFields = null,Object? fallbackFields = null,Object? claimedParts = null,}) {
   return _then(SelectedEditorPartPresentation(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
@@ -2646,7 +2646,7 @@ as Set<skir.PresentationPartId>,
 
 class ConflictingEditorPartPresentation implements EditorPartPresentationSelection {
   const ConflictingEditorPartPresentation({required  List<skir.PresentationId> candidates}): _candidates = candidates;
-
+  
 
  final  List<skir.PresentationId> _candidates;
  List<skir.PresentationId> get candidates {
@@ -2657,7 +2657,7 @@ class ConflictingEditorPartPresentation implements EditorPartPresentationSelecti
 
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ConflictingEditorPartPresentationCopyWith<ConflictingEditorPartPresentation> get copyWith => _$ConflictingEditorPartPresentationCopyWithImpl<ConflictingEditorPartPresentation>(this, _$identity);
@@ -2704,7 +2704,7 @@ class _$ConflictingEditorPartPresentationCopyWithImpl<$Res>
   final $Res Function(ConflictingEditorPartPresentation) _then;
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? candidates = null,}) {
   return _then(ConflictingEditorPartPresentation(
 candidates: null == candidates ? _self._candidates : candidates // ignore: cast_nullable_to_non_nullable
@@ -2720,12 +2720,12 @@ as List<skir.PresentationId>,
 
 class InvalidEditorPartPresentation implements EditorPartPresentationSelection {
   const InvalidEditorPartPresentation({required this.diagnostic});
-
+  
 
  final  String diagnostic;
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $InvalidEditorPartPresentationCopyWith<InvalidEditorPartPresentation> get copyWith => _$InvalidEditorPartPresentationCopyWithImpl<InvalidEditorPartPresentation>(this, _$identity);
@@ -2772,7 +2772,7 @@ class _$InvalidEditorPartPresentationCopyWithImpl<$Res>
   final $Res Function(InvalidEditorPartPresentation) _then;
 
 /// Create a copy of EditorPartPresentationSelection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostic = null,}) {
   return _then(InvalidEditorPartPresentation(
 diagnostic: null == diagnostic ? _self.diagnostic : diagnostic // ignore: cast_nullable_to_non_nullable
@@ -2788,7 +2788,7 @@ as String,
 
 class MissingEditorPartPresentation implements EditorPartPresentationSelection {
   const MissingEditorPartPresentation();
-
+  
 
 
 

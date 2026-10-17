@@ -13,8 +13,8 @@ part of 'organization_presence.dart';
 /// The provider owns one session identity, its heartbeat timers, subscription,
 /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
 /// expire locally after missed heartbeats. Presence is never used as durable
-/// organization state, and malformed or out of order observations are discarded
-/// at this boundary.
+/// organization state. Unknown subject identities and older active sequence
+/// numbers are ignored; payload decoding still reports malformed wire data.
 
 @ProviderFor(OrganizationPresence)
 final organizationPresenceProvider = OrganizationPresenceProvider._();
@@ -24,8 +24,8 @@ final organizationPresenceProvider = OrganizationPresenceProvider._();
 /// The provider owns one session identity, its heartbeat timers, subscription,
 /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
 /// expire locally after missed heartbeats. Presence is never used as durable
-/// organization state, and malformed or out of order observations are discarded
-/// at this boundary.
+/// organization state. Unknown subject identities and older active sequence
+/// numbers are ignored; payload decoding still reports malformed wire data.
 final class OrganizationPresenceProvider
     extends
         $AsyncNotifierProvider<
@@ -37,8 +37,8 @@ final class OrganizationPresenceProvider
   /// The provider owns one session identity, its heartbeat timers, subscription,
   /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
   /// expire locally after missed heartbeats. Presence is never used as durable
-  /// organization state, and malformed or out of order observations are discarded
-  /// at this boundary.
+  /// organization state. Unknown subject identities and older active sequence
+  /// numbers are ignored; payload decoding still reports malformed wire data.
   OrganizationPresenceProvider._()
     : super(
         from: null,
@@ -59,15 +59,15 @@ final class OrganizationPresenceProvider
 }
 
 String _$organizationPresenceHash() =>
-    r'ce170b2efa09152c48887509e5a410ae1d7a34b1';
+    r'0c33e1a712f0f6f50e1d923a5c361b703ce2fe65';
 
 /// Publishes and observes ephemeral collaboration presence for one organization.
 ///
 /// The provider owns one session identity, its heartbeat timers, subscription,
 /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
 /// expire locally after missed heartbeats. Presence is never used as durable
-/// organization state, and malformed or out of order observations are discarded
-/// at this boundary.
+/// organization state. Unknown subject identities and older active sequence
+/// numbers are ignored; payload decoding still reports malformed wire data.
 
 abstract class _$OrganizationPresence
     extends $AsyncNotifier<Map<PresenceSessionKey, ActivePanelPresence>> {

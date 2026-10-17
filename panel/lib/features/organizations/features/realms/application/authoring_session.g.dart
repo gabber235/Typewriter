@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'authoring_session.dart';
 
@@ -6,14 +6,35 @@ part of 'authoring_session.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+///
+/// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+/// prevent late responses from a replaced session from publishing into current state.
+/// Saved observations flow into the shared editing workspace, which separately owns
+/// local intent and replay. This session borrows transport repositories and releases
+/// them when the provider is disposed.
 
 @ProviderFor(AuthoringSession)
 final authoringSessionProvider = AuthoringSessionFamily._();
 
+/// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+///
+/// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+/// prevent late responses from a replaced session from publishing into current state.
+/// Saved observations flow into the shared editing workspace, which separately owns
+/// local intent and replay. This session borrows transport repositories and releases
+/// them when the provider is disposed.
 final class AuthoringSessionProvider
     extends $NotifierProvider<AuthoringSession, AuthoringSessionState> {
+  /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+  ///
+  /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+  /// prevent late responses from a replaced session from publishing into current state.
+  /// Saved observations flow into the shared editing workspace, which separately owns
+  /// local intent and replay. This session borrows transport repositories and releases
+  /// them when the provider is disposed.
   AuthoringSessionProvider._({
     required AuthoringSessionFamily super.from,
     required (skir.RecordId, skir.RecordId) super.argument,
@@ -60,6 +81,14 @@ final class AuthoringSessionProvider
 
 String _$authoringSessionHash() => r'0526646e73e9951f1f2c0bf23abafd9ef2e3e386';
 
+/// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+///
+/// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+/// prevent late responses from a replaced session from publishing into current state.
+/// Saved observations flow into the shared editing workspace, which separately owns
+/// local intent and replay. This session borrows transport repositories and releases
+/// them when the provider is disposed.
+
 final class AuthoringSessionFamily extends $Family
     with
         $ClassFamilyOverride<
@@ -78,6 +107,14 @@ final class AuthoringSessionFamily extends $Family
         isAutoDispose: true,
       );
 
+  /// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+  ///
+  /// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+  /// prevent late responses from a replaced session from publishing into current state.
+  /// Saved observations flow into the shared editing workspace, which separately owns
+  /// local intent and replay. This session borrows transport repositories and releases
+  /// them when the provider is disposed.
+
   AuthoringSessionProvider call(
     skir.RecordId organizationId,
     skir.RecordId realmId,
@@ -89,6 +126,14 @@ final class AuthoringSessionFamily extends $Family
   @override
   String toString() => r'authoringSessionProvider';
 }
+
+/// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+///
+/// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+/// prevent late responses from a replaced session from publishing into current state.
+/// Saved observations flow into the shared editing workspace, which separately owns
+/// local intent and replay. This session borrows transport repositories and releases
+/// them when the provider is disposed.
 
 abstract class _$AuthoringSession extends $Notifier<AuthoringSessionState> {
   late final _$args = ref.$arg as (skir.RecordId, skir.RecordId);

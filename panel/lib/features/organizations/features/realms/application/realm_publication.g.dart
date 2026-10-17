@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 part of 'realm_publication.dart';
 
@@ -6,7 +6,7 @@ part of 'realm_publication.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(realmPublicationRepository)
@@ -144,7 +144,7 @@ final class RealmPublicationProvider
   }
 }
 
-String _$realmPublicationHash() => r'b07eb43249760d53b3e3e2ae73d6e1d954c634a3';
+String _$realmPublicationHash() => r'04f782765228f678c26cf97daead8ddc831f932a';
 
 final class RealmPublicationFamily extends $Family
     with

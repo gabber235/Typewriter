@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'realm_inbox.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $RealmInboxIssueCopyWith(RealmInboxIssue _, $Res Function(RealmInboxIssue) __);
 }
 
 
-/// Adds pattern matching related methods to [RealmInboxIssue].
+/// Adds pattern-matching-related methods to [RealmInboxIssue].
 extension RealmInboxIssuePatterns on RealmInboxIssue {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -67,7 +67,7 @@ return submission(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -133,7 +133,7 @@ return submission(_that.submission);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -183,12 +183,12 @@ return submission(_that.submission);case _:
 
 class RealmInboxFinding extends RealmInboxIssue {
   const RealmInboxFinding(this.finding): super._();
-
+  
 
  final  ResourceIssue finding;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RealmInboxFindingCopyWith<RealmInboxFinding> get copyWith => _$RealmInboxFindingCopyWithImpl<RealmInboxFinding>(this, _$identity);
@@ -235,7 +235,7 @@ class _$RealmInboxFindingCopyWithImpl<$Res>
   final $Res Function(RealmInboxFinding) _then;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? finding = null,}) {
   return _then(RealmInboxFinding(
 null == finding ? _self.finding : finding // ignore: cast_nullable_to_non_nullable
@@ -244,11 +244,11 @@ as ResourceIssue,
 }
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $ResourceIssueCopyWith<$Res> get finding {
-
+  
   return $ResourceIssueCopyWith<$Res>(_self.finding, (value) {
     return _then(_self.copyWith(finding: value));
   });
@@ -260,12 +260,12 @@ $ResourceIssueCopyWith<$Res> get finding {
 
 class RealmInboxWorkIssue extends RealmInboxIssue {
   const RealmInboxWorkIssue(this.entry): super._();
-
+  
 
  final  WorkEntryState entry;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RealmInboxWorkIssueCopyWith<RealmInboxWorkIssue> get copyWith => _$RealmInboxWorkIssueCopyWithImpl<RealmInboxWorkIssue>(this, _$identity);
@@ -312,7 +312,7 @@ class _$RealmInboxWorkIssueCopyWithImpl<$Res>
   final $Res Function(RealmInboxWorkIssue) _then;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? entry = null,}) {
   return _then(RealmInboxWorkIssue(
 null == entry ? _self.entry : entry // ignore: cast_nullable_to_non_nullable
@@ -321,11 +321,11 @@ as WorkEntryState,
 }
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $WorkEntryStateCopyWith<$Res> get entry {
-
+  
   return $WorkEntryStateCopyWith<$Res>(_self.entry, (value) {
     return _then(_self.copyWith(entry: value));
   });
@@ -337,12 +337,12 @@ $WorkEntryStateCopyWith<$Res> get entry {
 
 class RealmInboxSubmissionIssue extends RealmInboxIssue {
   const RealmInboxSubmissionIssue(this.submission): super._();
-
+  
 
  final  LocalWorkSubmissionState submission;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RealmInboxSubmissionIssueCopyWith<RealmInboxSubmissionIssue> get copyWith => _$RealmInboxSubmissionIssueCopyWithImpl<RealmInboxSubmissionIssue>(this, _$identity);
@@ -389,7 +389,7 @@ class _$RealmInboxSubmissionIssueCopyWithImpl<$Res>
   final $Res Function(RealmInboxSubmissionIssue) _then;
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? submission = null,}) {
   return _then(RealmInboxSubmissionIssue(
 null == submission ? _self.submission : submission // ignore: cast_nullable_to_non_nullable
@@ -398,11 +398,11 @@ as LocalWorkSubmissionState,
 }
 
 /// Create a copy of RealmInboxIssue
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $LocalWorkSubmissionStateCopyWith<$Res> get submission {
-
+  
   return $LocalWorkSubmissionStateCopyWith<$Res>(_self.submission, (value) {
     return _then(_self.copyWith(submission: value));
   });
@@ -414,7 +414,7 @@ mixin _$RealmInboxState {
 
  RealmPublicationView get publication; List<RealmInboxIssue> get issues; List<skir.PublicationChange> get changes; List<skir.CompilationRoot> get pendingRoots; List<WorkEntryState> get localWork; List<LocalWorkSubmissionState> get submissions;
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RealmInboxStateCopyWith<RealmInboxState> get copyWith => _$RealmInboxStateCopyWithImpl<RealmInboxState>(this as RealmInboxState, _$identity);
@@ -464,7 +464,7 @@ class _$RealmInboxStateCopyWithImpl<$Res>
   final $Res Function(RealmInboxState) _then;
 
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? publication = null,Object? issues = null,Object? changes = null,Object? pendingRoots = null,Object? localWork = null,Object? submissions = null,}) {
   return _then(RealmInboxState(
 publication: null == publication ? _self.publication : publication // ignore: cast_nullable_to_non_nullable
@@ -477,11 +477,11 @@ as List<LocalWorkSubmissionState>,
   ));
 }
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $RealmPublicationViewCopyWith<$Res> get publication {
-
+  
   return $RealmPublicationViewCopyWith<$Res>(_self.publication, (value) {
     return _then(_self.copyWith(publication: value));
   });
@@ -489,7 +489,7 @@ $RealmPublicationViewCopyWith<$Res> get publication {
 }
 
 
-/// Adds pattern matching related methods to [RealmInboxState].
+/// Adds pattern-matching-related methods to [RealmInboxState].
 extension RealmInboxStatePatterns on RealmInboxState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -512,7 +512,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -575,7 +575,7 @@ return $default(_that.publication,_that.issues,_that.changes,_that.pendingRoots,
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -624,7 +624,7 @@ return $default(_that.publication,_that.issues,_that.changes,_that.pendingRoots,
 
 class _RealmInboxState implements RealmInboxState {
   const _RealmInboxState({required this.publication,  List<RealmInboxIssue> issues = const [],  List<skir.PublicationChange> changes = const [],  List<skir.CompilationRoot> pendingRoots = const [],  List<WorkEntryState> localWork = const [],  List<LocalWorkSubmissionState> submissions = const []}): _issues = issues,_changes = changes,_pendingRoots = pendingRoots,_localWork = localWork,_submissions = submissions;
-
+  
 
 @override final  RealmPublicationView publication;
  final  List<RealmInboxIssue> _issues;
@@ -664,7 +664,7 @@ class _RealmInboxState implements RealmInboxState {
 
 
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$RealmInboxStateCopyWith<_RealmInboxState> get copyWith => __$RealmInboxStateCopyWithImpl<_RealmInboxState>(this, _$identity);
@@ -711,7 +711,7 @@ class __$RealmInboxStateCopyWithImpl<$Res>
   final $Res Function(_RealmInboxState) _then;
 
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? publication = null,Object? issues = null,Object? changes = null,Object? pendingRoots = null,Object? localWork = null,Object? submissions = null,}) {
   return _then(_RealmInboxState(
 publication: null == publication ? _self.publication : publication // ignore: cast_nullable_to_non_nullable
@@ -725,11 +725,11 @@ as List<LocalWorkSubmissionState>,
 }
 
 /// Create a copy of RealmInboxState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $RealmPublicationViewCopyWith<$Res> get publication {
-
+  
   return $RealmPublicationViewCopyWith<$Res>(_self.publication, (value) {
     return _then(_self.copyWith(publication: value));
   });

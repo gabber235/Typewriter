@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'local_work_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$LocalWorkState {
 
  Map<WorkEntryId, WorkEntryState> get entries; Map<EditorResourceKey, LocalEditorValue> get editorValues; List<LocalWorkSubmissionState> get submissions;
 /// Create a copy of LocalWorkState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LocalWorkStateCopyWith<LocalWorkState> get copyWith => _$LocalWorkStateCopyWithImpl<LocalWorkState>(this as LocalWorkState, _$identity);
@@ -67,7 +67,7 @@ class _$LocalWorkStateCopyWithImpl<$Res>
   final $Res Function(LocalWorkState) _then;
 
 /// Create a copy of LocalWorkState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? entries = null,Object? editorValues = null,Object? submissions = null,}) {
   return _then(LocalWorkState(
 entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
@@ -80,7 +80,7 @@ as List<LocalWorkSubmissionState>,
 }
 
 
-/// Adds pattern matching related methods to [LocalWorkState].
+/// Adds pattern-matching-related methods to [LocalWorkState].
 extension LocalWorkStatePatterns on LocalWorkState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -103,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return $default(_that.entries,_that.editorValues,_that.submissions);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -215,7 +215,7 @@ return $default(_that.entries,_that.editorValues,_that.submissions);case _:
 
 class _LocalWorkState extends LocalWorkState {
   const _LocalWorkState({ Map<WorkEntryId, WorkEntryState> entries = const {},  Map<EditorResourceKey, LocalEditorValue> editorValues = const {},  List<LocalWorkSubmissionState> submissions = const []}): _entries = entries,_editorValues = editorValues,_submissions = submissions,super._();
-
+  
 
  final  Map<WorkEntryId, WorkEntryState> _entries;
 @override@JsonKey() Map<WorkEntryId, WorkEntryState> get entries {
@@ -240,7 +240,7 @@ class _LocalWorkState extends LocalWorkState {
 
 
 /// Create a copy of LocalWorkState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$LocalWorkStateCopyWith<_LocalWorkState> get copyWith => __$LocalWorkStateCopyWithImpl<_LocalWorkState>(this, _$identity);
@@ -287,7 +287,7 @@ class __$LocalWorkStateCopyWithImpl<$Res>
   final $Res Function(_LocalWorkState) _then;
 
 /// Create a copy of LocalWorkState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? entries = null,Object? editorValues = null,Object? submissions = null,}) {
   return _then(_LocalWorkState(
 entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
@@ -305,7 +305,7 @@ mixin _$WorkDriverId {
 
  String get domain; Object get scope;
 /// Create a copy of WorkDriverId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $WorkDriverIdCopyWith<WorkDriverId> get copyWith => _$WorkDriverIdCopyWithImpl<WorkDriverId>(this as WorkDriverId, _$identity);
@@ -355,7 +355,7 @@ class _$WorkDriverIdCopyWithImpl<$Res>
   final $Res Function(WorkDriverId) _then;
 
 /// Create a copy of WorkDriverId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? domain = null,Object? scope = null,}) {
   return _then(WorkDriverId(
 domain: null == domain ? _self.domain : domain // ignore: cast_nullable_to_non_nullable
@@ -366,7 +366,7 @@ as String,scope: null == scope ? _self.scope : scope ,
 }
 
 
-/// Adds pattern matching related methods to [WorkDriverId].
+/// Adds pattern-matching-related methods to [WorkDriverId].
 extension WorkDriverIdPatterns on WorkDriverId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -389,7 +389,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -452,7 +452,7 @@ return $default(_that.domain,_that.scope);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -501,13 +501,13 @@ return $default(_that.domain,_that.scope);case _:
 
 class _WorkDriverId implements WorkDriverId {
   const _WorkDriverId({required this.domain, required this.scope});
-
+  
 
 @override final  String domain;
 @override final  Object scope;
 
 /// Create a copy of WorkDriverId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$WorkDriverIdCopyWith<_WorkDriverId> get copyWith => __$WorkDriverIdCopyWithImpl<_WorkDriverId>(this, _$identity);
@@ -554,7 +554,7 @@ class __$WorkDriverIdCopyWithImpl<$Res>
   final $Res Function(_WorkDriverId) _then;
 
 /// Create a copy of WorkDriverId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? domain = null,Object? scope = null,}) {
   return _then(_WorkDriverId(
 domain: null == domain ? _self.domain : domain // ignore: cast_nullable_to_non_nullable
@@ -570,7 +570,7 @@ mixin _$WorkEntryId {
 
  WorkDriverId get driver; Object get identity;
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $WorkEntryIdCopyWith<WorkEntryId> get copyWith => _$WorkEntryIdCopyWithImpl<WorkEntryId>(this as WorkEntryId, _$identity);
@@ -620,7 +620,7 @@ class _$WorkEntryIdCopyWithImpl<$Res>
   final $Res Function(WorkEntryId) _then;
 
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? driver = null,Object? identity = null,}) {
   return _then(WorkEntryId(
 driver: null == driver ? _self.driver : driver // ignore: cast_nullable_to_non_nullable
@@ -628,11 +628,11 @@ as WorkDriverId,identity: null == identity ? _self.identity : identity ,
   ));
 }
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $WorkDriverIdCopyWith<$Res> get driver {
-
+  
   return $WorkDriverIdCopyWith<$Res>(_self.driver, (value) {
     return _then(_self.copyWith(driver: value));
   });
@@ -640,7 +640,7 @@ $WorkDriverIdCopyWith<$Res> get driver {
 }
 
 
-/// Adds pattern matching related methods to [WorkEntryId].
+/// Adds pattern-matching-related methods to [WorkEntryId].
 extension WorkEntryIdPatterns on WorkEntryId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -663,7 +663,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -726,7 +726,7 @@ return $default(_that.driver,_that.identity);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -775,13 +775,13 @@ return $default(_that.driver,_that.identity);case _:
 
 class _WorkEntryId implements WorkEntryId {
   const _WorkEntryId({required this.driver, required this.identity});
-
+  
 
 @override final  WorkDriverId driver;
 @override final  Object identity;
 
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$WorkEntryIdCopyWith<_WorkEntryId> get copyWith => __$WorkEntryIdCopyWithImpl<_WorkEntryId>(this, _$identity);
@@ -828,7 +828,7 @@ class __$WorkEntryIdCopyWithImpl<$Res>
   final $Res Function(_WorkEntryId) _then;
 
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? driver = null,Object? identity = null,}) {
   return _then(_WorkEntryId(
 driver: null == driver ? _self.driver : driver // ignore: cast_nullable_to_non_nullable
@@ -837,11 +837,11 @@ as WorkDriverId,identity: null == identity ? _self.identity : identity ,
 }
 
 /// Create a copy of WorkEntryId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $WorkDriverIdCopyWith<$Res> get driver {
-
+  
   return $WorkDriverIdCopyWith<$Res>(_self.driver, (value) {
     return _then(_self.copyWith(driver: value));
   });
@@ -853,7 +853,7 @@ mixin _$WorkFact {
 
  String get label; String get value;
 /// Create a copy of WorkFact
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $WorkFactCopyWith<WorkFact> get copyWith => _$WorkFactCopyWithImpl<WorkFact>(this as WorkFact, _$identity);
@@ -903,7 +903,7 @@ class _$WorkFactCopyWithImpl<$Res>
   final $Res Function(WorkFact) _then;
 
 /// Create a copy of WorkFact
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? value = null,}) {
   return _then(WorkFact(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -915,7 +915,7 @@ as String,
 }
 
 
-/// Adds pattern matching related methods to [WorkFact].
+/// Adds pattern-matching-related methods to [WorkFact].
 extension WorkFactPatterns on WorkFact {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -938,7 +938,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1001,7 +1001,7 @@ return $default(_that.label,_that.value);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1050,13 +1050,13 @@ return $default(_that.label,_that.value);case _:
 
 class _WorkFact implements WorkFact {
   const _WorkFact({required this.label, required this.value});
-
+  
 
 @override final  String label;
 @override final  String value;
 
 /// Create a copy of WorkFact
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$WorkFactCopyWith<_WorkFact> get copyWith => __$WorkFactCopyWithImpl<_WorkFact>(this, _$identity);
@@ -1103,7 +1103,7 @@ class __$WorkFactCopyWithImpl<$Res>
   final $Res Function(_WorkFact) _then;
 
 /// Create a copy of WorkFact
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? value = null,}) {
   return _then(_WorkFact(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -1120,7 +1120,7 @@ mixin _$WorkEntryState {
 
  WorkEntryId get id; String get label; String get phase; List<WorkFact> get details; bool get retained; bool get hasWork; bool get canSave; bool get canDiscard; bool get canRetry; bool get canReview; bool get blocksNavigation; bool get saving; bool get needsAttention; bool get needsInput; LocalWorkDestinationState get destination;
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $WorkEntryStateCopyWith<WorkEntryState> get copyWith => _$WorkEntryStateCopyWithImpl<WorkEntryState>(this as WorkEntryState, _$identity);
@@ -1170,7 +1170,7 @@ class _$WorkEntryStateCopyWithImpl<$Res>
   final $Res Function(WorkEntryState) _then;
 
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? canReview = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
   return _then(WorkEntryState(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1192,11 +1192,11 @@ as LocalWorkDestinationState,
   ));
 }
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $WorkEntryIdCopyWith<$Res> get id {
-
+  
   return $WorkEntryIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1204,7 +1204,7 @@ $WorkEntryIdCopyWith<$Res> get id {
 }
 
 
-/// Adds pattern matching related methods to [WorkEntryState].
+/// Adds pattern-matching-related methods to [WorkEntryState].
 extension WorkEntryStatePatterns on WorkEntryState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1227,7 +1227,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1290,7 +1290,7 @@ return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_t
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1339,7 +1339,7 @@ return $default(_that.id,_that.label,_that.phase,_that.details,_that.retained,_t
 
 class _WorkEntryState implements WorkEntryState {
   const _WorkEntryState({required this.id, required this.label, required this.phase,  List<WorkFact> details = const [], this.retained = false, this.hasWork = false, this.canSave = false, this.canDiscard = false, this.canRetry = false, this.canReview = false, this.blocksNavigation = false, this.saving = false, this.needsAttention = false, this.needsInput = false, this.destination = LocalWorkDestinationState.unavailable}): _details = details;
-
+  
 
 @override final  WorkEntryId id;
 @override final  String label;
@@ -1364,7 +1364,7 @@ class _WorkEntryState implements WorkEntryState {
 @override@JsonKey() final  LocalWorkDestinationState destination;
 
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$WorkEntryStateCopyWith<_WorkEntryState> get copyWith => __$WorkEntryStateCopyWithImpl<_WorkEntryState>(this, _$identity);
@@ -1411,7 +1411,7 @@ class __$WorkEntryStateCopyWithImpl<$Res>
   final $Res Function(_WorkEntryState) _then;
 
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? details = null,Object? retained = null,Object? hasWork = null,Object? canSave = null,Object? canDiscard = null,Object? canRetry = null,Object? canReview = null,Object? blocksNavigation = null,Object? saving = null,Object? needsAttention = null,Object? needsInput = null,Object? destination = null,}) {
   return _then(_WorkEntryState(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1434,11 +1434,11 @@ as LocalWorkDestinationState,
 }
 
 /// Create a copy of WorkEntryState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $WorkEntryIdCopyWith<$Res> get id {
-
+  
   return $WorkEntryIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
@@ -1450,7 +1450,7 @@ mixin _$WorkDriverSnapshot {
 
  Map<EditorResourceKey, LocalEditorValue> get editorValues; List<WorkEntryState> get entries;
 /// Create a copy of WorkDriverSnapshot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $WorkDriverSnapshotCopyWith<WorkDriverSnapshot> get copyWith => _$WorkDriverSnapshotCopyWithImpl<WorkDriverSnapshot>(this as WorkDriverSnapshot, _$identity);
@@ -1500,7 +1500,7 @@ class _$WorkDriverSnapshotCopyWithImpl<$Res>
   final $Res Function(WorkDriverSnapshot) _then;
 
 /// Create a copy of WorkDriverSnapshot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? editorValues = null,Object? entries = null,}) {
   return _then(WorkDriverSnapshot(
 editorValues: null == editorValues ? _self.editorValues : editorValues // ignore: cast_nullable_to_non_nullable
@@ -1512,7 +1512,7 @@ as List<WorkEntryState>,
 }
 
 
-/// Adds pattern matching related methods to [WorkDriverSnapshot].
+/// Adds pattern-matching-related methods to [WorkDriverSnapshot].
 extension WorkDriverSnapshotPatterns on WorkDriverSnapshot {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1535,7 +1535,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1598,7 +1598,7 @@ return $default(_that.editorValues,_that.entries);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1647,7 +1647,7 @@ return $default(_that.editorValues,_that.entries);case _:
 
 class _WorkDriverSnapshot implements WorkDriverSnapshot {
   const _WorkDriverSnapshot({ Map<EditorResourceKey, LocalEditorValue> editorValues = const {},  List<WorkEntryState> entries = const []}): _editorValues = editorValues,_entries = entries;
-
+  
 
  final  Map<EditorResourceKey, LocalEditorValue> _editorValues;
 @override@JsonKey() Map<EditorResourceKey, LocalEditorValue> get editorValues {
@@ -1665,7 +1665,7 @@ class _WorkDriverSnapshot implements WorkDriverSnapshot {
 
 
 /// Create a copy of WorkDriverSnapshot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$WorkDriverSnapshotCopyWith<_WorkDriverSnapshot> get copyWith => __$WorkDriverSnapshotCopyWithImpl<_WorkDriverSnapshot>(this, _$identity);
@@ -1712,7 +1712,7 @@ class __$WorkDriverSnapshotCopyWithImpl<$Res>
   final $Res Function(_WorkDriverSnapshot) _then;
 
 /// Create a copy of WorkDriverSnapshot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? editorValues = null,Object? entries = null,}) {
   return _then(_WorkDriverSnapshot(
 editorValues: null == editorValues ? _self._editorValues : editorValues // ignore: cast_nullable_to_non_nullable
@@ -1729,7 +1729,7 @@ mixin _$LocalWorkSubmissionState {
 
  Object get id; String get label; LocalWorkSubmissionPhase get phase; Set<Object> get resources;
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $LocalWorkSubmissionStateCopyWith<LocalWorkSubmissionState> get copyWith => _$LocalWorkSubmissionStateCopyWithImpl<LocalWorkSubmissionState>(this as LocalWorkSubmissionState, _$identity);
@@ -1779,7 +1779,7 @@ class _$LocalWorkSubmissionStateCopyWithImpl<$Res>
   final $Res Function(LocalWorkSubmissionState) _then;
 
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? resources = null,}) {
   return _then(LocalWorkSubmissionState(
 id: null == id ? _self.id : id ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -1789,11 +1789,11 @@ as Set<Object>,
   ));
 }
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $LocalWorkSubmissionPhaseCopyWith<$Res> get phase {
-
+  
   return $LocalWorkSubmissionPhaseCopyWith<$Res>(_self.phase, (value) {
     return _then(_self.copyWith(phase: value));
   });
@@ -1801,7 +1801,7 @@ $LocalWorkSubmissionPhaseCopyWith<$Res> get phase {
 }
 
 
-/// Adds pattern matching related methods to [LocalWorkSubmissionState].
+/// Adds pattern-matching-related methods to [LocalWorkSubmissionState].
 extension LocalWorkSubmissionStatePatterns on LocalWorkSubmissionState {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1824,7 +1824,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1887,7 +1887,7 @@ return $default(_that.id,_that.label,_that.phase,_that.resources);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1936,7 +1936,7 @@ return $default(_that.id,_that.label,_that.phase,_that.resources);case _:
 
 class _LocalWorkSubmissionState extends LocalWorkSubmissionState {
   const _LocalWorkSubmissionState({required this.id, required this.label, required this.phase,  Set<Object> resources = const {}}): _resources = resources,super._();
-
+  
 
 @override final  Object id;
 @override final  String label;
@@ -1950,7 +1950,7 @@ class _LocalWorkSubmissionState extends LocalWorkSubmissionState {
 
 
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$LocalWorkSubmissionStateCopyWith<_LocalWorkSubmissionState> get copyWith => __$LocalWorkSubmissionStateCopyWithImpl<_LocalWorkSubmissionState>(this, _$identity);
@@ -1997,7 +1997,7 @@ class __$LocalWorkSubmissionStateCopyWithImpl<$Res>
   final $Res Function(_LocalWorkSubmissionState) _then;
 
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? phase = null,Object? resources = null,}) {
   return _then(_LocalWorkSubmissionState(
 id: null == id ? _self.id : id ,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -2008,11 +2008,11 @@ as Set<Object>,
 }
 
 /// Create a copy of LocalWorkSubmissionState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $LocalWorkSubmissionPhaseCopyWith<$Res> get phase {
-
+  
   return $LocalWorkSubmissionPhaseCopyWith<$Res>(_self.phase, (value) {
     return _then(_self.copyWith(phase: value));
   });
@@ -2049,7 +2049,7 @@ $LocalWorkSubmissionPhaseCopyWith(LocalWorkSubmissionPhase _, $Res Function(Loca
 }
 
 
-/// Adds pattern matching related methods to [LocalWorkSubmissionPhase].
+/// Adds pattern-matching-related methods to [LocalWorkSubmissionPhase].
 extension LocalWorkSubmissionPhasePatterns on LocalWorkSubmissionPhase {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2075,7 +2075,7 @@ return uncertain(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2144,7 +2144,7 @@ return uncertain(_that.message,_that.replay);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2196,7 +2196,7 @@ return uncertain(_that.message,_that.replay);case _:
 
 class PreparedLocalWorkSubmission implements LocalWorkSubmissionPhase {
   const PreparedLocalWorkSubmission();
-
+  
 
 
 
@@ -2228,7 +2228,7 @@ String toString() {
 
 class ActiveLocalWorkSubmission implements LocalWorkSubmissionPhase {
   const ActiveLocalWorkSubmission();
-
+  
 
 
 
@@ -2260,13 +2260,13 @@ String toString() {
 
 class SettledLocalWorkSubmission implements LocalWorkSubmissionPhase {
   const SettledLocalWorkSubmission(this.outcome, this.integration);
-
+  
 
  final  LocalWorkKnownOutcome outcome;
  final  LocalWorkIntegration integration;
 
 /// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SettledLocalWorkSubmissionCopyWith<SettledLocalWorkSubmission> get copyWith => _$SettledLocalWorkSubmissionCopyWithImpl<SettledLocalWorkSubmission>(this, _$identity);
@@ -2313,7 +2313,7 @@ class _$SettledLocalWorkSubmissionCopyWithImpl<$Res>
   final $Res Function(SettledLocalWorkSubmission) _then;
 
 /// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? outcome = null,Object? integration = null,}) {
   return _then(SettledLocalWorkSubmission(
 null == outcome ? _self.outcome : outcome // ignore: cast_nullable_to_non_nullable
@@ -2323,20 +2323,20 @@ as LocalWorkIntegration,
 }
 
 /// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $LocalWorkKnownOutcomeCopyWith<$Res> get outcome {
-
+  
   return $LocalWorkKnownOutcomeCopyWith<$Res>(_self.outcome, (value) {
     return _then(_self.copyWith(outcome: value));
   });
 }/// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $LocalWorkIntegrationCopyWith<$Res> get integration {
-
+  
   return $LocalWorkIntegrationCopyWith<$Res>(_self.integration, (value) {
     return _then(_self.copyWith(integration: value));
   });
@@ -2348,13 +2348,13 @@ $LocalWorkIntegrationCopyWith<$Res> get integration {
 
 class UncertainLocalWorkSubmission implements LocalWorkSubmissionPhase {
   const UncertainLocalWorkSubmission(this.message, this.replay);
-
+  
 
  final  String message;
  final  SubmissionReplay replay;
 
 /// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $UncertainLocalWorkSubmissionCopyWith<UncertainLocalWorkSubmission> get copyWith => _$UncertainLocalWorkSubmissionCopyWithImpl<UncertainLocalWorkSubmission>(this, _$identity);
@@ -2401,7 +2401,7 @@ class _$UncertainLocalWorkSubmissionCopyWithImpl<$Res>
   final $Res Function(UncertainLocalWorkSubmission) _then;
 
 /// Create a copy of LocalWorkSubmissionPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? replay = null,}) {
   return _then(UncertainLocalWorkSubmission(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -2443,7 +2443,7 @@ $LocalWorkKnownOutcomeCopyWith(LocalWorkKnownOutcome _, $Res Function(LocalWorkK
 }
 
 
-/// Adds pattern matching related methods to [LocalWorkKnownOutcome].
+/// Adds pattern-matching-related methods to [LocalWorkKnownOutcome].
 extension LocalWorkKnownOutcomePatterns on LocalWorkKnownOutcome {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2468,7 +2468,7 @@ return notSubmitted(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2534,7 +2534,7 @@ return notSubmitted(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2584,7 +2584,7 @@ return notSubmitted(_that.message);case _:
 
 class ConfirmedLocalWorkOutcome implements LocalWorkKnownOutcome {
   const ConfirmedLocalWorkOutcome();
-
+  
 
 
 
@@ -2616,12 +2616,12 @@ String toString() {
 
 class RejectedLocalWorkOutcome implements LocalWorkKnownOutcome {
   const RejectedLocalWorkOutcome(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of LocalWorkKnownOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $RejectedLocalWorkOutcomeCopyWith<RejectedLocalWorkOutcome> get copyWith => _$RejectedLocalWorkOutcomeCopyWithImpl<RejectedLocalWorkOutcome>(this, _$identity);
@@ -2668,7 +2668,7 @@ class _$RejectedLocalWorkOutcomeCopyWithImpl<$Res>
   final $Res Function(RejectedLocalWorkOutcome) _then;
 
 /// Create a copy of LocalWorkKnownOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(RejectedLocalWorkOutcome(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -2684,12 +2684,12 @@ as String,
 
 class NotSubmittedLocalWorkOutcome implements LocalWorkKnownOutcome {
   const NotSubmittedLocalWorkOutcome(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of LocalWorkKnownOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $NotSubmittedLocalWorkOutcomeCopyWith<NotSubmittedLocalWorkOutcome> get copyWith => _$NotSubmittedLocalWorkOutcomeCopyWithImpl<NotSubmittedLocalWorkOutcome>(this, _$identity);
@@ -2736,7 +2736,7 @@ class _$NotSubmittedLocalWorkOutcomeCopyWithImpl<$Res>
   final $Res Function(NotSubmittedLocalWorkOutcome) _then;
 
 /// Create a copy of LocalWorkKnownOutcome
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(NotSubmittedLocalWorkOutcome(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -2777,7 +2777,7 @@ $LocalWorkIntegrationCopyWith(LocalWorkIntegration _, $Res Function(LocalWorkInt
 }
 
 
-/// Adds pattern matching related methods to [LocalWorkIntegration].
+/// Adds pattern-matching-related methods to [LocalWorkIntegration].
 extension LocalWorkIntegrationPatterns on LocalWorkIntegration {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2801,7 +2801,7 @@ return failed(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2864,7 +2864,7 @@ return failed(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2912,7 +2912,7 @@ return failed(_that.message);case _:
 
 class AppliedLocalWorkIntegration implements LocalWorkIntegration {
   const AppliedLocalWorkIntegration();
-
+  
 
 
 
@@ -2944,12 +2944,12 @@ String toString() {
 
 class FailedLocalWorkIntegration implements LocalWorkIntegration {
   const FailedLocalWorkIntegration(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of LocalWorkIntegration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $FailedLocalWorkIntegrationCopyWith<FailedLocalWorkIntegration> get copyWith => _$FailedLocalWorkIntegrationCopyWithImpl<FailedLocalWorkIntegration>(this, _$identity);
@@ -2996,7 +2996,7 @@ class _$FailedLocalWorkIntegrationCopyWithImpl<$Res>
   final $Res Function(FailedLocalWorkIntegration) _then;
 
 /// Create a copy of LocalWorkIntegration
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(FailedLocalWorkIntegration(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

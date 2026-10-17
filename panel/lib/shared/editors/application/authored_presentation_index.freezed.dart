@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'authored_presentation_index.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $AuthoredBindingRootCopyWith(AuthoredBindingRoot _, $Res Function(AuthoredBindin
 }
 
 
-/// Adds pattern matching related methods to [AuthoredBindingRoot].
+/// Adds pattern-matching-related methods to [AuthoredBindingRoot].
 extension AuthoredBindingRootPatterns on AuthoredBindingRoot {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -67,7 +67,7 @@ return collection(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -133,7 +133,7 @@ return collection(_that.sourceId);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -183,12 +183,12 @@ return collection(_that.sourceId);case _:
 
 class AuthoredResourceRoot implements AuthoredBindingRoot {
   const AuthoredResourceRoot(this.resource);
-
+  
 
  final  skir.ResourceId resource;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredResourceRootCopyWith<AuthoredResourceRoot> get copyWith => _$AuthoredResourceRootCopyWithImpl<AuthoredResourceRoot>(this, _$identity);
@@ -235,7 +235,7 @@ class _$AuthoredResourceRootCopyWithImpl<$Res>
   final $Res Function(AuthoredResourceRoot) _then;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? resource = null,}) {
   return _then(AuthoredResourceRoot(
 null == resource ? _self.resource : resource // ignore: cast_nullable_to_non_nullable
@@ -251,13 +251,13 @@ as skir.ResourceId,
 
 class AuthoredLocalRoot implements AuthoredBindingRoot {
   const AuthoredLocalRoot(this.binding, {this.origin});
-
+  
 
  final  skir.ExpressionBindingId binding;
  final  String? origin;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredLocalRootCopyWith<AuthoredLocalRoot> get copyWith => _$AuthoredLocalRootCopyWithImpl<AuthoredLocalRoot>(this, _$identity);
@@ -304,7 +304,7 @@ class _$AuthoredLocalRootCopyWithImpl<$Res>
   final $Res Function(AuthoredLocalRoot) _then;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? binding = null,Object? origin = freezed,}) {
   return _then(AuthoredLocalRoot(
 null == binding ? _self.binding : binding // ignore: cast_nullable_to_non_nullable
@@ -321,12 +321,12 @@ as String?,
 
 class AuthoredCollectionRoot implements AuthoredBindingRoot {
   const AuthoredCollectionRoot(this.sourceId);
-
+  
 
  final  String sourceId;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredCollectionRootCopyWith<AuthoredCollectionRoot> get copyWith => _$AuthoredCollectionRootCopyWithImpl<AuthoredCollectionRoot>(this, _$identity);
@@ -373,7 +373,7 @@ class _$AuthoredCollectionRootCopyWithImpl<$Res>
   final $Res Function(AuthoredCollectionRoot) _then;
 
 /// Create a copy of AuthoredBindingRoot
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? sourceId = null,}) {
   return _then(AuthoredCollectionRoot(
 null == sourceId ? _self.sourceId : sourceId // ignore: cast_nullable_to_non_nullable
@@ -414,7 +414,7 @@ $AuthoredPathStepCopyWith(AuthoredPathStep _, $Res Function(AuthoredPathStep) __
 }
 
 
-/// Adds pattern matching related methods to [AuthoredPathStep].
+/// Adds pattern-matching-related methods to [AuthoredPathStep].
 extension AuthoredPathStepPatterns on AuthoredPathStep {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -438,7 +438,7 @@ return item(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -501,7 +501,7 @@ return item();case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -549,12 +549,12 @@ return item();case _:
 
 class ExactAuthoredPathStep implements AuthoredPathStep {
   const ExactAuthoredPathStep(this.segment);
-
+  
 
  final  skir.PathSegment segment;
 
 /// Create a copy of AuthoredPathStep
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $ExactAuthoredPathStepCopyWith<ExactAuthoredPathStep> get copyWith => _$ExactAuthoredPathStepCopyWithImpl<ExactAuthoredPathStep>(this, _$identity);
@@ -601,7 +601,7 @@ class _$ExactAuthoredPathStepCopyWithImpl<$Res>
   final $Res Function(ExactAuthoredPathStep) _then;
 
 /// Create a copy of AuthoredPathStep
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? segment = null,}) {
   return _then(ExactAuthoredPathStep(
 null == segment ? _self.segment : segment // ignore: cast_nullable_to_non_nullable
@@ -617,7 +617,7 @@ as skir.PathSegment,
 
 class AnyAuthoredItem implements AuthoredPathStep {
   const AnyAuthoredItem();
-
+  
 
 
 
@@ -649,7 +649,7 @@ mixin _$AuthoredBindingAddress {
 
  AuthoredBindingRoot get root; List<AuthoredPathStep> get path;
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<AuthoredBindingAddress> get copyWith => _$AuthoredBindingAddressCopyWithImpl<AuthoredBindingAddress>(this as AuthoredBindingAddress, _$identity);
@@ -699,7 +699,7 @@ class _$AuthoredBindingAddressCopyWithImpl<$Res>
   final $Res Function(AuthoredBindingAddress) _then;
 
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? root = null,Object? path = null,}) {
   return _then(AuthoredBindingAddress(
 root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
@@ -708,11 +708,11 @@ as List<AuthoredPathStep>,
   ));
 }
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingRootCopyWith<$Res> get root {
-
+  
   return $AuthoredBindingRootCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -720,7 +720,7 @@ $AuthoredBindingRootCopyWith<$Res> get root {
 }
 
 
-/// Adds pattern matching related methods to [AuthoredBindingAddress].
+/// Adds pattern-matching-related methods to [AuthoredBindingAddress].
 extension AuthoredBindingAddressPatterns on AuthoredBindingAddress {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -743,7 +743,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -806,7 +806,7 @@ return $default(_that.root,_that.path);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -855,7 +855,7 @@ return $default(_that.root,_that.path);case _:
 
 class _AuthoredBindingAddress extends AuthoredBindingAddress {
   const _AuthoredBindingAddress({required this.root, required  List<AuthoredPathStep> path}): _path = path,super._();
-
+  
 
 @override final  AuthoredBindingRoot root;
  final  List<AuthoredPathStep> _path;
@@ -867,7 +867,7 @@ class _AuthoredBindingAddress extends AuthoredBindingAddress {
 
 
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredBindingAddressCopyWith<_AuthoredBindingAddress> get copyWith => __$AuthoredBindingAddressCopyWithImpl<_AuthoredBindingAddress>(this, _$identity);
@@ -914,7 +914,7 @@ class __$AuthoredBindingAddressCopyWithImpl<$Res>
   final $Res Function(_AuthoredBindingAddress) _then;
 
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? root = null,Object? path = null,}) {
   return _then(_AuthoredBindingAddress(
 root: null == root ? _self.root : root // ignore: cast_nullable_to_non_nullable
@@ -924,11 +924,11 @@ as List<AuthoredPathStep>,
 }
 
 /// Create a copy of AuthoredBindingAddress
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingRootCopyWith<$Res> get root {
-
+  
   return $AuthoredBindingRootCopyWith<$Res>(_self.root, (value) {
     return _then(_self.copyWith(root: value));
   });
@@ -940,7 +940,7 @@ mixin _$AuthoredBindingUse {
 
  AuthoredBindingAddress get address;
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredBindingUseCopyWith<AuthoredBindingUse> get copyWith => _$AuthoredBindingUseCopyWithImpl<AuthoredBindingUse>(this as AuthoredBindingUse, _$identity);
@@ -990,7 +990,7 @@ class _$AuthoredBindingUseCopyWithImpl<$Res>
   final $Res Function(AuthoredBindingUse) _then;
 
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? address = null,}) {
   return _then(AuthoredBindingUse(
 address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
@@ -998,11 +998,11 @@ as AuthoredBindingAddress,
   ));
 }
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get address {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.address, (value) {
     return _then(_self.copyWith(address: value));
   });
@@ -1010,7 +1010,7 @@ $AuthoredBindingAddressCopyWith<$Res> get address {
 }
 
 
-/// Adds pattern matching related methods to [AuthoredBindingUse].
+/// Adds pattern-matching-related methods to [AuthoredBindingUse].
 extension AuthoredBindingUsePatterns on AuthoredBindingUse {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1033,7 +1033,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1096,7 +1096,7 @@ return $default(_that.address);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1145,12 +1145,12 @@ return $default(_that.address);case _:
 
 class _AuthoredBindingUse implements AuthoredBindingUse {
   const _AuthoredBindingUse({required this.address});
-
+  
 
 @override final  AuthoredBindingAddress address;
 
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredBindingUseCopyWith<_AuthoredBindingUse> get copyWith => __$AuthoredBindingUseCopyWithImpl<_AuthoredBindingUse>(this, _$identity);
@@ -1197,7 +1197,7 @@ class __$AuthoredBindingUseCopyWithImpl<$Res>
   final $Res Function(_AuthoredBindingUse) _then;
 
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? address = null,}) {
   return _then(_AuthoredBindingUse(
 address: null == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
@@ -1206,11 +1206,11 @@ as AuthoredBindingAddress,
 }
 
 /// Create a copy of AuthoredBindingUse
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $AuthoredBindingAddressCopyWith<$Res> get address {
-
+  
   return $AuthoredBindingAddressCopyWith<$Res>(_self.address, (value) {
     return _then(_self.copyWith(address: value));
   });
@@ -1222,7 +1222,7 @@ mixin _$AuthoredPresentationIndex {
 
  List<AuthoredBindingUse> get uses;
 /// Create a copy of AuthoredPresentationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredPresentationIndexCopyWith<AuthoredPresentationIndex> get copyWith => _$AuthoredPresentationIndexCopyWithImpl<AuthoredPresentationIndex>(this as AuthoredPresentationIndex, _$identity);
@@ -1272,7 +1272,7 @@ class _$AuthoredPresentationIndexCopyWithImpl<$Res>
   final $Res Function(AuthoredPresentationIndex) _then;
 
 /// Create a copy of AuthoredPresentationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? uses = null,}) {
   return _then(AuthoredPresentationIndex(
 uses: null == uses ? _self.uses : uses // ignore: cast_nullable_to_non_nullable
@@ -1283,7 +1283,7 @@ as List<AuthoredBindingUse>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoredPresentationIndex].
+/// Adds pattern-matching-related methods to [AuthoredPresentationIndex].
 extension AuthoredPresentationIndexPatterns on AuthoredPresentationIndex {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1306,7 +1306,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1369,7 +1369,7 @@ return $default(_that.uses);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1418,7 +1418,7 @@ return $default(_that.uses);case _:
 
 class _AuthoredPresentationIndex extends AuthoredPresentationIndex {
   const _AuthoredPresentationIndex({required  List<AuthoredBindingUse> uses}): _uses = uses,super._();
-
+  
 
  final  List<AuthoredBindingUse> _uses;
 @override List<AuthoredBindingUse> get uses {
@@ -1429,7 +1429,7 @@ class _AuthoredPresentationIndex extends AuthoredPresentationIndex {
 
 
 /// Create a copy of AuthoredPresentationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredPresentationIndexCopyWith<_AuthoredPresentationIndex> get copyWith => __$AuthoredPresentationIndexCopyWithImpl<_AuthoredPresentationIndex>(this, _$identity);
@@ -1476,7 +1476,7 @@ class __$AuthoredPresentationIndexCopyWithImpl<$Res>
   final $Res Function(_AuthoredPresentationIndex) _then;
 
 /// Create a copy of AuthoredPresentationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? uses = null,}) {
   return _then(_AuthoredPresentationIndex(
 uses: null == uses ? _self._uses : uses // ignore: cast_nullable_to_non_nullable

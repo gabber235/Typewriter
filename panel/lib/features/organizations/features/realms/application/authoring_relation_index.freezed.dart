@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'authoring_relation_index.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$AuthoringOwnershipPath {
 
  List<skir.ResourceId> get owners; String? get problem;
 /// Create a copy of AuthoringOwnershipPath
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringOwnershipPathCopyWith<AuthoringOwnershipPath> get copyWith => _$AuthoringOwnershipPathCopyWithImpl<AuthoringOwnershipPath>(this as AuthoringOwnershipPath, _$identity);
@@ -67,7 +67,7 @@ class _$AuthoringOwnershipPathCopyWithImpl<$Res>
   final $Res Function(AuthoringOwnershipPath) _then;
 
 /// Create a copy of AuthoringOwnershipPath
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? owners = null,Object? problem = freezed,}) {
   return _then(AuthoringOwnershipPath(
 owners: null == owners ? _self.owners : owners // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as String?,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringOwnershipPath].
+/// Adds pattern-matching-related methods to [AuthoringOwnershipPath].
 extension AuthoringOwnershipPathPatterns on AuthoringOwnershipPath {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.owners,_that.problem);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return $default(_that.owners,_that.problem);case _:
 
 class _AuthoringOwnershipPath implements AuthoringOwnershipPath {
   const _AuthoringOwnershipPath({required  List<skir.ResourceId> owners, this.problem}): _owners = owners;
-
+  
 
  final  List<skir.ResourceId> _owners;
 @override List<skir.ResourceId> get owners {
@@ -226,7 +226,7 @@ class _AuthoringOwnershipPath implements AuthoringOwnershipPath {
 @override final  String? problem;
 
 /// Create a copy of AuthoringOwnershipPath
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringOwnershipPathCopyWith<_AuthoringOwnershipPath> get copyWith => __$AuthoringOwnershipPathCopyWithImpl<_AuthoringOwnershipPath>(this, _$identity);
@@ -273,7 +273,7 @@ class __$AuthoringOwnershipPathCopyWithImpl<$Res>
   final $Res Function(_AuthoringOwnershipPath) _then;
 
 /// Create a copy of AuthoringOwnershipPath
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? owners = null,Object? problem = freezed,}) {
   return _then(_AuthoringOwnershipPath(
 owners: null == owners ? _self._owners : owners // ignore: cast_nullable_to_non_nullable
@@ -290,7 +290,7 @@ mixin _$AuthoringRelationIndex {
 
  Map<skir.ResourceId, List<skir.ResourceId>> get parents; Map<skir.ResourceId, List<skir.ResourceId>> get children; List<String> get problems; Map<skir.ResourceId, List<String>> get resourceProblems;
 /// Create a copy of AuthoringRelationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoringRelationIndexCopyWith<AuthoringRelationIndex> get copyWith => _$AuthoringRelationIndexCopyWithImpl<AuthoringRelationIndex>(this as AuthoringRelationIndex, _$identity);
@@ -340,7 +340,7 @@ class _$AuthoringRelationIndexCopyWithImpl<$Res>
   final $Res Function(AuthoringRelationIndex) _then;
 
 /// Create a copy of AuthoringRelationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? parents = null,Object? children = null,Object? problems = null,Object? resourceProblems = null,}) {
   return _then(AuthoringRelationIndex(
 parents: null == parents ? _self.parents : parents // ignore: cast_nullable_to_non_nullable
@@ -354,7 +354,7 @@ as Map<skir.ResourceId, List<String>>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoringRelationIndex].
+/// Adds pattern-matching-related methods to [AuthoringRelationIndex].
 extension AuthoringRelationIndexPatterns on AuthoringRelationIndex {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -377,7 +377,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -440,7 +440,7 @@ return $default(_that.parents,_that.children,_that.problems,_that.resourceProble
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -489,7 +489,7 @@ return $default(_that.parents,_that.children,_that.problems,_that.resourceProble
 
 class _AuthoringRelationIndex extends AuthoringRelationIndex {
   const _AuthoringRelationIndex({required  Map<skir.ResourceId, List<skir.ResourceId>> parents, required  Map<skir.ResourceId, List<skir.ResourceId>> children, required  List<String> problems, required  Map<skir.ResourceId, List<String>> resourceProblems}): _parents = parents,_children = children,_problems = problems,_resourceProblems = resourceProblems,super._();
-
+  
 
  final  Map<skir.ResourceId, List<skir.ResourceId>> _parents;
 @override Map<skir.ResourceId, List<skir.ResourceId>> get parents {
@@ -521,7 +521,7 @@ class _AuthoringRelationIndex extends AuthoringRelationIndex {
 
 
 /// Create a copy of AuthoringRelationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoringRelationIndexCopyWith<_AuthoringRelationIndex> get copyWith => __$AuthoringRelationIndexCopyWithImpl<_AuthoringRelationIndex>(this, _$identity);
@@ -568,7 +568,7 @@ class __$AuthoringRelationIndexCopyWithImpl<$Res>
   final $Res Function(_AuthoringRelationIndex) _then;
 
 /// Create a copy of AuthoringRelationIndex
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? parents = null,Object? children = null,Object? problems = null,Object? resourceProblems = null,}) {
   return _then(_AuthoringRelationIndex(
 parents: null == parents ? _self._parents : parents // ignore: cast_nullable_to_non_nullable

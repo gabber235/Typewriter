@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_presentation_diagnostic.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $PortableDiagnosticTargetCopyWith(PortableDiagnosticTarget _, $Res Function(Port
 }
 
 
-/// Adds pattern matching related methods to [PortableDiagnosticTarget].
+/// Adds pattern-matching-related methods to [PortableDiagnosticTarget].
 extension PortableDiagnosticTargetPatterns on PortableDiagnosticTarget {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return value(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return value(_that.location);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -177,12 +177,12 @@ return value(_that.location);case _:
 
 class PortableBindingDiagnosticTarget extends PortableDiagnosticTarget {
   const PortableBindingDiagnosticTarget(this.reference): super._();
-
+  
 
  final  skir.BindingRef reference;
 
 /// Create a copy of PortableDiagnosticTarget
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableBindingDiagnosticTargetCopyWith<PortableBindingDiagnosticTarget> get copyWith => _$PortableBindingDiagnosticTargetCopyWithImpl<PortableBindingDiagnosticTarget>(this, _$identity);
@@ -229,7 +229,7 @@ class _$PortableBindingDiagnosticTargetCopyWithImpl<$Res>
   final $Res Function(PortableBindingDiagnosticTarget) _then;
 
 /// Create a copy of PortableDiagnosticTarget
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? reference = null,}) {
   return _then(PortableBindingDiagnosticTarget(
 null == reference ? _self.reference : reference // ignore: cast_nullable_to_non_nullable
@@ -245,12 +245,12 @@ as skir.BindingRef,
 
 class PortableValueDiagnosticTarget extends PortableDiagnosticTarget {
   const PortableValueDiagnosticTarget(this.location): super._();
-
+  
 
  final  skir.ValueLocation location;
 
 /// Create a copy of PortableDiagnosticTarget
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortableValueDiagnosticTargetCopyWith<PortableValueDiagnosticTarget> get copyWith => _$PortableValueDiagnosticTargetCopyWithImpl<PortableValueDiagnosticTarget>(this, _$identity);
@@ -297,7 +297,7 @@ class _$PortableValueDiagnosticTargetCopyWithImpl<$Res>
   final $Res Function(PortableValueDiagnosticTarget) _then;
 
 /// Create a copy of PortableDiagnosticTarget
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? location = null,}) {
   return _then(PortableValueDiagnosticTarget(
 null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
@@ -313,7 +313,7 @@ mixin _$PortablePresentationDiagnostic {
 
  String get code; String get message; skir.DiagnosticSeverity get severity; List<PortableDiagnosticTarget> get targets; Map<String, String> get details; skir.DiagnosticId? get id; skir.RuleOrigin? get origin;
 /// Create a copy of PortablePresentationDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortablePresentationDiagnosticCopyWith<PortablePresentationDiagnostic> get copyWith => _$PortablePresentationDiagnosticCopyWithImpl<PortablePresentationDiagnostic>(this as PortablePresentationDiagnostic, _$identity);
@@ -363,7 +363,7 @@ class _$PortablePresentationDiagnosticCopyWithImpl<$Res>
   final $Res Function(PortablePresentationDiagnostic) _then;
 
 /// Create a copy of PortablePresentationDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = null,Object? severity = null,Object? targets = null,Object? details = null,Object? id = freezed,Object? origin = freezed,}) {
   return _then(PortablePresentationDiagnostic(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -380,7 +380,7 @@ as skir.RuleOrigin?,
 }
 
 
-/// Adds pattern matching related methods to [PortablePresentationDiagnostic].
+/// Adds pattern-matching-related methods to [PortablePresentationDiagnostic].
 extension PortablePresentationDiagnosticPatterns on PortablePresentationDiagnostic {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -403,7 +403,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -466,7 +466,7 @@ return $default(_that.code,_that.message,_that.severity,_that.targets,_that.deta
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -515,7 +515,7 @@ return $default(_that.code,_that.message,_that.severity,_that.targets,_that.deta
 
 class _PortablePresentationDiagnostic implements PortablePresentationDiagnostic {
   const _PortablePresentationDiagnostic({required this.code, required this.message, required this.severity,  List<PortableDiagnosticTarget> targets = const [],  Map<String, String> details = const {}, this.id, this.origin}): _targets = targets,_details = details;
-
+  
 
 @override final  String code;
 @override final  String message;
@@ -538,7 +538,7 @@ class _PortablePresentationDiagnostic implements PortablePresentationDiagnostic 
 @override final  skir.RuleOrigin? origin;
 
 /// Create a copy of PortablePresentationDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PortablePresentationDiagnosticCopyWith<_PortablePresentationDiagnostic> get copyWith => __$PortablePresentationDiagnosticCopyWithImpl<_PortablePresentationDiagnostic>(this, _$identity);
@@ -585,7 +585,7 @@ class __$PortablePresentationDiagnosticCopyWithImpl<$Res>
   final $Res Function(_PortablePresentationDiagnostic) _then;
 
 /// Create a copy of PortablePresentationDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = null,Object? severity = null,Object? targets = null,Object? details = null,Object? id = freezed,Object? origin = freezed,}) {
   return _then(_PortablePresentationDiagnostic(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable

@@ -50,7 +50,7 @@ String toString() {
 
 class _AuthoringSearchResultPayload extends AuthoringSearchResultPayload {
   const _AuthoringSearchResultPayload({required this.hit, required this.document, required this.issues, required  Map<skir.ExpressionBindingId, PortableExpressionBinding> presentationContext}): _presentationContext = presentationContext,super._();
-
+  
 
 @override final  skir.AuthoringSearchHit hit;
 @override final  AuthoringDocument document;

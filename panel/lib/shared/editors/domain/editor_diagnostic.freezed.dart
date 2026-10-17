@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'editor_diagnostic.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$EditorDiagnostic {
 
  EditorDiagnosticCode get code; String get message; skir.ValuePath? get path; EditorDiagnosticSeverity get severity; Map<String, String> get details;
 /// Create a copy of EditorDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditorDiagnosticCopyWith<EditorDiagnostic> get copyWith => _$EditorDiagnosticCopyWithImpl<EditorDiagnostic>(this as EditorDiagnostic, _$identity);
@@ -67,7 +67,7 @@ class _$EditorDiagnosticCopyWithImpl<$Res>
   final $Res Function(EditorDiagnostic) _then;
 
 /// Create a copy of EditorDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? message = null,Object? path = freezed,Object? severity = null,Object? details = null,}) {
   return _then(EditorDiagnostic(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -82,7 +82,7 @@ as Map<String, String>,
 }
 
 
-/// Adds pattern matching related methods to [EditorDiagnostic].
+/// Adds pattern-matching-related methods to [EditorDiagnostic].
 extension EditorDiagnosticPatterns on EditorDiagnostic {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -105,7 +105,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -168,7 +168,7 @@ return $default(_that.code,_that.message,_that.path,_that.severity,_that.details
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -217,7 +217,7 @@ return $default(_that.code,_that.message,_that.path,_that.severity,_that.details
 
 class _EditorDiagnostic extends EditorDiagnostic {
   const _EditorDiagnostic({required this.code, required this.message, this.path, this.severity = EditorDiagnosticSeverity.error,  Map<String, String> details = const {}}): _details = details,super._();
-
+  
 
 @override final  EditorDiagnosticCode code;
 @override final  String message;
@@ -232,7 +232,7 @@ class _EditorDiagnostic extends EditorDiagnostic {
 
 
 /// Create a copy of EditorDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditorDiagnosticCopyWith<_EditorDiagnostic> get copyWith => __$EditorDiagnosticCopyWithImpl<_EditorDiagnostic>(this, _$identity);
@@ -279,7 +279,7 @@ class __$EditorDiagnosticCopyWithImpl<$Res>
   final $Res Function(_EditorDiagnostic) _then;
 
 /// Create a copy of EditorDiagnostic
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = null,Object? path = freezed,Object? severity = null,Object? details = null,}) {
   return _then(_EditorDiagnostic(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable

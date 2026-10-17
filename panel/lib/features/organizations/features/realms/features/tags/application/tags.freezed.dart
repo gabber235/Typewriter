@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'tags.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$Tag {
 
  skir.ResourceId get tagId; String get name; Color get color; List<skir.ResourceId> get parentIds; GraphPlacement get placement;
 /// Create a copy of Tag
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $TagCopyWith<Tag> get copyWith => _$TagCopyWithImpl<Tag>(this as Tag, _$identity);
@@ -67,7 +67,7 @@ class _$TagCopyWithImpl<$Res>
   final $Res Function(Tag) _then;
 
 /// Create a copy of Tag
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? tagId = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = freezed,}) {
   return _then(Tag(
 tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable
@@ -82,7 +82,7 @@ as GraphPlacement,
 }
 
 
-/// Adds pattern matching related methods to [Tag].
+/// Adds pattern-matching-related methods to [Tag].
 extension TagPatterns on Tag {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -105,7 +105,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -168,7 +168,7 @@ return $default(_that.tagId,_that.name,_that.color,_that.parentIds,_that.placeme
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -217,7 +217,7 @@ return $default(_that.tagId,_that.name,_that.color,_that.parentIds,_that.placeme
 
 class _Tag extends Tag {
   const _Tag({required this.tagId, required this.name, required this.color, required  List<skir.ResourceId> parentIds, required this.placement}): assert(name != "", 'Name must not be empty.'),_parentIds = parentIds,super._();
-
+  
 
 @override final  skir.ResourceId tagId;
 @override final  String name;
@@ -232,7 +232,7 @@ class _Tag extends Tag {
 @override final  GraphPlacement placement;
 
 /// Create a copy of Tag
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$TagCopyWith<_Tag> get copyWith => __$TagCopyWithImpl<_Tag>(this, _$identity);
@@ -279,7 +279,7 @@ class __$TagCopyWithImpl<$Res>
   final $Res Function(_Tag) _then;
 
 /// Create a copy of Tag
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? tagId = null,Object? name = null,Object? color = null,Object? parentIds = null,Object? placement = freezed,}) {
   return _then(_Tag(
 tagId: null == tagId ? _self.tagId : tagId // ignore: cast_nullable_to_non_nullable

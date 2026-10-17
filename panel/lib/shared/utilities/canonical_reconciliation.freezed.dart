@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'canonical_reconciliation.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$CanonicalReconciliation<T> {
 
  List<T> get values; T get canonical;
 /// Create a copy of CanonicalReconciliation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CanonicalReconciliationCopyWith<T, CanonicalReconciliation<T>> get copyWith => _$CanonicalReconciliationCopyWithImpl<T, CanonicalReconciliation<T>>(this as CanonicalReconciliation<T>, _$identity);
@@ -67,7 +67,7 @@ class _$CanonicalReconciliationCopyWithImpl<T,$Res>
   final $Res Function(CanonicalReconciliation<T>) _then;
 
 /// Create a copy of CanonicalReconciliation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? values = null,Object? canonical = freezed,}) {
   return _then(CanonicalReconciliation(
 values: null == values ? _self.values : values // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as T,
 }
 
 
-/// Adds pattern matching related methods to [CanonicalReconciliation].
+/// Adds pattern-matching-related methods to [CanonicalReconciliation].
 extension CanonicalReconciliationPatterns<T> on CanonicalReconciliation<T> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.values,_that.canonical);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return $default(_that.values,_that.canonical);case _:
 
 class _CanonicalReconciliation<T> implements CanonicalReconciliation<T> {
   const _CanonicalReconciliation({required  List<T> values, required this.canonical}): _values = values;
-
+  
 
  final  List<T> _values;
 @override List<T> get values {
@@ -226,7 +226,7 @@ class _CanonicalReconciliation<T> implements CanonicalReconciliation<T> {
 @override final  T canonical;
 
 /// Create a copy of CanonicalReconciliation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$CanonicalReconciliationCopyWith<T, _CanonicalReconciliation<T>> get copyWith => __$CanonicalReconciliationCopyWithImpl<T, _CanonicalReconciliation<T>>(this, _$identity);
@@ -273,7 +273,7 @@ class __$CanonicalReconciliationCopyWithImpl<T,$Res>
   final $Res Function(_CanonicalReconciliation<T>) _then;
 
 /// Create a copy of CanonicalReconciliation
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? values = null,Object? canonical = freezed,}) {
   return _then(_CanonicalReconciliation<T>(
 values: null == values ? _self._values : values // ignore: cast_nullable_to_non_nullable

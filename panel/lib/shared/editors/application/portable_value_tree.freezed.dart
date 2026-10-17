@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'portable_value_tree.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -42,7 +42,7 @@ $PortablePathResultCopyWith(PortablePathResult<T> _, $Res Function(PortablePathR
 }
 
 
-/// Adds pattern matching related methods to [PortablePathResult].
+/// Adds pattern-matching-related methods to [PortablePathResult].
 extension PortablePathResultPatterns<T> on PortablePathResult<T> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -66,7 +66,7 @@ return unavailable(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -129,7 +129,7 @@ return unavailable(_that.message);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -177,12 +177,12 @@ return unavailable(_that.message);case _:
 
 class PortablePathValue<T> implements PortablePathResult<T> {
   const PortablePathValue(this.value);
-
+  
 
  final  T value;
 
 /// Create a copy of PortablePathResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortablePathValueCopyWith<T, PortablePathValue<T>> get copyWith => _$PortablePathValueCopyWithImpl<T, PortablePathValue<T>>(this, _$identity);
@@ -229,7 +229,7 @@ class _$PortablePathValueCopyWithImpl<T,$Res>
   final $Res Function(PortablePathValue<T>) _then;
 
 /// Create a copy of PortablePathResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? value = freezed,}) {
   return _then(PortablePathValue<T>(
 freezed == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -245,12 +245,12 @@ as T,
 
 class PortablePathUnavailable<T> implements PortablePathResult<T> {
   const PortablePathUnavailable(this.message);
-
+  
 
  final  String message;
 
 /// Create a copy of PortablePathResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PortablePathUnavailableCopyWith<T, PortablePathUnavailable<T>> get copyWith => _$PortablePathUnavailableCopyWithImpl<T, PortablePathUnavailable<T>>(this, _$identity);
@@ -297,7 +297,7 @@ class _$PortablePathUnavailableCopyWithImpl<T,$Res>
   final $Res Function(PortablePathUnavailable<T>) _then;
 
 /// Create a copy of PortablePathResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(PortablePathUnavailable<T>(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

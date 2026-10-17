@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'edit_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$EditReplay<S,E> {
 
  EditReplayKind get kind; S get observation; E get edit; List<EditorDiagnostic> get diagnostics; EditConflictEvidence? get conflict; Object? get missing; Object? get cause;
 /// Create a copy of EditReplay
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditReplayCopyWith<S, E, EditReplay<S, E>> get copyWith => _$EditReplayCopyWithImpl<S, E, EditReplay<S, E>>(this as EditReplay<S, E>, _$identity);
@@ -67,7 +67,7 @@ class _$EditReplayCopyWithImpl<S,E,$Res>
   final $Res Function(EditReplay<S, E>) _then;
 
 /// Create a copy of EditReplay
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? conflict = freezed,Object? missing = freezed,Object? cause = freezed,}) {
   return _then(EditReplay(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -82,7 +82,7 @@ as EditConflictEvidence?,missing: freezed == missing ? _self.missing : missing ,
 }
 
 
-/// Adds pattern matching related methods to [EditReplay].
+/// Adds pattern-matching-related methods to [EditReplay].
 extension EditReplayPatterns<S,E> on EditReplay<S, E> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -105,7 +105,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -168,7 +168,7 @@ return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -217,7 +217,7 @@ return $default(_that.kind,_that.observation,_that.edit,_that.diagnostics,_that.
 
 class _EditReplay<S,E> implements EditReplay<S, E> {
   const _EditReplay({required this.kind, required this.observation, required this.edit,  List<EditorDiagnostic> diagnostics = const [], this.conflict, this.missing, this.cause}): _diagnostics = diagnostics;
-
+  
 
 @override final  EditReplayKind kind;
 @override final  S observation;
@@ -234,7 +234,7 @@ class _EditReplay<S,E> implements EditReplay<S, E> {
 @override final  Object? cause;
 
 /// Create a copy of EditReplay
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditReplayCopyWith<S, E, _EditReplay<S, E>> get copyWith => __$EditReplayCopyWithImpl<S, E, _EditReplay<S, E>>(this, _$identity);
@@ -281,7 +281,7 @@ class __$EditReplayCopyWithImpl<S,E,$Res>
   final $Res Function(_EditReplay<S, E>) _then;
 
 /// Create a copy of EditReplay
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? observation = freezed,Object? edit = freezed,Object? diagnostics = null,Object? conflict = freezed,Object? missing = freezed,Object? cause = freezed,}) {
   return _then(_EditReplay<S, E>(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -301,7 +301,7 @@ mixin _$EditObservationResult<S> {
 
  EditObservationKind get kind; S get observation; String? get message; bool get changed;
 /// Create a copy of EditObservationResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditObservationResultCopyWith<S, EditObservationResult<S>> get copyWith => _$EditObservationResultCopyWithImpl<S, EditObservationResult<S>>(this as EditObservationResult<S>, _$identity);
@@ -351,7 +351,7 @@ class _$EditObservationResultCopyWithImpl<S,$Res>
   final $Res Function(EditObservationResult<S>) _then;
 
 /// Create a copy of EditObservationResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? kind = null,Object? observation = freezed,Object? message = freezed,Object? changed = null,}) {
   return _then(EditObservationResult(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -365,7 +365,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [EditObservationResult].
+/// Adds pattern-matching-related methods to [EditObservationResult].
 extension EditObservationResultPatterns<S> on EditObservationResult<S> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -388,7 +388,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -451,7 +451,7 @@ return $default(_that.kind,_that.observation,_that.message,_that.changed);case _
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -500,7 +500,7 @@ return $default(_that.kind,_that.observation,_that.message,_that.changed);case _
 
 class _EditObservationResult<S> implements EditObservationResult<S> {
   const _EditObservationResult({required this.kind, required this.observation, this.message, this.changed = true});
-
+  
 
 @override final  EditObservationKind kind;
 @override final  S observation;
@@ -508,7 +508,7 @@ class _EditObservationResult<S> implements EditObservationResult<S> {
 @override@JsonKey() final  bool changed;
 
 /// Create a copy of EditObservationResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditObservationResultCopyWith<S, _EditObservationResult<S>> get copyWith => __$EditObservationResultCopyWithImpl<S, _EditObservationResult<S>>(this, _$identity);
@@ -555,7 +555,7 @@ class __$EditObservationResultCopyWithImpl<S,$Res>
   final $Res Function(_EditObservationResult<S>) _then;
 
 /// Create a copy of EditObservationResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? kind = null,Object? observation = freezed,Object? message = freezed,Object? changed = null,}) {
   return _then(_EditObservationResult<S>(
 kind: null == kind ? _self.kind : kind // ignore: cast_nullable_to_non_nullable
@@ -574,7 +574,7 @@ mixin _$EditCapture<S,E> {
 
  EditGroupId get group; String get label; S get baseline; S get proposed; List<E> get edits; Set<int> get operations;
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditCaptureCopyWith<S, E, EditCapture<S, E>> get copyWith => _$EditCaptureCopyWithImpl<S, E, EditCapture<S, E>>(this as EditCapture<S, E>, _$identity);
@@ -624,7 +624,7 @@ class _$EditCaptureCopyWithImpl<S,E,$Res>
   final $Res Function(EditCapture<S, E>) _then;
 
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? group = null,Object? label = null,Object? baseline = freezed,Object? proposed = freezed,Object? edits = null,Object? operations = null,}) {
   return _then(EditCapture(
 group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -637,11 +637,11 @@ as Set<int>,
   ));
 }
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get group {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
     return _then(_self.copyWith(group: value));
   });
@@ -649,7 +649,7 @@ $EditGroupIdCopyWith<$Res> get group {
 }
 
 
-/// Adds pattern matching related methods to [EditCapture].
+/// Adds pattern-matching-related methods to [EditCapture].
 extension EditCapturePatterns<S,E> on EditCapture<S, E> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -672,7 +672,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -735,7 +735,7 @@ return $default(_that.group,_that.label,_that.baseline,_that.proposed,_that.edit
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -784,7 +784,7 @@ return $default(_that.group,_that.label,_that.baseline,_that.proposed,_that.edit
 
 class _EditCapture<S,E> implements EditCapture<S, E> {
   const _EditCapture({required this.group, required this.label, required this.baseline, required this.proposed, required  List<E> edits, required  Set<int> operations}): _edits = edits,_operations = operations;
-
+  
 
 @override final  EditGroupId group;
 @override final  String label;
@@ -806,7 +806,7 @@ class _EditCapture<S,E> implements EditCapture<S, E> {
 
 
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditCaptureCopyWith<S, E, _EditCapture<S, E>> get copyWith => __$EditCaptureCopyWithImpl<S, E, _EditCapture<S, E>>(this, _$identity);
@@ -853,7 +853,7 @@ class __$EditCaptureCopyWithImpl<S,E,$Res>
   final $Res Function(_EditCapture<S, E>) _then;
 
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? group = null,Object? label = null,Object? baseline = freezed,Object? proposed = freezed,Object? edits = null,Object? operations = null,}) {
   return _then(_EditCapture<S, E>(
 group: null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -867,11 +867,11 @@ as Set<int>,
 }
 
 /// Create a copy of EditCapture
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get group {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
     return _then(_self.copyWith(group: value));
   });
@@ -908,7 +908,7 @@ $EditSettlementCopyWith(EditSettlement<S> _, $Res Function(EditSettlement<S>) __
 }
 
 
-/// Adds pattern matching related methods to [EditSettlement].
+/// Adds pattern-matching-related methods to [EditSettlement].
 extension EditSettlementPatterns<S> on EditSettlement<S> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -934,7 +934,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1003,7 +1003,7 @@ return rejected(_that.diagnostics,_that.cause,_that.contractChanged);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1055,12 +1055,12 @@ return rejected(_that.diagnostics,_that.cause,_that.contractChanged);case _:
 
 class EditConfirmed<S> implements EditSettlement<S> {
   const EditConfirmed(this.observation);
-
+  
 
  final  S observation;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditConfirmedCopyWith<S, EditConfirmed<S>> get copyWith => _$EditConfirmedCopyWithImpl<S, EditConfirmed<S>>(this, _$identity);
@@ -1107,7 +1107,7 @@ class _$EditConfirmedCopyWithImpl<S,$Res>
   final $Res Function(EditConfirmed<S>) _then;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? observation = freezed,}) {
   return _then(EditConfirmed<S>(
 freezed == observation ? _self.observation : observation // ignore: cast_nullable_to_non_nullable
@@ -1123,7 +1123,7 @@ as S,
 
 class EditAccepted<S> implements EditSettlement<S> {
   const EditAccepted();
-
+  
 
 
 
@@ -1155,13 +1155,13 @@ String toString() {
 
 class EditConflict<S> implements EditSettlement<S> {
   const EditConflict({required this.evidence, this.observation});
-
+  
 
  final  EditConflictEvidence evidence;
  final  S? observation;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditConflictCopyWith<S, EditConflict<S>> get copyWith => _$EditConflictCopyWithImpl<S, EditConflict<S>>(this, _$identity);
@@ -1208,7 +1208,7 @@ class _$EditConflictCopyWithImpl<S,$Res>
   final $Res Function(EditConflict<S>) _then;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? evidence = null,Object? observation = freezed,}) {
   return _then(EditConflict<S>(
 evidence: null == evidence ? _self.evidence : evidence // ignore: cast_nullable_to_non_nullable
@@ -1225,7 +1225,7 @@ as S?,
 
 class EditRejected<S> implements EditSettlement<S> {
   const EditRejected({ List<EditorDiagnostic> diagnostics = const [], this.cause, this.contractChanged = false}): _diagnostics = diagnostics;
-
+  
 
  final  List<EditorDiagnostic> _diagnostics;
 @JsonKey() List<EditorDiagnostic> get diagnostics {
@@ -1238,7 +1238,7 @@ class EditRejected<S> implements EditSettlement<S> {
 @JsonKey() final  bool contractChanged;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditRejectedCopyWith<S, EditRejected<S>> get copyWith => _$EditRejectedCopyWithImpl<S, EditRejected<S>>(this, _$identity);
@@ -1285,7 +1285,7 @@ class _$EditRejectedCopyWithImpl<S,$Res>
   final $Res Function(EditRejected<S>) _then;
 
 /// Create a copy of EditSettlement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? diagnostics = null,Object? cause = freezed,Object? contractChanged = null,}) {
   return _then(EditRejected<S>(
 diagnostics: null == diagnostics ? _self._diagnostics : diagnostics // ignore: cast_nullable_to_non_nullable
@@ -1302,7 +1302,7 @@ mixin _$EditGroupId {
 
  int get value;
 /// Create a copy of EditGroupId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<EditGroupId> get copyWith => _$EditGroupIdCopyWithImpl<EditGroupId>(this as EditGroupId, _$identity);
@@ -1352,7 +1352,7 @@ class _$EditGroupIdCopyWithImpl<$Res>
   final $Res Function(EditGroupId) _then;
 
 /// Create a copy of EditGroupId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? value = null,}) {
   return _then(EditGroupId(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -1363,7 +1363,7 @@ as int,
 }
 
 
-/// Adds pattern matching related methods to [EditGroupId].
+/// Adds pattern-matching-related methods to [EditGroupId].
 extension EditGroupIdPatterns on EditGroupId {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1386,7 +1386,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1449,7 +1449,7 @@ return $default(_that.value);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1498,12 +1498,12 @@ return $default(_that.value);case _:
 
 class _EditGroupId implements EditGroupId {
   const _EditGroupId(this.value);
-
+  
 
 @override final  int value;
 
 /// Create a copy of EditGroupId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditGroupIdCopyWith<_EditGroupId> get copyWith => __$EditGroupIdCopyWithImpl<_EditGroupId>(this, _$identity);
@@ -1550,7 +1550,7 @@ class __$EditGroupIdCopyWithImpl<$Res>
   final $Res Function(_EditGroupId) _then;
 
 /// Create a copy of EditGroupId
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? value = null,}) {
   return _then(_EditGroupId(
 null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -1591,7 +1591,7 @@ $EditGroupPhaseCopyWith(EditGroupPhase<S> _, $Res Function(EditGroupPhase<S>) __
 }
 
 
-/// Adds pattern matching related methods to [EditGroupPhase].
+/// Adds pattern-matching-related methods to [EditGroupPhase].
 extension EditGroupPhasePatterns<S> on EditGroupPhase<S> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1623,7 +1623,7 @@ return resourceMissing(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1710,7 +1710,7 @@ return resourceMissing(_that.resource,_that.proposal);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1774,7 +1774,7 @@ return resourceMissing(_that.resource,_that.proposal);case _:
 
 class EditGroupDirty<S> extends EditGroupPhase<S> {
   const EditGroupDirty(): super._();
-
+  
 
 
 
@@ -1806,7 +1806,7 @@ String toString() {
 
 class EditGroupAwaitingDependency<S> extends EditGroupPhase<S> {
   const EditGroupAwaitingDependency( Set<EditGroupId> groups): _groups = groups,super._();
-
+  
 
  final  Set<EditGroupId> _groups;
  Set<EditGroupId> get groups {
@@ -1817,7 +1817,7 @@ class EditGroupAwaitingDependency<S> extends EditGroupPhase<S> {
 
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupAwaitingDependencyCopyWith<S, EditGroupAwaitingDependency<S>> get copyWith => _$EditGroupAwaitingDependencyCopyWithImpl<S, EditGroupAwaitingDependency<S>>(this, _$identity);
@@ -1864,7 +1864,7 @@ class _$EditGroupAwaitingDependencyCopyWithImpl<S,$Res>
   final $Res Function(EditGroupAwaitingDependency<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? groups = null,}) {
   return _then(EditGroupAwaitingDependency<S>(
 null == groups ? _self._groups : groups // ignore: cast_nullable_to_non_nullable
@@ -1880,7 +1880,7 @@ as Set<EditGroupId>,
 
 class EditGroupSaving<S> extends EditGroupPhase<S> {
   const EditGroupSaving(): super._();
-
+  
 
 
 
@@ -1912,12 +1912,12 @@ String toString() {
 
 class EditGroupCommittedAwaitingRefresh<S> extends EditGroupPhase<S> {
   const EditGroupCommittedAwaitingRefresh(this.cause): super._();
-
+  
 
  final  Object? cause;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupCommittedAwaitingRefreshCopyWith<S, EditGroupCommittedAwaitingRefresh<S>> get copyWith => _$EditGroupCommittedAwaitingRefreshCopyWithImpl<S, EditGroupCommittedAwaitingRefresh<S>>(this, _$identity);
@@ -1964,7 +1964,7 @@ class _$EditGroupCommittedAwaitingRefreshCopyWithImpl<S,$Res>
   final $Res Function(EditGroupCommittedAwaitingRefresh<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? cause = freezed,}) {
   return _then(EditGroupCommittedAwaitingRefresh<S>(
 freezed == cause ? _self.cause : cause ,
@@ -1979,13 +1979,13 @@ freezed == cause ? _self.cause : cause ,
 
 class EditGroupConflict<S> extends EditGroupPhase<S> {
   const EditGroupConflict(this.message, this.evidence): super._();
-
+  
 
  final  String message;
  final  EditConflictEvidence? evidence;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupConflictCopyWith<S, EditGroupConflict<S>> get copyWith => _$EditGroupConflictCopyWithImpl<S, EditGroupConflict<S>>(this, _$identity);
@@ -2032,7 +2032,7 @@ class _$EditGroupConflictCopyWithImpl<S,$Res>
   final $Res Function(EditGroupConflict<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? evidence = freezed,}) {
   return _then(EditGroupConflict<S>(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -2049,13 +2049,13 @@ as EditConflictEvidence?,
 
 class EditGroupRejected<S> extends EditGroupPhase<S> {
   const EditGroupRejected(this.message, this.cause): super._();
-
+  
 
  final  String message;
  final  Object? cause;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupRejectedCopyWith<S, EditGroupRejected<S>> get copyWith => _$EditGroupRejectedCopyWithImpl<S, EditGroupRejected<S>>(this, _$identity);
@@ -2102,7 +2102,7 @@ class _$EditGroupRejectedCopyWithImpl<S,$Res>
   final $Res Function(EditGroupRejected<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? cause = freezed,}) {
   return _then(EditGroupRejected<S>(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -2118,7 +2118,7 @@ as String,freezed == cause ? _self.cause : cause ,
 
 class EditGroupContractChanged<S> extends EditGroupPhase<S> {
   const EditGroupContractChanged(): super._();
-
+  
 
 
 
@@ -2150,12 +2150,12 @@ String toString() {
 
 class EditGroupUncertain<S> extends EditGroupPhase<S> {
   const EditGroupUncertain(this.cause): super._();
-
+  
 
  final  Object cause;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupUncertainCopyWith<S, EditGroupUncertain<S>> get copyWith => _$EditGroupUncertainCopyWithImpl<S, EditGroupUncertain<S>>(this, _$identity);
@@ -2202,7 +2202,7 @@ class _$EditGroupUncertainCopyWithImpl<S,$Res>
   final $Res Function(EditGroupUncertain<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? cause = null,}) {
   return _then(EditGroupUncertain<S>(
 null == cause ? _self.cause : cause ,
@@ -2217,13 +2217,13 @@ null == cause ? _self.cause : cause ,
 
 class EditGroupRepeatedContention<S> extends EditGroupPhase<S> {
   const EditGroupRepeatedContention(this.attempts, this.evidence): super._();
-
+  
 
  final  int attempts;
  final  EditConflictEvidence? evidence;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupRepeatedContentionCopyWith<S, EditGroupRepeatedContention<S>> get copyWith => _$EditGroupRepeatedContentionCopyWithImpl<S, EditGroupRepeatedContention<S>>(this, _$identity);
@@ -2270,7 +2270,7 @@ class _$EditGroupRepeatedContentionCopyWithImpl<S,$Res>
   final $Res Function(EditGroupRepeatedContention<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? attempts = null,Object? evidence = freezed,}) {
   return _then(EditGroupRepeatedContention<S>(
 null == attempts ? _self.attempts : attempts // ignore: cast_nullable_to_non_nullable
@@ -2287,13 +2287,13 @@ as EditConflictEvidence?,
 
 class EditGroupResourceMissing<S> extends EditGroupPhase<S> {
   const EditGroupResourceMissing(this.resource, this.proposal): super._();
-
+  
 
  final  Object resource;
  final  S proposal;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupResourceMissingCopyWith<S, EditGroupResourceMissing<S>> get copyWith => _$EditGroupResourceMissingCopyWithImpl<S, EditGroupResourceMissing<S>>(this, _$identity);
@@ -2340,7 +2340,7 @@ class _$EditGroupResourceMissingCopyWithImpl<S,$Res>
   final $Res Function(EditGroupResourceMissing<S>) _then;
 
 /// Create a copy of EditGroupPhase
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? resource = null,Object? proposal = freezed,}) {
   return _then(EditGroupResourceMissing<S>(
 null == resource ? _self.resource : resource ,freezed == proposal ? _self.proposal : proposal // ignore: cast_nullable_to_non_nullable
@@ -2356,7 +2356,7 @@ mixin _$EditGroup<S> {
 
  EditGroupId get id; String get label; EditorCommitPolicy get policy; EditGroupPhase<S> get phase; Set<Object> get resources; int get operationCount; S get original;
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupCopyWith<S, EditGroup<S>> get copyWith => _$EditGroupCopyWithImpl<S, EditGroup<S>>(this as EditGroup<S>, _$identity);
@@ -2406,7 +2406,7 @@ class _$EditGroupCopyWithImpl<S,$Res>
   final $Res Function(EditGroup<S>) _then;
 
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? policy = null,Object? phase = null,Object? resources = null,Object? operationCount = null,Object? original = freezed,}) {
   return _then(EditGroup(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2420,20 +2420,20 @@ as S,
   ));
 }
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get id {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
 }/// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupPhaseCopyWith<S, $Res> get phase {
-
+  
   return $EditGroupPhaseCopyWith<S, $Res>(_self.phase, (value) {
     return _then(_self.copyWith(phase: value));
   });
@@ -2441,7 +2441,7 @@ $EditGroupPhaseCopyWith<S, $Res> get phase {
 }
 
 
-/// Adds pattern matching related methods to [EditGroup].
+/// Adds pattern-matching-related methods to [EditGroup].
 extension EditGroupPatterns<S> on EditGroup<S> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2464,7 +2464,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2527,7 +2527,7 @@ return $default(_that.id,_that.label,_that.policy,_that.phase,_that.resources,_t
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2576,7 +2576,7 @@ return $default(_that.id,_that.label,_that.policy,_that.phase,_that.resources,_t
 
 class _EditGroup<S> implements EditGroup<S> {
   const _EditGroup({required this.id, required this.label, required this.policy, required this.phase, required  Set<Object> resources, required this.operationCount, required this.original}): _resources = resources;
-
+  
 
 @override final  EditGroupId id;
 @override final  String label;
@@ -2593,7 +2593,7 @@ class _EditGroup<S> implements EditGroup<S> {
 @override final  S original;
 
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditGroupCopyWith<S, _EditGroup<S>> get copyWith => __$EditGroupCopyWithImpl<S, _EditGroup<S>>(this, _$identity);
@@ -2640,7 +2640,7 @@ class __$EditGroupCopyWithImpl<S,$Res>
   final $Res Function(_EditGroup<S>) _then;
 
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? label = null,Object? policy = null,Object? phase = null,Object? resources = null,Object? operationCount = null,Object? original = freezed,}) {
   return _then(_EditGroup<S>(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2655,20 +2655,20 @@ as S,
 }
 
 /// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get id {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.id, (value) {
     return _then(_self.copyWith(id: value));
   });
 }/// Create a copy of EditGroup
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupPhaseCopyWith<S, $Res> get phase {
-
+  
   return $EditGroupPhaseCopyWith<S, $Res>(_self.phase, (value) {
     return _then(_self.copyWith(phase: value));
   });
@@ -2680,7 +2680,7 @@ mixin _$EditingState<S> {
 
  S? get confirmed; S? get working; Map<EditGroupId, EditGroup<S>> get groups; Object? get failure; bool get available;
 /// Create a copy of EditingState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditingStateCopyWith<S, EditingState<S>> get copyWith => _$EditingStateCopyWithImpl<S, EditingState<S>>(this as EditingState<S>, _$identity);
@@ -2730,7 +2730,7 @@ class _$EditingStateCopyWithImpl<S,$Res>
   final $Res Function(EditingState<S>) _then;
 
 /// Create a copy of EditingState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? confirmed = freezed,Object? working = freezed,Object? groups = null,Object? failure = freezed,Object? available = null,}) {
   return _then(EditingState(
 confirmed: freezed == confirmed ? _self.confirmed : confirmed // ignore: cast_nullable_to_non_nullable
@@ -2744,7 +2744,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [EditingState].
+/// Adds pattern-matching-related methods to [EditingState].
 extension EditingStatePatterns<S> on EditingState<S> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2767,7 +2767,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2830,7 +2830,7 @@ return $default(_that.confirmed,_that.working,_that.groups,_that.failure,_that.a
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2879,7 +2879,7 @@ return $default(_that.confirmed,_that.working,_that.groups,_that.failure,_that.a
 
 class _EditingState<S> implements EditingState<S> {
   const _EditingState({this.confirmed, this.working,  Map<EditGroupId, EditGroup<S>> groups = const {}, this.failure, this.available = true}): _groups = groups;
-
+  
 
 @override final  S? confirmed;
 @override final  S? working;
@@ -2894,7 +2894,7 @@ class _EditingState<S> implements EditingState<S> {
 @override@JsonKey() final  bool available;
 
 /// Create a copy of EditingState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditingStateCopyWith<S, _EditingState<S>> get copyWith => __$EditingStateCopyWithImpl<S, _EditingState<S>>(this, _$identity);
@@ -2941,7 +2941,7 @@ class __$EditingStateCopyWithImpl<S,$Res>
   final $Res Function(_EditingState<S>) _then;
 
 /// Create a copy of EditingState
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? confirmed = freezed,Object? working = freezed,Object? groups = null,Object? failure = freezed,Object? available = null,}) {
   return _then(_EditingState<S>(
 confirmed: freezed == confirmed ? _self.confirmed : confirmed // ignore: cast_nullable_to_non_nullable
@@ -2985,7 +2985,7 @@ $EditStageResultCopyWith(EditStageResult _, $Res Function(EditStageResult) __);
 }
 
 
-/// Adds pattern matching related methods to [EditStageResult].
+/// Adds pattern-matching-related methods to [EditStageResult].
 extension EditStageResultPatterns on EditStageResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3010,7 +3010,7 @@ return rejected(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3076,7 +3076,7 @@ return rejected(_that.message,_that.cause);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3126,12 +3126,12 @@ return rejected(_that.message,_that.cause);case _:
 
 class EditStaged extends EditStageResult {
   const EditStaged(this.group): super._();
-
+  
 
  final  EditGroupId group;
 
 /// Create a copy of EditStageResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditStagedCopyWith<EditStaged> get copyWith => _$EditStagedCopyWithImpl<EditStaged>(this, _$identity);
@@ -3178,7 +3178,7 @@ class _$EditStagedCopyWithImpl<$Res>
   final $Res Function(EditStaged) _then;
 
 /// Create a copy of EditStageResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? group = null,}) {
   return _then(EditStaged(
 null == group ? _self.group : group // ignore: cast_nullable_to_non_nullable
@@ -3187,11 +3187,11 @@ as EditGroupId,
 }
 
 /// Create a copy of EditStageResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $EditGroupIdCopyWith<$Res> get group {
-
+  
   return $EditGroupIdCopyWith<$Res>(_self.group, (value) {
     return _then(_self.copyWith(group: value));
   });
@@ -3203,7 +3203,7 @@ $EditGroupIdCopyWith<$Res> get group {
 
 class EditUnchanged extends EditStageResult {
   const EditUnchanged(): super._();
-
+  
 
 
 
@@ -3235,13 +3235,13 @@ String toString() {
 
 class EditStageRejected extends EditStageResult {
   const EditStageRejected(this.message, this.cause): super._();
-
+  
 
  final  String message;
  final  Object? cause;
 
 /// Create a copy of EditStageResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditStageRejectedCopyWith<EditStageRejected> get copyWith => _$EditStageRejectedCopyWithImpl<EditStageRejected>(this, _$identity);
@@ -3288,7 +3288,7 @@ class _$EditStageRejectedCopyWithImpl<$Res>
   final $Res Function(EditStageRejected) _then;
 
 /// Create a copy of EditStageResult
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,Object? cause = freezed,}) {
   return _then(EditStageRejected(
 null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
@@ -3304,7 +3304,7 @@ mixin _$EditGroupReview<S,E> {
 
  S get saved; S get original; S get beforeGroup; S get proposal; Set<int> get operations; List<E> get edits; List<EditConflictEvidence> get conflicts; List<EditorDiagnostic> get diagnostics;
 /// Create a copy of EditGroupReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $EditGroupReviewCopyWith<S, E, EditGroupReview<S, E>> get copyWith => _$EditGroupReviewCopyWithImpl<S, E, EditGroupReview<S, E>>(this as EditGroupReview<S, E>, _$identity);
@@ -3354,7 +3354,7 @@ class _$EditGroupReviewCopyWithImpl<S,E,$Res>
   final $Res Function(EditGroupReview<S, E>) _then;
 
 /// Create a copy of EditGroupReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? saved = freezed,Object? original = freezed,Object? beforeGroup = freezed,Object? proposal = freezed,Object? operations = null,Object? edits = null,Object? conflicts = null,Object? diagnostics = null,}) {
   return _then(EditGroupReview(
 saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable
@@ -3372,7 +3372,7 @@ as List<EditorDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [EditGroupReview].
+/// Adds pattern-matching-related methods to [EditGroupReview].
 extension EditGroupReviewPatterns<S,E> on EditGroupReview<S, E> {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3395,7 +3395,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3458,7 +3458,7 @@ return $default(_that.saved,_that.original,_that.beforeGroup,_that.proposal,_tha
 
 }
 }
-/// A method similar to a `switch` method, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3507,7 +3507,7 @@ return $default(_that.saved,_that.original,_that.beforeGroup,_that.proposal,_tha
 
 class _EditGroupReview<S,E> implements EditGroupReview<S, E> {
   const _EditGroupReview({required this.saved, required this.original, required this.beforeGroup, required this.proposal, required  Set<int> operations, required  List<E> edits,  List<EditConflictEvidence> conflicts = const [],  List<EditorDiagnostic> diagnostics = const []}): _operations = operations,_edits = edits,_conflicts = conflicts,_diagnostics = diagnostics;
-
+  
 
 @override final  S saved;
 @override final  S original;
@@ -3543,7 +3543,7 @@ class _EditGroupReview<S,E> implements EditGroupReview<S, E> {
 
 
 /// Create a copy of EditGroupReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$EditGroupReviewCopyWith<S, E, _EditGroupReview<S, E>> get copyWith => __$EditGroupReviewCopyWithImpl<S, E, _EditGroupReview<S, E>>(this, _$identity);
@@ -3590,7 +3590,7 @@ class __$EditGroupReviewCopyWithImpl<S,E,$Res>
   final $Res Function(_EditGroupReview<S, E>) _then;
 
 /// Create a copy of EditGroupReview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? saved = freezed,Object? original = freezed,Object? beforeGroup = freezed,Object? proposal = freezed,Object? operations = null,Object? edits = null,Object? conflicts = null,Object? diagnostics = null,}) {
   return _then(_EditGroupReview<S, E>(
 saved: freezed == saved ? _self.saved : saved // ignore: cast_nullable_to_non_nullable

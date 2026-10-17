@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'presentation_interaction_scope.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$PresentationInteraction {
 
  bool get selected; bool get hovered; bool get focused; bool get pressed; bool get disabled; bool get readOnly; bool get invalid;
 /// Create a copy of PresentationInteraction
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PresentationInteractionCopyWith<PresentationInteraction> get copyWith => _$PresentationInteractionCopyWithImpl<PresentationInteraction>(this as PresentationInteraction, _$identity);
@@ -67,7 +67,7 @@ class _$PresentationInteractionCopyWithImpl<$Res>
   final $Res Function(PresentationInteraction) _then;
 
 /// Create a copy of PresentationInteraction
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,Object? readOnly = null,Object? invalid = null,}) {
   return _then(PresentationInteraction(
 selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable
@@ -84,7 +84,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [PresentationInteraction].
+/// Adds pattern-matching-related methods to [PresentationInteraction].
 extension PresentationInteractionPatterns on PresentationInteraction {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -107,7 +107,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -170,7 +170,7 @@ return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.d
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -219,7 +219,7 @@ return $default(_that.selected,_that.hovered,_that.focused,_that.pressed,_that.d
 
 class _PresentationInteraction extends PresentationInteraction {
   const _PresentationInteraction({this.selected = false, this.hovered = false, this.focused = false, this.pressed = false, this.disabled = false, this.readOnly = false, this.invalid = false}): super._();
-
+  
 
 @override@JsonKey() final  bool selected;
 @override@JsonKey() final  bool hovered;
@@ -230,7 +230,7 @@ class _PresentationInteraction extends PresentationInteraction {
 @override@JsonKey() final  bool invalid;
 
 /// Create a copy of PresentationInteraction
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PresentationInteractionCopyWith<_PresentationInteraction> get copyWith => __$PresentationInteractionCopyWithImpl<_PresentationInteraction>(this, _$identity);
@@ -277,7 +277,7 @@ class __$PresentationInteractionCopyWithImpl<$Res>
   final $Res Function(_PresentationInteraction) _then;
 
 /// Create a copy of PresentationInteraction
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? selected = null,Object? hovered = null,Object? focused = null,Object? pressed = null,Object? disabled = null,Object? readOnly = null,Object? invalid = null,}) {
   return _then(_PresentationInteraction(
 selected: null == selected ? _self.selected : selected // ignore: cast_nullable_to_non_nullable

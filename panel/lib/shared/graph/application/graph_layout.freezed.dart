@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'graph_layout.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$GraphDragSession {
 
  GraphDragPayload<GraphDragData> get payload; Offset get globalPosition; bool get inside;
 /// Create a copy of GraphDragSession
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $GraphDragSessionCopyWith<GraphDragSession> get copyWith => _$GraphDragSessionCopyWithImpl<GraphDragSession>(this as GraphDragSession, _$identity);
@@ -67,7 +67,7 @@ class _$GraphDragSessionCopyWithImpl<$Res>
   final $Res Function(GraphDragSession) _then;
 
 /// Create a copy of GraphDragSession
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? payload = null,Object? globalPosition = null,Object? inside = null,}) {
   return _then(GraphDragSession(
 payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
@@ -80,7 +80,7 @@ as bool,
 }
 
 
-/// Adds pattern matching related methods to [GraphDragSession].
+/// Adds pattern-matching-related methods to [GraphDragSession].
 extension GraphDragSessionPatterns on GraphDragSession {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -103,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -166,7 +166,7 @@ return $default(_that.payload,_that.globalPosition,_that.inside);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -215,14 +215,14 @@ return $default(_that.payload,_that.globalPosition,_that.inside);case _:
 
 class _GraphDragSession extends GraphDragSession {
   const _GraphDragSession({required this.payload, required this.globalPosition, required this.inside}): super._();
-
+  
 
 @override final  GraphDragPayload<GraphDragData> payload;
 @override final  Offset globalPosition;
 @override final  bool inside;
 
 /// Create a copy of GraphDragSession
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$GraphDragSessionCopyWith<_GraphDragSession> get copyWith => __$GraphDragSessionCopyWithImpl<_GraphDragSession>(this, _$identity);
@@ -269,7 +269,7 @@ class __$GraphDragSessionCopyWithImpl<$Res>
   final $Res Function(_GraphDragSession) _then;
 
 /// Create a copy of GraphDragSession
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? payload = null,Object? globalPosition = null,Object? inside = null,}) {
   return _then(_GraphDragSession(
 payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
@@ -287,7 +287,7 @@ mixin _$GraphInteractionPreview {
 
  Set<GraphIdentifier> get movingIds; (int, int,) get moveDelta; GraphResizePreview? get resize;
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $GraphInteractionPreviewCopyWith<GraphInteractionPreview> get copyWith => _$GraphInteractionPreviewCopyWithImpl<GraphInteractionPreview>(this as GraphInteractionPreview, _$identity);
@@ -337,7 +337,7 @@ class _$GraphInteractionPreviewCopyWithImpl<$Res>
   final $Res Function(GraphInteractionPreview) _then;
 
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? movingIds = null,Object? moveDelta = null,Object? resize = freezed,}) {
   return _then(GraphInteractionPreview(
 movingIds: null == movingIds ? _self.movingIds : movingIds // ignore: cast_nullable_to_non_nullable
@@ -347,7 +347,7 @@ as GraphResizePreview?,
   ));
 }
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphResizePreviewCopyWith<$Res>? get resize {
@@ -362,7 +362,7 @@ $GraphResizePreviewCopyWith<$Res>? get resize {
 }
 
 
-/// Adds pattern matching related methods to [GraphInteractionPreview].
+/// Adds pattern-matching-related methods to [GraphInteractionPreview].
 extension GraphInteractionPreviewPatterns on GraphInteractionPreview {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -385,7 +385,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -448,7 +448,7 @@ return $default(_that.movingIds,_that.moveDelta,_that.resize);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -497,7 +497,7 @@ return $default(_that.movingIds,_that.moveDelta,_that.resize);case _:
 
 class _GraphInteractionPreview implements GraphInteractionPreview {
   const _GraphInteractionPreview({ Set<GraphIdentifier> movingIds = const <GraphIdentifier>{}, this.moveDelta = const (0, 0), this.resize}): _movingIds = movingIds;
-
+  
 
  final  Set<GraphIdentifier> _movingIds;
 @override@JsonKey() Set<GraphIdentifier> get movingIds {
@@ -510,7 +510,7 @@ class _GraphInteractionPreview implements GraphInteractionPreview {
 @override final  GraphResizePreview? resize;
 
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$GraphInteractionPreviewCopyWith<_GraphInteractionPreview> get copyWith => __$GraphInteractionPreviewCopyWithImpl<_GraphInteractionPreview>(this, _$identity);
@@ -557,7 +557,7 @@ class __$GraphInteractionPreviewCopyWithImpl<$Res>
   final $Res Function(_GraphInteractionPreview) _then;
 
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? movingIds = null,Object? moveDelta = null,Object? resize = freezed,}) {
   return _then(_GraphInteractionPreview(
 movingIds: null == movingIds ? _self._movingIds : movingIds // ignore: cast_nullable_to_non_nullable
@@ -568,7 +568,7 @@ as GraphResizePreview?,
 }
 
 /// Create a copy of GraphInteractionPreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphResizePreviewCopyWith<$Res>? get resize {
@@ -587,7 +587,7 @@ mixin _$GraphResizePreview {
 
  GraphIdentifier get id; int get width; int get height;
 /// Create a copy of GraphResizePreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $GraphResizePreviewCopyWith<GraphResizePreview> get copyWith => _$GraphResizePreviewCopyWithImpl<GraphResizePreview>(this as GraphResizePreview, _$identity);
@@ -637,7 +637,7 @@ class _$GraphResizePreviewCopyWithImpl<$Res>
   final $Res Function(GraphResizePreview) _then;
 
 /// Create a copy of GraphResizePreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? width = null,Object? height = null,}) {
   return _then(GraphResizePreview(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -650,7 +650,7 @@ as int,
 }
 
 
-/// Adds pattern matching related methods to [GraphResizePreview].
+/// Adds pattern-matching-related methods to [GraphResizePreview].
 extension GraphResizePreviewPatterns on GraphResizePreview {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -673,7 +673,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -736,7 +736,7 @@ return $default(_that.id,_that.width,_that.height);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -785,14 +785,14 @@ return $default(_that.id,_that.width,_that.height);case _:
 
 class _GraphResizePreview implements GraphResizePreview {
   const _GraphResizePreview({required this.id, required this.width, required this.height});
-
+  
 
 @override final  GraphIdentifier id;
 @override final  int width;
 @override final  int height;
 
 /// Create a copy of GraphResizePreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$GraphResizePreviewCopyWith<_GraphResizePreview> get copyWith => __$GraphResizePreviewCopyWithImpl<_GraphResizePreview>(this, _$identity);
@@ -839,7 +839,7 @@ class __$GraphResizePreviewCopyWithImpl<$Res>
   final $Res Function(_GraphResizePreview) _then;
 
 /// Create a copy of GraphResizePreview
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? width = null,Object? height = null,}) {
   return _then(_GraphResizePreview(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -857,7 +857,7 @@ mixin _$GraphPlacedElement {
 
  GraphElement get element; Rect get bounds;
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<GraphPlacedElement> get copyWith => _$GraphPlacedElementCopyWithImpl<GraphPlacedElement>(this as GraphPlacedElement, _$identity);
@@ -907,7 +907,7 @@ class _$GraphPlacedElementCopyWithImpl<$Res>
   final $Res Function(GraphPlacedElement) _then;
 
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? element = null,Object? bounds = null,}) {
   return _then(GraphPlacedElement(
 element: null == element ? _self.element : element // ignore: cast_nullable_to_non_nullable
@@ -916,11 +916,11 @@ as Rect,
   ));
 }
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphElementCopyWith<$Res> get element {
-
+  
   return $GraphElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -928,7 +928,7 @@ $GraphElementCopyWith<$Res> get element {
 }
 
 
-/// Adds pattern matching related methods to [GraphPlacedElement].
+/// Adds pattern-matching-related methods to [GraphPlacedElement].
 extension GraphPlacedElementPatterns on GraphPlacedElement {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -951,7 +951,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1014,7 +1014,7 @@ return $default(_that.element,_that.bounds);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1063,13 +1063,13 @@ return $default(_that.element,_that.bounds);case _:
 
 class _GraphPlacedElement extends GraphPlacedElement {
   const _GraphPlacedElement({required this.element, required this.bounds}): super._();
-
+  
 
 @override final  GraphElement element;
 @override final  Rect bounds;
 
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$GraphPlacedElementCopyWith<_GraphPlacedElement> get copyWith => __$GraphPlacedElementCopyWithImpl<_GraphPlacedElement>(this, _$identity);
@@ -1116,7 +1116,7 @@ class __$GraphPlacedElementCopyWithImpl<$Res>
   final $Res Function(_GraphPlacedElement) _then;
 
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? element = null,Object? bounds = null,}) {
   return _then(_GraphPlacedElement(
 element: null == element ? _self.element : element // ignore: cast_nullable_to_non_nullable
@@ -1126,11 +1126,11 @@ as Rect,
 }
 
 /// Create a copy of GraphPlacedElement
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphElementCopyWith<$Res> get element {
-
+  
   return $GraphElementCopyWith<$Res>(_self.element, (value) {
     return _then(_self.copyWith(element: value));
   });
@@ -1142,7 +1142,7 @@ mixin _$GraphPlacedEdge {
 
  GraphEdge get edge; GraphPlacedElement get source; GraphPlacedElement get target; Offset get sourcePoint; Offset get targetPoint;
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $GraphPlacedEdgeCopyWith<GraphPlacedEdge> get copyWith => _$GraphPlacedEdgeCopyWithImpl<GraphPlacedEdge>(this as GraphPlacedEdge, _$identity);
@@ -1192,7 +1192,7 @@ class _$GraphPlacedEdgeCopyWithImpl<$Res>
   final $Res Function(GraphPlacedEdge) _then;
 
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? edge = null,Object? source = null,Object? target = null,Object? sourcePoint = null,Object? targetPoint = null,}) {
   return _then(GraphPlacedEdge(
 edge: null == edge ? _self.edge : edge // ignore: cast_nullable_to_non_nullable
@@ -1204,29 +1204,29 @@ as Offset,
   ));
 }
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphEdgeCopyWith<$Res> get edge {
-
+  
   return $GraphEdgeCopyWith<$Res>(_self.edge, (value) {
     return _then(_self.copyWith(edge: value));
   });
 }/// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get source {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
 }/// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get target {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });
@@ -1234,7 +1234,7 @@ $GraphPlacedElementCopyWith<$Res> get target {
 }
 
 
-/// Adds pattern matching related methods to [GraphPlacedEdge].
+/// Adds pattern-matching-related methods to [GraphPlacedEdge].
 extension GraphPlacedEdgePatterns on GraphPlacedEdge {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1257,7 +1257,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1320,7 +1320,7 @@ return $default(_that.edge,_that.source,_that.target,_that.sourcePoint,_that.tar
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1369,7 +1369,7 @@ return $default(_that.edge,_that.source,_that.target,_that.sourcePoint,_that.tar
 
 class _GraphPlacedEdge implements GraphPlacedEdge {
   const _GraphPlacedEdge({required this.edge, required this.source, required this.target, required this.sourcePoint, required this.targetPoint});
-
+  
 
 @override final  GraphEdge edge;
 @override final  GraphPlacedElement source;
@@ -1378,7 +1378,7 @@ class _GraphPlacedEdge implements GraphPlacedEdge {
 @override final  Offset targetPoint;
 
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$GraphPlacedEdgeCopyWith<_GraphPlacedEdge> get copyWith => __$GraphPlacedEdgeCopyWithImpl<_GraphPlacedEdge>(this, _$identity);
@@ -1425,7 +1425,7 @@ class __$GraphPlacedEdgeCopyWithImpl<$Res>
   final $Res Function(_GraphPlacedEdge) _then;
 
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? edge = null,Object? source = null,Object? target = null,Object? sourcePoint = null,Object? targetPoint = null,}) {
   return _then(_GraphPlacedEdge(
 edge: null == edge ? _self.edge : edge // ignore: cast_nullable_to_non_nullable
@@ -1438,29 +1438,29 @@ as Offset,
 }
 
 /// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphEdgeCopyWith<$Res> get edge {
-
+  
   return $GraphEdgeCopyWith<$Res>(_self.edge, (value) {
     return _then(_self.copyWith(edge: value));
   });
 }/// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get source {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.source, (value) {
     return _then(_self.copyWith(source: value));
   });
 }/// Create a copy of GraphPlacedEdge
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $GraphPlacedElementCopyWith<$Res> get target {
-
+  
   return $GraphPlacedElementCopyWith<$Res>(_self.target, (value) {
     return _then(_self.copyWith(target: value));
   });

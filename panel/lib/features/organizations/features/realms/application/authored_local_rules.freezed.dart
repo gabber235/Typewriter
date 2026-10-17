@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'authored_local_rules.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$AuthoredRuleProjection {
 
  Map<skir.ValueLocation, List<skir.OwnedRule>> get rules; List<PortablePresentationDiagnostic> get diagnostics;
 /// Create a copy of AuthoredRuleProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $AuthoredRuleProjectionCopyWith<AuthoredRuleProjection> get copyWith => _$AuthoredRuleProjectionCopyWithImpl<AuthoredRuleProjection>(this as AuthoredRuleProjection, _$identity);
@@ -67,7 +67,7 @@ class _$AuthoredRuleProjectionCopyWithImpl<$Res>
   final $Res Function(AuthoredRuleProjection) _then;
 
 /// Create a copy of AuthoredRuleProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? rules = null,Object? diagnostics = null,}) {
   return _then(AuthoredRuleProjection(
 rules: null == rules ? _self.rules : rules // ignore: cast_nullable_to_non_nullable
@@ -79,7 +79,7 @@ as List<PortablePresentationDiagnostic>,
 }
 
 
-/// Adds pattern matching related methods to [AuthoredRuleProjection].
+/// Adds pattern-matching-related methods to [AuthoredRuleProjection].
 extension AuthoredRuleProjectionPatterns on AuthoredRuleProjection {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -102,7 +102,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -165,7 +165,7 @@ return $default(_that.rules,_that.diagnostics);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -214,7 +214,7 @@ return $default(_that.rules,_that.diagnostics);case _:
 
 class _AuthoredRuleProjection extends AuthoredRuleProjection {
   const _AuthoredRuleProjection({ Map<skir.ValueLocation, List<skir.OwnedRule>> rules = const {},  List<PortablePresentationDiagnostic> diagnostics = const []}): _rules = rules,_diagnostics = diagnostics,super._();
-
+  
 
  final  Map<skir.ValueLocation, List<skir.OwnedRule>> _rules;
 @override@JsonKey() Map<skir.ValueLocation, List<skir.OwnedRule>> get rules {
@@ -232,7 +232,7 @@ class _AuthoredRuleProjection extends AuthoredRuleProjection {
 
 
 /// Create a copy of AuthoredRuleProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$AuthoredRuleProjectionCopyWith<_AuthoredRuleProjection> get copyWith => __$AuthoredRuleProjectionCopyWithImpl<_AuthoredRuleProjection>(this, _$identity);
@@ -279,7 +279,7 @@ class __$AuthoredRuleProjectionCopyWithImpl<$Res>
   final $Res Function(_AuthoredRuleProjection) _then;
 
 /// Create a copy of AuthoredRuleProjection
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? rules = null,Object? diagnostics = null,}) {
   return _then(_AuthoredRuleProjection(
 rules: null == rules ? _self._rules : rules // ignore: cast_nullable_to_non_nullable
@@ -296,7 +296,7 @@ mixin _$PatternMatch {
 
  skir.DataValue get value; List<skir.PathSegment> get path;
 /// Create a copy of _PatternMatch
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PatternMatchCopyWith<_PatternMatch> get copyWith => __$PatternMatchCopyWithImpl<_PatternMatch>(this as _PatternMatch, _$identity);
@@ -346,7 +346,7 @@ class __$PatternMatchCopyWithImpl<$Res>
   final $Res Function(_PatternMatch) _then;
 
 /// Create a copy of _PatternMatch
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? value = null,Object? path = null,}) {
   return _then(_PatternMatch(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
@@ -358,7 +358,7 @@ as List<skir.PathSegment>,
 }
 
 
-/// Adds pattern matching related methods to [_PatternMatch].
+/// Adds pattern-matching-related methods to [_PatternMatch].
 extension _PatternMatchPatterns on _PatternMatch {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -381,7 +381,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -444,7 +444,7 @@ return $default(_that.value,_that.path);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -493,7 +493,7 @@ return $default(_that.value,_that.path);case _:
 
 class _PatternMatchValue implements _PatternMatch {
   const _PatternMatchValue({required this.value, required  List<skir.PathSegment> path}): _path = path;
-
+  
 
 @override final  skir.DataValue value;
  final  List<skir.PathSegment> _path;
@@ -505,7 +505,7 @@ class _PatternMatchValue implements _PatternMatch {
 
 
 /// Create a copy of _PatternMatch
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PatternMatchValueCopyWith<_PatternMatchValue> get copyWith => __$PatternMatchValueCopyWithImpl<_PatternMatchValue>(this, _$identity);
@@ -552,7 +552,7 @@ class __$PatternMatchValueCopyWithImpl<$Res>
   final $Res Function(_PatternMatchValue) _then;
 
 /// Create a copy of _PatternMatch
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? path = null,}) {
   return _then(_PatternMatchValue(
 value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable

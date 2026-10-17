@@ -1,4 +1,4 @@
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,7 +9,7 @@ part of 'presentation_color.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -17,7 +17,7 @@ mixin _$PresentationColorEnvironment {
 
  ThemeData get theme; SurfaceAppearance get appearance; PresentationInteraction get interaction;
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $PresentationColorEnvironmentCopyWith<PresentationColorEnvironment> get copyWith => _$PresentationColorEnvironmentCopyWithImpl<PresentationColorEnvironment>(this as PresentationColorEnvironment, _$identity);
@@ -67,7 +67,7 @@ class _$PresentationColorEnvironmentCopyWithImpl<$Res>
   final $Res Function(PresentationColorEnvironment) _then;
 
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? theme = null,Object? appearance = null,Object? interaction = null,}) {
   return _then(PresentationColorEnvironment(
 theme: null == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
@@ -77,20 +77,20 @@ as PresentationInteraction,
   ));
 }
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SurfaceAppearanceCopyWith<$Res> get appearance {
-
+  
   return $SurfaceAppearanceCopyWith<$Res>(_self.appearance, (value) {
     return _then(_self.copyWith(appearance: value));
   });
 }/// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PresentationInteractionCopyWith<$Res> get interaction {
-
+  
   return $PresentationInteractionCopyWith<$Res>(_self.interaction, (value) {
     return _then(_self.copyWith(interaction: value));
   });
@@ -98,7 +98,7 @@ $PresentationInteractionCopyWith<$Res> get interaction {
 }
 
 
-/// Adds pattern matching related methods to [PresentationColorEnvironment].
+/// Adds pattern-matching-related methods to [PresentationColorEnvironment].
 extension PresentationColorEnvironmentPatterns on PresentationColorEnvironment {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -121,7 +121,7 @@ return $default(_that);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -184,7 +184,7 @@ return $default(_that.theme,_that.appearance,_that.interaction);case _:
 
 }
 }
-/// A method similar to a `switch`, using callbacks.
+/// A `switch`-like method, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -233,14 +233,14 @@ return $default(_that.theme,_that.appearance,_that.interaction);case _:
 
 class _PresentationColorEnvironment extends PresentationColorEnvironment {
   const _PresentationColorEnvironment({required this.theme, required this.appearance, required this.interaction}): super._();
-
+  
 
 @override final  ThemeData theme;
 @override final  SurfaceAppearance appearance;
 @override final  PresentationInteraction interaction;
 
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$PresentationColorEnvironmentCopyWith<_PresentationColorEnvironment> get copyWith => __$PresentationColorEnvironmentCopyWithImpl<_PresentationColorEnvironment>(this, _$identity);
@@ -287,7 +287,7 @@ class __$PresentationColorEnvironmentCopyWithImpl<$Res>
   final $Res Function(_PresentationColorEnvironment) _then;
 
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? theme = null,Object? appearance = null,Object? interaction = null,}) {
   return _then(_PresentationColorEnvironment(
 theme: null == theme ? _self.theme : theme // ignore: cast_nullable_to_non_nullable
@@ -298,20 +298,20 @@ as PresentationInteraction,
 }
 
 /// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SurfaceAppearanceCopyWith<$Res> get appearance {
-
+  
   return $SurfaceAppearanceCopyWith<$Res>(_self.appearance, (value) {
     return _then(_self.copyWith(appearance: value));
   });
 }/// Create a copy of PresentationColorEnvironment
-/// with the given fields replaced by the non null parameter values.
+/// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $PresentationInteractionCopyWith<$Res> get interaction {
-
+  
   return $PresentationInteractionCopyWith<$Res>(_self.interaction, (value) {
     return _then(_self.copyWith(interaction: value));
   });
