@@ -50,6 +50,7 @@ data class FileKey(
  *
  * The current contract accepts canonical lowercase SHA 256 values through [sha256].
  */
+@ConsistentCopyVisibility
 data class FileDigest private constructor(
     val algorithm: String,
     val value: String,

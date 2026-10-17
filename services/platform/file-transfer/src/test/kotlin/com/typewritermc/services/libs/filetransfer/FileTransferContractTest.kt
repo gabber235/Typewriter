@@ -16,6 +16,20 @@ import java.nio.file.Files
 import java.security.MessageDigest
 
 val FileTransferContractTest by testSuite {
+    test("digest factory accepts only canonical lowercase SHA 256 values") {
+        val digest = FileDigest.sha256("a".repeat(64))
+        digest.algorithm shouldBe "SHA-256"
+        digest.value shouldBe "a".repeat(64)
+
+        listOf("", "a".repeat(63), "a".repeat(65), "A".repeat(64), "g".repeat(64)).forEach { value ->
+            shouldThrow<IllegalArgumentException> { FileDigest.sha256(value) }
+        }
+    }
+
+    test("digest does not expose a public JVM copy that bypasses factory validation") {
+        FileDigest::class.java.methods.any { it.name == "copy" || it.name == "copy\$default" } shouldBe false
+    }
+
     test("sequential transfer rejects source completion that disagrees with metadata") {
         runTest {
             shouldThrow<TransferProtocolException> {
