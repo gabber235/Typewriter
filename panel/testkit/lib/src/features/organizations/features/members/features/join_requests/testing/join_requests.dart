@@ -1,12 +1,10 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter_animate/flutter_animate.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 // Join Request Mocks
@@ -17,8 +15,8 @@ OrganizationJoinRequest generateRandomJoinRequest() {
     Duration(minutes: faker.randomGenerator.integer(60, min: 5)),
   );
   return OrganizationJoinRequest(
-    requestId: recordId("request_to_join:${faker.guid.guid()}"),
-    userId: recordId("user:${faker.guid.guid()}"),
+    requestId: skir.recordId("request_to_join:${faker.guid.guid()}"),
+    userId: skir.recordId("user:${faker.guid.guid()}"),
     userName: faker.person.name(),
     userEmail: faker.internet.email(),
     userAvatarUrl:
@@ -41,34 +39,6 @@ class OrganizationJoinRequestsMock extends OrganizationJoinRequests {
   @override
   Stream<List<OrganizationJoinRequest>> build() async* {
     yield await displayState.generate(generateRandomJoinRequest);
-  }
-
-  @override
-  Future<void> approveRequests(
-    Iterable<skir.RecordId> requestIds,
-    List<OrganizationRole> roles,
-  ) async {
-    final ids = requestIds.toSet();
-    final requests = await future;
-    final approved = [
-      for (final id in ids)
-        requests.firstWhere((request) => request.requestId == id),
-    ];
-    state = AsyncData(
-      requests.where((request) => !ids.contains(request.requestId)).toList(),
-    );
-    for (final request in approved) {
-      onApprove?.call(request, roles);
-    }
-  }
-
-  @override
-  Future<void> declineRequest(skir.RecordId requestId) async {
-    await Future.delayed(300.ms);
-    final requests = await future;
-
-    final updated = requests.where((r) => r.requestId != requestId).toList();
-    state = AsyncData(updated);
   }
 }
 

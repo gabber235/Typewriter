@@ -1,6 +1,6 @@
 plugins {
     id("com.typewritermc.basic-conventions")
-    id("xyz.jpenilla.resource-factory-paper-convention") version "1.3.1"
+    id("xyz.jpenilla.resource-factory-paper-convention") version "1.4.0"
 }
 
 paperPluginYaml {
@@ -11,7 +11,7 @@ paperPluginYaml {
     version = project.version.toString()
 
     main = "com.typewritermc.loader.paper.TypewriterLoaderPlugin"
-    apiVersion = "1.21.3"
+    apiVersion = "1.21.4"
 
     foliaSupported = false
 

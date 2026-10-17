@@ -1,6 +1,3 @@
-import "dart:math" as math;
-
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// A placement adjustment applied after the preferred side overflows.
@@ -9,7 +6,7 @@ enum OverflowResolutionStep { flip, shift, resize }
 /// Geometry and configuration consumed by [computeAnchoredPlacement].
 ///
 /// All rectangles and offsets use the overlay's coordinate space. The child
-/// size is its unconstrained measured size before overflow resizing.
+/// size is its measured size before applying anchor and boundary constraints.
 class AnchoredOverlayPlacementInput {
   const AnchoredOverlayPlacementInput({
     required this.anchorRect,
@@ -51,8 +48,9 @@ class AnchoredOverlayPlacementResult {
 /// Resolves an overlay position without touching the render tree.
 ///
 /// The engine tries the preferred side first. If it does not fit, it tries the
-/// opposite side, then shifts the result into the boundary, and finally
-/// resizes it when the boundary is smaller than the child.
+/// opposite side and accepts the flip only if the whole child fits. Otherwise
+/// it keeps the preferred side, shifts into the boundary, and finally resizes
+/// when the boundary is smaller than the child.
 AnchoredOverlayPlacementResult computeAnchoredPlacement(
   AnchoredOverlayPlacementInput input,
 ) {
@@ -155,10 +153,10 @@ Size _applySharedAxisSizing({
 Size _applyInitialSizeConstraints(Size size, AnchoredOverlayConfig config) {
   final constrainedWidth = config.maxWidth == null
       ? size.width
-      : math.min(size.width, config.maxWidth!);
+      : min(size.width, config.maxWidth!);
   final constrainedHeight = config.maxHeight == null
       ? size.height
-      : math.min(size.height, config.maxHeight!);
+      : min(size.height, config.maxHeight!);
   return Size(constrainedWidth, constrainedHeight);
 }
 
@@ -194,7 +192,7 @@ Offset _clampOffset(Rect boundaryRect, Offset offset, Size size) {
 
 Size _clampSizeToBoundary(Rect boundaryRect, Size size) {
   return Size(
-    math.min(size.width, boundaryRect.width),
-    math.min(size.height, boundaryRect.height),
+    min(size.width, boundaryRect.width),
+    min(size.height, boundaryRect.height),
   );
 }

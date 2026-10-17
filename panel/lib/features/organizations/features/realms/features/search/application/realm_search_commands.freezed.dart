@@ -13,7 +13,7 @@ part of 'realm_search_commands.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$OpenRealmEffect implements DiagnosticableTreeMixin {
+mixin _$OpenRealmEffect {
 
  skir.RecordId get organizationId; skir.RecordId get realmId;
 /// Create a copy of OpenRealmEffect
@@ -23,13 +23,6 @@ mixin _$OpenRealmEffect implements DiagnosticableTreeMixin {
 $OpenRealmEffectCopyWith<OpenRealmEffect> get copyWith => _$OpenRealmEffectCopyWithImpl<OpenRealmEffect>(this as OpenRealmEffect, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as OpenRealmEffect;
-  properties
-    ..add(DiagnosticsProperty('type', 'OpenRealmEffect'))
-    ..add(DiagnosticsProperty('organizationId', _this.organizationId))..add(DiagnosticsProperty('realmId', _this.realmId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as OpenRealmEffect;
   return 'OpenRealmEffect(organizationId: ${_this.organizationId}, realmId: ${_this.realmId})';
 }
@@ -219,7 +212,7 @@ return $default(_that.organizationId,_that.realmId);case _:
 /// @nodoc
 
 
-class _OpenRealmEffect with DiagnosticableTreeMixin implements OpenRealmEffect {
+class _OpenRealmEffect implements OpenRealmEffect {
   const _OpenRealmEffect(this.organizationId, this.realmId);
   
 
@@ -233,12 +226,6 @@ class _OpenRealmEffect with DiagnosticableTreeMixin implements OpenRealmEffect {
 _$OpenRealmEffectCopyWith<_OpenRealmEffect> get copyWith => __$OpenRealmEffectCopyWithImpl<_OpenRealmEffect>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'OpenRealmEffect'))
-    ..add(DiagnosticsProperty('organizationId', organizationId))..add(DiagnosticsProperty('realmId', realmId));
-}
 
 @override
 bool operator ==(Object other) {
@@ -252,7 +239,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'OpenRealmEffect(organizationId: $organizationId, realmId: $realmId)';
 }
 

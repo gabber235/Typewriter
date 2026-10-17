@@ -1,0 +1,193 @@
+// Resource operations resolve affordances and prepare proposed edits against the panel
+// working observation. The Realm validates the confirmed saved baseline plus local overlay,
+// then runs catalog owned preparation. A preview is staged by the client and committed
+// through authoring admission separately.
+
+import {
+  AuthoringDiagnostic,
+  AuthoringObservationId,
+  CatalogChanged,
+  CounterpartChoice,
+  LinkOccurrence,
+  PreparedEdit,
+} from "editor/v1/authoring.skir";
+import { InvocationId } from "editor/v1/capability.skir";
+import {
+  OperationConfirmation,
+  ResolvedResourceOperations,
+} from "editor/v1/operation.skir";
+import {
+  AuthoringRecord,
+  CapabilityId,
+  CatalogGeneration,
+  DataValue,
+  ResourceId,
+  ValuePath,
+} from "editor/v1/type_catalog.skir";
+import { InternalError } from "kernel/v1/errors.skir";
+
+struct OperationOrigin(812500001) {
+  container: ResourceId? = 0;
+  occurrences: [LinkOccurrence] = 1;
+}
+
+/// Captures the operation selection and its exact origin occurrences under one catalog.
+/// invocation_id correlates requests and supplies stable preparation allocation identity; it does
+/// not make requests durable or guarantee server deduplication.
+struct OperationInvocation(812500002) {
+  invocation_id: InvocationId = 0;
+  catalog: CatalogGeneration = 1;
+  targets: [ResourceId] = 2;
+  origin: OperationOrigin = 3;
+}
+
+struct OperationResourceUpsert(812500003) {
+  resource: ResourceId = 0;
+  content: AuthoringRecord = 1;
+}
+
+/// Proposed replacements and removals layered over the confirmed saved observation for this request.
+/// These values are validated before callbacks run and are not saved by resolve or preparation.
+struct OperationWorkingOverlay(812500004) {
+  upserts: [OperationResourceUpsert] = 0;
+  removals: [ResourceId] = 1;
+}
+
+/// Couples a local overlay to the saved observation it was built from. A stale observation must
+/// be refreshed rather than silently applying the overlay to a different saved graph.
+struct OperationWorkingContext(812500005) {
+  confirmed_observation: AuthoringObservationId = 0;
+  overlay: OperationWorkingOverlay = 1;
+}
+
+struct PreparationChoiceId(812500006) {
+  value: string = 0;
+}
+
+struct PreparationSourceOption(812500007) {
+  label: string = 0;
+  occurrence: LinkOccurrence = 1;
+}
+
+struct PreparationCounterpartOption(812500008) {
+  label: string = 0;
+  counterpart: CounterpartChoice = 1;
+}
+
+enum PreparationChoice(812500009) {
+  source: struct {
+    choice_id: PreparationChoiceId = 0;
+    label: string = 1;
+    candidates: [PreparationSourceOption] = 2;
+  } = 1;
+  counterpart: struct {
+    choice_id: PreparationChoiceId = 0;
+    label: string = 1;
+    source: LinkOccurrence = 2;
+    candidates: [PreparationCounterpartOption] = 3;
+  } = 2;
+}
+
+enum PreparationChoiceAnswer(812500010) {
+  source: struct {
+    choice_id: PreparationChoiceId = 0;
+    occurrence: LinkOccurrence = 1;
+  } = 1;
+  counterpart: struct {
+    choice_id: PreparationChoiceId = 0;
+    counterpart: CounterpartChoice = 1;
+  } = 2;
+}
+
+struct OperationInputProblem(812500011) {
+  path: ValuePath = 0;
+  code: string = 1;
+  message: string = 2;
+}
+
+enum OperationSelectionEffect(812500012) {
+  unchanged = 1;
+  replace: [ResourceId] = 2;
+}
+
+struct StaleAuthoringObservation(812500013) {
+  actual: AuthoringObservationId = 0;
+}
+
+struct ResourceOperationFailure(812500014) {
+  diagnostics: [AuthoringDiagnostic] = 0;
+}
+
+struct ResolveResourceOperationsRequest(812500015) {
+  invocation: OperationInvocation = 0;
+  context: OperationWorkingContext = 1;
+}
+
+enum ResolveResourceOperationsResult(812500016) {
+  resolved: ResolvedResourceOperations = 1;
+  stale_observation: StaleAuthoringObservation = 2;
+  invalid: ResourceOperationFailure = 3;
+  catalog_changed: CatalogChanged = 4;
+  permission_denied: ResourceOperationFailure = 5;
+  failed: ResourceOperationFailure = 6;
+  internal_error: InternalError = 7;
+}
+
+/// Replays preparation with current input and choice answers. input_revision orders client responses;
+/// it is echoed in successful preparation results and is independent of saved resource versions.
+struct PrepareAuthoringActionRequest(812500017) {
+  invocation: OperationInvocation = 0;
+  capability: CapabilityId = 1;
+  context: OperationWorkingContext = 2;
+  input_revision: int32 = 3;
+  input: DataValue? = 4;
+  choices: [PreparationChoiceAnswer] = 5;
+}
+
+struct AuthoringActionNeedsInput(812500018) {
+  invocation_id: InvocationId = 0;
+  input_revision: int32 = 1;
+  normalized_input: DataValue? = 2;
+  problems: [OperationInputProblem] = 3;
+  choices: [PreparationChoice] = 4;
+}
+
+/// Proposed edit and client effects after preparation. Selection replacement applies when the
+/// preview is staged; confirmation describes the proposed action and does not persist it.
+struct AuthoringActionPreview(812500019) {
+  invocation_id: InvocationId = 0;
+  input_revision: int32 = 1;
+  edit: PreparedEdit = 2;
+  confirmation: OperationConfirmation? = 3;
+  selection: OperationSelectionEffect = 4;
+}
+
+/// Separates missing interactive input from a usable preview, stale baseline, unavailable action,
+/// validation rejection, permission failure, and callback failure. Refresh catalog or saved state
+/// when requested before attempting preparation again.
+enum AuthoringActionResult(812500020) {
+  needs_input: AuthoringActionNeedsInput = 1;
+  preview: AuthoringActionPreview = 2;
+  stale_observation: StaleAuthoringObservation = 3;
+  invalid: ResourceOperationFailure = 4;
+  unavailable: ResourceOperationFailure = 5;
+  catalog_changed: CatalogChanged = 6;
+  permission_denied: ResourceOperationFailure = 7;
+  failed: ResourceOperationFailure = 8;
+  internal_error: InternalError = 9;
+}
+
+/// Gives operation input search the same selection, working observation, and input revision as preparation.
+struct OperationSearchContext(812500021) {
+  invocation: OperationInvocation = 0;
+  context: OperationWorkingContext = 1;
+  input_revision: int32 = 2;
+}
+
+method ResolveResourceOperations(
+  ResolveResourceOperationsRequest
+): ResolveResourceOperationsResult = 920015;
+
+method PrepareAuthoringAction(
+  PrepareAuthoringActionRequest
+): AuthoringActionResult = 920016;

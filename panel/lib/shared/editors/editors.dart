@@ -1,8 +1,7 @@
 /// Public entry point for the editor domain, application, and presentation APIs.
 ///
-/// Consumers should import this library instead of reaching into editor
-/// implementation paths. Generated protocol types remain behind the specific
-/// protocol exports that own them.
+/// Consumers reach these APIs through the main panel library. Generated
+/// protocol models remain in the separate Skir library.
 library;
 
 export "application/application.dart";

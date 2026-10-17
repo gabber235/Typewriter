@@ -1,18 +1,20 @@
 package com.typewritermc.loader.api
 
 import com.typewritermc.imprint.ArtifactId
+import com.typewritermc.imprint.ArtifactVersion
+import com.typewritermc.imprint.CapabilityManifest
+import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.HostedArtifactManifest
 import com.typewritermc.imprint.ImprintManifest
 import com.typewritermc.loader.api.artifact.SharedArtifactAccess
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
 import com.typewritermc.services.libs.communicator.client.Communicator
+import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import java.nio.file.Path
+import java.security.MessageDigest
 
 /**
  * Identifies a runtime role within a host projection.
@@ -28,56 +30,6 @@ enum class RuntimePlacement {
 }
 
 /**
- * Addresses a logical Realm within an organization, independently of the hosting service id.
- *
- * Request and event subjects use opposite service directions. Operation suffixes are validated as lowercase
- * segments separated by dots or underscores; host migration must not change the Realm identity.
- */
-data class RealmServiceAddress(
-    val realmId: String,
-    val organizationId: String,
-) {
-    fun request(suffix: String): String = "service.to.$realmId.organization.$organizationId.realm.${validRealmOperation(suffix)}"
-
-    fun event(suffix: String): String = "service.from.$realmId.organization.$organizationId.realm.${validRealmOperation(suffix)}"
-}
-
-/**
- * Builds a typed request template using the logical Realm and organization identifiers.
- *
- * The operation suffix is validated immediately. Subscribe or target the template with [RealmServiceAddress].
- */
-fun realmRequestAddress(suffix: String): AddressTemplate<RealmServiceAddress> =
-    realmAddress("service.to.{realm}.organization.{organization}.realm.${validRealmOperation(suffix)}")
-
-/**
- * Builds the corresponding Realm event template for outbound notifications.
- *
- * The suffix follows the same grammar as request routes; the subject direction identifies events from the Realm.
- */
-fun realmEventAddress(suffix: String): AddressTemplate<RealmServiceAddress> =
-    realmAddress("service.from.{realm}.organization.{organization}.realm.${validRealmOperation(suffix)}")
-
-private fun realmAddress(pattern: String): AddressTemplate<RealmServiceAddress> =
-    addressTemplate(
-        pattern,
-        { address ->
-            addressValuesOf(
-                "realm" to address.realmId,
-                "organization" to address.organizationId,
-            )
-        },
-        { values -> RealmServiceAddress(values.require("realm"), values.require("organization")) },
-    )
-
-private fun validRealmOperation(value: String): String =
-    value.also {
-        require(it.matches(Regex("[a-z0-9]+(?:[._][a-z0-9]+)*"))) {
-            "Realm operation suffix must contain only lowercase names separated by dots or underscores."
-        }
-    }
-
-/**
  * Supplies one staged runtime with its identity, storage locations, artifact package, and host capabilities.
  *
  * The loader constructs this context from a resolved host projection. Host services are borrowed and outlive an
@@ -87,9 +39,87 @@ data class HostedDeploymentContext(
     val identity: HostedRuntimeIdentity,
     val directories: HostedRuntimeDirectories,
     val artifacts: HostedArtifactPackage,
+    val publicationTarget: EngineImplementationTarget,
+    val engineImplementation: EngineImplementationTarget?,
     val facts: Map<String, String>,
     val host: HostedRuntimeHost,
 )
+
+/**
+ * Identifies one artifact that contributes executable code to a selected engine implementation.
+ *
+ * The digest names the exact artifact bytes. Source parts are sorted and include only the parts selected for the
+ * target engine. The engine artifact itself has no source parts because the whole engine is executable.
+ */
+@Serializable
+data class EngineImplementationArtifact(
+    val id: ArtifactId,
+    val version: ArtifactVersion,
+    val digest: ArtifactDigest,
+    val sourceParts: List<String>,
+) {
+    init {
+        require(sourceParts == sourceParts.sorted().distinct()) {
+            "Engine implementation source parts must be sorted and unique."
+        }
+    }
+}
+
+/**
+ * Carries the primary engine identity and every exact artifact input used by that implementation.
+ *
+ * Realm and remote engine runtimes receive the same value from one deployment projection. The fingerprint is
+ * therefore independent of host placement and can safely fence compiled content at both publication and engine
+ * application.
+ */
+@Serializable
+data class EngineImplementationTarget(
+    val placement: RuntimePlacement,
+    val engine: EngineImplementationArtifact,
+    val extensions: List<EngineImplementationArtifact>,
+) {
+    init {
+        require(placement == RuntimePlacement.PRIMARY_ENGINE || placement == RuntimePlacement.PANEL_ENGINE) {
+            "An engine implementation must identify an engine placement."
+        }
+        require(engine.sourceParts.isEmpty()) { "The engine implementation input represents the whole artifact." }
+        require(extensions == extensions.sortedBy { it.id.value }) {
+            "Engine implementation extensions must be sorted by artifact identity."
+        }
+        require(extensions.map { it.id }.distinct().size == extensions.size) {
+            "Engine implementation extensions must have unique artifact identities."
+        }
+        require(extensions.all { it.sourceParts.isNotEmpty() }) {
+            "An engine implementation extension must contribute at least one source part."
+        }
+    }
+
+    fun fingerprint(): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        digest.updateFramed(placement.name)
+        digest.updateArtifact(engine)
+        extensions.forEach(digest::updateArtifact)
+        return digest.digest().joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+    }
+}
+
+private fun MessageDigest.updateArtifact(artifact: EngineImplementationArtifact) {
+    updateFramed(artifact.id.value)
+    updateFramed(artifact.version.value)
+    updateFramed(artifact.digest.algorithm.name)
+    updateFramed(artifact.digest.value)
+    updateFramed(artifact.sourceParts.size.toString())
+    artifact.sourceParts.forEach(::updateFramed)
+}
+
+private fun MessageDigest.updateFramed(value: String) {
+    val bytes = value.encodeToByteArray()
+    update((bytes.size ushr 24).toByte())
+    update((bytes.size ushr 16).toByte())
+    update((bytes.size ushr 8).toByte())
+    update(bytes.size.toByte())
+    update(bytes)
+}
 
 /**
  * Separates the physical host, logical Realm, and placement of one runtime.

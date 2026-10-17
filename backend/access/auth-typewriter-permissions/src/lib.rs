@@ -22,25 +22,30 @@ wit_bindgen::generate!({
     generate_all,
 });
 
-use otel_wasi::{ResultWithSlug, main_attribute, wasi_error};
+use otel_wasi::{ResultWithSlug, main_attribute};
 use wasmcloud_utils::{
-    decode_skir,
+    dispatch_route,
     skir::base::access::v1::permission::{
         EntityPermissionQualifier, GetEntityPermissionRequest, GetEntityPermissionResponse,
         Permissions,
     },
-    wasmcloud::messaging::{core_handler::Guest, reply, types},
+    transport_routes::{
+        InternalComponentScope, PanelPermissionResolveRoute, ServicesPermissionResolveRoute,
+        unmatched_route,
+    },
+    wasmcloud::messaging::{core_handler::Guest, types},
 };
 
 mod common;
+mod membership_consumers;
 mod services;
 mod users;
 
+#[cfg(test)]
+mod response_permission_test;
+
 struct TypewriterPermissions;
 wasmcloud_utils::export!(TypewriterPermissions);
-
-const PANEL_SUBJECT: &str = "auth.permissions.typewriter-panel";
-const SERVICES_SUBJECT: &str = "auth.permissions.typewriter-services";
 
 impl Guest for TypewriterPermissions {
     #[otel_wasi::wasi_instrument(service = "auth-typewriter-permissions", export)]
@@ -55,44 +60,45 @@ impl Guest for TypewriterPermissions {
 /// contract consumed by the auth callout, which preserves the ownership boundary between policy
 /// calculation and NATS claim signing.
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
-    main_attribute!("messaging.destination.name" = msg.subject.clone());
+    dispatch_route!(msg, PanelPermissionResolveRoute, handle_panel_route);
+    dispatch_route!(msg, ServicesPermissionResolveRoute, handle_services_route);
+    Err(unmatched_route(&msg, "permissions-unknown-subject"))
+}
 
-    let request = match decode_skir!(GetEntityPermissionRequest, &msg.body) {
-        Ok(req) => {
-            main_attribute!("auth.request.decode.success" = true);
-            req
-        }
-        Err(e) => {
-            main_attribute!("auth.outcome" = "failed");
-            return Err(e);
-        }
-    };
-    let (permissions, tags) = match msg.subject.as_str() {
-        PANEL_SUBJECT => handle_panel_subject(request).await,
-        SERVICES_SUBJECT => handle_services_subject(request).await,
-        other => Err(wasi_error!(
-            "permissions-unknown-subject",
-            "Unknown subject: {}",
-            other
-        )),
-    }
-    .inspect_err(|_| {
+async fn handle_panel_route(
+    _msg: types::NatsMessage,
+    _scope: InternalComponentScope,
+    request: GetEntityPermissionRequest,
+) -> Result<GetEntityPermissionResponse, otel_wasi::Error> {
+    permission_response(handle_panel_subject(request).await)
+}
+
+async fn handle_services_route(
+    _msg: types::NatsMessage,
+    _scope: InternalComponentScope,
+    request: GetEntityPermissionRequest,
+) -> Result<GetEntityPermissionResponse, otel_wasi::Error> {
+    permission_response(handle_services_subject(request).await)
+}
+
+fn permission_response(
+    result: Result<(Permissions, Vec<String>), otel_wasi::Error>,
+) -> Result<GetEntityPermissionResponse, otel_wasi::Error> {
+    let (permissions, tags) = result.inspect_err(|_| {
         main_attribute!("auth.outcome" = "failed");
     })?;
-
     let response = GetEntityPermissionResponse {
         permissions,
         tags,
         ..Default::default()
     };
-    let body = GetEntityPermissionResponse::serializer().to_bytes(&response);
     main_attribute!(
         "auth.outcome" = "authorized",
         "auth.response.permissions.tags.count" = response.tags.len() as i64,
         "auth.permissions.publish.deny.count" = response.permissions.publish.deny.len() as i64,
         "auth.permissions.subscribe.deny.count" = response.permissions.subscribe.deny.len() as i64,
     );
-    reply(msg, body).await
+    Ok(response)
 }
 
 #[tracing::instrument(skip(request))]

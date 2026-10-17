@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // coverage:ignore-file
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
@@ -9,27 +9,20 @@ part of 'models.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
-mixin _$SearchParsedSelector implements DiagnosticableTreeMixin {
+mixin _$SearchParsedSelector {
 
  String get selectorId; String get key; String? get value;
 /// Create a copy of SearchParsedSelector
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchParsedSelectorCopyWith<SearchParsedSelector> get copyWith => _$SearchParsedSelectorCopyWithImpl<SearchParsedSelector>(this as SearchParsedSelector, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchParsedSelector;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchParsedSelector'))
-    ..add(DiagnosticsProperty('selectorId', _this.selectorId))..add(DiagnosticsProperty('key', _this.key))..add(DiagnosticsProperty('value', _this.value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -45,7 +38,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchParsedSelector;
   return 'SearchParsedSelector(selectorId: ${_this.selectorId}, key: ${_this.key}, value: ${_this.value})';
 }
@@ -74,7 +67,7 @@ class _$SearchParsedSelectorCopyWithImpl<$Res>
   final $Res Function(SearchParsedSelector) _then;
 
 /// Create a copy of SearchParsedSelector
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? selectorId = null,Object? key = null,Object? value = freezed,}) {
   return _then(SearchParsedSelector(
 selectorId: null == selectorId ? _self.selectorId : selectorId // ignore: cast_nullable_to_non_nullable
@@ -87,7 +80,7 @@ as String?,
 }
 
 
-/// Adds pattern-matching-related methods to [SearchParsedSelector].
+/// Adds pattern matching related methods to [SearchParsedSelector].
 extension SearchParsedSelectorPatterns on SearchParsedSelector {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -110,7 +103,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -173,7 +166,7 @@ return $default(_that.selectorId,_that.key,_that.value);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -220,27 +213,21 @@ return $default(_that.selectorId,_that.key,_that.value);case _:
 /// @nodoc
 
 
-class _SearchParsedSelector with DiagnosticableTreeMixin implements SearchParsedSelector {
+class _SearchParsedSelector implements SearchParsedSelector {
   const _SearchParsedSelector({required this.selectorId, required this.key, this.value}): assert(selectorId != "", 'Selector ID must not be empty.'),assert(key != "", 'Key must not be empty.');
-  
+
 
 @override final  String selectorId;
 @override final  String key;
 @override final  String? value;
 
 /// Create a copy of SearchParsedSelector
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchParsedSelectorCopyWith<_SearchParsedSelector> get copyWith => __$SearchParsedSelectorCopyWithImpl<_SearchParsedSelector>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchParsedSelector'))
-    ..add(DiagnosticsProperty('selectorId', selectorId))..add(DiagnosticsProperty('key', key))..add(DiagnosticsProperty('value', value));
-}
 
 @override
 bool operator ==(Object other) {
@@ -254,7 +241,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchParsedSelector(selectorId: $selectorId, key: $key, value: $value)';
 }
 
@@ -282,7 +269,7 @@ class __$SearchParsedSelectorCopyWithImpl<$Res>
   final $Res Function(_SearchParsedSelector) _then;
 
 /// Create a copy of SearchParsedSelector
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? selectorId = null,Object? key = null,Object? value = freezed,}) {
   return _then(_SearchParsedSelector(
 selectorId: null == selectorId ? _self.selectorId : selectorId // ignore: cast_nullable_to_non_nullable
@@ -296,17 +283,11 @@ as String?,
 }
 
 /// @nodoc
-mixin _$SearchSelectorExpression implements DiagnosticableTreeMixin {
+mixin _$SearchSelectorExpression {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -318,7 +299,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSelectorExpression()';
 }
 
@@ -331,7 +312,7 @@ $SearchSelectorExpressionCopyWith(SearchSelectorExpression _, $Res Function(Sear
 }
 
 
-/// Adds pattern-matching-related methods to [SearchSelectorExpression].
+/// Adds pattern matching related methods to [SearchSelectorExpression].
 extension SearchSelectorExpressionPatterns on SearchSelectorExpression {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -356,7 +337,7 @@ return not(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -422,7 +403,7 @@ return not(_that.expression);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -470,25 +451,19 @@ return not(_that.expression);case _:
 /// @nodoc
 
 
-class SearchSelectorLeafExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+class SearchSelectorLeafExpression implements SearchSelectorExpression {
   const SearchSelectorLeafExpression(this.selector);
-  
+
 
  final  SearchParsedSelector selector;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSelectorLeafExpressionCopyWith<SearchSelectorLeafExpression> get copyWith => _$SearchSelectorLeafExpressionCopyWithImpl<SearchSelectorLeafExpression>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.leaf'))
-    ..add(DiagnosticsProperty('selector', selector));
-}
 
 @override
 bool operator ==(Object other) {
@@ -502,7 +477,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSelectorExpression.leaf(selector: $selector)';
 }
 
@@ -530,7 +505,7 @@ class _$SearchSelectorLeafExpressionCopyWithImpl<$Res>
   final $Res Function(SearchSelectorLeafExpression) _then;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? selector = null,}) {
   return _then(SearchSelectorLeafExpression(
 null == selector ? _self.selector : selector // ignore: cast_nullable_to_non_nullable
@@ -539,11 +514,11 @@ as SearchParsedSelector,
 }
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchParsedSelectorCopyWith<$Res> get selector {
-  
+
   return $SearchParsedSelectorCopyWith<$Res>(_self.selector, (value) {
     return _then(_self.copyWith(selector: value));
   });
@@ -553,27 +528,21 @@ $SearchParsedSelectorCopyWith<$Res> get selector {
 /// @nodoc
 
 
-class SearchSelectorBinaryExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+class SearchSelectorBinaryExpression implements SearchSelectorExpression {
   const SearchSelectorBinaryExpression({required this.operator, required this.left, required this.right});
-  
+
 
  final  SearchSelectorOperator operator;
  final  SearchSelectorExpression left;
  final  SearchSelectorExpression right;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSelectorBinaryExpressionCopyWith<SearchSelectorBinaryExpression> get copyWith => _$SearchSelectorBinaryExpressionCopyWithImpl<SearchSelectorBinaryExpression>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.binary'))
-    ..add(DiagnosticsProperty('operator', operator))..add(DiagnosticsProperty('left', left))..add(DiagnosticsProperty('right', right));
-}
 
 @override
 bool operator ==(Object other) {
@@ -587,7 +556,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSelectorExpression.binary(operator: $operator, left: $left, right: $right)';
 }
 
@@ -615,7 +584,7 @@ class _$SearchSelectorBinaryExpressionCopyWithImpl<$Res>
   final $Res Function(SearchSelectorBinaryExpression) _then;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? operator = null,Object? left = null,Object? right = null,}) {
   return _then(SearchSelectorBinaryExpression(
 operator: null == operator ? _self.operator : operator // ignore: cast_nullable_to_non_nullable
@@ -626,20 +595,20 @@ as SearchSelectorExpression,
 }
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get left {
-  
+
   return $SearchSelectorExpressionCopyWith<$Res>(_self.left, (value) {
     return _then(_self.copyWith(left: value));
   });
 }/// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get right {
-  
+
   return $SearchSelectorExpressionCopyWith<$Res>(_self.right, (value) {
     return _then(_self.copyWith(right: value));
   });
@@ -649,25 +618,19 @@ $SearchSelectorExpressionCopyWith<$Res> get right {
 /// @nodoc
 
 
-class SearchSelectorNotExpression with DiagnosticableTreeMixin implements SearchSelectorExpression {
+class SearchSelectorNotExpression implements SearchSelectorExpression {
   const SearchSelectorNotExpression(this.expression);
-  
+
 
  final  SearchSelectorExpression expression;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSelectorNotExpressionCopyWith<SearchSelectorNotExpression> get copyWith => _$SearchSelectorNotExpressionCopyWithImpl<SearchSelectorNotExpression>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSelectorExpression.not'))
-    ..add(DiagnosticsProperty('expression', expression));
-}
 
 @override
 bool operator ==(Object other) {
@@ -681,7 +644,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSelectorExpression.not(expression: $expression)';
 }
 
@@ -709,7 +672,7 @@ class _$SearchSelectorNotExpressionCopyWithImpl<$Res>
   final $Res Function(SearchSelectorNotExpression) _then;
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? expression = null,}) {
   return _then(SearchSelectorNotExpression(
 null == expression ? _self.expression : expression // ignore: cast_nullable_to_non_nullable
@@ -718,11 +681,11 @@ as SearchSelectorExpression,
 }
 
 /// Create a copy of SearchSelectorExpression
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res> get expression {
-  
+
   return $SearchSelectorExpressionCopyWith<$Res>(_self.expression, (value) {
     return _then(_self.copyWith(expression: value));
   });
@@ -730,23 +693,16 @@ $SearchSelectorExpressionCopyWith<$Res> get expression {
 }
 
 /// @nodoc
-mixin _$SearchQueryContext implements DiagnosticableTreeMixin {
+mixin _$SearchQueryContext {
 
  String get normalizedQuery; List<SearchParsedSelector> get selectors; List<String> get terms; SearchSelectorExpression? get selectorExpression;
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<SearchQueryContext> get copyWith => _$SearchQueryContextCopyWithImpl<SearchQueryContext>(this as SearchQueryContext, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchQueryContext;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', _this.normalizedQuery))..add(DiagnosticsProperty('selectors', _this.selectors))..add(DiagnosticsProperty('terms', _this.terms))..add(DiagnosticsProperty('selectorExpression', _this.selectorExpression));
-}
 
 @override
 bool operator ==(Object other) {
@@ -762,7 +718,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchQueryContext;
   return 'SearchQueryContext(normalizedQuery: ${_this.normalizedQuery}, selectors: ${_this.selectors}, terms: ${_this.terms}, selectorExpression: ${_this.selectorExpression})';
 }
@@ -791,7 +747,7 @@ class _$SearchQueryContextCopyWithImpl<$Res>
   final $Res Function(SearchQueryContext) _then;
 
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? terms = null,Object? selectorExpression = freezed,}) {
   return _then(SearchQueryContext(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
@@ -802,7 +758,7 @@ as SearchSelectorExpression?,
   ));
 }
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
@@ -817,7 +773,7 @@ $SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
 }
 
 
-/// Adds pattern-matching-related methods to [SearchQueryContext].
+/// Adds pattern matching related methods to [SearchQueryContext].
 extension SearchQueryContextPatterns on SearchQueryContext {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -840,7 +796,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -903,7 +859,7 @@ return $default(_that.normalizedQuery,_that.selectors,_that.terms,_that.selector
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -950,9 +906,9 @@ return $default(_that.normalizedQuery,_that.selectors,_that.terms,_that.selector
 /// @nodoc
 
 
-class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryContext {
+class _SearchQueryContext implements SearchQueryContext {
   const _SearchQueryContext({required this.normalizedQuery, required  List<SearchParsedSelector> selectors,  List<String> terms = const <String>[], this.selectorExpression}): _selectors = selectors,_terms = terms;
-  
+
 
 @override final  String normalizedQuery;
  final  List<SearchParsedSelector> _selectors;
@@ -972,18 +928,12 @@ class _SearchQueryContext with DiagnosticableTreeMixin implements SearchQueryCon
 @override final  SearchSelectorExpression? selectorExpression;
 
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchQueryContextCopyWith<_SearchQueryContext> get copyWith => __$SearchQueryContextCopyWithImpl<_SearchQueryContext>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchQueryContext'))
-    ..add(DiagnosticsProperty('normalizedQuery', normalizedQuery))..add(DiagnosticsProperty('selectors', selectors))..add(DiagnosticsProperty('terms', terms))..add(DiagnosticsProperty('selectorExpression', selectorExpression));
-}
 
 @override
 bool operator ==(Object other) {
@@ -997,7 +947,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchQueryContext(normalizedQuery: $normalizedQuery, selectors: $selectors, terms: $terms, selectorExpression: $selectorExpression)';
 }
 
@@ -1025,7 +975,7 @@ class __$SearchQueryContextCopyWithImpl<$Res>
   final $Res Function(_SearchQueryContext) _then;
 
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? normalizedQuery = null,Object? selectors = null,Object? terms = null,Object? selectorExpression = freezed,}) {
   return _then(_SearchQueryContext(
 normalizedQuery: null == normalizedQuery ? _self.normalizedQuery : normalizedQuery // ignore: cast_nullable_to_non_nullable
@@ -1037,7 +987,7 @@ as SearchSelectorExpression?,
 }
 
 /// Create a copy of SearchQueryContext
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
@@ -1052,23 +1002,16 @@ $SearchSelectorExpressionCopyWith<$Res>? get selectorExpression {
 }
 
 /// @nodoc
-mixin _$SearchGuidance implements DiagnosticableTreeMixin {
+mixin _$SearchGuidance {
 
  String get id; String get title; String? get description; SearchGuidanceVisibility get visibility; int get priority;
 /// Create a copy of SearchGuidance
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchGuidanceCopyWith<SearchGuidance> get copyWith => _$SearchGuidanceCopyWithImpl<SearchGuidance>(this as SearchGuidance, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchGuidance;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchGuidance'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('title', _this.title))..add(DiagnosticsProperty('description', _this.description))..add(DiagnosticsProperty('visibility', _this.visibility))..add(DiagnosticsProperty('priority', _this.priority));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1084,7 +1027,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchGuidance;
   return 'SearchGuidance(id: ${_this.id}, title: ${_this.title}, description: ${_this.description}, visibility: ${_this.visibility}, priority: ${_this.priority})';
 }
@@ -1113,7 +1056,7 @@ class _$SearchGuidanceCopyWithImpl<$Res>
   final $Res Function(SearchGuidance) _then;
 
 /// Create a copy of SearchGuidance
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? visibility = null,Object? priority = null,}) {
   return _then(SearchGuidance(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1128,7 +1071,7 @@ as int,
 }
 
 
-/// Adds pattern-matching-related methods to [SearchGuidance].
+/// Adds pattern matching related methods to [SearchGuidance].
 extension SearchGuidancePatterns on SearchGuidance {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1151,7 +1094,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1214,7 +1157,7 @@ return $default(_that.id,_that.title,_that.description,_that.visibility,_that.pr
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1261,9 +1204,9 @@ return $default(_that.id,_that.title,_that.description,_that.visibility,_that.pr
 /// @nodoc
 
 
-class _SearchGuidance with DiagnosticableTreeMixin implements SearchGuidance {
+class _SearchGuidance implements SearchGuidance {
   const _SearchGuidance({required this.id, required this.title, this.description, this.visibility = SearchGuidanceVisibility.emptyOnly, this.priority = 0}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.');
-  
+
 
 @override final  String id;
 @override final  String title;
@@ -1272,18 +1215,12 @@ class _SearchGuidance with DiagnosticableTreeMixin implements SearchGuidance {
 @override@JsonKey() final  int priority;
 
 /// Create a copy of SearchGuidance
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchGuidanceCopyWith<_SearchGuidance> get copyWith => __$SearchGuidanceCopyWithImpl<_SearchGuidance>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchGuidance'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('description', description))..add(DiagnosticsProperty('visibility', visibility))..add(DiagnosticsProperty('priority', priority));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1297,7 +1234,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchGuidance(id: $id, title: $title, description: $description, visibility: $visibility, priority: $priority)';
 }
 
@@ -1325,7 +1262,7 @@ class __$SearchGuidanceCopyWithImpl<$Res>
   final $Res Function(_SearchGuidance) _then;
 
 /// Create a copy of SearchGuidance
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? visibility = null,Object? priority = null,}) {
   return _then(_SearchGuidance(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1341,23 +1278,16 @@ as int,
 }
 
 /// @nodoc
-mixin _$SearchErrorSummary implements DiagnosticableTreeMixin {
+mixin _$SearchErrorSummary {
 
  String get id; String get message; SearchErrorSeverity get severity; String? get sourceLabel;
 /// Create a copy of SearchErrorSummary
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchErrorSummaryCopyWith<SearchErrorSummary> get copyWith => _$SearchErrorSummaryCopyWithImpl<SearchErrorSummary>(this as SearchErrorSummary, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchErrorSummary;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchErrorSummary'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('message', _this.message))..add(DiagnosticsProperty('severity', _this.severity))..add(DiagnosticsProperty('sourceLabel', _this.sourceLabel));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1373,7 +1303,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchErrorSummary;
   return 'SearchErrorSummary(id: ${_this.id}, message: ${_this.message}, severity: ${_this.severity}, sourceLabel: ${_this.sourceLabel})';
 }
@@ -1402,7 +1332,7 @@ class _$SearchErrorSummaryCopyWithImpl<$Res>
   final $Res Function(SearchErrorSummary) _then;
 
 /// Create a copy of SearchErrorSummary
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? message = null,Object? severity = null,Object? sourceLabel = freezed,}) {
   return _then(SearchErrorSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1416,7 +1346,7 @@ as String?,
 }
 
 
-/// Adds pattern-matching-related methods to [SearchErrorSummary].
+/// Adds pattern matching related methods to [SearchErrorSummary].
 extension SearchErrorSummaryPatterns on SearchErrorSummary {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1439,7 +1369,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1502,7 +1432,7 @@ return $default(_that.id,_that.message,_that.severity,_that.sourceLabel);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1549,9 +1479,9 @@ return $default(_that.id,_that.message,_that.severity,_that.sourceLabel);case _:
 /// @nodoc
 
 
-class _SearchErrorSummary with DiagnosticableTreeMixin implements SearchErrorSummary {
+class _SearchErrorSummary implements SearchErrorSummary {
   const _SearchErrorSummary({required this.id, required this.message, required this.severity, this.sourceLabel}): assert(id != "", 'ID must not be empty.'),assert(message != "", 'Message must not be empty.');
-  
+
 
 @override final  String id;
 @override final  String message;
@@ -1559,18 +1489,12 @@ class _SearchErrorSummary with DiagnosticableTreeMixin implements SearchErrorSum
 @override final  String? sourceLabel;
 
 /// Create a copy of SearchErrorSummary
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchErrorSummaryCopyWith<_SearchErrorSummary> get copyWith => __$SearchErrorSummaryCopyWithImpl<_SearchErrorSummary>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchErrorSummary'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('message', message))..add(DiagnosticsProperty('severity', severity))..add(DiagnosticsProperty('sourceLabel', sourceLabel));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1584,7 +1508,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchErrorSummary(id: $id, message: $message, severity: $severity, sourceLabel: $sourceLabel)';
 }
 
@@ -1612,7 +1536,7 @@ class __$SearchErrorSummaryCopyWithImpl<$Res>
   final $Res Function(_SearchErrorSummary) _then;
 
 /// Create a copy of SearchErrorSummary
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? message = null,Object? severity = null,Object? sourceLabel = freezed,}) {
   return _then(_SearchErrorSummary(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -1627,23 +1551,16 @@ as String?,
 }
 
 /// @nodoc
-mixin _$SearchSourceSnapshot implements DiagnosticableTreeMixin {
+mixin _$SearchSourceSnapshot {
 
  SearchSourceStatus get status; List<SearchNode> get nodes; List<SearchGuidance> get guidance; List<SearchErrorSummary> get errorSummaries; List<SearchSelectorValidation> get selectorValidations;
 /// Create a copy of SearchSourceSnapshot
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSourceSnapshotCopyWith<SearchSourceSnapshot> get copyWith => _$SearchSourceSnapshotCopyWithImpl<SearchSourceSnapshot>(this as SearchSourceSnapshot, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchSourceSnapshot;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchSourceSnapshot'))
-    ..add(DiagnosticsProperty('status', _this.status))..add(DiagnosticsProperty('nodes', _this.nodes))..add(DiagnosticsProperty('guidance', _this.guidance))..add(DiagnosticsProperty('errorSummaries', _this.errorSummaries))..add(DiagnosticsProperty('selectorValidations', _this.selectorValidations));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1659,7 +1576,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchSourceSnapshot;
   return 'SearchSourceSnapshot(status: ${_this.status}, nodes: ${_this.nodes}, guidance: ${_this.guidance}, errorSummaries: ${_this.errorSummaries}, selectorValidations: ${_this.selectorValidations})';
 }
@@ -1688,7 +1605,7 @@ class _$SearchSourceSnapshotCopyWithImpl<$Res>
   final $Res Function(SearchSourceSnapshot) _then;
 
 /// Create a copy of SearchSourceSnapshot
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? nodes = null,Object? guidance = null,Object? errorSummaries = null,Object? selectorValidations = null,}) {
   return _then(SearchSourceSnapshot(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -1703,7 +1620,7 @@ as List<SearchSelectorValidation>,
 }
 
 
-/// Adds pattern-matching-related methods to [SearchSourceSnapshot].
+/// Adds pattern matching related methods to [SearchSourceSnapshot].
 extension SearchSourceSnapshotPatterns on SearchSourceSnapshot {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1726,7 +1643,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -1789,7 +1706,7 @@ return $default(_that.status,_that.nodes,_that.guidance,_that.errorSummaries,_th
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -1836,9 +1753,9 @@ return $default(_that.status,_that.nodes,_that.guidance,_that.errorSummaries,_th
 /// @nodoc
 
 
-class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSourceSnapshot {
+class _SearchSourceSnapshot implements SearchSourceSnapshot {
   const _SearchSourceSnapshot({required this.status, required  List<SearchNode> nodes,  List<SearchGuidance> guidance = const <SearchGuidance>[],  List<SearchErrorSummary> errorSummaries = const <SearchErrorSummary>[],  List<SearchSelectorValidation> selectorValidations = const <SearchSelectorValidation>[]}): _nodes = nodes,_guidance = guidance,_errorSummaries = errorSummaries,_selectorValidations = selectorValidations;
-  
+
 
 @override final  SearchSourceStatus status;
  final  List<SearchNode> _nodes;
@@ -1871,18 +1788,12 @@ class _SearchSourceSnapshot with DiagnosticableTreeMixin implements SearchSource
 
 
 /// Create a copy of SearchSourceSnapshot
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchSourceSnapshotCopyWith<_SearchSourceSnapshot> get copyWith => __$SearchSourceSnapshotCopyWithImpl<_SearchSourceSnapshot>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSourceSnapshot'))
-    ..add(DiagnosticsProperty('status', status))..add(DiagnosticsProperty('nodes', nodes))..add(DiagnosticsProperty('guidance', guidance))..add(DiagnosticsProperty('errorSummaries', errorSummaries))..add(DiagnosticsProperty('selectorValidations', selectorValidations));
-}
 
 @override
 bool operator ==(Object other) {
@@ -1896,7 +1807,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSourceSnapshot(status: $status, nodes: $nodes, guidance: $guidance, errorSummaries: $errorSummaries, selectorValidations: $selectorValidations)';
 }
 
@@ -1924,7 +1835,7 @@ class __$SearchSourceSnapshotCopyWithImpl<$Res>
   final $Res Function(_SearchSourceSnapshot) _then;
 
 /// Create a copy of SearchSourceSnapshot
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? status = null,Object? nodes = null,Object? guidance = null,Object? errorSummaries = null,Object? selectorValidations = null,}) {
   return _then(_SearchSourceSnapshot(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -1940,17 +1851,11 @@ as List<SearchSelectorValidation>,
 }
 
 /// @nodoc
-mixin _$SearchNode implements DiagnosticableTreeMixin {
+mixin _$SearchNode {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchNode'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -1962,7 +1867,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchNode()';
 }
 
@@ -1975,7 +1880,7 @@ $SearchNodeCopyWith(SearchNode _, $Res Function(SearchNode) __);
 }
 
 
-/// Adds pattern-matching-related methods to [SearchNode].
+/// Adds pattern matching related methods to [SearchNode].
 extension SearchNodePatterns on SearchNode {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -1999,7 +1904,7 @@ return result(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2062,7 +1967,7 @@ return result(_that.result);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2108,9 +2013,9 @@ return result(_that.result);case _:
 /// @nodoc
 
 
-class SearchSectionNode with DiagnosticableTreeMixin implements SearchNode {
+class SearchSectionNode implements SearchNode {
   const SearchSectionNode({required this.id, required this.title, this.subtitle,  List<SearchNode> children = const <SearchNode>[]}): assert(id != "", 'ID must not be empty.'),assert(title != "", 'Title must not be empty.'),_children = children;
-  
+
 
  final  String id;
  final  String title;
@@ -2124,18 +2029,12 @@ class SearchSectionNode with DiagnosticableTreeMixin implements SearchNode {
 
 
 /// Create a copy of SearchNode
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSectionNodeCopyWith<SearchSectionNode> get copyWith => _$SearchSectionNodeCopyWithImpl<SearchSectionNode>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchNode.section'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('subtitle', subtitle))..add(DiagnosticsProperty('children', children));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2149,7 +2048,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchNode.section(id: $id, title: $title, subtitle: $subtitle, children: $children)';
 }
 
@@ -2177,7 +2076,7 @@ class _$SearchSectionNodeCopyWithImpl<$Res>
   final $Res Function(SearchSectionNode) _then;
 
 /// Create a copy of SearchNode
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? subtitle = freezed,Object? children = null,}) {
   return _then(SearchSectionNode(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2194,25 +2093,19 @@ as List<SearchNode>,
 /// @nodoc
 
 
-class SearchResultNode with DiagnosticableTreeMixin implements SearchNode {
+class SearchResultNode implements SearchNode {
   const SearchResultNode({required this.result});
-  
+
 
  final  SearchResult result;
 
 /// Create a copy of SearchNode
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchResultNodeCopyWith<SearchResultNode> get copyWith => _$SearchResultNodeCopyWithImpl<SearchResultNode>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchNode.result'))
-    ..add(DiagnosticsProperty('result', result));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2226,7 +2119,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchNode.result(result: $result)';
 }
 
@@ -2254,7 +2147,7 @@ class _$SearchResultNodeCopyWithImpl<$Res>
   final $Res Function(SearchResultNode) _then;
 
 /// Create a copy of SearchNode
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? result = null,}) {
   return _then(SearchResultNode(
 result: null == result ? _self.result : result // ignore: cast_nullable_to_non_nullable
@@ -2263,11 +2156,11 @@ as SearchResult,
 }
 
 /// Create a copy of SearchNode
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<$Res> get result {
-  
+
   return $SearchResultCopyWith<$Res>(_self.result, (value) {
     return _then(_self.copyWith(result: value));
   });
@@ -2275,23 +2168,16 @@ $SearchResultCopyWith<$Res> get result {
 }
 
 /// @nodoc
-mixin _$SearchResultType implements DiagnosticableTreeMixin {
+mixin _$SearchResultType {
 
  String get id; String get rowRendererId; String? get previewRendererId; String? get label;
 /// Create a copy of SearchResultType
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<SearchResultType> get copyWith => _$SearchResultTypeCopyWithImpl<SearchResultType>(this as SearchResultType, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchResultType;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchResultType'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('rowRendererId', _this.rowRendererId))..add(DiagnosticsProperty('previewRendererId', _this.previewRendererId))..add(DiagnosticsProperty('label', _this.label));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2307,7 +2193,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchResultType;
   return 'SearchResultType(id: ${_this.id}, rowRendererId: ${_this.rowRendererId}, previewRendererId: ${_this.previewRendererId}, label: ${_this.label})';
 }
@@ -2336,7 +2222,7 @@ class _$SearchResultTypeCopyWithImpl<$Res>
   final $Res Function(SearchResultType) _then;
 
 /// Create a copy of SearchResultType
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? rowRendererId = null,Object? previewRendererId = freezed,Object? label = freezed,}) {
   return _then(SearchResultType(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2350,7 +2236,7 @@ as String?,
 }
 
 
-/// Adds pattern-matching-related methods to [SearchResultType].
+/// Adds pattern matching related methods to [SearchResultType].
 extension SearchResultTypePatterns on SearchResultType {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2373,7 +2259,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2436,7 +2322,7 @@ return $default(_that.id,_that.rowRendererId,_that.previewRendererId,_that.label
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2483,9 +2369,9 @@ return $default(_that.id,_that.rowRendererId,_that.previewRendererId,_that.label
 /// @nodoc
 
 
-class _SearchResultType with DiagnosticableTreeMixin implements SearchResultType {
+class _SearchResultType implements SearchResultType {
   const _SearchResultType({required this.id, required this.rowRendererId, this.previewRendererId, this.label}): assert(id != "", 'ID must not be empty.'),assert(rowRendererId != "", 'Row renderer ID must not be empty.'),assert(previewRendererId == null || previewRendererId != "", 'Preview renderer ID must be null or nonempty.');
-  
+
 
 @override final  String id;
 @override final  String rowRendererId;
@@ -2493,18 +2379,12 @@ class _SearchResultType with DiagnosticableTreeMixin implements SearchResultType
 @override final  String? label;
 
 /// Create a copy of SearchResultType
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchResultTypeCopyWith<_SearchResultType> get copyWith => __$SearchResultTypeCopyWithImpl<_SearchResultType>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResultType'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('rowRendererId', rowRendererId))..add(DiagnosticsProperty('previewRendererId', previewRendererId))..add(DiagnosticsProperty('label', label));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2518,7 +2398,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResultType(id: $id, rowRendererId: $rowRendererId, previewRendererId: $previewRendererId, label: $label)';
 }
 
@@ -2546,7 +2426,7 @@ class __$SearchResultTypeCopyWithImpl<$Res>
   final $Res Function(_SearchResultType) _then;
 
 /// Create a copy of SearchResultType
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? rowRendererId = null,Object? previewRendererId = freezed,Object? label = freezed,}) {
   return _then(_SearchResultType(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2561,23 +2441,16 @@ as String?,
 }
 
 /// @nodoc
-mixin _$SearchResult implements DiagnosticableTreeMixin {
+mixin _$SearchResult {
 
  String get id; SearchResultType get type; Object get payload; String? get title; String? get subtitle; bool get isStale;
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchResultCopyWith<SearchResult> get copyWith => _$SearchResultCopyWithImpl<SearchResult>(this as SearchResult, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchResult;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchResult'))
-    ..add(DiagnosticsProperty('id', _this.id))..add(DiagnosticsProperty('type', _this.type))..add(DiagnosticsProperty('payload', _this.payload))..add(DiagnosticsProperty('title', _this.title))..add(DiagnosticsProperty('subtitle', _this.subtitle))..add(DiagnosticsProperty('isStale', _this.isStale));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2593,7 +2466,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchResult;
   return 'SearchResult(id: ${_this.id}, type: ${_this.type}, payload: ${_this.payload}, title: ${_this.title}, subtitle: ${_this.subtitle}, isStale: ${_this.isStale})';
 }
@@ -2622,7 +2495,7 @@ class _$SearchResultCopyWithImpl<$Res>
   final $Res Function(SearchResult) _then;
 
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
   return _then(SearchResult(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2634,11 +2507,11 @@ as bool,
   ));
 }
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-  
+
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2646,7 +2519,7 @@ $SearchResultTypeCopyWith<$Res> get type {
 }
 
 
-/// Adds pattern-matching-related methods to [SearchResult].
+/// Adds pattern matching related methods to [SearchResult].
 extension SearchResultPatterns on SearchResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2669,7 +2542,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2732,7 +2605,7 @@ return $default(_that.id,_that.type,_that.payload,_that.title,_that.subtitle,_th
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -2779,9 +2652,9 @@ return $default(_that.id,_that.type,_that.payload,_that.title,_that.subtitle,_th
 /// @nodoc
 
 
-class _SearchResult with DiagnosticableTreeMixin implements SearchResult {
+class _SearchResult implements SearchResult {
   const _SearchResult({required this.id, required this.type, required this.payload, this.title, this.subtitle, this.isStale = false}): assert(id != "", 'ID must not be empty.');
-  
+
 
 @override final  String id;
 @override final  SearchResultType type;
@@ -2791,18 +2664,12 @@ class _SearchResult with DiagnosticableTreeMixin implements SearchResult {
 @override@JsonKey() final  bool isStale;
 
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchResultCopyWith<_SearchResult> get copyWith => __$SearchResultCopyWithImpl<_SearchResult>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchResult'))
-    ..add(DiagnosticsProperty('id', id))..add(DiagnosticsProperty('type', type))..add(DiagnosticsProperty('payload', payload))..add(DiagnosticsProperty('title', title))..add(DiagnosticsProperty('subtitle', subtitle))..add(DiagnosticsProperty('isStale', isStale));
-}
 
 @override
 bool operator ==(Object other) {
@@ -2816,7 +2683,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchResult(id: $id, type: $type, payload: $payload, title: $title, subtitle: $subtitle, isStale: $isStale)';
 }
 
@@ -2844,7 +2711,7 @@ class __$SearchResultCopyWithImpl<$Res>
   final $Res Function(_SearchResult) _then;
 
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? type = null,Object? payload = null,Object? title = freezed,Object? subtitle = freezed,Object? isStale = null,}) {
   return _then(_SearchResult(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
@@ -2857,11 +2724,11 @@ as bool,
 }
 
 /// Create a copy of SearchResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchResultTypeCopyWith<$Res> get type {
-  
+
   return $SearchResultTypeCopyWith<$Res>(_self.type, (value) {
     return _then(_self.copyWith(type: value));
   });
@@ -2869,17 +2736,11 @@ $SearchResultTypeCopyWith<$Res> get type {
 }
 
 /// @nodoc
-mixin _$SearchSurfaceEffect implements DiagnosticableTreeMixin {
+mixin _$SearchSurfaceEffect {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -2891,7 +2752,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSurfaceEffect()';
 }
 
@@ -2904,7 +2765,7 @@ $SearchSurfaceEffectCopyWith(SearchSurfaceEffect _, $Res Function(SearchSurfaceE
 }
 
 
-/// Adds pattern-matching-related methods to [SearchSurfaceEffect].
+/// Adds pattern matching related methods to [SearchSurfaceEffect].
 extension SearchSurfaceEffectPatterns on SearchSurfaceEffect {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -2929,7 +2790,7 @@ return close(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -2998,7 +2859,7 @@ return close();case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3049,25 +2910,19 @@ return close();case _:
 /// @nodoc
 
 
-class SearchSurfaceUpdateQuery with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+class SearchSurfaceUpdateQuery implements SearchSurfaceEffect {
   const SearchSurfaceUpdateQuery({required this.updateQuery});
-  
+
 
  final  String updateQuery;
 
 /// Create a copy of SearchSurfaceEffect
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchSurfaceUpdateQueryCopyWith<SearchSurfaceUpdateQuery> get copyWith => _$SearchSurfaceUpdateQueryCopyWithImpl<SearchSurfaceUpdateQuery>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.updateQuery'))
-    ..add(DiagnosticsProperty('updateQuery', updateQuery));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3081,7 +2936,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSurfaceEffect.updateQuery(updateQuery: $updateQuery)';
 }
 
@@ -3109,7 +2964,7 @@ class _$SearchSurfaceUpdateQueryCopyWithImpl<$Res>
   final $Res Function(SearchSurfaceUpdateQuery) _then;
 
 /// Create a copy of SearchSurfaceEffect
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? updateQuery = null,}) {
   return _then(SearchSurfaceUpdateQuery(
 updateQuery: null == updateQuery ? _self.updateQuery : updateQuery // ignore: cast_nullable_to_non_nullable
@@ -3123,20 +2978,14 @@ as String,
 /// @nodoc
 
 
-class SearchSurfaceRefresh with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+class SearchSurfaceRefresh implements SearchSurfaceEffect {
   const SearchSurfaceRefresh();
-  
 
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.refresh'))
-    ;
-}
+
 
 @override
 bool operator ==(Object other) {
@@ -3148,7 +2997,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSurfaceEffect.refresh()';
 }
 
@@ -3161,20 +3010,14 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 /// @nodoc
 
 
-class SearchSurfaceClose with DiagnosticableTreeMixin implements SearchSurfaceEffect {
+class SearchSurfaceClose implements SearchSurfaceEffect {
   const SearchSurfaceClose();
-  
 
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchSurfaceEffect.close'))
-    ;
-}
+
 
 @override
 bool operator ==(Object other) {
@@ -3186,7 +3029,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchSurfaceEffect.close()';
 }
 
@@ -3197,23 +3040,16 @@ String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
 
 
 /// @nodoc
-mixin _$SearchPreviewRequest implements DiagnosticableTreeMixin {
+mixin _$SearchPreviewRequest {
 
  String get resultId; SearchQueryContext? get queryContext;
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchPreviewRequestCopyWith<SearchPreviewRequest> get copyWith => _$SearchPreviewRequestCopyWithImpl<SearchPreviewRequest>(this as SearchPreviewRequest, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-  final _this = this as SearchPreviewRequest;
-  properties
-    ..add(DiagnosticsProperty('type', 'SearchPreviewRequest'))
-    ..add(DiagnosticsProperty('resultId', _this.resultId))..add(DiagnosticsProperty('queryContext', _this.queryContext));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3229,7 +3065,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
   final _this = this as SearchPreviewRequest;
   return 'SearchPreviewRequest(resultId: ${_this.resultId}, queryContext: ${_this.queryContext})';
 }
@@ -3258,7 +3094,7 @@ class _$SearchPreviewRequestCopyWithImpl<$Res>
   final $Res Function(SearchPreviewRequest) _then;
 
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? resultId = null,Object? queryContext = freezed,}) {
   return _then(SearchPreviewRequest(
 resultId: null == resultId ? _self.resultId : resultId // ignore: cast_nullable_to_non_nullable
@@ -3267,7 +3103,7 @@ as SearchQueryContext?,
   ));
 }
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res>? get queryContext {
@@ -3282,7 +3118,7 @@ $SearchQueryContextCopyWith<$Res>? get queryContext {
 }
 
 
-/// Adds pattern-matching-related methods to [SearchPreviewRequest].
+/// Adds pattern matching related methods to [SearchPreviewRequest].
 extension SearchPreviewRequestPatterns on SearchPreviewRequest {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3305,7 +3141,7 @@ return $default(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3368,7 +3204,7 @@ return $default(_that.resultId,_that.queryContext);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3415,26 +3251,20 @@ return $default(_that.resultId,_that.queryContext);case _:
 /// @nodoc
 
 
-class _SearchPreviewRequest with DiagnosticableTreeMixin implements SearchPreviewRequest {
+class _SearchPreviewRequest implements SearchPreviewRequest {
   const _SearchPreviewRequest({required this.resultId, this.queryContext}): assert(resultId != "", 'Result ID must not be empty.');
-  
+
 
 @override final  String resultId;
 @override final  SearchQueryContext? queryContext;
 
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 _$SearchPreviewRequestCopyWith<_SearchPreviewRequest> get copyWith => __$SearchPreviewRequestCopyWithImpl<_SearchPreviewRequest>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchPreviewRequest'))
-    ..add(DiagnosticsProperty('resultId', resultId))..add(DiagnosticsProperty('queryContext', queryContext));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3448,7 +3278,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchPreviewRequest(resultId: $resultId, queryContext: $queryContext)';
 }
 
@@ -3476,7 +3306,7 @@ class __$SearchPreviewRequestCopyWithImpl<$Res>
   final $Res Function(_SearchPreviewRequest) _then;
 
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override @pragma('vm:prefer-inline') $Res call({Object? resultId = null,Object? queryContext = freezed,}) {
   return _then(_SearchPreviewRequest(
 resultId: null == resultId ? _self.resultId : resultId // ignore: cast_nullable_to_non_nullable
@@ -3486,7 +3316,7 @@ as SearchQueryContext?,
 }
 
 /// Create a copy of SearchPreviewRequest
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @override
 @pragma('vm:prefer-inline')
 $SearchQueryContextCopyWith<$Res>? get queryContext {
@@ -3501,17 +3331,11 @@ $SearchQueryContextCopyWith<$Res>? get queryContext {
 }
 
 /// @nodoc
-mixin _$SearchPreviewRequestResult implements DiagnosticableTreeMixin {
+mixin _$SearchPreviewRequestResult {
 
 
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchPreviewRequestResult'))
-    ;
-}
 
 @override
 bool operator ==(Object other) {
@@ -3523,7 +3347,7 @@ bool operator ==(Object other) {
 int get hashCode => runtimeType.hashCode;
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchPreviewRequestResult()';
 }
 
@@ -3536,7 +3360,7 @@ $SearchPreviewRequestResultCopyWith(SearchPreviewRequestResult _, $Res Function(
 }
 
 
-/// Adds pattern-matching-related methods to [SearchPreviewRequestResult].
+/// Adds pattern matching related methods to [SearchPreviewRequestResult].
 extension SearchPreviewRequestResultPatterns on SearchPreviewRequestResult {
 /// A variant of `map` that fallback to returning `orElse`.
 ///
@@ -3560,7 +3384,7 @@ return error(_that);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// Callbacks receives the raw object, upcasted.
 /// It is equivalent to doing:
@@ -3578,10 +3402,7 @@ final _that = this;
 switch (_that) {
 case SearchPreviewRequestResultData():
 return data(_that);case SearchPreviewRequestResultError():
-return error(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return error(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -3626,7 +3447,7 @@ return error(_that.message);case _:
 
 }
 }
-/// A `switch`-like method, using callbacks.
+/// A method similar to a `switch`, using callbacks.
 ///
 /// As opposed to `map`, this offers destructuring.
 /// It is equivalent to doing:
@@ -3643,10 +3464,7 @@ return error(_that.message);case _:
 switch (_that) {
 case SearchPreviewRequestResultData():
 return data(_that.data);case SearchPreviewRequestResultError():
-return error(_that.message);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return error(_that.message);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -3675,25 +3493,19 @@ return error(_that.message);case _:
 /// @nodoc
 
 
-class SearchPreviewRequestResultData with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
+class SearchPreviewRequestResultData implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultData({required this.data});
-  
+
 
  final  Object data;
 
 /// Create a copy of SearchPreviewRequestResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchPreviewRequestResultDataCopyWith<SearchPreviewRequestResultData> get copyWith => _$SearchPreviewRequestResultDataCopyWithImpl<SearchPreviewRequestResultData>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchPreviewRequestResult.data'))
-    ..add(DiagnosticsProperty('data', data));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3707,7 +3519,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchPreviewRequestResult.data(data: $data)';
 }
 
@@ -3735,7 +3547,7 @@ class _$SearchPreviewRequestResultDataCopyWithImpl<$Res>
   final $Res Function(SearchPreviewRequestResultData) _then;
 
 /// Create a copy of SearchPreviewRequestResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? data = null,}) {
   return _then(SearchPreviewRequestResultData(
 data: null == data ? _self.data : data ,
@@ -3748,25 +3560,19 @@ data: null == data ? _self.data : data ,
 /// @nodoc
 
 
-class SearchPreviewRequestResultError with DiagnosticableTreeMixin implements SearchPreviewRequestResult {
+class SearchPreviewRequestResultError implements SearchPreviewRequestResult {
   const SearchPreviewRequestResultError({required this.message}): assert(message != "", 'Message must not be empty.');
-  
+
 
  final  String message;
 
 /// Create a copy of SearchPreviewRequestResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $SearchPreviewRequestResultErrorCopyWith<SearchPreviewRequestResultError> get copyWith => _$SearchPreviewRequestResultErrorCopyWithImpl<SearchPreviewRequestResultError>(this, _$identity);
 
 
-@override
-void debugFillProperties(DiagnosticPropertiesBuilder properties) {
-    properties
-    ..add(DiagnosticsProperty('type', 'SearchPreviewRequestResult.error'))
-    ..add(DiagnosticsProperty('message', message));
-}
 
 @override
 bool operator ==(Object other) {
@@ -3780,7 +3586,7 @@ int get hashCode {
 }
 
 @override
-String toString({ DiagnosticLevel minLevel = DiagnosticLevel.info }) {
+String toString() {
     return 'SearchPreviewRequestResult.error(message: $message)';
 }
 
@@ -3808,7 +3614,7 @@ class _$SearchPreviewRequestResultErrorCopyWithImpl<$Res>
   final $Res Function(SearchPreviewRequestResultError) _then;
 
 /// Create a copy of SearchPreviewRequestResult
-/// with the given fields replaced by the non-null parameter values.
+/// with the given fields replaced by the non null parameter values.
 @pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
   return _then(SearchPreviewRequestResultError(
 message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable

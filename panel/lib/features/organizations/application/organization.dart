@@ -1,7 +1,3 @@
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -65,39 +61,26 @@ class Organizations extends _$Organizations {
       return;
     }
 
-    yield* ref.watchSequencedRequest(
-      subject: "cloud.to.user.$userId.organization.watch",
-      eventSubject: "cloud.from.user.$userId.organizations.changed",
-      requestBytes: skir.WatchUserOrganizationsRequest.serializer.toBytes(
-        skir.WatchUserOrganizationsRequest(),
-      ),
-      responseSerializer: skir.WatchUserOrganizationsResponse.serializer,
-      eventSerializer: skir.UserOrganizationsChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchUserOrganizationsResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchUserOrganizationsResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchUserOrganizationsResponse_snapshotWrapper(:final value) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(OrganizationData.fromSkir).toList(),
-            ),
-          skir.WatchUserOrganizationsResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+    yield* skir.WatchUserOrganizationsRequest().watch<List<OrganizationData>>(
+      ref,
+      userId: userId,
+      snapshot: (response) =>
+          _organizationSnapshot(response).values
+              .map(OrganizationData.fromSkir)
+              .toList(),
       reduce: _reduceOrganizations,
-      sequenceState: _sequenceState,
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) =>
+            _organizationSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
   /// Creates an organization for the authenticated user.
   ///
-  /// The operation identity makes replay safe at the mutation boundary. On
-  /// success, the returned user scoped change event is applied locally and the
+  /// On success, the returned user scoped change event is applied locally and the
   /// new organization identity is returned for navigation. Rejected responses
   /// become actionable [ApiException] values; unknown or internal responses stay
   /// uncertain so the shared mutation layer can expose recovery state.
@@ -113,7 +96,6 @@ class Organizations extends _$Organizations {
     }
 
     final request = skir.CreateOrganizationRequest(
-      operationId: uuid.v4(),
       name: name,
       logoUrl: logoUrl,
     );
@@ -123,16 +105,9 @@ class Organizations extends _$Organizations {
     );
 
     final response = await ref.mutateSkir(
-      "cloud.to.user.$userId.organization.create",
-      skir.CreateOrganizationRequest.serializer.toBytes(request),
-      skir.CreateOrganizationResponse.serializer,
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
+      request.operation(userId: userId),
       label: "Create organization",
       classify: (response) => switch (response) {
-        skir.CreateOrganizationResponse_invalidOperationIdErrorWrapper() ||
-        skir.CreateOrganizationResponse_operationIdentityReusedErrorWrapper() =>
-          MutationResponseDisposition.rejected,
         skir.CreateOrganizationResponse_successWrapper() =>
           MutationResponseDisposition.confirmed,
         skir.CreateOrganizationResponse_unknown() ||
@@ -142,12 +117,6 @@ class Organizations extends _$Organizations {
     );
 
     switch (response) {
-      case skir.CreateOrganizationResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.CreateOrganizationResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.CreateOrganizationResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.CreateOrganizationResponse_internalErrorWrapper():
@@ -172,6 +141,19 @@ class Organizations extends _$Organizations {
     }
   }
 }
+
+skir.UserOrganizationsSnapshot _organizationSnapshot(
+  skir.WatchUserOrganizationsResponse response,
+) => switch (response) {
+  skir.WatchUserOrganizationsResponse_snapshotWrapper(:final value) => value,
+  skir.WatchUserOrganizationsResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchUserOrganizationsResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchUserOrganizationsResponse_changedWrapper() => throw StateError(
+    "Snapshot request returned a delta",
+  ),
+};
 
 List<OrganizationData> _reduceOrganizations(
   List<OrganizationData> organizations,
@@ -203,7 +185,7 @@ List<OrganizationData> _reduceOrganizations(
 skir.RecordId? organizationId(Ref ref) {
   final id = ref.watch(routeParamProvider("organizationId"));
   if (id == null) return null;
-  return recordId("organization:$id");
+  return skir.recordId("organization:$id");
 }
 
 /// Selects the routed organization from the user's canonical organization list.

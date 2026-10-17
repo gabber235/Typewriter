@@ -1,4 +1,4 @@
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Describes an action or affordance available for one selectable.
 ///

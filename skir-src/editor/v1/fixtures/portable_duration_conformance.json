@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "maximumMilliseconds": "9007199254740991",
+  "cases": [
+    {
+      "id": "zero",
+      "milliseconds": "0",
+      "admitted": true
+    },
+    {
+      "id": "positiveBoundary",
+      "milliseconds": "9007199254740991",
+      "admitted": true
+    },
+    {
+      "id": "negativeBoundary",
+      "milliseconds": "-9007199254740991",
+      "admitted": true
+    },
+    {
+      "id": "positiveOverflow",
+      "milliseconds": "9007199254740992",
+      "admitted": false
+    },
+    {
+      "id": "negativeOverflow",
+      "milliseconds": "-9007199254740992",
+      "admitted": false
+    },
+    {
+      "id": "signed64Maximum",
+      "milliseconds": "9223372036854775807",
+      "admitted": false
+    },
+    {
+      "id": "signed64Minimum",
+      "milliseconds": "-9223372036854775808",
+      "admitted": false
+    },
+    {
+      "id": "oldKotlinPositiveBoundary",
+      "milliseconds": "4611686018427387902",
+      "admitted": false
+    },
+    {
+      "id": "oldKotlinNegativeBoundary",
+      "milliseconds": "-4611686018427387902",
+      "admitted": false
+    }
+  ],
+  "steps": [
+    {
+      "id": "stepToMaximum",
+      "value": "9007199254740990",
+      "increment": "1",
+      "admitted": true
+    },
+    {
+      "id": "stepPastMaximum",
+      "value": "9007199254740991",
+      "increment": "1",
+      "admitted": false
+    },
+    {
+      "id": "stepToMinimum",
+      "value": "-9007199254740990",
+      "increment": "-1",
+      "admitted": true
+    },
+    {
+      "id": "stepPastMinimum",
+      "value": "-9007199254740991",
+      "increment": "-1",
+      "admitted": false
+    }
+  ]
+}

@@ -1,8 +1,6 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Stable fallback titles used when an error does not provide a title.
+/// Pool of fallback titles sampled on each build when an error has no title.
 const funnyErrorTitles = [
   "The plot thickened too much",
   "This quest has no walkthrough",

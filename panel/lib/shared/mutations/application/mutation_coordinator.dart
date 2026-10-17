@@ -1,4 +1,4 @@
-import "dart:async";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Serializes mutations that touch overlapping resource identities.
 ///
@@ -14,7 +14,9 @@ final class MutationCoordinator {
 
   /// Waits until [resources] can be held without overlap.
   Future<MutationReservation> reserve(Set<Object> resources) {
-    if (_disposed) return Future.error(StateError("Mutation session ended"));
+    if (_disposed) {
+      return Future.error(StateError("Mutation session ended"));
+    }
     final ready = Completer<MutationReservation>();
     _waiting.add((resources: Set.unmodifiable(resources), ready: ready));
     _drain();
@@ -32,9 +34,11 @@ final class MutationCoordinator {
       _waiting.remove(request);
       _held.addAll(request.resources);
       request.ready.complete(
-        MutationReservation._(() {
-          _held.removeAll(request.resources);
-          if (!_disposed) _drain();
+        MutationReservation._(request.resources, (released) {
+          _held.removeAll(released);
+          if (!_disposed) {
+            _drain();
+          }
         }),
       );
     }
@@ -53,14 +57,56 @@ final class MutationCoordinator {
 
 /// Idempotent ownership token for one coordinator reservation.
 final class MutationReservation {
-  MutationReservation._(this._release);
-  final void Function() _release;
+  MutationReservation._(this.resources, this._release);
+  final Set<Object> resources;
+  final void Function(Set<Object>) _release;
   bool _released = false;
+
+  /// Transfers reserved keys to the requests that actually captured them.
+  /// Overlapping keys stay held until every request using that key settles.
+  List<MutationReservation> share(Iterable<Set<Object>> members) {
+    final portions = members
+        .map(Set<Object>.unmodifiable)
+        .toList();
+    if (_released ||
+        portions.isEmpty ||
+        portions.any((member) => !resources.containsAll(member))) {
+      throw StateError(
+        "Every request must own a subset of the live reservation",
+      );
+    }
+    _released = true;
+    final counts = <Object, int>{};
+    for (final portion in portions) {
+      for (final resource in portion) {
+        counts.update(resource, (count) => count + 1, ifAbsent: () => 1);
+      }
+    }
+    _release(resources.difference(counts.keys.toSet()));
+    return [
+      for (final portion in portions)
+        MutationReservation._(portion, (released) {
+          final settled = <Object>{};
+          for (final resource in released) {
+            final remaining = counts[resource]! - 1;
+            if (remaining == 0) {
+              counts.remove(resource);
+              settled.add(resource);
+            } else {
+              counts[resource] = remaining;
+            }
+          }
+          _release(settled);
+        }),
+    ];
+  }
 
   /// Releases the held resources and advances compatible queued requests.
   void release() {
-    if (_released) return;
+    if (_released) {
+      return;
+    }
     _released = true;
-    _release();
+    _release(resources);
   }
 }

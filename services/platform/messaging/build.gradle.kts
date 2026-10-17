@@ -3,6 +3,12 @@ plugins {
     `java-library`
 }
 
+kotlin {
+    sourceSets.named("main") {
+        kotlin.srcDir(rootProject.file("protocol/transport-adapters/kotlin/skirout"))
+    }
+}
+
 dependencies {
     implementation(project(":internal-utils"))
     api(project(":telemetry"))

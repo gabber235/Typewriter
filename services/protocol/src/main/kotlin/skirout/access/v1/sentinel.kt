@@ -27,7 +27,7 @@ sealed interface GetSentinelCredentialsRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class GetSentinelCredentialsRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.sentinel.GetSentinelCredentialsRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.sentinel.GetSentinelCredentialsRequest>? =
         null,
 ): skirout.access.v1.sentinel.GetSentinelCredentialsRequest_OrMutable {
     constructor(
@@ -56,7 +56,7 @@ class GetSentinelCredentialsRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.sentinel.GetSentinelCredentialsRequest.serializerImpl,
+            _SerializerRegistry.GetSentinelCredentialsRequestSerializerImpl,
         )
     }
 
@@ -92,25 +92,11 @@ class GetSentinelCredentialsRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "access/v1/sentinel.skir:GetSentinelCredentialsRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [GetSentinelCredentialsRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.GetSentinelCredentialsRequestSerializer;
 
         /** Describes the [GetSentinelCredentialsRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetSentinelCredentialsRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -181,7 +167,7 @@ sealed class GetSentinelCredentialsResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.access.v1.sentinel.GetSentinelCredentialsResponse._serializerImpl,
+            _SerializerRegistry.GetSentinelCredentialsResponseSerializerImpl,
         )
     }
 
@@ -215,53 +201,11 @@ sealed class GetSentinelCredentialsResponse private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.access.v1.sentinel.GetSentinelCredentialsResponse, Unknown>(
-                recordId = "access/v1/sentinel.skir:GetSentinelCredentialsResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [GetSentinelCredentialsResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.GetSentinelCredentialsResponseSerializer;
 
         /** Describes the [GetSentinelCredentialsResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetSentinelCredentialsResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -276,7 +220,7 @@ sealed class GetSentinelCredentialsResponse private constructor() {
     class Success private constructor(
         override val jwt: kotlin.String,
         override val seed: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success>? =
             null,
     ): skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success_OrMutable {
         constructor(
@@ -329,7 +273,7 @@ sealed class GetSentinelCredentialsResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success.serializerImpl,
+                _SerializerRegistry.GetSentinelCredentialsResponse_SuccessSerializerImpl,
             )
         }
 
@@ -380,43 +324,11 @@ sealed class GetSentinelCredentialsResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "access/v1/sentinel.skir:GetSentinelCredentialsResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.GetSentinelCredentialsResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "jwt",
-                    "jwt",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.jwt },
-                    { mut, v -> mut.jwt = v },
-                );
-                serializerImpl.addField(
-                    "seed",
-                    "seed",
-                    1,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.seed },
-                    { mut, v -> mut.seed = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.GetSentinelCredentialsResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -432,4 +344,87 @@ val GetSentinelCredentials: build.skir.service.Method<
         skirout.access.v1.sentinel.GetSentinelCredentialsResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val GetSentinelCredentialsRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/sentinel.skir:GetSentinelCredentialsRequest",
+        doc = "",
+        defaultInstance = skirout.access.v1.sentinel.GetSentinelCredentialsRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.sentinel.GetSentinelCredentialsRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetSentinelCredentialsRequestSerializer = build.skir.internal.makeSerializer(GetSentinelCredentialsRequestSerializerImpl);
+
+    val GetSentinelCredentialsResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.access.v1.sentinel.GetSentinelCredentialsResponse, skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Unknown>(
+            recordId = "access/v1/sentinel.skir:GetSentinelCredentialsResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Kind.values().size,
+            unknownInstance = skirout.access.v1.sentinel.GetSentinelCredentialsResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Unknown(skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val GetSentinelCredentialsResponseSerializer = build.skir.internal.makeSerializer(GetSentinelCredentialsResponseSerializerImpl);
+
+    val GetSentinelCredentialsResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "access/v1/sentinel.skir:GetSentinelCredentialsResponse.Success",
+        doc = "",
+        defaultInstance = skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetSentinelCredentialsResponse_SuccessSerializer = build.skir.internal.makeSerializer(GetSentinelCredentialsResponse_SuccessSerializerImpl);
+
+    init {
+        GetSentinelCredentialsRequestSerializerImpl.finalizeStruct();
+
+        GetSentinelCredentialsResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.access.v1.sentinel.GetSentinelCredentialsResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        GetSentinelCredentialsResponseSerializerImpl.addWrapperVariant(
+            2,
+            "success",
+            skirout.access.v1.sentinel.GetSentinelCredentialsResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.GetSentinelCredentialsResponse_SuccessSerializer,
+            "",
+            { skirout.access.v1.sentinel.GetSentinelCredentialsResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        GetSentinelCredentialsResponseSerializerImpl.finalizeEnum();
+
+        GetSentinelCredentialsResponse_SuccessSerializerImpl.addField(
+            "jwt",
+            "jwt",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.jwt },
+            { mut, v -> mut.jwt = v },
+        );
+        GetSentinelCredentialsResponse_SuccessSerializerImpl.addField(
+            "seed",
+            "seed",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.seed },
+            { mut, v -> mut.seed = v },
+        );
+        GetSentinelCredentialsResponse_SuccessSerializerImpl.finalizeStruct();
+    }
 }

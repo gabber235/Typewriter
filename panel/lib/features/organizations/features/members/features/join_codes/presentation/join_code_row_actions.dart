@@ -1,14 +1,9 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row control for revoking one invitation code.
-/// It hides itself while its asynchronous revoke operation is in flight; the
-/// provider performs optimistic removal and restores state on failure.
+/// The action hides after confirmation and submits through shared local work.
+/// Its local flag is not reset on failure, so it stays hidden until this widget
+/// state is recreated. Pending row visibility belongs to the activity projection.
 class JoinCodeRowActions extends HookConsumerWidget {
   const JoinCodeRowActions({required this.code, super.key});
 
@@ -46,9 +41,10 @@ class JoinCodeRowActions extends HookConsumerWidget {
       confirmIcon: Fa6Solid.link_slash,
       onConfirm: () async {
         isRevoking.value = true;
-        await ref
-            .read(organizationJoinCodesProvider.notifier)
-            .revokeCode(code.code);
+        await ref.executeMembership(
+          ref.membershipCommands.revoke(code.code),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

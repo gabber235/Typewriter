@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Carries the nesting depth used by descendant [DepthBox] surfaces.
@@ -45,9 +43,12 @@ class DepthBox extends HookWidget {
   Widget build(BuildContext context) {
     final parent = DepthContainer.maybeOf(context);
     final depth = this.depth ?? (parent?.depth ?? -1) + 1;
+    final surfaceColor = Surface.maybeOf(context)?.color;
 
     final color = enabled
-        ? depth.isEven
+        ? surfaceColor != null && depth == 0
+              ? surfaceColor
+              : depth.isEven
               ? Theme.of(context).colorScheme.surfaceContainerLowest
               : Theme.of(context).colorScheme.surface
         : Colors.transparent;
@@ -61,7 +62,16 @@ class DepthBox extends HookWidget {
             RoundedRectangleBorder(
               borderRadius: context.shapes.mediumBorderRadius,
             ),
-        child: Surface(color: color, child: child),
+        child: Surface(
+          color: color,
+          foreground: enabled && !(surfaceColor != null && depth == 0)
+              ? context.colors.contentPrimary
+              : null,
+          secondaryForeground: enabled && !(surfaceColor != null && depth == 0)
+              ? context.colors.contentSecondary
+              : null,
+          child: child,
+        ),
       ),
     );
 

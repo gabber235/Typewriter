@@ -1,6 +1,9 @@
-import "dart:io";
-
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
+
+final disallowedSharedPackageImport = RegExp(
+  r'import "package:typewriter_panel/(?!typewriter_panel\.dart";|infrastructure/protocols/skir/skir\.dart"\s+as skir;)',
+);
 
 Iterable<File> dartFiles(String path) {
   return Directory(path)
@@ -14,24 +17,41 @@ void expectSharedImports(String path) {
     final source = file.readAsStringSync();
     expect(
       source,
-      isNot(contains("package:typewriter_panel/features/")),
+      isNot(matches(disallowedSharedPackageImport)),
       reason: file.path,
     );
     expect(
       source,
-      isNot(
-        matches(
-          RegExp(
-            r'import "package:typewriter_panel/(?!typewriter_panel\.dart)',
-          ),
-        ),
-      ),
+      isNot(contains("package:typewriter_panel/features/")),
       reason: file.path,
     );
   }
 }
 
 void main() {
+  test("shared imports allow only the main barrel and named Skir library", () {
+    expect(
+      'import "package:typewriter_panel/typewriter_panel.dart";',
+      isNot(matches(disallowedSharedPackageImport)),
+    );
+    expect(
+      'import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart" as skir;',
+      isNot(matches(disallowedSharedPackageImport)),
+    );
+    expect(
+      'import "package:typewriter_panel/infrastructure/protocols/skir/skirout/editor/v1/action.dart" as action;',
+      matches(disallowedSharedPackageImport),
+    );
+    expect(
+      'import "package:typewriter_panel/features/organizations/organizations.dart";',
+      matches(disallowedSharedPackageImport),
+    );
+    expect(
+      'import "package:typewriter_panel/infrastructure/messaging/messaging.dart";',
+      matches(disallowedSharedPackageImport),
+    );
+  });
+
   test("shared module imports preserve feature boundaries", () {
     expectSharedImports("lib/shared/selectables");
     expectSharedImports("lib/shared/editors");

@@ -149,7 +149,7 @@ pub async fn handle(request: Request) -> Result<Response, otel_wasi::Error<Error
         }
     };
 
-    let status = status(&result);
+    let status = result.http_status();
     otel_wasi::main_attribute!(
         "http.response.status_code" = status as i64,
         "identity.response.variant" = result.variant_slug().to_string(),
@@ -191,20 +191,26 @@ fn skir_error(status: u16) -> Result<Response, otel_wasi::Error<ErrorCode>> {
     .error_with_typed_slug("service-identity-response-build-failed")
 }
 
-fn status(value: &IssueServiceIdentityResponse) -> u16 {
-    match value {
-        IssueServiceIdentityResponse::Success(_) => 200,
-        IssueServiceIdentityResponse::MalformedRequestError(_)
-        | IssueServiceIdentityResponse::UnknownRoleError(_)
-        | IssueServiceIdentityResponse::RoleUnknownPropertyError(_)
-        | IssueServiceIdentityResponse::RoleTypeInvalidError(_)
-        | IssueServiceIdentityResponse::RoleVersionInvalidError(_)
-        | IssueServiceIdentityResponse::CustomRoleNameRequiredError(_)
-        | IssueServiceIdentityResponse::CustomRoleNameInvalidError(_)
-        | IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 400,
-        IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 503,
-        IssueServiceIdentityResponse::InternalError(_)
-        | IssueServiceIdentityResponse::Unknown(_) => 500,
+trait IdentityHttpOutcome {
+    fn http_status(&self) -> u16;
+}
+
+impl IdentityHttpOutcome for IssueServiceIdentityResponse {
+    fn http_status(&self) -> u16 {
+        match self {
+            IssueServiceIdentityResponse::Success(_) => 200,
+            IssueServiceIdentityResponse::MalformedRequestError(_)
+            | IssueServiceIdentityResponse::UnknownRoleError(_)
+            | IssueServiceIdentityResponse::RoleUnknownPropertyError(_)
+            | IssueServiceIdentityResponse::RoleTypeInvalidError(_)
+            | IssueServiceIdentityResponse::RoleVersionInvalidError(_)
+            | IssueServiceIdentityResponse::CustomRoleNameRequiredError(_)
+            | IssueServiceIdentityResponse::CustomRoleNameInvalidError(_)
+            | IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError(_) => 400,
+            IssueServiceIdentityResponse::IdentityProviderUnavailableError(_) => 503,
+            IssueServiceIdentityResponse::InternalError(_)
+            | IssueServiceIdentityResponse::Unknown(_) => 500,
+        }
     }
 }
 
@@ -264,7 +270,7 @@ mod tests {
                 token: String::new(),
                 _unrecognized: None,
             }));
-        assert_eq!(status(&success), 200);
+        assert_eq!(success.http_status(), 200);
         let bad_requests = [
             skir_variant!(IssueServiceIdentityResponse::MalformedRequestError {}),
             skir_variant!(IssueServiceIdentityResponse::UnknownRoleError {}),
@@ -275,14 +281,23 @@ mod tests {
             skir_variant!(IssueServiceIdentityResponse::CustomRoleNameInvalidError {}),
             skir_variant!(IssueServiceIdentityResponse::BuiltinRoleNameForbiddenError {}),
         ];
-        assert!(bad_requests.iter().all(|response| status(response) == 400));
+        assert!(
+            bad_requests
+                .iter()
+                .all(|response| response.http_status() == 400)
+        );
         assert_eq!(
-            status(&skir_variant!(
-                IssueServiceIdentityResponse::IdentityProviderUnavailableError {}
-            )),
+            skir_variant!(IssueServiceIdentityResponse::IdentityProviderUnavailableError {})
+                .http_status(),
             503
         );
-        assert_eq!(status(&IssueServiceIdentityResponse::internal_error()), 500);
-        assert_eq!(status(&IssueServiceIdentityResponse::Unknown(None)), 500);
+        assert_eq!(
+            IssueServiceIdentityResponse::internal_error().http_status(),
+            500
+        );
+        assert_eq!(
+            IssueServiceIdentityResponse::Unknown(None).http_status(),
+            500
+        );
     }
 }

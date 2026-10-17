@@ -16,22 +16,12 @@ void main() {
   test("accepts valid identifiers", () {
     for (final value in validValues) {
       expect(value.isValidIdentifier, isTrue, reason: value);
-      expect(
-        StringValue(value).validateAgainst(identifierStringType),
-        isEmpty,
-        reason: value,
-      );
     }
   });
 
   test("rejects invalid identifiers", () {
     for (final value in invalidValues) {
       expect(value.isValidIdentifier, isFalse, reason: value);
-      expect(
-        StringValue(value).validateAgainst(identifierStringType),
-        isNotEmpty,
-        reason: value,
-      );
     }
   });
 }

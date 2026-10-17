@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Creates the theme derived gradient used by [Shimmer].
@@ -39,10 +36,6 @@ class _SlidingGradientTransform extends GradientTransform {
   }
 }
 
-/// A widget that provides shimmer animation to its descendants.
-///
-/// Wrap this around a section of your UI where you want to apply
-/// shimmer effects to loading states.
 /// Owns one shimmer timeline shared by registered loading descendants.
 ///
 /// Wrap a loading region with this widget, then use [ShimmerLoading] for each
@@ -191,7 +184,9 @@ class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
 /// Applies the nearest [Shimmer] gradient to [child].
 ///
 /// The child should contain shapes with solid colors that will be
-/// replaced by the shimmer gradient.
+/// replaced by the shimmer gradient. Without a laid out [Shimmer] ancestor,
+/// this renders an empty placeholder. The registered owner is captured at
+/// mount and must remain stable for the loading widget's lifetime.
 class ShimmerLoading extends HookWidget {
   const ShimmerLoading({required this.child, super.key});
 
@@ -263,9 +258,7 @@ class ShimmerLoading extends HookWidget {
   }
 }
 
-/// A convenient shimmer placeholder for a simple shaped loading region.
-///
-/// Use this as a quick placeholder for content that is loading.
+/// A shaped loading placeholder that requires a [Shimmer] ancestor.
 class ShimmerBox extends HookWidget {
   const ShimmerBox({
     super.key,

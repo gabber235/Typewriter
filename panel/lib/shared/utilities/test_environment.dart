@@ -1,4 +1,4 @@
-/// Platform neutral access to whether Flutter's test binding is active.
+/// Platform neutral access to the Flutter test runner's environment marker.
 ///
 /// The IO implementation reads the process environment. Web builds use the
 /// stub because `dart:io` is unavailable there.

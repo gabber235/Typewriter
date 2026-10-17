@@ -1,3 +1,5 @@
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 typedef CompleteTopologyScenario = ({
@@ -167,8 +169,8 @@ TopologyHost _host({
   bool canHostRealm = true,
   String? message,
 }) => TopologyHost(
-  hostId: recordId("service_host:$id"),
-  serviceId: recordId("service:$id"),
+  hostId: skir.recordId("service_host:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: desiredRevision,
   entrypoint: entrypoint,
   canHostRealm: canHostRealm,
@@ -194,7 +196,7 @@ TopologyRealm _realm({
   required TopologyRuntimeStatus status,
   String? message,
 }) => TopologyRealm(
-  realmId: recordId("realm_instance:$id"),
+  realmId: skir.recordId("realm_instance:$id"),
   ownerHost: _ownerHost(host),
   revision: 3,
   targetEngine: const TopologyEngineTarget(
@@ -210,7 +212,7 @@ TopologyEngine _engine({
   required TopologyRealm realm,
   required TopologyRuntimeStatus status,
 }) => TopologyEngine(
-  engineId: recordId("engine_instance:$id"),
+  engineId: skir.recordId("engine_instance:$id"),
   ownerHost: _ownerHost(host),
   realm: TopologyRealmInfo(realmId: realm.realmId, ownerHost: realm.ownerHost),
   revision: 5,
@@ -244,7 +246,7 @@ Service _hostService(TopologyHost host, {required bool online}) => Service(
   name: host.hostId.id.replaceAll("-", "_"),
   role: HostServiceRole(version: "1.0.0"),
   createdAt: DateTime.utc(2026, 8, 19),
-  organization: recordId("organization:story"),
+  organization: skir.recordId("organization:story"),
   state: ServiceState(
     status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
     lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 21),
@@ -258,12 +260,12 @@ Service _customService({
   required String version,
   required bool online,
 }) => Service(
-  serviceId: recordId("service:$id"),
+  serviceId: skir.recordId("service:$id"),
   revision: 1,
   name: name,
   role: CustomServiceRole(name: role, version: version),
   createdAt: DateTime.utc(2026, 8, 19),
-  organization: recordId("organization:story"),
+  organization: skir.recordId("organization:story"),
   state: ServiceState(
     status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
     lastSeen: online ? DateTime.now() : DateTime.utc(2026, 8, 20),

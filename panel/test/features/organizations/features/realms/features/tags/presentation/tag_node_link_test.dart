@@ -1,21 +1,55 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart" hide Tags;
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../../../../../support/graph.dart";
 import "../../../../../../../support/test_utils.dart";
 
 void main() {
   group("TagNode parent linking", () {
+    testWidgets(
+      "ready admission cannot mutate until that exact payload starts",
+      (tester) async {
+        final childId = skir.ResourceId(value: "child");
+        final parentId = skir.ResourceId(value: "parent");
+        await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
+        final payload = GraphDragPayload(
+          value: AuthoringResourceIdentifier.inScope(_scope, parentId),
+        );
+        addTearDown(payload.retire);
+        final details = DragTargetDetails(data: payload, offset: Offset.zero);
+        final target = _target(tester);
+        expect(target.onWillAcceptWithDetails!(details), isTrue);
+        target.onAcceptWithDetails!(details);
+        expect(
+          tester
+              .container()
+              .read(workingTagProvider(childId))
+              .requireValue!
+              .parentIds,
+          isEmpty,
+        );
+        payload.start();
+        target.onAcceptWithDetails!(details);
+        target.onAcceptWithDetails!(details);
+        await tester.pump();
+        expect(
+          tester
+              .container()
+              .read(workingTagProvider(childId))
+              .requireValue!
+              .parentIds,
+          [parentId],
+        );
+      },
+    );
+
     testWidgets("dropping a parent onto a child links them", (tester) async {
-      final childId = recordId("tag:child");
-      final parentId = recordId("tag:parent");
-      final notifier = await _pumpTagTarget(tester, [
-        _tag(childId),
-        _tag(parentId),
-      ], childId);
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
+      await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
       final target = _target(tester);
       final details = _details(parentId);
 
@@ -23,14 +57,28 @@ void main() {
       target.onAcceptWithDetails!(details);
       await tester.pump();
 
-      expect(notifier.updatedTag?.tagId, childId);
-      expect(notifier.updatedTag?.parentIds, [parentId]);
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .tagId,
+        childId,
+      );
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .parentIds,
+        [parentId],
+      );
     });
 
     testWidgets("dropping a direct parent again unlinks it", (tester) async {
-      final childId = recordId("tag:child");
-      final parentId = recordId("tag:parent");
-      final notifier = await _pumpTagTarget(tester, [
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
+      await _pumpTagTarget(tester, [
         _tag(childId, parentIds: [parentId]),
         _tag(parentId),
       ], childId);
@@ -41,12 +89,26 @@ void main() {
       target.onAcceptWithDetails!(details);
       await tester.pump();
 
-      expect(notifier.updatedTag?.tagId, childId);
-      expect(notifier.updatedTag?.parentIds, isEmpty);
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .tagId,
+        childId,
+      );
+      expect(
+        tester
+            .container()
+            .read(workingTagProvider(childId))
+            .requireValue!
+            .parentIds,
+        isEmpty,
+      );
     });
 
     testWidgets("rejects self links", (tester) async {
-      final tagId = recordId("tag:self");
+      final tagId = skir.ResourceId(value: "self");
       await _pumpTagTarget(tester, [_tag(tagId)], tagId);
 
       expect(
@@ -55,10 +117,32 @@ void main() {
       );
     });
 
+    testWidgets("rejects a parent dragged from another authoring scope", (
+      tester,
+    ) async {
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
+      await _pumpTagTarget(tester, [_tag(childId), _tag(parentId)], childId);
+      final otherScope = AuthoringScope(
+        organizationId: _scope.organizationId,
+        realmId: skir.recordId("realm:other"),
+      );
+
+      expect(
+        _target(tester).onWillAcceptWithDetails!(
+          DragTargetDetails(
+            data: _activePayload(parentId, scope: otherScope),
+            offset: Offset.zero,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
     testWidgets("rejects an indirect existing parent", (tester) async {
-      final childId = recordId("tag:child");
-      final intermediateId = recordId("tag:intermediate");
-      final parentId = recordId("tag:parent");
+      final childId = skir.ResourceId(value: "child");
+      final intermediateId = skir.ResourceId(value: "intermediate");
+      final parentId = skir.ResourceId(value: "parent");
       await _pumpTagTarget(tester, [
         _tag(childId, parentIds: [intermediateId]),
         _tag(intermediateId, parentIds: [parentId]),
@@ -72,8 +156,8 @@ void main() {
     });
 
     testWidgets("rejects direct tag cycles", (tester) async {
-      final childId = recordId("tag:child");
-      final parentId = recordId("tag:parent");
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
       await _pumpTagTarget(tester, [
         _tag(childId),
         _tag(parentId, parentIds: [childId]),
@@ -86,9 +170,9 @@ void main() {
     });
 
     testWidgets("rejects transitive tag cycles", (tester) async {
-      final childId = recordId("tag:child");
-      final parentId = recordId("tag:parent");
-      final ancestorId = recordId("tag:ancestor");
+      final childId = skir.ResourceId(value: "child");
+      final parentId = skir.ResourceId(value: "parent");
+      final ancestorId = skir.ResourceId(value: "ancestor");
       await _pumpTagTarget(tester, [
         _tag(childId),
         _tag(parentId, parentIds: [ancestorId]),
@@ -104,21 +188,23 @@ void main() {
     testWidgets("shows clear feedback for rejected parent drops", (
       tester,
     ) async {
-      final childId = recordId("tag:child");
+      final childId = skir.ResourceId(value: "child");
       final tags = [_tag(childId)];
       await _pumpTagTarget(tester, tags, childId);
       final target = _target(tester);
       expect(target.onWillAcceptWithDetails!(_details(childId)), isFalse);
 
       final rejectedTarget = target.builder(
-        tester.element(find.byType(DragTarget<TagIdentifier>)),
+        tester.element(
+          find.byType(
+            DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>,
+          ),
+        ),
         const [],
-        [TagIdentifier(childId)],
+        [_activePayload(childId)],
       );
       await tester.pumpTestApp(
-        overrides: [
-          canonicalTagsProvider.overrideWith(() => _RecordingTags(tags)),
-        ],
+        overrides: [...authoringFixtureOverrides(tags: tags)],
         child: SizedBox(width: 200, height: 100, child: rejectedTarget),
       );
       await tester.pumpAndSettle();
@@ -136,65 +222,55 @@ void main() {
   });
 }
 
-DragTarget<TagIdentifier> _target(WidgetTester tester) => tester
-    .widget<DragTarget<TagIdentifier>>(find.byType(DragTarget<TagIdentifier>));
-
-DragTargetDetails<TagIdentifier> _details(skir.RecordId id) =>
-    DragTargetDetails(data: TagIdentifier(id), offset: Offset.zero);
-
-Tag _tag(skir.RecordId id, {List<skir.RecordId> parentIds = const []}) => Tag(
-  tagId: id,
-  name: id.id,
-  color: Colors.blue,
-  parentIds: parentIds,
-  placement: const Placement(x: 0, y: 0, width: 2, height: 1),
+DragTarget<GraphDragPayload<AuthoringResourceIdentifier>> _target(
+  WidgetTester tester,
+) => tester.widget<DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>>(
+  find.byType(DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>),
 );
 
-Future<_RecordingTags> _pumpTagTarget(
+DragTargetDetails<GraphDragPayload<AuthoringResourceIdentifier>> _details(
+  skir.ResourceId id,
+) => DragTargetDetails(data: _activePayload(id), offset: Offset.zero);
+
+final _scope = AuthoringScope(
+  organizationId: skir.recordId("organization:fixture"),
+  realmId: skir.recordId("realm:fixture"),
+);
+
+Tag _tag(skir.ResourceId id, {List<skir.ResourceId> parentIds = const []}) =>
+    Tag(
+      tagId: id,
+      name: id.id,
+      color: Colors.blue,
+      parentIds: parentIds,
+      placement: GraphPlacement(x: 0, y: 0, width: 2, height: 1),
+    );
+
+Future<void> _pumpTagTarget(
   WidgetTester tester,
   List<Tag> tags,
-  skir.RecordId targetId,
+  skir.ResourceId targetId,
 ) async {
-  late _RecordingTags notifier;
   await tester.pumpTestApp(
-    overrides: [
-      canonicalTagsProvider.overrideWith(() => notifier = _RecordingTags(tags)),
-    ],
+    overrides: [...authoringFixtureOverrides(tags: tags)],
     child: Center(
       child: SizedBox(
         width: 200,
         height: 100,
-        child: GraphDrag(
-          draggingInsideGraph: ValueNotifier(false),
-          child: TagNode(tagId: targetId),
-        ),
+        child: testGraphDragScope(tester, child: TagNode(tagId: targetId)),
       ),
     ),
   );
   await tester.pumpAndSettle();
-  return notifier;
 }
 
-class _RecordingTags extends CanonicalTags {
-  _RecordingTags(this.tags);
-
-  final List<Tag> tags;
-  Tag? updatedTag;
-
-  @override
-  Future<List<Tag>> build() async => tags;
-
-  @override
-  Future<TypedMutationResult> updateTag(Tag tag, {Tag? expected}) async {
-    updatedTag = tag;
-    state = AsyncData(
-      state.requireValue
-          .map((current) => current.tagId == tag.tagId ? tag : current)
-          .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: 1,
-      value: StringValue(tag.name),
-    );
-  }
+GraphDragPayload<AuthoringResourceIdentifier> _activePayload(
+  skir.ResourceId id, {
+  AuthoringScope? scope,
+}) {
+  final payload = GraphDragPayload(
+    value: AuthoringResourceIdentifier.inScope(scope ?? _scope, id),
+  )..start();
+  addTearDown(payload.retire);
+  return payload;
 }

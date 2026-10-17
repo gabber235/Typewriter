@@ -1,4 +1,3 @@
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "inspection.g.dart";
@@ -25,8 +24,9 @@ AsyncValue<List<InspectableSelectable>> inspectedSelection(Ref ref) {
 
 /// Whether the inspector should occupy space for the current selection.
 ///
-/// Loading and error states intentionally remain visible. The session replaces
-/// the graph with an unavailable state while selected resources refresh.
+/// When no retained selection value is available, loading and errors keep the
+/// pane visible. The session retains its installed graph until a new selection
+/// can be built; temporary provider states do not replace it.
 @riverpod
 bool hasInspectableSelection(Ref ref) {
   return ref.watch(inspectedSelectionProvider).value?.isNotEmpty ?? true;

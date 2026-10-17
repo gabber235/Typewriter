@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Decides whether a key event should be consumed before it reaches the input.
@@ -8,9 +5,9 @@ typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
 
 /// Coordinates the inner and surrounding focus nodes used by an input field.
 ///
-/// Instances created by the public constructors own their focus nodes and must
-/// be disposed by the creator. Instances built from an existing input focus
-/// node leave that node owned by the caller.
+/// The creator must dispose the controller. The default constructor owns both
+/// nodes; [InputFieldController.fromInputFocusNode] borrows the input node and
+/// owns only the surrounding node.
 class InputFieldController {
   InputFieldController({String? inputDebugLabel, String? surroundingDebugLabel})
     : this._(
@@ -71,7 +68,7 @@ class InputFieldController {
 }
 
 /// Container that unifies focus highlighting, surrounding focus behavior,
-/// action shortcuts, and key-event blocking for input-like widgets.
+/// and action shortcuts for inputs with separate editing and navigation focus.
 /// Supply the inner input via [child] and its [controller].
 class InputFieldContainer extends HookConsumerWidget {
   const InputFieldContainer({
@@ -83,12 +80,11 @@ class InputFieldContainer extends HookConsumerWidget {
     this.borderRadius,
     this.onInputFocus,
     this.onDismiss,
-    this.onCancel,
     this.autofocus = false,
     super.key,
   });
 
-  /// Controller that owns the input and surrounding focus nodes.
+  /// Coordinates the focus nodes; its creator retains disposal responsibility.
   final InputFieldController controller;
 
   /// The actual input widget to render (e.g. TextField, DropdownMenu).
@@ -112,10 +108,6 @@ class InputFieldContainer extends HookConsumerWidget {
   /// Called when a dismiss intent is handled while the input is focused.
   /// Dismissing leaves the field but keeps what was typed.
   final VoidCallback? onDismiss;
-
-  /// Called when a cancel intent is handled while the input is focused.
-  /// Cancelling leaves the field and discards what was typed.
-  final VoidCallback? onCancel;
 
   /// Whether the surrounding focus should request focus automatically.
   final bool autofocus;
@@ -203,13 +195,6 @@ class InputFieldContainer extends HookConsumerWidget {
                   DismissIntent: CallbackAction<DismissIntent>(
                     onInvoke: (intent) {
                       onDismiss?.call();
-                      modeCoordinator.end(id);
-                      return null;
-                    },
-                  ),
-                  CancelIntent: CallbackAction<CancelIntent>(
-                    onInvoke: (intent) {
-                      onCancel?.call();
                       modeCoordinator.end(id);
                       return null;
                     },

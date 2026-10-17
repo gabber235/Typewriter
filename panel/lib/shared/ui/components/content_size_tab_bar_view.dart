@@ -1,6 +1,4 @@
-import "package:expandable_page_view/expandable_page_view.dart";
-import "package:flutter/gestures.dart";
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays tab pages whose viewport height follows the current page.
 ///
@@ -42,7 +40,7 @@ class ContentSizeTabBarView extends StatefulWidget {
   /// The physics are modified to snap to page boundaries using
   /// [PageScrollPhysics] prior to being used.
   ///
-  /// Defaults to matching platform conventions.
+  /// Defaults to page snapping with [ClampingScrollPhysics].
   final ScrollPhysics? physics;
 
   /// {@macro flutter.widgets.scrollable.dragStartBehavior}

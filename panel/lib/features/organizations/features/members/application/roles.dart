@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -10,9 +7,9 @@ part "roles.g.dart";
 
 /// Role metadata used by membership editors.
 ///
-/// [assignable] is the client visible permission boundary for ordinary role
-/// changes. Roles that are not assignable remain visible because they are part
-/// of a member's authoritative projection, but the controls cannot edit them.
+/// [assignable] advertises whether ordinary role changes may select this role;
+/// the server still authorizes commands. Protected roles remain visible as part
+/// of a member's authoritative projection, but these controls cannot edit them.
 @freezed
 abstract class OrganizationRole with _$OrganizationRole {
   @Assert("name != \"\"", "Name must not be empty.")
@@ -47,11 +44,11 @@ abstract class OrganizationRole with _$OrganizationRole {
   );
 }
 
-/// Streams the role catalog for the selected organization.
+/// Loads the role catalog for the selected organization.
 ///
-/// The initial list and later add, update, and remove messages are folded into
-/// one provider value. Membership editors consume this catalog to render both
-/// available choices and the protected roles that must remain visible.
+/// Membership editors consume this catalog to render available choices and
+/// the protected roles that must remain visible. Invalidating this provider
+/// reloads the authoritative snapshot.
 @riverpod
 class OrganizationRoles extends _$OrganizationRoles {
   @override
@@ -69,41 +66,29 @@ class OrganizationRoles extends _$OrganizationRoles {
       return;
     }
 
-    final request = skir.WatchOrganizationRolesRequest();
-
-    yield* ref.watchRequest(
-      subject:
-          "cloud.to.user.$userId.organization.${organizationId.id}.roles.watch",
-      listenSubject: "cloud.from.organization.${organizationId.id}.roles.watch",
-      requestBytes: skir.WatchOrganizationRolesRequest.serializer.toBytes(
-        request,
+    final response = await ref.requestSkir(
+      skir.WatchOrganizationRolesRequest().operation(
+        userId: userId,
+        organizationId: organizationId,
       ),
-      serializer: skir.WatchOrganizationRolesResponse.serializer,
-      transformer: (previous, response) {
-        switch (response) {
-          case skir.WatchOrganizationRolesResponse_unknown():
-            throw ApiException.unknownResponseMessage();
-          case skir.WatchOrganizationRolesResponse_internalErrorWrapper():
-            throw ApiException.internalServerError();
-          case skir.WatchOrganizationRolesResponse_listWrapper(:final value):
-            return value.map(OrganizationRole.fromSkir).toList();
-          case skir.WatchOrganizationRolesResponse_addWrapper(:final value):
-            return previous.upsertByKey(
-              (role) => role.roleId,
-              OrganizationRole.fromSkir(value),
-            );
-          case skir.WatchOrganizationRolesResponse_updateWrapper(:final value):
-            return previous.upsertByKey(
-              (role) => role.roleId,
-              OrganizationRole.fromSkir(value),
-            );
-          case skir.WatchOrganizationRolesResponse_removeWrapper(:final value):
-            return previous?.where((role) => role.roleId != value).toList() ??
-                [];
-        }
-      },
     );
+    if (!ref.mounted) return;
+    yield response.readRoleSnapshot();
   }
 }
 
-/// Provider for the list of members in the current organization.
+extension OrganizationRoleSnapshot on skir.WatchOrganizationRolesResponse {
+  List<OrganizationRole> readRoleSnapshot() => switch (this) {
+    skir.WatchOrganizationRolesResponse_listWrapper(:final value) =>
+      value.map(OrganizationRole.fromSkir).toList(),
+    skir.WatchOrganizationRolesResponse_unknown() =>
+      throw ApiException.unknownResponseMessage(),
+    skir.WatchOrganizationRolesResponse_internalErrorWrapper() =>
+      throw ApiException.internalServerError(),
+    skir.WatchOrganizationRolesResponse_addWrapper() ||
+    skir.WatchOrganizationRolesResponse_updateWrapper() ||
+    skir.WatchOrganizationRolesResponse_removeWrapper() => throw StateError(
+      "Snapshot request returned a role change",
+    ),
+  };
+}

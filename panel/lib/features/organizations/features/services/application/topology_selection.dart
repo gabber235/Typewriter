@@ -17,7 +17,7 @@ class ServiceHostIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     final connections = ref.watch(serviceConnectionsProvider);
     final organization = ref.watch(organizationIdProvider);
@@ -47,11 +47,8 @@ class ServiceHostIdentifier extends SelectableIdentifier {
     final repository = ref
         .watch(resourceRepositoriesProvider)
         .services(organization);
-    final serviceCommands = canonicalService == null
-        ? null
-        : ref.watch(
-            canonicalOrganizationServicesProvider(organization).notifier,
-          );
+    final work = ref.watch(localWorkProvider.notifier);
+    final configurationSnapshot = HostEditorSnapshot(host, topology);
 
     return AsyncData(
       _ServiceHostSelectable(
@@ -60,22 +57,62 @@ class ServiceHostIdentifier extends SelectableIdentifier {
         service: service,
         topology: topology,
         connected: connections[host.serviceId] ?? false,
-        configurationTarget: ResourceEditorTarget(
+        configurationTarget: ValueEditingRegistration(
           targetId: this,
           label: "${service?.displayName ?? host.hostId.id}: configuration",
-          resource: HostEditorResource(repository, hostId),
-          snapshot: HostEditorSnapshot(host, topology),
+          persistence: HostEditPersistence(repository, hostId),
+          snapshot: configurationSnapshot,
+          observations: EditObservationAdmission.reviewChanges,
+          observe: (workspace) => work.observe(
+            organizationTopologyControllerProvider(organization),
+            (next) {
+              if (next.value case final topology?) {
+                final current = topology.hosts.firstWhereOrNull(
+                  (value) => value.hostId == hostId,
+                );
+                workspace.acceptConfirmed(
+                  current == null
+                      ? workspace.confirmed.copyWith(exists: false)
+                      : ValueEditDocument.fromSnapshot(
+                          HostEditorSnapshot(current, topology),
+                          identity: workspace.confirmed.identity,
+                        ),
+                );
+              } else if (next.error case final error?) {
+                workspace.acceptFailure(error);
+              }
+            },
+          ),
           commitPolicy: EditorCommitPolicy.applyResource,
+          portablePresentation: (source) => topologyHostPortableHost(
+            host: host,
+            service: service,
+            connected: connections[host.serviceId] ?? false,
+            configurationOwner: source,
+            identityOwner: null,
+            realmTargets: configurationSnapshot._realmTargets,
+            engineTargets: configurationSnapshot._engineTargets,
+            realms: topology.realmInstances
+                .where((realm) => realm.ownerHost.id != host.hostId)
+                .toList(),
+          ),
         ),
         onUnbind: canonicalService == null
             ? null
-            : () => serviceCommands!.deleteService(canonicalService.serviceId),
+            : () async {
+                final response = await work.execute(
+                  repository.unbind(canonicalService.serviceId),
+                );
+                response.requireAcceptedUnbinding();
+              },
         serviceIdentityTarget: service == null || canonicalService == null
             ? null
             : serviceIdentityTarget(
                 id: ServiceIdentifier(service.serviceId),
                 service: canonicalService,
+                connected: connections[host.serviceId] ?? false,
                 repository: repository,
+                work: work,
               ),
       ),
     );
@@ -104,7 +141,7 @@ class RealmInstanceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     final connections = ref.watch(serviceConnectionsProvider);
     if (topologyState.mapUnready<Selectable>() case final state?) return state;
@@ -167,7 +204,7 @@ class EngineInstanceIdentifier extends SelectableIdentifier {
 
   @override
   AsyncValue<Selectable> create(Ref ref) {
-    final topologyState = ref.watch(organizationTopologyStreamProvider);
+    final topologyState = ref.watch(organizationTopologyProvider);
     final servicesState = ref.watch(canonicalServicesProvider);
     if (topologyState.mapUnready<Selectable>() case final state?) return state;
     if (servicesState.mapUnready<Selectable>() case final state?) return state;

@@ -76,15 +76,15 @@ sealed interface ResolutionResult {
 }
 
 /**
- * Selects newest compatible runtime artifacts for a topology and loader intent.
+ * Selects newest compatible runtime artifacts for a responding host selection and loader intent.
  *
- * Exactly one Realm artifact identity must be available. Host API compatibility is checked for assigned runtime
+ * Exactly one Realm artifact identity must be available. Host API compatibility is checked for selected runtime
  * hosts. The newest version of every extension is included; conflicting versions of a shared artifact identity
  * reject the selection.
  */
 fun resolveDeployment(
     candidates: CandidateIndex,
-    topology: RealmTopology,
+    selection: RealmDeploymentSelection,
     primaryEngine: PrimaryEngineTarget,
     intent: RealmLoaderIntent,
 ): ResolutionResult {
@@ -97,7 +97,7 @@ fun resolveDeployment(
 
     val realm =
         realms
-            .filter { it.supports(topology.serviceApis.getValue(topology.realmService)) }
+            .filter { it.supports(selection.serviceApis.getValue(selection.realmService)) }
             .maxByOrNull { it.artifact.coordinate.version }
             ?: run {
                 problems += "No Realm artifact supports the Realm host API."
@@ -108,7 +108,7 @@ fun resolveDeployment(
             .engines(primaryEngine.id)
             .filter { primaryEngine.version.accepts(it.artifact.coordinate.version) }
             .filter { candidate ->
-                topology.primaryEngineServices.all { service -> candidate.supports(topology.serviceApis.getValue(service)) }
+                selection.primaryEngineServices.all { service -> candidate.supports(selection.serviceApis.getValue(service)) }
             }.maxByOrNull { it.artifact.coordinate.version }
             ?: run {
                 problems += "No compatible primary engine satisfies ${primaryEngine.id} ${primaryEngine.version}."
@@ -118,7 +118,7 @@ fun resolveDeployment(
         candidates
             .engines(intent.panelEngine.id)
             .filter { intent.panelEngine.version.accepts(it.artifact.coordinate.version) }
-            .filter { it.supports(topology.serviceApis.getValue(topology.realmService)) }
+            .filter { it.supports(selection.serviceApis.getValue(selection.realmService)) }
             .maxByOrNull { it.artifact.coordinate.version }
             ?: run {
                 problems += "No compatible panel engine satisfies ${intent.panelEngine.id} ${intent.panelEngine.version}."

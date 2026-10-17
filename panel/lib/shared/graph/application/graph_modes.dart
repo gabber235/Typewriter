@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keyboard mode that emits one grid step of movement for the active nodes.

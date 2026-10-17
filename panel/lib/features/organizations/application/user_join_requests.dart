@@ -1,6 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -80,39 +77,27 @@ class UserJoinRequests extends _$UserJoinRequests {
     }
 
     final request = skir.WatchUserJoinRequestsRequest();
-    yield* ref.watchSequencedRequest(
-      subject: "cloud.to.user.$userId.organization.join_requests.watch",
-      eventSubject: "cloud.from.user.$userId.join_requests.changed",
-      requestBytes: skir.WatchUserJoinRequestsRequest.serializer.toBytes(
-        request,
-      ),
-      responseSerializer: skir.WatchUserJoinRequestsResponse.serializer,
-      eventSerializer: skir.UserJoinRequestsChanged.serializer,
-      snapshot: (response) {
-        return switch (response) {
-          skir.WatchUserJoinRequestsResponse_unknown() =>
-            throw ApiException.unknownResponseMessage(),
-          skir.WatchUserJoinRequestsResponse_internalErrorWrapper() =>
-            throw ApiException.internalServerError(),
-          skir.WatchUserJoinRequestsResponse_snapshotWrapper(:final value) =>
-            SequencedSnapshot(
-              sequence: value.sequence,
-              value: value.values.map(UserJoinRequest.fromSkir).toList(),
-            ),
-          skir.WatchUserJoinRequestsResponse_changedWrapper() =>
-            throw StateError("Snapshot request returned a delta"),
-        };
-      },
-      eventSequence: (event) => event.sequence,
+    yield* request.watch<List<UserJoinRequest>>(
+      ref,
+      userId: userId,
+      snapshot: (response) =>
+          _userJoinRequestSnapshot(response).values
+              .map(UserJoinRequest.fromSkir)
+              .toList(),
       reduce: _reduceUserJoinRequests,
-      sequenceState: _sequenceState,
+      reconciliation: ProjectionReconciliation.sequenced(
+        snapshotSequence: (response) =>
+            _userJoinRequestSnapshot(response).sequence,
+        eventSequence: (event) => event.sequence,
+        sequenceState: _sequenceState,
+      ),
     );
   }
 
   /// Submits a request using either an invite code or an invite URL.
   ///
-  /// The caller supplies user input, while this owner extracts the code, creates
-  /// the operation identity, submits the mutation, and applies the success event.
+  /// The caller supplies user input, while this owner extracts the code, submits
+  /// the mutation, and applies the success event.
   /// Server rejection remains an [ApiException], including already joined,
   /// duplicate pending, expired code, and pending limit outcomes.
   Future<void> requestToJoin(String urlOrCode) async {
@@ -123,19 +108,12 @@ class UserJoinRequests extends _$UserJoinRequests {
 
     state.ensureReady();
     final code = _extractCode(urlOrCode);
-    final codeId = recordId("organization_join_code:$code");
+    final codeId = skir.recordId("organization_join_code:$code");
 
-    final request = skir.SubmitUserJoinRequestRequest(
-      operationId: uuid.v4(),
-      code: codeId,
-    );
+    final request = skir.SubmitUserJoinRequestRequest(code: codeId);
 
     final response = await ref.mutateSkir(
-      "cloud.to.user.$userId.organization.join_requests.request",
-      skir.SubmitUserJoinRequestRequest.serializer.toBytes(request),
-      skir.SubmitUserJoinRequestResponse.serializer,
-      submissionId: request.operationId,
-      replay: SubmissionReplay.identicalRequest,
+      request.operation(userId: userId),
       label: "Request membership",
       classify: (response) => switch (response) {
         skir.SubmitUserJoinRequestResponse_requestMadeWrapper() ||
@@ -149,12 +127,6 @@ class UserJoinRequests extends _$UserJoinRequests {
     );
 
     switch (response) {
-      case skir.SubmitUserJoinRequestResponse_invalidOperationIdErrorWrapper():
-        throw ApiException.badRequest("Operation identity is required");
-      case skir.SubmitUserJoinRequestResponse_operationIdentityReusedErrorWrapper():
-        throw ApiException.conflict(
-          "Operation identity was reused with different input",
-        );
       case skir.SubmitUserJoinRequestResponse_unknown():
         throw ApiException.unknownResponseMessage();
       case skir.SubmitUserJoinRequestResponse_codeNotFoundErrorWrapper():
@@ -204,17 +176,10 @@ class UserJoinRequests extends _$UserJoinRequests {
     );
 
     try {
-      final request = skir.CancelUserJoinRequestRequest(
-        operationId: uuid.v4(),
-        requestId: requestId,
-      );
+      final request = skir.CancelUserJoinRequestRequest(requestId: requestId);
 
       final response = await ref.mutateSkir(
-        "cloud.to.user.$userId.organization.join_requests.cancel",
-        skir.CancelUserJoinRequestRequest.serializer.toBytes(request),
-        skir.CancelUserJoinRequestResponse.serializer,
-        submissionId: request.operationId,
-        replay: SubmissionReplay.identicalRequest,
+        request.operation(userId: userId),
         label: "Cancel membership request",
         classify: (response) => switch (response) {
           skir.CancelUserJoinRequestResponse_successWrapper() =>
@@ -227,12 +192,6 @@ class UserJoinRequests extends _$UserJoinRequests {
       );
 
       switch (response) {
-        case skir.CancelUserJoinRequestResponse_invalidOperationIdErrorWrapper():
-          throw ApiException.badRequest("Operation identity is required");
-        case skir.CancelUserJoinRequestResponse_operationIdentityReusedErrorWrapper():
-          throw ApiException.conflict(
-            "Operation identity was reused with different input",
-          );
         case skir.CancelUserJoinRequestResponse_unknown():
           throw ApiException.unknownResponseMessage();
         case skir.CancelUserJoinRequestResponse_internalErrorWrapper():
@@ -287,6 +246,19 @@ class UserJoinRequests extends _$UserJoinRequests {
     );
   }
 }
+
+skir.UserJoinRequestsSnapshot _userJoinRequestSnapshot(
+  skir.WatchUserJoinRequestsResponse response,
+) => switch (response) {
+  skir.WatchUserJoinRequestsResponse_snapshotWrapper(:final value) => value,
+  skir.WatchUserJoinRequestsResponse_unknown() =>
+    throw ApiException.unknownResponseMessage(),
+  skir.WatchUserJoinRequestsResponse_internalErrorWrapper() =>
+    throw ApiException.internalServerError(),
+  skir.WatchUserJoinRequestsResponse_changedWrapper() => throw StateError(
+    "Snapshot request returned a delta",
+  ),
+};
 
 List<UserJoinRequest> _reduceUserJoinRequests(
   List<UserJoinRequest> requests,

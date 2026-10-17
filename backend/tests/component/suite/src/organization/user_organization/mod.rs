@@ -10,11 +10,7 @@ use typewriter_component_test::prelude::{
 };
 use wasmcloud_utils::{
     skir::base::organization::v1::{
-        join_codes::*,
-        join_request::*,
-        member::*,
-        organization::*,
-        user::*,
+        join_codes::*, join_request::*, member::*, organization::*, user::*,
     },
     skir_client::UnrecognizedValues,
 };
@@ -29,14 +25,8 @@ const JOIN_SUBMISSION_OUTCOME_INDEX: usize = wasmcloud_utils::transaction_outcom
 
 async fn execute_join_submission_transaction(
     query: typewriter_component_test::SeedQuery,
-    operation: &str,
 ) -> anyhow::Result<serde_json::Value> {
     query
-        .bind(
-            "receipt",
-            surrealdb_types::RecordId::from(skir_record_id("mutation_receipt", operation)),
-        )?
-        .bind("request_bytes", operation.as_bytes().to_vec())?
         .query_json_retrying_conflicts(JOIN_SUBMISSION_OUTCOME_INDEX)
         .await
 }
@@ -88,7 +78,6 @@ async fn create_organization_sets_up_roles_membership_and_notification(
         });
 
     let request = CreateOrganizationRequest {
-        operation_id: crate::framework::operation_id(),
         name: "alpha".to_string(),
         logo_url: Some("https://example.com/alpha.png".to_string()),
         _unrecognized: None,
@@ -209,7 +198,6 @@ async fn manual_join_consumes_single_use_code_and_publishes_both_views(
         });
 
     let request = SubmitUserJoinRequestRequest {
-        operation_id: crate::framework::operation_id(),
         code: skir_record_id("organization_join_code", "invite"),
         _unrecognized: None,
     };
@@ -276,8 +264,8 @@ async fn concurrent_single_use_join_allows_exactly_one_request(
         )?
         .bind("code", code)?;
     let (first, second) = tokio::join!(
-        execute_join_submission_transaction(first, "concurrent-single-use-first"),
-        execute_join_submission_transaction(second, "concurrent-single-use-second"),
+        execute_join_submission_transaction(first),
+        execute_join_submission_transaction(second),
     );
     let responses = [first?, second?];
     assert_eq!(
@@ -341,8 +329,8 @@ async fn concurrent_automatic_join_retries_without_duplicate_membership(
         .bind("user", user)?
         .bind("code", code)?;
     let (first, second) = tokio::join!(
-        execute_join_submission_transaction(first, "concurrent-automatic-first"),
-        execute_join_submission_transaction(second, "concurrent-automatic-second"),
+        execute_join_submission_transaction(first),
+        execute_join_submission_transaction(second),
     );
     let responses = [first?, second?];
     assert_eq!(
@@ -392,7 +380,6 @@ async fn failed_single_use_join_rolls_back_code_deletion(
         .await?;
 
     let request = SubmitUserJoinRequestRequest {
-        operation_id: crate::framework::operation_id(),
         code: skir_record_id("organization_join_code", "invite"),
         _unrecognized: None,
     };
@@ -451,7 +438,8 @@ async fn watch_returns_only_requested_user_organizations(
         anyhow::bail!("expected organization list")
     };
     assert_eq!(
-        snapshot.values
+        snapshot
+            .values
             .iter()
             .map(|organization| organization.name.as_str())
             .collect::<Vec<_>>(),
@@ -484,7 +472,6 @@ async fn automatic_join_creates_membership_and_consumes_code(
         .messaging_mock()?
         .expect_persisted_publish("typewriter.to.organization.alpha.join_codes.changed");
     let request = SubmitUserJoinRequestRequest {
-        operation_id: crate::framework::operation_id(),
         code: skir_record_id("organization_join_code", "automatic"),
         _unrecognized: None,
     };
@@ -535,7 +522,6 @@ async fn cancel_request_deletes_and_notifies_both_views(
         .messaging_mock()?
         .expect_persisted_publish("typewriter.to.organization.alpha.join_requests.changed");
     let request = CancelUserJoinRequestRequest {
-        operation_id: crate::framework::operation_id(),
         request_id: skir_record_id("request_to_join", &key),
         _unrecognized: None,
     };

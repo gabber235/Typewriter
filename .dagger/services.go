@@ -8,6 +8,7 @@ func (m *Typewriter) servicesGradleContainer(source *dagger.Workspace) *dagger.C
 	return dag.Container().
 		From("eclipse-temurin:21-jdk-noble").
 		WithDirectory("/workspace/services", services).
+		WithDirectory("/workspace/skir-src", source.Directory("/skir-src", defaultWorkspaceOpts)).
 		WithMountedCache("/root/.gradle/caches", dag.CacheVolume("services-gradle-caches")).
 		WithMountedCache("/root/.gradle/wrapper", dag.CacheVolume("services-gradle-wrapper"))
 }
@@ -16,6 +17,6 @@ func (m *Typewriter) servicesGradleContainer(source *dagger.Workspace) *dagger.C
 func (m *Typewriter) ServicesCheck(source *dagger.Workspace) *dagger.Container {
 	return m.servicesGradleContainer(source).
 		WithWorkdir("/workspace/services").
-		WithExec([]string{"./gradlew", "check", "ktlintCheck", "--no-daemon", "--max-workers=4"}).
-		WithExec([]string{"./gradlew", "-p", "imprint", "check", "ktlintCheck", "--no-daemon", "--max-workers=4"})
+		WithExec([]string{"./gradlew", "check", "ktlintCheck", "--no-daemon", "--max-workers=2"}).
+		WithExec([]string{"./gradlew", "-p", "imprint", "check", "ktlintCheck", "--no-daemon", "--max-workers=2"})
 }

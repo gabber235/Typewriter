@@ -1,15 +1,10 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents optional supporting text as a label followed by a message.
 ///
 /// Either value may be omitted. When both are absent or empty, the widget
-/// contributes no layout space. Changes between those states are animated so
-/// validation and contextual help can appear without abruptly moving nearby
-/// content.
+/// contributes no layout space. Size changes animate while content remains
+/// present; switching to or from the completely empty state is immediate.
 class LabeledMessage extends StatelessWidget {
   const LabeledMessage({
     this.label,
@@ -138,8 +133,6 @@ class _RenderLabeledMessage extends RenderBox
     }
   }
 
-  // HIT TEST
-
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     for (final child in children) {
@@ -159,9 +152,8 @@ class _RenderLabeledMessage extends RenderBox
     return false;
   }
 
-  // INTRINSICS
-
-  // Incoming height/width are ignored as children are always laid out unconstrained.
+  // Width determines text wrapping for intrinsic heights. Intrinsic widths
+  // measure each child without a height constraint.
 
   @override
   double computeMinIntrinsicWidth(double height) {

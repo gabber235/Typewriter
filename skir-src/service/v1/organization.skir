@@ -11,28 +11,30 @@ enum ServiceUpdateValidationError {
   name_invalid;
 }
 
-// Streams the organization service projection for the addressed organization.
-// The initial list is a snapshot. Later add, update, and remove variants describe committed binding, metadata, or
-// liveness changes. A service is visible here only while organization bound; this watch does not expose unbound
-// registration leases.
+// Events for one organization service projection. Binding and unbinding replace the complete list.
+// Metadata and liveness publish updates. Accepted command integration can remove an unbound identity.
+// Only organization bound services belong in this projection.
+enum OrganizationServicesChanged {
+  replace: [Service];
+  update: Service;
+  remove: RecordId;
+}
+
+// Reads the current organization service snapshot. Later events use OrganizationServicesChanged.
 method WatchOrganizationServices(
   struct {}
 ): enum {
   internal_error: InternalError;
 
   list: [Service];
-  add: Service;
-  update: Service;
-  remove: RecordId;
 } = 820326;
 
 // Performs an organization scoped compare and set update of service metadata.
 // The registration service owns revision and increments it only after accepting the name change. A stale expected
 // revision returns the current service in conflict_error, while service_not_found_error means the service is absent
-// from this organization. Operation identity protects retries and rejects reuse with different input.
+// from this organization.
 method UpdateOrganizationService(
   struct {
-    operation_id: string;
     service_id: RecordId;
     expected_revision: int64;
     name: string;
@@ -50,8 +52,5 @@ method UpdateOrganizationService(
   service_not_found_error: struct {};
 
   validation_error: ServiceUpdateValidationError;
-
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   invalid_record_id_error: InvalidRecordIdError;
 } = 872501;

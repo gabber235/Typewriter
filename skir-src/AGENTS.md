@@ -1,6 +1,6 @@
 # Skir Contracts
 
-This directory contains the canonical Typewriter contracts. Design these files as long-lived product promises between components, not as mirrors of current transport routes, database tables, or generated code.
+This directory contains the canonical Typewriter contracts. Design these files around durable product concepts, not as mirrors of current transport routes, database tables, or generated code.
 
 ## Directory Structure
 
@@ -13,7 +13,7 @@ Only use these top-level folders:
 - `library`
 - `editor`
 
-Each bounded context owns its own version folders, such as `library/v1` or `service/v2`.
+Each bounded context owns its own version folders, such as `library/v1` or `service/v1`. These folders do not imply a stability promise before release.
 
 ## Core Design Rules
 
@@ -25,17 +25,9 @@ Each bounded context owns its own version folders, such as `library/v1` or `serv
 - Model failures as typed outcomes, not string errors. Use result variants such as success, validation_failed, not_found, permission_denied, and conflict.
 - Do not model database internals. Contracts should survive database rewrites and must not be shaped around record layouts, indexes, storage-specific IDs, or query details.
 
-## Compatibility
+## Pre-release evolution
 
-- Make every compatibility promise explicit. Mark contracts as experimental, internal, or stable.
-- Stable contracts are additive-only within the same major version.
-- Prefer additive evolution: add fields, variants, methods, or events.
-- Do not change field meaning, change defaults, narrow accepted input, or make optional data required inside a stable major version.
-- Use deprecation before removal. Stable fields, methods, and events should move through deprecated, unsupported, and removed in the next major version instead of disappearing suddenly.
-
-## Versioning
-
-- Stable contract packages use major-versioned folders, such as `v1` and `v2`.
-- Breaking changes require a new major version folder. Keep the old version available during migration.
-- Version by bounded context instead of forcing one global project version. For example, a breaking change in `library/v1` creates `library/v2` and does not force `organization/v2`.
-- Prefer adding new operations inside an existing major version when the old operation can remain correct.
+- Typewriter has not been released. Make breaking contract changes directly in the existing `v1` folders when they improve the model, and update all consumers together.
+- Do not increment contract versions or revisions, or preserve unreleased shapes with migrations, compatibility aliases, deprecation stages, or parallel version folders.
+- Keep declaration IDs and field or variant numbers contiguous and ascending within their respective sequences. Renumber after changes instead of reserving gaps for compatibility.
+- Define compatibility and versioning guarantees when a contract is actually published as stable.

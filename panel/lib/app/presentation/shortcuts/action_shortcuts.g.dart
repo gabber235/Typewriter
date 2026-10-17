@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'action_shortcuts.dart';
 
@@ -6,7 +6,7 @@ part of 'action_shortcuts.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// Riverpod registry of mounted action sets and their winning actions.
 ///
@@ -59,7 +59,7 @@ final class ActionShortcutsProvider
   }
 }
 
-String _$actionShortcutsHash() => r'bba5f306a5a974f4139fc669b110e6005ea7f0fc';
+String _$actionShortcutsHash() => r'01b317df7ee865ef80884d00b87dd4db606a3101';
 
 /// Riverpod registry of mounted action sets and their winning actions.
 ///

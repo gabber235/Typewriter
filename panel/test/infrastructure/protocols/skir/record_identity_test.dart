@@ -4,15 +4,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
-  test("resource allocation uses typed tables and compact string keys", () {
-    for (final resource in AuthoringResource.values) {
-      final id = newResourceId(resource);
-      expect(id.table, resource.name);
-      expect(id.key, isA<skir.RecordIdKey_stringWrapper>());
-      expect(id.id, matches(RegExp(r"^[a-z0-9]{20}$")));
-    }
-  });
-
   test("opaque keys survive route encoding without database quoting", () {
     for (final key in [
       "abc123",
@@ -22,15 +13,15 @@ void main() {
       "a:b",
       "a b/한글`",
     ]) {
-      final id = recordId("page:$key");
+      final id = skir.recordId("page:$key");
       final routeKey = Uri.decodeComponent(Uri.encodeComponent(id.id));
-      expect(recordId("page:$routeKey"), id);
+      expect(skir.recordId("page:$routeKey"), id);
       expect(id.id, key);
     }
   });
 
   test("query rendering is separate from raw string identity", () {
-    final id = recordId("page:old-id");
+    final id = skir.recordId("page:old-id");
     expect(id.id, "old-id");
     expect(id.toSurrealQl(), "page:`old-id`");
     expect(

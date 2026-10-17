@@ -15,24 +15,16 @@ class _PageSearch extends _$PageSearch {
   }
 }
 
-/// Supplies the sidebar projection, preserving local edits while searching.
-///
-/// A projected result is used immediately when available. Otherwise the
-/// canonical provider is awaited once, then the projection is read again so
-/// the sidebar does not display stale canonical values over an active draft.
+/// Filters shared working pages immediately as values or search text change.
 @riverpod
-Future<List<Page>> _viewingPages(Ref ref) async {
+AsyncValue<List<Page>> _viewingPages(Ref ref) {
   final bookId = ref.watch(bookIdProvider);
-  if (bookId == null) throw Exception("Not visiting a book (sub)route");
-
-  final search = ref.watch(_pageSearchProvider);
-
-  await ref.debounce(300.ms);
-
-  final projected = ref.watch(projectedBookPagesProvider(bookId, search));
-  if (projected.hasValue) return projected.requireValue;
-  await ref.watch(canonicalBookPagesProvider(bookId).future);
-  return ref.read(projectedBookPagesProvider(bookId, search)).requireValue;
+  if (bookId == null) {
+    return AsyncError(StateError("No book selected"), StackTrace.current);
+  }
+  return ref.watch(
+    workingBookPagesProvider(bookId, ref.watch(_pageSearchProvider)),
+  );
 }
 
 /// Sidebar for searching, selecting, and organizing pages in the active book.

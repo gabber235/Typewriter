@@ -1,24 +1,21 @@
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
-
-typedef MultiInteractionCommitter = Future<void> Function(
-  List<EditorInteractionSession> interactions,
-);
 
 /// Presents several owners as one editor for multi selection editing.
 ///
 /// A read returns loading or invalid state if any owner has that state, mixed
 /// when owners disagree, and a ready value only when all owners agree. An
 /// update is sent to every owner, but the aggregate is applied only when all
-/// owners accept the same value. [commitInteractions] owns the persistence
-/// policy for the corresponding sessions, including whether their commits are
-/// atomic. This class observes owners but never disposes them.
-final class MultiEditOwner extends ChangeNotifier implements EditOwner {
+/// owners accept the same value. [SelectionInteractionCommit] prepares the
+/// corresponding sessions together while each request retains its persistence
+/// boundary. This class observes owners but never disposes them.
+final class MultiEditOwner extends ChangeNotifier
+    implements EditOwner, EditingControlOwner {
   MultiEditOwner({
     required List<EditOwner> owners,
     required this.rootType,
-    required this.typeCatalog,
-    required this.commitInteractions,
+    required this.catalog,
   }) : owners = List.unmodifiable(owners) {
     if (this.owners.isEmpty) {
       throw ArgumentError.value(owners, "owners", "Must not be empty");
@@ -36,15 +33,19 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
     }
   }
   final List<EditOwner> owners;
-  final MultiInteractionCommitter commitInteractions;
   @override
-  final TypeExpression rootType;
+  EditControl bindControl() => EditSelectionControl([
+    for (final owner in owners)
+      if (owner case final EditingControlOwner editing) editing.bindControl(),
+  ]);
   @override
-  final TypeCatalog typeCatalog;
+  final skir.TypeUse rootType;
+  @override
+  final CheckedEditorCatalog catalog;
   @override
   bool get readOnly => owners.any((owner) => owner.readOnly);
   @override
-  EditorValue value(DataPath path) {
+  EditorValue value(skir.ValuePath path) {
     final values = owners.map((owner) => owner.value(path)).toList();
     if (values.any((value) => value is LoadingEditorValue)) {
       return const EditorValue.loading();
@@ -61,25 +62,20 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
 
   @override
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   }) {
-    final validation = validate(path, value);
-    if (validation is! AppliedEditorMutation) return validation;
-    return owners
-        .map(
-          (owner) => owner.update(
-            path,
-            validation.value,
-            structuralMutation: structuralMutation,
-          ),
-        )
-        .aggregateEditorMutationsFor(path);
+    return const SelectionEditingCoordinator().update(
+      owners,
+      path,
+      value,
+      structuralMutation: structuralMutation,
+    );
   }
 
   @override
-  EditorMutationResult validate(DataPath path, DataValue value) {
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value) {
     if (readOnly) return const EditorMutationResult.conflict();
     return owners
         .map((owner) => owner.validate(path, value))
@@ -87,11 +83,13 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
   }
 
   @override
-  EditorInteractionSession beginInteraction(DataPath path) => _MultiInteraction(
-    path,
-    owners.map((owner) => owner.beginInteraction(path)).toList(growable: false),
-    commitInteractions,
-  );
+  EditorInteractionSession beginInteraction(skir.ValuePath path) =>
+      _MultiInteraction(
+        path,
+        owners
+            .map((owner) => owner.beginInteraction(path))
+            .toList(growable: false),
+      );
   @override
   void dispose() {
     for (final owner in owners) {
@@ -102,19 +100,18 @@ final class MultiEditOwner extends ChangeNotifier implements EditOwner {
 }
 
 final class _MultiInteraction implements EditorInteractionSession {
-  _MultiInteraction(this.path, this.sessions, this.commitAll);
+  _MultiInteraction(this.path, this.sessions);
 
   @override
-  final DataPath path;
+  final skir.ValuePath path;
   final List<EditorInteractionSession> sessions;
-  final MultiInteractionCommitter commitAll;
 
   @override
   bool get active =>
       sessions.isNotEmpty && sessions.every((session) => session.active);
 
   @override
-  Future<void> commit() => commitAll(sessions);
+  Future<void> commit() => sessions.commitSelection();
 
   @override
   void cancel() {
@@ -127,8 +124,7 @@ final class _MultiInteraction implements EditorInteractionSession {
 extension IndependentInteractionCommit on Iterable<EditorInteractionSession> {
   /// Commits unrelated interactions without claiming atomic persistence.
   ///
-  /// Use only for local editors and isolated examples. Resource backed
-  /// selection editing must use [AtomicResourceInteractionCommit].
+  /// Use only for local editors and isolated examples. Resource selection editing uses [SelectionInteractionCommit].
   Future<void> commitIndependently() async {
     await Future.wait(map((session) => session.commit()));
   }
@@ -139,7 +135,7 @@ extension IndependentInteractionCommit on Iterable<EditorInteractionSession> {
 /// valid only when at least one owner accepts the path and every applied owner
 /// returns the same value.
 extension SelectionEditorMutationAggregation on Iterable<EditorMutationResult> {
-  EditorMutationResult aggregateEditorMutationsFor(DataPath path) {
+  EditorMutationResult aggregateEditorMutationsFor(skir.ValuePath path) {
     final results = toList();
     final diagnostics = results
         .whereType<InvalidEditorMutation>()
@@ -155,8 +151,8 @@ extension SelectionEditorMutationAggregation on Iterable<EditorMutationResult> {
     final applied = results.whereType<AppliedEditorMutation>().toList();
     if (applied.isEmpty) {
       return EditorMutationResult.invalid([
-        TypeDiagnostic(
-          code: TypeDiagnosticCode.invalidPath,
+        EditorDiagnostic(
+          code: EditorDiagnosticCode.invalidPath,
           message: "No inspected selection can accept the mutation",
           path: path,
         ),

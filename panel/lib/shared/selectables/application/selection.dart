@@ -1,6 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/services.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "selection.g.dart";

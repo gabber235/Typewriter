@@ -1,7 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:rxdart/rxdart.dart";
-import "package:searchlight/searchlight.dart" hide SearchResult;
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -18,6 +14,10 @@ const createOrganizationSearchResultType = SearchResultType(
   label: "Create Organization",
 );
 
+/// Maintains a local search index of the supplied membership projection.
+/// Loading retains available results with stale markers, while provider errors
+/// remain visible beside those results. Navigation and creation are returned
+/// by separate commands as host effects; this source performs no mutation.
 final class OrganizationsSearchSource(
   final ValueListenable<AsyncValue<List<OrganizationData>>> organizations,
 ) implements SearchSource {

@@ -1,11 +1,10 @@
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Provides the operation registry for a subtree of selectable UI.
 ///
-/// The app shell installs the complete registry above route content. Descendant
-/// inspectors, context menus, and shortcut bindings derive availability from
-/// this same list, keeping their action surface consistent.
+/// The app shell installs generic operations above route content. Inspectors,
+/// context menus and shortcuts use this list for generic selectables. Realm
+/// authoring resources instead project their available resource operations.
 class SelectionOperationsRoot extends InheritedWidget {
   const SelectionOperationsRoot({
     required this.operations,

@@ -20,11 +20,12 @@ repository = "https://github.com/gabber235/Typewriter"
 anyhow = "1"
 async-trait = "0.1"
 async-nats = "0.49.1"
-base64 = "0.22"
+base64 = "0.23"
 bytes = "1"
 cargo_metadata = "0.23"
 clap = { version = "4", features = ["derive"] }
 futures-util = "0.3"
+hex = "0.4"
 http = "1"
 http-body-util = "0.1"
 hyper = "1"
@@ -41,14 +42,13 @@ tracing-subscriber = "0.3"
 proc-macro2 = "1"
 quote = "1"
 reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
-semver = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 json-matcher = "0.1"
 skir-client = "0.1"
 surrealdb = { version = "3.2.4", features = ["kv-mem"] }
 surrealdb-types = "3.2.4"
-sha2 = "0.10"
+sha2 = "0.11"
 syn = { version = "2", features = ["full", "extra-traits"] }
 thiserror = "2"
 tempfile = "3"
@@ -69,25 +69,25 @@ component-test-core = { path = "crates/component-test-core" }
 component-test-macros = { path = "crates/component-test-macros" }
 component-test = { path = "crates/component-test" }
 typewriter-component-test = { path = "crates/typewriter-component-test" }
-wasmtime-wasi = { version = "47.0.3", default-features = false, features = [
+wasmtime-wasi = { version = "48.0.6", default-features = false, features = [
     "p2",
     "p3",
 ] }
-wasmtime-wasi-http = { version = "47.0.3", default-features = false, features = [
+wasmtime-wasi-http = { version = "48.0.6", default-features = false, features = [
     "p2",
     "p3",
 ] }
 
 wasmcloud-utils = { path = "../../wasmcloud-utils" }
 
-wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "c8984bda3fadaf825d0b47f69a8041561fd3d32c", default-features = false, features = [
+wash-runtime = { git = "https://github.com/gabber235/wasmCloud", rev = "0d5784c3159ecfc893230955d8dad4d675e414bf", default-features = false, features = [
     "wasmcloud-nats",
     "wasi-config",
     "wasi-logging",
     "wasi-otel",
     "wasm_component_model_implements",
 ] }
-wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "f7dad10b6c739e8e1fc58432aef4fe1021763d10" }
+wasmcloud-plugin-surrealdb = { git = "https://github.com/Seamlezz/wasmCloud-host", rev = "ef71a4fa1718a0ffbbdba362004e2bb69707ac54" }
 
 [profile.dev]
 debug = 0

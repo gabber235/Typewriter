@@ -10,11 +10,11 @@ struct OrganizationRole {
   role_id: RecordId;
   name: string;
   color: Color;
-  // Whether new members receive this role when no explicit role selection is supplied.
+  // Fallback role for member updates whose requested and retained protected roles are empty.
   default_role: bool;
   // Whether administrators may include this role in an ordinary assignment.
   assignable: bool;
-  // Whether administrators may delete this role from the organization.
+  // Advertised role removal policy. References from members and join codes impose further restrictions.
   deletable: bool;
 }
 

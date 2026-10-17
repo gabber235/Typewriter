@@ -1,8 +1,9 @@
 //! Expand mappings from transaction outcome enums to typed SKIR responses.
 //!
-//! A committed outcome continues as a value. A rejected outcome becomes an early response whose
-//! payload is assembled from bindings in the matching pattern. This keeps database rejection
-//! handling at the component boundary while preserving the generated SKIR payload contract.
+//! Matches the application's decoded outcome enum, after the caller handles database transaction
+//! rejection. The declared success arm continues as a value; domain error arms return a response
+//! whose payload is assembled from pattern bindings. This macro does not execute a transaction
+//! or distinguish committed and rejected database results itself.
 
 use proc_macro2::TokenStream;
 use quote::quote;

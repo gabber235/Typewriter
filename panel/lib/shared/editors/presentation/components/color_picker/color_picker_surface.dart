@@ -1,15 +1,10 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents the color editing controls used by [ColorPickerField].
 ///
 /// [color] remains owned by the field and its editor binding. Every valid
-/// control change is emitted through [onChanged]. This surface keeps only the
-/// last meaningful hue needed when a grayscale value is adjusted. When alpha
+/// control change is emitted through [onChanged]. This surface remembers the
+/// format choice and the last meaningful hue for grayscale adjustments. When alpha
 /// is excluded, updates are normalized to opaque values before emission.
 /// [replacing] identifies a mixed selection where the first chosen color is a
 /// replacement rather than an edit to one shared value.
@@ -21,9 +16,23 @@ class ColorPickerSurface extends HookConsumerWidget {
     this.enabled = true,
     this.warnsAboutAlpha = false,
     this.replacing = false,
+    this.initialFormat,
+    this.showFormatSelector = true,
+    this.showCopyAction = true,
+    this.offeredSwatches = const [],
+    this.popupPadding,
+    this.popupColor,
+    this.popupShape,
     super.key,
   });
 
+  final ColorFieldFormat? initialFormat;
+  final bool showFormatSelector;
+  final bool showCopyAction;
+  final List<int> offeredSwatches;
+  final EdgeInsetsGeometry? popupPadding;
+  final Color? popupColor;
+  final ShapeBorder? popupShape;
   final Color color;
   final bool includeAlpha;
   final ValueChanged<Color> onChanged;
@@ -35,6 +44,15 @@ class ColorPickerSurface extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(colorLibraryProvider);
     final libraryController = ref.read(colorLibraryProvider.notifier);
+    final localFormat = useState(initialFormat);
+    void setFormat(ColorFieldFormat value) {
+      if (initialFormat == null) {
+        libraryController.setFormat(value);
+      } else {
+        localFormat.value = value;
+      }
+    }
+
     final incomingHsv = HSVColor.fromColor(color);
     final rememberedHue = useState(incomingHsv.hue);
     final hsv = hsvWithPreservedHue(color, rememberedHue.value);
@@ -61,9 +79,9 @@ class ColorPickerSurface extends HookConsumerWidget {
         _ => null,
       };
 
-      if (format == null) return KeyEventResult.ignored;
+      if (format == null || !showFormatSelector) return KeyEventResult.ignored;
 
-      libraryController.setFormat(format);
+      setFormat(format);
       return KeyEventResult.handled;
     }
 
@@ -75,17 +93,23 @@ class ColorPickerSurface extends HookConsumerWidget {
           onKeyEvent: handleKey,
           child: Surface(
             color: Theme.of(context).colorScheme.surfaceContainer,
+            foreground: context.colors.contentPrimary,
+            secondaryForeground: context.colors.contentSecondary,
             child: Material(
-              color: Theme.of(context).colorScheme.surfaceContainer,
+              color:
+                  popupColor ?? Theme.of(context).colorScheme.surfaceContainer,
+              shape: popupShape,
               elevation: 8,
-              borderRadius: context.shapes.largeBorderRadius,
+              borderRadius: popupShape == null
+                  ? context.shapes.largeBorderRadius
+                  : null,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
                   maxWidth: 340,
                   maxHeight: 620,
                 ),
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(14),
+                  padding: popupPadding ?? const EdgeInsets.all(14),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,19 +184,20 @@ class ColorPickerSurface extends HookConsumerWidget {
                             ),
                           ),
                           const Spacer(),
-                          IconButton(
-                            tooltip: "Copy color",
-                            onPressed: () => Clipboard.setData(
-                              ClipboardData(
-                                text: color.formatHex(
-                                  includeAlpha: includeAlpha,
+                          if (showCopyAction)
+                            IconButton(
+                              tooltip: "Copy color",
+                              onPressed: () => Clipboard.setData(
+                                ClipboardData(
+                                  text: color.formatHex(
+                                    includeAlpha: includeAlpha,
+                                  ),
                                 ),
                               ),
+                              icon: const Icones(
+                                MaterialSymbols.content_copy_rounded,
+                              ),
                             ),
-                            icon: const Icones(
-                              MaterialSymbols.content_copy_rounded,
-                            ),
-                          ),
                           IconButton(
                             tooltip: library.favorites.contains(color.argbValue)
                                 ? "Remove from favorites"
@@ -198,12 +223,20 @@ class ColorPickerSurface extends HookConsumerWidget {
                         ),
                       ColorFields(
                         color: color,
-                        format: library.format,
+                        format: localFormat.value ?? library.format,
+                        showFormatSelector: showFormatSelector,
                         includeAlpha: includeAlpha,
                         enabled: enabled,
-                        onFormatChanged: libraryController.setFormat,
+                        onFormatChanged: setFormat,
                         onChanged: update,
                       ),
+                      if (offeredSwatches.isNotEmpty)
+                        ColorSwatchGrid(
+                          label: "Offered colors",
+                          colors: offeredSwatches,
+                          enabled: enabled,
+                          onSelected: (value) => update(Color(value)),
+                        ),
                       if (library.recent.isNotEmpty) ...[
                         Text(
                           "Recent",

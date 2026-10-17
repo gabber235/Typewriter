@@ -1,9 +1,9 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches keyed content with a slide direction derived from index changes.
 ///
-/// A larger index enters from the trailing direction and a smaller index enters
-/// from the leading direction. The caller must provide a key that changes with
+/// A larger index enters from the right and a smaller index enters from the
+/// left. The caller must provide a key that changes with
 /// the content; the index only supplies transition direction.
 class DirectionalContentSwitcher extends StatefulWidget {
   const DirectionalContentSwitcher({

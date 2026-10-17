@@ -1,12 +1,3 @@
-import "dart:async";
-import "dart:math";
-import "dart:ui";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 export "package:typewriter_panel/shared/ui/components/secret_field_state.dart";
@@ -19,8 +10,9 @@ part "secret_field_view.dart";
 ///
 /// The field owns its local lifecycle state. [onGenerate] supplies the value
 /// and optional expiry; the value is copied automatically when [copyOnGenerate]
-/// is true. Expired values remain present but concealed, and generation
-/// failures become an error state and an error snackbar.
+/// is true. Expiry is checked on generation and by a timer every second;
+/// it conceals the local value without revoking it upstream. Exceptions during
+/// generation or automatic copying become an error state and an error snackbar.
 class SecretField extends HookWidget {
   const SecretField({
     required this.title,
@@ -75,7 +67,9 @@ class SecretField extends HookWidget {
   /// Called after the complete prefixed value is written to the clipboard.
   final VoidCallback? onCopied;
 
-  /// Called once when a revealed value reaches its expiration time.
+  /// Called when the timer transitions a revealed value to expired.
+  ///
+  /// A value already expired when generation completes does not invoke this.
   final VoidCallback? onExpired;
 
   @override

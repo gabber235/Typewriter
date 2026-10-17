@@ -1,4 +1,4 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 
 part of 'members.dart';
 
@@ -6,33 +6,33 @@ part of 'members.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
+// GENERATED CODE. DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Owns the current organization's member projection and its mutations.
+/// Owns the current organization's member projection.
 ///
 /// The provider starts with a snapshot, applies later sequenced changes, and
-/// invalidates itself when a sequence gap or failed mutation makes the local
-/// projection unsafe to trust. A successful mutation applies the returned
-/// event, so consumers observe the same change stream as remote updates.
+/// invalidates itself when a sequence gap makes the local projection unsafe to
+/// trust. [MembershipResourceRepository] owns commands and feeds confirmed
+/// events through the same ordered projection path as broker events.
 
 @ProviderFor(OrganizationMembers)
 final organizationMembersProvider = OrganizationMembersProvider._();
 
-/// Owns the current organization's member projection and its mutations.
+/// Owns the current organization's member projection.
 ///
 /// The provider starts with a snapshot, applies later sequenced changes, and
-/// invalidates itself when a sequence gap or failed mutation makes the local
-/// projection unsafe to trust. A successful mutation applies the returned
-/// event, so consumers observe the same change stream as remote updates.
+/// invalidates itself when a sequence gap makes the local projection unsafe to
+/// trust. [MembershipResourceRepository] owns commands and feeds confirmed
+/// events through the same ordered projection path as broker events.
 final class OrganizationMembersProvider
     extends
         $StreamNotifierProvider<OrganizationMembers, List<OrganizationMember>> {
-  /// Owns the current organization's member projection and its mutations.
+  /// Owns the current organization's member projection.
   ///
   /// The provider starts with a snapshot, applies later sequenced changes, and
-  /// invalidates itself when a sequence gap or failed mutation makes the local
-  /// projection unsafe to trust. A successful mutation applies the returned
-  /// event, so consumers observe the same change stream as remote updates.
+  /// invalidates itself when a sequence gap makes the local projection unsafe to
+  /// trust. [MembershipResourceRepository] owns commands and feeds confirmed
+  /// events through the same ordered projection path as broker events.
   OrganizationMembersProvider._()
     : super(
         from: null,
@@ -53,14 +53,14 @@ final class OrganizationMembersProvider
 }
 
 String _$organizationMembersHash() =>
-    r'b11320b61873c77c35dfde83c55eef8ef609b4f4';
+    r'a664c438463dd1faed674379733b83ec0490a84a';
 
-/// Owns the current organization's member projection and its mutations.
+/// Owns the current organization's member projection.
 ///
 /// The provider starts with a snapshot, applies later sequenced changes, and
-/// invalidates itself when a sequence gap or failed mutation makes the local
-/// projection unsafe to trust. A successful mutation applies the returned
-/// event, so consumers observe the same change stream as remote updates.
+/// invalidates itself when a sequence gap makes the local projection unsafe to
+/// trust. [MembershipResourceRepository] owns commands and feeds confirmed
+/// events through the same ordered projection path as broker events.
 
 abstract class _$OrganizationMembers
     extends $StreamNotifier<List<OrganizationMember>> {

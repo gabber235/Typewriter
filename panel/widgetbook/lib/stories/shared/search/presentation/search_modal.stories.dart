@@ -1,5 +1,5 @@
-import "package:flutter/material.dart";
-import "package:flutter_animate/flutter_animate.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -38,13 +38,17 @@ Widget searchModalRouteUseCase(BuildContext context) {
     initialValue: "",
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(
+      books: [_storyBook],
+      pages: List.generate(
+        8,
+        (_) => generateRandomPage().copyWith(bookId: _storyBook.bookId),
+      ),
+    ),
     overrides: [
-      ...bookPagesProviderOverrides(state: DisplayState.manyItems),
-      ...pagesProviderOverrides(),
       ...pageIdProviderOverrides(pageId: "example-page-id"),
       ...bookIdProviderOverrides(bookId: "example-book-id"),
-      ...booksProviderOverrides(state: DisplayState.manyItems),
       ...organizationProviderOverrides(),
       ...organizationsProviderOverrides(state: DisplayState.manyItems),
       ...authProviderOverrides(),
@@ -115,7 +119,7 @@ _SearchStoryConfig _configFromKnobs(BuildContext context) {
 final _mockRowRenderers = <String, SearchResultRowBuilder>{
   "mockPageRow": _mockResultRow,
   "mockEntryRow": _mockResultRow,
-  "mockElementDefinitionRow": _mockElementDefinitionResultRow,
+  "mockElementDefinitionRow": _mockResultRow,
   "mockBookRow": _mockResultRow,
   "mockTagRow": _mockResultRow,
 };
@@ -125,7 +129,18 @@ final _mockPreviewRenderers = <String, SearchResultPreviewBuilder>{
 };
 
 Widget _mockElementDefinitionPreview(SearchResultPreviewContext context) {
-  return ElementDefinitionSearchPreview(context: context);
+  return switch (context) {
+    SearchResultPreviewContextLoading() => const Center(
+      child: CircularProgressIndicator(),
+    ),
+    SearchResultPreviewContextData(:final result, :final data) => ListTile(
+      title: Text(result.title ?? result.id),
+      subtitle: Text(data.toString()),
+    ),
+    SearchResultPreviewContextError(:final message) => Center(
+      child: Text(message),
+    ),
+  };
 }
 
 Widget _mockResultRow(SearchResultRowContext context) =>
@@ -150,22 +165,6 @@ class _MockResultRow extends StatelessWidget {
       shortcutActivator: searchContext.shortcutActivator,
       selected: searchContext.selected,
     ),
-  );
-}
-
-Widget _mockElementDefinitionResultRow(SearchResultRowContext context) {
-  final payload = context.result.payload;
-  if (payload is! ElementDefinition) {
-    return MissingSearchResultRendererRow(result: context.result);
-  }
-
-  return ElementDefinitionSearchResultItem.fromDefinition(
-    elementDefinition: payload,
-    selected: context.selected,
-    focused: context.focused,
-    loading: context.loading,
-    onTap: context.onTap,
-    shortcutActivator: context.shortcutActivator,
   );
 }
 
@@ -205,3 +204,11 @@ class _SearchStoryConfig {
   final Duration debounceDuration;
   final Duration searchDelay;
 }
+
+final _storyBook = Book(
+  bookId: skir.ResourceId(value: "example-book-id"),
+  title: "Example Book",
+  icon: "mdi:book",
+  color: Colors.blue,
+  tagIds: const [],
+);

@@ -7,7 +7,7 @@ import com.typewritermc.services.libs.http.core.HttpResponse
 import com.typewritermc.services.libs.http.core.HttpResult
 import com.typewritermc.services.libs.http.core.HttpTransport
 import com.typewritermc.services.libs.utils.await
-import kotlinx.coroutines.CancellationException
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.ConnectException
@@ -62,7 +62,6 @@ class JdkHttpTransport(
             .followRedirects(HttpClient.Redirect.NEVER)
             .build()
 
-    /** Executes one request and returns bounded response data or a classified transport failure. */
     override suspend fun execute(request: HttpRequest): HttpResult {
         check(!closed.get()) { "JdkHttpTransport is closed" }
         val body = request.body
@@ -85,7 +84,7 @@ class JdkHttpTransport(
                 ),
             )
         } catch (failure: Throwable) {
-            rethrowExceptional(failure)
+            failure.rethrowExceptional()
             when (val cause = unwrap(failure)) {
                 is ResponseLimitException -> HttpResult.Failure(HttpError.ResponseTooLarge(limit))
                 is HttpTimeoutException, is HttpConnectTimeoutException -> HttpResult.Failure(HttpError.Timeout)
@@ -117,18 +116,6 @@ private tailrec fun unwrap(failure: Throwable): Throwable =
     } else {
         failure
     }
-
-private fun rethrowExceptional(failure: Throwable) {
-    var current: Throwable? = failure
-    while (current != null) {
-        if (current is CancellationException || current is VirtualMachineError || current is ThreadDeath ||
-            current is LinkageError
-        ) {
-            throw current
-        }
-        current = current.cause
-    }
-}
 
 private class ResponseLimitException : RuntimeException()
 

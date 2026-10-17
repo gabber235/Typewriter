@@ -33,7 +33,6 @@ impl From<ReconciledRevisionRecord> for ReconciledRevision {
     }
 }
 
-/// Stored engine selection and version constraint.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct EngineTargetRecord {
     pub engine_id: String,
@@ -59,7 +58,6 @@ impl From<EngineTargetRecord> for EngineTarget {
     }
 }
 
-/// Stored engine capability advertised by a host.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct SupportedEngineRecord {
     pub engine_id: String,
@@ -74,7 +72,6 @@ impl From<SupportedEngineRecord> for SupportedEngine {
     }
 }
 
-/// Stored lifecycle state for a service host.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum HostRuntimeStatusRecord {
@@ -97,7 +94,6 @@ impl From<HostRuntimeStatusRecord> for HostRuntimeStatus {
     }
 }
 
-/// Stored host lifecycle state and its last update time.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HostRuntimeStateRecord {
     pub status: HostRuntimeStatusRecord,
@@ -116,7 +112,6 @@ impl From<HostRuntimeStateRecord> for HostRuntimeState {
     }
 }
 
-/// Stored lifecycle state for a realm or engine instance.
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "UPPERCASE")]
 pub enum ChildRuntimeStatusRecord {
@@ -143,7 +138,6 @@ impl From<ChildRuntimeStatusRecord> for ChildRuntimeStatus {
     }
 }
 
-/// Stored child runtime state and its last update time.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChildRuntimeStateRecord {
     pub status: ChildRuntimeStatusRecord,

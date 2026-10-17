@@ -1,4 +1,4 @@
-import "package:freezed_annotation/freezed_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "secret_field_state.freezed.dart";
 
@@ -15,7 +15,7 @@ sealed class SecretFieldState with _$SecretFieldState {
   /// [SecretField.onGenerate] is currently running.
   const factory SecretFieldState.loading() = SecretFieldLoading;
 
-  /// A value is visible and may be copied until [expiresAt], if provided.
+  /// A value is visible and copyable until the field observes [expiresAt].
   const factory SecretFieldState.revealed({
     required String value,
     DateTime? expiresAt,
@@ -25,7 +25,7 @@ sealed class SecretFieldState with _$SecretFieldState {
   const factory SecretFieldState.expired({required String value}) =
       SecretFieldExpired;
 
-  /// Generation failed; [message] describes the caught exception.
+  /// Generation or automatic copying failed; [message] describes the exception.
   const factory SecretFieldState.error({required String message}) =
       SecretFieldError;
 }

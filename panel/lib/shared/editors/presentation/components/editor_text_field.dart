@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Selects which focus boundary receives focus when the field is built.
@@ -15,12 +12,14 @@ class EditorTextField extends HookWidget {
   const EditorTextField({
     this.focusNode,
     this.inputFieldController,
+    this.statesController,
     this.autofocus = EditorTextFieldAutoFocus.none,
     this.controller,
     this.text,
     this.validator,
     this.onChanged,
     this.onDone,
+    this.onCommittedDone,
     this.onEditingComplete,
     this.onSubmitted,
     this.actions,
@@ -29,7 +28,13 @@ class EditorTextField extends HookWidget {
     this.style,
     this.inputFormatters,
     this.keyboardType = TextInputType.text,
+    this.textCapitalization = TextCapitalization.none,
+    this.enableSuggestions = true,
+    this.obscureText = false,
+    this.maxLength,
+    this.maxLengthEnforcement,
     this.decoration,
+    this.displayText,
     this.hintText,
     this.prefix,
     this.singleLine = true,
@@ -41,12 +46,12 @@ class EditorTextField extends HookWidget {
     this.selectAllOnFocus = false,
     this.onInputFocus,
     this.onDismiss,
-    this.onCancel,
     super.key,
   }) : super();
   final TextEditingController? controller;
   final FocusNode? focusNode;
   final InputFieldController? inputFieldController;
+  final WidgetStatesController? statesController;
 
   /// Determines whether the field or its surrounding focus boundary receives
   /// focus automatically when built.
@@ -68,6 +73,10 @@ class EditorTextField extends HookWidget {
   /// focus.
   final ValueChanged<String>? onDone;
 
+  /// Receives the exact editor buffer once focus leaves and composition ends.
+  /// Display text is never passed to this callback.
+  final ValueChanged<TextEditingValue>? onCommittedDone;
+
   /// Called when editing completes to control the next focus transition.
   /// Prefer [onDone] or [onSubmitted] when only the value needs handling. If
   /// null, focus moves to the surrounding focus node.
@@ -88,6 +97,12 @@ class EditorTextField extends HookWidget {
   final TextStyle? style;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType keyboardType;
+  final TextCapitalization textCapitalization;
+  final bool enableSuggestions;
+  final bool obscureText;
+  final int? maxLength;
+  final MaxLengthEnforcement? maxLengthEnforcement;
+  final String? displayText;
   final InputDecoration? decoration;
   final String? hintText;
   final Widget? prefix;
@@ -100,7 +115,6 @@ class EditorTextField extends HookWidget {
   final bool selectAllOnFocus;
   final VoidCallback? onInputFocus;
   final VoidCallback? onDismiss;
-  final VoidCallback? onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +128,39 @@ class EditorTextField extends HookWidget {
         this.inputFieldController ?? defaultInputFieldController;
     final focusNode = inputFieldController.inputFocusNode;
     final surroundingFocusNode = inputFieldController.surroundingFocusNode;
+    final ownTextChanges = useRef(<String>[]);
+    final observedText = useRef(text);
+    var ownTextEcho = false;
+    if (text != observedText.value && text != null) {
+      final acknowledged = ownTextChanges.value.indexOf(text!);
+      ownTextEcho = acknowledged >= 0;
+      if (acknowledged >= 0) {
+        ownTextChanges.value.removeRange(0, acknowledged + 1);
+      } else {
+        ownTextChanges.value.clear();
+      }
+      observedText.value = text;
+    }
+    final pendingCompletion = useRef(false);
+    final active = useRef(true);
+    useEffect(() {
+      active.value = true;
+      return () => active.value = false;
+    }, const []);
+    void completeCommittedInput() {
+      if (!active.value || !pendingCompletion.value || focusNode.hasFocus) {
+        return;
+      }
+      final value = controller.value;
+      if (value.composing.isValid && !value.composing.isCollapsed) return;
+      pendingCompletion.value = false;
+      onCommittedDone?.call(value);
+    }
+
+    useEffect(() {
+      controller.addListener(completeCommittedInput);
+      return () => controller.removeListener(completeCommittedInput);
+    }, [controller, focusNode, onCommittedDone]);
 
     useEffect(() {
       if (!selectAllOnFocus || !focusNode.hasPrimaryFocus) return null;
@@ -128,25 +175,50 @@ class EditorTextField extends HookWidget {
       return () => active = false;
     }, [controller, focusNode.hasPrimaryFocus, selectAllOnFocus]);
 
-    // When we are not focused, we want to update the controller with the latest.
-    // Since other people may update the text and we want that reflected.
-    // However, when we are focused, we don't want to update the controller as this causes the cursor to jump.
+    // Own edits already match the controller. Shared changes replace bound text
+    // while preserving the selection, including when this field has focus.
     useEffect(() {
-      if (!focusNode.hasFocus && text != null) {
-        controller.text = text ?? "";
+      final composing = controller.value.composing;
+      final editing =
+          focusNode.hasFocus || (composing.isValid && !composing.isCollapsed);
+      final pendingOwnDraft = ownTextChanges.value.isNotEmpty;
+      final visibleText = pendingOwnDraft || ownTextEcho && editing
+          ? null
+          : editing
+          ? text
+          : displayText ?? text;
+      if (visibleText != null && controller.text != visibleText) {
+        final selection = controller.selection;
+        controller.value = TextEditingValue(
+          text: visibleText,
+          selection: selection.isValid
+              ? TextSelection(
+                  baseOffset: selection.baseOffset.clamp(0, visibleText.length),
+                  extentOffset: selection.extentOffset.clamp(
+                    0,
+                    visibleText.length,
+                  ),
+                )
+              : TextSelection.collapsed(offset: visibleText.length),
+        );
       }
       return null;
-    }, [text]);
+    }, [text, displayText, focusNode.hasFocus]);
 
     final previousFocus = useState(focusNode.hasFocus);
     useFocusedChange(focusNode, ({required hasFocus}) {
       final hadFocus = previousFocus.value;
       if (!hadFocus && hasFocus) {
-        if (text != null) {
+        pendingCompletion.value = false;
+        if (text != null && ownTextChanges.value.isEmpty) {
           controller.text = text!;
         }
       } else if (hadFocus && !hasFocus) {
-        onDone?.call(controller.text);
+        if (active.value) {
+          onDone?.call(controller.text);
+          pendingCompletion.value = true;
+          completeCommittedInput();
+        }
       }
       previousFocus.value = hasFocus;
     }, [text]);
@@ -176,8 +248,8 @@ class EditorTextField extends HookWidget {
       surroundingActions: surroundingActions,
       onInputFocus: onInputFocus,
       onDismiss: onDismiss,
-      onCancel: onCancel,
       child: TextFormField(
+        statesController: statesController,
         focusNode: focusNode,
         autofocus: autofocus == EditorTextFieldAutoFocus.textField,
         controller: controller,
@@ -185,9 +257,16 @@ class EditorTextField extends HookWidget {
         onEditingComplete:
             onEditingComplete ?? surroundingFocusNode.requestFocus,
         onFieldSubmitted: onSubmitted,
-        onChanged: onChanged,
+        onChanged: (draft) {
+          ownTextChanges.value.add(draft);
+          onChanged?.call(draft);
+        },
         style: style,
-        textCapitalization: TextCapitalization.none,
+        textCapitalization: textCapitalization,
+        enableSuggestions: enableSuggestions,
+        obscureText: obscureText,
+        maxLength: maxLength,
+        maxLengthEnforcement: maxLengthEnforcement,
         textInputAction: isSingleLine
             ? TextInputAction.done
             : TextInputAction.newline,

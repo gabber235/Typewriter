@@ -84,7 +84,6 @@ async fn manual_request_and_approval_are_visible_from_both_components(
         .request_skir(
             "typewriter.from.user.applicant.organization.join_requests.request",
             &SubmitUserJoinRequestRequest {
-                operation_id: crate::framework::operation_id(),
                 code: skir_record_id("organization_join_code", "invite"),
                 _unrecognized: None,
             },
@@ -120,7 +119,6 @@ async fn manual_request_and_approval_are_visible_from_both_components(
         .request_skir(
             "typewriter.from.user.founder.organization.alpha.members.join_requests.approve",
             &ApproveOrganizationJoinRequestsRequest {
-                operation_id: crate::framework::operation_id(),
                 request_ids: vec![skir_record_id("request_to_join", &request_key)],
                 role_ids: vec![skir_record_id("organization_role", &writer_key)],
                 _unrecognized: None,

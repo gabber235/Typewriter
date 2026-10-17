@@ -1,19 +1,11 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents one moderation request and its transient interaction state.
 ///
 /// The card owns expansion and per request role selection. List selection is
-/// owned by [JoinRequestsList], while durable approval and decline operations
-/// belong to [OrganizationJoinRequests]. Expiry only removes the local row;
-/// the provider remains responsible for authoritative reconciliation.
+/// owned by [JoinRequestsList]. Approval and decline execute prepared repository
+/// commands through shared local work. The countdown clears selection only;
+/// the visibility projection separately filters expired rows using local time.
 class JoinRequestCard extends HookConsumerWidget {
   const JoinRequestCard({
     required this.request,
@@ -84,8 +76,12 @@ class JoinRequestCard extends HookConsumerWidget {
                 onConfirm: () {
                   onSelectionChanged(false);
                   return ref
-                      .read(organizationJoinRequestsProvider.notifier)
-                      .approveRequests([request.requestId], selectedRoles.value)
+                      .executeMembership(
+                        ref.membershipCommands.approve([
+                          request.requestId,
+                        ], selectedRoles.value),
+                        (response) => response.requireAccepted(),
+                      )
                       .catchApiExceptionsAndDisplay(context);
                 },
               ),
@@ -167,9 +163,6 @@ class JoinRequestCard extends HookConsumerWidget {
                   isExpanded: expansibleController.isExpanded,
                   onExpired: () {
                     onSelectionChanged(false);
-                    ref
-                        .read(organizationJoinRequestsProvider.notifier)
-                        .cleanupExpiredRequests();
                   },
                   onDecline: () => _confirmDeclineRequest(context, ref),
                   onToggle: () => expansibleController.toggle(),
@@ -221,9 +214,6 @@ class JoinRequestCard extends HookConsumerWidget {
           endDate: request.expiresAt,
           onExpired: () {
             onSelectionChanged(false);
-            ref
-                .read(organizationJoinRequestsProvider.notifier)
-                .cleanupExpiredRequests();
           },
         ),
         SizedBox(width: context.spacing.space4),
@@ -255,7 +245,7 @@ class JoinRequestCard extends HookConsumerWidget {
     );
   }
 
-  /// Confirms a destructive action before delegating it to the provider.
+  /// Clears local selection on confirmation before submitting the decline.
   Future<void> _confirmDeclineRequest(
     BuildContext context,
     WidgetRef ref,
@@ -268,9 +258,10 @@ class JoinRequestCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.xmark,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationJoinRequestsProvider.notifier)
-            .declineRequest(request.requestId);
+        await ref.executeMembership(
+          ref.membershipCommands.decline(request.requestId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

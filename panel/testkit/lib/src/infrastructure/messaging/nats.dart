@@ -1,7 +1,32 @@
-import "dart:async";
-import "dart:typed_data";
-
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+
+/// Keeps the notifier contract when feature tests supply a transport directly.
+///
+/// These fixtures bypass server admission. Permission ownership tests use the
+/// production notifier with a replaced client factory instead.
+class FakeNats extends Nats {
+  FakeNats(this._initialClient);
+
+  final NatsClient _initialClient;
+
+  @override
+  NatsClient build() => _initialClient;
+
+  NatsClient get connection => client;
+
+  set connection(NatsClient client) => state = client;
+
+  @override
+  Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) async {}
+
+  @override
+  Future<void> refreshAuthorization(Set<skir.RecordId> observedRealms) async {}
+
+  @override
+  Future<void> retry() async {}
+}
 
 final class FakeNatsRequest {
   FakeNatsRequest({
@@ -27,6 +52,21 @@ final class FakeNatsPublication {
 }
 
 final class FakeNatsClient implements NatsClient {
+  FakeNatsClient({
+    this.actorId = "fixture-user",
+    this.organizationId = "fixture-organization",
+    this.connectionSession = "0123456789abcdef0123456789abcdef",
+  });
+
+  @override
+  final String actorId;
+
+  @override
+  final String? organizationId;
+
+  @override
+  final String connectionSession;
+
   final Map<String, FutureOr<Uint8List> Function(Uint8List)> _handlers = {};
   final Map<int, FakeNatsSubscription> _subscriptions = {};
   final StreamController<NatsConnectionState> _connectionStateController =
@@ -127,8 +167,9 @@ final class FakeNatsClient implements NatsClient {
   }
 
   @override
-  Future<FakeNatsSubscription> subscribeOrdered(
+  Future<FakeNatsSubscription> subscribePersistent(
     String stream,
+    String consumer,
     String filterSubject,
   ) => subscribe(filterSubject);
 

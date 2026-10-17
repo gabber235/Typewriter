@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Installs the interaction infrastructure required by the panel shell.
@@ -17,16 +15,15 @@ class AppRequiredWidgets extends HookWidget {
   @override
   Widget build(BuildContext context) {
     useDisableContextMenu();
-    return SelectionOperationsRoot(
-      operations: const [
-        ...coreSelectionOperations,
-        ...entrySelectionOperations,
-      ],
-      child: GlobalCursorController(
-        child: GlobalPaneNavigator(
-          child: GlobalActionsManager(
-            child: GlobalModeShortcut(
-              child: GlobalOperationShortcuts(child: Shimmer(child: child)),
+    return RealmNavigationBoundary(
+      child: SelectionOperationsRoot(
+        operations: const [...coreSelectionOperations],
+        child: GlobalCursorController(
+          child: GlobalPaneNavigator(
+            child: GlobalActionsManager(
+              child: GlobalModeShortcut(
+                child: GlobalOperationShortcuts(child: Shimmer(child: child)),
+              ),
             ),
           ),
         ),

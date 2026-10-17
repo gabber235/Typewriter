@@ -1,6 +1,4 @@
-import "dart:async";
-
-import "package:flutter/widgets.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Selects whether [SelectionInitialization] may choose a value.
 enum SelectionInitializationPolicy { automatic, explicit }
@@ -37,7 +35,6 @@ class SelectionInitialization<T extends Object> extends StatefulWidget {
   /// Values eligible for automatic selection, deduplicated before evaluation.
   final Iterable<T> choices;
 
-  /// Receives the selected default after the current update completes.
   /// Receives an eligible candidate after the current widget update completes.
   final ValueChanged<T?>? onSelected;
 

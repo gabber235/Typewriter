@@ -1,11 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:hooks_riverpod/misc.dart";
-import "package:rxdart/rxdart.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Signals that an operation was requested while its provider state was not
@@ -107,6 +99,7 @@ extension RefExtension on Ref {
     if (didDispose) throw Exception("Debounce was disposed");
   }
 
+  /// Replays the latest provider value and closes when this reference disposes.
   Stream<StateT> streamed<StateT>(ProviderListenable<StateT> provider) {
     final subject = BehaviorSubject<StateT>();
     onDispose(subject.close);
@@ -118,6 +111,10 @@ extension RefExtension on Ref {
     return subject.stream;
   }
 
+  /// Exposes provider updates as a listenable for imperative consumers.
+  ///
+  /// The subscription follows this reference's lifetime. Consumers must remove
+  /// their listeners when done; this adapter does not dispose the notifier.
   ValueListenable<StateT> valued<StateT>(ProviderListenable<StateT> provider) {
     final notifier = ValueNotifier<StateT>(read(provider));
     listen(

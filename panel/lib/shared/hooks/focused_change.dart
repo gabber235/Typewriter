@@ -1,7 +1,9 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Calls [onChange] whenever [focus] changes focus state.
+///
+/// Notifications about other focus properties do not call [onChange].
+/// This prevents a rebuild of a focused control from repeating its focus entry.
 ///
 /// The listener is attached for the lifetime of this hook and removed during
 /// cleanup. It does not invoke [onChange] for the initial state; call the
@@ -14,11 +16,15 @@ void useFocusedChange(
   List<Object?>? keys,
 ]) {
   useEffect(() {
+    var previous = focus.hasFocus;
     void onFocusChange() {
-      onChange(hasFocus: focus.hasFocus);
+      final current = focus.hasFocus;
+      if (current == previous) return;
+      previous = current;
+      onChange(hasFocus: current);
     }
 
     focus.addListener(onFocusChange);
     return () => focus.removeListener(onFocusChange);
-  }, keys ?? []);
+  }, [focus, ...?keys]);
 }

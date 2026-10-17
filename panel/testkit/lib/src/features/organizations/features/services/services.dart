@@ -1,12 +1,10 @@
-import "dart:async";
-
-import "package:faker/faker.dart";
-import "package:flutter_animate/flutter_animate.dart";
-// ignore: depend_on_referenced_packages, implementation_imports
-import "package:riverpod/src/framework.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
-import "package:typewriter_panel/typewriter_panel.dart" hide random;
+import "package:typewriter_panel/typewriter_panel.dart";
+import "package:faker/faker.dart";
+
+// ignore: depend_on_referenced_packages, implementation_imports
+
 import "package:typewriter_testkit/src/shared/testing/testing.dart";
 
 Service generateRandomService({
@@ -31,7 +29,7 @@ Service generateRandomService({
         )
       : faker.date.dateTimeBetween(createdAt, DateTime.now().subtract(14.days));
   return Service(
-    serviceId: recordId("service:${faker.guid.guid()}"),
+    serviceId: skir.recordId("service:${faker.guid.guid()}"),
     revision: 1,
     name: faker.lorem
         .words(faker.randomGenerator.integer(3, min: 1))
@@ -43,7 +41,8 @@ Service generateRandomService({
       status: online ? ServiceStateStatus.online : ServiceStateStatus.offline,
       lastSeen: lastSeen,
     ),
-    organization: organization ?? recordId("organization:${faker.guid.guid()}"),
+    organization:
+        organization ?? skir.recordId("organization:${faker.guid.guid()}"),
   );
 }
 
@@ -54,7 +53,7 @@ class ServicesMock extends CanonicalOrganizationServices {
   @override
   Stream<List<Service>> build(skir.RecordId organizationId) async* {
     yield await displayState.generateBatch((count) {
-      final organization = recordId("organization:${faker.guid.guid()}");
+      final organization = skir.recordId("organization:${faker.guid.guid()}");
       return List.generate(count, (index) {
         final role = switch (index) {
           0 => HostServiceRole(
@@ -69,37 +68,6 @@ class ServicesMock extends CanonicalOrganizationServices {
         return generateRandomService(organization: organization, role: role);
       });
     });
-  }
-
-  @override
-  Future<void> bindService(String token) async =>
-      Future<void>.delayed(const Duration(milliseconds: 1000));
-
-  @override
-  Future<TypedMutationResult> updateService(Service service) async {
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    final canonical = service.copyWith(revision: service.revision + 1);
-    state = AsyncData(
-      (await future)
-          .map(
-            (value) => value.serviceId == service.serviceId ? canonical : value,
-          )
-          .toList(),
-    );
-    return TypedMutationResult.success(
-      revision: canonical.revision,
-      value: canonical.identityValue,
-    );
-  }
-
-  @override
-  Future<void> deleteService(skir.RecordId serviceId) async {
-    await Future<void>.delayed(const Duration(milliseconds: 100));
-    state = AsyncData(
-      (await future)
-          .where((service) => service.serviceId != serviceId)
-          .toList(),
-    );
   }
 }
 

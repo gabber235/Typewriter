@@ -5,6 +5,12 @@ plugins {
     `java-library`
 }
 
+kotlin {
+    sourceSets.named("main") {
+        kotlin.srcDir(rootProject.file("protocol/transport-adapters/kotlin-loader/skirout"))
+    }
+}
+
 buildConfig {
     packageName("com.typewritermc.loader")
     useKotlinOutput {

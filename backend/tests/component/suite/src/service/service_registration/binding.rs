@@ -1,27 +1,31 @@
 use component_test::{TestContext, TestResult, component_test};
 use json_matcher::assert_jm;
 use wasmcloud_utils::skir::base::service::v1::{
-    organization::WatchOrganizationServicesResponse,
+    organization::OrganizationServicesChanged,
     registration::{
         BindServiceRequest, BindServiceResponse, ServiceBoundNotification, UnbindServiceRequest,
         UnbindServiceResponse,
     },
-    topology::WatchOrganizationTopologyResponse,
+    topology::OrganizationTopologyChanged,
 };
 
 use super::{ServiceRegistration, database, request};
 
-fn service_add_matches(body: &[u8]) -> bool {
-    WatchOrganizationServicesResponse::serializer()
+fn service_binding_snapshot_matches(body: &[u8]) -> bool {
+    OrganizationServicesChanged::serializer()
         .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
         .is_ok_and(|response| {
             matches!(
                 response,
-                WatchOrganizationServicesResponse::List(services)
-                    if services.iter().any(|service| service.service_id.key.to_string() == "bindable"
-                        && service.organization.as_ref().is_some_and(|organization| {
-                            organization.key.to_string() == "test_org"
-                        }))
+                OrganizationServicesChanged::Replace(services)
+                    if services.len() == 2
+                        && services.iter().all(|service| {
+                            service.organization.as_ref().is_some_and(|organization| {
+                                organization.key.to_string() == "test_org"
+                            })
+                        })
+                        && services.iter().any(|service| service.service_id.key.to_string() == "bindable")
+                        && services.iter().any(|service| service.service_id.key.to_string() == "existing")
             )
         })
 }
@@ -36,12 +40,12 @@ fn bound_notification_matches(body: &[u8]) -> bool {
 }
 
 fn topology_empty_matches(body: &[u8]) -> bool {
-    WatchOrganizationTopologyResponse::serializer()
+    OrganizationTopologyChanged::serializer()
         .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
         .is_ok_and(|response| {
             matches!(
                 response,
-                WatchOrganizationTopologyResponse::List(topology)
+                OrganizationTopologyChanged::Replace(topology)
                     if topology.hosts.is_empty() && topology.realms.is_empty() && topology.engines.is_empty()
             )
         })
@@ -63,7 +67,6 @@ async fn invalid_registration_token_does_not_bind_service(
         context,
         "typewriter.from.user.actor.organization.test_org.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ZZZZZZZZZZ".into(),
             _unrecognized: None,
         },
@@ -103,7 +106,6 @@ async fn missing_organization_does_not_consume_registration(
         context,
         "typewriter.from.user.actor.organization.missing.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ABCDEFGHIJ".into(),
             _unrecognized: None,
         },
@@ -132,14 +134,14 @@ async fn valid_registration_binds_service_and_publishes_both_views(
     let database = database(context)?;
     database
         .seed(
-            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:bindable SET name = 'bindable', role = { type: 'host', version: '1.0.0' }, registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
+            "CREATE user:actor SET name = 'actor'; CREATE organization:test_org SET name = 'test_org', founder = user:actor; CREATE service:existing SET name = 'existing', role = { type: 'host', version: '1.0.0' }, organization = organization:test_org; CREATE service:bindable SET name = 'bindable', role = { type: 'host', version: '1.0.0' }, registration = { token: 'ABCDEFGHIJ', expires_at: time::now() + 1m }",
         )
         .execute()
         .await?;
     let messaging = context.messaging_mock()?;
     messaging
         .expect_publish("typewriter.to.organization.test_org.services.watch")
-        .body_matches(service_add_matches);
+        .body_matches(service_binding_snapshot_matches);
     messaging
         .expect_publish("typewriter.to.service.bindable.registration.bound")
         .body_matches(bound_notification_matches);
@@ -148,7 +150,6 @@ async fn valid_registration_binds_service_and_publishes_both_views(
         context,
         "typewriter.from.user.actor.organization.test_org.services.bind",
         &BindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             registration_token: "ABCDEFGHIJ".into(),
             _unrecognized: None,
         },
@@ -192,12 +193,12 @@ async fn unbind_removes_service_and_topology_from_organization_views(
     messaging
         .expect_publish("typewriter.to.organization.test_org.services.watch")
         .body_matches(|body| {
-            WatchOrganizationServicesResponse::serializer()
+            OrganizationServicesChanged::serializer()
                 .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
                 .is_ok_and(|response| {
                     matches!(
                         response,
-                        WatchOrganizationServicesResponse::List(services) if services.is_empty()
+                        OrganizationServicesChanged::Replace(services) if services.is_empty()
                     )
                 })
         });
@@ -209,7 +210,6 @@ async fn unbind_removes_service_and_topology_from_organization_views(
         context,
         "typewriter.from.user.actor.organization.test_org.services.unbind",
         &UnbindServiceRequest {
-            operation_id: crate::framework::operation_id(),
             service_id: "bound".into(),
             _unrecognized: None,
         },

@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -26,6 +24,37 @@ Widget adaptiveChoiceControlUseCase(BuildContext context) {
           onSelected: (value) => selected.value = value,
         );
       },
+    ),
+  );
+}
+
+@widgetbook.UseCase(
+  name: "Styled and disabled choices",
+  type: SlidingChoiceControl,
+)
+Widget slidingChoiceControlUseCase(BuildContext context) {
+  final disabled = context.knobs.boolean(
+    label: "Disable SVG",
+    initialValue: false,
+  );
+  return FakeApp(
+    child: Center(
+      child: SizedBox(
+        width: 360,
+        child: HookBuilder(
+          builder: (context) {
+            final selected = useState("Iconify");
+            return SlidingChoiceControl<String>(
+              selected: selected.value,
+              disabled: disabled ? const {"SVG"} : const {},
+              children: const {"Iconify": Text("Iconify"), "SVG": Text("SVG")},
+              onSelected: (value) {
+                if (value != null) selected.value = value;
+              },
+            );
+          },
+        ),
+      ),
     ),
   );
 }

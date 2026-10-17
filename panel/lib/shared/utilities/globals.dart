@@ -1,6 +1,4 @@
-import "dart:math";
-
-import "package:uuid/uuid.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared UUID generator for identifiers created by panel operations.
 ///

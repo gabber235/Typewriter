@@ -34,7 +34,7 @@ import com.typewritermc.services.libs.telemetry.childSpan
 import com.typewritermc.services.libs.telemetry.consumerSpan
 import com.typewritermc.services.libs.telemetry.mainSpan
 import com.typewritermc.services.libs.telemetry.mainSpanScope
-import com.typewritermc.services.libs.utils.rethrowExceptionalThrowable
+import com.typewritermc.services.libs.utils.rethrowExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
@@ -94,7 +94,7 @@ class Communicator(
                     try {
                         contract.requestCodec.encode(request)
                     } catch (failure: Throwable) {
-                        rethrowExceptionalThrowable(failure)
+                        failure.rethrowExceptional()
                         main.recordDegraded(contract.failureSlug, failure)
                         send(CommunicationResult.Failure(CommunicationError.Encode(contract.failureSlug, failure)))
                         return@mainSpan
@@ -144,7 +144,7 @@ class Communicator(
                                                 try {
                                                     contract.responseCodec.decode(delivery.message.payload)
                                                 } catch (failure: Throwable) {
-                                                    rethrowExceptionalThrowable(failure)
+                                                    failure.rethrowExceptional()
                                                     main.recordDegraded(contract.failureSlug, failure)
                                                     send(
                                                         CommunicationResult.Failure(
@@ -339,6 +339,35 @@ class Communicator(
         }.responseResult()
     }
 
+    /** Publishes an update to the concrete subject resolved for one watch request. */
+    suspend fun <Address : Any, Request : Any, Initial : Any, Update : Any> publishUpdate(
+        contract: WatchContract<Address, Request, Initial, Update>,
+        address: Address,
+        request: Request,
+        update: Update,
+        headers: MessageHeaders = MessageHeaders.Empty,
+    ): CommunicationResult<Unit> {
+        val destination = contract.updateDestination(address, request)
+        return operation(
+            contract.name.value,
+            "publish",
+            contract.failureSlug,
+            SpanKind.PRODUCER,
+            contract.updateAddress.template,
+        ) { annotate ->
+            val classification = contract.updateClassifier.classify(update)
+            publishResponse(
+                destination,
+                update,
+                contract.updateCodec,
+                classification,
+                contract.failureSlug,
+                headers,
+                annotate,
+            )
+        }.responseResult()
+    }
+
     internal suspend fun <Response : Any> sendResponse(
         name: String,
         template: String?,
@@ -386,7 +415,7 @@ class Communicator(
         headers: MessageHeaders = MessageHeaders.Empty,
     ): Flow<CommunicationResult<WatchMessage<Initial, Update>>> =
         flow {
-            val updateAddress = contract.updateAddress.render(address)
+            val updateAddress = contract.updateDestination(address, request)
             val subscriptionResult =
                 operation(
                     contract.name.value,
@@ -419,7 +448,7 @@ class Communicator(
                                 subscription.deliveries.collect(bufferedDeliveries::send)
                                 bufferedDeliveries.close()
                             } catch (failure: Throwable) {
-                                rethrowExceptional(failure)
+                                failure.rethrowExceptional()
                                 exactFailure.set(failure)
                                 bufferedDeliveries.close(failure)
                             }
@@ -486,7 +515,7 @@ class Communicator(
                             try {
                                 subscription.close()
                             } catch (cleanupFailure: Throwable) {
-                                rethrowExceptional(cleanupFailure)
+                                cleanupFailure.rethrowExceptional()
                                 val primary = primaryFailure
                                 if (primary == null) {
                                     exactFailure.set(cleanupFailure)
@@ -498,7 +527,7 @@ class Communicator(
                             try {
                                 deliveryCollector.cancelAndJoin()
                             } catch (cleanupFailure: Throwable) {
-                                rethrowExceptional(cleanupFailure)
+                                cleanupFailure.rethrowExceptional()
                                 val primary = primaryFailure
                                 if (primary == null) {
                                     primaryFailure = cleanupFailure
@@ -644,7 +673,7 @@ class Communicator(
         try {
             block()
         } catch (failure: Throwable) {
-            rethrowExceptional(failure)
+            failure.rethrowExceptional()
             val communicationError = error(failure)
             throw SluggedException.wrap(communicationError.slug, Classified(communicationError))
         }
@@ -665,7 +694,7 @@ class Communicator(
         }
 
     private fun recover(failure: Throwable): CommunicationResult.Failure {
-        rethrowExceptional(failure)
+        failure.rethrowExceptional()
         val classified = failure.causes().filterIsInstance<Classified>().firstOrNull() ?: throw failure
         return CommunicationResult.Failure(classified.error)
     }
@@ -730,5 +759,3 @@ private fun Throwable.causes(): Sequence<Throwable> =
             current = current.cause
         }
     }
-
-private fun rethrowExceptional(failure: Throwable) = rethrowExceptionalThrowable(failure)

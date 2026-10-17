@@ -25,11 +25,14 @@ import org.gradle.api.tasks.bundling.Jar
 internal fun Project.configureRealmProject(declaration: DeclaredArtifact) {
     configureArtifactVersion(declaration)
     val main = productionSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
+    configurations.named(main.implementationConfigurationName) { configuration ->
+        configuration.extendsFrom(configurations.getByName(PLATFORM_API_CONFIGURATION))
+    }
     configurations.named(main.compileOnlyConfigurationName) { configuration ->
         configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, emptyList(), files())
+    val manifest = registerManifestTask(declaration, emptyList(), resolvePlatformApiArtifacts(), files())
     configureHostedJar(manifest)
 }
 
@@ -44,13 +47,20 @@ internal fun Project.configureEngineProject(declaration: DeclaredArtifact) {
     val main = productionSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME)
     configurations.named(main.implementationConfigurationName) { configuration ->
         configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
+        configuration.extendsFrom(configurations.getByName(PLATFORM_API_CONFIGURATION))
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
     configurations.named(main.compileOnlyConfigurationName) { configuration ->
         configuration.extendsFrom(configurations.getByName(HOST_API_CONFIGURATION))
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, relationships, resolveEngineCoreArtifacts())
+    val manifest =
+        registerManifestTask(
+            declaration,
+            relationships,
+            resolvePlatformApiArtifacts(),
+            resolveEngineCoreArtifacts(),
+        )
     configureHostedJar(manifest)
 }
 
@@ -70,7 +80,7 @@ internal fun Project.configureCapabilityProject(declaration: DeclaredArtifact) {
         relationships.forEach { configuration.extendsFrom(it.configuration) }
     }
     configureMainCodegen(declaration)
-    val manifest = registerManifestTask(declaration, relationships, files())
+    val manifest = registerManifestTask(declaration, relationships, files(), files())
     configureThinJar(manifest, emptyList())
 }
 
@@ -182,6 +192,15 @@ private fun Project.resolveEngineCoreArtifacts(): FileCollection =
         configuration.isTransitive = false
         configuration.extendsFrom(configurations.getByName(ENGINE_CORE_CONFIGURATION))
         configuration.description = "Resolves the direct engine core contribution artifact."
+    }
+
+private fun Project.resolvePlatformApiArtifacts(): FileCollection =
+    configurations.create("imprintPlatformApiArtifacts") { configuration ->
+        configuration.isCanBeConsumed = false
+        configuration.isCanBeResolved = true
+        configuration.isTransitive = false
+        configuration.extendsFrom(configurations.getByName(PLATFORM_API_CONFIGURATION))
+        configuration.description = "Resolves the direct platform API metadata artifact."
     }
 
 /**

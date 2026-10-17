@@ -8,3 +8,28 @@ generators:
   - mod: skir-kotlin-gen
     outDir: ./services/protocol/src/main/kotlin/skirout
     config: {}
+  - mod: typewriter-transport-skir-bridge/rust
+    outDir: ./backend/wasmcloud-utils/src/transport_routes/skirout
+    config:
+      executable: ./services/protocol/transport-generator/target/release/typewriter-transport-generator
+      manifest: ./services/protocol/transport-routes.yaml
+      target: rust
+  - mod: typewriter-transport-skir-bridge/kotlin
+    outDir: ./services/protocol/transport-adapters/kotlin/skirout
+    config:
+      executable: ./services/protocol/transport-generator/target/release/typewriter-transport-generator
+      manifest: ./services/protocol/transport-routes.yaml
+      target: kotlin
+  - mod: typewriter-transport-skir-bridge/kotlin-loader
+    outDir: ./services/protocol/transport-adapters/kotlin-loader/skirout
+    config:
+      executable: ./services/protocol/transport-generator/target/release/typewriter-transport-generator
+      manifest: ./services/protocol/transport-routes.yaml
+      target: kotlin_loader
+  - mod: typewriter-transport-skir-bridge/dart
+    outDir: ./panel/lib/infrastructure/messaging/generated/skirout
+    config:
+      executable: ./services/protocol/transport-generator/target/release/typewriter-transport-generator
+      manifest: ./services/protocol/transport-routes.yaml
+      target: dart
+      dartImportUriPrefix: package:typewriter_panel/infrastructure/protocols/skir/skirout/

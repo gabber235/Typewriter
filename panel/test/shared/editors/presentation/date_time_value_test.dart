@@ -6,22 +6,21 @@ void main() {
 
   test("formats every supported editor shape", () {
     expect(
-      formatDateTimeEditorValue(precise, includeDate: true, includeTime: true),
+      precise.toEditorText(includeDate: true, includeTime: true),
       "2024-02-29 23:58:45",
     );
     expect(
-      formatDateTimeEditorValue(precise, includeDate: true, includeTime: false),
+      precise.toEditorText(includeDate: true, includeTime: false),
       "2024-02-29",
     );
     expect(
-      formatDateTimeEditorValue(precise, includeDate: false, includeTime: true),
+      precise.toEditorText(includeDate: false, includeTime: true),
       "23:58:45",
     );
   });
 
   test("parses leap dates and preserves hidden precision", () {
-    final parsed = parseDateTimeEditorValue(
-      "2028-02-29 01:02:03",
+    final parsed = "2028-02-29 01:02:03".parseEditorDateTime(
       current: precise,
       includeDate: true,
       includeTime: true,
@@ -30,8 +29,7 @@ void main() {
   });
 
   test("date only edits preserve the complete stored time", () {
-    final parsed = parseDateTimeEditorValue(
-      "2025-04-30",
+    final parsed = "2025-04-30".parseEditorDateTime(
       current: precise,
       includeDate: true,
       includeTime: false,
@@ -40,8 +38,7 @@ void main() {
   });
 
   test("time only edits preserve the complete stored date and precision", () {
-    final parsed = parseDateTimeEditorValue(
-      "07:06:05",
+    final parsed = "07:06:05".parseEditorDateTime(
       current: precise,
       includeDate: false,
       includeTime: true,
@@ -60,8 +57,7 @@ void main() {
       "12:30:60",
     ]) {
       expect(
-        () => parseDateTimeEditorValue(
-          draft,
+        () => draft.parseEditorDateTime(
           current: precise,
           includeDate: draft.contains("-"),
           includeTime: !draft.contains("-") || draft.contains(" "),
@@ -73,17 +69,22 @@ void main() {
   });
 
   test("month movement clamps to month length across leap boundaries", () {
-    expect(moveMonth(DateTime.utc(2024, 1, 31), 1), DateTime.utc(2024, 2, 29));
-    expect(moveMonth(DateTime.utc(2023, 1, 31), 1), DateTime.utc(2023, 2, 28));
-    expect(moveMonth(DateTime.utc(2024, 2, 29), 12), DateTime.utc(2025, 2, 28));
-    expect(daysInMonth(2024, 2), 29);
-    expect(daysInMonth(2023, 2), 28);
+    expect(DateTime.utc(2024, 1, 31).moveMonth(1), DateTime.utc(2024, 2, 29));
+    expect(DateTime.utc(2023, 1, 31).moveMonth(1), DateTime.utc(2023, 2, 28));
+    expect(DateTime.utc(2024, 2, 29).moveMonth(12), DateTime.utc(2025, 2, 28));
+  });
+
+  test("calendar operations retain fields without timezone conversion", () {
+    final local = DateTime(2024, 2, 29, 23, 58);
+
+    expect(local.calendarDate, DateTime.utc(2024, 2, 29));
+    expect(local.hasSameCalendarDate(DateTime.utc(2024, 2, 29, 1)), isTrue);
+    expect(local.semanticCalendarLabel, "Thursday, February 29, 2024");
   });
 
   test("both hidden is a deliberate parsing failure", () {
     expect(
-      () => parseDateTimeEditorValue(
-        "",
+      () => "".parseEditorDateTime(
         current: precise,
         includeDate: false,
         includeTime: false,

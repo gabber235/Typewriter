@@ -1,0 +1,89 @@
+// Resource operations publish additive editor affordances from catalog declarations.
+// Contributions attach shared operation definitions to matching resource types; the Realm
+// resolves current availability against a working observation. Action dispatch and authoring
+// preparation remain separate from labels, grouping, and primary operation nomination.
+
+import { EditorAction } from "editor/v1/action.skir";
+import { HeaderActionTone } from "editor/v1/presentation.skir";
+import {
+  PresentationId,
+  TypeTemplate,
+  TypeUse,
+} from "editor/v1/type_catalog.skir";
+
+/// Stable declaration owned identity, independent of display labels and catalog generation.
+struct ResourceOperationId(812600001) {
+  artifact: string = 0;
+  source_part: string = 1;
+  declaration: string = 2;
+  local: string = 3;
+}
+
+enum OperationTargets(812600002) {
+  single: TypeTemplate = 1;
+  selection: TypeTemplate = 2;
+  contributed_single = 3;
+  contributed_selection = 4;
+}
+
+enum OperationGroup(812600003) {
+  navigation = 1;
+  edit = 2;
+  organize = 3;
+  destructive = 4;
+}
+
+struct OperationConfirmation(812600004) {
+  title: string = 0;
+  message: string = 1;
+  confirmation_label: string = 2;
+}
+
+struct OperationPresentation(812600005) {
+  label: string = 0;
+  description: string = 1;
+  icon: string = 2;
+  group: OperationGroup = 3;
+  order: int32 = 4;
+  tone: HeaderActionTone = 5;
+  confirmation: OperationConfirmation? = 6;
+}
+
+struct OperationInputDefinition(812600006) {
+  type: TypeUse = 0;
+  presentation: PresentationId? = 1;
+}
+
+struct ResourceOperationDefinition(812600007) {
+  id: ResourceOperationId = 0;
+  presentation: OperationPresentation = 1;
+  targets: OperationTargets = 2;
+  action: EditorAction = 3;
+}
+
+/// Adds operation identities to matching resource types and optionally nominates a primary action.
+/// Resolution considers all selected targets; primary nomination applies to a single resource
+/// and conflicting equally applicable nominations are rejected.
+struct ResourceOperationContribution(812600008) {
+  target: TypeTemplate = 0;
+  operations: [ResourceOperationId] = 1;
+  primary: ResourceOperationId? = 2;
+}
+
+/// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
+/// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
+enum OperationAvailability(812600009) {
+  hidden = 1;
+  disabled: string = 2;
+  enabled = 3;
+}
+
+struct ResolvedResourceOperation(812600010) {
+  definition: ResourceOperationDefinition = 0;
+  availability: OperationAvailability = 1;
+}
+
+struct ResolvedResourceOperations(812600011) {
+  operations: [ResolvedResourceOperation] = 0;
+  primary_operation: ResourceOperationId? = 1;
+}

@@ -1,5 +1,3 @@
-import "package:flutter/rendering.dart";
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Positions one overlay child relative to [anchorRect] in overlay coordinates.

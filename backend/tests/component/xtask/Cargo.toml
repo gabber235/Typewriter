@@ -15,8 +15,8 @@ anyhow.workspace = true
 cargo_metadata.workspace = true
 clap.workspace = true
 component-test-model.workspace = true
+hex.workspace = true
 component-test.workspace = true
-serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 typewriter-component-tests = { path = "../suite" }

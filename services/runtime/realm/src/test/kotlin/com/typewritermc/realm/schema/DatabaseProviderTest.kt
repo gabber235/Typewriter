@@ -3,6 +3,9 @@ package com.typewritermc.realm.schema
 import com.surrealdb.Surreal
 import com.typewritermc.realm.SURREALDB_EMBEDDED_VERSION
 import com.typewritermc.realm.SURREALDB_SERVER_VERSION
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.mainSpanBlocking
+import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
@@ -58,6 +61,44 @@ val DatabaseProviderTest by testSuite {
                 database.version() shouldBe SURREALDB_EMBEDDED_VERSION
             }
         } finally {
+            directory.toFile().deleteRecursively()
+        }
+    }
+
+    test("versioned SurrealKV reopens after the previous native handle closes") {
+        val directory = Files.createTempDirectory("realm_surrealkv_reopen")
+        val telemetry = TelemetryTestHarness.create()
+        val provider =
+            DatabaseProvider(
+                RealmDatabaseConfiguration(
+                    endpoint = DatabaseEndpoint.Embedded.SurrealKv(directory),
+                    authentication = DatabaseAuthentication.None,
+                    namespace = "reopen",
+                    database = "reopen",
+                ),
+            )
+
+        fun connect() =
+            telemetry.telemetry.mainSpanBlocking(
+                name = "test.realm.database.reopen",
+                unhandledFailureSlug = ErrorSlug.of("test-realm-database-reopen-failed"),
+            ) {
+                provider.connect()
+            }
+
+        try {
+            val first = connect()
+            first.query("UPSERT probe:state SET value = 'preserved';")
+            provider.close(first)
+
+            val reopened = connect()
+            try {
+                reopened.query("SELECT VALUE value FROM ONLY probe:state;").take(0).getString() shouldBe "preserved"
+            } finally {
+                provider.close(reopened)
+            }
+        } finally {
+            telemetry.close()
             directory.toFile().deleteRecursively()
         }
     }

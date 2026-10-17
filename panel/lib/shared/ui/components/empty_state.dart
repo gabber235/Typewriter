@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents a compact empty state for inline list and table content.
@@ -59,14 +56,16 @@ class EmptyState extends HookConsumerWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge?.copyWith(color: textColor),
             ),
-            SizedBox(height: context.spacing.space2),
-            Text(
-              description,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: textColor.withValues(alpha: 0.7),
+            if (description.isNotEmpty) ...[
+              SizedBox(height: context.spacing.space2),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textColor.withValues(alpha: 0.7),
+                ),
               ),
-            ),
+            ],
             if (buttonText != null) ...[
               SizedBox(height: context.spacing.space4),
               FilledButton.icon(

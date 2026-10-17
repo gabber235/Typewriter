@@ -14,8 +14,21 @@ use wasmcloud_utils::skir::base::{
     access::v1::permission::{EntityPermissionQualifier, Permissions},
     kernel::v1::record_id::RecordId,
 };
+use wasmcloud_utils::skir_utils::RecordIdKeyIdentity;
+use wasmcloud_utils::transport_routes::{
+    GrantScope, GrantSet, MembershipProjection, OrganizationActorRole, OrganizationActorScope,
+    RealmRole, RealmScope, SubjectToken, UserRole, UserScope,
+};
 
-use crate::common::{AuthentikClaims, User, build_permissions};
+use crate::{
+    common::{AuthentikClaims, TrustedUserProfile, User, build_permissions},
+    membership_consumers::{ConnectionSession, MembershipConsumerScope},
+};
+
+#[derive(serde::Deserialize)]
+struct AdmittedRealmRecords {
+    realms: Vec<DatabaseRecordId>,
+}
 
 /// Derive NATS policy and tags for one authenticated panel user.
 ///
@@ -32,13 +45,25 @@ pub async fn handle_panel_user(
         .ok_or_else(|| wasi_error!("permissions-panel-no-subject", "No subject in claims"))?;
 
     let additional = claims.additional;
-    let (name, email, avatar_url) = extract_user_details(&additional);
+    let TrustedUserProfile {
+        name,
+        email,
+        avatar_url,
+    } = additional.user_profile();
 
-    // Extract organization_id from the qualifier (user-supplied, not trusted for routing)
-    let organization_id = match &qualifier {
-        EntityPermissionQualifier::User(user) => user.organization_id.clone(),
-        _ => None,
+    let user_qualifier = match qualifier {
+        EntityPermissionQualifier::User(user) => user,
+        _ => {
+            return Err(wasi_error!(
+                "permissions-panel-qualifier-invalid",
+                "user qualifier required"
+            ));
+        }
     };
+    let organization_id = user_qualifier.organization_id;
+    let connection_session =
+        ConnectionSession::try_from(user_qualifier.connection_session.as_str())?;
+    let actor = SubjectToken::try_from(user_id.as_str())?;
 
     main_attribute!(
         "auth.entity.id" = user_id.clone(),
@@ -54,68 +79,72 @@ pub async fn handle_panel_user(
 
     upsert_user(&user_id, &name, &email, &avatar_url).await?;
 
-    let mut allow_publish = vec![];
-    let mut allow_subscribe = vec![];
+    let mut grants = GrantSet::default();
     let mut tags = vec![format!("user:{user_id}")];
 
-    // ########### PERMISSIONS ###########
-    {
-        allow_subscribe.push(format!("_INBOX.{user_id}.>"));
-        allow_publish.push("_INBOX.>".to_string());
-        add_membership_stream_permissions(&mut allow_publish);
+    UserScope {
+        user: actor.clone(),
+    }
+    .grant(UserRole::AuthenticatedUser, &mut grants);
+    grants
+        .subscribe
+        .insert(format!("_INBOX.{actor}.{}.*", connection_session.as_str()));
+    grants.publish.insert("$SYS.REQ.USER.INFO".to_owned());
+    let user_consumers = MembershipConsumerScope::user(&actor, &connection_session);
+    for projection in [
+        MembershipProjection::UserOrganizationsChanged,
+        MembershipProjection::UserJoinRequestsChanged,
+    ] {
+        user_consumers.grant(projection, &mut grants)?;
+    }
+    main_attribute!("auth.permissions.category.organizations" = true);
 
-        add_user_organizations_permissions(&user_id, &mut allow_publish, &mut allow_subscribe);
-        main_attribute!("auth.permissions.category.organizations" = true);
-
-        if let Some(ref org_id) = organization_id {
-            let is_member = is_member_of_organization(&user_id, org_id).await?;
-            if is_member {
-                tags.push(org_id.to_string());
-                main_attribute!("auth.permissions.organization_access" = "allowed");
-                let org_id = &org_id.key.to_string();
-                add_organization_roles_permissions(
-                    &user_id,
-                    org_id,
-                    &mut allow_publish,
-                    &mut allow_subscribe,
-                );
-                add_organization_members_permissions(
-                    &user_id,
-                    org_id,
-                    &mut allow_publish,
-                    &mut allow_subscribe,
-                );
-                add_organization_services_permissions(
-                    &user_id,
-                    org_id,
-                    &mut allow_publish,
-                    &mut allow_subscribe,
-                );
-                add_organization_realm_permissions(
-                    org_id,
-                    &mut allow_publish,
-                    &mut allow_subscribe,
-                );
-                add_organization_presence_permissions(
-                    &user_id,
-                    org_id,
-                    &mut allow_publish,
-                    &mut allow_subscribe,
-                );
-                main_attribute!(
-                    "auth.permissions.category.roles" = true,
-                    "auth.permissions.category.members" = true,
-                    "auth.permissions.category.services" = true,
-                    "auth.permissions.category.realm" = true,
-                );
-            } else {
-                main_attribute!("auth.permissions.organization_access" = "denied");
+    if let Some(ref org_id) = organization_id {
+        if is_member_of_organization(&user_id, org_id).await? {
+            let organization_record = DatabaseRecordId::from(org_id);
+            let organization_identity = organization_record.key.raw_identity()?;
+            tags.push(format!(
+                "{}:{organization_identity}",
+                organization_record.table
+            ));
+            main_attribute!("auth.permissions.organization_access" = "allowed");
+            let organization = SubjectToken::try_from(organization_identity)?;
+            OrganizationActorScope {
+                user: actor.clone(),
+                organization: organization.clone(),
             }
+            .grant(OrganizationActorRole::OrganizationMember, &mut grants);
+            let consumers = MembershipConsumerScope::organization_member(
+                &actor,
+                &organization,
+                &connection_session,
+            );
+            for projection in [
+                MembershipProjection::OrganizationMembersChanged,
+                MembershipProjection::OrganizationJoinRequestsChanged,
+                MembershipProjection::OrganizationJoinCodesChanged,
+            ] {
+                consumers.grant(projection, &mut grants)?;
+            }
+            for realm in admitted_panel_realms(&organization_record).await? {
+                realm.grant(RealmRole::OrganizationMember, &mut grants);
+            }
+            main_attribute!(
+                "auth.permissions.category.roles" = true,
+                "auth.permissions.category.members" = true,
+                "auth.permissions.category.services" = true,
+                "auth.permissions.category.realm" = true,
+            );
+        } else {
+            main_attribute!("auth.permissions.organization_access" = "denied");
         }
     }
-    // ######### END PERMISSIONS #########
 
-    let permissions = build_permissions(allow_publish, allow_subscribe);
+    let permissions = build_permissions(
+        grants.publish.into_iter().collect(),
+        grants.subscribe.into_iter().collect(),
+        None,
+    );
 
     main_attribute!(
         "auth.permissions.publish.allow.count" = permissions.publish.allow.len() as i64,
@@ -125,24 +154,36 @@ pub async fn handle_panel_user(
     Ok((permissions, tags))
 }
 
-fn extract_user_details(claims: &AuthentikClaims) -> (String, Option<String>, Option<String>) {
-    let name = claims
-        .name
-        .clone()
-        .or_else(|| claims.discord.as_ref().map(|d| d.username.clone()))
-        .unwrap_or_else(|| "Unknown".to_string());
-
-    let email = claims
-        .email
-        .clone()
-        .or_else(|| claims.discord.as_ref().and_then(|d| d.email.clone()));
-
-    let avatar_url = claims
-        .avatar_url
-        .clone()
-        .or_else(|| claims.discord.as_ref().and_then(|d| d.avatar_url.clone()));
-
-    (name, email, avatar_url)
+async fn admitted_panel_realms(
+    organization: &DatabaseRecordId,
+) -> Result<Vec<RealmScope>, otel_wasi::Error> {
+    let records = read_query!(
+        "RETURN { realms: (SELECT VALUE id FROM realm_instance WHERE owner_host_id.service_id.organization = $organization ORDER BY id) };"
+    )
+    .bind("organization", organization)
+    .execute()
+    .await
+    .error_with_slug("permissions-realm-scope-query-failed")?
+    .parse::<AdmittedRealmRecords>()
+    .error_with_slug("permissions-realm-scope-parse-failed")?;
+    let organization = SubjectToken::try_from(organization.key.raw_identity()?)?;
+    records
+        .realms
+        .into_iter()
+        .map(|record| {
+            if record.table != "realm_instance" {
+                return Err(wasi_error!(
+                    "permissions-realm-scope-invalid-table",
+                    "invalid Realm table"
+                ));
+            }
+            let realm = SubjectToken::try_from(record.key.raw_identity()?)?;
+            Ok(RealmScope {
+                organization: organization.clone(),
+                realm,
+            })
+        })
+        .collect()
 }
 
 /// Persist the latest trusted profile projection without making it an authorization decision.
@@ -216,307 +257,4 @@ async fn is_member_of_organization(
     .error_with_slug("organization-permissions-failed")?
     .parse::<bool>()
     .error_with_slug("organization-permissions-failed")
-}
-
-/// Adds permissions for user/organizations component
-fn add_user_organizations_permissions(
-    user_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!("cloud.to.user.{user_id}.organization.watch"));
-    allow_subscribe.push(format!("cloud.from.user.{user_id}.organization.watch"));
-    allow_subscribe.push(format!("cloud.from.user.{user_id}.organizations.changed"));
-    allow_publish.push(format!("cloud.to.user.{user_id}.organization.create"));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.join_requests.watch"
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.user.{user_id}.organization.join_requests.watch"
-    ));
-    allow_subscribe.push(format!("cloud.from.user.{user_id}.join_requests.changed"));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.join_requests.request"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.join_requests.cancel"
-    ));
-}
-
-/// Adds permissions for organization/roles component
-fn add_organization_roles_permissions(
-    user_id: &str,
-    org_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.roles.watch"
-    ));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.roles.watch"));
-}
-
-/// Adds permissions for organization/members component
-fn add_organization_members_permissions(
-    user_id: &str,
-    org_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.watch"
-    ));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.members.watch"));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.members.changed"));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.update"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.remove"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.watch"
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.organization.{org_id}.members.join_requests.watch"
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.organization.{org_id}.join_requests.changed"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.approve"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_requests.decline"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.watch"
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.organization.{org_id}.members.join_codes.watch"
-    ));
-    allow_subscribe.push(format!(
-        "cloud.from.organization.{org_id}.join_codes.changed"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.generate"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.members.join_codes.revoke"
-    ));
-}
-
-fn add_membership_stream_permissions(allow_publish: &mut Vec<String>) {
-    allow_publish.extend([
-        "$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP".to_string(),
-        "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.>".to_string(),
-        "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.>".to_string(),
-        "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.>".to_string(),
-        "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.>".to_string(),
-    ]);
-}
-
-/// Adds permissions for organization/services component
-fn add_organization_services_permissions(
-    user_id: &str,
-    org_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.services.watch"
-    ));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.services.watch"));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.services.bind"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.services.update"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.services.unbind"
-    ));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.topology.watch"
-    ));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.topology.watch"));
-    allow_publish.push(format!(
-        "cloud.to.user.{user_id}.organization.{org_id}.topology.configure"
-    ));
-}
-
-/// Adds permissions for organization/realm component
-fn add_organization_realm_permissions(
-    org_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.list"));
-    allow_subscribe.push(format!("cloud.from.organization.{org_id}.realm.list"));
-    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.create"));
-    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.delete"));
-    allow_publish.push(format!("cloud.to.organization.{org_id}.realm.update"));
-
-    for suffix in [
-        "compiled.content.watch",
-        "editor.capability.command.invoke",
-        "editor.capability.computation.invoke",
-        "editor.catalog.fetch",
-        "editor.catalog.invalidate",
-        "editor.presentation.search",
-        "editor.presentation.search.cancel",
-        "library.authoring.batch.apply",
-        "library.authoring.batch.preview",
-        "library.authoring.content.search",
-        "library.authoring.resources.resolve",
-        "library.authoring.selector.suggest",
-        "library.authoring.snapshot.get",
-        "shared.blob.begin",
-        "shared.blob.complete",
-        "shared.blob.metadata",
-        "shared.blob.read",
-        "shared.blob.write",
-        "shared.catalog.fetch",
-        "shared.publish",
-    ] {
-        allow_publish.push(format!("service.to.*.organization.{org_id}.realm.{suffix}",));
-    }
-    for suffix in [
-        "editor.catalog.invalidate",
-        "editor.presentation.search",
-        "library.authoring.changed",
-        "compiled.content.watch",
-    ] {
-        allow_subscribe.push(format!(
-            "service.from.*.organization.{org_id}.realm.{suffix}",
-        ));
-    }
-}
-
-fn add_organization_presence_permissions(
-    user_id: &str,
-    org_id: &str,
-    allow_publish: &mut Vec<String>,
-    allow_subscribe: &mut Vec<String>,
-) {
-    allow_publish.push(format!(
-        "typewriter.presence.organization.{org_id}.user.{user_id}"
-    ));
-    allow_subscribe.push(format!("typewriter.presence.organization.{org_id}.user.*"));
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{
-        add_membership_stream_permissions, add_organization_members_permissions,
-        add_organization_presence_permissions,
-    };
-    use rstest::rstest;
-
-    #[rstest]
-    #[case::simple_ids("user-1", "org-1")]
-    #[case::uuid_ids(
-        "550e8400-e29b-41d4-a716-446655440000",
-        "123e4567-e89b-12d3-a456-426614174000"
-    )]
-    #[case::distinct_ids("member-alpha", "organization-beta")]
-    fn organization_member_permissions_match_current_api(
-        #[case] user_id: &str,
-        #[case] org_id: &str,
-    ) {
-        let mut publish = Vec::new();
-        let mut subscribe = Vec::new();
-        add_organization_members_permissions(user_id, org_id, &mut publish, &mut subscribe);
-
-        let publish_prefix = format!("cloud.to.user.{user_id}.organization.{org_id}.members");
-        assert_eq!(
-            publish,
-            [
-                format!("{publish_prefix}.watch"),
-                format!("{publish_prefix}.update"),
-                format!("{publish_prefix}.remove"),
-                format!("{publish_prefix}.join_requests.watch"),
-                format!("{publish_prefix}.join_requests.approve"),
-                format!("{publish_prefix}.join_requests.decline"),
-                format!("{publish_prefix}.join_codes.watch"),
-                format!("{publish_prefix}.join_codes.generate"),
-                format!("{publish_prefix}.join_codes.revoke"),
-            ]
-        );
-        let subscribe_prefix = format!("cloud.from.organization.{org_id}.members");
-        assert_eq!(
-            subscribe,
-            [
-                format!("{subscribe_prefix}.watch"),
-                format!("{subscribe_prefix}.changed"),
-                format!("{subscribe_prefix}.join_requests.watch"),
-                format!("cloud.from.organization.{org_id}.join_requests.changed"),
-                format!("{subscribe_prefix}.join_codes.watch"),
-                format!("cloud.from.organization.{org_id}.join_codes.changed"),
-            ]
-        );
-        assert!(publish.iter().all(|subject| !subject.ends_with(".list")));
-        assert!(publish.iter().all(|subject| !subject.ends_with(".invite")));
-        assert!(
-            publish
-                .iter()
-                .all(|subject| !subject.ends_with(".role.assign"))
-        );
-        assert!(publish.iter().all(|subject| !subject.ends_with(".reject")));
-    }
-
-    #[test]
-    fn presence_publish_is_bound_to_authenticated_user() {
-        let mut publish = Vec::new();
-        let mut subscribe = Vec::new();
-
-        add_organization_presence_permissions(
-            "trusted-user",
-            "trusted-org",
-            &mut publish,
-            &mut subscribe,
-        );
-
-        assert_eq!(
-            publish,
-            ["typewriter.presence.organization.trusted-org.user.trusted-user"]
-        );
-        assert_eq!(
-            subscribe,
-            ["typewriter.presence.organization.trusted-org.user.*"]
-        );
-    }
-
-    #[test]
-    fn membership_stream_permissions_only_allow_ordered_consumer_operations() {
-        let mut publish = Vec::new();
-
-        add_membership_stream_permissions(&mut publish);
-
-        assert_eq!(
-            publish,
-            [
-                "$JS.API.STREAM.INFO.TYPEWRITER_MEMBERSHIP",
-                "$JS.API.CONSUMER.CREATE.TYPEWRITER_MEMBERSHIP.>",
-                "$JS.API.CONSUMER.INFO.TYPEWRITER_MEMBERSHIP.>",
-                "$JS.API.CONSUMER.MSG.NEXT.TYPEWRITER_MEMBERSHIP.>",
-                "$JS.API.CONSUMER.DELETE.TYPEWRITER_MEMBERSHIP.>",
-            ]
-        );
-        assert!(
-            publish
-                .iter()
-                .all(|subject| !subject.contains("STREAM.CREATE"))
-        );
-        assert!(
-            publish
-                .iter()
-                .all(|subject| !subject.contains("STREAM.UPDATE"))
-        );
-        assert!(
-            publish
-                .iter()
-                .all(|subject| !subject.contains("STREAM.DELETE"))
-        );
-    }
 }

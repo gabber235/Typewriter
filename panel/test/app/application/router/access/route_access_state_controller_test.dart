@@ -1,5 +1,5 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:typewriter_panel/app/application/router/access/route_access_state_controller.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
   test("stable initial state emits once when it changes", () {

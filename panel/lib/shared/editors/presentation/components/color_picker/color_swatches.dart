@@ -1,6 +1,3 @@
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_reorderable_grid_view/widgets/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Displays selectable colors with optional removal and reordering actions.

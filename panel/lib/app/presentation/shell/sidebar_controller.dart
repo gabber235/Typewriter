@@ -29,18 +29,12 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
   final minSize = min(kSidebarMinSize, maxSize);
   final effectiveSize = size.clamp(max<double>(0.0, minSize), maxSize);
   final isDragging = useState(false);
-
-  void resizeFromDrag(double value) {
-    ref.read(sidebarSizeProvider.notifier).size(value.clamp(minSize, maxSize));
-  }
-
-  void resizeBy(double delta) {
-    final newSize = (effectiveSize + delta).clamp(
-      max<double>(0.0, minSize),
-      maxSize,
-    );
-    ref.read(sidebarSizeProvider.notifier).size(newSize);
-  }
+  final resize = DimensionResizeOperation(
+    getSize: () => effectiveSize,
+    onSizeChange: ref.read(sidebarSizeProvider.notifier).size,
+    minSize: max<double>(0.0, minSize),
+    maxSize: maxSize,
+  );
 
   final shortcuts = [
     ActionShortcut(
@@ -54,7 +48,7 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
         const SingleActivator(LogicalKeyboardKey.comma, shift: true),
       ],
       priority: -1,
-      onInvoke: (_) => resizeBy(
+      onInvoke: (_) => resize.by(
         HardwareKeyboard.instance.isShiftPressed
             ? -kSidebarResizeLargeStep
             : -kSidebarResizeSmallStep,
@@ -72,7 +66,7 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
         const SingleActivator(LogicalKeyboardKey.period, shift: true),
       ],
       priority: -1,
-      onInvoke: (_) => resizeBy(
+      onInvoke: (_) => resize.by(
         HardwareKeyboard.instance.isShiftPressed
             ? kSidebarResizeLargeStep
             : kSidebarResizeSmallStep,
@@ -99,7 +93,7 @@ _SidebarController _useSidebarController(BuildContext context, WidgetRef ref) {
     maxSize: maxSize,
     isDragging: isDragging,
     shortcuts: shortcuts,
-    resize: resizeFromDrag,
+    resize: resize.to,
     startDragging: () => isDragging.value = true,
     stopDragging: () => isDragging.value = false,
   );

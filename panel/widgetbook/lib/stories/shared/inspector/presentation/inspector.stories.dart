@@ -1,5 +1,5 @@
-import "package:flutter/material.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
@@ -22,33 +22,42 @@ Widget sharedBookAndTagColorUseCase(BuildContext context) =>
 
 Widget bookAndTagSelectionStory({required bool sharedColor}) {
   final book = Book(
-    bookId: recordId("book:earth"),
+    bookId: skir.ResourceId(value: "book:earth"),
     title: "earth",
     icon: "mdi:earth",
     color: Colors.teal,
     tagIds: const [],
   );
   final tag = Tag(
-    tagId: recordId("tag:earth"),
+    tagId: skir.ResourceId(value: "tag:earth"),
     name: "earth",
     color: sharedColor ? Colors.teal : Colors.orange,
     parentIds: const [],
-    placement: const Placement(x: 0, y: 0, width: 4, height: 1),
+    placement: const GraphPlacement(x: 0, y: 0, width: 4, height: 1),
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(books: [book], tags: [tag]),
     overrides: [
-      ...authoringSessionMockOverrides(books: [book], tags: [tag]),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [tag]),
-      canonicalBooksProvider.overrideWith(() => _HeterogeneousBooks(book)),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
     ],
     child: InspectorScaffold(
       child: SelectedInspectorStory(
-        selection: [BookIdentifier(book.bookId), TagIdentifier(tag.tagId)],
+        selection: [
+          AuthoringResourceIdentifier(
+            organizationId: skir.recordId("organization:widgetbook"),
+            realmId: skir.recordId("service:widgetbook"),
+            resourceId: book.bookId,
+          ),
+          AuthoringResourceIdentifier(
+            organizationId: skir.recordId("organization:widgetbook"),
+            realmId: skir.recordId("service:widgetbook"),
+            resourceId: tag.tagId,
+          ),
+        ],
         child: Center(
           child: Wrap(
             spacing: 16,
@@ -71,19 +80,4 @@ Widget bookAndTagSelectionStory({required bool sharedColor}) {
       ),
     ),
   );
-}
-
-class _HeterogeneousBooks extends CanonicalBooks {
-  _HeterogeneousBooks(this.book);
-
-  final Book book;
-
-  @override
-  Future<List<Book>> build() async => [book];
-
-  @override
-  Future<TypedMutationResult> updateBook(Book book, {Book? expected}) async {
-    state = AsyncData([book]);
-    return TypedMutationResult.success(revision: 1, value: book.inspectorValue);
-  }
 }

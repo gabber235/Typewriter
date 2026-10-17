@@ -1,22 +1,11 @@
-import "dart:math" as math;
-
-import "package:flutter/cupertino.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:okcolor/models/extensions.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "shortcut_display.freezed.dart";
 
-// The default spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
+// Base spacing between displayed keys before applying visual density.
 const double _kLabelItemDefaultSpacing = 8;
 
-// The minimum spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
+// Compact density must retain this much separation between keys.
 const double _kLabelItemMinSpacing = 4;
 
 /// Selects the visual treatment used for keyboard shortcut keys.
@@ -191,7 +180,7 @@ class ShortcutDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final density = Theme.of(context).visualDensity;
-    final double horizontalPadding = math.max(
+    final double horizontalPadding = max(
       _kLabelItemMinSpacing,
       _kLabelItemDefaultSpacing + density.horizontal * 2,
     );

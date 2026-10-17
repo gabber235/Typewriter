@@ -1,7 +1,3 @@
-import "dart:ui" show PointerDeviceKind;
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -29,7 +25,7 @@ void main() {
   testWidgets(
     "successful feedback expires after ten seconds and later saves appear again",
     (tester) async {
-      final workspace = LocalWorkSession();
+      final workspace = ScopedWorkSession();
       final journal = workspace;
 
       addTearDown(workspace.dispose);
@@ -44,7 +40,7 @@ void main() {
       await tester.pumpTestApp(
         child: Scaffold(
           appBar: AppBar(
-            actions: [LocalWorkSessionActivityView(controller: workspace)],
+            actions: [ScopedWorkSessionActivityView(controller: workspace)],
           ),
         ),
       );
@@ -110,7 +106,7 @@ void main() {
         await tester.binding.setSurfaceSize(Size(mobile ? 390 : 1280, 800));
         addTearDown(() => tester.binding.setSurfaceSize(null));
 
-        final workspace = LocalWorkSession();
+        final workspace = ScopedWorkSession();
         final journal = workspace;
 
         addTearDown(workspace.dispose);
@@ -126,15 +122,24 @@ void main() {
         await tester.pumpTestApp(
           child: Scaffold(
             appBar: AppBar(
-              actions: [LocalWorkSessionActivityView(controller: workspace)],
+              actions: [ScopedWorkSessionActivityView(controller: workspace)],
             ),
           ),
         );
-        if (mobile) {
-          await tester.tap(find.byTooltip("Needs attention"));
-        } else {
-          await tester.tap(find.text("Needs attention"));
-        }
+        final pointer = await tester.createGesture(
+          kind: PointerDeviceKind.mouse,
+        );
+        addTearDown(pointer.removePointer);
+        await pointer.addPointer(location: const Offset(10, 500));
+        await pointer.moveTo(
+          tester.getCenter(find.byTooltip("Needs attention")),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.text("Save activity"),
+          mobile ? findsNothing : findsOneWidget,
+        );
+        await tester.tap(find.byTooltip("Needs attention"));
 
         await tester.pumpAndSettle();
         expect(find.text("Save activity"), findsOneWidget);
@@ -148,16 +153,12 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         if (!mobile) {
-          final mouse = await tester.createGesture(
-            kind: PointerDeviceKind.mouse,
-          );
-          await mouse.addPointer(location: Offset.zero);
-          await mouse.moveTo(tester.getCenter(find.byTooltip("Close")));
+          await pointer.moveTo(tester.getCenter(find.byTooltip("Close")));
           await tester.pump(const Duration(seconds: 1));
           await tester.pump();
           expect(tester.takeException(), isNull);
 
-          await mouse.removePointer();
+          await pointer.moveTo(const Offset(10, 500));
           await tester.pumpAndSettle();
         }
 
@@ -190,19 +191,15 @@ void main() {
       const failed = LocalWorkSubmissionState(
         id: 1,
         label: "Failed",
-        sending: false,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.rejected,
-        message: "Rejected",
+        phase: LocalWorkSubmissionPhase.settled(
+          LocalWorkKnownOutcome.rejected("Rejected"),
+          LocalWorkIntegration.applied(),
+        ),
       );
       const saving = LocalWorkSubmissionState(
         id: 2,
         label: "Saving",
-        sending: true,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.ready,
+        phase: LocalWorkSubmissionPhase.active(),
       );
       expect(
         MutationActivityPhase.resolve([failed, saving], const []),
@@ -211,10 +208,10 @@ void main() {
       const completed = LocalWorkSubmissionState(
         id: 2,
         label: "Saving",
-        sending: false,
-        canReplay: false,
-        integrationFailed: false,
-        result: LocalWorkSubmissionResult.confirmed,
+        phase: LocalWorkSubmissionPhase.settled(
+          LocalWorkKnownOutcome.confirmed(),
+          LocalWorkIntegration.applied(),
+        ),
       );
       expect(
         MutationActivityPhase.resolve([failed, completed], const []),
@@ -226,7 +223,7 @@ void main() {
   testWidgets(
     "already confirmed submissions expire but uncertain outcomes do not",
     (tester) async {
-      final journal = LocalWorkSession();
+      final journal = ScopedWorkSession();
 
       final confirmed = MutationSubmission<void>(
         id: 1,

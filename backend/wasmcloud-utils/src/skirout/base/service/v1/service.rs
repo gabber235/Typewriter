@@ -87,23 +87,25 @@ pub struct ServiceRole_Host {
 
 impl ServiceRole_Host {
     pub fn default_ref() -> &'static ServiceRole_Host {
-        static D: std::sync::LazyLock<ServiceRole_Host> = std::sync::LazyLock::new(ServiceRole_Host::default);
+        static D: std::sync::LazyLock<ServiceRole_Host> =
+            std::sync::LazyLock::new(ServiceRole_Host::default);
         &D
     }
 }
 
 impl ServiceRole_Host {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRole_Host> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRole_Host>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/service.skir",
-                    "ServiceRole.Host",
-                    "",
-                    |x: &ServiceRole_Host| &x._unrecognized,
-                    |x: &mut ServiceRole_Host, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceRole_Host>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/service.skir",
+                "ServiceRole.Host",
+                "",
+                |x: &ServiceRole_Host| &x._unrecognized,
+                |x: &mut ServiceRole_Host, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceRole_Host> {
@@ -126,23 +128,25 @@ pub struct ServiceRole_Custom {
 
 impl ServiceRole_Custom {
     pub fn default_ref() -> &'static ServiceRole_Custom {
-        static D: std::sync::LazyLock<ServiceRole_Custom> = std::sync::LazyLock::new(ServiceRole_Custom::default);
+        static D: std::sync::LazyLock<ServiceRole_Custom> =
+            std::sync::LazyLock::new(ServiceRole_Custom::default);
         &D
     }
 }
 
 impl ServiceRole_Custom {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRole_Custom> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRole_Custom>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/service.skir",
-                    "ServiceRole.Custom",
-                    "",
-                    |x: &ServiceRole_Custom| &x._unrecognized,
-                    |x: &mut ServiceRole_Custom, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceRole_Custom>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/service.skir",
+                "ServiceRole.Custom",
+                "",
+                |x: &ServiceRole_Custom| &x._unrecognized,
+                |x: &mut ServiceRole_Custom, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceRole_Custom> {
@@ -170,21 +174,25 @@ impl Default for ServiceRole {
 
 impl ServiceRole {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ServiceRole> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ServiceRole>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ServiceRole| match x {
-                        ServiceRole::Unknown(_) => 0,
-                        ServiceRole::Host(_) => 1,
-                        ServiceRole::Custom(_) => 2,
-                    },
-                    |u| ServiceRole::Unknown(Some(u)),
-                    |x: &ServiceRole| match x { ServiceRole::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/service.skir",
-                    "ServiceRole",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ServiceRole>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ServiceRole| match x {
+                    ServiceRole::Unknown(_) => 0,
+                    ServiceRole::Host(_) => 1,
+                    ServiceRole::Custom(_) => 2,
+                },
+                |u| ServiceRole::Unknown(Some(u)),
+                |x: &ServiceRole| match x {
+                    ServiceRole::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/service.skir",
+                "ServiceRole",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceRole> {
@@ -212,21 +220,25 @@ impl Default for ServiceStatus {
 
 impl ServiceStatus {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<ServiceStatus> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<ServiceStatus>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &ServiceStatus| match x {
-                        ServiceStatus::Unknown(_) => 0,
-                        ServiceStatus::Online => 1,
-                        ServiceStatus::Offline => 2,
-                    },
-                    |u| ServiceStatus::Unknown(Some(u)),
-                    |x: &ServiceStatus| match x { ServiceStatus::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "service/v1/service.skir",
-                    "ServiceStatus",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<ServiceStatus>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &ServiceStatus| match x {
+                    ServiceStatus::Unknown(_) => 0,
+                    ServiceStatus::Online => 1,
+                    ServiceStatus::Offline => 2,
+                },
+                |u| ServiceStatus::Unknown(Some(u)),
+                |x: &ServiceStatus| match x {
+                    ServiceStatus::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "service/v1/service.skir",
+                "ServiceStatus",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceStatus> {
@@ -249,7 +261,8 @@ pub struct ServiceState {
 
 impl ServiceState {
     pub fn default_ref() -> &'static ServiceState {
-        static D: std::sync::LazyLock<ServiceState> = std::sync::LazyLock::new(ServiceState::default);
+        static D: std::sync::LazyLock<ServiceState> =
+            std::sync::LazyLock::new(ServiceState::default);
         &D
     }
 }
@@ -266,16 +279,17 @@ impl Default for ServiceState {
 
 impl ServiceState {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceState> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceState>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/service.skir",
-                    "ServiceState",
-                    "",
-                    |x: &ServiceState| &x._unrecognized,
-                    |x: &mut ServiceState, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceState>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/service.skir",
+                "ServiceState",
+                "",
+                |x: &ServiceState| &x._unrecognized,
+                |x: &mut ServiceState, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceState> {
@@ -298,7 +312,8 @@ pub struct ServiceRegistration {
 
 impl ServiceRegistration {
     pub fn default_ref() -> &'static ServiceRegistration {
-        static D: std::sync::LazyLock<ServiceRegistration> = std::sync::LazyLock::new(ServiceRegistration::default);
+        static D: std::sync::LazyLock<ServiceRegistration> =
+            std::sync::LazyLock::new(ServiceRegistration::default);
         &D
     }
 }
@@ -315,16 +330,17 @@ impl Default for ServiceRegistration {
 
 impl ServiceRegistration {
     fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ServiceRegistration> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<ServiceRegistration>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "service/v1/service.skir",
-                    "ServiceRegistration",
-                    "",
-                    |x: &ServiceRegistration| &x._unrecognized,
-                    |x: &mut ServiceRegistration, u| x._unrecognized = u,
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ServiceRegistration>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "service/v1/service.skir",
+                "ServiceRegistration",
+                "",
+                |x: &ServiceRegistration| &x._unrecognized,
+                |x: &mut ServiceRegistration, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<ServiceRegistration> {
@@ -338,55 +354,195 @@ impl ServiceRegistration {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<Service> = Service::_adapter() as *const _ as *mut _;
-                (*a).add_field("service_id", 0, crate::skirout::base::kernel::v1::record_id::RecordId::serializer(), "", |x: &Service| &x.service_id, |x: &mut Service, v| x.service_id = v);
-                (*a).add_field("revision", 1, crate::skir_client::Serializer::int64(), "", |x: &Service| &x.revision, |x: &mut Service, v| x.revision = v);
-                (*a).add_field("name", 2, crate::skir_client::Serializer::string(), "", |x: &Service| &x.name, |x: &mut Service, v| x.name = v);
-                (*a).add_field("role", 3, crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter()), "", |x: &Service| &x.role, |x: &mut Service, v| x.role = v);
-                (*a).add_field("created_at", 4, crate::skir_client::Serializer::timestamp(), "", |x: &Service| &x.created_at, |x: &mut Service, v| x.created_at = v);
-                (*a).add_field("organization", 5, crate::skir_client::Serializer::optional(crate::skirout::base::kernel::v1::record_id::RecordId::serializer()), "", |x: &Service| &x.organization, |x: &mut Service, v| x.organization = v);
-                (*a).add_field("registration", 6, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceRegistration::_adapter())), "", |x: &Service| &x.registration, |x: &mut Service, v| x.registration = v);
-                (*a).add_field("state", 7, crate::skir_client::Serializer::optional(crate::skir_client::internal::struct_serializer_from_static(ServiceState::_adapter())), "", |x: &Service| &x.state, |x: &mut Service, v| x.state = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Host> = ServiceRole_Host::_adapter() as *const _ as *mut _;
-                (*a).add_field("version", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Host| &x.version, |x: &mut ServiceRole_Host, v| x.version = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Custom> = ServiceRole_Custom::_adapter() as *const _ as *mut _;
-                (*a).add_field("name", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Custom| &x.name, |x: &mut ServiceRole_Custom, v| x.name = v);
-                (*a).add_field("version", 1, crate::skir_client::Serializer::string(), "", |x: &ServiceRole_Custom| &x.version, |x: &mut ServiceRole_Custom, v| x.version = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ServiceRole> = ServiceRole::_adapter() as *const _ as *mut _;
-                (*a).add_wrapper_variant("host", 1, 1, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Host::_adapter()), "", |v| ServiceRole::Host(Box::new(v)), |x| match x { ServiceRole::Host(b) => b.as_ref(), _ => unreachable!() });
-                (*a).add_wrapper_variant("custom", 2, 2, crate::skir_client::internal::struct_serializer_from_static(ServiceRole_Custom::_adapter()), "", |v| ServiceRole::Custom(Box::new(v)), |x| match x { ServiceRole::Custom(b) => b.as_ref(), _ => unreachable!() });
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<ServiceStatus> = ServiceStatus::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("online", 1, 1, "", ServiceStatus::Online);
-                (*a).add_constant_variant("offline", 2, 2, "", ServiceStatus::Offline);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceState> = ServiceState::_adapter() as *const _ as *mut _;
-                (*a).add_field("status", 0, crate::skir_client::internal::enum_serializer_from_static(ServiceStatus::_adapter()), "", |x: &ServiceState| &x.status, |x: &mut ServiceState, v| x.status = v);
-                (*a).add_field("last_seen", 1, crate::skir_client::Serializer::timestamp(), "", |x: &ServiceState| &x.last_seen, |x: &mut ServiceState, v| x.last_seen = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<ServiceRegistration> = ServiceRegistration::_adapter() as *const _ as *mut _;
-                (*a).add_field("token", 0, crate::skir_client::Serializer::string(), "", |x: &ServiceRegistration| &x.token, |x: &mut ServiceRegistration, v| x.token = v);
-                (*a).add_field("expires_at", 1, crate::skir_client::Serializer::timestamp(), "", |x: &ServiceRegistration| &x.expires_at, |x: &mut ServiceRegistration, v| x.expires_at = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<Service> =
+                Service::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "service_id",
+                0,
+                crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                "",
+                |x: &Service| &x.service_id,
+                |x: &mut Service, v| x.service_id = v,
+            );
+            (*a).add_field(
+                "revision",
+                1,
+                crate::skir_client::Serializer::int64(),
+                "",
+                |x: &Service| &x.revision,
+                |x: &mut Service, v| x.revision = v,
+            );
+            (*a).add_field(
+                "name",
+                2,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &Service| &x.name,
+                |x: &mut Service, v| x.name = v,
+            );
+            (*a).add_field(
+                "role",
+                3,
+                crate::skir_client::internal::enum_serializer_from_static(ServiceRole::_adapter()),
+                "",
+                |x: &Service| &x.role,
+                |x: &mut Service, v| x.role = v,
+            );
+            (*a).add_field(
+                "created_at",
+                4,
+                crate::skir_client::Serializer::timestamp(),
+                "",
+                |x: &Service| &x.created_at,
+                |x: &mut Service, v| x.created_at = v,
+            );
+            (*a).add_field(
+                "organization",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::kernel::v1::record_id::RecordId::serializer(),
+                ),
+                "",
+                |x: &Service| &x.organization,
+                |x: &mut Service, v| x.organization = v,
+            );
+            (*a).add_field(
+                "registration",
+                6,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ServiceRegistration::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &Service| &x.registration,
+                |x: &mut Service, v| x.registration = v,
+            );
+            (*a).add_field(
+                "state",
+                7,
+                crate::skir_client::Serializer::optional(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ServiceState::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &Service| &x.state,
+                |x: &mut Service, v| x.state = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Host> =
+                ServiceRole_Host::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "version",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceRole_Host| &x.version,
+                |x: &mut ServiceRole_Host, v| x.version = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceRole_Custom> =
+                ServiceRole_Custom::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "name",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceRole_Custom| &x.name,
+                |x: &mut ServiceRole_Custom, v| x.name = v,
+            );
+            (*a).add_field(
+                "version",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceRole_Custom| &x.version,
+                |x: &mut ServiceRole_Custom, v| x.version = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ServiceRole> =
+                ServiceRole::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "host",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServiceRole_Host::_adapter(),
+                ),
+                "",
+                |v| ServiceRole::Host(Box::new(v)),
+                |x| match x {
+                    ServiceRole::Host(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "custom",
+                2,
+                2,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    ServiceRole_Custom::_adapter(),
+                ),
+                "",
+                |v| ServiceRole::Custom(Box::new(v)),
+                |x| match x {
+                    ServiceRole::Custom(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<ServiceStatus> =
+                ServiceStatus::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("online", 1, 1, "", ServiceStatus::Online);
+            (*a).add_constant_variant("offline", 2, 2, "", ServiceStatus::Offline);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceState> =
+                ServiceState::_adapter() as *const _ as *mut _;
+            (*a).add_field("status", 0, crate::skir_client::internal::enum_serializer_from_static(ServiceStatus::_adapter()), "", |x: &ServiceState| &x.status, |x: &mut ServiceState, v| x.status = v);
+            (*a).add_field(
+                "last_seen",
+                1,
+                crate::skir_client::Serializer::timestamp(),
+                "",
+                |x: &ServiceState| &x.last_seen,
+                |x: &mut ServiceState, v| x.last_seen = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ServiceRegistration> =
+                ServiceRegistration::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "token",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ServiceRegistration| &x.token,
+                |x: &mut ServiceRegistration, v| x.token = v,
+            );
+            (*a).add_field(
+                "expires_at",
+                1,
+                crate::skir_client::Serializer::timestamp(),
+                "",
+                |x: &ServiceRegistration| &x.expires_at,
+                |x: &mut ServiceRegistration, v| x.expires_at = v,
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

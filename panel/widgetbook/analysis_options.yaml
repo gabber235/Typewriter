@@ -102,7 +102,7 @@ analyzer:
 
 plugins:
   riverpod_lint:
-    version: 3.1.4
+    version: 3.1.9
     diagnostics:
       missing_provider_scope: false
       scoped_providers_should_specify_dependencies: false

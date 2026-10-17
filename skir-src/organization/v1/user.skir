@@ -42,12 +42,9 @@ method WatchUserJoinRequests(
 // Single use codes are consumed as part of the successful submission.
 method SubmitUserJoinRequest(
   struct {
-    operation_id: string;
     code: RecordId;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   request_made: struct {
@@ -74,12 +71,9 @@ method SubmitUserJoinRequest(
 // The organization request view receives the corresponding removal as well.
 method CancelUserJoinRequest(
   struct {
-    operation_id: string;
     request_id: RecordId;
   }
 ): enum {
-  invalid_operation_id_error: struct {};
-  operation_identity_reused_error: struct {};
   internal_error: InternalError;
 
   success: struct {

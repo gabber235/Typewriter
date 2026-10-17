@@ -1,7 +1,9 @@
 /// A mutable damped spring used to animate a scalar toward a target.
 ///
 /// The owning controller updates the value by calling [tick] each frame. Set
-/// [target] to animate, or set [value] to snap both current and target values.
+/// [target] to animate. Assigning a different [value] updates both current and
+/// target values but preserves velocity; assigning the current value does
+/// nothing.
 class SpringValue {
   SpringValue({
     required double value,

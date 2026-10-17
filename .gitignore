@@ -160,6 +160,6 @@ docker/nats
 PLAN.md
 /panel/doc
 plans/
-/docs
+/docs/*
 backend/.artifact_keeper_password
 AGENTS.local.md

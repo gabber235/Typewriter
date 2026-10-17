@@ -8,10 +8,10 @@ import com.typewritermc.loader.LoaderServiceConnection
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.deployment.PrimaryEngineTarget
 import com.typewritermc.loader.deployment.RealmLoaderIntent
-import com.typewritermc.services.libs.communicator.address.AddressTemplate
-import com.typewritermc.services.libs.communicator.address.addressTemplate
-import com.typewritermc.services.libs.communicator.address.addressValuesOf
-import com.typewritermc.services.libs.communicator.contract.OperationName
+import com.typewritermc.protocol.transport.generated.ServiceRouteScope
+import com.typewritermc.protocol.transport.generated.hostExecutionReport
+import com.typewritermc.protocol.transport.generated.hostExecutionWatch
+import com.typewritermc.protocol.transport.generated.serviceHostRegister
 import com.typewritermc.services.libs.communicator.contract.ResponseClassification
 import com.typewritermc.services.libs.communicator.contract.ResponseClassifier
 import com.typewritermc.services.libs.communicator.contract.ResponseOutcome
@@ -19,12 +19,9 @@ import com.typewritermc.services.libs.communicator.contract.ResponsePolicy
 import com.typewritermc.services.libs.communicator.contract.ResponseVariant
 import com.typewritermc.services.libs.communicator.contract.WatchMessage
 import com.typewritermc.services.libs.communicator.result.CommunicationResult
-import com.typewritermc.services.libs.communicator.skir.skirUnaryContract
-import com.typewritermc.services.libs.communicator.skir.skirWatchContract
 import com.typewritermc.services.libs.registrar.RegistrarResult
 import com.typewritermc.services.libs.registrar.RegistrarState
 import com.typewritermc.services.libs.registrar.ServiceId
-import com.typewritermc.services.libs.telemetry.ErrorSlug
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -36,29 +33,17 @@ import skirout.kernel.v1.record_id.RecordId
 import skirout.kernel.v1.record_id.RecordIdKey
 import skirout.service.v1.topology.ChildRuntimeState
 import skirout.service.v1.topology.ChildRuntimeStatus
-import skirout.service.v1.topology.RegisterServiceHost
 import skirout.service.v1.topology.RegisterServiceHostRequest
 import skirout.service.v1.topology.RegisterServiceHostResponse
-import skirout.service.v1.topology.ReportHostExecution
 import skirout.service.v1.topology.ReportHostExecutionRequest
 import skirout.service.v1.topology.ReportHostExecutionResponse
 import skirout.service.v1.topology.SupportedEngine
-import skirout.service.v1.topology.WatchHostExecution
 import skirout.service.v1.topology.WatchHostExecutionRequest
 import skirout.service.v1.topology.WatchHostExecutionResponse
 import java.time.Clock
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
-@JvmInline
-private value class HostExecutionAddress(
-    val serviceId: ServiceId,
-)
-
-private val hostExecutionRequestAddress = hostExecutionAddress("cloud.to.service.{service}.execution.watch")
-private val hostExecutionUpdateAddress = hostExecutionAddress("cloud.from.service.{service}.execution.watch")
-private val hostRegistrationAddress = hostExecutionAddress("cloud.to.service.{service}.execution.register")
-private val hostExecutionReportAddress = hostExecutionAddress("cloud.to.service.{service}.execution.report")
 private val hostRegistrationClassifier =
     ResponseClassifier<RegisterServiceHostResponse> { response ->
         when (response) {
@@ -67,15 +52,9 @@ private val hostRegistrationClassifier =
             else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
         }
     }
-private val hostRegistrationContract =
-    skirUnaryContract(
-        method = RegisterServiceHost,
-        name = OperationName.of("host.execution.register"),
-        address = hostRegistrationAddress,
-        responsePolicy = ResponsePolicy(RegisterServiceHostResponse.createInternalError(), hostRegistrationClassifier),
-        failureSlug = ErrorSlug.of("host-execution-register-failed"),
-    )
-private val hostExecutionClassifier =
+internal val hostRegistrationResponsePolicy =
+    ResponsePolicy(RegisterServiceHostResponse.createInternalError(), hostRegistrationClassifier)
+internal val hostExecutionResponseClassifier =
     ResponseClassifier<WatchHostExecutionResponse> { response ->
         when (response) {
             is WatchHostExecutionResponse.DesiredWrapper -> classification(ResponseOutcome.SUCCESS, "desired")
@@ -83,17 +62,8 @@ private val hostExecutionClassifier =
             else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
         }
     }
-private val hostExecutionContract =
-    skirWatchContract(
-        method = WatchHostExecution,
-        updateSerializer = WatchHostExecutionResponse.serializer,
-        name = OperationName.of("host.execution.watch"),
-        requestAddress = hostExecutionRequestAddress,
-        updateAddress = hostExecutionUpdateAddress,
-        initialPolicy = ResponsePolicy(WatchHostExecutionResponse.createInternalError(), hostExecutionClassifier),
-        updateClassifier = hostExecutionClassifier,
-        failureSlug = ErrorSlug.of("host-execution-watch-failed"),
-    )
+internal val hostExecutionResponsePolicy =
+    ResponsePolicy(WatchHostExecutionResponse.createInternalError(), hostExecutionResponseClassifier)
 private val hostExecutionReportClassifier =
     ResponseClassifier<ReportHostExecutionResponse> { response ->
         when (response) {
@@ -103,14 +73,8 @@ private val hostExecutionReportClassifier =
             else -> classification(ResponseOutcome.DOMAIN_ERROR, "unknown")
         }
     }
-private val hostExecutionReportContract =
-    skirUnaryContract(
-        method = ReportHostExecution,
-        name = OperationName.of("host.execution.report"),
-        address = hostExecutionReportAddress,
-        responsePolicy = ResponsePolicy(ReportHostExecutionResponse.createInternalError(), hostExecutionReportClassifier),
-        failureSlug = ErrorSlug.of("host-execution-report-failed"),
-    )
+internal val hostExecutionReportResponsePolicy =
+    ResponsePolicy(ReportHostExecutionResponse.createInternalError(), hostExecutionReportClassifier)
 
 /**
  * Registers host capabilities and watches backend execution assignments through ready messaging generations.
@@ -134,9 +98,12 @@ class BackendArtifactHostAssignmentSource(
                         is RegistrarResult.Failure -> return@flatMapLatest emptyFlow()
                     }
                 flow {
-                    val address = HostExecutionAddress(ready.session.identity.serviceId)
+                    val address = ServiceRouteScope(ready.session.identity.serviceId.value)
+                    val registrationContract = address.serviceHostRegister(hostRegistrationResponsePolicy)
+                    val executionContract =
+                        address.hostExecutionWatch(hostExecutionResponsePolicy, hostExecutionResponseClassifier)
                     while (true) {
-                        val registration = communicator.request(hostRegistrationContract, address, registrationRequest())
+                        val registration = communicator.request(registrationContract, address, registrationRequest())
                         val registered =
                             (
                                 (registration as? CommunicationResult.Success)?.value
@@ -148,7 +115,7 @@ class BackendArtifactHostAssignmentSource(
                         }
                         communicator
                             .watch(
-                                hostExecutionContract,
+                                executionContract,
                                 address,
                                 WatchHostExecutionRequest(),
                             ).collect { result ->
@@ -158,7 +125,9 @@ class BackendArtifactHostAssignmentSource(
                                         is WatchMessage.Initial -> message.value
                                         is WatchMessage.Update -> message.value
                                     }
-                                response.toDesiredHostExecution(panelEngine, address.serviceId)?.let { emit(it) }
+                                response
+                                    .toDesiredHostExecution(panelEngine, ready.session.identity.serviceId)
+                                    ?.let { emit(it) }
                             }
                         delay(1.seconds)
                     }
@@ -230,11 +199,12 @@ internal class BackendHostExecutionReporter(
                 realmState = state(RuntimePlacement.REALM),
                 engineState = state(RuntimePlacement.PRIMARY_ENGINE),
             )
+        val scope = ServiceRouteScope(observation.revision.serviceId.value)
         when (
             val result =
                 session.communicator.request(
-                    hostExecutionReportContract,
-                    HostExecutionAddress(observation.revision.serviceId),
+                    scope.hostExecutionReport(hostExecutionReportResponsePolicy),
+                    scope,
                     request,
                 )
         ) {
@@ -350,13 +320,6 @@ private fun RecordId.stringKey(): String =
         is RecordIdKey.StringWrapper -> value.value
         else -> error("Topology record ids must use string keys.")
     }
-
-private fun hostExecutionAddress(pattern: String): AddressTemplate<HostExecutionAddress> =
-    addressTemplate(
-        pattern,
-        { addressValuesOf("service" to it.serviceId.value) },
-        { HostExecutionAddress(ServiceId(it.require("service"))) },
-    )
 
 private fun classification(
     outcome: ResponseOutcome,

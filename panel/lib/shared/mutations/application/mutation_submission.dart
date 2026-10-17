@@ -1,6 +1,3 @@
-import "dart:async";
-
-import "package:flutter/foundation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns delivery of one prepared request, independently of later user edits.
@@ -8,8 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The supplied sender must capture an immutable request and destination.
 /// Repeated attempts reuse that sender. Only protocols with verified replay
 /// support may retry an uncertain result. Concurrent attempts share one Future.
-/// A confirmed response is integrated once; integration failure is reported
-/// separately because resending could duplicate an already accepted mutation.
+/// Known results enter local integration independently of delivery. Successful
+/// integration is retained; failed integration can run again without resending
+/// an already accepted mutation. Disposal stops publication and releases owned
+/// dependencies but cannot retract a request already sent to the server.
 final class MutationSubmission<T> extends ChangeNotifier {
   MutationSubmission({
     required this.id,
@@ -28,8 +27,8 @@ final class MutationSubmission<T> extends ChangeNotifier {
   final Future<SubmissionResult<T>> Function() _send;
   final Future<void> Function(SubmissionResult<T>)? _integrate;
   final void Function()? _onDispose;
-  AsyncError? _integrationError;
-  AsyncError? get integrationError => _integrationError;
+  SdkAsyncError? _integrationError;
+  SdkAsyncError? get integrationError => _integrationError;
   Future<SubmissionResult<T>>? _active;
   SubmissionResult<T>? _result;
   bool _disposed = false;
@@ -39,6 +38,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
   bool get unsettled => sending || _result is! SubmissionConfirmed<T>;
   bool get canReplay =>
       !sending &&
+      _integrationError == null &&
       (_result is SubmissionNotSubmitted<T> ||
           (_result is SubmissionUncertain<T> &&
               replay == SubmissionReplay.identicalRequest));
@@ -52,6 +52,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
     if (_disposed) throw StateError("Submission is disposed");
     final active = _active;
     if (active != null) return active;
+    if (_integrationError != null) return retryIntegration();
     final previous = _result;
     if (previous != null && !canReplay && _integrationError == null) {
       return Future.value(previous);
@@ -81,6 +82,26 @@ final class MutationSubmission<T> extends ChangeNotifier {
     return _active!;
   }
 
+  /// Applies the captured known response again without sending the request.
+  Future<SubmissionResult<T>> retryIntegration() {
+    if (_disposed) throw StateError("Submission is disposed");
+    if (_active case final active?) return active;
+    final previous = _result;
+    if (previous == null || previous is SubmissionUncertain<T>) {
+      throw StateError("Local integration requires a known response");
+    }
+    if (_integrationError == null) return Future.value(previous);
+    _active = _integrateResult(previous).then((result) {
+      if (!_disposed) {
+        _active = null;
+        notifyListeners();
+      }
+      return result;
+    });
+    notifyListeners();
+    return _active!;
+  }
+
   Future<SubmissionResult<T>> _integrateResult(
     SubmissionResult<T> result,
   ) async {
@@ -90,7 +111,7 @@ final class MutationSubmission<T> extends ChangeNotifier {
       _integrationError = null;
     } on Object catch (error, stackTrace) {
       if (_disposed) return result;
-      _integrationError = AsyncError(error, stackTrace);
+      _integrationError = SdkAsyncError(error, stackTrace);
       FlutterError.reportError(
         FlutterErrorDetails(exception: error, stack: stackTrace),
       );

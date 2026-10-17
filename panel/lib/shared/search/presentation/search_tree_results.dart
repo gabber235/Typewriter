@@ -1,9 +1,3 @@
-import "package:collection/collection.dart";
-import "package:flutter/material.dart" hide SearchController;
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Projects the controller snapshot into an interactive, scrollable result
@@ -14,9 +8,18 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// delegated by result type identifier through [rowRenderers]. Empty states
 /// replace the scroll view only when the projected row count is zero.
 class SearchTreeResults extends HookConsumerWidget {
-  const SearchTreeResults({required this.rowRenderers, super.key});
+  const SearchTreeResults({
+    required this.rowRenderers,
+    this.empty,
+    this.loading,
+    this.shrinkWrap = false,
+    super.key,
+  });
 
   final Map<String, SearchResultRowBuilder> rowRenderers;
+  final Widget? empty;
+  final Widget? loading;
+  final bool shrinkWrap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,12 +36,25 @@ class SearchTreeResults extends HookConsumerWidget {
     );
 
     if (viewModel.rowCount == 0) {
-      return SearchResultEmptyState(snapshot: snapshot);
+      return switch (snapshot.status) {
+        .loading when loading != null => loading!,
+        .idle ||
+        .ready when empty != null && snapshot.errorSummaries.isEmpty => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (snapshot.guidance.isNotEmpty)
+              Flexible(child: SearchResultEmptyState(snapshot: snapshot)),
+            Flexible(child: empty!),
+          ],
+        ),
+        _ => SearchResultEmptyState(snapshot: snapshot),
+      };
     }
 
     return ClipPath(
       clipper: VerticalClipper(additionalWidth: 500),
       child: CustomScrollView(
+        shrinkWrap: shrinkWrap,
         clipBehavior: .none,
         slivers: [
           for (final error in snapshot.errorSummaries)

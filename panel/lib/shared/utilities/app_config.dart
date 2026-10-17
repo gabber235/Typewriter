@@ -1,4 +1,4 @@
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Build time configuration grouped by the boundary that consumes it.
 ///

@@ -27,7 +27,7 @@ sealed interface ServiceHeartbeatNotification_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ServiceHeartbeatNotification private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.lifecycle.ServiceHeartbeatNotification>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.lifecycle.ServiceHeartbeatNotification>? =
         null,
 ): skirout.service.v1.lifecycle.ServiceHeartbeatNotification_OrMutable {
     constructor(
@@ -56,7 +56,7 @@ class ServiceHeartbeatNotification private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.lifecycle.ServiceHeartbeatNotification.serializerImpl,
+            _SerializerRegistry.ServiceHeartbeatNotificationSerializerImpl,
         )
     }
 
@@ -92,25 +92,11 @@ class ServiceHeartbeatNotification private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/lifecycle.skir:ServiceHeartbeatNotification",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceHeartbeatNotification] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceHeartbeatNotificationSerializer;
 
         /** Describes the [ServiceHeartbeatNotification] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceHeartbeatNotificationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -121,7 +107,7 @@ sealed interface ServiceShutdownNotification_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ServiceShutdownNotification private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.lifecycle.ServiceShutdownNotification>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.lifecycle.ServiceShutdownNotification>? =
         null,
 ): skirout.service.v1.lifecycle.ServiceShutdownNotification_OrMutable {
     constructor(
@@ -150,7 +136,7 @@ class ServiceShutdownNotification private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.lifecycle.ServiceShutdownNotification.serializerImpl,
+            _SerializerRegistry.ServiceShutdownNotificationSerializerImpl,
         )
     }
 
@@ -186,24 +172,42 @@ class ServiceShutdownNotification private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/lifecycle.skir:ServiceShutdownNotification",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceShutdownNotification] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceShutdownNotificationSerializer;
 
         /** Describes the [ServiceShutdownNotification] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
+        val typeDescriptor get() = _SerializerRegistry.ServiceShutdownNotificationSerializerImpl.typeDescriptor;
+    }
+}
 
-        init {
-            serializerImpl.finalizeStruct();
-        }
+private object _SerializerRegistry {
+    val ServiceHeartbeatNotificationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/lifecycle.skir:ServiceHeartbeatNotification",
+        doc = "",
+        defaultInstance = skirout.service.v1.lifecycle.ServiceHeartbeatNotification.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.lifecycle.ServiceHeartbeatNotification.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceHeartbeatNotificationSerializer = build.skir.internal.makeSerializer(ServiceHeartbeatNotificationSerializerImpl);
+
+    val ServiceShutdownNotificationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/lifecycle.skir:ServiceShutdownNotification",
+        doc = "",
+        defaultInstance = skirout.service.v1.lifecycle.ServiceShutdownNotification.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.lifecycle.ServiceShutdownNotification.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceShutdownNotificationSerializer = build.skir.internal.makeSerializer(ServiceShutdownNotificationSerializerImpl);
+
+    init {
+        ServiceHeartbeatNotificationSerializerImpl.finalizeStruct();
+
+        ServiceShutdownNotificationSerializerImpl.finalizeStruct();
     }
 }

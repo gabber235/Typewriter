@@ -2,7 +2,7 @@
 
 package com.typewritermc.services.libs.telemetry
 
-import com.typewritermc.services.libs.utils.findExceptionalThrowable
+import com.typewritermc.services.libs.utils.findExceptional
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
@@ -48,7 +48,7 @@ private fun rethrowExceptional(
     span: Span,
     thrown: Throwable,
 ) {
-    val exceptional = findExceptionalThrowable(thrown) ?: return
+    val exceptional = thrown.findExceptional() ?: return
     if (exceptional is CancellationException) cancelled(span)
     throw exceptional
 }
@@ -117,7 +117,7 @@ fun <T> ServiceTelemetry.mainSpanBlocking(
             return result
         }
     } catch (failure: Throwable) {
-        if (findExceptionalThrowable(failure) is CancellationException) main.recordCancelled()
+        if (failure.findExceptional() is CancellationException) main.recordCancelled()
         rethrowExceptional(span, failure)
         val recorded = recordFailure(span, failure, unhandledFailureSlug)
         main.recordFailed(recorded)
@@ -154,7 +154,7 @@ suspend fun <T> ServiceTelemetry.mainSpan(
             result
         }
     } catch (failure: Throwable) {
-        if (findExceptionalThrowable(failure) is CancellationException) main.recordCancelled()
+        if (failure.findExceptional() is CancellationException) main.recordCancelled()
         rethrowExceptional(span, failure)
         val recorded = recordFailure(span, failure, unhandledFailureSlug)
         main.recordFailed(recorded)

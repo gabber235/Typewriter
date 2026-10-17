@@ -16,6 +16,5 @@ dependencies {
     implementation(libs.kotlin.serialize.cbor)
     implementation(libs.kotlin.serialize.json)
     implementation(libs.mordant)
-    testImplementation(libs.koin.test)
     testImplementation(libs.kotlin.coroutines.test)
 }

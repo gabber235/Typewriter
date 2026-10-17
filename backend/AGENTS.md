@@ -1,3 +1,13 @@
+## Macros and code generation
+
+Prefer Rust macros when they make declarations and calling code more readable, remove boilerplate, or improve developer experience. Use macros to express repeated patterns and domain declarations concisely, with useful validation during compilation.
+
+Reuse and extend the existing macros exposed through `wasmcloud_utils`, including query declarations, response construction, outcome mapping, and identifier validation. Shared procedural macros live in `wasmcloud-utils-macros`. Choose `macro_rules!`, derives, or procedural macros according to the transformation required.
+
+Keep macro inputs expressive and expansions deterministic and inspectable. Make generated types, control flow, ownership, and effects understandable from the declaration. Report invalid inputs with actionable compiler errors at the relevant source location. Use ordinary functions and traits for shared behavior when they provide an equally clear API with less machinery.
+
+When changing macros, update affected callers and verify representative expansions compile. Use the existing macro tests to cover meaningful behavior and diagnostics for invalid declarations.
+
 ## NATS subject translation
 
 - Panel → wasmCloud request: panel and permission code uses `cloud.to...`; backend subscriptions and handlers receive same flow as `typewriter.from...`.

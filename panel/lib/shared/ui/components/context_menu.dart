@@ -1,9 +1,3 @@
-import "package:flutter/foundation.dart";
-import "package:flutter/gestures.dart";
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "context_menu.freezed.dart";
@@ -12,7 +6,8 @@ part "context_menu.freezed.dart";
 ///
 /// Secondary click and long press open the menu at the pointer position when
 /// [enableGestures] is true. On Apple platforms, a control click opens it;
-/// other taps are delegated to [onTapUp]'s [orElse] callback. Supply [builder]
+/// other taps can be delegated through the static [onTapUp] helper's `orElse`
+/// callback. Supply [builder]
 /// when the child must be built with the menu controller.
 class ContextMenuRegion extends HookWidget {
   const ContextMenuRegion({
@@ -20,6 +15,7 @@ class ContextMenuRegion extends HookWidget {
     this.enableGestures = true,
     this.controller,
     this.childFocusNode,
+    this.onClose,
     this.child,
     this.builder,
     super.key,
@@ -33,6 +29,7 @@ class ContextMenuRegion extends HookWidget {
 
   final MenuController? controller;
   final FocusNode? childFocusNode;
+  final VoidCallback? onClose;
 
   final Widget? child;
   final Widget Function(BuildContext, MenuController, Widget?)? builder;
@@ -43,7 +40,7 @@ class ContextMenuRegion extends HookWidget {
 
     final controller = this.controller ?? useMenuController();
 
-    final menu = MenuAnchor(
+    final anchor = MenuAnchor(
       menuChildren: [
         for (final (index, item) in items.indexed)
           _buildMenuItem(
@@ -54,9 +51,30 @@ class ContextMenuRegion extends HookWidget {
           ),
       ],
       controller: controller,
+      onClose: onClose,
       childFocusNode: childFocusNode,
       builder: builder,
       child: child,
+    );
+
+    final menu = Shortcuts(
+      shortcuts: const {
+        SingleActivator(LogicalKeyboardKey.contextMenu):
+            SelectorContextMenuIntent(),
+        SingleActivator(LogicalKeyboardKey.f10, shift: true):
+            SelectorContextMenuIntent(),
+      },
+      child: Actions(
+        actions: {
+          SelectorContextMenuIntent: CallbackAction<SelectorContextMenuIntent>(
+            onInvoke: (_) {
+              controller.open();
+              return null;
+            },
+          ),
+        },
+        child: anchor,
+      ),
     );
 
     if (enableGestures) {
@@ -101,9 +119,13 @@ class ContextMenuRegion extends HookWidget {
   }
 
   /// Creates a tap handler that applies the platform context menu policy.
+  ///
+  /// [onContextTap] replaces menu opening on an Apple Control click. It must
+  /// resolve the target and open the menu itself if needed.
   static void Function(TapUpDetails) onTapUp(
     MenuController controller, {
     Function(TapUpDetails)? orElse,
+    ValueChanged<TapUpDetails>? onContextTap,
   }) {
     return (details) {
       if (controller.isOpen) {
@@ -128,7 +150,11 @@ class ContextMenuRegion extends HookWidget {
               HardwareKeyboard.instance.logicalKeysPressed.contains(
                 LogicalKeyboardKey.controlRight,
               )) {
-            controller.open(position: details.localPosition);
+            if (onContextTap != null) {
+              onContextTap(details);
+            } else {
+              controller.open(position: details.localPosition);
+            }
           } else {
             orElse?.call(details);
           }

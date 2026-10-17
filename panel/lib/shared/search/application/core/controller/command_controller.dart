@@ -1,17 +1,18 @@
-// ignore_for_file: prefer_initializing_formals
-
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/foundation.dart";
-import "package:flutter_animate/flutter_animate.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
+
+// ignore_for_file: prefer_initializing_formals
 
 typedef CommandSurfaceEffectCallback = FutureOr<void> Function(
   SearchSurfaceEffect effect,
 );
 
-/// Owns one active search command and publishes its lifecycle to the surface.
+/// Admits command execution and publishes feedback for one search surface.
+///
+/// A running command rejects another submission. Completion publishes its
+/// result, applies the surface effect, then executes host effects in order.
+/// Host effects can therefore continue after a surface closes. Disposal stops
+/// subsequent state publication; it does not cancel command work already begun.
+/// Thrown command or effect errors become failed feedback while mounted.
 class CommandController with ChangeNotifier {
   CommandController({
     required CommandSurfaceEffectCallback effectCallback,

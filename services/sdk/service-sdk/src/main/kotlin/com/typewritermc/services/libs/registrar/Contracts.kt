@@ -94,6 +94,7 @@ enum class MessagingOperation {
     CONNECT,
     BINDING_WATCH,
     BINDING_QUERY,
+    REGISTRATION_LEASE,
     REAUTHORIZE,
     HEARTBEAT,
     SHUTDOWN,
@@ -264,15 +265,24 @@ sealed interface RuntimeResult<out Value> {
     ) : RuntimeResult<Nothing>
 }
 
-/** Current organization binding, including the operator token while unbound. */
+/** Current organization binding observed without creating or renewing a registration lease. */
 sealed interface BindingStatus {
-    data class Unbound(
-        val token: RegistrationToken?,
-    ) : BindingStatus
+    data object Unbound : BindingStatus
 
     data class Bound(
         val binding: OrganizationBinding,
     ) : BindingStatus
+}
+
+/** Result of explicitly ensuring the operator registration lease. */
+sealed interface RegistrationLeaseResult {
+    data class Issued(
+        val token: RegistrationToken,
+    ) : RegistrationLeaseResult
+
+    data class AlreadyBound(
+        val binding: OrganizationBinding,
+    ) : RegistrationLeaseResult
 }
 
 /** Initial or subsequent binding information emitted by a runtime watch. */
@@ -314,6 +324,8 @@ interface RegistrarRuntime {
     suspend fun reconnectForBoundPermissions(): RuntimeResult<Unit>
 
     suspend fun queryBinding(): RuntimeResult<BindingStatus>
+
+    suspend fun ensureRegistrationLease(): RuntimeResult<RegistrationLeaseResult>
 
     suspend fun sendHeartbeat(): RuntimeResult<Unit>
 

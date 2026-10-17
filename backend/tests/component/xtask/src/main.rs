@@ -181,6 +181,7 @@ fn roots() -> Result<Roots> {
 fn metadata(roots: &Roots) -> Result<Metadata> {
     MetadataCommand::new()
         .manifest_path(roots.backend.join("Cargo.toml"))
+        .other_options(vec!["--locked".to_string()])
         .exec()
         .context("metadata phase: cargo metadata for backend/Cargo.toml failed")
 }
@@ -433,6 +434,7 @@ fn build_components<'a>(
     let mut packages_to_build = BTreeSet::new();
     let mut args = vec![
         "build".to_string(),
+        "--locked".to_string(),
         "--manifest-path".to_string(),
         roots.backend.join("Cargo.toml").display().to_string(),
         "--target".to_string(),
@@ -614,7 +616,7 @@ fn write_manifest(
 
 fn sha256(path: &Path) -> Result<String> {
     let bytes = fs::read(path).with_context(|| format!("hash phase: read {}", path.display()))?;
-    Ok(format!("{:x}", Sha256::digest(bytes)))
+    Ok(hex::encode(Sha256::digest(bytes)))
 }
 fn version(program: &str) -> Result<String> {
     let output = Command::new(program)
@@ -643,7 +645,7 @@ fn run_tests(
     let manifest_path = roots.tests.join("Cargo.toml");
     let mut command = cargo_command();
     command
-        .args(["test", "--manifest-path"])
+        .args(["test", "--locked", "--manifest-path"])
         .arg(&manifest_path)
         .args(["-p", "typewriter-component-tests", "--lib"]);
     if let Some(jobs) = args.jobs {
@@ -660,7 +662,7 @@ fn run_tests(
         command.env("COMPONENT_TEST_JOBS", jobs.to_string());
     }
     command.env("COMPONENT_TEST_LIVE", if args.live { "1" } else { "0" });
-    let status = command.current_dir(&roots.repository).status().context("test phase: failed command `cargo test --manifest-path backend/tests/component/Cargo.toml -p typewriter-component-tests --lib -- ...`")?;
+    let status = command.current_dir(&roots.repository).status().context("test phase: failed command `cargo test --locked --manifest-path backend/tests/component/Cargo.toml -p typewriter-component-tests --lib -- ...`")?;
     Ok(status.code().unwrap_or(1))
 }
 
@@ -672,7 +674,7 @@ fn verify_libtest_catalog(
 ) -> Result<()> {
     let mut command = cargo_command();
     command
-        .args(["test", "--manifest-path"])
+        .args(["test", "--locked", "--manifest-path"])
         .arg(roots.tests.join("Cargo.toml"))
         .args(["-p", "typewriter-component-tests", "--lib"]);
     if let Some(jobs) = jobs {

@@ -8,9 +8,9 @@ use wasmcloud_utils::skir::base::service::v1::topology::{
     ConfigureServiceHostResponse, EngineRealmSelection, EngineRealmSelection_ExistingRealm,
     EngineTarget, GetServiceMessagingScopeRequest, GetServiceMessagingScopeResponse,
     HostExecutionConfiguration, HostedEngineConfiguration, HostedRealmConfiguration,
-    RegisterServiceHostRequest, RegisterServiceHostResponse, ReportHostExecutionRequest,
-    ReportHostExecutionResponse, SupportedEngine, WatchHostExecutionRequest,
-    WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
+    OrganizationTopologyChanged, RegisterServiceHostRequest, RegisterServiceHostResponse,
+    ReportHostExecutionRequest, ReportHostExecutionResponse, SupportedEngine,
+    WatchHostExecutionRequest, WatchHostExecutionResponse, WatchOrganizationTopologyRequest,
     WatchOrganizationTopologyResponse,
 };
 
@@ -155,8 +155,8 @@ async fn configure_creates_local_realm_and_engine_transactionally(
     context.messaging_mock()?.expect_publish(ORGANIZATION_TOPOLOGY_SUBJECT)
         .body_matches(|bytes| {
             matches!(
-                WatchOrganizationTopologyResponse::serializer().from_bytes(bytes, wasmcloud_utils::skir_client::UnrecognizedValues::Drop),
-                Ok(WatchOrganizationTopologyResponse::ConfigurationChanged(change))
+                OrganizationTopologyChanged::serializer().from_bytes(bytes, wasmcloud_utils::skir_client::UnrecognizedValues::Drop),
+                Ok(OrganizationTopologyChanged::ConfigurationChanged(change))
                     if change.host.revision == 2 && change.realm.is_some() && change.engine.is_some()
                         && change.removed_resources.is_empty()
             )
@@ -526,7 +526,7 @@ async fn host_watch_and_report_apply_only_current_topology_revision(
         ReportHostExecutionResponse::StaleRevisionError(_)
     ));
 
-    expect_publications(context, 2, 0, 0)?;
+    expect_publications(context, 1, 0, 0)?;
     let applied = report(context, 4, active_state()).await?;
     assert!(matches!(applied, ReportHostExecutionResponse::Success(_)));
     assert_jm!(
@@ -547,7 +547,6 @@ async fn configure(
         context,
         "typewriter.from.user.actor.organization.test_org.topology.configure",
         &ConfigureServiceHostRequest {
-            operation_id: crate::framework::operation_id(),
             host_id: skir_record_id("service_host", "host"),
             expected_revision,
             execution,

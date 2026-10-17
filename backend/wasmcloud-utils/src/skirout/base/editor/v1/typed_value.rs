@@ -14,41 +14,43 @@
 //   cargo add skir-client
 
 // ==============================================================================
-// struct TypedValueEnvelope
+// struct PortableValue
 // ==============================================================================
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct TypedValueEnvelope {
-    pub root_type: crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef,
-    pub root_value: crate::skirout::base::editor::v1::type_catalog::TypedValue,
+pub struct PortableValue {
+    pub actual_type: crate::skirout::base::editor::v1::type_catalog::TypeUse,
+    pub payload: crate::skirout::base::editor::v1::type_catalog::DataValue,
     /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypedValueEnvelope>>,
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PortableValue>>,
 }
 
-impl TypedValueEnvelope {
-    pub fn default_ref() -> &'static TypedValueEnvelope {
-        static D: std::sync::LazyLock<TypedValueEnvelope> = std::sync::LazyLock::new(TypedValueEnvelope::default);
+impl PortableValue {
+    pub fn default_ref() -> &'static PortableValue {
+        static D: std::sync::LazyLock<PortableValue> =
+            std::sync::LazyLock::new(PortableValue::default);
         &D
     }
 }
 
-impl TypedValueEnvelope {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TypedValueEnvelope> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<TypedValueEnvelope>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/typed_value.skir",
-                    "TypedValueEnvelope",
-                    "",
-                    |x: &TypedValueEnvelope| &x._unrecognized,
-                    |x: &mut TypedValueEnvelope, u| x._unrecognized = u,
-                )
-            });
+impl PortableValue {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<PortableValue> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<PortableValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/typed_value.skir",
+                "PortableValue",
+                "",
+                |x: &PortableValue| &x._unrecognized,
+                |x: &mut PortableValue, u| x._unrecognized = u,
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<TypedValueEnvelope> {
+    pub fn serializer() -> crate::skir_client::Serializer<PortableValue> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(TypedValueEnvelope::_adapter())
+        crate::skir_client::internal::struct_serializer_from_static(PortableValue::_adapter())
     }
 }
 
@@ -57,14 +59,26 @@ impl TypedValueEnvelope {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<TypedValueEnvelope> = TypedValueEnvelope::_adapter() as *const _ as *mut _;
-                (*a).add_field("root_type", 0, crate::skirout::base::editor::v1::type_catalog::ResolvedTypeRef::serializer(), "", |x: &TypedValueEnvelope| &x.root_type, |x: &mut TypedValueEnvelope, v| x.root_type = v);
-                (*a).add_field("root_value", 1, crate::skirout::base::editor::v1::type_catalog::TypedValue::serializer(), "", |x: &TypedValueEnvelope| &x.root_value, |x: &mut TypedValueEnvelope, v| x.root_value = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| unsafe {
+        let a: *mut crate::skir_client::internal::StructAdapter<PortableValue> =
+            PortableValue::_adapter() as *const _ as *mut _;
+        (*a).add_field(
+            "actual_type",
+            0,
+            crate::skirout::base::editor::v1::type_catalog::TypeUse::serializer(),
+            "",
+            |x: &PortableValue| &x.actual_type,
+            |x: &mut PortableValue, v| x.actual_type = v,
+        );
+        (*a).add_field(
+            "payload",
+            1,
+            crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+            "",
+            |x: &PortableValue| &x.payload,
+            |x: &mut PortableValue, v| x.payload = v,
+        );
+        (*a).finalize();
+    });
     let _ = *INIT;
 }

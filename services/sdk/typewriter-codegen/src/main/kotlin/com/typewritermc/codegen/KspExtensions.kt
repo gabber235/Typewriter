@@ -7,7 +7,11 @@ import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSAnnotation
 import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSType
 import com.squareup.kotlinpoet.CodeBlock
+import com.typewritermc.types.FloatWidth
+import com.typewritermc.types.IntegerWidth
+import com.typewritermc.types.ScalarKind
 import kotlin.reflect.KClass
 
 /** Finds symbols using the actual annotation type so processors do not duplicate qualified names as strings. */
@@ -31,6 +35,15 @@ fun KSAnnotated.rawAnnotation(type: KClass<out Annotation>): KSAnnotation? {
     }
 }
 
+/** Finds one raw annotation without requiring its declaration on the processor classpath. */
+fun KSAnnotated.rawAnnotation(qualifiedName: String): KSAnnotation? =
+    annotations.singleOrNull {
+        it.annotationType
+            .resolve()
+            .declaration.qualifiedName
+            ?.asString() == qualifiedName
+    }
+
 /** Returns the single typed annotation of [type], including declared default values. */
 @OptIn(KspExperimental::class)
 inline fun <reified T : Annotation> KSAnnotated.annotation(): T? = getAnnotationsByType(T::class).singleOrNull()
@@ -41,8 +54,8 @@ fun KSAnnotation.argument(name: String): Any? = arguments.singleOrNull { it.name
 /**
  * Converts an open identifier into the stable upper camel form used by generated declaration names.
  *
- * Separators and other non alphanumeric characters are discarded, so the result is suitable for a generated
- * Kotlin declaration when the input contains human supplied names.
+ * Separators and other non alphanumeric characters are discarded. The result can be empty or start with a digit;
+ * callers remain responsible for any additional Kotlin identifier constraints.
  */
 fun String.toUpperCamelIdentifier(): String =
     split(Regex("[^A-Za-z0-9]+"))
@@ -59,3 +72,26 @@ fun Map<String, String>.stringMapCode(): CodeBlock {
     toSortedMap().forEach { (key, value) -> builder.add("%S to %S,\n", key, value) }
     return builder.unindent().add(")").build()
 }
+
+/** Interprets every portable scalar alias through one shared KSP policy. */
+fun KSType.portableScalarKind(): ScalarKind? =
+    when (declaration.qualifiedName?.asString()) {
+        "kotlin.Unit" -> ScalarKind.Unit
+        "kotlin.Boolean" -> ScalarKind.Boolean
+        "kotlin.String", "kotlin.Char" -> ScalarKind.Text
+        "kotlin.ByteArray" -> ScalarKind.Bytes
+        "kotlin.Byte" -> ScalarKind.Integer(IntegerWidth.SIGNED_8)
+        "kotlin.Short" -> ScalarKind.Integer(IntegerWidth.SIGNED_16)
+        "kotlin.Int" -> ScalarKind.Integer(IntegerWidth.SIGNED_32)
+        "kotlin.Long", "java.math.BigInteger" -> ScalarKind.Integer(IntegerWidth.SIGNED_64)
+        "kotlin.UByte" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_8)
+        "kotlin.UShort" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_16)
+        "kotlin.UInt" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_32)
+        "kotlin.ULong" -> ScalarKind.Integer(IntegerWidth.UNSIGNED_64)
+        "kotlin.Float" -> ScalarKind.Float(FloatWidth.FLOAT_32)
+        "kotlin.Double" -> ScalarKind.Float(FloatWidth.FLOAT_64)
+        "java.math.BigDecimal" -> ScalarKind.Decimal
+        "kotlin.time.Instant", "java.time.Instant" -> ScalarKind.Timestamp
+        "kotlin.time.Duration", "java.time.Duration" -> ScalarKind.Duration
+        else -> null
+    }

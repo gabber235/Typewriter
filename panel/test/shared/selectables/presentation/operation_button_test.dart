@@ -1,15 +1,66 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "../../../support/test_utils.dart";
 
 void main() {
   const foregroundColor = Color(0xFF123456);
+
+  testWidgets("delete operation denies invocation when mutation is disabled", (
+    tester,
+  ) async {
+    var deletions = 0;
+    final identifier = _DeleteIdentifier(() => deletions++);
+    final operation = DeleteOperation(canMutate: () => false);
+    final container = await _pumpDeleteOperation(tester, operation, identifier);
+
+    expect(operation.canExecuteOn([_DeleteSelectable(identifier)]), isFalse);
+    await tester.tap(find.text("Invoke deletion"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ConfirmationDialogue), findsNothing);
+    expect(deletions, 0);
+    expect(container.read(selectionProvider), [identifier]);
+  });
+
+  testWidgets("delete operation rechecks access after confirmation", (
+    tester,
+  ) async {
+    var allowed = true;
+    var deletions = 0;
+    final identifier = _DeleteIdentifier(() => deletions++);
+    final operation = DeleteOperation(canMutate: () => allowed);
+    final container = await _pumpDeleteOperation(tester, operation, identifier);
+
+    await tester.tap(find.text("Invoke deletion"));
+    await tester.pumpAndSettle();
+    expect(find.byType(ConfirmationDialogue), findsOneWidget);
+    allowed = false;
+    await tester.tap(find.widgetWithText(FilledButton, "Delete"));
+    await tester.pumpAndSettle();
+
+    expect(deletions, 0);
+    expect(container.read(selectionProvider), [identifier]);
+    expect(find.byType(ConfirmationDialogue), findsNothing);
+  });
+
+  testWidgets("ordinary delete operation deletes and clears its selection", (
+    tester,
+  ) async {
+    var deletions = 0;
+    final identifier = _DeleteIdentifier(() => deletions++);
+    const operation = DeleteOperation();
+    final container = await _pumpDeleteOperation(tester, operation, identifier);
+
+    expect(operation.canExecuteOn([_DeleteSelectable(identifier)]), isTrue);
+    await tester.tap(find.text("Invoke deletion"));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, "Delete"));
+    await tester.pumpAndSettle();
+
+    expect(deletions, 1);
+    expect(container.read(selectionProvider), isEmpty);
+  });
 
   testWidgets("filled button shows the operation shortcut", (tester) async {
     await tester.pumpTestApp(
@@ -91,6 +142,54 @@ void main() {
     );
     semantics.dispose();
   });
+}
+
+Future<ProviderContainer> _pumpDeleteOperation(
+  WidgetTester tester,
+  DeleteOperation operation,
+  _DeleteIdentifier identifier,
+) async {
+  await tester.pumpTestApp(
+    child: Consumer(
+      builder: (context, ref, _) => Center(
+        child: TextButton(
+          onPressed: () => operation.executeOn(ref),
+          child: const Text("Invoke deletion"),
+        ),
+      ),
+    ),
+  );
+  final container = tester.container(of: find.text("Invoke deletion"));
+  container.read(selectionProvider.notifier).selectAll([identifier]);
+  await tester.pumpAndSettle();
+  return container;
+}
+
+class _DeleteIdentifier extends SelectableIdentifier {
+  const _DeleteIdentifier(this.onDelete);
+
+  final VoidCallback onDelete;
+
+  @override
+  String get id => "deletable";
+
+  @override
+  AsyncValue<Selectable> create(Ref ref) => AsyncData(_DeleteSelectable(this));
+}
+
+class _DeleteSelectable extends Selectable<_DeleteIdentifier> {
+  const _DeleteSelectable(this.id);
+
+  @override
+  final _DeleteIdentifier id;
+
+  @override
+  String get name => id.id;
+
+  @override
+  List<SelectionCapability> get capabilities => [
+    DeleteSelectionCapability(onDelete: id.onDelete),
+  ];
 }
 
 Color? _shortcutForegroundColor(WidgetTester tester) {

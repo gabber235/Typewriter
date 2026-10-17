@@ -1,4 +1,4 @@
-import "package:flutter/material.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Applies the message transition used by [ElasticMessageSwitcher].
 ///

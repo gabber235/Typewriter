@@ -9,6 +9,19 @@ void main() {
   const baseSelectors = [KeyValueSelectorDefinition(id: "tag", key: "#")];
 
   group("SourceController", () {
+    test("retains results emitted synchronously during initialization", () {
+      final snapshot = readySnapshot(nodes: [resultNode("initial")]);
+      final source = FakeSearchSource(initialSnapshot: snapshot);
+      final controller = SourceController(
+        source: source,
+        baseSelectors: baseSelectors,
+      );
+      addTearDown(controller.dispose);
+
+      expect(controller.snapshot, snapshot);
+      expect(source.initializeCount, 1);
+    });
+
     test(
       "initializes source and exposes initial idle snapshot and base selectors",
       () {

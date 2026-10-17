@@ -4,10 +4,10 @@
 /// selection state, and they keep source and command policy outside presentation.
 library;
 
+export "search_body.dart";
 export "search_command_info.dart";
 export "search_frame.dart";
 export "search_modal.dart";
-export "search_modal_body.dart";
 export "search_result_empty_state.dart";
 export "search_result_renderers.dart";
 export "search_root.dart";

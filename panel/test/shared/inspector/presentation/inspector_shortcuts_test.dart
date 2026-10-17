@@ -1,15 +1,120 @@
-import "dart:math";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
 void main() {
+  testWidgets("fitted headings render in mobile and minimum desktop panes", (
+    tester,
+  ) async {
+    final selected = TestSelectableIdentifier(
+      id: "a book with an unusually long title that needs fitting",
+    );
+    for (final width in [400.0, 1600.0]) {
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpTestApp(
+        child: Center(
+          child: SizedBox(
+            width: width,
+            height: 800,
+            child: const InspectorScaffold(child: SizedBox()),
+          ),
+        ),
+        overrides: [
+          selectionProvider.overrideWithValue([selected]),
+          inspectorSizeProvider.overrideWithValue(kInspectorMinSize),
+        ],
+      );
+      expect(
+        find.byType(width < 600 ? MobileInspector : DesktopInspector),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pumpAndSettle();
+      if (width < 600) {
+        tester
+            .widget<DraggableScrollableSheet>(
+              find.byType(DraggableScrollableSheet),
+            )
+            .controller!
+            .jumpTo(0.9);
+        await tester.pumpAndSettle();
+      }
+      final heading = tester.widget<AutoSizeText>(find.byType(AutoSizeText));
+      expect(heading.minFontSize, 18);
+      expect(heading.maxFontSize, 40);
+      expect(heading.textSpan?.toPlainText(), selected.id.formatted);
+      expect(tester.takeException(), isNull);
+    }
+  });
+
+  testWidgets(
+    "inspector context counts requested selections including unresolved items",
+    (tester) async {
+      final first = TestSelectableIdentifier(id: "first");
+      final second = TestSelectableIdentifier(id: "second");
+      await tester.pumpTestApp(
+        child: const Center(
+          child: SizedBox(
+            width: 1600,
+            height: 800,
+            child: InspectorScaffold(child: SizedBox()),
+          ),
+        ),
+      );
+      final container = tester.container(of: find.byType(InspectorScaffold));
+      container.read(selectionProvider.notifier).selectAll([first]);
+      await tester.pumpAndSettle();
+      expect(find.byType(AutoSizeText), findsOneWidget);
+      container.read(selectionProvider.notifier).selectAll([first, second]);
+      await tester.pumpAndSettle();
+      expect(find.byType(AutoSizeText), findsNothing);
+      final environments = tester.widgetList<PresentationEnvironment>(
+        find.byType(PresentationEnvironment),
+      );
+      expect(
+        environments
+            .single
+            .bindings[presentationSelectionCountBindingId]
+            ?.value
+            .authoredInteger
+            ?.toInt(),
+        2,
+      );
+      container.read(selectionProvider.notifier).selectAll([first]);
+      await tester.pumpAndSettle();
+      expect(find.byType(AutoSizeText), findsOneWidget);
+      final resolved = container.read(inspectedSelectionProvider).requireValue;
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpTestApp(
+        child: const Center(
+          child: SizedBox(
+            width: 1600,
+            height: 800,
+            child: InspectorScaffold(child: SizedBox()),
+          ),
+        ),
+        overrides: [
+          selectionProvider.overrideWithValue([first, second]),
+          inspectedSelectionProvider.overrideWith((ref) => AsyncData(resolved)),
+        ],
+      );
+      expect(find.byType(AutoSizeText), findsNothing);
+      expect(
+        tester
+            .widget<PresentationEnvironment>(
+              find.byType(PresentationEnvironment),
+            )
+            .bindings[presentationSelectionCountBindingId]
+            ?.value
+            .authoredInteger
+            ?.toInt(),
+        2,
+      );
+    },
+  );
+
   group("Inspector shortcuts", () {
     testWidgets("organization scaffold hosts the inspector", (tester) async {
       await tester.pumpTestApp(

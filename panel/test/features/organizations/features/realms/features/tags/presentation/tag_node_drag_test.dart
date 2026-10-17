@@ -1,56 +1,102 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:typewriter_panel/typewriter_panel.dart" as tags_lib;
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
+import "../../../../../../../support/graph.dart";
 import "../../../../../../../support/test_utils.dart";
 
-final _testTagId = recordId("tag:test_tag");
-final _tagRefreshProvider = NotifierProvider<_TagRefresh, int>(_TagRefresh.new);
-
-class _TagRefresh extends Notifier<int> {
-  @override
-  int build() => 0;
-
-  void increment() => state++;
-}
-
+final _testTagId = skir.ResourceId(value: "test_tag");
+final _testScope = AuthoringScope(
+  organizationId: skir.recordId("organization:fixture"),
+  realmId: skir.recordId("realm:fixture"),
+);
 Tag _testTag({int x = 0, int y = 0}) => Tag(
   tagId: _testTagId,
   name: "Test Tag",
   color: Colors.blue,
   parentIds: const [],
-  placement: Placement(x: x, y: y, width: 2, height: 1),
+  placement: GraphPlacement(x: x, y: y, width: 2, height: 1),
 );
 
 void main() {
   group("TagNode drag and drop", () {
+    testWidgets(
+      "remote source removal retires its avatar while the graph remains mounted",
+      (tester) async {
+        final tag = _testTag();
+        final transport = ScriptedAuthoringTransport(
+          AsyncData(fixtureAuthoringDocument(tags: [tag])),
+        );
+        addTearDown(transport.dispose);
+        final moves = <List<GraphMoveCommitPayload>>[];
+        await tester.pumpTestApp(
+          overrides: authoringFixtureOverrides(transport: transport),
+          child: SizedBox(
+            width: 600,
+            height: 400,
+            child: Graph(
+              data: GraphData(
+                cellSize: 50,
+                edges: const [],
+                elements: [
+                  GraphElement(
+                    id: GraphIdentifier(_testTagId.value),
+                    x: 0,
+                    y: 0,
+                    width: 3,
+                    height: 1,
+                    builder: (_) => TagNode(tagId: _testTagId),
+                  ),
+                ],
+              ),
+              onElementsMoved: moves.add,
+            ),
+          ),
+        );
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.byType(TagNode)),
+        );
+        await gesture.moveBy(const Offset(25, 0));
+        await tester.pump();
+        final controller = tester
+            .widget<GraphDrag>(find.byType(GraphDrag))
+            .controller;
+        final payload = controller.value!.payload;
+        transport.publish(AsyncData(fixtureAuthoringDocument(tags: const [])));
+        await tester.pumpAndSettle();
+        expect(find.byType(Graph), findsOneWidget);
+        expect(payload.phase, GraphDragPhase.retired);
+        expect(controller.value, isNull);
+        expect(find.byType(FeedbackTagNode), findsNothing);
+        await gesture.moveTo(const Offset(790, 590));
+        await tester.pump();
+        await gesture.up();
+        await tester.pumpAndSettle();
+        expect(moves, isEmpty);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
     testWidgets("retains selector and focus while tag refreshes", (
       tester,
     ) async {
       final tag = _testTag();
-      final refresh = Completer<Tag?>();
-      var buildCount = 0;
+      final transport = ScriptedAuthoringTransport(
+        AsyncData(fixtureAuthoringDocument(tags: [tag])),
+      );
+      addTearDown(transport.dispose);
 
       await tester.pumpTestApp(
         settle: false,
-        overrides: [
-          tags_lib.canonicalTagProvider(_testTagId).overrideWith((ref) {
-            ref.watch(_tagRefreshProvider);
-            buildCount++;
-            if (buildCount == 1) return tag;
-            return refresh.future;
-          }),
-        ],
+        overrides: [...authoringFixtureOverrides(transport: transport)],
         child: Center(
           child: SizedBox(
             width: 200,
             height: 100,
-            child: GraphDrag(
-              draggingInsideGraph: ValueNotifier(false),
+            child: testGraphDragScope(
+              tester,
               child: TagNode(tagId: _testTagId),
             ),
           ),
@@ -66,24 +112,28 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(TagNode)),
       );
-      container.read(_tagRefreshProvider.notifier).increment();
+      transport.publish(const AsyncLoading());
       await tester.pump();
-
-      expect(buildCount, 2);
       expect(
-        container.read(tags_lib.projectedTagProvider(_testTagId)).isLoading,
-        isTrue,
+        container.read(workingTagProvider(_testTagId)).requireValue!.name,
+        tag.name,
       );
 
       expect(find.byType(Selector), findsOneWidget);
       expect(FocusManager.instance.primaryFocus, same(focusNode));
 
-      refresh.complete(tag);
+      transport.publish(
+        AsyncData(
+          fixtureAuthoringDocument(tags: [tag.copyWith(name: "Refreshed")]),
+        ),
+      );
       await tester.pumpAndSettle();
     });
 
-    testWidgets("TagIdentifier implements GraphDragData", (tester) async {
-      final tagId = TagIdentifier(_testTagId);
+    testWidgets("scoped authored identity implements GraphDragData", (
+      tester,
+    ) async {
+      final tagId = AuthoringResourceIdentifier.inScope(_testScope, _testTagId);
 
       expect(tagId, isA<GraphDragData>());
       expect(tagId.graphId, equals(const GraphIdentifier("test_tag")));
@@ -94,16 +144,14 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
             width: 200,
             height: 100,
-            child: GraphDrag(
-              draggingInsideGraph: ValueNotifier(false),
+            child: testGraphDragScope(
+              tester,
               child: TagNode(tagId: _testTagId),
             ),
           ),
@@ -111,7 +159,9 @@ void main() {
         settle: true,
       );
 
-      final draggableFinder = find.byType(Draggable<TagIdentifier>);
+      final draggableFinder = find.byType(
+        Draggable<GraphDragPayload<AuthoringResourceIdentifier>>,
+      );
       expect(draggableFinder, findsOneWidget);
     });
 
@@ -140,9 +190,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -181,16 +229,14 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
             width: 800,
             height: 600,
-            child: GraphDrag(
-              draggingInsideGraph: ValueNotifier(false),
+            child: testGraphDragScope(
+              tester,
               child: TagNode(tagId: _testTagId),
             ),
           ),
@@ -217,20 +263,16 @@ void main() {
     ) async {
       final tag = _testTag(x: 0, y: 0);
 
-      final draggingInsideGraph = ValueNotifier(false);
-
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
             width: 800,
             height: 600,
-            child: GraphDrag(
-              draggingInsideGraph: draggingInsideGraph,
+            child: testGraphDragScope(
+              tester,
               child: TagNode(tagId: _testTagId),
             ),
           ),
@@ -246,7 +288,10 @@ void main() {
       await gesture.moveBy(const Offset(50, 50));
       await tester.pump();
 
-      expect(draggingInsideGraph.value, isTrue);
+      final controller = tester
+          .widget<GraphDrag>(find.byType(GraphDrag))
+          .controller;
+      expect(controller.value?.inside, isTrue);
       expect(find.byType(PlaceholderTagNode), findsNothing);
 
       await gesture.up();
@@ -260,9 +305,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -295,9 +338,7 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
@@ -330,16 +371,14 @@ void main() {
 
       await tester.pumpTestApp(
         overrides: [
-          tags_lib
-              .projectedTagProvider(_testTagId)
-              .overrideWith((ref) => AsyncData(tag)),
+          ...authoringFixtureOverrides(tags: [tag]),
         ],
         child: Center(
           child: SizedBox(
             width: 200,
             height: 100,
-            child: GraphDrag(
-              draggingInsideGraph: ValueNotifier(false),
+            child: testGraphDragScope(
+              tester,
               child: TagNode(tagId: _testTagId),
             ),
           ),
@@ -347,7 +386,9 @@ void main() {
         settle: true,
       );
 
-      final dragTargetFinder = find.byType(DragTarget<TagIdentifier>);
+      final dragTargetFinder = find.byType(
+        DragTarget<GraphDragPayload<AuthoringResourceIdentifier>>,
+      );
       expect(dragTargetFinder, findsOneWidget);
     });
   });

@@ -2,9 +2,7 @@
 // organization topology and the selected realm's owner host. The resulting
 // interaction state is the shared gate used by the organization workspace:
 // presentation may remain mounted while mutations and navigation are paused.
-import "package:collection/collection.dart";
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -26,13 +24,43 @@ enum RealmConnectionState {
   unavailable,
 }
 
-@freezed
+/// Reloads topology when a previously disconnected service becomes available.
+///
+/// Service heartbeats are independent from topology observations. A recovered
+/// service therefore provides a reliable opportunity to replace any topology
+/// event that core NATS could not deliver while the panel was disconnected.
+/// The first observation belongs to startup, not recovery. Refreshing it would
+/// invalidate the topology snapshot that is already being initialized.
+/// A snapshot already in progress owns reconciliation and is not replaced.
+@riverpod
+void realmTopologyRecovery(Ref ref) {
+  final organizationId = ref.watch(organizationIdProvider);
+  if (organizationId == null) return;
+
+  ref.listen(serviceConnectionsProvider, (previous, next) {
+    final recovered = next.entries.any(
+      (entry) => entry.value && previous?[entry.key] == false,
+    );
+    if (!recovered) return;
+    // Recovery is an effect on the topology owner. Dispatch it after the current
+    // provider derivation pass so dependants cannot rebuild twice in that pass.
+    unawaited(
+      Future<void>.microtask(() {
+        if (!ref.mounted) return;
+        final topology = organizationTopologyControllerProvider(organizationId);
+        if (ref.read(topology).isLoading) return;
+        ref.read(topology.notifier).refresh();
+      }),
+    );
+  });
+}
+
 /// UI policy derived from [RealmConnectionState].
 ///
 /// The state has no independent lifecycle or mutable authority. Widgets use
 /// [suspended] to block edits while preserving the current view, then rebuild
 /// when the connection provider emits a new state.
-/// UI interaction policy derived from [RealmConnectionState].
+@freezed
 abstract class RealmInteractionState with _$RealmInteractionState {
   const factory RealmInteractionState({
     required RealmConnectionState connectionState,
@@ -56,7 +84,7 @@ abstract class RealmInteractionState with _$RealmInteractionState {
 skir.RecordId? realmId(Ref ref) {
   final id = ref.watch(routeParamProvider("realmId"));
   if (id == null) return null;
-  return recordId("realm_instance:$id");
+  return skir.recordId("realm_instance:$id");
 }
 
 /// Finds the selected realm in the organization topology projection.
@@ -64,11 +92,16 @@ skir.RecordId? realmId(Ref ref) {
 /// Topology is the authority for realm identity, owner host, lifecycle status,
 /// and last update time. A valid route identifier with no matching entry yields
 /// `null`, allowing connection policy to distinguish absence from inactivity.
+/// Ready topology observations are projected without an asynchronous boundary,
+/// while initial resolution and explicit topology refreshes remain pending.
 @riverpod
-Future<TopologyRealm?> selectedRealm(Ref ref) async {
+FutureOr<TopologyRealm?> selectedRealm(Ref ref) {
   final id = ref.watch(realmIdProvider);
   if (id == null) return null;
-  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  final topology = ref
+      .watch(organizationTopologyProvider)
+      .unwrapPrevious()
+      .requireValue;
   return topology.realmInstances.firstWhereOrNull(
     (realm) => realm.realmId == id,
   );
@@ -77,7 +110,7 @@ Future<TopologyRealm?> selectedRealm(Ref ref) async {
 /// Exposes all realms in the current organization topology for selection UI.
 @riverpod
 Future<List<TopologyRealm>> realms(Ref ref) async {
-  final topology = await ref.watch(organizationTopologyStreamProvider.future);
+  final topology = await ref.watch(organizationTopologyProvider.future);
   return topology.realmInstances;
 }
 
@@ -100,37 +133,30 @@ Future<Map<skir.RecordId, bool>> realmsAvailability(Ref ref) async {
 /// The selected realm must resolve, report an active runtime status, and have
 /// its owner host connected. Resolution failures become [unavailable]; known
 /// inactive or disconnected realms become [offline]. Topology invalidation is
-/// the recovery path, and causes Riverpod to reevaluate this stream.
+/// the recovery path, and causes Riverpod to reevaluate this result.
 @riverpod
-Stream<RealmConnectionState> realmConnection(Ref ref) async* {
+FutureOr<RealmConnectionState> realmConnection(Ref ref) {
   final id = ref.watch(realmIdProvider);
   if (id == null) {
-    yield RealmConnectionState.notSelected;
-    return;
+    return RealmConnectionState.notSelected;
   }
 
-  yield RealmConnectionState.checking;
-
-  TopologyRealm? realm;
-  try {
-    realm = await ref.watch(selectedRealmProvider.future);
-  } on Object {
-    yield RealmConnectionState.unavailable;
-    return;
+  final selected = ref.watch(selectedRealmProvider).unwrapPrevious();
+  if (selected.hasError) {
+    return RealmConnectionState.unavailable;
   }
+  final realm = selected.requireValue;
 
   if (realm == null) {
-    yield RealmConnectionState.unavailable;
-    return;
+    return RealmConnectionState.unavailable;
   }
 
   if (realm.state.status != TopologyRuntimeStatus.active ||
       !ref.watch(hostConnectedProvider(realm.ownerHost.id))) {
-    yield RealmConnectionState.offline;
-    return;
+    return RealmConnectionState.offline;
   }
 
-  yield RealmConnectionState.online;
+  return RealmConnectionState.online;
 }
 
 /// Provides a synchronous interaction policy for widgets during async checks.
@@ -141,10 +167,11 @@ Stream<RealmConnectionState> realmConnection(Ref ref) async* {
 @riverpod
 RealmInteractionState realmInteraction(Ref ref) {
   final realmId = ref.watch(realmIdProvider);
-  final connectionState =
-      ref.watch(realmConnectionProvider).value ??
-      (realmId == null
-          ? RealmConnectionState.notSelected
-          : RealmConnectionState.checking);
+  final connection = ref.watch(realmConnectionProvider);
+  final connectionState = connection.isLoading
+      ? (realmId == null
+            ? RealmConnectionState.notSelected
+            : RealmConnectionState.checking)
+      : connection.value ?? RealmConnectionState.unavailable;
   return RealmInteractionState(connectionState: connectionState);
 }

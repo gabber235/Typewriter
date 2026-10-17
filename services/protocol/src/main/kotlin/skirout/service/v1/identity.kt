@@ -30,7 +30,7 @@ sealed interface IssueServiceIdentityRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class IssueServiceIdentityRequest private constructor(
     override val role: skirout.service.v1.service.ServiceRole,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityRequest>? =
         null,
 ): skirout.service.v1.identity.IssueServiceIdentityRequest_OrMutable {
     constructor(
@@ -77,7 +77,7 @@ class IssueServiceIdentityRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.identity.IssueServiceIdentityRequest.serializerImpl,
+            _SerializerRegistry.IssueServiceIdentityRequestSerializerImpl,
         )
     }
 
@@ -121,34 +121,11 @@ class IssueServiceIdentityRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/identity.skir:IssueServiceIdentityRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [IssueServiceIdentityRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.IssueServiceIdentityRequestSerializer;
 
         /** Describes the [IssueServiceIdentityRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "role",
-                "role",
-                0,
-                skirout.service.v1.service.ServiceRole.serializer,
-                "",
-                { it.role },
-                { mut, v -> mut.role = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -390,7 +367,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.identity.IssueServiceIdentityResponse._serializerImpl,
+            _SerializerRegistry.IssueServiceIdentityResponseSerializerImpl,
         )
     }
 
@@ -509,134 +486,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
             skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.identity.IssueServiceIdentityResponse, Unknown>(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [IssueServiceIdentityResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.IssueServiceIdentityResponseSerializer;
 
         /** Describes the [IssueServiceIdentityResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "malformed_request_error",
-                    Kind.MALFORMED_REQUEST_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError.serializer,
-                    "",
-                    { MalformedRequestErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "unknown_role_error",
-                    Kind.UNKNOWN_ROLE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError.serializer,
-                    "",
-                    { UnknownRoleErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "role_unknown_property_error",
-                    Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError.serializer,
-                    "",
-                    { RoleUnknownPropertyErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "role_type_invalid_error",
-                    Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError.serializer,
-                    "",
-                    { RoleTypeInvalidErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "role_version_invalid_error",
-                    Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.serializer,
-                    "",
-                    { RoleVersionInvalidErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "custom_role_name_required_error",
-                    Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError.serializer,
-                    "",
-                    { CustomRoleNameRequiredErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "custom_role_name_invalid_error",
-                    Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError.serializer,
-                    "",
-                    { CustomRoleNameInvalidErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    10,
-                    "builtin_role_name_forbidden_error",
-                    Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError.serializer,
-                    "",
-                    { BuiltinRoleNameForbiddenErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    11,
-                    "identity_provider_unavailable_error",
-                    Kind.IDENTITY_PROVIDER_UNAVAILABLE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError.serializer,
-                    "",
-                    { IdentityProviderUnavailableErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -655,7 +509,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override val displayName: kotlin.String,
         override val username: kotlin.String,
         override val token: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.Success>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.Success_OrMutable {
         constructor(
@@ -720,7 +574,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.Success.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_SuccessSerializerImpl,
             )
         }
 
@@ -785,61 +639,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "service_id",
-                    "serviceId",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.serviceId },
-                    { mut, v -> mut.serviceId = v },
-                );
-                serializerImpl.addField(
-                    "display_name",
-                    "displayName",
-                    1,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.displayName },
-                    { mut, v -> mut.displayName = v },
-                );
-                serializerImpl.addField(
-                    "username",
-                    "username",
-                    2,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.username },
-                    { mut, v -> mut.username = v },
-                );
-                serializerImpl.addField(
-                    "token",
-                    "token",
-                    3,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.token },
-                    { mut, v -> mut.token = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -850,7 +654,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class MalformedRequestError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError_OrMutable {
         constructor(
@@ -879,7 +683,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_MalformedRequestErrorSerializerImpl,
             )
         }
 
@@ -915,25 +719,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.MalformedRequestError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [MalformedRequestError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_MalformedRequestErrorSerializer;
 
             /** Describes the [MalformedRequestError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_MalformedRequestErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -944,7 +734,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class UnknownRoleError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError_OrMutable {
         constructor(
@@ -973,7 +763,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_UnknownRoleErrorSerializerImpl,
             )
         }
 
@@ -1009,25 +799,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.UnknownRoleError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [UnknownRoleError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_UnknownRoleErrorSerializer;
 
             /** Describes the [UnknownRoleError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_UnknownRoleErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1038,7 +814,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RoleUnknownPropertyError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError_OrMutable {
         constructor(
@@ -1067,7 +843,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializerImpl,
             )
         }
 
@@ -1103,25 +879,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleUnknownPropertyError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RoleUnknownPropertyError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializer;
 
             /** Describes the [RoleUnknownPropertyError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1132,7 +894,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RoleTypeInvalidError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError_OrMutable {
         constructor(
@@ -1161,7 +923,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializerImpl,
             )
         }
 
@@ -1197,25 +959,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleTypeInvalidError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RoleTypeInvalidError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializer;
 
             /** Describes the [RoleTypeInvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1226,7 +974,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RoleVersionInvalidError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError_OrMutable {
         constructor(
@@ -1255,7 +1003,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializerImpl,
             )
         }
 
@@ -1291,25 +1039,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleVersionInvalidError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RoleVersionInvalidError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializer;
 
             /** Describes the [RoleVersionInvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1320,7 +1054,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class CustomRoleNameRequiredError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError_OrMutable {
         constructor(
@@ -1349,7 +1083,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializerImpl,
             )
         }
 
@@ -1385,25 +1119,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.CustomRoleNameRequiredError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [CustomRoleNameRequiredError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializer;
 
             /** Describes the [CustomRoleNameRequiredError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1414,7 +1134,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class CustomRoleNameInvalidError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError_OrMutable {
         constructor(
@@ -1443,7 +1163,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializerImpl,
             )
         }
 
@@ -1479,25 +1199,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.CustomRoleNameInvalidError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [CustomRoleNameInvalidError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializer;
 
             /** Describes the [CustomRoleNameInvalidError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1508,7 +1214,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class BuiltinRoleNameForbiddenError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError_OrMutable {
         constructor(
@@ -1537,7 +1243,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializerImpl,
             )
         }
 
@@ -1573,25 +1279,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [BuiltinRoleNameForbiddenError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializer;
 
             /** Describes the [BuiltinRoleNameForbiddenError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -1602,7 +1294,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class IdentityProviderUnavailableError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError>? =
             null,
     ): skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError_OrMutable {
         constructor(
@@ -1631,7 +1323,7 @@ sealed class IssueServiceIdentityResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError.serializerImpl,
+                _SerializerRegistry.IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializerImpl,
             )
         }
 
@@ -1667,25 +1359,11 @@ sealed class IssueServiceIdentityResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.IdentityProviderUnavailableError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [IdentityProviderUnavailableError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializer;
 
             /** Describes the [IdentityProviderUnavailableError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -1701,4 +1379,321 @@ val IssueServiceIdentity: build.skir.service.Method<
         skirout.service.v1.identity.IssueServiceIdentityResponse.serializer,
         "",
     )
+}
+
+private object _SerializerRegistry {
+    val IssueServiceIdentityRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityRequestSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityRequestSerializerImpl);
+
+    val IssueServiceIdentityResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.identity.IssueServiceIdentityResponse, skirout.service.v1.identity.IssueServiceIdentityResponse.Unknown>(
+            recordId = "service/v1/identity.skir:IssueServiceIdentityResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.identity.IssueServiceIdentityResponse.Unknown(skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val IssueServiceIdentityResponseSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponseSerializerImpl);
+
+    val IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.CustomRoleNameInvalidError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.CustomRoleNameRequiredError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.IdentityProviderUnavailableError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_MalformedRequestErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.MalformedRequestError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_MalformedRequestErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_MalformedRequestErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleTypeInvalidError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleUnknownPropertyError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.RoleVersionInvalidError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializerImpl);
+
+    val IssueServiceIdentityResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.Success",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_SuccessSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_SuccessSerializerImpl);
+
+    val IssueServiceIdentityResponse_UnknownRoleErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/identity.skir:IssueServiceIdentityResponse.UnknownRoleError",
+        doc = "",
+        defaultInstance = skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val IssueServiceIdentityResponse_UnknownRoleErrorSerializer = build.skir.internal.makeSerializer(IssueServiceIdentityResponse_UnknownRoleErrorSerializerImpl);
+
+    init {
+        IssueServiceIdentityRequestSerializerImpl.addField(
+            "role",
+            "role",
+            0,
+            skirout.service.v1.service.ServiceRole.serializer,
+            "",
+            { it.role },
+            { mut, v -> mut.role = v },
+        );
+        IssueServiceIdentityRequestSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            1,
+            "internal_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            2,
+            "success",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_SuccessSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            3,
+            "malformed_request_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.MALFORMED_REQUEST_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_MalformedRequestErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.MalformedRequestErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            4,
+            "unknown_role_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.UNKNOWN_ROLE_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_UnknownRoleErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.UnknownRoleErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            5,
+            "role_unknown_property_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_UNKNOWN_PROPERTY_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleUnknownPropertyErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            6,
+            "role_type_invalid_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_TYPE_INVALID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleTypeInvalidErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            7,
+            "role_version_invalid_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.ROLE_VERSION_INVALID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.RoleVersionInvalidErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            8,
+            "custom_role_name_required_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_REQUIRED_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameRequiredErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            9,
+            "custom_role_name_invalid_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.CUSTOM_ROLE_NAME_INVALID_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.CustomRoleNameInvalidErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            10,
+            "builtin_role_name_forbidden_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.BUILTIN_ROLE_NAME_FORBIDDEN_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.BuiltinRoleNameForbiddenErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.addWrapperVariant(
+            11,
+            "identity_provider_unavailable_error",
+            skirout.service.v1.identity.IssueServiceIdentityResponse.Kind.IDENTITY_PROVIDER_UNAVAILABLE_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializer,
+            "",
+            { skirout.service.v1.identity.IssueServiceIdentityResponse.IdentityProviderUnavailableErrorWrapper(it) },
+            { it.value },
+        );
+        IssueServiceIdentityResponseSerializerImpl.finalizeEnum();
+
+        IssueServiceIdentityResponse_BuiltinRoleNameForbiddenErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_CustomRoleNameInvalidErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_CustomRoleNameRequiredErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_IdentityProviderUnavailableErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_MalformedRequestErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_RoleTypeInvalidErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_RoleUnknownPropertyErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_RoleVersionInvalidErrorSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_SuccessSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        IssueServiceIdentityResponse_SuccessSerializerImpl.addField(
+            "display_name",
+            "displayName",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.displayName },
+            { mut, v -> mut.displayName = v },
+        );
+        IssueServiceIdentityResponse_SuccessSerializerImpl.addField(
+            "username",
+            "username",
+            2,
+            build.skir.Serializers.string,
+            "",
+            { it.username },
+            { mut, v -> mut.username = v },
+        );
+        IssueServiceIdentityResponse_SuccessSerializerImpl.addField(
+            "token",
+            "token",
+            3,
+            build.skir.Serializers.string,
+            "",
+            { it.token },
+            { mut, v -> mut.token = v },
+        );
+        IssueServiceIdentityResponse_SuccessSerializerImpl.finalizeStruct();
+
+        IssueServiceIdentityResponse_UnknownRoleErrorSerializerImpl.finalizeStruct();
+    }
 }

@@ -1,12 +1,10 @@
-import "package:flutter/widgets.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Registers shortcuts for operations available to the current selection.
 ///
-/// The operation list comes from the nearest [SelectionOperationsRoot]. The
-/// resolved selection is read from [selectedProvider], so shortcuts disappear
-/// while selected identifiers are loading or unavailable.
+/// Generic operations come from the nearest [SelectionOperationsRoot]; authoring
+/// resources use their Realm operation affordances. [selectedProvider] supplies
+/// the resolved batch, including retained data during provider refresh.
 class SelectionOperationShortcuts extends ConsumerWidget {
   const SelectionOperationShortcuts({
     required this.child,
@@ -23,8 +21,9 @@ class SelectionOperationShortcuts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selected = ref.watch(selectedProvider).value;
-    final operations = availableSelectionOperations(
-      SelectionOperationsRoot.of(context),
+    final operations = selectionOperationsFor(
+      ref,
+      context,
       selected,
     ).whereType<ShortcutableOperation>();
 

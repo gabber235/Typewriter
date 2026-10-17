@@ -1,5 +1,4 @@
-import "dart:async";
-import "dart:math";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 // ignore_for_file: one_member_abstracts
 

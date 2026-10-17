@@ -40,6 +40,7 @@ fun includeProject(name: String, directory: String) {
 
 includeProject("internal-utils", "platform/internal-utils")
 includeProject("protocol", "protocol")
+includeProject("typewriter-contracts", "sdk/typewriter-contracts")
 includeProject("typewriter-api", "sdk/typewriter-api")
 includeProject("typewriter-codegen", "sdk/typewriter-codegen")
 includeProject("service-sdk", "sdk/service-sdk")

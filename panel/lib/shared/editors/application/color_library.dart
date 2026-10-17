@@ -1,8 +1,4 @@
-import "dart:convert";
-
-import "package:freezed_annotation/freezed_annotation.dart";
-import "package:localstorage/localstorage.dart";
-import "package:riverpod_annotation/riverpod_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 part "color_library.freezed.dart";
 part "color_library.g.dart";

@@ -1,5 +1,6 @@
 // Icon content has two deliberately distinct wire representations.
-// iconify carries a validated prefix:name lookup value. svg carries sanitized SVG source.
+// iconify carries a prefix:name lookup value. svg carries inline SVG source.
+// The variant does not certify sanitization; rendering boundaries own safe interpretation.
 // Consumers must retain the variant because lookup names and markup have different handling and safety rules.
 enum Icon(800100001) {
   iconify: string = 1;

@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook/widgetbook.dart";
@@ -9,8 +8,7 @@ Widget pageHeadingDefaultUseCase(BuildContext context) {
   final title = context.knobs.string(label: "Title", initialValue: "Library");
   final subtext = context.knobs.string(
     label: "Subtext",
-    initialValue:
-        "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
+    initialValue: "Browse books containing your quests, dialogues, and cinematics. Search by title or tag, organize related content, then open a book to continue editing its pages.",
   );
   return FakeApp(
     child: Align(

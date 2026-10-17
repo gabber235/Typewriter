@@ -5,6 +5,7 @@ import com.typewritermc.services.libs.filetransfer.messaging.FileTransferMessage
 import com.typewritermc.services.libs.filetransfer.messaging.MessagingFileTransferEndpoint
 import com.typewritermc.services.libs.filetransfer.storage.FileSystemFileTransferEndpoint
 import de.infix.testBalloon.framework.core.testSuite
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.ints.shouldBeLessThanOrEqual
@@ -15,6 +16,33 @@ import java.nio.file.Files
 import java.security.MessageDigest
 
 val FileTransferContractTest by testSuite {
+    test("digest factory accepts only canonical lowercase SHA 256 values") {
+        val digest = FileDigest.sha256("a".repeat(64))
+        digest.algorithm shouldBe "SHA-256"
+        digest.value shouldBe "a".repeat(64)
+
+        listOf("", "a".repeat(63), "a".repeat(65), "A".repeat(64), "g".repeat(64)).forEach { value ->
+            shouldThrow<IllegalArgumentException> { FileDigest.sha256(value) }
+        }
+    }
+
+    test("digest does not expose a public JVM copy that bypasses factory validation") {
+        FileDigest::class.java.methods.any { it.name == "copy" || it.name == "copy\$default" } shouldBe false
+    }
+
+    test("sequential transfer rejects source completion that disagrees with metadata") {
+        runTest {
+            shouldThrow<TransferProtocolException> {
+                SequentialByteTransfer(chunkSize = 3).copy(
+                    size = 4,
+                    acceptedOffset = 0,
+                    read = { offset, _ -> ByteTransferChunk(offset, byteArrayOf(1, 2, 3), complete = true) },
+                    write = { offset, bytes -> offset + bytes.size },
+                )
+            }
+        }
+    }
+
     listOf("local" to ::localFixture, "messaging" to ::messagingFixture).forEach { (adapter, fixture) ->
         test("$adapter adapter uploads and downloads immutable content") {
             runTest {

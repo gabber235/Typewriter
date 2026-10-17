@@ -1,6 +1,8 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../support/test_utils.dart";
 
@@ -10,42 +12,56 @@ void main() {
   ) async {
     const key = EditorResourceKey(scope: "test", identity: "uncertain");
     final document = EditorDocument(
-      rootType: RecordType(
-        fields: const {"name": TypeField(name: "name", type: StringType())},
+      rootType: skir.TypeUse.wrapNamed(
+        skir.NamedTypeUse(definition: _recordType, arguments: const []),
       ),
-      typeCatalog: const TypeCatalog([]),
-      confirmedValue: RecordValue({"name": StringValue("canonical")}),
+      catalog: _recordCatalog,
+      confirmedValue: skir.DataValue.createRecord(
+        fields: [
+          skir.FieldValue(
+            name: "name",
+            value: skir.DataValue.wrapStringValue("canonical"),
+          ),
+        ],
+      ),
       revision: 1,
     );
-    final snapshot = DocumentEditorSnapshot(document);
-    final workspace = LocalWorkSession();
-    addTearDown(workspace.dispose);
-    final source = workspace.editor(
-      ResourceEditorTarget(
-        targetId: key.identity,
-        label: "Uncertain configuration",
-        resource: _UncertainResource(key, snapshot),
-        snapshot: snapshot,
-        commitPolicy: EditorCommitPolicy.applyResource,
-      ),
+    final snapshot = FakeEditorSnapshot(
+      document,
+      validation: acceptTestEditorMutation,
     );
-    workspace.retain(key);
+    final workspace = ScopedWorkSession();
+    addTearDown(workspace.dispose);
+    final source = ValueEditingRegistration(
+      targetId: key.identity,
+      label: "Uncertain configuration",
+      persistence: _UncertainResource(key, snapshot),
+      snapshot: snapshot,
+      commitPolicy: EditorCommitPolicy.applyResource,
+    ).acquire(workspace);
+    addTearDown(
+      workspace.lease(WorkDriverId(domain: "value", scope: key)).release,
+    );
     source.update(
-      DataPath.root.field("name"),
-      const StringValue("local draft"),
+      editorRootPath.field("name"),
+      skir.DataValue.wrapStringValue("local draft"),
     );
     expect(await source.flush(), isA<MutationUncertain>());
 
     await tester.pumpTestApp(
       child: Scaffold(
         appBar: AppBar(
-          actions: [LocalWorkSessionActivityView(controller: workspace)],
+          actions: [ScopedWorkSessionActivityView(controller: workspace)],
         ),
       ),
     );
     await tester.tap(find.text("Needs attention"));
     await tester.pumpAndSettle();
-    await tester.tap(find.text("Outcome unknown. Verify before retrying."));
+    await tester.tap(
+      find.text(
+        "The outcome is unknown. Local work is retained and will not be resubmitted",
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text("Submission"), findsNothing);
@@ -54,7 +70,60 @@ void main() {
   });
 }
 
-final class _UncertainResource implements EditableResource {
+final _recordType = skir.TypeDefinitionId(
+  typeId: skir.TypeId.createQualified(namespace: "test", name: "Resource"),
+  revision: 1,
+);
+final _recordField = skir.EffectiveFieldTemplate(
+  key: "name",
+  owner: skir.FieldOwner(definition: _recordType, name: "name"),
+  type: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
+  rules: const [],
+);
+final _recordCatalog = CheckedEditorCatalog(
+  skir.EditorCatalogWireSnapshot(
+    resourceOperations: const [],
+    resourceOperationContributions: const [],
+    generation: skir.CatalogGeneration(value: "test"),
+    types: [
+      skir.PublishedType(
+        display: null,
+        definition: skir.TypeDefinition(
+          id: _recordType,
+          parameters: const [],
+          representation: skir.RepresentationTemplate.createRecord(
+            fields: [
+              skir.FieldDeclaration(
+                owner: _recordField.owner,
+                type: _recordField.type,
+                overrides: const [],
+                hasConstructorDefault: false,
+              ),
+            ],
+            abstract_: false,
+          ),
+          parents: const [],
+        ),
+        status: skir.DeclarationStatus.ready,
+        effectiveFields: [_recordField],
+        ancestorTemplates: const [],
+      ),
+    ],
+    relations: const [],
+    resourceDefinitions: const [],
+    presentations: const [],
+    presentationMaterials: const [],
+    configuration: const [],
+    diagnostics: const [],
+
+    endpointBindings: const [],
+    capabilities: const [],
+    recommendations: const [],
+    roleFallbacks: const [],
+  ),
+);
+
+final class _UncertainResource extends ValueEditPersistence {
   _UncertainResource(this.key, this.snapshot);
 
   @override
@@ -65,26 +134,20 @@ final class _UncertainResource implements EditableResource {
   Set<Object> get reservations => {key};
 
   @override
-  Future<EditorSnapshot?> refresh() async => snapshot;
+  Future<EditorSnapshot?> refreshSnapshot() async => snapshot;
 
   @override
-  MutationIntent prepare(
+  PreparedCommit<TypedMutationResult> prepareValue(
     EditorSnapshot snapshot,
     EditorCommit changes,
-    void Function(TypedMutationResult) accept,
-  ) => IndependentMutation(
-    PendingCommit<TypedMutationResult>(
-      resources: reservations,
-      prepare: () => PreparedCommit<TypedMutationResult>(
-        id: "not-a-uuid",
-        label: "Uncertain configuration",
-        resources: reservations,
-        send: () async => SubmissionResult<TypedMutationResult>.uncertain(
-          message: "The response could not be confirmed",
-          cause: StateError("response lost"),
-          stackTrace: StackTrace.current,
-        ),
-      ),
+  ) => PreparedCommit(
+    id: "not-a-uuid",
+    label: "Uncertain configuration",
+    resources: reservations,
+    send: () async => SubmissionResult.uncertain(
+      message: "The response could not be confirmed",
+      cause: StateError("response lost"),
+      stackTrace: StackTrace.current,
     ),
   );
 }

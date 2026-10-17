@@ -1,4 +1,3 @@
-import "package:flutter/foundation.dart";
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
@@ -32,7 +31,7 @@ void main() {
       final failure = StateError("private transport detail");
 
       final result = await runPanelMutation<String?>(
-        operation: PanelMutationOperation.updateTag,
+        operation: PanelMutationOperation.updateService,
         mutation: () async => throw failure,
         recover: (_, _) => null,
       );
@@ -40,7 +39,7 @@ void main() {
       expect(result, isNull);
       expect(reports, hasLength(1));
       expect(reports.single.exception, same(failure));
-      expect(reports.single.context.toString(), "while updating a tag");
+      expect(reports.single.context.toString(), "while updating a service");
       expect(
         reports.single.context.toString(),
         isNot(contains("private transport detail")),

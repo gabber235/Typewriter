@@ -1,34 +1,28 @@
-/*
- * Editing is deliberately owned separately from persistence.
- *
- * The owner exposes the current local value and preserves its invariants while
- * presentation code edits it. A transactional implementation may also own a
- * canonical resource snapshot, a local draft, revision tracking, persistence
- * attempts, and reconciliation, but those states remain distinct. Callers must
- * use the operations here instead of mutating a value or coordinating saves
- * themselves. Implementations notify listeners after an observable state
- * change and release all owned interaction state from dispose.
- */
-import "package:flutter/foundation.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Owns mutable typed values and reversible interactions, independently of
-/// saving.
+/// Exposes typed local values and reversible interaction to presentation.
+///
+/// Owners validate writes and notify listeners when their observable state
+/// changes. Resource drafts, revision tracking and save policy stay with the
+/// underlying editing workspace. A borrowed view may delegate to that owner,
+/// so disposing this interface need not dispose the resource draft.
 abstract interface class EditOwner implements Listenable {
   /// Describes the type used to validate values exposed by this owner.
-  TypeExpression get rootType;
+  skir.TypeUse get rootType;
 
   /// Provides the catalog required to interpret [rootType].
-  TypeCatalog get typeCatalog;
+  CheckedEditorCatalog get catalog;
 
   /// Whether edits are currently rejected instead of applied locally.
   bool get readOnly;
 
   /// Reads the local draft at [path], not necessarily the canonical resource.
-  EditorValue value(DataPath path);
+  EditorValue value(skir.ValuePath path);
 
   /// Validates an edit without changing the local draft.
-  EditorMutationResult validate(DataPath path, DataValue value);
+  EditorMutationResult validate(skir.ValuePath path, skir.DataValue value);
 
   /// Applies a validated edit to the local draft.
   ///
@@ -36,17 +30,17 @@ abstract interface class EditOwner implements Listenable {
   /// change. Structural metadata is retained when supplied, allowing an owner
   /// to preserve the operation for later persistence or reconciliation.
   EditorMutationResult update(
-    DataPath path,
-    DataValue value, {
+    skir.ValuePath path,
+    skir.DataValue value, {
     EditorStructuralMutation? structuralMutation,
   });
 
   /// Opens a reversible interaction whose lifetime ends with its session.
   ///
-  /// Implementations serialize overlapping interactions and keep their
-  /// ownership local. Closing the session restores or commits according to the
-  /// interaction contract, without making persistence implicit for callers.
-  EditorInteractionSession beginInteraction(DataPath path);
+  /// Sessions gate their owner's save policy while the interaction is active.
+  /// [EditorInteractionSession.commit] and [EditorInteractionSession.cancel]
+  /// define how the interaction leaves its local draft boundary.
+  EditorInteractionSession beginInteraction(skir.ValuePath path);
 
   /// Releases listeners, interaction gates, and other owned resources.
   void dispose();

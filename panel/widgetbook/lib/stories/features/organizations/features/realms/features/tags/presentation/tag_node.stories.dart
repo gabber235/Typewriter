@@ -1,40 +1,37 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 import "package:typewriter_testkit/typewriter_testkit.dart";
 import "package:widgetbook_annotation/widgetbook_annotation.dart" as widgetbook;
-import "package:widgetbook_workspace/support/realm_runtime.dart";
 import "package:widgetbook_workspace/support/selected_inspector_story.dart";
 
 @widgetbook.UseCase(name: "Default", type: TagNode)
 Widget tagNodeUseCase(BuildContext context) {
   final previewTag = Tag(
-    tagId: recordId("tag:current_tag"),
+    tagId: skir.ResourceId(value: "tag:current_tag"),
     name: "current_tag",
     color: Colors.purple,
     parentIds: const [],
-    placement: const Placement(x: 2, y: 3, width: 4, height: 1),
+    placement: const GraphPlacement(x: 2, y: 3, width: 4, height: 1),
   );
   final parentCandidate = Tag(
-    tagId: recordId("tag:candidate_parent"),
+    tagId: skir.ResourceId(value: "tag:candidate_parent"),
     name: "candidate_parent",
     color: Colors.teal,
     parentIds: const [],
-    placement: const Placement(x: 8, y: 1, width: 4, height: 1),
+    placement: const GraphPlacement(x: 8, y: 1, width: 4, height: 1),
   );
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () =>
+        fixtureAuthoringDocument(tags: [previewTag, parentCandidate]),
     overrides: [
-      ...authoringSessionMockOverrides(tags: [previewTag, parentCandidate]),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: [previewTag, parentCandidate]),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
     ],
     child: InspectorScaffold(
-      realmRuntime: storyRealmRuntime([previewTag, parentCandidate]),
       child: Center(
         child: SizedBox(
           width: 150,
@@ -73,20 +70,25 @@ Widget mixedTagSelectionStory({bool initiallySelected = true}) {
   final tags = [earth, europe, netherlands, italy];
   final selected = [netherlands, italy];
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(tags: tags),
     overrides: [
-      ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: tags),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
     ],
     child: InspectorScaffold(
-      realmRuntime: storyRealmRuntime(tags),
       child: SelectedInspectorStory(
         selection: initiallySelected
-            ? [for (final tag in selected) TagIdentifier(tag.tagId)]
+            ? [
+                for (final tag in selected)
+                  AuthoringResourceIdentifier(
+                    organizationId: skir.recordId("organization:widgetbook"),
+                    realmId: skir.recordId("service:widgetbook"),
+                    resourceId: tag.tagId,
+                  ),
+              ]
             : const [],
         child: Center(
           child: Wrap(
@@ -111,13 +113,13 @@ Tag _storyTag(
   String name, {
   required Color color,
   required int x,
-  List<skir.RecordId> parents = const [],
+  List<skir.ResourceId> parents = const [],
 }) => Tag(
-  tagId: recordId("tag:$name"),
+  tagId: skir.ResourceId(value: "tag:$name"),
   name: name,
   color: color,
   parentIds: parents,
-  placement: Placement(x: x, y: 0, width: 4, height: 1),
+  placement: GraphPlacement(x: x, y: 0, width: 4, height: 1),
 );
 
 @widgetbook.UseCase(name: "Multiple Colors", type: TagNode)
@@ -133,22 +135,21 @@ Widget tagNodeColorsUseCase(BuildContext context) {
 
   final tags = colors.asMap().entries.map((entry) {
     return Tag(
-      tagId: recordId("tag:tag_${entry.key}"),
+      tagId: skir.ResourceId(value: "tag:tag_${entry.key}"),
       name: "tag_${entry.key}",
       color: entry.value,
       parentIds: const [],
-      placement: const Placement(x: 0, y: 0, width: 2, height: 1),
+      placement: const GraphPlacement(x: 0, y: 0, width: 2, height: 1),
     );
   }).toList();
 
-  return FakeApp(
+  return AuthoringFixtureApp(
+    createDocument: () => fixtureAuthoringDocument(tags: tags),
     overrides: [
-      ...authoringSessionMockOverrides(tags: tags),
       organizationIdProvider.overrideWithValue(
-        recordId("organization:widgetbook"),
+        skir.recordId("organization:widgetbook"),
       ),
-      realmIdProvider.overrideWithValue(recordId("service:widgetbook")),
-      ...tagsProviderOverrides(tags: tags),
+      realmIdProvider.overrideWithValue(skir.recordId("service:widgetbook")),
     ],
     child: InspectorScaffold(
       child: Center(

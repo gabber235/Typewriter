@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:json_annotation/json_annotation.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Encodes nullable colors as hexadecimal strings with an optional leading #.
 class NullableColorConverter extends JsonConverter<Color?, String?> {

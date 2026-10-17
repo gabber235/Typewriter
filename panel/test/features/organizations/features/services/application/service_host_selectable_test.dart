@@ -1,10 +1,4 @@
-import "dart:async";
-import "dart:typed_data";
-
-import "package:flutter/material.dart";
-
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -13,16 +7,17 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/provider_test_utils.dart";
 import "../../../../../support/test_utils.dart";
 
-part "topology_selection_removal_test_cases.dart";
 part "host_apply_test_cases.dart";
 part "host_target_selection_test_cases.dart";
+part "inspector_name_refresh_test_cases.dart";
 part "resource_connection_test_cases.dart";
 part "service_host_selectable_test_support.dart";
+part "topology_selection_removal_test_cases.dart";
 
 const _updateSubject = "cloud.to.user.user1.organization.org1.services.update";
 const _configureSubject =
     "cloud.to.user.user1.organization.org1.topology.configure";
-final _organizationId = recordId("organization:org1");
+final _organizationId = skir.recordId("organization:org1");
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,25 +26,24 @@ void main() {
   _testHostApply();
   _testHostTargetSelection();
   _testResourceConnections();
+  _testInspectorNameRefresh();
 
   test("host presentation owns separate runtime and resource inputs", () async {
     final harness = await _Harness.create();
     addTearDown(harness.dispose);
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
-    final model = harness.selectable.buildPresentation(owners);
-    expect(
-      model.inputs.values.whereType<PresentationValueInput>(),
-      hasLength(1),
-    );
-
-    final edits = model.inputs.values
-        .whereType<PresentationEditInput>()
-        .map((input) => input.owner as EditorSource)
-        .toList();
+    final content = _buildInspection(harness, owners);
+    final edits = owners.labels.keys.whereType<ValueEditing>().toList();
     expect(edits, hasLength(2));
-    expect(edits.map((owner) => owner.document!.revision), [1, 1]);
+    expect(edits.map((owner) => owner.document.revision), [1, 1]);
     expect(identical(edits[0], edits[1]), isFalse);
+    expect(
+      content.host!.document.bindings.values.where(
+        (binding) => !binding.editable,
+      ),
+      isNotEmpty,
+    );
   });
 
   test("service save carries only identity and its own revision", () async {
@@ -66,23 +60,86 @@ void main() {
         ),
       );
     });
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
 
-    final model = harness.selectable.buildPresentation(owners);
-    final owner =
-        ((model.inputs[const BindingId(2)]! as PresentationEditInput).owner
-              as EditorSource)
-          ..update(DataPath.root.field("name"), const StringValue("renamed"));
+    _buildInspection(harness, owners);
+    final owner = _identitySource(owners)
+      ..update(
+        editorRootPath.field("name"),
+        skir.DataValue.wrapStringValue("renamed"),
+      );
     final result = await owner.flush() as MutationSuccess;
     expect(request!.name, "renamed");
     expect(result.revision, 2);
-    expect((result.value as RecordValue).fields.keys, ["name"]);
+    expect(result.value.authoredRecord!.fields.map((field) => field.name), [
+      "name",
+    ]);
 
     expect(harness.nats.requests.map((entry) => entry.subject), [
       "cloud.to.user.user1.organization.org1.services.watch",
       _updateSubject,
     ]);
+  });
+
+  test("service portable host preserves the backend editor owner", () async {
+    final harness = await _Harness.create();
+    addTearDown(harness.dispose);
+    skir.UpdateOrganizationServiceRequest? request;
+    harness.respond(_updateSubject, (data) {
+      request = skir.UpdateOrganizationServiceRequest.serializer.fromBytes(
+        data,
+      );
+      return skir.UpdateOrganizationServiceResponse.serializer.toBytes(
+        skir.UpdateOrganizationServiceResponse.wrapSuccess(
+          harness.service.copyWith(revision: 2, name: "portable_name").toSkir(),
+        ),
+      );
+    });
+    final owners = InspectionBindings();
+    addTearDown(owners.dispose);
+    final host = _buildInspection(harness, owners).host!;
+    final editable = host.document.bindings.entries.singleWhere(
+      (entry) => entry.key.value == "service.identity.name",
+    );
+
+    final result = await host.write(
+      skir.BindingRef(
+        bindingId: editable.key,
+        path: skir.ValuePath(segments: const []),
+      ),
+      skir.DataValue.wrapStringValue("portable_name"),
+      context: host.rootInvocation,
+    );
+    expect(result, isA<PortablePresentationWriteApplied>());
+
+    final saved = await _identitySource(owners).flush();
+    expect(saved, isA<MutationSuccess>());
+    expect(request!.name, "portable_name");
+    expect(request!.expectedRevision, 1);
+  });
+
+  test("service runtime bindings stay read only", () async {
+    final harness = await _Harness.create();
+    addTearDown(harness.dispose);
+    final owners = InspectionBindings();
+    addTearDown(owners.dispose);
+    final host = _buildInspection(harness, owners).host!;
+    final runtime = host.document.bindings.entries.firstWhere(
+      (entry) => !entry.value.editable,
+    );
+
+    expect(
+      await host.write(
+        skir.BindingRef(
+          bindingId: runtime.key,
+          path: skir.ValuePath(segments: const []),
+        ),
+        skir.DataValue.wrapStringValue("changed"),
+        context: host.rootInvocation,
+      ),
+      isA<PortablePresentationWriteRejected>(),
+    );
   });
 
   test("configuration saves only the host transaction", () async {
@@ -100,32 +157,25 @@ void main() {
         ),
       );
     });
-    final owners = EditorOwnerRegistry();
+    final owners = InspectionBindings();
     addTearDown(owners.dispose);
 
-    final model = harness.selectable.buildPresentation(owners);
-    final owner =
-        ((model.inputs[const BindingId(1)]! as PresentationEditInput).owner
-              as EditorSource)
-          ..update(
-            DataPath.root.field("realm"),
-            PolymorphicValue(
-              concreteType: const ResolvedTypeRef(
-                id: QualifiedTypeId(
-                  namespace: "panel.host",
-                  name: "RealmHosted",
-                ),
-                revision: 1,
-              ),
-              value: RecordValue({"target": StringValue("paper@*")}),
-            ),
-          );
+    _buildInspection(harness, owners);
+    final owner = _configurationSource(owners)
+      ..update(
+        editorRootPath.field("realm"),
+        _mode("RealmHosted", {
+          "target": skir.DataValue.wrapStringValue("paper@*"),
+        }),
+      );
 
     final result = await owner.flush() as MutationSuccess;
     expect(request!.execution.realm, isNotNull);
     expect(result.revision, 2);
     expect(
-      (result.value as RecordValue).fields.containsKey("service"),
+      result.value.authoredRecord!.fields.any(
+        (field) => field.name == "service",
+      ),
       isFalse,
     );
     expect(harness.nats.requests.map((entry) => entry.subject), [
@@ -133,4 +183,72 @@ void main() {
       _configureSubject,
     ]);
   });
+
+  test("service and host share one portable identity editor", () async {
+    final harness = await _Harness.create();
+    addTearDown(harness.dispose);
+    final sessionSubscription = harness.container.listen(
+      inspectionSessionProvider,
+      (_, _) {},
+    );
+    addTearDown(sessionSubscription.close);
+    final session = harness.container.read(inspectionSessionProvider);
+
+    harness.container.read(selectionProvider.notifier).selectAll([
+      ServiceIdentifier(harness.service.serviceId),
+      ServiceHostIdentifier(harness.host.hostId),
+    ]);
+    await waitForProvider(
+      harness.container,
+      inspectedSelectionProvider,
+      (value) => value.hasValue && value.requireValue.length == 2,
+      description: "mixed service and host inspection",
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(session.hosts, hasLength(1));
+    expect(session.owners.labels, hasLength(1));
+    expect(
+      session.hosts.single.document.bindings.keys.map((id) => id.value),
+      contains("service.identity.name"),
+    );
+  });
+
+  test(
+    "multiple hosts share identity and retain configuration editors",
+    () async {
+      final harness = await _Harness.create(includeSecondHost: true);
+      addTearDown(harness.dispose);
+      final sessionSubscription = harness.container.listen(
+        inspectionSessionProvider,
+        (_, _) {},
+      );
+      addTearDown(sessionSubscription.close);
+      final session = harness.container.read(inspectionSessionProvider);
+
+      harness.container.read(selectionProvider.notifier).selectAll([
+        ServiceHostIdentifier(harness.host.hostId),
+        ServiceHostIdentifier(harness.secondHost!.hostId),
+      ]);
+      await waitForProvider(
+        harness.container,
+        inspectedSelectionProvider,
+        (value) => value.hasValue && value.requireValue.length == 2,
+        description: "multiple host inspection",
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(session.hosts, hasLength(2));
+      expect(session.owners.labels, hasLength(3));
+      expect(
+        session.hosts
+            .expand((host) => host.document.bindings.keys)
+            .map((id) => id.value),
+        containsAll([
+          "service.identity.name",
+          "host.configuration.realm.enabled",
+        ]),
+      );
+    },
+  );
 }

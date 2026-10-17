@@ -3,7 +3,6 @@
 package com.typewritermc.loader.shared
 
 import com.typewritermc.loader.api.artifact.SharedArtifactCatalog
-import com.typewritermc.loader.api.artifact.SharedArtifactChanged
 import com.typewritermc.loader.api.artifact.SharedArtifactDescriptor
 import com.typewritermc.loader.api.artifact.SharedArtifactId
 import com.typewritermc.loader.api.artifact.SharedArtifactRevision
@@ -21,7 +20,7 @@ import kotlin.io.path.readBytes
 import kotlin.io.path.writeBytes
 
 /**
- * Stores descriptors, catalog revision, and pending events together in a CBOR state file.
+ * Stores descriptors and catalog revision together in a CBOR state file.
  *
  * A mutex serializes this instance. Failed transaction blocks discard working changes; file replacement uses
  * atomic moves when supported. A persistence failure can leave memory advanced and propagates to the caller. This
@@ -50,26 +49,11 @@ class FileSharedArtifactRepository(
             )
         }
 
-    suspend fun pendingChanges(): List<SharedArtifactChanged> = mutex.withLock { state.outbox }
-
-    /**
-     * Removes a pending event after successful publication.
-     *
-     * Acknowledgment is separate from delivery; interruption between them can cause duplicate events.
-     */
-    suspend fun acknowledge(change: SharedArtifactChanged) {
-        mutex.withLock {
-            state = state.copy(outbox = state.outbox.filterNot { it == change })
-            writeState(stateFile, state)
-        }
-    }
-
     private class MutableTransaction(
         initial: StoredSharedArtifacts,
     ) : SharedArtifactTransaction {
         private val artifacts = initial.artifacts.associateByTo(linkedMapOf()) { it.id }
         private var catalogRevision = initial.catalogRevision
-        private val outbox = initial.outbox.toMutableList()
 
         override suspend fun find(id: SharedArtifactId): SharedArtifactDescriptor? = artifacts[id]
 
@@ -79,11 +63,7 @@ class FileSharedArtifactRepository(
 
         override suspend fun nextCatalogRevision(): SharedCatalogRevision = SharedCatalogRevision(++catalogRevision)
 
-        override suspend fun enqueue(change: SharedArtifactChanged) {
-            outbox += change
-        }
-
-        fun state() = StoredSharedArtifacts(catalogRevision, artifacts.values.toList(), outbox)
+        fun state() = StoredSharedArtifacts(catalogRevision, artifacts.values.toList())
     }
 }
 
@@ -91,7 +71,6 @@ class FileSharedArtifactRepository(
 private data class StoredSharedArtifacts(
     val catalogRevision: Long = 0,
     val artifacts: List<SharedArtifactDescriptor> = emptyList(),
-    val outbox: List<SharedArtifactChanged> = emptyList(),
 )
 
 private val sharedArtifactCbor = Cbor { encodeDefaults = true }

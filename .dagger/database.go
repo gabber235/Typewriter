@@ -257,7 +257,9 @@ func (m *Typewriter) localClusterSurrealkit(
 	}
 
 	container := m.surrealkitContainer().
-		WithDirectory("/workspace/backend", backend).
+		WithDirectory("/workspace/backend", backend, dagger.ContainerWithDirectoryOpts{
+			Owner: "65532",
+		}).
 		WithWorkdir("/workspace/backend")
 	if surrealdb != nil {
 		container = container.WithServiceBinding("surrealdb.local.seamlezz.net", surrealdb)

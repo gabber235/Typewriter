@@ -1,8 +1,4 @@
-import "dart:typed_data";
-
-import "package:dartastic_opentelemetry/dartastic_opentelemetry.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:http/http.dart" as http;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 void main() {
@@ -38,7 +34,7 @@ void main() {
       uri: Uri.parse("https://example.com/path"),
       operation: (headers) async {
         expect(headers, isEmpty);
-        return http.Response("ok", 200);
+        return Response("ok", 200);
       },
     );
 

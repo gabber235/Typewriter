@@ -1,6 +1,4 @@
-import "package:flutter/material.dart";
 import "package:flutter_test/flutter_test.dart";
-import "package:skir_client/skir_client.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
@@ -65,7 +63,7 @@ void main() {
 
     test("formats object keys and values recursively", () {
       final nested = skir.RecordIdValue.wrapObject(
-        KeyedIterable.copy([
+        skir.KeyedIterable.copy([
           skir.ObjectRecordIdValue(
             key: "nested key",
             value: skir.RecordIdValue.wrapString("value"),
@@ -73,7 +71,7 @@ void main() {
         ], (item) => item.key),
       );
       final key = skir.RecordIdKey.wrapObject(
-        KeyedIterable.copy([
+        skir.KeyedIterable.copy([
           skir.ObjectRecordIdKey(key: "simple", value: nested),
           skir.ObjectRecordIdKey(key: "123", value: skir.RecordIdValue.null_),
         ], (item) => item.key),

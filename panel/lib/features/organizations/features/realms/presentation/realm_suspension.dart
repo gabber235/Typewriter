@@ -1,6 +1,3 @@
-import "dart:ui";
-
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Keeps realm content visible while blocking interaction when its connection
@@ -176,7 +173,9 @@ class _ConnectionCard extends StatelessWidget {
                           textColor: theme.colorScheme.onSurfaceVariant,
                         ),
                       ],
-                      if (connectionState == RealmConnectionState.unavailable &&
+                      if ((connectionState == RealmConnectionState.offline ||
+                              connectionState ==
+                                  RealmConnectionState.unavailable) &&
                           onRetry != null) ...[
                         SizedBox(height: context.spacing.space4),
                         OutlinedButton.icon(

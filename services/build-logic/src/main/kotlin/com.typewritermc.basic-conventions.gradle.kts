@@ -9,6 +9,13 @@ group = "com.typewritermc"
 
 repositories {
     mavenCentral()
+    maven {
+        name = "SkirClientFork"
+        url = uri("https://jitpack.io")
+        content {
+            includeModule("com.github.gabber235", "skir-kotlin-client")
+        }
+    }
 }
 
 val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
@@ -25,7 +32,7 @@ detekt {
 ktlint {
     version.set(libs.findVersion("ktlint").get().requiredVersion)
     filter {
-        exclude("**/skirout/**")
+        exclude { it.file.invariantSeparatorsPath.contains("/skirout/") }
         exclude { it.file.invariantSeparatorsPath.contains("/generated/ksp/") }
     }
 }
@@ -34,6 +41,7 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
+        freeCompilerArgs.add("-Xcontext-parameters")
     }
 }
 

@@ -1,14 +1,11 @@
-import "dart:collection";
-import "dart:math";
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Computes stable, non overlapping grid placements for a service topology.
 ///
-/// Connected nodes are laid out in directed ranks, with source nodes above
-/// their children. Disconnected components are then packed into a compact grid.
-/// Every traversal and tie breaker is sorted by identifier, so the same graph
-/// produces the same positions regardless of input order. This class is pure;
+/// Connected nodes use directed ranks. Nodes unreachable by the topological
+/// traversal, such as a closed cycle, share a fallback rank. [components] sorts
+/// nodes and components by identifier; passing that result to [pack] gives
+/// stable positions regardless of the original node order. This class is pure;
 /// [ServicesPackedLayout] owns conversion to the shared render model.
 class ServicesPackedPacker {
   const ServicesPackedPacker({required this.gap});
@@ -32,6 +29,9 @@ class ServicesPackedPacker {
         ..sort((left, right) => left.id.compareTo(right.id));
 
   /// Places components without overlap and returns absolute node coordinates.
+  ///
+  /// Components are placed in input order. Use [components] when that order
+  /// should be independent of the original graph enumeration.
   ///
   /// Candidate origins are scored by overall extent, area, balance, then
   /// coordinates. Those tie breakers make the result deterministic while
@@ -273,9 +273,9 @@ class ServicesPackedPacker {
 
   /// Converts a packed relationship to the shared graph edge contract.
   ///
-  /// Services are ranked top to bottom, so edges leave the source bottom and
-  /// enter the target top. The element map is accepted for the layout boundary;
-  /// endpoint validity has already been established by [ServicesPackedLayout].
+  /// Edges leave the source bottom and enter the target top, including fallback
+  /// ranks for cycles. Endpoint validity has already been established by
+  /// [ServicesPackedLayout].
   GraphEdge edge(
     ServicesPackedConnection connection,
     Map<GraphIdentifier, GraphElement> elements,

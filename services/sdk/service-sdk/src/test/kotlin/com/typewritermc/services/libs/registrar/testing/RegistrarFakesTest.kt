@@ -26,8 +26,7 @@ val RegistrarFakesTest by testSuite {
                 runtime.enqueueWatch(
                     RuntimeResult.Success(
                         BindingObservation.Initial(
-                            com.typewritermc.services.libs.registrar.BindingStatus
-                                .Unbound(null),
+                            com.typewritermc.services.libs.registrar.BindingStatus.Unbound,
                         ),
                     ),
                 )

@@ -32,7 +32,7 @@ sealed interface ReconciledRevision_OrMutable {
 class ReconciledRevision private constructor(
     override val desired: kotlin.Long,
     override val applied: kotlin.Long,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReconciledRevision>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReconciledRevision>? =
         null,
 ): skirout.service.v1.topology.ReconciledRevision_OrMutable {
     constructor(
@@ -85,7 +85,7 @@ class ReconciledRevision private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ReconciledRevision.serializerImpl,
+            _SerializerRegistry.ReconciledRevisionSerializerImpl,
         )
     }
 
@@ -136,43 +136,11 @@ class ReconciledRevision private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ReconciledRevision",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ReconciledRevision] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ReconciledRevisionSerializer;
 
         /** Describes the [ReconciledRevision] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "desired",
-                "desired",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.desired },
-                { mut, v -> mut.desired = v },
-            );
-            serializerImpl.addField(
-                "applied",
-                "applied",
-                1,
-                build.skir.Serializers.int64,
-                "",
-                { it.applied },
-                { mut, v -> mut.applied = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ReconciledRevisionSerializerImpl.typeDescriptor;
     }
 }
 
@@ -188,7 +156,7 @@ sealed interface EngineTarget_OrMutable {
 class EngineTarget private constructor(
     override val engineId: kotlin.String,
     override val versionConstraint: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineTarget>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineTarget>? =
         null,
 ): skirout.service.v1.topology.EngineTarget_OrMutable {
     constructor(
@@ -241,7 +209,7 @@ class EngineTarget private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.EngineTarget.serializerImpl,
+            _SerializerRegistry.EngineTargetSerializerImpl,
         )
     }
 
@@ -292,43 +260,11 @@ class EngineTarget private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:EngineTarget",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [EngineTarget] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.EngineTargetSerializer;
 
         /** Describes the [EngineTarget] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "engine_id",
-                "engineId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.engineId },
-                { mut, v -> mut.engineId = v },
-            );
-            serializerImpl.addField(
-                "version_constraint",
-                "versionConstraint",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.versionConstraint },
-                { mut, v -> mut.versionConstraint = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.EngineTargetSerializerImpl.typeDescriptor;
     }
 }
 
@@ -342,7 +278,7 @@ sealed interface SupportedEngine_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class SupportedEngine private constructor(
     override val engineId: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SupportedEngine>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.SupportedEngine>? =
         null,
 ): skirout.service.v1.topology.SupportedEngine_OrMutable {
     constructor(
@@ -389,7 +325,7 @@ class SupportedEngine private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.SupportedEngine.serializerImpl,
+            _SerializerRegistry.SupportedEngineSerializerImpl,
         )
     }
 
@@ -433,34 +369,11 @@ class SupportedEngine private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:SupportedEngine",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [SupportedEngine] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.SupportedEngineSerializer;
 
         /** Describes the [SupportedEngine] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "engine_id",
-                "engineId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.engineId },
-                { mut, v -> mut.engineId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.SupportedEngineSerializerImpl.typeDescriptor;
     }
 }
 
@@ -501,10 +414,6 @@ sealed class HostRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.OFFLINE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object RECONCILING : skirout.service.v1.topology.HostRuntimeStatus() {
@@ -516,10 +425,6 @@ sealed class HostRuntimeStatus private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.RECONCILING_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -533,10 +438,6 @@ sealed class HostRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.ACTIVE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object FAILED : skirout.service.v1.topology.HostRuntimeStatus() {
@@ -548,10 +449,6 @@ sealed class HostRuntimeStatus private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.FAILED_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -565,10 +462,6 @@ sealed class HostRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.DRIFTED_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.HostRuntimeStatus>? get() = null;
@@ -578,7 +471,7 @@ sealed class HostRuntimeStatus private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostRuntimeStatus._serializerImpl,
+            _SerializerRegistry.HostRuntimeStatusSerializerImpl,
         )
     }
 
@@ -589,75 +482,11 @@ sealed class HostRuntimeStatus private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.HostRuntimeStatus, Unknown>(
-                recordId = "service/v1/topology.skir:HostRuntimeStatus",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [HostRuntimeStatus] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.HostRuntimeStatusSerializer;
 
         /** Describes the [HostRuntimeStatus] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            OFFLINE;
-            RECONCILING;
-            ACTIVE;
-            FAILED;
-            DRIFTED;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 6) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "offline",
-                    Kind.OFFLINE_CONST.ordinal,
-                    "",
-                    OFFLINE,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "reconciling",
-                    Kind.RECONCILING_CONST.ordinal,
-                    "",
-                    RECONCILING,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "active",
-                    Kind.ACTIVE_CONST.ordinal,
-                    "",
-                    ACTIVE,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "failed",
-                    Kind.FAILED_CONST.ordinal,
-                    "",
-                    FAILED,
-                );
-                _serializerImpl.addConstantVariant(
-                    5,
-                    "drifted",
-                    Kind.DRIFTED_CONST.ordinal,
-                    "",
-                    DRIFTED,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostRuntimeStatusSerializerImpl.typeDescriptor;
     }
 }
 
@@ -675,7 +504,7 @@ class HostRuntimeState private constructor(
     override val status: skirout.service.v1.topology.HostRuntimeStatus,
     override val message: kotlin.String?,
     override val updatedAt: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostRuntimeState>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostRuntimeState>? =
         null,
 ): skirout.service.v1.topology.HostRuntimeState_OrMutable {
     constructor(
@@ -734,7 +563,7 @@ class HostRuntimeState private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostRuntimeState.serializerImpl,
+            _SerializerRegistry.HostRuntimeStateSerializerImpl,
         )
     }
 
@@ -792,54 +621,11 @@ class HostRuntimeState private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:HostRuntimeState",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [HostRuntimeState] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.HostRuntimeStateSerializer;
 
         /** Describes the [HostRuntimeState] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "status",
-                "status",
-                0,
-                skirout.service.v1.topology.HostRuntimeStatus.serializer,
-                "",
-                { it.status },
-                { mut, v -> mut.status = v },
-            );
-            serializerImpl.addField(
-                "message",
-                "message",
-                1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.message },
-                { mut, v -> mut.message = v },
-            );
-            serializerImpl.addField(
-                "updated_at",
-                "updatedAt",
-                2,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.updatedAt },
-                { mut, v -> mut.updatedAt = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostRuntimeStateSerializerImpl.typeDescriptor;
     }
 }
 
@@ -882,10 +668,6 @@ sealed class ChildRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.ABSENT_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object STAGING : skirout.service.v1.topology.ChildRuntimeStatus() {
@@ -897,10 +679,6 @@ sealed class ChildRuntimeStatus private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.STAGING_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -914,10 +692,6 @@ sealed class ChildRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.ACTIVE_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object QUIESCING : skirout.service.v1.topology.ChildRuntimeStatus() {
@@ -929,10 +703,6 @@ sealed class ChildRuntimeStatus private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.QUIESCING_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -946,10 +716,6 @@ sealed class ChildRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.FAILED_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     object ROLLED_BACK : skirout.service.v1.topology.ChildRuntimeStatus() {
@@ -961,10 +727,6 @@ sealed class ChildRuntimeStatus private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return Kind.ROLLED_BACK_CONST.ordinal;
-        }
-
-        init {
-            _maybeFinalizeSerializer();
         }
     }
 
@@ -978,10 +740,6 @@ sealed class ChildRuntimeStatus private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.DRIFTED_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.ChildRuntimeStatus>? get() = null;
@@ -991,7 +749,7 @@ sealed class ChildRuntimeStatus private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ChildRuntimeStatus._serializerImpl,
+            _SerializerRegistry.ChildRuntimeStatusSerializerImpl,
         )
     }
 
@@ -1002,91 +760,11 @@ sealed class ChildRuntimeStatus private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ChildRuntimeStatus, Unknown>(
-                recordId = "service/v1/topology.skir:ChildRuntimeStatus",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ChildRuntimeStatus] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ChildRuntimeStatusSerializer;
 
         /** Describes the [ChildRuntimeStatus] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            ABSENT;
-            STAGING;
-            ACTIVE;
-            QUIESCING;
-            FAILED;
-            ROLLED_BACK;
-            DRIFTED;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 8) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "absent",
-                    Kind.ABSENT_CONST.ordinal,
-                    "",
-                    ABSENT,
-                );
-                _serializerImpl.addConstantVariant(
-                    2,
-                    "staging",
-                    Kind.STAGING_CONST.ordinal,
-                    "",
-                    STAGING,
-                );
-                _serializerImpl.addConstantVariant(
-                    3,
-                    "active",
-                    Kind.ACTIVE_CONST.ordinal,
-                    "",
-                    ACTIVE,
-                );
-                _serializerImpl.addConstantVariant(
-                    4,
-                    "quiescing",
-                    Kind.QUIESCING_CONST.ordinal,
-                    "",
-                    QUIESCING,
-                );
-                _serializerImpl.addConstantVariant(
-                    5,
-                    "failed",
-                    Kind.FAILED_CONST.ordinal,
-                    "",
-                    FAILED,
-                );
-                _serializerImpl.addConstantVariant(
-                    6,
-                    "rolled_back",
-                    Kind.ROLLED_BACK_CONST.ordinal,
-                    "",
-                    ROLLED_BACK,
-                );
-                _serializerImpl.addConstantVariant(
-                    7,
-                    "drifted",
-                    Kind.DRIFTED_CONST.ordinal,
-                    "",
-                    DRIFTED,
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ChildRuntimeStatusSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1106,7 +784,7 @@ class ChildRuntimeState private constructor(
     override val activeArtifactVersion: kotlin.String?,
     override val message: kotlin.String?,
     override val updatedAt: java.time.Instant,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ChildRuntimeState>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ChildRuntimeState>? =
         null,
 ): skirout.service.v1.topology.ChildRuntimeState_OrMutable {
     constructor(
@@ -1171,7 +849,7 @@ class ChildRuntimeState private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ChildRuntimeState.serializerImpl,
+            _SerializerRegistry.ChildRuntimeStateSerializerImpl,
         )
     }
 
@@ -1236,65 +914,11 @@ class ChildRuntimeState private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ChildRuntimeState",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ChildRuntimeState] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ChildRuntimeStateSerializer;
 
         /** Describes the [ChildRuntimeState] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "status",
-                "status",
-                0,
-                skirout.service.v1.topology.ChildRuntimeStatus.serializer,
-                "",
-                { it.status },
-                { mut, v -> mut.status = v },
-            );
-            serializerImpl.addField(
-                "active_artifact_version",
-                "activeArtifactVersion",
-                1,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.activeArtifactVersion },
-                { mut, v -> mut.activeArtifactVersion = v },
-            );
-            serializerImpl.addField(
-                "message",
-                "message",
-                2,
-                build.skir.Serializers.optional(
-                    build.skir.Serializers.string,
-                ),
-                "",
-                { it.message },
-                { mut, v -> mut.message = v },
-            );
-            serializerImpl.addField(
-                "updated_at",
-                "updatedAt",
-                3,
-                build.skir.Serializers.timestamp,
-                "",
-                { it.updatedAt },
-                { mut, v -> mut.updatedAt = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ChildRuntimeStateSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1322,7 +946,7 @@ class ServiceHost private constructor(
     override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
     override val topologyRevision: skirout.service.v1.topology.ReconciledRevision,
     override val state: skirout.service.v1.topology.HostRuntimeState,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceHost>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceHost>? =
         null,
 ): skirout.service.v1.topology.ServiceHost_OrMutable {
     constructor(
@@ -1411,7 +1035,7 @@ class ServiceHost private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ServiceHost.serializerImpl,
+            _SerializerRegistry.ServiceHostSerializerImpl,
         )
     }
 
@@ -1452,7 +1076,7 @@ class ServiceHost private constructor(
         );
 
         /**
-         * If the value of [hostId] is already mutable, returns it as-is.
+         * If the value of [hostId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
          */
         val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1468,7 +1092,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as-is.
+         * If the value of [serviceId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1484,7 +1108,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [supportedEngines] is already mutable, returns it as-is.
+         * If the value of [supportedEngines] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
          */
         val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
@@ -1500,7 +1124,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [topologyRevision] is already mutable, returns it as-is.
+         * If the value of [topologyRevision] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [topologyRevision] and returns it.
          */
         val mutableTopologyRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
@@ -1516,7 +1140,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as-is.
+         * If the value of [state] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.HostRuntimeState.Mutable get() {
@@ -1584,99 +1208,11 @@ class ServiceHost private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ServiceHost",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceHost] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceHostSerializer;
 
         /** Describes the [ServiceHost] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "host_id",
-                "hostId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.hostId },
-                { mut, v -> mut.hostId = v },
-            );
-            serializerImpl.addField(
-                "service_id",
-                "serviceId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.serviceId },
-                { mut, v -> mut.serviceId = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                2,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "entrypoint",
-                "entrypoint",
-                3,
-                build.skir.Serializers.string,
-                "",
-                { it.entrypoint },
-                { mut, v -> mut.entrypoint = v },
-            );
-            serializerImpl.addField(
-                "can_host_realm",
-                "canHostRealm",
-                4,
-                build.skir.Serializers.bool,
-                "",
-                { it.canHostRealm },
-                { mut, v -> mut.canHostRealm = v },
-            );
-            serializerImpl.addField(
-                "supported_engines",
-                "supportedEngines",
-                5,
-                build.skir.Serializers.list(
-                    skirout.service.v1.topology.SupportedEngine.serializer,
-                ),
-                "",
-                { it.supportedEngines },
-                { mut, v -> mut.supportedEngines = v },
-            );
-            serializerImpl.addField(
-                "topology_revision",
-                "topologyRevision",
-                6,
-                skirout.service.v1.topology.ReconciledRevision.serializer,
-                "",
-                { it.topologyRevision },
-                { mut, v -> mut.topologyRevision = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                7,
-                skirout.service.v1.topology.HostRuntimeState.serializer,
-                "",
-                { it.state },
-                { mut, v -> mut.state = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceHostSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1692,7 +1228,7 @@ sealed interface OwnerHost_OrMutable {
 class OwnerHost private constructor(
     override val id: skirout.kernel.v1.record_id.RecordId,
     override val name: kotlin.String,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OwnerHost>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OwnerHost>? =
         null,
 ): skirout.service.v1.topology.OwnerHost_OrMutable {
     constructor(
@@ -1745,7 +1281,7 @@ class OwnerHost private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.OwnerHost.serializerImpl,
+            _SerializerRegistry.OwnerHostSerializerImpl,
         )
     }
 
@@ -1768,7 +1304,7 @@ class OwnerHost private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as-is.
+         * If the value of [id] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1812,43 +1348,11 @@ class OwnerHost private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:OwnerHost",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [OwnerHost] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.OwnerHostSerializer;
 
         /** Describes the [OwnerHost] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "id",
-                "id",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.id },
-                { mut, v -> mut.id = v },
-            );
-            serializerImpl.addField(
-                "name",
-                "name",
-                1,
-                build.skir.Serializers.string,
-                "",
-                { it.name },
-                { mut, v -> mut.name = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.OwnerHostSerializerImpl.typeDescriptor;
     }
 }
 
@@ -1870,7 +1374,7 @@ class RealmInstance private constructor(
     override val revision: kotlin.Long,
     override val targetEngine: skirout.service.v1.topology.EngineTarget,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInstance>? =
         null,
 ): skirout.service.v1.topology.RealmInstance_OrMutable {
     constructor(
@@ -1941,7 +1445,7 @@ class RealmInstance private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.RealmInstance.serializerImpl,
+            _SerializerRegistry.RealmInstanceSerializerImpl,
         )
     }
 
@@ -1973,7 +1477,7 @@ class RealmInstance private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1989,7 +1493,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as-is.
+         * If the value of [ownerHost] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -2005,7 +1509,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [targetEngine] is already mutable, returns it as-is.
+         * If the value of [targetEngine] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [targetEngine] and returns it.
          */
         val mutableTargetEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -2021,7 +1525,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as-is.
+         * If the value of [state] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -2077,70 +1581,11 @@ class RealmInstance private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:RealmInstance",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmInstance] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmInstanceSerializer;
 
         /** Describes the [RealmInstance] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.addField(
-                "owner_host",
-                "ownerHost",
-                1,
-                skirout.service.v1.topology.OwnerHost.serializer,
-                "",
-                { it.ownerHost },
-                { mut, v -> mut.ownerHost = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                2,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "target_engine",
-                "targetEngine",
-                3,
-                skirout.service.v1.topology.EngineTarget.serializer,
-                "",
-                { it.targetEngine },
-                { mut, v -> mut.targetEngine = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                4,
-                skirout.service.v1.topology.ChildRuntimeState.serializer,
-                "",
-                { it.state },
-                { mut, v -> mut.state = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmInstanceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2156,7 +1601,7 @@ sealed interface RealmInfo_OrMutable {
 class RealmInfo private constructor(
     override val realmId: skirout.kernel.v1.record_id.RecordId,
     override val ownerHost: skirout.service.v1.topology.OwnerHost,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInfo>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmInfo>? =
         null,
 ): skirout.service.v1.topology.RealmInfo_OrMutable {
     constructor(
@@ -2209,7 +1654,7 @@ class RealmInfo private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.RealmInfo.serializerImpl,
+            _SerializerRegistry.RealmInfoSerializerImpl,
         )
     }
 
@@ -2232,7 +1677,7 @@ class RealmInfo private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as-is.
+         * If the value of [realmId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2248,7 +1693,7 @@ class RealmInfo private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as-is.
+         * If the value of [ownerHost] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -2292,43 +1737,11 @@ class RealmInfo private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:RealmInfo",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [RealmInfo] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.RealmInfoSerializer;
 
         /** Describes the [RealmInfo] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm_id",
-                "realmId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.realmId },
-                { mut, v -> mut.realmId = v },
-            );
-            serializerImpl.addField(
-                "owner_host",
-                "ownerHost",
-                1,
-                skirout.service.v1.topology.OwnerHost.serializer,
-                "",
-                { it.ownerHost },
-                { mut, v -> mut.ownerHost = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.RealmInfoSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2352,7 +1765,7 @@ class EngineInstance private constructor(
     override val revision: kotlin.Long,
     override val target: skirout.service.v1.topology.EngineTarget,
     override val state: skirout.service.v1.topology.ChildRuntimeState,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineInstance>? =
         null,
 ): skirout.service.v1.topology.EngineInstance_OrMutable {
     constructor(
@@ -2429,7 +1842,7 @@ class EngineInstance private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.EngineInstance.serializerImpl,
+            _SerializerRegistry.EngineInstanceSerializerImpl,
         )
     }
 
@@ -2464,7 +1877,7 @@ class EngineInstance private constructor(
         );
 
         /**
-         * If the value of [engineId] is already mutable, returns it as-is.
+         * If the value of [engineId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
          */
         val mutableEngineId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2480,7 +1893,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as-is.
+         * If the value of [ownerHost] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -2496,7 +1909,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [realm] is already mutable, returns it as-is.
+         * If the value of [realm] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [realm] and returns it.
          */
         val mutableRealm: skirout.service.v1.topology.RealmInfo.Mutable get() {
@@ -2512,7 +1925,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -2528,7 +1941,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as-is.
+         * If the value of [state] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -2588,79 +2001,11 @@ class EngineInstance private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:EngineInstance",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [EngineInstance] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.EngineInstanceSerializer;
 
         /** Describes the [EngineInstance] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "engine_id",
-                "engineId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.engineId },
-                { mut, v -> mut.engineId = v },
-            );
-            serializerImpl.addField(
-                "owner_host",
-                "ownerHost",
-                1,
-                skirout.service.v1.topology.OwnerHost.serializer,
-                "",
-                { it.ownerHost },
-                { mut, v -> mut.ownerHost = v },
-            );
-            serializerImpl.addField(
-                "realm",
-                "realm",
-                2,
-                skirout.service.v1.topology.RealmInfo.serializer,
-                "",
-                { it.realm },
-                { mut, v -> mut.realm = v },
-            );
-            serializerImpl.addField(
-                "revision",
-                "revision",
-                3,
-                build.skir.Serializers.int64,
-                "",
-                { it.revision },
-                { mut, v -> mut.revision = v },
-            );
-            serializerImpl.addField(
-                "target",
-                "target",
-                4,
-                skirout.service.v1.topology.EngineTarget.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "state",
-                "state",
-                5,
-                skirout.service.v1.topology.ChildRuntimeState.serializer,
-                "",
-                { it.state },
-                { mut, v -> mut.state = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.EngineInstanceSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2674,7 +2019,7 @@ sealed interface HostedRealmConfiguration_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class HostedRealmConfiguration private constructor(
     override val primaryEngine: skirout.service.v1.topology.EngineTarget,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedRealmConfiguration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedRealmConfiguration>? =
         null,
 ): skirout.service.v1.topology.HostedRealmConfiguration_OrMutable {
     constructor(
@@ -2721,7 +2066,7 @@ class HostedRealmConfiguration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostedRealmConfiguration.serializerImpl,
+            _SerializerRegistry.HostedRealmConfigurationSerializerImpl,
         )
     }
 
@@ -2741,7 +2086,7 @@ class HostedRealmConfiguration private constructor(
         );
 
         /**
-         * If the value of [primaryEngine] is already mutable, returns it as-is.
+         * If the value of [primaryEngine] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [primaryEngine] and returns it.
          */
         val mutablePrimaryEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -2781,34 +2126,11 @@ class HostedRealmConfiguration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:HostedRealmConfiguration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [HostedRealmConfiguration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.HostedRealmConfigurationSerializer;
 
         /** Describes the [HostedRealmConfiguration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "primary_engine",
-                "primaryEngine",
-                0,
-                skirout.service.v1.topology.EngineTarget.serializer,
-                "",
-                { it.primaryEngine },
-                { mut, v -> mut.primaryEngine = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostedRealmConfigurationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -2846,10 +2168,6 @@ sealed class EngineRealmSelection private constructor() {
         override fun hashCode(): kotlin.Int {
             return Kind.HOSTED_REALM_CONST.ordinal;
         }
-
-        init {
-            _maybeFinalizeSerializer();
-        }
     }
 
     class ExistingRealmWrapper private constructor (
@@ -2877,7 +2195,7 @@ sealed class EngineRealmSelection private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.EngineRealmSelection._serializerImpl,
+            _SerializerRegistry.EngineRealmSelectionSerializerImpl,
         )
     }
 
@@ -2900,52 +2218,11 @@ sealed class EngineRealmSelection private constructor() {
             )
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.EngineRealmSelection, Unknown>(
-                recordId = "service/v1/topology.skir:EngineRealmSelection",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [EngineRealmSelection] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.EngineRealmSelectionSerializer;
 
         /** Describes the [EngineRealmSelection] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            HOSTED_REALM;
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 2) {
-                _serializerImpl.addConstantVariant(
-                    1,
-                    "hosted_realm",
-                    Kind.HOSTED_REALM_CONST.ordinal,
-                    "",
-                    HOSTED_REALM,
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "existing_realm",
-                    Kind.EXISTING_REALM_WRAPPER.ordinal,
-                    skirout.service.v1.topology.EngineRealmSelection.ExistingRealm.serializer,
-                    "",
-                    { ExistingRealmWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.EngineRealmSelectionSerializerImpl.typeDescriptor;
     }
 
     sealed interface ExistingRealm_OrMutable {
@@ -2958,7 +2235,7 @@ sealed class EngineRealmSelection private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class ExistingRealm private constructor(
         override val realmId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineRealmSelection.ExistingRealm>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineRealmSelection.ExistingRealm>? =
             null,
     ): skirout.service.v1.topology.EngineRealmSelection.ExistingRealm_OrMutable {
         constructor(
@@ -3005,7 +2282,7 @@ sealed class EngineRealmSelection private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.EngineRealmSelection.ExistingRealm.serializerImpl,
+                _SerializerRegistry.EngineRealmSelection_ExistingRealmSerializerImpl,
             )
         }
 
@@ -3025,7 +2302,7 @@ sealed class EngineRealmSelection private constructor() {
             );
 
             /**
-             * If the value of [realmId] is already mutable, returns it as-is.
+             * If the value of [realmId] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
              */
             val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -3065,34 +2342,11 @@ sealed class EngineRealmSelection private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:EngineRealmSelection.ExistingRealm",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [ExistingRealm] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.EngineRealmSelection_ExistingRealmSerializer;
 
             /** Describes the [ExistingRealm] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "realm_id",
-                    "realmId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.realmId },
-                    { mut, v -> mut.realmId = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.EngineRealmSelection_ExistingRealmSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -3109,7 +2363,7 @@ sealed interface HostedEngineConfiguration_OrMutable {
 class HostedEngineConfiguration private constructor(
     override val target: skirout.service.v1.topology.EngineTarget,
     override val realm: skirout.service.v1.topology.EngineRealmSelection,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedEngineConfiguration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostedEngineConfiguration>? =
         null,
 ): skirout.service.v1.topology.HostedEngineConfiguration_OrMutable {
     constructor(
@@ -3162,7 +2416,7 @@ class HostedEngineConfiguration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostedEngineConfiguration.serializerImpl,
+            _SerializerRegistry.HostedEngineConfigurationSerializerImpl,
         )
     }
 
@@ -3185,7 +2439,7 @@ class HostedEngineConfiguration private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as-is.
+         * If the value of [target] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -3229,43 +2483,11 @@ class HostedEngineConfiguration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:HostedEngineConfiguration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [HostedEngineConfiguration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.HostedEngineConfigurationSerializer;
 
         /** Describes the [HostedEngineConfiguration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "target",
-                "target",
-                0,
-                skirout.service.v1.topology.EngineTarget.serializer,
-                "",
-                { it.target },
-                { mut, v -> mut.target = v },
-            );
-            serializerImpl.addField(
-                "realm",
-                "realm",
-                1,
-                skirout.service.v1.topology.EngineRealmSelection.serializer,
-                "",
-                { it.realm },
-                { mut, v -> mut.realm = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostedEngineConfigurationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -3281,7 +2503,7 @@ sealed interface HostExecutionConfiguration_OrMutable {
 class HostExecutionConfiguration private constructor(
     override val realm: skirout.service.v1.topology.HostedRealmConfiguration?,
     override val primaryEngine: skirout.service.v1.topology.HostedEngineConfiguration?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionConfiguration>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionConfiguration>? =
         null,
 ): skirout.service.v1.topology.HostExecutionConfiguration_OrMutable {
     constructor(
@@ -3334,7 +2556,7 @@ class HostExecutionConfiguration private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostExecutionConfiguration.serializerImpl,
+            _SerializerRegistry.HostExecutionConfigurationSerializerImpl,
         )
     }
 
@@ -3385,408 +2607,11 @@ class HostExecutionConfiguration private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:HostExecutionConfiguration",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [HostExecutionConfiguration] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.HostExecutionConfigurationSerializer;
 
         /** Describes the [HostExecutionConfiguration] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "realm",
-                "realm",
-                0,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.HostedRealmConfiguration.serializer,
-                ),
-                "",
-                { it.realm },
-                { mut, v -> mut.realm = v },
-            );
-            serializerImpl.addField(
-                "primary_engine",
-                "primaryEngine",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.HostedEngineConfiguration.serializer,
-                ),
-                "",
-                { it.primaryEngine },
-                { mut, v -> mut.primaryEngine = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-sealed interface RegisterServiceHostRequest_OrMutable {
-    val entrypoint: kotlin.String;
-    val canHostRealm: kotlin.Boolean;
-    val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
-
-    fun toFrozen(): skirout.service.v1.topology.RegisterServiceHostRequest;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RegisterServiceHostRequest private constructor(
-    override val entrypoint: kotlin.String,
-    override val canHostRealm: kotlin.Boolean,
-    override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-        null,
-): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        entrypoint: kotlin.String,
-        canHostRealm: kotlin.Boolean,
-        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-            null,
-    ): this(
-        entrypoint,
-        canHostRealm,
-        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        entrypoint = this.entrypoint,
-        canHostRealm = this.canHostRealm,
-        supportedEngines = this.supportedEngines,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        entrypoint: kotlin.String =
-            this.entrypoint,
-        canHostRealm: kotlin.Boolean =
-            this.canHostRealm,
-        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-            this.supportedEngines,
-    ) = skirout.service.v1.topology.RegisterServiceHostRequest(
-        entrypoint,
-        canHostRealm,
-        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.RegisterServiceHostRequest && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.entrypoint, this.canHostRealm, this.supportedEngines).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.service.v1.topology.RegisterServiceHostRequest.serializerImpl,
-        )
-    }
-
-    /** Mutable version of [RegisterServiceHostRequest]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var entrypoint: kotlin.String =
-            "",
-        override var canHostRealm: kotlin.Boolean =
-            false,
-        override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
-            null,
-    ): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.service.v1.topology.RegisterServiceHostRequest(
-            entrypoint = this.entrypoint,
-            canHostRealm = this.canHostRealm,
-            supportedEngines = this.supportedEngines,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [supportedEngines] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
-         */
-        val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
-            var value = this.supportedEngines;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.supportedEngines = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.service.v1.topology.RegisterServiceHostRequest(
-                "",
-                false,
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RegisterServiceHostRequest].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            entrypoint: kotlin.String =
-                "",
-            canHostRealm: kotlin.Boolean =
-                false,
-            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
-        ) = skirout.service.v1.topology.RegisterServiceHostRequest(
-            entrypoint = entrypoint,
-            canHostRealm = canHostRealm,
-            supportedEngines = supportedEngines,
-            _unrecognizedFields = null,
-        );
-
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:RegisterServiceHostRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
-        /** Serializer for [RegisterServiceHostRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [RegisterServiceHostRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "entrypoint",
-                "entrypoint",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.entrypoint },
-                { mut, v -> mut.entrypoint = v },
-            );
-            serializerImpl.addField(
-                "can_host_realm",
-                "canHostRealm",
-                1,
-                build.skir.Serializers.bool,
-                "",
-                { it.canHostRealm },
-                { mut, v -> mut.canHostRealm = v },
-            );
-            serializerImpl.addField(
-                "supported_engines",
-                "supportedEngines",
-                2,
-                build.skir.Serializers.list(
-                    skirout.service.v1.topology.SupportedEngine.serializer,
-                ),
-                "",
-                { it.supportedEngines },
-                { mut, v -> mut.supportedEngines = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
-    }
-}
-
-/** Deeply immutable. */
-sealed class RegisterServiceHostResponse private constructor() {
-    /** The kind of variant held by a `RegisterServiceHostResponse`. */
-    enum class Kind {
-        UNKNOWN,
-        SUCCESS_WRAPPER,
-        INTERNAL_ERROR_WRAPPER,
-    }
-
-    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.RegisterServiceHostResponse.UNKNOWN")) internal constructor(
-        internal val _kind: Kind,
-        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>?,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        override val kind get() = _kind;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse && other.kind == kind;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kind.ordinal;
-        }
-    }
-
-    class SuccessWrapper private constructor (
-        val value: skirout.service.v1.topology.ServiceHost,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        constructor(
-            value: skirout.service.v1.topology.ServiceHost_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.SUCCESS_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse.SuccessWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1867169789;
-        }
-    }
-
-    class InternalErrorWrapper private constructor (
-        val value: skirout.kernel.v1.errors.InternalError,
-    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
-        constructor(
-            value: skirout.kernel.v1.errors.InternalError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.RegisterServiceHostResponse.InternalErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 778975750;
-        }
-    }
-
-    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>? get() = null;
-
-    abstract val kind: Kind;
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            skirout.service.v1.topology.RegisterServiceHostResponse._serializerImpl,
-        )
-    }
-
-    companion object {
-        /**
-         * Constant indicating an unknown [RegisterServiceHostResponse].
-         * Default value for fields of type [RegisterServiceHostResponse].
-         */
-        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
-
-        /** Shortcut for `SuccessWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createSuccess(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            revision: kotlin.Long,
-            entrypoint: kotlin.String,
-            canHostRealm: kotlin.Boolean,
-            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
-            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
-        ) = SuccessWrapper(
-            skirout.service.v1.topology.ServiceHost(
-                hostId = hostId,
-                serviceId = serviceId,
-                revision = revision,
-                entrypoint = entrypoint,
-                canHostRealm = canHostRealm,
-                supportedEngines = supportedEngines,
-                topologyRevision = topologyRevision,
-                state = state,
-            )
-        );
-
-        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInternalError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InternalErrorWrapper(
-            skirout.kernel.v1.errors.InternalError()
-        );
-
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.RegisterServiceHostResponse, Unknown>(
-                recordId = "service/v1/topology.skir:RegisterServiceHostResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
-        /** Serializer for [RegisterServiceHostResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
-
-        /** Describes the [RegisterServiceHostResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ServiceHost.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostExecutionConfigurationSerializerImpl.typeDescriptor;
     }
 }
 
@@ -3806,7 +2631,7 @@ class HostConfigurationChange private constructor(
     override val realm: skirout.service.v1.topology.RealmInstance?,
     override val engine: skirout.service.v1.topology.EngineInstance?,
     override val removedResources: kotlin.collections.List<skirout.kernel.v1.record_id.RecordId>,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostConfigurationChange>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostConfigurationChange>? =
         null,
 ): skirout.service.v1.topology.HostConfigurationChange_OrMutable {
     constructor(
@@ -3871,7 +2696,7 @@ class HostConfigurationChange private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.HostConfigurationChange.serializerImpl,
+            _SerializerRegistry.HostConfigurationChangeSerializerImpl,
         )
     }
 
@@ -3900,7 +2725,7 @@ class HostConfigurationChange private constructor(
         );
 
         /**
-         * If the value of [host] is already mutable, returns it as-is.
+         * If the value of [host] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
          */
         val mutableHost: skirout.service.v1.topology.ServiceHost.Mutable get() {
@@ -3916,7 +2741,7 @@ class HostConfigurationChange private constructor(
         }
 
         /**
-         * If the value of [removedResources] is already mutable, returns it as-is.
+         * If the value of [removedResources] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [removedResources] and returns it.
          */
         val mutableRemovedResources: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -3968,72 +2793,15 @@ class HostConfigurationChange private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:HostConfigurationChange",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [HostConfigurationChange] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.HostConfigurationChangeSerializer;
 
         /** Describes the [HostConfigurationChange] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "host",
-                "host",
-                0,
-                skirout.service.v1.topology.ServiceHost.serializer,
-                "",
-                { it.host },
-                { mut, v -> mut.host = v },
-            );
-            serializerImpl.addField(
-                "realm",
-                "realm",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.RealmInstance.serializer,
-                ),
-                "",
-                { it.realm },
-                { mut, v -> mut.realm = v },
-            );
-            serializerImpl.addField(
-                "engine",
-                "engine",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.EngineInstance.serializer,
-                ),
-                "",
-                { it.engine },
-                { mut, v -> mut.engine = v },
-            );
-            serializerImpl.addField(
-                "removed_resources",
-                "removedResources",
-                3,
-                build.skir.Serializers.list(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.removedResources },
-                { mut, v -> mut.removedResources = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.HostConfigurationChangeSerializerImpl.typeDescriptor;
     }
 }
 
 sealed interface ConfigureServiceHostRequest_OrMutable {
-    val operationId: kotlin.String;
     val hostId: skirout.kernel.v1.record_id.RecordId_OrMutable;
     val expectedRevision: kotlin.Long;
     val execution: skirout.service.v1.topology.HostExecutionConfiguration_OrMutable;
@@ -4044,24 +2812,21 @@ sealed interface ConfigureServiceHostRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class ConfigureServiceHostRequest private constructor(
-    override val operationId: kotlin.String,
     override val hostId: skirout.kernel.v1.record_id.RecordId,
     override val expectedRevision: kotlin.Long,
     override val execution: skirout.service.v1.topology.HostExecutionConfiguration,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostRequest>? =
         null,
 ): skirout.service.v1.topology.ConfigureServiceHostRequest_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String,
         hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
         expectedRevision: kotlin.Long,
         execution: skirout.service.v1.topology.HostExecutionConfiguration_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostRequest>? =
             null,
     ): this(
-        operationId,
         hostId.toFrozen(),
         expectedRevision,
         execution.toFrozen(),
@@ -4073,7 +2838,6 @@ class ConfigureServiceHostRequest private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        operationId = this.operationId,
         hostId = this.hostId,
         expectedRevision = this.expectedRevision,
         execution = this.execution,
@@ -4083,8 +2847,6 @@ class ConfigureServiceHostRequest private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        operationId: kotlin.String =
-            this.operationId,
         hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             this.hostId,
         expectedRevision: kotlin.Long =
@@ -4092,7 +2854,6 @@ class ConfigureServiceHostRequest private constructor(
         execution: skirout.service.v1.topology.HostExecutionConfiguration_OrMutable =
             this.execution,
     ) = skirout.service.v1.topology.ConfigureServiceHostRequest(
-        operationId,
         hostId.toFrozen(),
         expectedRevision,
         execution.toFrozen(),
@@ -4103,17 +2864,17 @@ class ConfigureServiceHostRequest private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.service.v1.topology.ConfigureServiceHostRequest && this.operationId == other.operationId && this.hostId == other.hostId && this.expectedRevision == other.expectedRevision && this.execution == other.execution);
+        return this === other || (other is skirout.service.v1.topology.ConfigureServiceHostRequest && this.hostId == other.hostId && this.expectedRevision == other.expectedRevision && this.execution == other.execution);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.operationId, this.hostId, this.expectedRevision, this.execution).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.hostId, this.expectedRevision, this.execution).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ConfigureServiceHostRequest.serializerImpl,
+            _SerializerRegistry.ConfigureServiceHostRequestSerializerImpl,
         )
     }
 
@@ -4121,8 +2882,6 @@ class ConfigureServiceHostRequest private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var operationId: kotlin.String =
-            "",
         override var hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
             skirout.kernel.v1.record_id.RecordId.partial(),
         override var expectedRevision: kotlin.Long =
@@ -4134,7 +2893,6 @@ class ConfigureServiceHostRequest private constructor(
     ): skirout.service.v1.topology.ConfigureServiceHostRequest_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.service.v1.topology.ConfigureServiceHostRequest(
-            operationId = this.operationId,
             hostId = this.hostId,
             expectedRevision = this.expectedRevision,
             execution = this.execution,
@@ -4142,7 +2900,7 @@ class ConfigureServiceHostRequest private constructor(
         );
 
         /**
-         * If the value of [hostId] is already mutable, returns it as-is.
+         * If the value of [hostId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
          */
         val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -4158,7 +2916,7 @@ class ConfigureServiceHostRequest private constructor(
         }
 
         /**
-         * If the value of [execution] is already mutable, returns it as-is.
+         * If the value of [execution] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [execution] and returns it.
          */
         val mutableExecution: skirout.service.v1.topology.HostExecutionConfiguration.Mutable get() {
@@ -4177,7 +2935,6 @@ class ConfigureServiceHostRequest private constructor(
     companion object {
         private val default =
             skirout.service.v1.topology.ConfigureServiceHostRequest(
-                "",
                 skirout.kernel.v1.record_id.RecordId.partial(),
                 0L,
                 skirout.service.v1.topology.HostExecutionConfiguration.partial(),
@@ -4194,8 +2951,6 @@ class ConfigureServiceHostRequest private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            operationId: kotlin.String =
-                "",
             hostId: skirout.kernel.v1.record_id.RecordId_OrMutable =
                 skirout.kernel.v1.record_id.RecordId.partial(),
             expectedRevision: kotlin.Long =
@@ -4203,68 +2958,17 @@ class ConfigureServiceHostRequest private constructor(
             execution: skirout.service.v1.topology.HostExecutionConfiguration_OrMutable =
                 skirout.service.v1.topology.HostExecutionConfiguration.partial(),
         ) = skirout.service.v1.topology.ConfigureServiceHostRequest(
-            operationId = operationId,
             hostId = hostId,
             expectedRevision = expectedRevision,
             execution = execution,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ConfigureServiceHostRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ConfigureServiceHostRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ConfigureServiceHostRequestSerializer;
 
         /** Describes the [ConfigureServiceHostRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "operation_id",
-                "operationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.operationId },
-                { mut, v -> mut.operationId = v },
-            );
-            serializerImpl.addField(
-                "host_id",
-                "hostId",
-                1,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.hostId },
-                { mut, v -> mut.hostId = v },
-            );
-            serializerImpl.addField(
-                "expected_revision",
-                "expectedRevision",
-                2,
-                build.skir.Serializers.int64,
-                "",
-                { it.expectedRevision },
-                { mut, v -> mut.expectedRevision = v },
-            );
-            serializerImpl.addField(
-                "execution",
-                "execution",
-                3,
-                skirout.service.v1.topology.HostExecutionConfiguration.serializer,
-                "",
-                { it.execution },
-                { mut, v -> mut.execution = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -4278,8 +2982,6 @@ sealed class ConfigureServiceHostResponse private constructor() {
         INVALID_CONFIGURATION_ERROR_WRAPPER,
         INCOMPATIBLE_ENGINE_ERROR_WRAPPER,
         REALM_NOT_FOUND_ERROR_WRAPPER,
-        INVALID_OPERATION_ID_ERROR_WRAPPER,
-        OPERATION_IDENTITY_REUSED_ERROR_WRAPPER,
         INVALID_RECORD_ID_ERROR_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
@@ -4389,42 +3091,6 @@ sealed class ConfigureServiceHostResponse private constructor() {
         }
     }
 
-    class InvalidOperationIdErrorWrapper private constructor (
-        val value: skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError,
-    ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
-        constructor(
-            value: skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.INVALID_OPERATION_ID_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1583533316;
-        }
-    }
-
-    class OperationIdentityReusedErrorWrapper private constructor (
-        val value: skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError,
-    ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
-        constructor(
-            value: skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedErrorWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -981047678;
-        }
-    }
-
     class InvalidRecordIdErrorWrapper private constructor (
         val value: skirout.kernel.v1.errors.InvalidRecordIdError,
     ) : skirout.service.v1.topology.ConfigureServiceHostResponse() {
@@ -4468,7 +3134,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ConfigureServiceHostResponse._serializerImpl,
+            _SerializerRegistry.ConfigureServiceHostResponseSerializerImpl,
         )
     }
 
@@ -4545,24 +3211,6 @@ sealed class ConfigureServiceHostResponse private constructor() {
             )
         );
 
-        /** Shortcut for `InvalidOperationIdErrorWrapper(skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createInvalidOperationIdError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = InvalidOperationIdErrorWrapper(
-            skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError()
-        );
-
-        /** Shortcut for `OperationIdentityReusedErrorWrapper(skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createOperationIdentityReusedError(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-        ) = OperationIdentityReusedErrorWrapper(
-            skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError()
-        );
-
         /** Shortcut for `InvalidRecordIdErrorWrapper(skirout.kernel.v1.errors.InvalidRecordIdError(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createInvalidRecordIdError(
@@ -4586,116 +3234,11 @@ sealed class ConfigureServiceHostResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ConfigureServiceHostResponse, Unknown>(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ConfigureServiceHostResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ConfigureServiceHostResponseSerializer;
 
         /** Describes the [ConfigureServiceHostResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.topology.HostConfigurationChange.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "conflict_error",
-                    Kind.CONFLICT_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError.serializer,
-                    "",
-                    { ConflictErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "invalid_configuration_error",
-                    Kind.INVALID_CONFIGURATION_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError.serializer,
-                    "",
-                    { InvalidConfigurationErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "incompatible_engine_error",
-                    Kind.INCOMPATIBLE_ENGINE_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError.serializer,
-                    "",
-                    { IncompatibleEngineErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "realm_not_found_error",
-                    Kind.REALM_NOT_FOUND_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError.serializer,
-                    "",
-                    { RealmNotFoundErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "invalid_operation_id_error",
-                    Kind.INVALID_OPERATION_ID_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError.serializer,
-                    "",
-                    { InvalidOperationIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "operation_identity_reused_error",
-                    Kind.OPERATION_IDENTITY_REUSED_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError.serializer,
-                    "",
-                    { OperationIdentityReusedErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    8,
-                    "invalid_record_id_error",
-                    Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
-                    "",
-                    { InvalidRecordIdErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    9,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface ConflictError_OrMutable {
@@ -4708,7 +3251,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class ConflictError private constructor(
         override val actual: skirout.service.v1.topology.HostConfigurationChange,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError>? =
             null,
     ): skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError_OrMutable {
         constructor(
@@ -4755,7 +3298,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError.serializerImpl,
+                _SerializerRegistry.ConfigureServiceHostResponse_ConflictErrorSerializerImpl,
             )
         }
 
@@ -4775,7 +3318,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [actual] is already mutable, returns it as-is.
+             * If the value of [actual] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
              */
             val mutableActual: skirout.service.v1.topology.HostConfigurationChange.Mutable get() {
@@ -4815,34 +3358,11 @@ sealed class ConfigureServiceHostResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.ConflictError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [ConflictError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ConfigureServiceHostResponse_ConflictErrorSerializer;
 
             /** Describes the [ConflictError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "actual",
-                    "actual",
-                    0,
-                    skirout.service.v1.topology.HostConfigurationChange.serializer,
-                    "",
-                    { it.actual },
-                    { mut, v -> mut.actual = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostResponse_ConflictErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4856,7 +3376,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class InvalidConfigurationError private constructor(
         override val message: kotlin.String,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError>? =
             null,
     ): skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError_OrMutable {
         constructor(
@@ -4903,7 +3423,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError.serializerImpl,
+                _SerializerRegistry.ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl,
             )
         }
 
@@ -4947,34 +3467,11 @@ sealed class ConfigureServiceHostResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidConfigurationError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [InvalidConfigurationError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ConfigureServiceHostResponse_InvalidConfigurationErrorSerializer;
 
             /** Describes the [InvalidConfigurationError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "message",
-                    "message",
-                    0,
-                    build.skir.Serializers.string,
-                    "",
-                    { it.message },
-                    { mut, v -> mut.message = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -4988,7 +3485,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class IncompatibleEngineError private constructor(
         override val target: skirout.service.v1.topology.EngineTarget,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError>? =
             null,
     ): skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError_OrMutable {
         constructor(
@@ -5035,7 +3532,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError.serializerImpl,
+                _SerializerRegistry.ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl,
             )
         }
 
@@ -5055,7 +3552,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [target] is already mutable, returns it as-is.
+             * If the value of [target] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
              */
             val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -5095,34 +3592,11 @@ sealed class ConfigureServiceHostResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.IncompatibleEngineError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [IncompatibleEngineError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ConfigureServiceHostResponse_IncompatibleEngineErrorSerializer;
 
             /** Describes the [IncompatibleEngineError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "target",
-                    "target",
-                    0,
-                    skirout.service.v1.topology.EngineTarget.serializer,
-                    "",
-                    { it.target },
-                    { mut, v -> mut.target = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl.typeDescriptor;
         }
     }
 
@@ -5136,7 +3610,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
     @kotlin.Suppress("UNUSED_PARAMETER")
     class RealmNotFoundError private constructor(
         override val realmId: skirout.kernel.v1.record_id.RecordId,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError>? =
             null,
     ): skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError_OrMutable {
         constructor(
@@ -5183,7 +3657,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError.serializerImpl,
+                _SerializerRegistry.ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl,
             )
         }
 
@@ -5203,7 +3677,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [realmId] is already mutable, returns it as-is.
+             * If the value of [realmId] is already mutable, returns it as is.
              * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
              */
             val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -5243,223 +3717,866 @@ sealed class ConfigureServiceHostResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.RealmNotFoundError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [RealmNotFoundError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ConfigureServiceHostResponse_RealmNotFoundErrorSerializer;
 
             /** Describes the [RealmNotFoundError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
+            val typeDescriptor get() = _SerializerRegistry.ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl.typeDescriptor;
+        }
+    }
+}
 
-            init {
-                serializerImpl.addField(
-                    "realm_id",
-                    "realmId",
-                    0,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { it.realmId },
-                    { mut, v -> mut.realmId = v },
-                );
-                serializerImpl.finalizeStruct();
+sealed interface OrganizationTopologySnapshot_OrMutable {
+    val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable>;
+    val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable>;
+    val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable>;
+
+    fun toFrozen(): skirout.service.v1.topology.OrganizationTopologySnapshot;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class OrganizationTopologySnapshot private constructor(
+    override val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost>,
+    override val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance>,
+    override val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
+        null,
+): skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
+        realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
+        engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
+            null,
+    ): this(
+        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        hosts = this.hosts,
+        realms = this.realms,
+        engines = this.engines,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
+            this.hosts,
+        realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
+            this.realms,
+        engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
+            this.engines,
+    ) = skirout.service.v1.topology.OrganizationTopologySnapshot(
+        build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
+        build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.OrganizationTopologySnapshot && this.hosts == other.hosts && this.realms == other.realms && this.engines == other.engines);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.hosts, this.realms, this.engines).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [OrganizationTopologySnapshot]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+        override var realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+        override var engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.OrganizationTopologySnapshot>? =
+            null,
+    ): skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.OrganizationTopologySnapshot(
+            hosts = this.hosts,
+            realms = this.realms,
+            engines = this.engines,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [hosts] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
+         */
+        val mutableHosts: kotlin.collections.MutableList<skirout.service.v1.topology.ServiceHost_OrMutable> get() {
+            var value = this.hosts;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.hosts = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [realms] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
+         */
+        val mutableRealms: kotlin.collections.MutableList<skirout.service.v1.topology.RealmInstance_OrMutable> get() {
+            var value = this.realms;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.realms = value;
+                    value;
+                }
+            }
+        }
+
+        /**
+         * If the value of [engines] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
+         */
+        val mutableEngines: kotlin.collections.MutableList<skirout.service.v1.topology.EngineInstance_OrMutable> get() {
+            var value = this.engines;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.engines = value;
+                    value;
+                }
             }
         }
     }
 
-    sealed interface InvalidOperationIdError_OrMutable {
-        fun toFrozen(): skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError;
-    }
+    companion object {
+        private val default =
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+            );
 
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class InvalidOperationIdError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError>? =
-            null,
-    ): skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError_OrMutable {
-        constructor(
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [OrganizationTopologySnapshot].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError>? =
+            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
+            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
+            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
+        ) = skirout.service.v1.topology.OrganizationTopologySnapshot(
+            hosts = hosts,
+            realms = realms,
+            engines = engines,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [OrganizationTopologySnapshot] instances. */
+        val serializer get() = _SerializerRegistry.OrganizationTopologySnapshotSerializer;
+
+        /** Describes the [OrganizationTopologySnapshot] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OrganizationTopologySnapshotSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface RealmRuntimeObservation_OrMutable {
+    val realmId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
+
+    fun toFrozen(): skirout.service.v1.topology.RealmRuntimeObservation;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RealmRuntimeObservation private constructor(
+    override val realmId: skirout.kernel.v1.record_id.RecordId,
+    override val state: skirout.service.v1.topology.ChildRuntimeState,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmRuntimeObservation>? =
+        null,
+): skirout.service.v1.topology.RealmRuntimeObservation_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmRuntimeObservation>? =
+            null,
+    ): this(
+        realmId.toFrozen(),
+        state.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        realmId = this.realmId,
+        state = this.state,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.realmId,
+        state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+            this.state,
+    ) = skirout.service.v1.topology.RealmRuntimeObservation(
+        realmId.toFrozen(),
+        state.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.RealmRuntimeObservation && this.realmId == other.realmId && this.state == other.state);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.realmId, this.state).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RealmRuntimeObservationSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RealmRuntimeObservation]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+            skirout.service.v1.topology.ChildRuntimeState.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RealmRuntimeObservation>? =
+            null,
+    ): skirout.service.v1.topology.RealmRuntimeObservation_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.RealmRuntimeObservation(
+            realmId = this.realmId,
+            state = this.state,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [realmId] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
+         */
+        val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.realmId;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.realmId = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [state] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
+         */
+        val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
+            var value = this.state;
+            return when (value) {
+                is skirout.service.v1.topology.ChildRuntimeState -> {
+                    value = value.toMutable();
+                    this.state = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ChildRuntimeState.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.RealmRuntimeObservation(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+                skirout.service.v1.topology.ChildRuntimeState.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RealmRuntimeObservation].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+                skirout.service.v1.topology.ChildRuntimeState.partial(),
+        ) = skirout.service.v1.topology.RealmRuntimeObservation(
+            realmId = realmId,
+            state = state,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RealmRuntimeObservation] instances. */
+        val serializer get() = _SerializerRegistry.RealmRuntimeObservationSerializer;
+
+        /** Describes the [RealmRuntimeObservation] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RealmRuntimeObservationSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface EngineRuntimeObservation_OrMutable {
+    val engineId: skirout.kernel.v1.record_id.RecordId_OrMutable;
+    val state: skirout.service.v1.topology.ChildRuntimeState_OrMutable;
+
+    fun toFrozen(): skirout.service.v1.topology.EngineRuntimeObservation;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class EngineRuntimeObservation private constructor(
+    override val engineId: skirout.kernel.v1.record_id.RecordId,
+    override val state: skirout.service.v1.topology.ChildRuntimeState,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineRuntimeObservation>? =
+        null,
+): skirout.service.v1.topology.EngineRuntimeObservation_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        engineId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+        state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineRuntimeObservation>? =
+            null,
+    ): this(
+        engineId.toFrozen(),
+        state.toFrozen(),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        engineId = this.engineId,
+        state = this.state,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        engineId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            this.engineId,
+        state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+            this.state,
+    ) = skirout.service.v1.topology.EngineRuntimeObservation(
+        engineId.toFrozen(),
+        state.toFrozen(),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.EngineRuntimeObservation && this.engineId == other.engineId && this.state == other.state);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.engineId, this.state).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.EngineRuntimeObservationSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [EngineRuntimeObservation]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var engineId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+            skirout.kernel.v1.record_id.RecordId.partial(),
+        override var state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+            skirout.service.v1.topology.ChildRuntimeState.partial(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.EngineRuntimeObservation>? =
+            null,
+    ): skirout.service.v1.topology.EngineRuntimeObservation_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.EngineRuntimeObservation(
+            engineId = this.engineId,
+            state = this.state,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [engineId] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
+         */
+        val mutableEngineId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
+            var value = this.engineId;
+            return when (value) {
+                is skirout.kernel.v1.record_id.RecordId -> {
+                    value = value.toMutable();
+                    this.engineId = value;
+                    return value;
+                }
+                is skirout.kernel.v1.record_id.RecordId.Mutable -> value;
+            }
+        }
+
+        /**
+         * If the value of [state] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
+         */
+        val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
+            var value = this.state;
+            return when (value) {
+                is skirout.service.v1.topology.ChildRuntimeState -> {
+                    value = value.toMutable();
+                    this.state = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ChildRuntimeState.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.EngineRuntimeObservation(
+                skirout.kernel.v1.record_id.RecordId.partial(),
+                skirout.service.v1.topology.ChildRuntimeState.partial(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [EngineRuntimeObservation].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            engineId: skirout.kernel.v1.record_id.RecordId_OrMutable =
+                skirout.kernel.v1.record_id.RecordId.partial(),
+            state: skirout.service.v1.topology.ChildRuntimeState_OrMutable =
+                skirout.service.v1.topology.ChildRuntimeState.partial(),
+        ) = skirout.service.v1.topology.EngineRuntimeObservation(
+            engineId = engineId,
+            state = state,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [EngineRuntimeObservation] instances. */
+        val serializer get() = _SerializerRegistry.EngineRuntimeObservationSerializer;
+
+        /** Describes the [EngineRuntimeObservation] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.EngineRuntimeObservationSerializerImpl.typeDescriptor;
+    }
+}
+
+sealed interface HostExecutionObservation_OrMutable {
+    val host: skirout.service.v1.topology.ServiceHost_OrMutable;
+    val realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable?;
+    val engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable?;
+
+    fun toFrozen(): skirout.service.v1.topology.HostExecutionObservation;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class HostExecutionObservation private constructor(
+    override val host: skirout.service.v1.topology.ServiceHost,
+    override val realm: skirout.service.v1.topology.RealmRuntimeObservation?,
+    override val engine: skirout.service.v1.topology.EngineRuntimeObservation?,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionObservation>? =
+        null,
+): skirout.service.v1.topology.HostExecutionObservation_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        host: skirout.service.v1.topology.ServiceHost_OrMutable,
+        realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable?,
+        engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable?,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionObservation>? =
+            null,
+    ): this(
+        host.toFrozen(),
+        if (realm != null) realm.toFrozen() else null,
+        if (engine != null) engine.toFrozen() else null,
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        host = this.host,
+        realm = this.realm,
+        engine = this.engine,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        host: skirout.service.v1.topology.ServiceHost_OrMutable =
+            this.host,
+        realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable? =
+            this.realm,
+        engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable? =
+            this.engine,
+    ) = skirout.service.v1.topology.HostExecutionObservation(
+        host.toFrozen(),
+        if (realm != null) realm.toFrozen() else null,
+        if (engine != null) engine.toFrozen() else null,
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.HostExecutionObservation && this.host == other.host && this.realm == other.realm && this.engine == other.engine);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.host, this.realm, this.engine).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.HostExecutionObservationSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [HostExecutionObservation]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var host: skirout.service.v1.topology.ServiceHost_OrMutable =
+            skirout.service.v1.topology.ServiceHost.partial(),
+        override var realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable? =
+            null,
+        override var engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable? =
+            null,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.HostExecutionObservation>? =
+            null,
+    ): skirout.service.v1.topology.HostExecutionObservation_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.HostExecutionObservation(
+            host = this.host,
+            realm = this.realm,
+            engine = this.engine,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [host] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
+         */
+        val mutableHost: skirout.service.v1.topology.ServiceHost.Mutable get() {
+            var value = this.host;
+            return when (value) {
+                is skirout.service.v1.topology.ServiceHost -> {
+                    value = value.toMutable();
+                    this.host = value;
+                    return value;
+                }
+                is skirout.service.v1.topology.ServiceHost.Mutable -> value;
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.HostExecutionObservation(
+                skirout.service.v1.topology.ServiceHost.partial(),
                 null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
+                null,
+            );
 
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
 
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
+        /**
+         * Creates a new instance of [HostExecutionObservation].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            host: skirout.service.v1.topology.ServiceHost_OrMutable =
+                skirout.service.v1.topology.ServiceHost.partial(),
+            realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable? =
+                null,
+            engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable? =
+                null,
+        ) = skirout.service.v1.topology.HostExecutionObservation(
+            host = host,
+            realm = realm,
+            engine = engine,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [HostExecutionObservation] instances. */
+        val serializer get() = _SerializerRegistry.HostExecutionObservationSerializer;
+
+        /** Describes the [HostExecutionObservation] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.HostExecutionObservationSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class OrganizationTopologyChanged private constructor() {
+    /** The kind of variant held by a `OrganizationTopologyChanged`. */
+    enum class Kind {
+        UNKNOWN,
+        REPLACE_WRAPPER,
+        CONFIGURATION_CHANGED_WRAPPER,
+        OBSERVATIONS_REPORTED_WRAPPER,
+        HOST_ADVERTISED_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.OrganizationTopologyChanged.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.OrganizationTopologyChanged>?,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
+        override val kind get() = _kind;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError);
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged && other.kind == kind;
         }
 
         override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [InvalidOperationIdError]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError>? =
-                null,
-        ): skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError();
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [InvalidOperationIdError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidOperationIdError(
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidOperationIdError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [InvalidOperationIdError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [InvalidOperationIdError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            return kind.ordinal;
         }
     }
 
-    sealed interface OperationIdentityReusedError_OrMutable {
-        fun toFrozen(): skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class OperationIdentityReusedError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError>? =
-            null,
-    ): skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError_OrMutable {
+    class ReplaceWrapper private constructor (
+        val value: skirout.service.v1.topology.OrganizationTopologySnapshot,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
         constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError>? =
-                null,
-        ): this(
-            _unrecognizedFields,
-        ) {}
+            value: skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable,
+        ): this(value.toFrozen()) {}
 
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable();
+        override val kind get() = Kind.REPLACE_WRAPPER;
 
         override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError);
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.ReplaceWrapper && value == other.value;
         }
 
         override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>().hashCode();
+            return this.value.hashCode() + 1094496948;
+        }
+    }
+
+    class ConfigurationChangedWrapper private constructor (
+        val value: skirout.service.v1.topology.HostConfigurationChange,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
+        constructor(
+            value: skirout.service.v1.topology.HostConfigurationChange_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.CONFIGURATION_CHANGED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.ConfigurationChangedWrapper && value == other.value;
         }
 
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError.serializerImpl,
-            )
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -992139157;
+        }
+    }
+
+    class ObservationsReportedWrapper private constructor (
+        val value: skirout.service.v1.topology.HostExecutionObservation,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
+        constructor(
+            value: skirout.service.v1.topology.HostExecutionObservation_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.OBSERVATIONS_REPORTED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.ObservationsReportedWrapper && value == other.value;
         }
 
-        /** Mutable version of [OperationIdentityReusedError]. */
-        class Mutable internal constructor(
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 702183499;
+        }
+    }
+
+    class HostAdvertisedWrapper private constructor (
+        val value: skirout.service.v1.topology.ServiceHost,
+    ) : skirout.service.v1.topology.OrganizationTopologyChanged() {
+        constructor(
+            value: skirout.service.v1.topology.ServiceHost_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.HOST_ADVERTISED_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.OrganizationTopologyChanged.HostAdvertisedWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 1456645140;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.OrganizationTopologyChanged>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.OrganizationTopologyChangedSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [OrganizationTopologyChanged].
+         * Default value for fields of type [OrganizationTopologyChanged].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `ReplaceWrapper(skirout.service.v1.topology.OrganizationTopologySnapshot(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createReplace(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError>? =
-                null,
-        ): skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError(
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-        }
+            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
+            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
+            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
+        ) = ReplaceWrapper(
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
+                hosts = hosts,
+                realms = realms,
+                engines = engines,
+            )
+        );
 
-        companion object {
-            private val default =
-                skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError();
+        /** Shortcut for `ConfigurationChangedWrapper(skirout.service.v1.topology.HostConfigurationChange(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createConfigurationChanged(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            host: skirout.service.v1.topology.ServiceHost_OrMutable,
+            realm: skirout.service.v1.topology.RealmInstance_OrMutable?,
+            engine: skirout.service.v1.topology.EngineInstance_OrMutable?,
+            removedResources: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
+        ) = ConfigurationChangedWrapper(
+            skirout.service.v1.topology.HostConfigurationChange(
+                host = host,
+                realm = realm,
+                engine = engine,
+                removedResources = removedResources,
+            )
+        );
 
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
+        /** Shortcut for `ObservationsReportedWrapper(skirout.service.v1.topology.HostExecutionObservation(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createObservationsReported(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            host: skirout.service.v1.topology.ServiceHost_OrMutable,
+            realm: skirout.service.v1.topology.RealmRuntimeObservation_OrMutable?,
+            engine: skirout.service.v1.topology.EngineRuntimeObservation_OrMutable?,
+        ) = ObservationsReportedWrapper(
+            skirout.service.v1.topology.HostExecutionObservation(
+                host = host,
+                realm = realm,
+                engine = engine,
+            )
+        );
 
-            /**
-             * Creates a new instance of [OperationIdentityReusedError].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-            ) = skirout.service.v1.topology.ConfigureServiceHostResponse.OperationIdentityReusedError(
-                _unrecognizedFields = null,
-            );
+        /** Shortcut for `HostAdvertisedWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createHostAdvertised(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
+            entrypoint: kotlin.String,
+            canHostRealm: kotlin.Boolean,
+            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
+            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
+            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
+        ) = HostAdvertisedWrapper(
+            skirout.service.v1.topology.ServiceHost(
+                hostId = hostId,
+                serviceId = serviceId,
+                revision = revision,
+                entrypoint = entrypoint,
+                canHostRealm = canHostRealm,
+                supportedEngines = supportedEngines,
+                topologyRevision = topologyRevision,
+                state = state,
+            )
+        );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.OperationIdentityReusedError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
+        /** Serializer for [OrganizationTopologyChanged] instances. */
+        val serializer get() = _SerializerRegistry.OrganizationTopologyChangedSerializer;
 
-            /** Serializer for [OperationIdentityReusedError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [OperationIdentityReusedError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
-        }
+        /** Describes the [OrganizationTopologyChanged] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.OrganizationTopologyChangedSerializerImpl.typeDescriptor;
     }
 }
 
@@ -5470,7 +4587,7 @@ sealed interface WatchOrganizationTopologyRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchOrganizationTopologyRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyRequest>? =
         null,
 ): skirout.service.v1.topology.WatchOrganizationTopologyRequest_OrMutable {
     constructor(
@@ -5499,7 +4616,7 @@ class WatchOrganizationTopologyRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.WatchOrganizationTopologyRequest.serializerImpl,
+            _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl,
         )
     }
 
@@ -5535,25 +4652,11 @@ class WatchOrganizationTopologyRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:WatchOrganizationTopologyRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [WatchOrganizationTopologyRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializer;
 
         /** Describes the [WatchOrganizationTopologyRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -5563,11 +4666,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
     enum class Kind {
         UNKNOWN,
         LIST_WRAPPER,
-        CONFIGURATION_CHANGED_WRAPPER,
-        HOST_UPDATED_WRAPPER,
-        REALM_UPDATED_WRAPPER,
-        ENGINE_UPDATED_WRAPPER,
-        RESOURCE_REMOVED_WRAPPER,
         INTERNAL_ERROR_WRAPPER,
     }
 
@@ -5587,10 +4685,10 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
     }
 
     class ListWrapper private constructor (
-        val value: skirout.service.v1.topology.WatchOrganizationTopologyResponse.List,
+        val value: skirout.service.v1.topology.OrganizationTopologySnapshot,
     ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
         constructor(
-            value: skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable,
+            value: skirout.service.v1.topology.OrganizationTopologySnapshot_OrMutable,
         ): this(value.toFrozen()) {}
 
         override val kind get() = Kind.LIST_WRAPPER;
@@ -5601,96 +4699,6 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
 
         override fun hashCode(): kotlin.Int {
             return this.value.hashCode() + 3322014;
-        }
-    }
-
-    class ConfigurationChangedWrapper private constructor (
-        val value: skirout.service.v1.topology.HostConfigurationChange,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.service.v1.topology.HostConfigurationChange_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.CONFIGURATION_CHANGED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ConfigurationChangedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -992139157;
-        }
-    }
-
-    class HostUpdatedWrapper private constructor (
-        val value: skirout.service.v1.topology.ServiceHost,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.service.v1.topology.ServiceHost_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.HOST_UPDATED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.HostUpdatedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 434853156;
-        }
-    }
-
-    class RealmUpdatedWrapper private constructor (
-        val value: skirout.service.v1.topology.RealmInstance,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.service.v1.topology.RealmInstance_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.REALM_UPDATED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.RealmUpdatedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1489789707;
-        }
-    }
-
-    class EngineUpdatedWrapper private constructor (
-        val value: skirout.service.v1.topology.EngineInstance,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.service.v1.topology.EngineInstance_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.ENGINE_UPDATED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.EngineUpdatedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + -1204215874;
-        }
-    }
-
-    class ResourceRemovedWrapper private constructor (
-        val value: skirout.kernel.v1.record_id.RecordId,
-    ) : skirout.service.v1.topology.WatchOrganizationTopologyResponse() {
-        constructor(
-            value: skirout.kernel.v1.record_id.RecordId_OrMutable,
-        ): this(value.toFrozen()) {}
-
-        override val kind get() = Kind.RESOURCE_REMOVED_WRAPPER;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.ResourceRemovedWrapper && value == other.value;
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return this.value.hashCode() + 1594463535;
         }
     }
 
@@ -5719,7 +4727,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse._serializerImpl,
+            _SerializerRegistry.WatchOrganizationTopologyResponseSerializerImpl,
         )
     }
 
@@ -5730,7 +4738,7 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
          */
         val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
 
-        /** Shortcut for `ListWrapper(skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(...))`. */
+        /** Shortcut for `ListWrapper(skirout.service.v1.topology.OrganizationTopologySnapshot(...))`. */
         @kotlin.Suppress("UNUSED_PARAMETER")
         fun createList(
             _mustNameArguments: _MustNameArguments =
@@ -5739,110 +4747,10 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
             engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
         ) = ListWrapper(
-            skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
+            skirout.service.v1.topology.OrganizationTopologySnapshot(
                 hosts = hosts,
                 realms = realms,
                 engines = engines,
-            )
-        );
-
-        /** Shortcut for `ConfigurationChangedWrapper(skirout.service.v1.topology.HostConfigurationChange(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createConfigurationChanged(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            host: skirout.service.v1.topology.ServiceHost_OrMutable,
-            realm: skirout.service.v1.topology.RealmInstance_OrMutable?,
-            engine: skirout.service.v1.topology.EngineInstance_OrMutable?,
-            removedResources: kotlin.collections.Iterable<skirout.kernel.v1.record_id.RecordId_OrMutable>,
-        ) = ConfigurationChangedWrapper(
-            skirout.service.v1.topology.HostConfigurationChange(
-                host = host,
-                realm = realm,
-                engine = engine,
-                removedResources = removedResources,
-            )
-        );
-
-        /** Shortcut for `HostUpdatedWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createHostUpdated(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            revision: kotlin.Long,
-            entrypoint: kotlin.String,
-            canHostRealm: kotlin.Boolean,
-            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
-            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
-            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
-        ) = HostUpdatedWrapper(
-            skirout.service.v1.topology.ServiceHost(
-                hostId = hostId,
-                serviceId = serviceId,
-                revision = revision,
-                entrypoint = entrypoint,
-                canHostRealm = canHostRealm,
-                supportedEngines = supportedEngines,
-                topologyRevision = topologyRevision,
-                state = state,
-            )
-        );
-
-        /** Shortcut for `RealmUpdatedWrapper(skirout.service.v1.topology.RealmInstance(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createRealmUpdated(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            realmId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            ownerHost: skirout.service.v1.topology.OwnerHost_OrMutable,
-            revision: kotlin.Long,
-            targetEngine: skirout.service.v1.topology.EngineTarget_OrMutable,
-            state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
-        ) = RealmUpdatedWrapper(
-            skirout.service.v1.topology.RealmInstance(
-                realmId = realmId,
-                ownerHost = ownerHost,
-                revision = revision,
-                targetEngine = targetEngine,
-                state = state,
-            )
-        );
-
-        /** Shortcut for `EngineUpdatedWrapper(skirout.service.v1.topology.EngineInstance(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createEngineUpdated(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            engineId: skirout.kernel.v1.record_id.RecordId_OrMutable,
-            ownerHost: skirout.service.v1.topology.OwnerHost_OrMutable,
-            realm: skirout.service.v1.topology.RealmInfo_OrMutable,
-            revision: kotlin.Long,
-            target: skirout.service.v1.topology.EngineTarget_OrMutable,
-            state: skirout.service.v1.topology.ChildRuntimeState_OrMutable,
-        ) = EngineUpdatedWrapper(
-            skirout.service.v1.topology.EngineInstance(
-                engineId = engineId,
-                ownerHost = ownerHost,
-                realm = realm,
-                revision = revision,
-                target = target,
-                state = state,
-            )
-        );
-
-        /** Shortcut for `ResourceRemovedWrapper(skirout.kernel.v1.record_id.RecordId(...))`. */
-        @kotlin.Suppress("UNUSED_PARAMETER")
-        fun createResourceRemoved(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            table: kotlin.String,
-            key: skirout.kernel.v1.record_id.RecordIdKey,
-        ) = ResourceRemovedWrapper(
-            skirout.kernel.v1.record_id.RecordId(
-                table = table,
-                key = key,
             )
         );
 
@@ -5855,332 +4763,11 @@ sealed class WatchOrganizationTopologyResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.WatchOrganizationTopologyResponse, Unknown>(
-                recordId = "service/v1/topology.skir:WatchOrganizationTopologyResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [WatchOrganizationTopologyResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchOrganizationTopologyResponseSerializer;
 
         /** Describes the [WatchOrganizationTopologyResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "list",
-                    Kind.LIST_WRAPPER.ordinal,
-                    skirout.service.v1.topology.WatchOrganizationTopologyResponse.List.serializer,
-                    "",
-                    { ListWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "configuration_changed",
-                    Kind.CONFIGURATION_CHANGED_WRAPPER.ordinal,
-                    skirout.service.v1.topology.HostConfigurationChange.serializer,
-                    "",
-                    { ConfigurationChangedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "host_updated",
-                    Kind.HOST_UPDATED_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ServiceHost.serializer,
-                    "",
-                    { HostUpdatedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    4,
-                    "realm_updated",
-                    Kind.REALM_UPDATED_WRAPPER.ordinal,
-                    skirout.service.v1.topology.RealmInstance.serializer,
-                    "",
-                    { RealmUpdatedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    5,
-                    "engine_updated",
-                    Kind.ENGINE_UPDATED_WRAPPER.ordinal,
-                    skirout.service.v1.topology.EngineInstance.serializer,
-                    "",
-                    { EngineUpdatedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    6,
-                    "resource_removed",
-                    Kind.RESOURCE_REMOVED_WRAPPER.ordinal,
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                    "",
-                    { ResourceRemovedWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    7,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
-    }
-
-    sealed interface List_OrMutable {
-        val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable>;
-        val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable>;
-        val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable>;
-
-        fun toFrozen(): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List;
-    }
-
-    /** Deeply immutable. */
-    @kotlin.Suppress("UNUSED_PARAMETER")
-    class List private constructor(
-        override val hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost>,
-        override val realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance>,
-        override val engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance>,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-            null,
-    ): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable {
-        constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable>,
-            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable>,
-            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable>,
-            _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-                null,
-        ): this(
-            build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
-            _unrecognizedFields,
-        ) {}
-
-        @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-        override fun toFrozen() = this;
-
-        /** Returns a mutable shallow copy of this instance */
-        fun toMutable() = Mutable(
-            hosts = this.hosts,
-            realms = this.realms,
-            engines = this.engines,
-        );
-
-        /** Returns a shallow copy of this instance with the specified fields replaced. */
-        fun copy(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                this.hosts,
-            realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                this.realms,
-            engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                this.engines,
-        ) = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-            build.skir.internal.toFrozenList(hosts, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(realms, { it.toFrozen() }),
-            build.skir.internal.toFrozenList(engines, { it.toFrozen() }),
-            this._unrecognizedFields,
-        );
-
-        @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-        fun copy() = this;
-
-        override fun equals(other: kotlin.Any?): kotlin.Boolean {
-            return this === other || (other is skirout.service.v1.topology.WatchOrganizationTopologyResponse.List && this.hosts == other.hosts && this.realms == other.realms && this.engines == other.engines);
-        }
-
-        override fun hashCode(): kotlin.Int {
-            return kotlin.collections.listOf<kotlin.Any?>(this.hosts, this.realms, this.engines).hashCode();
-        }
-
-        override fun toString(): kotlin.String {
-            return build.skir.internal.toStringImpl(
-                this,
-                skirout.service.v1.topology.WatchOrganizationTopologyResponse.List.serializerImpl,
-            )
-        }
-
-        /** Mutable version of [List]. */
-        class Mutable internal constructor(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            override var hosts: kotlin.collections.List<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-            override var realms: kotlin.collections.List<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-            override var engines: kotlin.collections.List<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-            internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchOrganizationTopologyResponse.List>? =
-                null,
-        ): skirout.service.v1.topology.WatchOrganizationTopologyResponse.List_OrMutable {
-            /** Returns a deeply immutable copy of this instance */
-            override fun toFrozen() = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                hosts = this.hosts,
-                realms = this.realms,
-                engines = this.engines,
-                _unrecognizedFields = this._unrecognizedFields,
-            );
-
-            /**
-             * If the value of [hosts] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
-             */
-            val mutableHosts: kotlin.collections.MutableList<skirout.service.v1.topology.ServiceHost_OrMutable> get() {
-                var value = this.hosts;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.hosts = value;
-                        value;
-                    }
-                }
-            }
-
-            /**
-             * If the value of [realms] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
-             */
-            val mutableRealms: kotlin.collections.MutableList<skirout.service.v1.topology.RealmInstance_OrMutable> get() {
-                var value = this.realms;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.realms = value;
-                        value;
-                    }
-                }
-            }
-
-            /**
-             * If the value of [engines] is already mutable, returns it as-is.
-             * Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
-             */
-            val mutableEngines: kotlin.collections.MutableList<skirout.service.v1.topology.EngineInstance_OrMutable> get() {
-                var value = this.engines;
-                return when (value) {
-                    is build.skir.internal.MutableList -> value;
-                    else -> {
-                        value = build.skir.internal.MutableList(value);
-                        this.engines = value;
-                        value;
-                    }
-                }
-            }
-        }
-
-        companion object {
-            private val default =
-                skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-                );
-
-            /** Returns an instance with all fields set to their default values. */
-            fun partial() = default;
-
-            /**
-             * Creates a new instance of [List].
-             * Unlike the constructor, does not require all fields to be specified.
-             * Missing fields will be set to their default values.
-             */
-            fun partial(
-                _mustNameArguments: _MustNameArguments =
-                    _MustNameArguments,
-                hosts: kotlin.collections.Iterable<skirout.service.v1.topology.ServiceHost_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.ServiceHost>(),
-                realms: kotlin.collections.Iterable<skirout.service.v1.topology.RealmInstance_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.RealmInstance>(),
-                engines: kotlin.collections.Iterable<skirout.service.v1.topology.EngineInstance_OrMutable> =
-                    build.skir.internal.emptyFrozenList<skirout.service.v1.topology.EngineInstance>(),
-            ) = skirout.service.v1.topology.WatchOrganizationTopologyResponse.List(
-                hosts = hosts,
-                realms = realms,
-                engines = engines,
-                _unrecognizedFields = null,
-            );
-
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:WatchOrganizationTopologyResponse.List",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
-            /** Serializer for [List] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-            /** Describes the [List] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "hosts",
-                    "hosts",
-                    0,
-                    build.skir.Serializers.list(
-                        skirout.service.v1.topology.ServiceHost.serializer,
-                    ),
-                    "",
-                    { it.hosts },
-                    { mut, v -> mut.hosts = v },
-                );
-                serializerImpl.addField(
-                    "realms",
-                    "realms",
-                    1,
-                    build.skir.Serializers.list(
-                        skirout.service.v1.topology.RealmInstance.serializer,
-                    ),
-                    "",
-                    { it.realms },
-                    { mut, v -> mut.realms = v },
-                );
-                serializerImpl.addField(
-                    "engines",
-                    "engines",
-                    2,
-                    build.skir.Serializers.list(
-                        skirout.service.v1.topology.EngineInstance.serializer,
-                    ),
-                    "",
-                    { it.engines },
-                    { mut, v -> mut.engines = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchOrganizationTopologyResponseSerializerImpl.typeDescriptor;
     }
 }
 
@@ -6191,7 +4778,7 @@ sealed interface WatchHostExecutionRequest_OrMutable {
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class WatchHostExecutionRequest private constructor(
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionRequest>? =
         null,
 ): skirout.service.v1.topology.WatchHostExecutionRequest_OrMutable {
     constructor(
@@ -6220,7 +4807,7 @@ class WatchHostExecutionRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.WatchHostExecutionRequest.serializerImpl,
+            _SerializerRegistry.WatchHostExecutionRequestSerializerImpl,
         )
     }
 
@@ -6256,25 +4843,11 @@ class WatchHostExecutionRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:WatchHostExecutionRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [WatchHostExecutionRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchHostExecutionRequestSerializer;
 
         /** Describes the [WatchHostExecutionRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchHostExecutionRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -6345,7 +4918,7 @@ sealed class WatchHostExecutionResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.WatchHostExecutionResponse._serializerImpl,
+            _SerializerRegistry.WatchHostExecutionResponseSerializerImpl,
         )
     }
 
@@ -6381,53 +4954,11 @@ sealed class WatchHostExecutionResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.WatchHostExecutionResponse, Unknown>(
-                recordId = "service/v1/topology.skir:WatchHostExecutionResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [WatchHostExecutionResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.WatchHostExecutionResponseSerializer;
 
         /** Describes the [WatchHostExecutionResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "desired",
-                    Kind.DESIRED_WRAPPER.ordinal,
-                    skirout.service.v1.topology.WatchHostExecutionResponse.Desired.serializer,
-                    "",
-                    { DesiredWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.WatchHostExecutionResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Desired_OrMutable {
@@ -6444,7 +4975,7 @@ sealed class WatchHostExecutionResponse private constructor() {
         override val topologyRevision: kotlin.Long,
         override val realm: skirout.service.v1.topology.RealmInstance?,
         override val engine: skirout.service.v1.topology.EngineInstance?,
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionResponse.Desired>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.WatchHostExecutionResponse.Desired>? =
             null,
     ): skirout.service.v1.topology.WatchHostExecutionResponse.Desired_OrMutable {
         constructor(
@@ -6503,7 +5034,7 @@ sealed class WatchHostExecutionResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.WatchHostExecutionResponse.Desired.serializerImpl,
+                _SerializerRegistry.WatchHostExecutionResponse_DesiredSerializerImpl,
             )
         }
 
@@ -6561,56 +5092,11 @@ sealed class WatchHostExecutionResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:WatchHostExecutionResponse.Desired",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Desired] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.WatchHostExecutionResponse_DesiredSerializer;
 
             /** Describes the [Desired] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.addField(
-                    "topology_revision",
-                    "topologyRevision",
-                    0,
-                    build.skir.Serializers.int64,
-                    "",
-                    { it.topologyRevision },
-                    { mut, v -> mut.topologyRevision = v },
-                );
-                serializerImpl.addField(
-                    "realm",
-                    "realm",
-                    1,
-                    build.skir.Serializers.optional(
-                        skirout.service.v1.topology.RealmInstance.serializer,
-                    ),
-                    "",
-                    { it.realm },
-                    { mut, v -> mut.realm = v },
-                );
-                serializerImpl.addField(
-                    "engine",
-                    "engine",
-                    2,
-                    build.skir.Serializers.optional(
-                        skirout.service.v1.topology.EngineInstance.serializer,
-                    ),
-                    "",
-                    { it.engine },
-                    { mut, v -> mut.engine = v },
-                );
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.WatchHostExecutionResponse_DesiredSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -6629,7 +5115,7 @@ class ReportHostExecutionRequest private constructor(
     override val topologyRevision: kotlin.Long,
     override val realmState: skirout.service.v1.topology.ChildRuntimeState?,
     override val engineState: skirout.service.v1.topology.ChildRuntimeState?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionRequest>? =
         null,
 ): skirout.service.v1.topology.ReportHostExecutionRequest_OrMutable {
     constructor(
@@ -6688,7 +5174,7 @@ class ReportHostExecutionRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ReportHostExecutionRequest.serializerImpl,
+            _SerializerRegistry.ReportHostExecutionRequestSerializerImpl,
         )
     }
 
@@ -6746,56 +5232,11 @@ class ReportHostExecutionRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ReportHostExecutionRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ReportHostExecutionRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ReportHostExecutionRequestSerializer;
 
         /** Describes the [ReportHostExecutionRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "topology_revision",
-                "topologyRevision",
-                0,
-                build.skir.Serializers.int64,
-                "",
-                { it.topologyRevision },
-                { mut, v -> mut.topologyRevision = v },
-            );
-            serializerImpl.addField(
-                "realm_state",
-                "realmState",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.ChildRuntimeState.serializer,
-                ),
-                "",
-                { it.realmState },
-                { mut, v -> mut.realmState = v },
-            );
-            serializerImpl.addField(
-                "engine_state",
-                "engineState",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.service.v1.topology.ChildRuntimeState.serializer,
-                ),
-                "",
-                { it.engineState },
-                { mut, v -> mut.engineState = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ReportHostExecutionRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -6885,7 +5326,7 @@ sealed class ReportHostExecutionResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ReportHostExecutionResponse._serializerImpl,
+            _SerializerRegistry.ReportHostExecutionResponseSerializerImpl,
         )
     }
 
@@ -6923,62 +5364,11 @@ sealed class ReportHostExecutionResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ReportHostExecutionResponse, Unknown>(
-                recordId = "service/v1/topology.skir:ReportHostExecutionResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [ReportHostExecutionResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.ReportHostExecutionResponseSerializer;
 
         /** Describes the [ReportHostExecutionResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "success",
-                    Kind.SUCCESS_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ReportHostExecutionResponse.Success.serializer,
-                    "",
-                    { SuccessWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "stale_revision_error",
-                    Kind.STALE_REVISION_ERROR_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError.serializer,
-                    "",
-                    { StaleRevisionErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.ReportHostExecutionResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface Success_OrMutable {
@@ -6988,7 +5378,7 @@ sealed class ReportHostExecutionResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class Success private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionResponse.Success>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionResponse.Success>? =
             null,
     ): skirout.service.v1.topology.ReportHostExecutionResponse.Success_OrMutable {
         constructor(
@@ -7017,7 +5407,7 @@ sealed class ReportHostExecutionResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ReportHostExecutionResponse.Success.serializerImpl,
+                _SerializerRegistry.ReportHostExecutionResponse_SuccessSerializerImpl,
             )
         }
 
@@ -7053,25 +5443,11 @@ sealed class ReportHostExecutionResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ReportHostExecutionResponse.Success",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [Success] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ReportHostExecutionResponse_SuccessSerializer;
 
             /** Describes the [Success] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ReportHostExecutionResponse_SuccessSerializerImpl.typeDescriptor;
         }
     }
 
@@ -7082,7 +5458,7 @@ sealed class ReportHostExecutionResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class StaleRevisionError private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError>? =
             null,
     ): skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError_OrMutable {
         constructor(
@@ -7111,7 +5487,7 @@ sealed class ReportHostExecutionResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError.serializerImpl,
+                _SerializerRegistry.ReportHostExecutionResponse_StaleRevisionErrorSerializerImpl,
             )
         }
 
@@ -7147,25 +5523,11 @@ sealed class ReportHostExecutionResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:ReportHostExecutionResponse.StaleRevisionError",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [StaleRevisionError] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.ReportHostExecutionResponse_StaleRevisionErrorSerializer;
 
             /** Describes the [StaleRevisionError] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.ReportHostExecutionResponse_StaleRevisionErrorSerializerImpl.typeDescriptor;
         }
     }
 }
@@ -7184,7 +5546,7 @@ class ServiceMessagingScope private constructor(
     override val organizationId: kotlin.String,
     override val ownedRealm: skirout.kernel.v1.record_id.RecordId?,
     override val attachedRealm: skirout.kernel.v1.record_id.RecordId?,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceMessagingScope>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.ServiceMessagingScope>? =
         null,
 ): skirout.service.v1.topology.ServiceMessagingScope_OrMutable {
     constructor(
@@ -7243,7 +5605,7 @@ class ServiceMessagingScope private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.ServiceMessagingScope.serializerImpl,
+            _SerializerRegistry.ServiceMessagingScopeSerializerImpl,
         )
     }
 
@@ -7301,56 +5663,11 @@ class ServiceMessagingScope private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:ServiceMessagingScope",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [ServiceMessagingScope] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.ServiceMessagingScopeSerializer;
 
         /** Describes the [ServiceMessagingScope] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "organization_id",
-                "organizationId",
-                0,
-                build.skir.Serializers.string,
-                "",
-                { it.organizationId },
-                { mut, v -> mut.organizationId = v },
-            );
-            serializerImpl.addField(
-                "owned_realm",
-                "ownedRealm",
-                1,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.ownedRealm },
-                { mut, v -> mut.ownedRealm = v },
-            );
-            serializerImpl.addField(
-                "attached_realm",
-                "attachedRealm",
-                2,
-                build.skir.Serializers.optional(
-                    skirout.kernel.v1.record_id.RecordId.serializer,
-                ),
-                "",
-                { it.attachedRealm },
-                { mut, v -> mut.attachedRealm = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.ServiceMessagingScopeSerializerImpl.typeDescriptor;
     }
 }
 
@@ -7364,7 +5681,7 @@ sealed interface GetServiceMessagingScopeRequest_OrMutable {
 @kotlin.Suppress("UNUSED_PARAMETER")
 class GetServiceMessagingScopeRequest private constructor(
     override val serviceId: skirout.kernel.v1.record_id.RecordId,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeRequest>? =
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeRequest>? =
         null,
 ): skirout.service.v1.topology.GetServiceMessagingScopeRequest_OrMutable {
     constructor(
@@ -7411,7 +5728,7 @@ class GetServiceMessagingScopeRequest private constructor(
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.GetServiceMessagingScopeRequest.serializerImpl,
+            _SerializerRegistry.GetServiceMessagingScopeRequestSerializerImpl,
         )
     }
 
@@ -7431,7 +5748,7 @@ class GetServiceMessagingScopeRequest private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as-is.
+         * If the value of [serviceId] is already mutable, returns it as is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -7471,34 +5788,11 @@ class GetServiceMessagingScopeRequest private constructor(
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "service/v1/topology.skir:GetServiceMessagingScopeRequest",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-        );
-
         /** Serializer for [GetServiceMessagingScopeRequest] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
+        val serializer get() = _SerializerRegistry.GetServiceMessagingScopeRequestSerializer;
 
         /** Describes the [GetServiceMessagingScopeRequest] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "service_id",
-                "serviceId",
-                0,
-                skirout.kernel.v1.record_id.RecordId.serializer,
-                "",
-                { it.serviceId },
-                { mut, v -> mut.serviceId = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeRequestSerializerImpl.typeDescriptor;
     }
 }
 
@@ -7588,7 +5882,7 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.service.v1.topology.GetServiceMessagingScopeResponse._serializerImpl,
+            _SerializerRegistry.GetServiceMessagingScopeResponseSerializerImpl,
         )
     }
 
@@ -7633,62 +5927,11 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
             skirout.kernel.v1.errors.InternalError()
         );
 
-        private val _serializerImpl =
-            build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.GetServiceMessagingScopeResponse, Unknown>(
-                recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse",
-                doc = "",
-                getKindOrdinal = { it.kind.ordinal },
-                kindCount = Kind.values().size,
-                unknownInstance = UNKNOWN,
-                wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, it) },
-                getUnrecognized = { it._unrecognized },
-            );
-
         /** Serializer for [GetServiceMessagingScopeResponse] instances. */
-        val serializer = build.skir.internal.makeSerializer(_serializerImpl);
+        val serializer get() = _SerializerRegistry.GetServiceMessagingScopeResponseSerializer;
 
         /** Describes the [GetServiceMessagingScopeResponse] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _serializerImpl.typeDescriptor;
-
-        init {
-            _maybeFinalizeSerializer();
-        }
-
-        private var _finalizationCounter = 0;
-
-        private fun _maybeFinalizeSerializer() {
-            _finalizationCounter += 1;
-            if (_finalizationCounter == 1) {
-                _serializerImpl.addWrapperVariant(
-                    1,
-                    "found",
-                    Kind.FOUND_WRAPPER.ordinal,
-                    skirout.service.v1.topology.ServiceMessagingScope.serializer,
-                    "",
-                    { FoundWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    2,
-                    "not_found",
-                    Kind.NOT_FOUND_WRAPPER.ordinal,
-                    skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.serializer,
-                    "",
-                    { NotFoundWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.addWrapperVariant(
-                    3,
-                    "internal_error",
-                    Kind.INTERNAL_ERROR_WRAPPER.ordinal,
-                    skirout.kernel.v1.errors.InternalError.serializer,
-                    "",
-                    { InternalErrorWrapper(it) },
-                    { it.value },
-                );
-                _serializerImpl.finalizeEnum();
-            }
-        }
+        val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeResponseSerializerImpl.typeDescriptor;
     }
 
     sealed interface NotFound_OrMutable {
@@ -7698,7 +5941,7 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
     /** Deeply immutable. */
     @kotlin.Suppress("UNUSED_PARAMETER")
     class NotFound private constructor(
-        private val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
+        internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound>? =
             null,
     ): skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound_OrMutable {
         constructor(
@@ -7727,7 +5970,7 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
         override fun toString(): kotlin.String {
             return build.skir.internal.toStringImpl(
                 this,
-                skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.serializerImpl,
+                _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializerImpl,
             )
         }
 
@@ -7763,40 +6006,289 @@ sealed class GetServiceMessagingScopeResponse private constructor() {
                 _unrecognizedFields = null,
             );
 
-            private val serializerImpl = build.skir.internal.StructSerializer(
-                recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
-                doc = "",
-                defaultInstance = default,
-                newMutableFn = { it?.toMutable() ?: Mutable() },
-                toFrozenFn = { it.toFrozen() },
-                getUnrecognizedFields = { it._unrecognizedFields },
-                setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-            );
-
             /** Serializer for [NotFound] instances. */
-            val serializer = build.skir.internal.makeSerializer(serializerImpl);
+            val serializer get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializer;
 
             /** Describes the [NotFound] type. Provides runtime introspection capabilities. */
-            val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-            init {
-                serializerImpl.finalizeStruct();
-            }
+            val typeDescriptor get() = _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializerImpl.typeDescriptor;
         }
     }
 }
 
-val RegisterServiceHost: build.skir.service.Method<
-    skirout.service.v1.topology.RegisterServiceHostRequest,
-    skirout.service.v1.topology.RegisterServiceHostResponse,
-> by kotlin.lazy {
-    build.skir.service.Method(
-        "RegisterServiceHost",
-        934206,
-        skirout.service.v1.topology.RegisterServiceHostRequest.serializer,
-        skirout.service.v1.topology.RegisterServiceHostResponse.serializer,
-        "",
-    )
+sealed interface RegisterServiceHostRequest_OrMutable {
+    val entrypoint: kotlin.String;
+    val canHostRealm: kotlin.Boolean;
+    val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable>;
+
+    fun toFrozen(): skirout.service.v1.topology.RegisterServiceHostRequest;
+}
+
+/** Deeply immutable. */
+@kotlin.Suppress("UNUSED_PARAMETER")
+class RegisterServiceHostRequest private constructor(
+    override val entrypoint: kotlin.String,
+    override val canHostRealm: kotlin.Boolean,
+    override val supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine>,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+        null,
+): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
+    constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        entrypoint: kotlin.String,
+        canHostRealm: kotlin.Boolean,
+        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
+        _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+            null,
+    ): this(
+        entrypoint,
+        canHostRealm,
+        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
+        _unrecognizedFields,
+    ) {}
+
+    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
+    override fun toFrozen() = this;
+
+    /** Returns a mutable shallow copy of this instance */
+    fun toMutable() = Mutable(
+        entrypoint = this.entrypoint,
+        canHostRealm = this.canHostRealm,
+        supportedEngines = this.supportedEngines,
+    );
+
+    /** Returns a shallow copy of this instance with the specified fields replaced. */
+    fun copy(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        entrypoint: kotlin.String =
+            this.entrypoint,
+        canHostRealm: kotlin.Boolean =
+            this.canHostRealm,
+        supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+            this.supportedEngines,
+    ) = skirout.service.v1.topology.RegisterServiceHostRequest(
+        entrypoint,
+        canHostRealm,
+        build.skir.internal.toFrozenList(supportedEngines, { it.toFrozen() }),
+        this._unrecognizedFields,
+    );
+
+    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
+    fun copy() = this;
+
+    override fun equals(other: kotlin.Any?): kotlin.Boolean {
+        return this === other || (other is skirout.service.v1.topology.RegisterServiceHostRequest && this.entrypoint == other.entrypoint && this.canHostRealm == other.canHostRealm && this.supportedEngines == other.supportedEngines);
+    }
+
+    override fun hashCode(): kotlin.Int {
+        return kotlin.collections.listOf<kotlin.Any?>(this.entrypoint, this.canHostRealm, this.supportedEngines).hashCode();
+    }
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RegisterServiceHostRequestSerializerImpl,
+        )
+    }
+
+    /** Mutable version of [RegisterServiceHostRequest]. */
+    class Mutable internal constructor(
+        _mustNameArguments: _MustNameArguments =
+            _MustNameArguments,
+        override var entrypoint: kotlin.String =
+            "",
+        override var canHostRealm: kotlin.Boolean =
+            false,
+        override var supportedEngines: kotlin.collections.List<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+            build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.service.v1.topology.RegisterServiceHostRequest>? =
+            null,
+    ): skirout.service.v1.topology.RegisterServiceHostRequest_OrMutable {
+        /** Returns a deeply immutable copy of this instance */
+        override fun toFrozen() = skirout.service.v1.topology.RegisterServiceHostRequest(
+            entrypoint = this.entrypoint,
+            canHostRealm = this.canHostRealm,
+            supportedEngines = this.supportedEngines,
+            _unrecognizedFields = this._unrecognizedFields,
+        );
+
+        /**
+         * If the value of [supportedEngines] is already mutable, returns it as is.
+         * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
+         */
+        val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
+            var value = this.supportedEngines;
+            return when (value) {
+                is build.skir.internal.MutableList -> value;
+                else -> {
+                    value = build.skir.internal.MutableList(value);
+                    this.supportedEngines = value;
+                    value;
+                }
+            }
+        }
+    }
+
+    companion object {
+        private val default =
+            skirout.service.v1.topology.RegisterServiceHostRequest(
+                "",
+                false,
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+            );
+
+        /** Returns an instance with all fields set to their default values. */
+        fun partial() = default;
+
+        /**
+         * Creates a new instance of [RegisterServiceHostRequest].
+         * Unlike the constructor, does not require all fields to be specified.
+         * Missing fields will be set to their default values.
+         */
+        fun partial(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            entrypoint: kotlin.String =
+                "",
+            canHostRealm: kotlin.Boolean =
+                false,
+            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable> =
+                build.skir.internal.emptyFrozenList<skirout.service.v1.topology.SupportedEngine>(),
+        ) = skirout.service.v1.topology.RegisterServiceHostRequest(
+            entrypoint = entrypoint,
+            canHostRealm = canHostRealm,
+            supportedEngines = supportedEngines,
+            _unrecognizedFields = null,
+        );
+
+        /** Serializer for [RegisterServiceHostRequest] instances. */
+        val serializer get() = _SerializerRegistry.RegisterServiceHostRequestSerializer;
+
+        /** Describes the [RegisterServiceHostRequest] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostRequestSerializerImpl.typeDescriptor;
+    }
+}
+
+/** Deeply immutable. */
+sealed class RegisterServiceHostResponse private constructor() {
+    /** The kind of variant held by a `RegisterServiceHostResponse`. */
+    enum class Kind {
+        UNKNOWN,
+        SUCCESS_WRAPPER,
+        INTERNAL_ERROR_WRAPPER,
+    }
+
+    class Unknown @kotlin.Deprecated("For internal use", kotlin.ReplaceWith("skirout.service.v1.topology.RegisterServiceHostResponse.UNKNOWN")) internal constructor(
+        internal val _kind: Kind,
+        internal override val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>?,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        override val kind get() = _kind;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse && other.kind == kind;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return kind.ordinal;
+        }
+    }
+
+    class SuccessWrapper private constructor (
+        val value: skirout.service.v1.topology.ServiceHost,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        constructor(
+            value: skirout.service.v1.topology.ServiceHost_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.SUCCESS_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse.SuccessWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + -1867169789;
+        }
+    }
+
+    class InternalErrorWrapper private constructor (
+        val value: skirout.kernel.v1.errors.InternalError,
+    ) : skirout.service.v1.topology.RegisterServiceHostResponse() {
+        constructor(
+            value: skirout.kernel.v1.errors.InternalError_OrMutable,
+        ): this(value.toFrozen()) {}
+
+        override val kind get() = Kind.INTERNAL_ERROR_WRAPPER;
+
+        override fun equals(other: kotlin.Any?): kotlin.Boolean {
+            return other is skirout.service.v1.topology.RegisterServiceHostResponse.InternalErrorWrapper && value == other.value;
+        }
+
+        override fun hashCode(): kotlin.Int {
+            return this.value.hashCode() + 778975750;
+        }
+    }
+
+    internal open val _unrecognized: _UnrecognizedVariant<skirout.service.v1.topology.RegisterServiceHostResponse>? get() = null;
+
+    abstract val kind: Kind;
+
+    override fun toString(): kotlin.String {
+        return build.skir.internal.toStringImpl(
+            this,
+            _SerializerRegistry.RegisterServiceHostResponseSerializerImpl,
+        )
+    }
+
+    companion object {
+        /**
+         * Constant indicating an unknown [RegisterServiceHostResponse].
+         * Default value for fields of type [RegisterServiceHostResponse].
+         */
+        val UNKNOWN = @kotlin.Suppress("DEPRECATION") Unknown(Kind.UNKNOWN, null);
+
+        /** Shortcut for `SuccessWrapper(skirout.service.v1.topology.ServiceHost(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createSuccess(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+            hostId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            serviceId: skirout.kernel.v1.record_id.RecordId_OrMutable,
+            revision: kotlin.Long,
+            entrypoint: kotlin.String,
+            canHostRealm: kotlin.Boolean,
+            supportedEngines: kotlin.collections.Iterable<skirout.service.v1.topology.SupportedEngine_OrMutable>,
+            topologyRevision: skirout.service.v1.topology.ReconciledRevision_OrMutable,
+            state: skirout.service.v1.topology.HostRuntimeState_OrMutable,
+        ) = SuccessWrapper(
+            skirout.service.v1.topology.ServiceHost(
+                hostId = hostId,
+                serviceId = serviceId,
+                revision = revision,
+                entrypoint = entrypoint,
+                canHostRealm = canHostRealm,
+                supportedEngines = supportedEngines,
+                topologyRevision = topologyRevision,
+                state = state,
+            )
+        );
+
+        /** Shortcut for `InternalErrorWrapper(skirout.kernel.v1.errors.InternalError(...))`. */
+        @kotlin.Suppress("UNUSED_PARAMETER")
+        fun createInternalError(
+            _mustNameArguments: _MustNameArguments =
+                _MustNameArguments,
+        ) = InternalErrorWrapper(
+            skirout.kernel.v1.errors.InternalError()
+        );
+
+        /** Serializer for [RegisterServiceHostResponse] instances. */
+        val serializer get() = _SerializerRegistry.RegisterServiceHostResponseSerializer;
+
+        /** Describes the [RegisterServiceHostResponse] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.RegisterServiceHostResponseSerializerImpl.typeDescriptor;
+    }
 }
 
 val ConfigureServiceHost: build.skir.service.Method<
@@ -7862,4 +6354,1671 @@ val GetServiceMessagingScope: build.skir.service.Method<
         skirout.service.v1.topology.GetServiceMessagingScopeResponse.serializer,
         "",
     )
+}
+
+val RegisterServiceHost: build.skir.service.Method<
+    skirout.service.v1.topology.RegisterServiceHostRequest,
+    skirout.service.v1.topology.RegisterServiceHostResponse,
+> by kotlin.lazy {
+    build.skir.service.Method(
+        "RegisterServiceHost",
+        934206,
+        skirout.service.v1.topology.RegisterServiceHostRequest.serializer,
+        skirout.service.v1.topology.RegisterServiceHostResponse.serializer,
+        "",
+    )
+}
+
+private object _SerializerRegistry {
+    val ChildRuntimeStateSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ChildRuntimeState",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ChildRuntimeState.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ChildRuntimeState.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ChildRuntimeStateSerializer = build.skir.internal.makeSerializer(ChildRuntimeStateSerializerImpl);
+
+    val ChildRuntimeStatusSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ChildRuntimeStatus, skirout.service.v1.topology.ChildRuntimeStatus.Unknown>(
+            recordId = "service/v1/topology.skir:ChildRuntimeStatus",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.ChildRuntimeStatus.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.ChildRuntimeStatus.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.ChildRuntimeStatus.Unknown(skirout.service.v1.topology.ChildRuntimeStatus.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ChildRuntimeStatusSerializer = build.skir.internal.makeSerializer(ChildRuntimeStatusSerializerImpl);
+
+    val ConfigureServiceHostRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ConfigureServiceHostRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ConfigureServiceHostRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ConfigureServiceHostRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConfigureServiceHostRequestSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostRequestSerializerImpl);
+
+    val ConfigureServiceHostResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ConfigureServiceHostResponse, skirout.service.v1.topology.ConfigureServiceHostResponse.Unknown>(
+            recordId = "service/v1/topology.skir:ConfigureServiceHostResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.ConfigureServiceHostResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.ConfigureServiceHostResponse.Unknown(skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ConfigureServiceHostResponseSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostResponseSerializerImpl);
+
+    val ConfigureServiceHostResponse_ConflictErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.ConflictError",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConfigureServiceHostResponse_ConflictErrorSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostResponse_ConflictErrorSerializerImpl);
+
+    val ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.IncompatibleEngineError",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConfigureServiceHostResponse_IncompatibleEngineErrorSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl);
+
+    val ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.InvalidConfigurationError",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConfigureServiceHostResponse_InvalidConfigurationErrorSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl);
+
+    val ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ConfigureServiceHostResponse.RealmNotFoundError",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ConfigureServiceHostResponse_RealmNotFoundErrorSerializer = build.skir.internal.makeSerializer(ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl);
+
+    val EngineInstanceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:EngineInstance",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.EngineInstance.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.EngineInstance.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EngineInstanceSerializer = build.skir.internal.makeSerializer(EngineInstanceSerializerImpl);
+
+    val EngineRealmSelectionSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.EngineRealmSelection, skirout.service.v1.topology.EngineRealmSelection.Unknown>(
+            recordId = "service/v1/topology.skir:EngineRealmSelection",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.EngineRealmSelection.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.EngineRealmSelection.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.EngineRealmSelection.Unknown(skirout.service.v1.topology.EngineRealmSelection.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val EngineRealmSelectionSerializer = build.skir.internal.makeSerializer(EngineRealmSelectionSerializerImpl);
+
+    val EngineRealmSelection_ExistingRealmSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:EngineRealmSelection.ExistingRealm",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.EngineRealmSelection.ExistingRealm.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.EngineRealmSelection.ExistingRealm.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EngineRealmSelection_ExistingRealmSerializer = build.skir.internal.makeSerializer(EngineRealmSelection_ExistingRealmSerializerImpl);
+
+    val EngineRuntimeObservationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:EngineRuntimeObservation",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.EngineRuntimeObservation.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.EngineRuntimeObservation.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EngineRuntimeObservationSerializer = build.skir.internal.makeSerializer(EngineRuntimeObservationSerializerImpl);
+
+    val EngineTargetSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:EngineTarget",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.EngineTarget.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.EngineTarget.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val EngineTargetSerializer = build.skir.internal.makeSerializer(EngineTargetSerializerImpl);
+
+    val GetServiceMessagingScopeRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:GetServiceMessagingScopeRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.GetServiceMessagingScopeRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.GetServiceMessagingScopeRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetServiceMessagingScopeRequestSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeRequestSerializerImpl);
+
+    val GetServiceMessagingScopeResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.GetServiceMessagingScopeResponse, skirout.service.v1.topology.GetServiceMessagingScopeResponse.Unknown>(
+            recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.GetServiceMessagingScopeResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.GetServiceMessagingScopeResponse.Unknown(skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val GetServiceMessagingScopeResponseSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeResponseSerializerImpl);
+
+    val GetServiceMessagingScopeResponse_NotFoundSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:GetServiceMessagingScopeResponse.NotFound",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFound.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val GetServiceMessagingScopeResponse_NotFoundSerializer = build.skir.internal.makeSerializer(GetServiceMessagingScopeResponse_NotFoundSerializerImpl);
+
+    val HostConfigurationChangeSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostConfigurationChange",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostConfigurationChange.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostConfigurationChange.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostConfigurationChangeSerializer = build.skir.internal.makeSerializer(HostConfigurationChangeSerializerImpl);
+
+    val HostedEngineConfigurationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostedEngineConfiguration",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostedEngineConfiguration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostedEngineConfiguration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostedEngineConfigurationSerializer = build.skir.internal.makeSerializer(HostedEngineConfigurationSerializerImpl);
+
+    val HostedRealmConfigurationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostedRealmConfiguration",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostedRealmConfiguration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostedRealmConfiguration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostedRealmConfigurationSerializer = build.skir.internal.makeSerializer(HostedRealmConfigurationSerializerImpl);
+
+    val HostExecutionConfigurationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostExecutionConfiguration",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostExecutionConfiguration.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostExecutionConfiguration.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostExecutionConfigurationSerializer = build.skir.internal.makeSerializer(HostExecutionConfigurationSerializerImpl);
+
+    val HostExecutionObservationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostExecutionObservation",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostExecutionObservation.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostExecutionObservation.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostExecutionObservationSerializer = build.skir.internal.makeSerializer(HostExecutionObservationSerializerImpl);
+
+    val HostRuntimeStateSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:HostRuntimeState",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.HostRuntimeState.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.HostRuntimeState.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val HostRuntimeStateSerializer = build.skir.internal.makeSerializer(HostRuntimeStateSerializerImpl);
+
+    val HostRuntimeStatusSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.HostRuntimeStatus, skirout.service.v1.topology.HostRuntimeStatus.Unknown>(
+            recordId = "service/v1/topology.skir:HostRuntimeStatus",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.HostRuntimeStatus.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.HostRuntimeStatus.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.HostRuntimeStatus.Unknown(skirout.service.v1.topology.HostRuntimeStatus.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val HostRuntimeStatusSerializer = build.skir.internal.makeSerializer(HostRuntimeStatusSerializerImpl);
+
+    val OrganizationTopologyChangedSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.OrganizationTopologyChanged, skirout.service.v1.topology.OrganizationTopologyChanged.Unknown>(
+            recordId = "service/v1/topology.skir:OrganizationTopologyChanged",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.OrganizationTopologyChanged.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.OrganizationTopologyChanged.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.OrganizationTopologyChanged.Unknown(skirout.service.v1.topology.OrganizationTopologyChanged.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val OrganizationTopologyChangedSerializer = build.skir.internal.makeSerializer(OrganizationTopologyChangedSerializerImpl);
+
+    val OrganizationTopologySnapshotSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:OrganizationTopologySnapshot",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.OrganizationTopologySnapshot.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.OrganizationTopologySnapshot.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OrganizationTopologySnapshotSerializer = build.skir.internal.makeSerializer(OrganizationTopologySnapshotSerializerImpl);
+
+    val OwnerHostSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:OwnerHost",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.OwnerHost.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.OwnerHost.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val OwnerHostSerializer = build.skir.internal.makeSerializer(OwnerHostSerializerImpl);
+
+    val RealmInfoSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:RealmInfo",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.RealmInfo.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.RealmInfo.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmInfoSerializer = build.skir.internal.makeSerializer(RealmInfoSerializerImpl);
+
+    val RealmInstanceSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:RealmInstance",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.RealmInstance.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.RealmInstance.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmInstanceSerializer = build.skir.internal.makeSerializer(RealmInstanceSerializerImpl);
+
+    val RealmRuntimeObservationSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:RealmRuntimeObservation",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.RealmRuntimeObservation.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.RealmRuntimeObservation.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RealmRuntimeObservationSerializer = build.skir.internal.makeSerializer(RealmRuntimeObservationSerializerImpl);
+
+    val ReconciledRevisionSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ReconciledRevision",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ReconciledRevision.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ReconciledRevision.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ReconciledRevisionSerializer = build.skir.internal.makeSerializer(ReconciledRevisionSerializerImpl);
+
+    val RegisterServiceHostRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:RegisterServiceHostRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.RegisterServiceHostRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.RegisterServiceHostRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val RegisterServiceHostRequestSerializer = build.skir.internal.makeSerializer(RegisterServiceHostRequestSerializerImpl);
+
+    val RegisterServiceHostResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.RegisterServiceHostResponse, skirout.service.v1.topology.RegisterServiceHostResponse.Unknown>(
+            recordId = "service/v1/topology.skir:RegisterServiceHostResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.RegisterServiceHostResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.RegisterServiceHostResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.RegisterServiceHostResponse.Unknown(skirout.service.v1.topology.RegisterServiceHostResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val RegisterServiceHostResponseSerializer = build.skir.internal.makeSerializer(RegisterServiceHostResponseSerializerImpl);
+
+    val ReportHostExecutionRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ReportHostExecutionRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ReportHostExecutionRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ReportHostExecutionRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ReportHostExecutionRequestSerializer = build.skir.internal.makeSerializer(ReportHostExecutionRequestSerializerImpl);
+
+    val ReportHostExecutionResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.ReportHostExecutionResponse, skirout.service.v1.topology.ReportHostExecutionResponse.Unknown>(
+            recordId = "service/v1/topology.skir:ReportHostExecutionResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.ReportHostExecutionResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.ReportHostExecutionResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.ReportHostExecutionResponse.Unknown(skirout.service.v1.topology.ReportHostExecutionResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val ReportHostExecutionResponseSerializer = build.skir.internal.makeSerializer(ReportHostExecutionResponseSerializerImpl);
+
+    val ReportHostExecutionResponse_StaleRevisionErrorSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ReportHostExecutionResponse.StaleRevisionError",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionError.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ReportHostExecutionResponse_StaleRevisionErrorSerializer = build.skir.internal.makeSerializer(ReportHostExecutionResponse_StaleRevisionErrorSerializerImpl);
+
+    val ReportHostExecutionResponse_SuccessSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ReportHostExecutionResponse.Success",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ReportHostExecutionResponse.Success.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ReportHostExecutionResponse.Success.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ReportHostExecutionResponse_SuccessSerializer = build.skir.internal.makeSerializer(ReportHostExecutionResponse_SuccessSerializerImpl);
+
+    val ServiceHostSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ServiceHost",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ServiceHost.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ServiceHost.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceHostSerializer = build.skir.internal.makeSerializer(ServiceHostSerializerImpl);
+
+    val ServiceMessagingScopeSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:ServiceMessagingScope",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.ServiceMessagingScope.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.ServiceMessagingScope.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val ServiceMessagingScopeSerializer = build.skir.internal.makeSerializer(ServiceMessagingScopeSerializerImpl);
+
+    val SupportedEngineSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:SupportedEngine",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.SupportedEngine.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.SupportedEngine.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val SupportedEngineSerializer = build.skir.internal.makeSerializer(SupportedEngineSerializerImpl);
+
+    val WatchHostExecutionRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:WatchHostExecutionRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.WatchHostExecutionRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.WatchHostExecutionRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchHostExecutionRequestSerializer = build.skir.internal.makeSerializer(WatchHostExecutionRequestSerializerImpl);
+
+    val WatchHostExecutionResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.WatchHostExecutionResponse, skirout.service.v1.topology.WatchHostExecutionResponse.Unknown>(
+            recordId = "service/v1/topology.skir:WatchHostExecutionResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.WatchHostExecutionResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.WatchHostExecutionResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.WatchHostExecutionResponse.Unknown(skirout.service.v1.topology.WatchHostExecutionResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchHostExecutionResponseSerializer = build.skir.internal.makeSerializer(WatchHostExecutionResponseSerializerImpl);
+
+    val WatchHostExecutionResponse_DesiredSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:WatchHostExecutionResponse.Desired",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.WatchHostExecutionResponse.Desired.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.WatchHostExecutionResponse.Desired.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchHostExecutionResponse_DesiredSerializer = build.skir.internal.makeSerializer(WatchHostExecutionResponse_DesiredSerializerImpl);
+
+    val WatchOrganizationTopologyRequestSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "service/v1/topology.skir:WatchOrganizationTopologyRequest",
+        doc = "",
+        defaultInstance = skirout.service.v1.topology.WatchOrganizationTopologyRequest.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.service.v1.topology.WatchOrganizationTopologyRequest.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val WatchOrganizationTopologyRequestSerializer = build.skir.internal.makeSerializer(WatchOrganizationTopologyRequestSerializerImpl);
+
+    val WatchOrganizationTopologyResponseSerializerImpl =
+        build.skir.internal.EnumSerializer.create<skirout.service.v1.topology.WatchOrganizationTopologyResponse, skirout.service.v1.topology.WatchOrganizationTopologyResponse.Unknown>(
+            recordId = "service/v1/topology.skir:WatchOrganizationTopologyResponse",
+            doc = "",
+            getKindOrdinal = { it.kind.ordinal },
+            kindCount = skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.values().size,
+            unknownInstance = skirout.service.v1.topology.WatchOrganizationTopologyResponse.UNKNOWN,
+            wrapUnrecognized = { @kotlin.Suppress("DEPRECATION") skirout.service.v1.topology.WatchOrganizationTopologyResponse.Unknown(skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.UNKNOWN, it) },
+            getUnrecognized = { it._unrecognized },
+        );
+
+    val WatchOrganizationTopologyResponseSerializer = build.skir.internal.makeSerializer(WatchOrganizationTopologyResponseSerializerImpl);
+
+    init {
+        ChildRuntimeStateSerializerImpl.addField(
+            "status",
+            "status",
+            0,
+            _SerializerRegistry.ChildRuntimeStatusSerializer,
+            "",
+            { it.status },
+            { mut, v -> mut.status = v },
+        );
+        ChildRuntimeStateSerializerImpl.addField(
+            "active_artifact_version",
+            "activeArtifactVersion",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.activeArtifactVersion },
+            { mut, v -> mut.activeArtifactVersion = v },
+        );
+        ChildRuntimeStateSerializerImpl.addField(
+            "message",
+            "message",
+            2,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        ChildRuntimeStateSerializerImpl.addField(
+            "updated_at",
+            "updatedAt",
+            3,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.updatedAt },
+            { mut, v -> mut.updatedAt = v },
+        );
+        ChildRuntimeStateSerializerImpl.finalizeStruct();
+
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            1,
+            "absent",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.ABSENT_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.ABSENT,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            2,
+            "staging",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.STAGING_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.STAGING,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            3,
+            "active",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.ACTIVE_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.ACTIVE,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            4,
+            "quiescing",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.QUIESCING_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.QUIESCING,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            5,
+            "failed",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.FAILED_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.FAILED,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            6,
+            "rolled_back",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.ROLLED_BACK_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.ROLLED_BACK,
+        );
+        ChildRuntimeStatusSerializerImpl.addConstantVariant(
+            7,
+            "drifted",
+            skirout.service.v1.topology.ChildRuntimeStatus.Kind.DRIFTED_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.ChildRuntimeStatus.DRIFTED,
+        );
+        ChildRuntimeStatusSerializerImpl.finalizeEnum();
+
+        ConfigureServiceHostRequestSerializerImpl.addField(
+            "host_id",
+            "hostId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.hostId },
+            { mut, v -> mut.hostId = v },
+        );
+        ConfigureServiceHostRequestSerializerImpl.addField(
+            "expected_revision",
+            "expectedRevision",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.expectedRevision },
+            { mut, v -> mut.expectedRevision = v },
+        );
+        ConfigureServiceHostRequestSerializerImpl.addField(
+            "execution",
+            "execution",
+            2,
+            _SerializerRegistry.HostExecutionConfigurationSerializer,
+            "",
+            { it.execution },
+            { mut, v -> mut.execution = v },
+        );
+        ConfigureServiceHostRequestSerializerImpl.finalizeStruct();
+
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.HostConfigurationChangeSerializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            2,
+            "conflict_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.CONFLICT_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ConfigureServiceHostResponse_ConflictErrorSerializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.ConflictErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            3,
+            "invalid_configuration_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INVALID_CONFIGURATION_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ConfigureServiceHostResponse_InvalidConfigurationErrorSerializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidConfigurationErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            4,
+            "incompatible_engine_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INCOMPATIBLE_ENGINE_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ConfigureServiceHostResponse_IncompatibleEngineErrorSerializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.IncompatibleEngineErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            5,
+            "realm_not_found_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.REALM_NOT_FOUND_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ConfigureServiceHostResponse_RealmNotFoundErrorSerializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.RealmNotFoundErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            6,
+            "invalid_record_id_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INVALID_RECORD_ID_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InvalidRecordIdError.serializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.InvalidRecordIdErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.addWrapperVariant(
+            7,
+            "internal_error",
+            skirout.service.v1.topology.ConfigureServiceHostResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.ConfigureServiceHostResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        ConfigureServiceHostResponseSerializerImpl.finalizeEnum();
+
+        ConfigureServiceHostResponse_ConflictErrorSerializerImpl.addField(
+            "actual",
+            "actual",
+            0,
+            _SerializerRegistry.HostConfigurationChangeSerializer,
+            "",
+            { it.actual },
+            { mut, v -> mut.actual = v },
+        );
+        ConfigureServiceHostResponse_ConflictErrorSerializerImpl.finalizeStruct();
+
+        ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            _SerializerRegistry.EngineTargetSerializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        ConfigureServiceHostResponse_IncompatibleEngineErrorSerializerImpl.finalizeStruct();
+
+        ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl.addField(
+            "message",
+            "message",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        ConfigureServiceHostResponse_InvalidConfigurationErrorSerializerImpl.finalizeStruct();
+
+        ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        ConfigureServiceHostResponse_RealmNotFoundErrorSerializerImpl.finalizeStruct();
+
+        EngineInstanceSerializerImpl.addField(
+            "engine_id",
+            "engineId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.engineId },
+            { mut, v -> mut.engineId = v },
+        );
+        EngineInstanceSerializerImpl.addField(
+            "owner_host",
+            "ownerHost",
+            1,
+            _SerializerRegistry.OwnerHostSerializer,
+            "",
+            { it.ownerHost },
+            { mut, v -> mut.ownerHost = v },
+        );
+        EngineInstanceSerializerImpl.addField(
+            "realm",
+            "realm",
+            2,
+            _SerializerRegistry.RealmInfoSerializer,
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        EngineInstanceSerializerImpl.addField(
+            "revision",
+            "revision",
+            3,
+            build.skir.Serializers.int64,
+            "",
+            { it.revision },
+            { mut, v -> mut.revision = v },
+        );
+        EngineInstanceSerializerImpl.addField(
+            "target",
+            "target",
+            4,
+            _SerializerRegistry.EngineTargetSerializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        EngineInstanceSerializerImpl.addField(
+            "state",
+            "state",
+            5,
+            _SerializerRegistry.ChildRuntimeStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        EngineInstanceSerializerImpl.finalizeStruct();
+
+        EngineRealmSelectionSerializerImpl.addConstantVariant(
+            1,
+            "hosted_realm",
+            skirout.service.v1.topology.EngineRealmSelection.Kind.HOSTED_REALM_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.EngineRealmSelection.HOSTED_REALM,
+        );
+        EngineRealmSelectionSerializerImpl.addWrapperVariant(
+            2,
+            "existing_realm",
+            skirout.service.v1.topology.EngineRealmSelection.Kind.EXISTING_REALM_WRAPPER.ordinal,
+            _SerializerRegistry.EngineRealmSelection_ExistingRealmSerializer,
+            "",
+            { skirout.service.v1.topology.EngineRealmSelection.ExistingRealmWrapper(it) },
+            { it.value },
+        );
+        EngineRealmSelectionSerializerImpl.finalizeEnum();
+
+        EngineRealmSelection_ExistingRealmSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        EngineRealmSelection_ExistingRealmSerializerImpl.finalizeStruct();
+
+        EngineRuntimeObservationSerializerImpl.addField(
+            "engine_id",
+            "engineId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.engineId },
+            { mut, v -> mut.engineId = v },
+        );
+        EngineRuntimeObservationSerializerImpl.addField(
+            "state",
+            "state",
+            1,
+            _SerializerRegistry.ChildRuntimeStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        EngineRuntimeObservationSerializerImpl.finalizeStruct();
+
+        EngineTargetSerializerImpl.addField(
+            "engine_id",
+            "engineId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.engineId },
+            { mut, v -> mut.engineId = v },
+        );
+        EngineTargetSerializerImpl.addField(
+            "version_constraint",
+            "versionConstraint",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.versionConstraint },
+            { mut, v -> mut.versionConstraint = v },
+        );
+        EngineTargetSerializerImpl.finalizeStruct();
+
+        GetServiceMessagingScopeRequestSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        GetServiceMessagingScopeRequestSerializerImpl.finalizeStruct();
+
+        GetServiceMessagingScopeResponseSerializerImpl.addWrapperVariant(
+            1,
+            "found",
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.FOUND_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceMessagingScopeSerializer,
+            "",
+            { skirout.service.v1.topology.GetServiceMessagingScopeResponse.FoundWrapper(it) },
+            { it.value },
+        );
+        GetServiceMessagingScopeResponseSerializerImpl.addWrapperVariant(
+            2,
+            "not_found",
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.NOT_FOUND_WRAPPER.ordinal,
+            _SerializerRegistry.GetServiceMessagingScopeResponse_NotFoundSerializer,
+            "",
+            { skirout.service.v1.topology.GetServiceMessagingScopeResponse.NotFoundWrapper(it) },
+            { it.value },
+        );
+        GetServiceMessagingScopeResponseSerializerImpl.addWrapperVariant(
+            3,
+            "internal_error",
+            skirout.service.v1.topology.GetServiceMessagingScopeResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.GetServiceMessagingScopeResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        GetServiceMessagingScopeResponseSerializerImpl.finalizeEnum();
+
+        GetServiceMessagingScopeResponse_NotFoundSerializerImpl.finalizeStruct();
+
+        HostConfigurationChangeSerializerImpl.addField(
+            "host",
+            "host",
+            0,
+            _SerializerRegistry.ServiceHostSerializer,
+            "",
+            { it.host },
+            { mut, v -> mut.host = v },
+        );
+        HostConfigurationChangeSerializerImpl.addField(
+            "realm",
+            "realm",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.RealmInstanceSerializer,
+            ),
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        HostConfigurationChangeSerializerImpl.addField(
+            "engine",
+            "engine",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.EngineInstanceSerializer,
+            ),
+            "",
+            { it.engine },
+            { mut, v -> mut.engine = v },
+        );
+        HostConfigurationChangeSerializerImpl.addField(
+            "removed_resources",
+            "removedResources",
+            3,
+            build.skir.Serializers.list(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.removedResources },
+            { mut, v -> mut.removedResources = v },
+        );
+        HostConfigurationChangeSerializerImpl.finalizeStruct();
+
+        HostedEngineConfigurationSerializerImpl.addField(
+            "target",
+            "target",
+            0,
+            _SerializerRegistry.EngineTargetSerializer,
+            "",
+            { it.target },
+            { mut, v -> mut.target = v },
+        );
+        HostedEngineConfigurationSerializerImpl.addField(
+            "realm",
+            "realm",
+            1,
+            _SerializerRegistry.EngineRealmSelectionSerializer,
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        HostedEngineConfigurationSerializerImpl.finalizeStruct();
+
+        HostedRealmConfigurationSerializerImpl.addField(
+            "primary_engine",
+            "primaryEngine",
+            0,
+            _SerializerRegistry.EngineTargetSerializer,
+            "",
+            { it.primaryEngine },
+            { mut, v -> mut.primaryEngine = v },
+        );
+        HostedRealmConfigurationSerializerImpl.finalizeStruct();
+
+        HostExecutionConfigurationSerializerImpl.addField(
+            "realm",
+            "realm",
+            0,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.HostedRealmConfigurationSerializer,
+            ),
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        HostExecutionConfigurationSerializerImpl.addField(
+            "primary_engine",
+            "primaryEngine",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.HostedEngineConfigurationSerializer,
+            ),
+            "",
+            { it.primaryEngine },
+            { mut, v -> mut.primaryEngine = v },
+        );
+        HostExecutionConfigurationSerializerImpl.finalizeStruct();
+
+        HostExecutionObservationSerializerImpl.addField(
+            "host",
+            "host",
+            0,
+            _SerializerRegistry.ServiceHostSerializer,
+            "",
+            { it.host },
+            { mut, v -> mut.host = v },
+        );
+        HostExecutionObservationSerializerImpl.addField(
+            "realm",
+            "realm",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.RealmRuntimeObservationSerializer,
+            ),
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        HostExecutionObservationSerializerImpl.addField(
+            "engine",
+            "engine",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.EngineRuntimeObservationSerializer,
+            ),
+            "",
+            { it.engine },
+            { mut, v -> mut.engine = v },
+        );
+        HostExecutionObservationSerializerImpl.finalizeStruct();
+
+        HostRuntimeStateSerializerImpl.addField(
+            "status",
+            "status",
+            0,
+            _SerializerRegistry.HostRuntimeStatusSerializer,
+            "",
+            { it.status },
+            { mut, v -> mut.status = v },
+        );
+        HostRuntimeStateSerializerImpl.addField(
+            "message",
+            "message",
+            1,
+            build.skir.Serializers.optional(
+                build.skir.Serializers.string,
+            ),
+            "",
+            { it.message },
+            { mut, v -> mut.message = v },
+        );
+        HostRuntimeStateSerializerImpl.addField(
+            "updated_at",
+            "updatedAt",
+            2,
+            build.skir.Serializers.timestamp,
+            "",
+            { it.updatedAt },
+            { mut, v -> mut.updatedAt = v },
+        );
+        HostRuntimeStateSerializerImpl.finalizeStruct();
+
+        HostRuntimeStatusSerializerImpl.addConstantVariant(
+            1,
+            "offline",
+            skirout.service.v1.topology.HostRuntimeStatus.Kind.OFFLINE_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.HostRuntimeStatus.OFFLINE,
+        );
+        HostRuntimeStatusSerializerImpl.addConstantVariant(
+            2,
+            "reconciling",
+            skirout.service.v1.topology.HostRuntimeStatus.Kind.RECONCILING_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.HostRuntimeStatus.RECONCILING,
+        );
+        HostRuntimeStatusSerializerImpl.addConstantVariant(
+            3,
+            "active",
+            skirout.service.v1.topology.HostRuntimeStatus.Kind.ACTIVE_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.HostRuntimeStatus.ACTIVE,
+        );
+        HostRuntimeStatusSerializerImpl.addConstantVariant(
+            4,
+            "failed",
+            skirout.service.v1.topology.HostRuntimeStatus.Kind.FAILED_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.HostRuntimeStatus.FAILED,
+        );
+        HostRuntimeStatusSerializerImpl.addConstantVariant(
+            5,
+            "drifted",
+            skirout.service.v1.topology.HostRuntimeStatus.Kind.DRIFTED_CONST.ordinal,
+            "",
+            skirout.service.v1.topology.HostRuntimeStatus.DRIFTED,
+        );
+        HostRuntimeStatusSerializerImpl.finalizeEnum();
+
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            1,
+            "replace",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.REPLACE_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.ReplaceWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            2,
+            "configuration_changed",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.CONFIGURATION_CHANGED_WRAPPER.ordinal,
+            _SerializerRegistry.HostConfigurationChangeSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.ConfigurationChangedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            3,
+            "observations_reported",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.OBSERVATIONS_REPORTED_WRAPPER.ordinal,
+            _SerializerRegistry.HostExecutionObservationSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.ObservationsReportedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.addWrapperVariant(
+            4,
+            "host_advertised",
+            skirout.service.v1.topology.OrganizationTopologyChanged.Kind.HOST_ADVERTISED_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceHostSerializer,
+            "",
+            { skirout.service.v1.topology.OrganizationTopologyChanged.HostAdvertisedWrapper(it) },
+            { it.value },
+        );
+        OrganizationTopologyChangedSerializerImpl.finalizeEnum();
+
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "hosts",
+            "hosts",
+            0,
+            build.skir.Serializers.list(
+                _SerializerRegistry.ServiceHostSerializer,
+            ),
+            "",
+            { it.hosts },
+            { mut, v -> mut.hosts = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "realms",
+            "realms",
+            1,
+            build.skir.Serializers.list(
+                _SerializerRegistry.RealmInstanceSerializer,
+            ),
+            "",
+            { it.realms },
+            { mut, v -> mut.realms = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.addField(
+            "engines",
+            "engines",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.EngineInstanceSerializer,
+            ),
+            "",
+            { it.engines },
+            { mut, v -> mut.engines = v },
+        );
+        OrganizationTopologySnapshotSerializerImpl.finalizeStruct();
+
+        OwnerHostSerializerImpl.addField(
+            "id",
+            "id",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.id },
+            { mut, v -> mut.id = v },
+        );
+        OwnerHostSerializerImpl.addField(
+            "name",
+            "name",
+            1,
+            build.skir.Serializers.string,
+            "",
+            { it.name },
+            { mut, v -> mut.name = v },
+        );
+        OwnerHostSerializerImpl.finalizeStruct();
+
+        RealmInfoSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmInfoSerializerImpl.addField(
+            "owner_host",
+            "ownerHost",
+            1,
+            _SerializerRegistry.OwnerHostSerializer,
+            "",
+            { it.ownerHost },
+            { mut, v -> mut.ownerHost = v },
+        );
+        RealmInfoSerializerImpl.finalizeStruct();
+
+        RealmInstanceSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmInstanceSerializerImpl.addField(
+            "owner_host",
+            "ownerHost",
+            1,
+            _SerializerRegistry.OwnerHostSerializer,
+            "",
+            { it.ownerHost },
+            { mut, v -> mut.ownerHost = v },
+        );
+        RealmInstanceSerializerImpl.addField(
+            "revision",
+            "revision",
+            2,
+            build.skir.Serializers.int64,
+            "",
+            { it.revision },
+            { mut, v -> mut.revision = v },
+        );
+        RealmInstanceSerializerImpl.addField(
+            "target_engine",
+            "targetEngine",
+            3,
+            _SerializerRegistry.EngineTargetSerializer,
+            "",
+            { it.targetEngine },
+            { mut, v -> mut.targetEngine = v },
+        );
+        RealmInstanceSerializerImpl.addField(
+            "state",
+            "state",
+            4,
+            _SerializerRegistry.ChildRuntimeStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        RealmInstanceSerializerImpl.finalizeStruct();
+
+        RealmRuntimeObservationSerializerImpl.addField(
+            "realm_id",
+            "realmId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.realmId },
+            { mut, v -> mut.realmId = v },
+        );
+        RealmRuntimeObservationSerializerImpl.addField(
+            "state",
+            "state",
+            1,
+            _SerializerRegistry.ChildRuntimeStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        RealmRuntimeObservationSerializerImpl.finalizeStruct();
+
+        ReconciledRevisionSerializerImpl.addField(
+            "desired",
+            "desired",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.desired },
+            { mut, v -> mut.desired = v },
+        );
+        ReconciledRevisionSerializerImpl.addField(
+            "applied",
+            "applied",
+            1,
+            build.skir.Serializers.int64,
+            "",
+            { it.applied },
+            { mut, v -> mut.applied = v },
+        );
+        ReconciledRevisionSerializerImpl.finalizeStruct();
+
+        RegisterServiceHostRequestSerializerImpl.addField(
+            "entrypoint",
+            "entrypoint",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.entrypoint },
+            { mut, v -> mut.entrypoint = v },
+        );
+        RegisterServiceHostRequestSerializerImpl.addField(
+            "can_host_realm",
+            "canHostRealm",
+            1,
+            build.skir.Serializers.bool,
+            "",
+            { it.canHostRealm },
+            { mut, v -> mut.canHostRealm = v },
+        );
+        RegisterServiceHostRequestSerializerImpl.addField(
+            "supported_engines",
+            "supportedEngines",
+            2,
+            build.skir.Serializers.list(
+                _SerializerRegistry.SupportedEngineSerializer,
+            ),
+            "",
+            { it.supportedEngines },
+            { mut, v -> mut.supportedEngines = v },
+        );
+        RegisterServiceHostRequestSerializerImpl.finalizeStruct();
+
+        RegisterServiceHostResponseSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.service.v1.topology.RegisterServiceHostResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.ServiceHostSerializer,
+            "",
+            { skirout.service.v1.topology.RegisterServiceHostResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        RegisterServiceHostResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.service.v1.topology.RegisterServiceHostResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.RegisterServiceHostResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        RegisterServiceHostResponseSerializerImpl.finalizeEnum();
+
+        ReportHostExecutionRequestSerializerImpl.addField(
+            "topology_revision",
+            "topologyRevision",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.topologyRevision },
+            { mut, v -> mut.topologyRevision = v },
+        );
+        ReportHostExecutionRequestSerializerImpl.addField(
+            "realm_state",
+            "realmState",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ChildRuntimeStateSerializer,
+            ),
+            "",
+            { it.realmState },
+            { mut, v -> mut.realmState = v },
+        );
+        ReportHostExecutionRequestSerializerImpl.addField(
+            "engine_state",
+            "engineState",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.ChildRuntimeStateSerializer,
+            ),
+            "",
+            { it.engineState },
+            { mut, v -> mut.engineState = v },
+        );
+        ReportHostExecutionRequestSerializerImpl.finalizeStruct();
+
+        ReportHostExecutionResponseSerializerImpl.addWrapperVariant(
+            1,
+            "success",
+            skirout.service.v1.topology.ReportHostExecutionResponse.Kind.SUCCESS_WRAPPER.ordinal,
+            _SerializerRegistry.ReportHostExecutionResponse_SuccessSerializer,
+            "",
+            { skirout.service.v1.topology.ReportHostExecutionResponse.SuccessWrapper(it) },
+            { it.value },
+        );
+        ReportHostExecutionResponseSerializerImpl.addWrapperVariant(
+            2,
+            "stale_revision_error",
+            skirout.service.v1.topology.ReportHostExecutionResponse.Kind.STALE_REVISION_ERROR_WRAPPER.ordinal,
+            _SerializerRegistry.ReportHostExecutionResponse_StaleRevisionErrorSerializer,
+            "",
+            { skirout.service.v1.topology.ReportHostExecutionResponse.StaleRevisionErrorWrapper(it) },
+            { it.value },
+        );
+        ReportHostExecutionResponseSerializerImpl.addWrapperVariant(
+            3,
+            "internal_error",
+            skirout.service.v1.topology.ReportHostExecutionResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.ReportHostExecutionResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        ReportHostExecutionResponseSerializerImpl.finalizeEnum();
+
+        ReportHostExecutionResponse_StaleRevisionErrorSerializerImpl.finalizeStruct();
+
+        ReportHostExecutionResponse_SuccessSerializerImpl.finalizeStruct();
+
+        ServiceHostSerializerImpl.addField(
+            "host_id",
+            "hostId",
+            0,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.hostId },
+            { mut, v -> mut.hostId = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "service_id",
+            "serviceId",
+            1,
+            skirout.kernel.v1.record_id.RecordId.serializer,
+            "",
+            { it.serviceId },
+            { mut, v -> mut.serviceId = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "revision",
+            "revision",
+            2,
+            build.skir.Serializers.int64,
+            "",
+            { it.revision },
+            { mut, v -> mut.revision = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "entrypoint",
+            "entrypoint",
+            3,
+            build.skir.Serializers.string,
+            "",
+            { it.entrypoint },
+            { mut, v -> mut.entrypoint = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "can_host_realm",
+            "canHostRealm",
+            4,
+            build.skir.Serializers.bool,
+            "",
+            { it.canHostRealm },
+            { mut, v -> mut.canHostRealm = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "supported_engines",
+            "supportedEngines",
+            5,
+            build.skir.Serializers.list(
+                _SerializerRegistry.SupportedEngineSerializer,
+            ),
+            "",
+            { it.supportedEngines },
+            { mut, v -> mut.supportedEngines = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "topology_revision",
+            "topologyRevision",
+            6,
+            _SerializerRegistry.ReconciledRevisionSerializer,
+            "",
+            { it.topologyRevision },
+            { mut, v -> mut.topologyRevision = v },
+        );
+        ServiceHostSerializerImpl.addField(
+            "state",
+            "state",
+            7,
+            _SerializerRegistry.HostRuntimeStateSerializer,
+            "",
+            { it.state },
+            { mut, v -> mut.state = v },
+        );
+        ServiceHostSerializerImpl.finalizeStruct();
+
+        ServiceMessagingScopeSerializerImpl.addField(
+            "organization_id",
+            "organizationId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.organizationId },
+            { mut, v -> mut.organizationId = v },
+        );
+        ServiceMessagingScopeSerializerImpl.addField(
+            "owned_realm",
+            "ownedRealm",
+            1,
+            build.skir.Serializers.optional(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.ownedRealm },
+            { mut, v -> mut.ownedRealm = v },
+        );
+        ServiceMessagingScopeSerializerImpl.addField(
+            "attached_realm",
+            "attachedRealm",
+            2,
+            build.skir.Serializers.optional(
+                skirout.kernel.v1.record_id.RecordId.serializer,
+            ),
+            "",
+            { it.attachedRealm },
+            { mut, v -> mut.attachedRealm = v },
+        );
+        ServiceMessagingScopeSerializerImpl.finalizeStruct();
+
+        SupportedEngineSerializerImpl.addField(
+            "engine_id",
+            "engineId",
+            0,
+            build.skir.Serializers.string,
+            "",
+            { it.engineId },
+            { mut, v -> mut.engineId = v },
+        );
+        SupportedEngineSerializerImpl.finalizeStruct();
+
+        WatchHostExecutionRequestSerializerImpl.finalizeStruct();
+
+        WatchHostExecutionResponseSerializerImpl.addWrapperVariant(
+            1,
+            "desired",
+            skirout.service.v1.topology.WatchHostExecutionResponse.Kind.DESIRED_WRAPPER.ordinal,
+            _SerializerRegistry.WatchHostExecutionResponse_DesiredSerializer,
+            "",
+            { skirout.service.v1.topology.WatchHostExecutionResponse.DesiredWrapper(it) },
+            { it.value },
+        );
+        WatchHostExecutionResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.service.v1.topology.WatchHostExecutionResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.WatchHostExecutionResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchHostExecutionResponseSerializerImpl.finalizeEnum();
+
+        WatchHostExecutionResponse_DesiredSerializerImpl.addField(
+            "topology_revision",
+            "topologyRevision",
+            0,
+            build.skir.Serializers.int64,
+            "",
+            { it.topologyRevision },
+            { mut, v -> mut.topologyRevision = v },
+        );
+        WatchHostExecutionResponse_DesiredSerializerImpl.addField(
+            "realm",
+            "realm",
+            1,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.RealmInstanceSerializer,
+            ),
+            "",
+            { it.realm },
+            { mut, v -> mut.realm = v },
+        );
+        WatchHostExecutionResponse_DesiredSerializerImpl.addField(
+            "engine",
+            "engine",
+            2,
+            build.skir.Serializers.optional(
+                _SerializerRegistry.EngineInstanceSerializer,
+            ),
+            "",
+            { it.engine },
+            { mut, v -> mut.engine = v },
+        );
+        WatchHostExecutionResponse_DesiredSerializerImpl.finalizeStruct();
+
+        WatchOrganizationTopologyRequestSerializerImpl.finalizeStruct();
+
+        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
+            1,
+            "list",
+            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.LIST_WRAPPER.ordinal,
+            _SerializerRegistry.OrganizationTopologySnapshotSerializer,
+            "",
+            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.ListWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationTopologyResponseSerializerImpl.addWrapperVariant(
+            2,
+            "internal_error",
+            skirout.service.v1.topology.WatchOrganizationTopologyResponse.Kind.INTERNAL_ERROR_WRAPPER.ordinal,
+            skirout.kernel.v1.errors.InternalError.serializer,
+            "",
+            { skirout.service.v1.topology.WatchOrganizationTopologyResponse.InternalErrorWrapper(it) },
+            { it.value },
+        );
+        WatchOrganizationTopologyResponseSerializerImpl.finalizeEnum();
+    }
 }

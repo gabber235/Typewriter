@@ -1,5 +1,4 @@
-import "package:flutter/material.dart";
-import "package:flutter/rendering.dart";
+import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Render slots for element content and its resize handle.
 enum ResizableElementSlot { child, gestureDetector }

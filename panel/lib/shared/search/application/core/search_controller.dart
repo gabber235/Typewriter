@@ -1,13 +1,19 @@
-// ignore_for_file: prefer_initializing_formals
-
-import "dart:async";
-
-import "package:collection/collection.dart";
-import "package:flutter/services.dart";
-import "package:flutter/widgets.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Coordinates one source, scope, interaction, and search surface lifecycle.
+// ignore_for_file: prefer_initializing_formals
+
+/// Owns one search session and its surface state.
+///
+/// [SourceController] parses input and owns the source lifetime. This owner
+/// projects scope visibility over that source tree, retaining selection and
+/// preview only for result identities still present. Selection here belongs to
+/// this search session and is independent of the panel resource selection.
+///
+/// Activations can complete a picker or dispatch a command. Commands resolve
+/// their target from the current tree and delegate execution to
+/// [CommandController]. User query changes during execution are retained and
+/// take precedence over a command supplied replacement query. Disposal releases
+/// the source, command controller and dependency listeners.
 class SearchController<T> extends ChangeNotifier
     implements SearchCommandDispatcher {
   SearchController({
@@ -124,6 +130,7 @@ class SearchController<T> extends ChangeNotifier
         ),
         result,
       );
+      if (_disposed) return;
       switch (outcome) {
         case SearchActivationComplete(:final value):
           await _onCompleted?.call(value);

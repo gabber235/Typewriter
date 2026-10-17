@@ -207,17 +207,16 @@ allow = false
 error_contains = "organization_name_unique"
 
 [[cases]]
-name = "role_batch_rejects_missing_member_without_partial_write_or_receipt"
+name = "role_batch_rejects_missing_member_without_partial_write"
 kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
 LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
-LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:absent], [organization_role:acme_member], mutation_receipt:invalid_roles, [1]);
+LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:absent], [organization_role:acme_member]);
 RETURN $result.outcome = 'user-not-found-error'
     AND $result.user_ids = [user:absent]
-    AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme)
-    AND mutation_receipt:invalid_roles.result = NONE;
+    AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
 };
 """
 allow = true
@@ -226,16 +225,15 @@ path = ""
 equals = true
 
 [[cases]]
-name = "role_batch_preserves_protected_roles_and_replays_complete_receipt"
+name = "role_batch_preserves_protected_roles"
 kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [organization_role:acme_member], mutation_receipt:valid_roles, [2]);
-LET $replay = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [organization_role:acme_member], mutation_receipt:valid_roles, [2]);
+LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [organization_role:acme_member]);
 RETURN $result.outcome = 'updated' AND array::len($result.members) = 2
     AND $result.sequence = 1 AND organization:acme.members_sequence = 1
-    AND $result = $replay AND fn::organization::founder_member(user:alice, organization:acme);
+    AND fn::organization::founder_member(user:alice, organization:acme);
 };
 """
 allow = true
@@ -249,7 +247,7 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:bob], [organization_role:acme_member], mutation_receipt:duplicates, [3]);
+LET $result = fn::organization::members::update_roles(organization:acme, [user:bob, user:bob], [organization_role:acme_member]);
 RETURN $result.outcome = 'invalid-selection-error';
 };
 """
@@ -259,18 +257,6 @@ path = ""
 equals = true
 
 [[cases]]
-name = "receipt_rejects_identity_reuse"
-kind = "sql_expect"
-actor = "root"
-sql = """
-RETURN {
-RETURN fn::organization::members::update_roles(organization:acme, [user:bob], [organization_role:acme_member], mutation_receipt:valid_roles, [4]);
-};
-"""
-allow = false
-error_contains = "operation-identity-reused-error"
-
-[[cases]]
 name = "approval_rejects_missing_request_without_consuming_valid_request"
 kind = "sql_expect"
 actor = "root"
@@ -278,10 +264,9 @@ sql = """
 RETURN {
 CREATE user:approval_dave SET name = "Approval Dave";
 RELATE user:approval_dave->request_to_join:batch_dave->organization:acme;
-LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:absent], [organization_role:acme_member], mutation_receipt:invalid_approval, [5]);
+LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:absent], [organization_role:acme_member]);
 RETURN $result.outcome = 'request-not-found-error' AND request_to_join:batch_dave.id != NONE
-    AND !fn::organization::member(user:approval_dave, organization:acme)
-    AND mutation_receipt:invalid_approval.result = NONE;
+    AND !fn::organization::member(user:approval_dave, organization:acme);
 };
 """
 allow = true
@@ -290,7 +275,7 @@ path = ""
 equals = true
 
 [[cases]]
-name = "approval_batch_creates_all_memberships_and_replays_consumed_requests"
+name = "approval_batch_creates_all_memberships"
 kind = "sql_expect"
 actor = "root"
 sql = """
@@ -299,8 +284,7 @@ RETURN {
     RELATE user:approval_carol->request_to_join:batch_carol->organization:acme;
     LET $join_requests_before = organization:acme.join_requests_sequence;
     LET $members_before = organization:acme.members_sequence;
-    LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:batch_carol], [organization_role:acme_member], mutation_receipt:valid_approvals, [6]);
-    LET $replay = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:batch_carol], [organization_role:acme_member], mutation_receipt:valid_approvals, [6]);
+    LET $result = fn::organization::members::approve_requests(organization:acme, [request_to_join:batch_dave, request_to_join:batch_carol], [organization_role:acme_member]);
     RETURN $result.outcome = 'approved' AND array::len($result.approvals) = 2
         AND $result.join_requests_sequence = $join_requests_before + 1
         AND $result.members_sequence = $members_before + 1
@@ -310,7 +294,6 @@ RETURN {
         AND user:approval_dave.organizations_sequence = 1
         AND user:approval_carol.join_requests_sequence = 1
         AND user:approval_carol.organizations_sequence = 1
-        AND $result = $replay
         AND fn::organization::member(user:approval_dave, organization:acme)
         AND fn::organization::member(user:approval_carol, organization:acme)
         AND request_to_join:batch_dave.id = NONE AND request_to_join:batch_carol.id = NONE;
@@ -327,7 +310,7 @@ kind = "sql_expect"
 actor = "root"
 sql = """
 RETURN {
-    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [], mutation_receipt:default_roles, [7]);
+    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], []);
     LET $bob = (SELECT * FROM member_of WHERE in = user:bob AND out = organization:acme)[0];
     RETURN $result.outcome = 'updated' AND fn::organization::founder_member(user:alice, organization:acme)
         AND array::len($bob.roles) > 0
@@ -347,10 +330,9 @@ sql = """
 RETURN {
     LET $founder = (SELECT VALUE id FROM organization_role WHERE organization = organization:acme AND name = 'founder')[0];
     LET $before = SELECT in, roles FROM member_of WHERE out = organization:acme;
-    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [$founder], mutation_receipt:forbidden, [8]);
+    LET $result = fn::organization::members::update_roles(organization:acme, [user:alice, user:bob], [$founder]);
     RETURN $result.outcome = 'roles-not-assignable-error' AND $result.user_ids = [user:bob]
-        AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme)
-        AND mutation_receipt:forbidden.result = NONE;
+        AND $before = (SELECT in, roles FROM member_of WHERE out = organization:acme);
 };
 """
 allow = true

@@ -61,8 +61,10 @@ class _TreeItem extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return switch (node) {
-      LeafTreeNode<Page>(:final value) when expanded => _PageTile(page: value),
-      LeafTreeNode<Page>(:final value) => _SmallPageTile(page: value),
+      LeafTreeNode<Page>(:final value) => _PageTile(
+        page: value,
+        expanded: expanded,
+      ),
       InnerTreeNode<Page>() => _TreeCategory(
         node: node as InnerTreeNode<Page>,
         expanded: expanded,
@@ -113,11 +115,7 @@ class _TreeCategory extends HookConsumerWidget {
               activators: [SingleActivator(LogicalKeyboardKey.keyN)],
               priority: 2,
               onInvoke: (_) {
-                promptAndCreatePage(
-                  context: context,
-                  ref: ref,
-                  chapter: chapter,
-                );
+                createPage(context: context, ref: ref, chapter: chapter);
               },
             ),
             ActionShortcut(
@@ -144,11 +142,8 @@ class _TreeCategory extends HookConsumerWidget {
               MenuItem(
                 label: "New Page",
                 icon: Icones(Fa6Solid.plus),
-                onPressed: () => promptAndCreatePage(
-                  context: context,
-                  ref: ref,
-                  chapter: chapter,
-                ),
+                onPressed: () =>
+                    createPage(context: context, ref: ref, chapter: chapter),
               ),
               MenuItem(
                 label: "Rename Chapter",
@@ -174,16 +169,29 @@ class _TreeCategory extends HookConsumerWidget {
                 return DragTarget<PageDrag>(
                   onWillAcceptWithDetails: (details) => true,
                   onAcceptWithDetails: (details) async {
-                    final result = await ref.editPage(
-                      id: details.data.pageId,
-                      chapter: skir.StringChange(
-                        expected: details.data.chapter,
-                        value: node.path,
-                      ),
-                    );
-                    result.requireApplied(
-                      conflictMessage: "The page chapter changed",
-                    );
+                    ref
+                        .readRealmEditing()
+                        .edit(
+                          label: "Move page to chapter",
+                          apply: (edit) {
+                            final at = authoredFieldLocation(
+                              details.data.pageId,
+                              ["chapter"],
+                            );
+                            final current = edit.expect(at);
+                            if (current is! PortablePathValue<skir.DataValue> ||
+                                current.value != details.data.expectedChapter) {
+                              throw StateError(
+                                "The page chapter changed during the drag",
+                              );
+                            }
+                            edit.setPayload(
+                              at,
+                              skir.DataValue.wrapStringValue(node.path),
+                            );
+                          },
+                        )
+                        .report(context);
                   },
                   builder: (context, pageCandidates, pageRejected) {
                     final isAccepting =

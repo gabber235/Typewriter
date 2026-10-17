@@ -1,19 +1,11 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Responsive member row for touch layouts.
 ///
 /// The collapsed header handles selection and keyboard actions. Expansion
-/// reveals role editing and removal without changing the provider contract used
-/// by the desktop table. Role choices come from the live role catalog, so a
-/// stale member row cannot invent assignable roles.
+/// reveals role editing and removal through the same repository commands as
+/// the desktop table. Role choices use the observed catalog's assignable flag;
+/// the server remains responsible for validating requested role changes.
 class MemberTabletCard extends HookConsumerWidget {
   const MemberTabletCard({
     required this.member,
@@ -205,12 +197,13 @@ class MemberTabletCard extends HookConsumerWidget {
                                 selectedRoles: member.roles,
                                 onRolesChanged: (newRoles) {
                                   ref
-                                      .read(
-                                        organizationMembersProvider.notifier,
+                                      .executeMembership(
+                                        ref.membershipCommands.updateRoles([
+                                          member.userId,
+                                        ], newRoles),
+                                        (response) =>
+                                            response.requireAccepted(),
                                       )
-                                      .updateMemberRoles([
-                                        member.userId,
-                                      ], newRoles)
                                       .catchApiExceptionsAndDisplay(context);
                                 },
                               ),
@@ -259,9 +252,10 @@ class MemberTabletCard extends HookConsumerWidget {
       confirmIcon: Fa6Solid.user_minus,
       onConfirm: () async {
         onSelectionChanged(false);
-        await ref
-            .read(organizationMembersProvider.notifier)
-            .removeMember(member.userId);
+        await ref.executeMembership(
+          ref.membershipCommands.remove(member.userId),
+          (response) => response.requireAccepted(),
+        );
       },
     );
   }

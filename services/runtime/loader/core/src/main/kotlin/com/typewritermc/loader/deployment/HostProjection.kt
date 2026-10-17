@@ -7,6 +7,8 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.EngineManifest
 import com.typewritermc.imprint.ExtensionManifest
 import com.typewritermc.imprint.ImprintManifest
+import com.typewritermc.loader.api.EngineImplementationArtifact
+import com.typewritermc.loader.api.EngineImplementationTarget
 import com.typewritermc.loader.api.RuntimePlacement
 import com.typewritermc.loader.api.SourcePartDisposition
 import com.typewritermc.loader.artifact.DeploymentArtifact
@@ -18,25 +20,25 @@ import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 
 /**
- * Describes service assignments, API versions, and deployment facts.
+ * Pins the responding host roles, API versions, and facts used to select deployment artifacts.
  *
- * Every assigned host must have an API version. The Realm host receives the panel engine as well; primary engines
- * use their own host set.
+ * This selection comes from presence observations, not a complete backend assignment snapshot. Every selected
+ * host must have an API version. The Realm host also receives the panel engine; primary engines use their own set.
  */
 @Serializable
-data class RealmTopology(
+data class RealmDeploymentSelection(
     val realmService: ServiceId,
     val primaryEngineServices: Set<ServiceId>,
     val serviceApis: Map<ServiceId, com.typewritermc.imprint.ArtifactVersion>,
     val factsByService: Map<ServiceId, Map<String, String>> = emptyMap(),
 ) {
     init {
-        require(serviceApis.keys.containsAll(assignedServices())) {
-            "Every assigned service must declare its host API version."
+        require(serviceApis.keys.containsAll(selectedServices())) {
+            "Every selected service must declare its host API version."
         }
     }
 
-    fun assignedServices(): Set<ServiceId> = primaryEngineServices + realmService
+    fun selectedServices(): Set<ServiceId> = primaryEngineServices + realmService
 
     fun factsFor(serviceId: ServiceId): Map<String, String> = factsByService[serviceId].orEmpty()
 }
@@ -46,6 +48,7 @@ data class RealmTopology(
 data class ProjectedRuntime(
     val placement: RuntimePlacement,
     val artifact: DeploymentArtifact,
+    val implementation: EngineImplementationTarget? = null,
 ) {
     companion object {
         fun realm(artifact: DeploymentArtifact) = ProjectedRuntime(RuntimePlacement.REALM, artifact)
@@ -83,6 +86,7 @@ data class HostDeploymentProjection(
     val serviceId: ServiceId,
     val runtimes: List<ProjectedRuntime>,
     val extensions: List<ProjectedExtension>,
+    val publicationTarget: EngineImplementationTarget,
     val facts: Map<String, String>,
 ) {
     fun canonical(): HostDeploymentProjection =
@@ -94,6 +98,7 @@ data class HostDeploymentProjection(
                     .map { extension ->
                         extension.copy(sourceParts = extension.sourceParts.sortedBy(ProjectedSourcePart::name))
                     },
+            publicationTarget = publicationTarget,
             facts = facts.toSortedMap(),
         )
 }
@@ -113,40 +118,101 @@ object HostDeploymentProjectionCodec {
 }
 
 /**
- * Derives runtime roles and source part eligibility for an assigned host.
+ * Derives runtime roles and source part eligibility for a selected host.
  *
- * Unassigned hosts and missing required manifests are rejected. Extension parts retain eligible placements or
+ * Unselected hosts and missing required manifests are rejected. Extension parts retain eligible placements or
  * concrete reasons when none of the projected engines can load them.
  */
 fun DeploymentSnapshot.projectFor(
     realmId: String,
-    topology: RealmTopology,
+    selection: RealmDeploymentSelection,
     serviceId: ServiceId,
     manifests: Map<ArtifactId, ImprintManifest>,
 ): HostDeploymentProjection {
-    require(serviceId in topology.assignedServices()) { "Cannot project a deployment for an unassigned service." }
-    val runtimes = projectedRuntimes(topology, serviceId)
-    val extensions = projectedExtensions(runtimes, manifests)
+    require(serviceId in selection.selectedServices()) { "Cannot project a deployment for an unselected service." }
+    val projected = projectedRuntimes(selection, serviceId)
+    val extensions = projectedExtensions(projected, manifests)
+    val publicationTarget = primaryEngineImplementation(manifests)
+    val runtimes =
+        projected.map { runtime ->
+            when (runtime.placement) {
+                RuntimePlacement.REALM -> runtime
+                RuntimePlacement.PRIMARY_ENGINE -> runtime.copy(implementation = publicationTarget)
+                RuntimePlacement.PANEL_ENGINE -> runtime.copy(implementation = runtime.implementation(extensions))
+            }
+        }
     return HostDeploymentProjection(
         realmId = realmId,
         generation = generation,
         serviceId = serviceId,
         runtimes = runtimes,
         extensions = extensions,
-        facts = topology.factsFor(serviceId),
+        publicationTarget = publicationTarget,
+        facts = selection.factsFor(serviceId),
     ).canonical()
 }
 
+private fun ProjectedRuntime.implementation(extensions: List<ProjectedExtension>): EngineImplementationTarget =
+    EngineImplementationTarget(
+        placement = placement,
+        engine = artifact.toImplementationArtifact(emptyList()),
+        extensions =
+            extensions
+                .mapNotNull { extension ->
+                    extension.sourceParts
+                        .filter { part ->
+                            val eligible = part.disposition as? SourcePartDisposition.Eligible
+                            eligible != null && placement in eligible.placements
+                        }.map(ProjectedSourcePart::name)
+                        .sorted()
+                        .takeIf(List<String>::isNotEmpty)
+                        ?.let(extension.artifact::toImplementationArtifact)
+                }.sortedBy { it.id.value },
+    )
+
+private fun DeploymentSnapshot.primaryEngineImplementation(manifests: Map<ArtifactId, ImprintManifest>): EngineImplementationTarget {
+    val engineArtifact = content.primaryEngine
+    val engineManifest = manifests[engineArtifact.coordinate.id] as? EngineManifest
+    requireNotNull(engineManifest) { "Primary engine ${engineArtifact.coordinate.id} is missing its engine manifest." }
+    val extensionManifests = manifests.values.filterIsInstance<ExtensionManifest>()
+    val selectedExtensions = content.extensions.mapTo(linkedSetOf()) { it.coordinate.id }
+    val eligibleParts =
+        SourcePartEligibilityResolver
+            .resolve(DeploymentSelection(engineManifest, selectedExtensions), extensionManifests)
+            .filter { it.eligibility is Eligibility.Eligible }
+            .groupBy({ it.artifact }, { it.sourcePart })
+    return EngineImplementationTarget(
+        placement = RuntimePlacement.PRIMARY_ENGINE,
+        engine = engineArtifact.toImplementationArtifact(emptyList()),
+        extensions =
+            content.extensions
+                .mapNotNull { artifact ->
+                    eligibleParts[artifact.coordinate.id]
+                        ?.sorted()
+                        ?.takeIf(List<String>::isNotEmpty)
+                        ?.let(artifact::toImplementationArtifact)
+                }.sortedBy { it.id.value },
+    )
+}
+
+private fun DeploymentArtifact.toImplementationArtifact(sourceParts: List<String>) =
+    EngineImplementationArtifact(
+        id = coordinate.id,
+        version = coordinate.version,
+        digest = digest,
+        sourceParts = sourceParts,
+    )
+
 private fun DeploymentSnapshot.projectedRuntimes(
-    topology: RealmTopology,
+    selection: RealmDeploymentSelection,
     serviceId: ServiceId,
 ): List<ProjectedRuntime> =
     buildList {
-        if (serviceId == topology.realmService) {
+        if (serviceId == selection.realmService) {
             add(ProjectedRuntime.realm(content.realm))
             add(ProjectedRuntime.panelEngine(content.panelEngine))
         }
-        if (serviceId in topology.primaryEngineServices) {
+        if (serviceId in selection.primaryEngineServices) {
             add(ProjectedRuntime.primaryEngine(content.primaryEngine))
         }
     }

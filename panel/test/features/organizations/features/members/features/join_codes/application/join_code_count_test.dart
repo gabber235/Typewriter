@@ -1,5 +1,6 @@
 import "package:flutter_test/flutter_test.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
+import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
+    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 import "support/join_codes_test_support.dart";
@@ -29,7 +30,7 @@ void main() {
             : now.add(const Duration(days: 7));
       }
       return OrganizationJoinCode(
-        code: recordId("organization_join_code:CODE-$codeCounter"),
+        code: skir.recordId("organization_join_code:CODE-$codeCounter"),
         createdAt: now.subtract(const Duration(days: 1)),
         expiresAt: expiresAt,
       );

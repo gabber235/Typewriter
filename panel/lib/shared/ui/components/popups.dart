@@ -1,19 +1,12 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:flutter/services.dart";
-import "package:flutter_animate/flutter_animate.dart";
-import "package:flutter_hooks/flutter_hooks.dart";
-import "package:hooks_riverpod/hooks_riverpod.dart";
-import "package:iconify_flutter_plus/icons/fa6_solid.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Presents an asynchronous confirmation action inside an [AlertDialog].
 ///
 /// The dialog owns the countdown and transient loading state. [onConfirm] is
-/// awaited before the route returns `true`; cancellation returns `false` and
-/// invokes [onCancel] after dismissing the route. Supply exactly one of
-/// [body] or [content]. Use [showConfirmationDialogue] for the normal route
+/// awaited before the confirm action returns `true`. The cancel action returns
+/// `false` and invokes [onCancel]; route dismissal can return no result without
+/// invoking that callback. Supply [body] or [content], with [body] taking
+/// precedence. Use [showConfirmationDialogue] for the normal route
 /// integration, including the panel's keyboard and provider context.
 class ConfirmationDialogue extends HookWidget {
   const ConfirmationDialogue({
@@ -44,12 +37,12 @@ class ConfirmationDialogue extends HookWidget {
 
   /// Rich content explaining the action being confirmed.
   ///
-  /// Mutually exclusive with [content].
+  /// Takes precedence over [content] when both are supplied.
   final Widget? body;
 
   /// Plain text explaining the action being confirmed.
   ///
-  /// Mutually exclusive with [body].
+  /// Used when [body] is absent.
   final String? content;
 
   /// Label for the action that commits the confirmation.
@@ -64,7 +57,7 @@ class ConfirmationDialogue extends HookWidget {
   /// Foreground color for the confirm action.
   final Color onConfirmColor;
 
-  /// Prevents confirmation until this duration has elapsed.
+  /// Counts down this duration's whole seconds before enabling confirmation.
   ///
   /// The countdown is displayed in the confirm label. This is useful before
   /// an irreversible action.
@@ -78,7 +71,8 @@ class ConfirmationDialogue extends HookWidget {
 
   /// The asynchronous operation to run after confirmation.
   ///
-  /// The route is dismissed only after this future completes successfully.
+  /// The confirm action dismisses the route after successful completion if it
+  /// is still mounted. Other dismissal actions remain available while waiting.
   final FutureOr<void> Function()? onConfirm;
 
   /// Optional notification that the user cancelled the dialog.
@@ -174,8 +168,8 @@ class ConfirmationDialogue extends HookWidget {
 /// Shows a confirmation dialog and returns whether confirmation completed.
 ///
 /// The caller's [onConfirm] is awaited. Holding either Shift key bypasses the
-/// dialog when [delayConfirm] is zero, which supports deliberate expert
-/// workflows without bypassing a configured safety delay. A dismissed dialog
+/// dialog when [delayConfirm] has zero whole seconds. For a longer delay, Shift
+/// still shows the dialog but removes its countdown. A dismissed dialog
 /// returns `false`.
 Future<bool> showConfirmationDialogue({
   required BuildContext context,
@@ -193,7 +187,7 @@ Future<bool> showConfirmationDialogue({
   FutureOr<void> Function()? onConfirm,
   Function? onCancel,
 }) async {
-  // Shift is an explicit expert shortcut, but never bypasses a safety delay.
+  // Shift bypasses a zero second dialog and removes longer countdowns below.
   final hasShiftDown =
       HardwareKeyboard.instance.isLogicalKeyPressed(
         LogicalKeyboardKey.shiftLeft,

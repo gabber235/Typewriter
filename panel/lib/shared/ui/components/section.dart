@@ -1,4 +1,3 @@
-import "package:flutter/material.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Groups related content in a themed, clipped surface card.
@@ -33,6 +32,12 @@ class Section extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: radius),
       child: Surface(
         color: color,
+        foreground: backgroundColor == null
+            ? context.colors.contentPrimary
+            : Color.alphaBlend(color, Surface.colorOf(context)).on(context),
+        secondaryForeground: backgroundColor == null
+            ? context.colors.contentSecondary
+            : null,
         child: ClipRRect(borderRadius: radius, child: child),
       ),
     );

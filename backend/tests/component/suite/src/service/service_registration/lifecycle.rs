@@ -3,19 +3,19 @@ use json_matcher::assert_jm;
 use typewriter_component_test::prelude::SkirMessagingExt;
 use wasmcloud_utils::skir::base::service::v1::{
     lifecycle::{ServiceHeartbeatNotification, ServiceShutdownNotification},
-    organization::WatchOrganizationServicesResponse,
+    organization::OrganizationServicesChanged,
     service::ServiceStatus,
 };
 
 use super::{ServiceRegistration, database};
 
 fn service_update_matches(body: &[u8], expected_status: ServiceStatus) -> bool {
-    let Ok(response) = WatchOrganizationServicesResponse::serializer()
+    let Ok(response) = OrganizationServicesChanged::serializer()
         .from_bytes(body, wasmcloud_utils::skir_client::UnrecognizedValues::Drop)
     else {
         return false;
     };
-    let WatchOrganizationServicesResponse::Update(service) = response else {
+    let OrganizationServicesChanged::Update(service) = response else {
         return false;
     };
     service.service_id.key.to_string() == "bound_service"

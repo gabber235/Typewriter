@@ -1,5 +1,3 @@
-import "package:flutter/material.dart";
-import "package:iconify_flutter_plus/icons/material_symbols.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// The navigation level currently shown by [DateTimeCalendar].

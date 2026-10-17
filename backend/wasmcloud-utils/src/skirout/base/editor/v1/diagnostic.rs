@@ -33,22 +33,26 @@ impl Default for DiagnosticSeverity {
 
 impl DiagnosticSeverity {
     fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<DiagnosticSeverity> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<DiagnosticSeverity>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &DiagnosticSeverity| match x {
-                        DiagnosticSeverity::Unknown(_) => 0,
-                        DiagnosticSeverity::Information => 1,
-                        DiagnosticSeverity::Warning => 2,
-                        DiagnosticSeverity::Error => 3,
-                    },
-                    |u| DiagnosticSeverity::Unknown(Some(u)),
-                    |x: &DiagnosticSeverity| match x { DiagnosticSeverity::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/diagnostic.skir",
-                    "DiagnosticSeverity",
-                    "",
-                )
-            });
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<DiagnosticSeverity>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &DiagnosticSeverity| match x {
+                    DiagnosticSeverity::Unknown(_) => 0,
+                    DiagnosticSeverity::Information => 1,
+                    DiagnosticSeverity::Warning => 2,
+                    DiagnosticSeverity::Error => 3,
+                },
+                |u| DiagnosticSeverity::Unknown(Some(u)),
+                |x: &DiagnosticSeverity| match x {
+                    DiagnosticSeverity::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/diagnostic.skir",
+                "DiagnosticSeverity",
+                "",
+            )
+        });
         &*ADAPTER
     }
     pub fn serializer() -> crate::skir_client::Serializer<DiagnosticSeverity> {
@@ -58,168 +62,397 @@ impl DiagnosticSeverity {
 }
 
 // ==============================================================================
-// enum DiagnosticCode
+// struct DeclarationOrigin
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeclarationOrigin {
+    pub owner: crate::skirout::base::editor::v1::type_catalog::DeclarationOwner,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeclarationOrigin>>,
+}
+
+impl DeclarationOrigin {
+    pub fn default_ref() -> &'static DeclarationOrigin {
+        static D: std::sync::LazyLock<DeclarationOrigin> =
+            std::sync::LazyLock::new(DeclarationOrigin::default);
+        &D
+    }
+}
+
+impl DeclarationOrigin {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeclarationOrigin> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DeclarationOrigin>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "DeclarationOrigin",
+                "",
+                |x: &DeclarationOrigin| &x._unrecognized,
+                |x: &mut DeclarationOrigin, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeclarationOrigin> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DeclarationOrigin::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct DeclarationDiagnostic
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DeclarationDiagnostic {
+    pub affected: crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId,
+    pub code: String,
+    pub origins: Vec<DeclarationOrigin>,
+    pub field: Option<crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DeclarationDiagnostic>>,
+}
+
+impl DeclarationDiagnostic {
+    pub fn default_ref() -> &'static DeclarationDiagnostic {
+        static D: std::sync::LazyLock<DeclarationDiagnostic> =
+            std::sync::LazyLock::new(DeclarationDiagnostic::default);
+        &D
+    }
+}
+
+impl DeclarationDiagnostic {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DeclarationDiagnostic> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DeclarationDiagnostic>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "DeclarationDiagnostic",
+                "",
+                |x: &DeclarationDiagnostic| &x._unrecognized,
+                |x: &mut DeclarationDiagnostic, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DeclarationDiagnostic> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            DeclarationDiagnostic::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct DiagnosticTemplate
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct DiagnosticTemplate {
+    pub code: String,
+    pub message: String,
+    pub severity: DiagnosticSeverity,
+    pub targets: Vec<crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DiagnosticTemplate>>,
+}
+
+impl DiagnosticTemplate {
+    pub fn default_ref() -> &'static DiagnosticTemplate {
+        static D: std::sync::LazyLock<DiagnosticTemplate> =
+            std::sync::LazyLock::new(DiagnosticTemplate::default);
+        &D
+    }
+}
+
+impl DiagnosticTemplate {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DiagnosticTemplate> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<DiagnosticTemplate>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "DiagnosticTemplate",
+                "",
+                |x: &DiagnosticTemplate| &x._unrecognized,
+                |x: &mut DiagnosticTemplate, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<DiagnosticTemplate> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(DiagnosticTemplate::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct Diagnostic
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct Diagnostic {
+    pub id: crate::skirout::base::editor::v1::type_catalog::DiagnosticId,
+    pub origin: crate::skirout::base::editor::v1::type_catalog::RuleOrigin,
+    pub code: String,
+    pub message: String,
+    pub severity: DiagnosticSeverity,
+    pub primary: Option<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
+    pub related: Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<Diagnostic>>,
+}
+
+impl Diagnostic {
+    pub fn default_ref() -> &'static Diagnostic {
+        static D: std::sync::LazyLock<Diagnostic> = std::sync::LazyLock::new(Diagnostic::default);
+        &D
+    }
+}
+
+impl Diagnostic {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<Diagnostic> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<Diagnostic>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "Diagnostic",
+                "",
+                |x: &Diagnostic| &x._unrecognized,
+                |x: &mut Diagnostic, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<Diagnostic> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(Diagnostic::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct ValueProblem
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct ValueProblem {
+    pub location: crate::skirout::base::editor::v1::type_catalog::ValueLocation,
+    pub code: String,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ValueProblem>>,
+}
+
+impl ValueProblem {
+    pub fn default_ref() -> &'static ValueProblem {
+        static D: std::sync::LazyLock<ValueProblem> =
+            std::sync::LazyLock::new(ValueProblem::default);
+        &D
+    }
+}
+
+impl ValueProblem {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ValueProblem> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<ValueProblem>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "ValueProblem",
+                "",
+                |x: &ValueProblem| &x._unrecognized,
+                |x: &mut ValueProblem, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<ValueProblem> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(ValueProblem::_adapter())
+    }
+}
+
+// ==============================================================================
+// struct InitializationDiagnostic
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct InitializationDiagnostic {
+    pub field: Option<crate::skirout::base::editor::v1::type_catalog::FieldOwner>,
+    pub code: String,
+    pub message: String,
+    pub relative_path: Option<crate::skirout::base::editor::v1::type_catalog::ValuePath>,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<InitializationDiagnostic>>,
+}
+
+impl InitializationDiagnostic {
+    pub fn default_ref() -> &'static InitializationDiagnostic {
+        static D: std::sync::LazyLock<InitializationDiagnostic> =
+            std::sync::LazyLock::new(InitializationDiagnostic::default);
+        &D
+    }
+}
+
+impl InitializationDiagnostic {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<InitializationDiagnostic>
+    {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<InitializationDiagnostic>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "InitializationDiagnostic",
+                "",
+                |x: &InitializationDiagnostic| &x._unrecognized,
+                |x: &mut InitializationDiagnostic, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<InitializationDiagnostic> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(
+            InitializationDiagnostic::_adapter(),
+        )
+    }
+}
+
+// ==============================================================================
+// struct CompleteValue
+// ==============================================================================
+
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct CompleteValue {
+    pub schema: crate::skirout::base::editor::v1::type_catalog::CheckedType,
+    pub value: crate::skirout::base::editor::v1::type_catalog::DataValue,
+    /// Set this to None when you're creating a struct.
+    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<CompleteValue>>,
+}
+
+impl CompleteValue {
+    pub fn default_ref() -> &'static CompleteValue {
+        static D: std::sync::LazyLock<CompleteValue> =
+            std::sync::LazyLock::new(CompleteValue::default);
+        &D
+    }
+}
+
+impl CompleteValue {
+    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<CompleteValue> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::StructAdapter<CompleteValue>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::StructAdapter::new(
+                "editor/v1/diagnostic.skir",
+                "CompleteValue",
+                "",
+                |x: &CompleteValue| &x._unrecognized,
+                |x: &mut CompleteValue, u| x._unrecognized = u,
+            )
+        });
+        &*ADAPTER
+    }
+    pub fn serializer() -> crate::skir_client::Serializer<CompleteValue> {
+        initialize_module_serializers();
+        crate::skir_client::internal::struct_serializer_from_static(CompleteValue::_adapter())
+    }
+}
+
+// ==============================================================================
+// enum StructuralResult
 // ==============================================================================
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum DiagnosticCode {
-    Unknown(Option<crate::skir_client::UnrecognizedVariant<DiagnosticCode>>),
-    InvalidTypeId,
-    InvalidRevision,
-    DuplicateDefinition,
-    InvalidArity,
-    UnsatisfiedBound,
-    InvalidVariance,
-    InheritanceCycle,
-    InheritanceConflict,
-    WeakenedConstraint,
-    IncompatibleRepresentation,
-    InvalidValue,
-    MissingRequiredField,
-    UnknownField,
-    InvalidPath,
-    InvalidConcreteType,
-    ConversionNotFound,
-    ConversionAmbiguous,
-    ConversionFailed,
-    InvalidExpression,
-    EvaluationBudgetExceeded,
-    InvalidPresentation,
-    MutationConflict,
-    PermissionDenied,
+pub enum StructuralResult {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<StructuralResult>>),
+    Valid,
+    Invalid(Vec<ValueProblem>),
 }
 
-impl Default for DiagnosticCode {
+impl Default for StructuralResult {
     fn default() -> Self {
-        DiagnosticCode::Unknown(None)
+        StructuralResult::Unknown(None)
     }
 }
 
-impl DiagnosticCode {
-    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<DiagnosticCode> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::EnumAdapter<DiagnosticCode>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::EnumAdapter::new(
-                    |x: &DiagnosticCode| match x {
-                        DiagnosticCode::Unknown(_) => 0,
-                        DiagnosticCode::InvalidTypeId => 1,
-                        DiagnosticCode::InvalidRevision => 2,
-                        DiagnosticCode::DuplicateDefinition => 3,
-                        DiagnosticCode::InvalidArity => 4,
-                        DiagnosticCode::UnsatisfiedBound => 5,
-                        DiagnosticCode::InvalidVariance => 6,
-                        DiagnosticCode::InheritanceCycle => 7,
-                        DiagnosticCode::InheritanceConflict => 8,
-                        DiagnosticCode::WeakenedConstraint => 9,
-                        DiagnosticCode::IncompatibleRepresentation => 10,
-                        DiagnosticCode::InvalidValue => 11,
-                        DiagnosticCode::MissingRequiredField => 12,
-                        DiagnosticCode::UnknownField => 13,
-                        DiagnosticCode::InvalidPath => 14,
-                        DiagnosticCode::InvalidConcreteType => 15,
-                        DiagnosticCode::ConversionNotFound => 16,
-                        DiagnosticCode::ConversionAmbiguous => 17,
-                        DiagnosticCode::ConversionFailed => 18,
-                        DiagnosticCode::InvalidExpression => 19,
-                        DiagnosticCode::EvaluationBudgetExceeded => 20,
-                        DiagnosticCode::InvalidPresentation => 21,
-                        DiagnosticCode::MutationConflict => 22,
-                        DiagnosticCode::PermissionDenied => 23,
-                    },
-                    |u| DiagnosticCode::Unknown(Some(u)),
-                    |x: &DiagnosticCode| match x { DiagnosticCode::Unknown(Some(u)) => Some(u.as_ref()), _ => None },
-                    "editor/v1/diagnostic.skir",
-                    "DiagnosticCode",
-                    "",
-                )
-            });
+impl StructuralResult {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<StructuralResult> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<StructuralResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &StructuralResult| match x {
+                    StructuralResult::Unknown(_) => 0,
+                    StructuralResult::Valid => 1,
+                    StructuralResult::Invalid(_) => 2,
+                },
+                |u| StructuralResult::Unknown(Some(u)),
+                |x: &StructuralResult| match x {
+                    StructuralResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/diagnostic.skir",
+                "StructuralResult",
+                "",
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<DiagnosticCode> {
+    pub fn serializer() -> crate::skir_client::Serializer<StructuralResult> {
         initialize_module_serializers();
-        crate::skir_client::internal::enum_serializer_from_static(DiagnosticCode::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(StructuralResult::_adapter())
     }
 }
 
 // ==============================================================================
-// struct TypeDiagnostic
+// enum CompletenessResult
 // ==============================================================================
 
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct TypeDiagnostic {
-    pub code: DiagnosticCode,
-    pub severity: DiagnosticSeverity,
-    pub message: String,
-    pub path: Option<crate::skirout::base::editor::v1::path::DataPath>,
-    pub related_type: Option<String>,
-    pub details: Vec<DiagnosticDetail>,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<TypeDiagnostic>>,
+#[derive(Debug, Clone, PartialEq)]
+pub enum CompletenessResult {
+    Unknown(Option<crate::skir_client::UnrecognizedVariant<CompletenessResult>>),
+    Complete(Box<CompleteValue>),
+    Unfinished(Vec<crate::skirout::base::editor::v1::type_catalog::ValueLocation>),
+    Invalid(Vec<ValueProblem>),
 }
 
-impl TypeDiagnostic {
-    pub fn default_ref() -> &'static TypeDiagnostic {
-        static D: std::sync::LazyLock<TypeDiagnostic> = std::sync::LazyLock::new(TypeDiagnostic::default);
-        &D
+impl Default for CompletenessResult {
+    fn default() -> Self {
+        CompletenessResult::Unknown(None)
     }
 }
 
-impl TypeDiagnostic {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<TypeDiagnostic> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<TypeDiagnostic>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/diagnostic.skir",
-                    "TypeDiagnostic",
-                    "",
-                    |x: &TypeDiagnostic| &x._unrecognized,
-                    |x: &mut TypeDiagnostic, u| x._unrecognized = u,
-                )
-            });
+impl CompletenessResult {
+    fn _adapter() -> &'static crate::skir_client::internal::EnumAdapter<CompletenessResult> {
+        static ADAPTER: std::sync::LazyLock<
+            crate::skir_client::internal::EnumAdapter<CompletenessResult>,
+        > = std::sync::LazyLock::new(|| {
+            crate::skir_client::internal::EnumAdapter::new(
+                |x: &CompletenessResult| match x {
+                    CompletenessResult::Unknown(_) => 0,
+                    CompletenessResult::Complete(_) => 1,
+                    CompletenessResult::Unfinished(_) => 2,
+                    CompletenessResult::Invalid(_) => 3,
+                },
+                |u| CompletenessResult::Unknown(Some(u)),
+                |x: &CompletenessResult| match x {
+                    CompletenessResult::Unknown(Some(u)) => Some(u.as_ref()),
+                    _ => None,
+                },
+                "editor/v1/diagnostic.skir",
+                "CompletenessResult",
+                "",
+            )
+        });
         &*ADAPTER
     }
-    pub fn serializer() -> crate::skir_client::Serializer<TypeDiagnostic> {
+    pub fn serializer() -> crate::skir_client::Serializer<CompletenessResult> {
         initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(TypeDiagnostic::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct DiagnosticDetail
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct DiagnosticDetail {
-    pub key: String,
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<DiagnosticDetail>>,
-}
-
-impl DiagnosticDetail {
-    pub fn default_ref() -> &'static DiagnosticDetail {
-        static D: std::sync::LazyLock<DiagnosticDetail> = std::sync::LazyLock::new(DiagnosticDetail::default);
-        &D
-    }
-}
-
-impl DiagnosticDetail {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<DiagnosticDetail> {
-        static ADAPTER: std::sync::LazyLock<crate::skir_client::internal::StructAdapter<DiagnosticDetail>> =
-            std::sync::LazyLock::new(|| {
-                crate::skir_client::internal::StructAdapter::new(
-                    "editor/v1/diagnostic.skir",
-                    "DiagnosticDetail",
-                    "",
-                    |x: &DiagnosticDetail| &x._unrecognized,
-                    |x: &mut DiagnosticDetail, u| x._unrecognized = u,
-                )
-            });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<DiagnosticDetail> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(DiagnosticDetail::_adapter())
+        crate::skir_client::internal::enum_serializer_from_static(CompletenessResult::_adapter())
     }
 }
 
@@ -228,58 +461,315 @@ impl DiagnosticDetail {
 // ==============================================================================
 
 fn initialize_module_serializers() {
-    static INIT: std::sync::LazyLock<()> =
-        std::sync::LazyLock::new(|| {
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<DiagnosticSeverity> = DiagnosticSeverity::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("information", 1, 1, "", DiagnosticSeverity::Information);
-                (*a).add_constant_variant("warning", 2, 2, "", DiagnosticSeverity::Warning);
-                (*a).add_constant_variant("error", 3, 3, "", DiagnosticSeverity::Error);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::EnumAdapter<DiagnosticCode> = DiagnosticCode::_adapter() as *const _ as *mut _;
-                (*a).add_constant_variant("invalid_type_id", 1, 1, "", DiagnosticCode::InvalidTypeId);
-                (*a).add_constant_variant("invalid_revision", 2, 2, "", DiagnosticCode::InvalidRevision);
-                (*a).add_constant_variant("duplicate_definition", 3, 3, "", DiagnosticCode::DuplicateDefinition);
-                (*a).add_constant_variant("invalid_arity", 4, 4, "", DiagnosticCode::InvalidArity);
-                (*a).add_constant_variant("unsatisfied_bound", 5, 5, "", DiagnosticCode::UnsatisfiedBound);
-                (*a).add_constant_variant("invalid_variance", 6, 6, "", DiagnosticCode::InvalidVariance);
-                (*a).add_constant_variant("inheritance_cycle", 7, 7, "", DiagnosticCode::InheritanceCycle);
-                (*a).add_constant_variant("inheritance_conflict", 8, 8, "", DiagnosticCode::InheritanceConflict);
-                (*a).add_constant_variant("weakened_constraint", 9, 9, "", DiagnosticCode::WeakenedConstraint);
-                (*a).add_constant_variant("incompatible_representation", 10, 10, "", DiagnosticCode::IncompatibleRepresentation);
-                (*a).add_constant_variant("invalid_value", 11, 11, "", DiagnosticCode::InvalidValue);
-                (*a).add_constant_variant("missing_required_field", 12, 12, "", DiagnosticCode::MissingRequiredField);
-                (*a).add_constant_variant("unknown_field", 13, 13, "", DiagnosticCode::UnknownField);
-                (*a).add_constant_variant("invalid_path", 14, 14, "", DiagnosticCode::InvalidPath);
-                (*a).add_constant_variant("invalid_concrete_type", 15, 15, "", DiagnosticCode::InvalidConcreteType);
-                (*a).add_constant_variant("conversion_not_found", 16, 16, "", DiagnosticCode::ConversionNotFound);
-                (*a).add_constant_variant("conversion_ambiguous", 17, 17, "", DiagnosticCode::ConversionAmbiguous);
-                (*a).add_constant_variant("conversion_failed", 18, 18, "", DiagnosticCode::ConversionFailed);
-                (*a).add_constant_variant("invalid_expression", 19, 19, "", DiagnosticCode::InvalidExpression);
-                (*a).add_constant_variant("evaluation_budget_exceeded", 20, 20, "", DiagnosticCode::EvaluationBudgetExceeded);
-                (*a).add_constant_variant("invalid_presentation", 21, 21, "", DiagnosticCode::InvalidPresentation);
-                (*a).add_constant_variant("mutation_conflict", 22, 22, "", DiagnosticCode::MutationConflict);
-                (*a).add_constant_variant("permission_denied", 23, 23, "", DiagnosticCode::PermissionDenied);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<TypeDiagnostic> = TypeDiagnostic::_adapter() as *const _ as *mut _;
-                (*a).add_field("code", 0, crate::skir_client::internal::enum_serializer_from_static(DiagnosticCode::_adapter()), "", |x: &TypeDiagnostic| &x.code, |x: &mut TypeDiagnostic, v| x.code = v);
-                (*a).add_field("severity", 1, crate::skir_client::internal::enum_serializer_from_static(DiagnosticSeverity::_adapter()), "", |x: &TypeDiagnostic| &x.severity, |x: &mut TypeDiagnostic, v| x.severity = v);
-                (*a).add_field("message", 2, crate::skir_client::Serializer::string(), "", |x: &TypeDiagnostic| &x.message, |x: &mut TypeDiagnostic, v| x.message = v);
-                (*a).add_field("path", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::path::DataPath::serializer()), "", |x: &TypeDiagnostic| &x.path, |x: &mut TypeDiagnostic, v| x.path = v);
-                (*a).add_field("related_type", 4, crate::skir_client::Serializer::optional(crate::skir_client::Serializer::string()), "", |x: &TypeDiagnostic| &x.related_type, |x: &mut TypeDiagnostic, v| x.related_type = v);
-                (*a).add_field("details", 5, crate::skir_client::Serializer::array(crate::skir_client::internal::struct_serializer_from_static(DiagnosticDetail::_adapter())), "", |x: &TypeDiagnostic| &x.details, |x: &mut TypeDiagnostic, v| x.details = v);
-                (*a).finalize();
-            }
-            unsafe {
-                let a: *mut crate::skir_client::internal::StructAdapter<DiagnosticDetail> = DiagnosticDetail::_adapter() as *const _ as *mut _;
-                (*a).add_field("key", 0, crate::skir_client::Serializer::string(), "", |x: &DiagnosticDetail| &x.key, |x: &mut DiagnosticDetail, v| x.key = v);
-                (*a).add_field("value", 1, crate::skir_client::Serializer::string(), "", |x: &DiagnosticDetail| &x.value, |x: &mut DiagnosticDetail, v| x.value = v);
-                (*a).finalize();
-            }
-        });
+    static INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<DiagnosticSeverity> =
+                DiagnosticSeverity::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("information", 1, 1, "", DiagnosticSeverity::Information);
+            (*a).add_constant_variant("warning", 2, 2, "", DiagnosticSeverity::Warning);
+            (*a).add_constant_variant("error", 3, 3, "", DiagnosticSeverity::Error);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DeclarationOrigin> =
+                DeclarationOrigin::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "owner",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::DeclarationOwner::serializer(),
+                "",
+                |x: &DeclarationOrigin| &x.owner,
+                |x: &mut DeclarationOrigin, v| x.owner = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DeclarationDiagnostic> =
+                DeclarationDiagnostic::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "affected",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::TypeDefinitionId::serializer(),
+                "",
+                |x: &DeclarationDiagnostic| &x.affected,
+                |x: &mut DeclarationDiagnostic, v| x.affected = v,
+            );
+            (*a).add_field(
+                "code",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &DeclarationDiagnostic| &x.code,
+                |x: &mut DeclarationDiagnostic, v| x.code = v,
+            );
+            (*a).add_field(
+                "origins",
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        DeclarationOrigin::_adapter(),
+                    ),
+                ),
+                "",
+                |x: &DeclarationDiagnostic| &x.origins,
+                |x: &mut DeclarationDiagnostic, v| x.origins = v,
+            );
+            (*a).add_field("field", 3, crate::skir_client::Serializer::optional(crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern::serializer()), "", |x: &DeclarationDiagnostic| &x.field, |x: &mut DeclarationDiagnostic, v| x.field = v);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<DiagnosticTemplate> =
+                DiagnosticTemplate::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "code",
+                0,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &DiagnosticTemplate| &x.code,
+                |x: &mut DiagnosticTemplate, v| x.code = v,
+            );
+            (*a).add_field(
+                "message",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &DiagnosticTemplate| &x.message,
+                |x: &mut DiagnosticTemplate, v| x.message = v,
+            );
+            (*a).add_field(
+                "severity",
+                2,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    DiagnosticSeverity::_adapter(),
+                ),
+                "",
+                |x: &DiagnosticTemplate| &x.severity,
+                |x: &mut DiagnosticTemplate, v| x.severity = v,
+            );
+            (*a).add_field("targets", 3, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::type_catalog::RelativeFieldPattern::serializer()), "", |x: &DiagnosticTemplate| &x.targets, |x: &mut DiagnosticTemplate, v| x.targets = v);
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<Diagnostic> =
+                Diagnostic::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "id",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::DiagnosticId::serializer(),
+                "",
+                |x: &Diagnostic| &x.id,
+                |x: &mut Diagnostic, v| x.id = v,
+            );
+            (*a).add_field(
+                "origin",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::RuleOrigin::serializer(),
+                "",
+                |x: &Diagnostic| &x.origin,
+                |x: &mut Diagnostic, v| x.origin = v,
+            );
+            (*a).add_field(
+                "code",
+                2,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &Diagnostic| &x.code,
+                |x: &mut Diagnostic, v| x.code = v,
+            );
+            (*a).add_field(
+                "message",
+                3,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &Diagnostic| &x.message,
+                |x: &mut Diagnostic, v| x.message = v,
+            );
+            (*a).add_field(
+                "severity",
+                4,
+                crate::skir_client::internal::enum_serializer_from_static(
+                    DiagnosticSeverity::_adapter(),
+                ),
+                "",
+                |x: &Diagnostic| &x.severity,
+                |x: &mut Diagnostic, v| x.severity = v,
+            );
+            (*a).add_field(
+                "primary",
+                5,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                ),
+                "",
+                |x: &Diagnostic| &x.primary,
+                |x: &mut Diagnostic, v| x.primary = v,
+            );
+            (*a).add_field(
+                "related",
+                6,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                ),
+                "",
+                |x: &Diagnostic| &x.related,
+                |x: &mut Diagnostic, v| x.related = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<ValueProblem> =
+                ValueProblem::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "location",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                "",
+                |x: &ValueProblem| &x.location,
+                |x: &mut ValueProblem, v| x.location = v,
+            );
+            (*a).add_field(
+                "code",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &ValueProblem| &x.code,
+                |x: &mut ValueProblem, v| x.code = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<InitializationDiagnostic> =
+                InitializationDiagnostic::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "field",
+                0,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::FieldOwner::serializer(),
+                ),
+                "",
+                |x: &InitializationDiagnostic| &x.field,
+                |x: &mut InitializationDiagnostic, v| x.field = v,
+            );
+            (*a).add_field(
+                "code",
+                1,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &InitializationDiagnostic| &x.code,
+                |x: &mut InitializationDiagnostic, v| x.code = v,
+            );
+            (*a).add_field(
+                "message",
+                2,
+                crate::skir_client::Serializer::string(),
+                "",
+                |x: &InitializationDiagnostic| &x.message,
+                |x: &mut InitializationDiagnostic, v| x.message = v,
+            );
+            (*a).add_field(
+                "relative_path",
+                3,
+                crate::skir_client::Serializer::optional(
+                    crate::skirout::base::editor::v1::type_catalog::ValuePath::serializer(),
+                ),
+                "",
+                |x: &InitializationDiagnostic| &x.relative_path,
+                |x: &mut InitializationDiagnostic, v| x.relative_path = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::StructAdapter<CompleteValue> =
+                CompleteValue::_adapter() as *const _ as *mut _;
+            (*a).add_field(
+                "schema",
+                0,
+                crate::skirout::base::editor::v1::type_catalog::CheckedType::serializer(),
+                "",
+                |x: &CompleteValue| &x.schema,
+                |x: &mut CompleteValue, v| x.schema = v,
+            );
+            (*a).add_field(
+                "value",
+                1,
+                crate::skirout::base::editor::v1::type_catalog::DataValue::serializer(),
+                "",
+                |x: &CompleteValue| &x.value,
+                |x: &mut CompleteValue, v| x.value = v,
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<StructuralResult> =
+                StructuralResult::_adapter() as *const _ as *mut _;
+            (*a).add_constant_variant("valid", 1, 1, "", StructuralResult::Valid);
+            (*a).add_wrapper_variant(
+                "invalid",
+                2,
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ValueProblem::_adapter(),
+                    ),
+                ),
+                "",
+                |v| StructuralResult::Invalid(v),
+                |x| match x {
+                    StructuralResult::Invalid(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+        unsafe {
+            let a: *mut crate::skir_client::internal::EnumAdapter<CompletenessResult> =
+                CompletenessResult::_adapter() as *const _ as *mut _;
+            (*a).add_wrapper_variant(
+                "complete",
+                1,
+                1,
+                crate::skir_client::internal::struct_serializer_from_static(
+                    CompleteValue::_adapter(),
+                ),
+                "",
+                |v| CompletenessResult::Complete(Box::new(v)),
+                |x| match x {
+                    CompletenessResult::Complete(b) => b.as_ref(),
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "unfinished",
+                2,
+                2,
+                crate::skir_client::Serializer::array(
+                    crate::skirout::base::editor::v1::type_catalog::ValueLocation::serializer(),
+                ),
+                "",
+                |v| CompletenessResult::Unfinished(v),
+                |x| match x {
+                    CompletenessResult::Unfinished(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).add_wrapper_variant(
+                "invalid",
+                3,
+                3,
+                crate::skir_client::Serializer::array(
+                    crate::skir_client::internal::struct_serializer_from_static(
+                        ValueProblem::_adapter(),
+                    ),
+                ),
+                "",
+                |v| CompletenessResult::Invalid(v),
+                |x| match x {
+                    CompletenessResult::Invalid(v) => v,
+                    _ => unreachable!(),
+                },
+            );
+            (*a).finalize();
+        }
+    });
     let _ = *INIT;
 }

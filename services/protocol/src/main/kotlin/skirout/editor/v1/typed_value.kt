@@ -20,31 +20,31 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface TypedValueEnvelope_OrMutable {
-    val rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable;
-    val rootValue: skirout.editor.v1.type_catalog.TypedValue;
+sealed interface PortableValue_OrMutable {
+    val actualType: skirout.editor.v1.type_catalog.TypeUse;
+    val payload: skirout.editor.v1.type_catalog.DataValue;
 
-    fun toFrozen(): skirout.editor.v1.typed_value.TypedValueEnvelope;
+    fun toFrozen(): skirout.editor.v1.typed_value.PortableValue;
 }
 
 /** Deeply immutable. */
 @kotlin.Suppress("UNUSED_PARAMETER")
-class TypedValueEnvelope private constructor(
-    override val rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef,
-    override val rootValue: skirout.editor.v1.type_catalog.TypedValue,
-    private val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.TypedValueEnvelope>? =
+class PortableValue private constructor(
+    override val actualType: skirout.editor.v1.type_catalog.TypeUse,
+    override val payload: skirout.editor.v1.type_catalog.DataValue,
+    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.PortableValue>? =
         null,
-): skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable {
+): skirout.editor.v1.typed_value.PortableValue_OrMutable {
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable,
-        rootValue: skirout.editor.v1.type_catalog.TypedValue,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.TypedValueEnvelope>? =
+        actualType: skirout.editor.v1.type_catalog.TypeUse,
+        payload: skirout.editor.v1.type_catalog.DataValue,
+        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.PortableValue>? =
             null,
     ): this(
-        rootType.toFrozen(),
-        rootValue,
+        actualType,
+        payload,
         _unrecognizedFields,
     ) {}
 
@@ -53,21 +53,21 @@ class TypedValueEnvelope private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        rootType = this.rootType,
-        rootValue = this.rootValue,
+        actualType = this.actualType,
+        payload = this.payload,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            this.rootType,
-        rootValue: skirout.editor.v1.type_catalog.TypedValue =
-            this.rootValue,
-    ) = skirout.editor.v1.typed_value.TypedValueEnvelope(
-        rootType.toFrozen(),
-        rootValue,
+        actualType: skirout.editor.v1.type_catalog.TypeUse =
+            this.actualType,
+        payload: skirout.editor.v1.type_catalog.DataValue =
+            this.payload,
+    ) = skirout.editor.v1.typed_value.PortableValue(
+        actualType,
+        payload,
         this._unrecognizedFields,
     );
 
@@ -75,119 +75,107 @@ class TypedValueEnvelope private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.typed_value.TypedValueEnvelope && this.rootType == other.rootType && this.rootValue == other.rootValue);
+        return this === other || (other is skirout.editor.v1.typed_value.PortableValue && this.actualType == other.actualType && this.payload == other.payload);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.rootType, this.rootValue).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.actualType, this.payload).hashCode();
     }
 
     override fun toString(): kotlin.String {
         return build.skir.internal.toStringImpl(
             this,
-            skirout.editor.v1.typed_value.TypedValueEnvelope.serializerImpl,
+            _SerializerRegistry.PortableValueSerializerImpl,
         )
     }
 
-    /** Mutable version of [TypedValueEnvelope]. */
+    /** Mutable version of [PortableValue]. */
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-            skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-        override var rootValue: skirout.editor.v1.type_catalog.TypedValue =
-            skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.TypedValueEnvelope>? =
+        override var actualType: skirout.editor.v1.type_catalog.TypeUse =
+            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+        override var payload: skirout.editor.v1.type_catalog.DataValue =
+            skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.typed_value.PortableValue>? =
             null,
-    ): skirout.editor.v1.typed_value.TypedValueEnvelope_OrMutable {
+    ): skirout.editor.v1.typed_value.PortableValue_OrMutable {
         /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.typed_value.TypedValueEnvelope(
-            rootType = this.rootType,
-            rootValue = this.rootValue,
+        override fun toFrozen() = skirout.editor.v1.typed_value.PortableValue(
+            actualType = this.actualType,
+            payload = this.payload,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [rootType] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [rootType] and returns it.
-         */
-        val mutableRootType: skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable get() {
-            var value = this.rootType;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef -> {
-                    value = value.toMutable();
-                    this.rootType = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.ResolvedTypeRef.Mutable -> value;
-            }
-        }
     }
 
     companion object {
         private val default =
-            skirout.editor.v1.typed_value.TypedValueEnvelope(
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
+            skirout.editor.v1.typed_value.PortableValue(
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
             );
 
         /** Returns an instance with all fields set to their default values. */
         fun partial() = default;
 
         /**
-         * Creates a new instance of [TypedValueEnvelope].
+         * Creates a new instance of [PortableValue].
          * Unlike the constructor, does not require all fields to be specified.
          * Missing fields will be set to their default values.
          */
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            rootType: skirout.editor.v1.type_catalog.ResolvedTypeRef_OrMutable =
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.partial(),
-            rootValue: skirout.editor.v1.type_catalog.TypedValue =
-                skirout.editor.v1.type_catalog.TypedValue.UNKNOWN,
-        ) = skirout.editor.v1.typed_value.TypedValueEnvelope(
-            rootType = rootType,
-            rootValue = rootValue,
+            actualType: skirout.editor.v1.type_catalog.TypeUse =
+                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
+            payload: skirout.editor.v1.type_catalog.DataValue =
+                skirout.editor.v1.type_catalog.DataValue.UNKNOWN,
+        ) = skirout.editor.v1.typed_value.PortableValue(
+            actualType = actualType,
+            payload = payload,
             _unrecognizedFields = null,
         );
 
-        private val serializerImpl = build.skir.internal.StructSerializer(
-            recordId = "editor/v1/typed_value.skir:TypedValueEnvelope",
-            doc = "",
-            defaultInstance = default,
-            newMutableFn = { it?.toMutable() ?: Mutable() },
-            toFrozenFn = { it.toFrozen() },
-            getUnrecognizedFields = { it._unrecognizedFields },
-            setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+        /** Serializer for [PortableValue] instances. */
+        val serializer get() = _SerializerRegistry.PortableValueSerializer;
+
+        /** Describes the [PortableValue] type. Provides runtime introspection capabilities. */
+        val typeDescriptor get() = _SerializerRegistry.PortableValueSerializerImpl.typeDescriptor;
+    }
+}
+
+private object _SerializerRegistry {
+    val PortableValueSerializerImpl = build.skir.internal.StructSerializer(
+        recordId = "editor/v1/typed_value.skir:PortableValue",
+        doc = "",
+        defaultInstance = skirout.editor.v1.typed_value.PortableValue.partial(),
+        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.typed_value.PortableValue.Mutable() },
+        toFrozenFn = { it.toFrozen() },
+        getUnrecognizedFields = { it._unrecognizedFields },
+        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
+    );
+
+    val PortableValueSerializer = build.skir.internal.makeSerializer(PortableValueSerializerImpl);
+
+    init {
+        PortableValueSerializerImpl.addField(
+            "actual_type",
+            "actualType",
+            0,
+            skirout.editor.v1.type_catalog.TypeUse.serializer,
+            "",
+            { it.actualType },
+            { mut, v -> mut.actualType = v },
         );
-
-        /** Serializer for [TypedValueEnvelope] instances. */
-        val serializer = build.skir.internal.makeSerializer(serializerImpl);
-
-        /** Describes the [TypedValueEnvelope] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = serializerImpl.typeDescriptor;
-
-        init {
-            serializerImpl.addField(
-                "root_type",
-                "rootType",
-                0,
-                skirout.editor.v1.type_catalog.ResolvedTypeRef.serializer,
-                "",
-                { it.rootType },
-                { mut, v -> mut.rootType = v },
-            );
-            serializerImpl.addField(
-                "root_value",
-                "rootValue",
-                1,
-                skirout.editor.v1.type_catalog.TypedValue.serializer,
-                "",
-                { it.rootValue },
-                { mut, v -> mut.rootValue = v },
-            );
-            serializerImpl.finalizeStruct();
-        }
+        PortableValueSerializerImpl.addField(
+            "payload",
+            "payload",
+            1,
+            skirout.editor.v1.type_catalog.DataValue.serializer,
+            "",
+            { it.payload },
+            { mut, v -> mut.payload = v },
+        );
+        PortableValueSerializerImpl.finalizeStruct();
     }
 }
