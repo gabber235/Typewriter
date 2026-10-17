@@ -122,7 +122,7 @@ fn sentinel_response_bytes() -> Result<Vec<u8>, otel_wasi::Error<ErrorCode>> {
     Ok(GetSentinelCredentialsResponse::serializer().to_bytes(&response))
 }
 
-#[instrument]
+#[instrument(skip(creds))]
 /// Extracts text between credential markers without validating the enclosed JWT or seed.
 fn extract_from_creds(creds: &str, begin_marker: &str, end_marker: &str) -> Option<String> {
     let start = creds.find(begin_marker)? + begin_marker.len();
@@ -218,5 +218,85 @@ mod tests {
     #[test]
     fn missing_marker_returns_none() {
         assert_eq!(extract_from_creds("", "begin", "end"), None);
+    }
+
+    #[test]
+    fn extraction_tracing_omits_the_credential_bundle() {
+        let jwt = "synthetic.jwt.credential";
+        let seed = "SYNTHETIC_PRIVATE_SEED";
+        let creds = format!(
+            "-----BEGIN NATS USER JWT-----\n{jwt}\n------END NATS USER JWT------\n\
+             -----BEGIN USER NKEY SEED-----\n{seed}\n------END USER NKEY SEED------"
+        );
+        let recorder = CapturedTracing::default();
+        tracing::subscriber::with_default(recorder.clone(), || {
+            assert_eq!(
+                extract_from_creds(
+                    &creds,
+                    "-----BEGIN NATS USER JWT-----",
+                    "------END NATS USER JWT------",
+                )
+                .as_deref(),
+                Some(jwt)
+            );
+            assert_eq!(
+                extract_from_creds(
+                    &creds,
+                    "-----BEGIN USER NKEY SEED-----",
+                    "------END USER NKEY SEED------",
+                )
+                .as_deref(),
+                Some(seed)
+            );
+        });
+        let fields = recorder.fields.lock().unwrap();
+        assert!(fields.iter().any(|(name, _)| name == "begin_marker"));
+        assert!(!fields.iter().any(|(name, _)| name == "creds"));
+        for (_, value) in fields.iter() {
+            assert!(!value.contains(jwt));
+            assert!(!value.contains(seed));
+        }
+    }
+
+    #[derive(Clone, Default)]
+    struct CapturedTracing {
+        fields: std::sync::Arc<std::sync::Mutex<Vec<(String, String)>>>,
+        next_id: std::sync::Arc<std::sync::atomic::AtomicU64>,
+    }
+
+    struct FieldVisitor<'a>(&'a mut Vec<(String, String)>);
+
+    impl tracing::field::Visit for FieldVisitor<'_> {
+        fn record_debug(&mut self, field: &tracing::field::Field, value: &dyn std::fmt::Debug) {
+            self.0.push((field.name().to_owned(), format!("{value:?}")));
+        }
+    }
+
+    impl tracing::Subscriber for CapturedTracing {
+        fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+            true
+        }
+
+        fn new_span(&self, attrs: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+            attrs.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+            let id = self
+                .next_id
+                .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+                + 1;
+            tracing::span::Id::from_u64(id)
+        }
+
+        fn record(&self, _: &tracing::span::Id, values: &tracing::span::Record<'_>) {
+            values.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+        }
+
+        fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+
+        fn event(&self, event: &tracing::Event<'_>) {
+            event.record(&mut FieldVisitor(&mut self.fields.lock().unwrap()));
+        }
+
+        fn enter(&self, _: &tracing::span::Id) {}
+        fn exit(&self, _: &tracing::span::Id) {}
     }
 }
