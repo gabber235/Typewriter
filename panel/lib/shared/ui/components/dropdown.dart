@@ -3,9 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// A decorated wrapper around Material's [DropdownMenu] for editor inputs.
 ///
 /// It keeps focus, selection initialization, action shortcuts, surrounding
-/// actions, and key event blocking on the same [InputFieldContainer] boundary,
-/// so dropdowns behave like other editor controls.
-///
+/// actions, and menu dismissal on the same [InputFieldContainer] boundary.
+/// Activating the field opens its choices in insert mode. Selecting or
+/// dismissing returns to surrounding focus; moving elsewhere closes the menu.
 class Dropdown<T extends Object> extends HookWidget {
   const Dropdown({
     required this.dropdownMenuEntries,
@@ -93,6 +93,11 @@ class Dropdown<T extends Object> extends HookWidget {
     final inputFieldController =
         this.inputFieldController ?? defaultInputFieldController;
     final focusNode = inputFieldController.inputFocusNode;
+    final menuController = useMenuController();
+    final toggleFocusNode = useFocusNode(
+      canRequestFocus: false,
+      skipTraversal: true,
+    );
 
     // When we are not focused, we want to update the controller with the latest.
     // Since other people may update the text and we want that reflected.
@@ -105,6 +110,7 @@ class Dropdown<T extends Object> extends HookWidget {
     }, [currentLabel]);
     useFocusedChange(focusNode, ({required hasFocus}) {
       if (!hasFocus) {
+        menuController.close();
         controller.text = currentLabel ?? "";
       }
     }, [currentLabel]);
@@ -119,6 +125,14 @@ class Dropdown<T extends Object> extends HookWidget {
       onSelected: onSelected,
       child: InputFieldContainer(
         controller: inputFieldController,
+        onInputFocus: () {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted && enabled && focusNode.hasPrimaryFocus) {
+              menuController.open();
+            }
+          });
+        },
+        onDismiss: menuController.close,
         actions: actions,
         inputActions: [
           ...?menuActions,
@@ -142,37 +156,93 @@ class Dropdown<T extends Object> extends HookWidget {
             ),
         ],
         surroundingActions: surroundingActions,
-        child: DropdownMenu<T>(
-          focusNode: focusNode,
-          controller: controller,
-          enabled: enabled,
-          enableFilter: enableFilter,
-          menuHeight: menuHeight,
-          hintText: hintText,
-          leadingIcon: leadingIcon,
-          trailingIcon: trailingIcon,
-          textStyle: textStyle,
-          textAlign: textAlign,
-          initialSelection: selected,
-          onSelected: (value) {
-            if (value == null &&
-                onCustomValue != null &&
-                controller.text.isNotEmpty) {
-              onCustomValue!(controller.text);
-            } else {
-              onSelected?.call(value);
-            }
-            if (value != null) {
-              inputFieldController.endInteraction();
-            }
-            if (focusNode.hasFocus) {
-              inputFieldController.requestSurroundingFocus();
-            }
+        child: HookBuilder(
+          builder: (inputContext) {
+            // Material handles Escape inside DropdownMenu before its surrounding
+            // actions. Dispatch the panel's dismiss intent at the input node so
+            // closing the menu also ends this field's insert interaction.
+            useEffect(() {
+              final previous = focusNode.onKeyEvent;
+              KeyEventResult handleKey(FocusNode node, KeyEvent event) {
+                final result =
+                    previous?.call(node, event) ?? KeyEventResult.ignored;
+                if (result != KeyEventResult.ignored) return result;
+                if (node.hasPrimaryFocus &&
+                    shortcutsFor(DismissIntent).any(
+                      (shortcut) =>
+                          shortcut.accepts(event, HardwareKeyboard.instance),
+                    )) {
+                  Actions.invoke(inputContext, const DismissIntent());
+                  return KeyEventResult.handled;
+                }
+                return KeyEventResult.ignored;
+              }
+
+              focusNode.onKeyEvent = handleKey;
+              return () {
+                if (focusNode.onKeyEvent == handleKey) {
+                  focusNode.onKeyEvent = previous;
+                }
+              };
+            }, [focusNode]);
+            return DropdownMenu<T>(
+              focusNode: focusNode,
+              menuController: menuController,
+              controller: controller,
+              enabled: enabled,
+              enableFilter: enableFilter,
+              menuHeight: menuHeight,
+              decorationBuilder: (context, menu) => InputDecoration(
+                hintText: hintText,
+                prefixIcon: leadingIcon,
+                suffixIcon: Padding(
+                  padding: inputDecorationTheme?.isCollapsed == true
+                      ? EdgeInsets.zero
+                      : const EdgeInsets.all(4),
+                  child: IconButton(
+                    focusNode: toggleFocusNode,
+                    isSelected: menu.isOpen,
+                    tooltip: menu.isOpen ? "Close choices" : "Open choices",
+                    constraints: inputDecorationTheme?.suffixIconConstraints,
+                    icon: trailingIcon ?? const Icon(Icons.arrow_drop_down),
+                    selectedIcon: const Icon(Icons.arrow_drop_up),
+                    onPressed: !enabled
+                        ? null
+                        : () {
+                            if (menu.isOpen) {
+                              menu.close();
+                              inputFieldController.endInteraction();
+                            } else {
+                              inputFieldController.beginInteraction();
+                            }
+                          },
+                  ),
+                ),
+              ),
+              textStyle: textStyle,
+              textAlign: textAlign,
+              initialSelection: selected,
+              onSelected: (value) {
+                if (value == null &&
+                    onCustomValue != null &&
+                    controller.text.isNotEmpty) {
+                  onCustomValue!(controller.text);
+                } else {
+                  onSelected?.call(value);
+                }
+                if (value != null) {
+                  inputFieldController.endInteraction();
+                }
+                if (focusNode.hasFocus) {
+                  inputFieldController.requestSurroundingFocus();
+                }
+              },
+              dropdownMenuEntries: dropdownMenuEntries,
+              inputDecorationTheme: inputDecorationTheme,
+              menuStyle: menuStyle,
+              expandedInsets: EdgeInsets.zero,
+            );
           },
-          dropdownMenuEntries: dropdownMenuEntries,
-          inputDecorationTheme: inputDecorationTheme,
-          menuStyle: menuStyle,
-          expandedInsets: EdgeInsets.zero,
         ),
       ),
     );

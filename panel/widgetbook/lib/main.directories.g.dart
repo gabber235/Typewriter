@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_import, prefer_relative_imports, directives_ordering
 
-// GENERATED CODE. DO NOT MODIFY BY HAND
+// GENERATED CODE - DO NOT MODIFY BY HAND
 
 // **************************************************************************
 // AppGenerator
@@ -136,6 +136,8 @@ import 'package:widgetbook_workspace/stories/shared/ui/components/countdown_badg
     as _widgetbook_workspace_stories_shared_ui_components_countdown_badge_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/drag_handle.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_drag_handle_stories;
+import 'package:widgetbook_workspace/stories/shared/ui/components/dropdown.stories.dart'
+    as _widgetbook_workspace_stories_shared_ui_components_dropdown_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/elastic_switcher.stories.dart'
     as _widgetbook_workspace_stories_shared_ui_components_elastic_switcher_stories;
 import 'package:widgetbook_workspace/stories/shared/ui/components/empty_screen.stories.dart'
@@ -1525,6 +1527,17 @@ final directories = <_widgetbook.WidgetbookNode>[
                     builder:
                         _widgetbook_workspace_stories_shared_ui_components_drag_handle_stories
                             .dragHandleVerticalUseCase,
+                  ),
+                ],
+              ),
+              _widgetbook.WidgetbookComponent(
+                name: 'Dropdown<Object>',
+                useCases: [
+                  _widgetbook.WidgetbookUseCase(
+                    name: 'Focus and keyboard interaction',
+                    builder:
+                        _widgetbook_workspace_stories_shared_ui_components_dropdown_stories
+                            .dropdownInteractionUseCase,
                   ),
                 ],
               ),

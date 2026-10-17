@@ -6,6 +6,112 @@ import "package:typewriter_panel/typewriter_panel.dart";
 import "../../../support/test_utils.dart";
 
 void main() {
+  for (final configured in [false, true]) {
+    testWidgets(
+      "dropdown retains panel chrome with sparse overrides $configured",
+      (tester) async {
+        final fixture = _Fixture(
+          skir.DataValue.wrapStringValue(""),
+          skir.ScalarKind.text,
+        );
+        final input =
+            (skir.SelectControl.mutable()
+                  ..control =
+                      (fixture.control.toMutable()
+                            ..label = _text("Realm target"))
+                          .toFrozen()
+                  ..options = [
+                    (skir.SelectOption.mutable()
+                          ..optionId = "paper"
+                          ..label = _text("typewritermc:paper")
+                          ..value = _text("paper"))
+                        .toFrozen(),
+                  ]
+                  ..appearance = configured
+                      ? (skir.InputAppearance.mutable()
+                              ..density = skir.ControlDensity.compact)
+                            .toFrozen()
+                      : null
+                  ..popup = configured
+                      ? (skir.PopupAppearance.mutable()
+                              ..fill = skir.PresentationColor.wrapValue(
+                                _literal(
+                                  skir.DataValue.wrapInteger("4278190335"),
+                                ),
+                              ))
+                            .toFrozen()
+                      : null)
+                .toFrozen();
+        await fixture.pump(
+          tester,
+          skir.PresentationElement.wrapSelectInput(input),
+        );
+        final context = tester.element(find.byType(Dropdown<String>));
+        final theme = Theme.of(context).dropdownMenuTheme;
+        final decoration = tester
+            .widget<InputDecorator>(find.byType(InputDecorator))
+            .decoration;
+        expect(decoration.filled, isTrue);
+        expect(decoration.fillColor, theme.inputDecorationTheme!.fillColor);
+        expect(decoration.border, theme.inputDecorationTheme!.border);
+        expect(
+          decoration.contentPadding,
+          theme.inputDecorationTheme!.contentPadding,
+        );
+        expect(
+          decoration.isDense,
+          configured || theme.inputDecorationTheme!.isDense,
+        );
+        expect(decoration.prefixIcon, isNull);
+        expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
+        expect(fixture.value, skir.DataValue.wrapStringValue(""));
+
+        if (configured) {
+          tester
+              .widget<InputFieldContainer>(find.byType(InputFieldContainer))
+              .controller
+              .requestSurroundingFocus();
+          await tester.pump();
+          await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+          await tester.pump();
+          expect(
+            tester
+                .widget<TextField>(find.byType(TextField))
+                .focusNode!
+                .hasFocus,
+            isTrue,
+          );
+          await tester.enterText(find.byType(TextField), "paper");
+          await tester.pump();
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        } else {
+          await tester.tap(find.byType(TextField));
+        }
+        await tester.pumpAndSettle();
+        final menu = tester.widget<MenuAnchor>(find.byType(MenuAnchor));
+        expect(menu.style!.padding, theme.menuStyle!.padding);
+        expect(menu.style!.shape, theme.menuStyle!.shape);
+        expect(
+          menu.style!.backgroundColor!.resolve({}),
+          configured
+              ? const Color(0xff0000ff)
+              : theme.menuStyle!.backgroundColor!.resolve({}),
+        );
+        expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
+        expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
+        if (configured) {
+          await tester.testTextInput.receiveAction(TextInputAction.done);
+        } else {
+          await tester.tap(find.text("typewritermc:paper").last);
+        }
+        await tester.pumpAndSettle();
+        expect(fixture.value, skir.DataValue.wrapStringValue("paper"));
+        expect(menu.controller!.isOpen, isFalse);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   for (final wrapped in [false, true]) {
     testWidgets(
       "leading glyph is centered and inherits icon defaults with column $wrapped",

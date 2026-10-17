@@ -763,14 +763,12 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
             },
           );
           final externalSuffix = _interactiveAdornment(content?.suffix);
-          final dropdownLeading = _entryLeading(
-            context,
-            control,
-            content,
-            scope,
-            style,
-            Icons.arrow_drop_down,
-          );
+          // DropdownMenu replaces its component themes when overrides are
+          // supplied. Apply authored properties over the panel defaults.
+          final dropdownTheme = DropdownMenuTheme.of(context);
+          final inputTheme =
+              dropdownTheme.inputDecorationTheme ??
+              Theme.of(context).inputDecorationTheme;
           final dropdown = Dropdown<String>(
             key: ValueKey("${node.nodeId}.input"),
             selected: selected,
@@ -781,21 +779,24 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
             hintText: _entryPlaceholder(content, scope),
             textStyle: style.valueStyle,
             textAlign: style.alignment,
-            leadingIcon: externalLeading ? null : dropdownLeading,
+            leadingIcon: externalLeading ? null : leading,
             trailingIcon: externalSuffix ? null : suffix,
             inputDecorationTheme: InputDecorationTheme(
-              fillColor: style.decoration.fillColor,
-              filled: style.decoration.filled,
-              border: style.decoration.border,
-              enabledBorder: style.decoration.enabledBorder,
-              focusedBorder: style.decoration.focusedBorder,
-              disabledBorder: style.decoration.disabledBorder,
-              errorBorder: style.decoration.errorBorder,
-              contentPadding: style.padding,
-              isDense: style.dense ?? false,
-              hintStyle: style.decoration.hintStyle,
+              data: inputTheme.copyWith(
+                fillColor: style.decoration.fillColor,
+                filled: style.decoration.filled,
+                border: style.decoration.border,
+                enabledBorder: style.decoration.enabledBorder,
+                focusedBorder: style.decoration.focusedBorder,
+                disabledBorder: style.decoration.disabledBorder,
+                errorBorder: style.decoration.errorBorder,
+                focusedErrorBorder: style.decoration.focusedErrorBorder,
+                contentPadding: style.padding,
+                isDense: style.dense,
+                hintStyle: style.decoration.hintStyle,
+              ),
             ),
-            menuStyle: MenuStyle(
+            menuStyle: (dropdownTheme.menuStyle ?? const MenuStyle()).copyWith(
               backgroundColor: popup?.fill == null
                   ? null
                   : WidgetStatePropertyAll(colors.resolve(popup!.fill!, scope)),
@@ -845,7 +846,7 @@ extension _PortableScalarInputRendering on PortablePresentationNodeRenderer {
           );
           return _entryComposition(
             child: dropdown,
-            leading: externalLeading ? dropdownLeading : null,
+            leading: externalLeading ? leading : null,
             trailing: externalSuffix ? suffix : null,
           );
         },
