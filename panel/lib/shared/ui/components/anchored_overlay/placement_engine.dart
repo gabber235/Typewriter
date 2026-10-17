@@ -6,7 +6,7 @@ enum OverflowResolutionStep { flip, shift, resize }
 /// Geometry and configuration consumed by [computeAnchoredPlacement].
 ///
 /// All rectangles and offsets use the overlay's coordinate space. The child
-/// size is its unconstrained measured size before overflow resizing.
+/// size is its measured size before applying anchor and boundary constraints.
 class AnchoredOverlayPlacementInput {
   const AnchoredOverlayPlacementInput({
     required this.anchorRect,
@@ -48,8 +48,9 @@ class AnchoredOverlayPlacementResult {
 /// Resolves an overlay position without touching the render tree.
 ///
 /// The engine tries the preferred side first. If it does not fit, it tries the
-/// opposite side, then shifts the result into the boundary, and finally
-/// resizes it when the boundary is smaller than the child.
+/// opposite side and accepts the flip only if the whole child fits. Otherwise
+/// it keeps the preferred side, shifts into the boundary, and finally resizes
+/// when the boundary is smaller than the child.
 AnchoredOverlayPlacementResult computeAnchoredPlacement(
   AnchoredOverlayPlacementInput input,
 ) {

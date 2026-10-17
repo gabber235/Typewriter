@@ -1,13 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-// Coordinates focus movement between visible panes in the panel shell.
-//
-// A Pane registers its focus scope and rendered bounds with the nearest
-// GlobalPaneNavigator. Directional shortcuts are evaluated after layout,
-// using the pane bounds rather than the bounds of an individual child. The
-// primary pane supplies the initial virtual origin, while the last active
-// pane supplies the fallback origin when focus is temporarily absent.
-
 class _PaneRegistration {
   _PaneRegistration({required this.scope});
 
@@ -45,6 +37,13 @@ class _PaneSnapshot {
   final Rect bounds;
 }
 
+/// Coordinates focus movement between visible panes in the panel shell.
+///
+/// A Pane registers its focus scope and rendered bounds with the nearest
+/// GlobalPaneNavigator. Directional shortcuts are evaluated after layout,
+/// using the pane bounds rather than the bounds of an individual child. The
+/// primary pane supplies the initial virtual origin, while the last active
+/// pane supplies the fallback origin when focus is temporarily absent.
 class _PaneCoordinator extends ChangeNotifier {
   final LinkedHashSet<_PaneRegistration> _registrations =
       LinkedHashSet<_PaneRegistration>.identity();

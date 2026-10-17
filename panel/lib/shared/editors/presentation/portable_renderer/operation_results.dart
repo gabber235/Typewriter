@@ -50,6 +50,7 @@ abstract class PortableOperationState with _$PortableOperationState {
 /// A newer request supersedes older completions. Known input changes permanently
 /// retire their request tokens, and disposal prevents completion notifications.
 /// The renderer or explicit scope caller owns this object's lifetime.
+/// Retiring feedback never cancels an operation or rolls back its host edit.
 class PortableOperationResults extends ValueNotifier<PortableOperationState> {
   PortableOperationResults() : super(const PortableOperationState());
   bool _closed = false;

@@ -187,6 +187,18 @@ sealed class EditorPartPresentationSelection
       MissingEditorPartPresentation;
 }
 
+/// Interprets one published editor catalog snapshot for panel consumers.
+///
+/// Published types already contain effective fields and ancestor templates.
+/// This owner applies their generic arguments, checks readiness and readability,
+/// resolves reference contracts and selects presentation material. It also
+/// exposes canonical read models from their reserved namespace. It does not
+/// fetch catalogs or own editable resource state.
+///
+/// Presentation selection distinguishes absence, ambiguity and invalid material.
+/// Specificity precedes priority, and role fallback advances only when a role
+/// has no match. Invalid or conflicting winners stay visible as failures.
+/// Cached expression and inheritance checks belong to this snapshot instance.
 final class CheckedEditorCatalog {
   CheckedEditorCatalog(this.snapshot)
     : _types = {
@@ -304,6 +316,9 @@ final class CheckedEditorCatalog {
     return List.unmodifiable(ordered);
   }
 
+  /// Resolves the requested role through its breadth first fallback order.
+  /// A conflicting or unavailable winner ends resolution instead of falling
+  /// through to an unrelated representation.
   EditorPresentationSelection selectPresentation(
     skir.TypeSelection actual,
     skir.PresentationRole requested,
@@ -677,6 +692,9 @@ final class CheckedEditorCatalog {
     return definition == null ? null : published(definition);
   }
 
+  /// Applies effective field templates to the chosen type arguments.
+  /// Unfinished arguments leave individual field types unavailable; missing or
+  /// unready declarations expose no fields.
   List<AppliedEditorField> fields(skir.TypeSelection selection) {
     final definition = selected(selection);
     if (definition == null ||
@@ -690,6 +708,9 @@ final class CheckedEditorCatalog {
     ];
   }
 
+  /// Resolves a nested value path, using concrete named values when available.
+  /// Map rows require an item segment followed by a key or value branch.
+  /// Invalid paths or unresolved type applications return null.
   skir.TypeUse? valueTypeAt(
     skir.TypeSelection root,
     skir.ValuePath path, {
@@ -1284,6 +1305,9 @@ final class CheckedEditorCatalog {
         _ => false,
       };
 
+  /// Checks nominal readability and nullable widening for valid type uses.
+  /// This relation does not prove declaration readiness or argument bounds;
+  /// callers admitting external types must use [isReadyTypeUse] as well.
   bool isReadableAs(skir.TypeUse actual, skir.TypeUse expected) =>
       _isReadableAs(actual, expected, 0);
 

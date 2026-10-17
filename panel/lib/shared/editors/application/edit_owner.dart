@@ -2,20 +2,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/*
- * Editing is deliberately owned separately from persistence.
- *
- * The owner exposes the current local value and preserves its invariants while
- * presentation code edits it. A transactional implementation may also own a
- * canonical resource snapshot, a local draft, revision tracking, persistence
- * attempts, and reconciliation, but those states remain distinct. Callers must
- * use the operations here instead of mutating a value or coordinating saves
- * themselves. Implementations notify listeners after an observable state
- * change and release all owned interaction state from dispose.
- */
-
-/// Owns mutable typed values and reversible interactions, independently of
-/// saving.
+/// Exposes typed local values and reversible interaction to presentation.
+///
+/// Owners validate writes and notify listeners when their observable state
+/// changes. Resource drafts, revision tracking and save policy stay with the
+/// underlying editing workspace. A borrowed view may delegate to that owner,
+/// so disposing this interface need not dispose the resource draft.
 abstract interface class EditOwner implements Listenable {
   /// Describes the type used to validate values exposed by this owner.
   skir.TypeUse get rootType;
@@ -45,9 +37,9 @@ abstract interface class EditOwner implements Listenable {
 
   /// Opens a reversible interaction whose lifetime ends with its session.
   ///
-  /// Implementations serialize overlapping interactions and keep their
-  /// ownership local. Closing the session restores or commits according to the
-  /// interaction contract, without making persistence implicit for callers.
+  /// Sessions gate their owner's save policy while the interaction is active.
+  /// [EditorInteractionSession.commit] and [EditorInteractionSession.cancel]
+  /// define how the interaction leaves its local draft boundary.
   EditorInteractionSession beginInteraction(skir.ValuePath path);
 
   /// Releases listeners, interaction gates, and other owned resources.

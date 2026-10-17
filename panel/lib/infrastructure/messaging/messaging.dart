@@ -1,8 +1,8 @@
 /// Panel boundaries for authenticated NATS transport and typed Skir messaging.
 ///
 /// The transport layer owns connection lifetime and failure translation. The
-/// protocol layer owns serialization, ordered projection recovery, and mutation
-/// submission identity.
+/// protocol layer owns serialization and ordered projection recovery. Mutation
+/// adapters transfer captured submissions to the shared local work owner.
 library;
 
 export "api_exception.dart";

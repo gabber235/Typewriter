@@ -1,3 +1,5 @@
+-- Canonical membership edges. The original founder must remain a member while the organization
+-- exists, and at least one member must retain the founder role. These are separate invariants.
 DEFINE TABLE OVERWRITE member_of TYPE RELATION FROM user TO organization ENFORCED SCHEMAFULL
     PERMISSIONS NONE;
 

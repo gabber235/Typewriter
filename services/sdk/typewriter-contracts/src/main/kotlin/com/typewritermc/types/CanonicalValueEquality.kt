@@ -15,6 +15,10 @@ interface CanonicalValueEquality {
     fun hash(value: CompleteValue): CanonicalValueHash
 }
 
+/**
+ * Compares admitted values by concrete schema and representation, independently of editor collection identities.
+ * Lists preserve order; sets and maps compare sorted representation keys. Repeated entries remain significant.
+ */
 object DefaultCanonicalValueEquality : CanonicalValueEquality {
     override fun equivalent(
         left: CompleteValue,

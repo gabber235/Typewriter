@@ -1,6 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Builds a row in an [AnimatedTable].
 /// Builds one active row. The animation is complete for settled rows and
 /// runs forward for inserted rows.
 typedef AnimatedTableRowBuilder = TableRow Function(
@@ -9,14 +8,12 @@ typedef AnimatedTableRowBuilder = TableRow Function(
   Animation<double> animation,
 );
 
-/// Builds a row while it is being removed from an [AnimatedTable].
 /// Builds a row that remains available while its removal animation reverses.
 typedef AnimatedTableRemovedRowBuilder = TableRow Function(
   BuildContext context,
   Animation<double> animation,
 );
 
-/// Builds a transition for a table cell or empty state.
 /// Builds the transition applied independently to each cell or empty state.
 typedef AnimatedTableTransitionBuilder = Widget Function(
   BuildContext context,

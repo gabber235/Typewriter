@@ -377,6 +377,10 @@ final class _AuthoredTypeSearchResultItem extends StatelessWidget {
   }
 }
 
+/// Keeps tentative type arguments outside the authored document until the user
+/// reviews Realm repair effects. The caller owns preparation and staging of the
+/// accepted preview; this widget reports that local admission result, not saved
+/// or published state. Catalog checking owns type argument admissibility.
 final class AuthoredTypeArgumentEditor extends StatefulWidget {
   const AuthoredTypeArgumentEditor({
     required this.selection,

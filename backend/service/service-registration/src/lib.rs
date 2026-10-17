@@ -52,7 +52,6 @@ impl Guest for Component {
     }
 }
 
-/// Routes generated request and event contracts to their typed handlers.
 async fn handle_message_async(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
     dispatch_event_route!(msg, ServiceHeartbeatRoute, heartbeat::handle_heartbeat);
     dispatch_route!(msg, ServiceBindingQueryRoute, status::handle_binding);

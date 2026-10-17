@@ -90,6 +90,13 @@ BoundPresentationHost _topologyRuntimePortableHost({
   );
 }
 
+/// Joins captured host observations with caller owned identity and configuration
+/// editors for the inspector.
+///
+/// Configuration toggles replace local named variants and all configuration
+/// bindings share [configurationOwner]. [configurationOnly] omits identity and
+/// runtime facts for a combined selection; callers supply the common targets
+/// and eligible external Realms for that selection.
 BoundPresentationHost topologyHostPortableHost({
   required TopologyHost host,
   required Service? service,

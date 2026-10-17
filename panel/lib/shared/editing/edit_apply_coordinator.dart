@@ -20,8 +20,13 @@ abstract interface class EditPreparedApply {
   Future<void> start(MutationReservation reservation);
 }
 
-/// Prepares every member before starting any independent server request.
-/// A reservation is transferred into shared leases, without claiming atomic writes.
+/// Coordinates selection apply across independent workspace save lanes.
+///
+/// Every member must belong to the same local work owner. Preparation claims
+/// lanes, reserves the full resource union, refreshes observations and captures
+/// every member before sending. Requests in the same lane run serially; other
+/// lanes may proceed together and settle independently. This preparation
+/// barrier does not make the server writes one transaction.
 final class EditApplyCoordinator {
   const EditApplyCoordinator();
   Future<void> apply(Iterable<EditApplyRequest> requests) async {

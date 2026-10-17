@@ -4,6 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "authored_local_rules.freezed.dart";
 
+/// Projects portable configuration rules onto one resource's working values.
+///
+/// Local feedback follows concrete collection occurrences and retains target
+/// locations even when values are unfinished. It is independent of Realm check
+/// execution and cannot establish saved publication readiness.
 @freezed
 abstract class AuthoredRuleProjection with _$AuthoredRuleProjection {
   const factory AuthoredRuleProjection({

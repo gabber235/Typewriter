@@ -4,6 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns one captured invocation through input, confirmation and local admission.
 /// Target identity is independent of subsequent changes to global selection.
+/// Realm previews are proposals over a captured saved observation and local
+/// overlay. Confirmation precedes local staging; selection and route recovery
+/// run only after staging succeeds. Navigation, catalog and access changes
+/// expire prompts, while invocation and input revisions reject unrelated replies.
 final class ResourceOperationRunner {
   ResourceOperationRunner({
     required this.ref,

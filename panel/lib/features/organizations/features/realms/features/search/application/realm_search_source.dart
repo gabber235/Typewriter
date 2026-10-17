@@ -8,6 +8,9 @@ const realmSearchResultType = SearchResultType(
   label: "Realm",
 );
 
+/// Indexes the supplied topology projection without probing runtime readiness.
+/// Commands separately gate opening a Realm on availability; retained results
+/// may remain visible while the projection reloads or reports an error.
 final class RealmsSearchSource(
   final ValueListenable<AsyncValue<List<TopologyRealm>>> realms,
 ) implements SearchSource {

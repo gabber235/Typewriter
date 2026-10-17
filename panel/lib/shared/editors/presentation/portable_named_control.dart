@@ -22,6 +22,9 @@ typedef PortableControlUnavailableBuilder = Widget Function(
   String message,
 );
 
+/// A named value projection whose replacements retain its actual type and send
+/// expression read witnesses through the original binding setter. The enclosing
+/// host retains ownership of admission, staging and persistence.
 @freezed
 abstract class PortableNamedPayload with _$PortableNamedPayload {
   const factory PortableNamedPayload({

@@ -2,12 +2,6 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "models.freezed.dart";
 
-/// Immutable contracts shared by search sources, controllers, and widgets.
-///
-/// Sources publish a [SearchSourceSnapshot] containing a hierarchical
-/// [SearchNode] tree. Controllers turn raw input into [SearchQueryContext] and
-/// coordinate interactions against result IDs still present in that tree.
-
 /// A selector extracted from the normalized query.
 @freezed
 abstract class SearchParsedSelector with _$SearchParsedSelector {
@@ -362,6 +356,9 @@ extension SearchSurfaceEffects on Set<SearchSurfaceEffect> {
   }
 }
 
+/// An application side effect returned by a command for its surface host.
+/// Execution belongs to registered [SearchHostEffectExecutor] instances, keeping
+/// router and feature ownership out of the shared search controller.
 abstract interface class SearchHostEffect {}
 
 /// Identifies a result whose detail should be loaded.

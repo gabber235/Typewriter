@@ -14,6 +14,11 @@ final class ResizeDimensionToBoundIntent extends Intent {
   final DimensionResizeBound bound;
 }
 
+/// Shared bounded resize policy for pointer, keyboard, and semantic actions.
+///
+/// The caller owns the current size. Relative updates pass through
+/// [sizeResolver] before clamping; absolute updates and bound jumps only clamp.
+/// Requesting a bound that was not supplied does nothing.
 final class DimensionResizeOperation {
   const DimensionResizeOperation({
     required this.getSize,

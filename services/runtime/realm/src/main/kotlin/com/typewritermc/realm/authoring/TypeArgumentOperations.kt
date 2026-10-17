@@ -75,7 +75,14 @@ internal interface TypeArgumentOperations {
     suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult
 }
 
-/** Previews repairs and prepares validated edits without persisting them. */
+/**
+ * Previews a resource type argument change together with repairs to values and incident links.
+ *
+ * The resource definition remains fixed. Incompatible values become unfilled, compatible nested records can
+ * be retagged, and invalid links become disconnect intents. Preparation checks current expectations and
+ * regenerates the preview before returning an edit, so caller supplied repair metadata is never trusted as
+ * authority. Persistence remains a separate authoring commit.
+ */
 internal class DefaultTypeArgumentOperations(
     private val snapshots: AuthoringViewStore,
 ) : TypeArgumentOperations {

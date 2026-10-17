@@ -1,3 +1,8 @@
+// Portable type declarations, applied schemas, and authored values form the shared model
+// interpreted by Realm and panel code. Templates can contain declaration parameters;
+// TypeUse contains closed applications. Authored values retain concrete named type evidence,
+// stable collection identities, and unfinished input independently of native runtime objects.
+
 import { Duration } from "kernel/v1/duration.skir";
 
 struct DeclaredTypeId(810100001) {
@@ -59,6 +64,7 @@ struct NamedTypeTemplate(810100011) {
 struct NullableTypeTemplate(810100012) {
   value: TypeTemplate = 0;
 }
+/// Declaration type expression that can retain references to parameters owned by a definition.
 enum TypeTemplate(810100013) {
   parameter: ParameterKey = 1;
   named: NamedTypeTemplate = 2;
@@ -72,6 +78,7 @@ struct NamedTypeUse(810100014) {
 struct NullableTypeUse(810100015) {
   value: TypeUse = 0;
 }
+/// Closed type application with concrete arguments, suitable for resolution in a checked catalog.
 enum TypeUse(810100016) {
   named: NamedTypeUse = 1;
   nullable: NullableTypeUse = 2;
@@ -133,6 +140,8 @@ enum RepresentationTemplate(810100029) {
   enumeration: EnumerationRepresentationTemplate = 5;
   link: LinkRepresentationTemplate = 6;
 }
+/// Canonical declaration meaning before application of generic arguments and inherited fields.
+/// Display metadata, editor controls, and native constructors are owned by adjacent catalog services.
 struct TypeDefinition(810100030) {
   id: TypeDefinitionId = 0;
   parameters: [TypeParameter] = 1;
@@ -143,9 +152,13 @@ struct TypeDefinition(810100030) {
 struct ResourceId(810100031) {
   value: string = 0;
 }
+/// Stable authored collection occurrence identity. Reordering preserves it; equal values can
+/// still occupy different list positions or map rows with different identities.
 struct ItemId(810100032) {
   value: string = 0;
 }
+/// Targets an authored resource and optionally the exact inverse value location.
+/// An absent opposite path allows a relation authored on only one side.
 struct LinkTarget(810100033) {
   resource: ResourceId = 0;
   opposite: ValuePath? = 1;
@@ -183,6 +196,9 @@ struct MapPayload(810100041) {
 struct DurationValue(810100042) {
   value: Duration = 0;
 }
+/// Portable authored content. unfilled means input is unfinished, while null is an explicit
+/// nullable value. Named wrappers retain concrete type evidence; collection item identities
+/// are independent of value equality. Schema and completeness checks apply separately.
 enum DataValue(810100043) {
   unfilled = 1;
   null = 2;
@@ -212,10 +228,14 @@ struct PendingTypeSelection(810100045) {
   definition: TypeDefinitionId = 0;
   arguments: [ArgumentSelection] = 1;
 }
+/// A resource configuration can retain unfinished generic arguments without inventing a closed type.
+/// Partial schema resolution exposes known fields while dependent fields await those arguments.
 enum TypeSelection(810100046) {
   complete: NamedTypeUse = 1;
   pending: PendingTypeSelection = 2;
 }
+/// Canonical authored configuration and fields for one resource, before native construction.
+/// It can be structurally valid while containing unfinished input that blocks publication.
 struct AuthoringRecord(810100047) {
   configuration: TypeSelection = 0;
   fields: [FieldValue|name] = 1;
@@ -232,6 +252,8 @@ struct ConversionId(810100049) {
 struct CapabilityId(810100050) {
   value: string = 0;
 }
+/// Opaque identity for one assembled catalog incarnation. Compare for equality, not ordering;
+/// resource observations and publication identities have separate lifecycles.
 struct CatalogGeneration(810100051) {
   value: string = 0;
 }
@@ -253,6 +275,8 @@ struct RuleId(810100056) {
   local_index: int32 = 1;
 }
 
+/// Exact path within one resource or bound value. Collection segments use stable item identity,
+/// and map_key or map_value selects a branch after the map row item segment.
 struct ValuePath(810100057) {
   segments: [PathSegment] = 0;
 }
@@ -281,6 +305,8 @@ enum FieldPatternSegment(810100063) {
   keys = 3;
   values = 4;
 }
+/// Schema pattern expanded against an owning occurrence. Collection wildcards describe many
+/// concrete value paths and do not themselves identify an editable item.
 struct RelativeFieldPattern(810100064) {
   segments: [FieldPatternSegment] = 0;
 }
@@ -360,6 +386,8 @@ struct AppliedSchema(810100084) {
   fields: [ResolvedField|key] = 2;
   ancestors: [NamedTypeUse] = 3;
 }
+/// Applied type evidence bound to a specific checked catalog generation.
+/// A resolved schema is separate from proving that a particular authored value is complete.
 struct CheckedType(810100085) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;

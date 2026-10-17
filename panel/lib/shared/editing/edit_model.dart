@@ -2,7 +2,12 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "edit_model.freezed.dart";
 
-/// Stateless meaning of edits. The workspace owns every live operation.
+/// Domain semantics used to rebuild and validate an editing workspace.
+///
+/// Observation admission defines freshness and contract consistency. Replay
+/// describes an edit against a new baseline, while semantic read witnesses
+/// expose dependencies on preceding local edits. Implementations supply these
+/// rules without owning timers, reservations, or request delivery.
 abstract interface class EditModel<S, E> {
   EditObservationResult<S> acceptObservation(S known, S incoming);
   bool sameContract(S left, S right);
@@ -22,7 +27,12 @@ abstract interface class EditRead<S> {
   bool differs(S before, S after);
 }
 
-/// Encodes one real server request from an immutable capture.
+/// Adapts an editing workspace to its actual persistence boundary.
+///
+/// Reservations must cover the resources that preparation can capture. The
+/// workspace observes under that reservation before [prepare] freezes a request.
+/// [refresh] recovers acknowledged state after a save whose response did not
+/// include its resulting observation.
 abstract interface class EditPersistence<S, E> {
   Set<Object> reservationsFor(Iterable<E> pendingEdits);
   Future<S> observeForCommit(S known);

@@ -27,7 +27,13 @@ import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
 import java.security.MessageDigest
 
-/** Lowers allocations before exposing staged content, so later replay needs no allocation history. */
+/**
+ * Owns the request local graph and normalized intent sequence used during operation preparation.
+ *
+ * New counterpart records and collection items are allocated before staged content becomes visible to later
+ * callbacks. The emitted edit therefore replays without allocation history. [finish] validates the complete
+ * graph and checks that replay reproduces staged resources; the enclosing edit context adds baseline evidence.
+ */
 internal class AuthoringPlanningSession(
     val baseline: AuthoringView,
     private val invocationId: String,

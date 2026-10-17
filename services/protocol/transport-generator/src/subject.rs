@@ -21,6 +21,10 @@ pub enum Token {
     Parameter(Parameter),
 }
 
+/// A concrete subject shape with named identity captures, never authored broker wildcards.
+/// Parsing validates tokens and capture uniqueness. Scope admission is separate: request endpoints
+/// require every scope identity, while event and update endpoints may use a subset. Bounded updates
+/// additionally require a final transfer capture; grant emission decides when it becomes a wildcard.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "String", into = "String")]
 pub struct SubjectTemplate(Vec<Token>);

@@ -81,6 +81,10 @@ skir.PublishedType _draftPublished(
   display: null,
 );
 
+/// Local editor schema for the host draft, separate from a Realm catalog.
+///
+/// Named variants preserve disabled and enabled choices while the snapshot
+/// translates the resulting value into a complete host configuration command.
 final _hostConfigurationCatalog = skir.EditorCatalogWireSnapshot(
   resourceOperations: const [],
   resourceOperationContributions: const [],

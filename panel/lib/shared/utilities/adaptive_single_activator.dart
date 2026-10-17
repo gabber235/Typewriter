@@ -5,9 +5,8 @@ bool get isApple =>
     defaultTargetPlatform == TargetPlatform.iOS ||
     defaultTargetPlatform == TargetPlatform.macOS;
 
-/// If the user is on an Apple platform, this will return true if the [meta]
-/// key is pressed. Otherwise, it will return true if the [control] key is
-/// pressed.
+/// Whether either Command key is pressed on Apple platforms, or either Control
+/// key is pressed on other platforms.
 bool get hasOverrideDown =>
     HardwareKeyboard.instance.isLogicalKeyPressed(
           LogicalKeyboardKey.controlLeft,

@@ -242,6 +242,9 @@ impl Manifest {
         }
     }
 
+    /// Admits route identity, channel grants, endpoint captures, and referenced compiler bindings.
+    /// Fails the whole generation on an invalid route. Emitters perform additional target checks,
+    /// including which scope and role combinations their runtime supports.
     pub fn resolve(self, symbols: &CanonicalSymbols) -> Result<Vec<ResolvedRoute>, String> {
         let mut names = BTreeSet::new();
         for route in &self.routes {

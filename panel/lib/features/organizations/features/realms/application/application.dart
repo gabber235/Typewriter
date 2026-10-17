@@ -6,10 +6,11 @@
 /// organization and an online realm exist. NATS adapters translate between
 /// those application contracts and the realm service wire protocols.
 ///
-/// Confirmed observations belong to [AuthoringSession]. Catalog snapshots
-/// belong to [RealmEditorCatalogCache]. [RealmEditing] owns working
-/// values, grouped operations, and save lifecycle across all Realm views.
-/// The realm service remains authoritative for durable content.
+/// [AuthoringSession] pairs confirmed observations with their checked catalog.
+/// [RealmEditing] adapts commands into the [EditingWorkspace] retained by the
+/// application local work driver. That workspace owns working values, grouped
+/// operations, and save lifecycle across Realm views. The Realm service remains
+/// authoritative for durable content.
 
 library;
 

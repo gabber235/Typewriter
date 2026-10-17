@@ -582,6 +582,13 @@ class HostRolloutParticipant(
         }
     }
 
+    /**
+     * Owns the ordered runtimes and combined health of one local projection.
+     *
+     * Activation and resume follow runtime order; quiesce and close reverse it. A failed transition compensates
+     * only completed steps, in reverse order, with a deadline per step. Failed closures retain their runtime
+     * handles for retry so the containing participant can keep ownership until cleanup succeeds.
+     */
     internal class LocalProjection(
         private val runtimes: List<LoadedHostedRuntime>,
         scope: CoroutineScope,

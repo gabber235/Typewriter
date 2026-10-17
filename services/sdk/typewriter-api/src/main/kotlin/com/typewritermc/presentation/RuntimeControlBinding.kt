@@ -18,6 +18,12 @@ import skirout.editor.v1.presentation.PresentationProperties as WirePresentation
 import skirout.editor.v1.type_catalog.ExpressionBindingId as WireExpressionBindingId
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
+/**
+ * Captures one bound field editor and publishes it once after its configuration finishes.
+ * An explicit control and a named presentation reference are mutually exclusive. With neither selected, publication
+ * requests the default presentation and preserves the field's binding, decorations, and read or write policy.
+ * Nested collection editors receive their slot's binding instead of borrowing the owner's field path.
+ */
 internal class RuntimeControlBinding(
     private val state: PresentationBuildState,
     private val target: MutableList<PresentationNode>,

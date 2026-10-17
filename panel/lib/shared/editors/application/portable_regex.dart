@@ -22,6 +22,9 @@ final class PortableRegexUnsupported extends PortableRegexNormalization {
   final String reason;
 }
 
+/// Admits the shared regex subset and expands host dependent shorthands to
+/// explicit character classes. Ready means normalization succeeded; compilation
+/// can still reject malformed ranges or exceed the instruction budget.
 extension PortableRegexString on String {
   PortableRegexNormalization normalizePortableRegex() {
     final pattern = this;
@@ -426,6 +429,13 @@ const _portableWhitespace =
 const _portableDot = r"[^\n\r\u2028\u2029]";
 const _portableLiteralEscapes = r"fnrt\.*+?^${}()|[]/-";
 
+/// Executes a normalized pattern over Unicode code points using an explicit
+/// instruction machine. Call [PortableRegexString.normalizePortableRegex] first;
+/// [compile] assumes the subset restrictions have already been checked.
+///
+/// Matching and replacement charge work through the caller supplied step hook,
+/// allowing the enclosing expression evaluator to enforce its shared budget.
+/// [matches] requires the whole input, while [find] and [containsMatchIn] search.
 final class PortableRegexMatcher {
   PortableRegexMatcher._(this._instructions, this._start, this.groupCount);
 
@@ -659,6 +669,8 @@ final class PortableRegexMatcher {
   }
 }
 
+/// Capture offsets are Unicode code point positions, not UTF16 string offsets.
+/// [group] must receive the same input used for matching.
 final class PortableRegexMatch {
   const PortableRegexMatch(this.captures);
 

@@ -2,7 +2,10 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Coordinates a navigation request with controls that may mount afterwards.
+/// Coordinates the latest navigation request with controls that may mount later.
+/// Requests stay pending until a matching ancestor location registers. The most
+/// specific mounted target wins, optionally restricted to a presentation role.
+/// The caller owns disposal and can invalidate a request through isCurrent.
 class PortableLocationRevealController {
   final Map<Object, _LocationTarget> _targets = {};
   skir.ValueLocation? _pending;

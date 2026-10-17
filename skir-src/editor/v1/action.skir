@@ -1,3 +1,8 @@
+// Editor actions describe intent embedded in portable presentations. Local actions target
+// editable bindings, Realm actions invoke host capabilities, navigation identifies resource
+// destinations, and authoring actions enter selection preparation. The panel dispatch owner
+// resolves bindings and current edit scope before applying an action.
+
 import { BindingRef } from "editor/v1/binding.skir";
 import { ExpressionNode } from "editor/v1/expression.skir";
 import {
@@ -61,6 +66,8 @@ struct ChooseFormAction(810700010) {
   type: TypeUse = 1;
 }
 
+/// Mutations of bound editor values. Collection item identities identify occurrences and
+/// anchors; the owning edit scope decides staging and commit behavior.
 enum LocalEditorAction(810700011) {
   set_value: SetValueAction = 1;
   insert_list_item: InsertListItemAction = 2;
@@ -97,6 +104,8 @@ struct ResourceNavigationAction(810700016) {
   mode: ResourceNavigationMode = 1;
 }
 
+/// Invokes catalog authoring preparation for evaluated resource targets and optional initial input.
+/// Its output is a proposed edit, rather than an immediate saved resource mutation.
 struct AuthoringCapabilityAction(810700017) {
   capability: CapabilityId = 0;
   targets: ExpressionNode = 1;

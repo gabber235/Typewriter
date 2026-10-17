@@ -9,7 +9,7 @@ const _iconifyHosts = [
   "api.unisvg.com",
 ];
 
-/// Renders an icon value from Iconify or sanitized inline SVG data.
+/// Renders Iconify icons or inline SVG admitted by [IconTextValidation].
 ///
 /// Invalid values and failed remote loads render a broken image icon. Iconify
 /// values are fetched from the public Iconify SVG endpoint and cached by the

@@ -13,6 +13,7 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutes
 import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 
+/** Rebinds long lived Realm services to one messaging session without transferring service lifecycle ownership. */
 internal class RealmRouteFactory(
     private val authoring: AuthoringRepository,
     private val authoringSearch: AuthoringSearchRepository,

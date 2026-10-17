@@ -9,7 +9,7 @@ import com.typewritermc.services.libs.registrar.RegistrarState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 
-/** Receives an operator-visible binding token. */
+/** Receives a binding token for explicit display to the operator. */
 fun interface BindingTokenOutput {
     /** Displays a registration token without assuming ownership of its lifetime. */
     fun display(token: String)
@@ -19,7 +19,7 @@ fun interface BindingTokenOutput {
 class RegistrarConsoleObserver(
     private val output: BindingTokenOutput,
 ) {
-    /** Collects state until cancelled and emits each distinct pending registration token once. */
+    /** Collects until cancelled, suppressing a pending token when it matches the most recently displayed token. */
     suspend fun observe(states: Flow<RegistrarSnapshot>) {
         var displayed: String? = null
         states.collect { snapshot ->

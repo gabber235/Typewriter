@@ -27,11 +27,7 @@ struct TopologyListRecord {
 }
 
 #[tracing::instrument(skip_all)]
-/// Decodes the topology watch request and returns the caller's organization snapshot.
-///
-/// The organization path parameter defines the query scope. The actor parameter is retained for
-/// tracing context supplied by the subject, while the request body currently carries no fields
-/// beyond the Skir boundary.
+/// Returns the topology for the organization admitted by the generated dispatcher.
 pub async fn handle_watch(
     _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::OrganizationActorScope,

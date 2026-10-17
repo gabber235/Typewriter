@@ -55,6 +55,15 @@ class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
         TypewriterTypeProcessor(environment.codeGenerator, environment.logger, environment.options)
 }
 
+/**
+ * Collects contributions across KSP rounds and publishes one provider index when processing finishes.
+ * Unresolved source graphs are deferred so contracts generated in earlier rounds can become inputs.
+ * Emission sets belong to this compilation and prevent duplicate files across those rounds.
+ *
+ * Source declarations own their SDK output. Dependency declarations are claimed only when explicitly
+ * imported or when the artifact opts into claiming its dependency closure. Generated adapters retain
+ * authored callbacks; catalog assembly and runtime binding remain the consumers' responsibility.
+ */
 private class TypewriterTypeProcessor(
     private val codeGenerator: CodeGenerator,
     private val logger: KSPLogger,

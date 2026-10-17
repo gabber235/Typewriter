@@ -2,7 +2,7 @@ part of "route.dart";
 
 /// Empty state shown when a book route has no selected page.
 ///
-/// Adding a page prepares and publishes a shared working resource, then opens
+/// Adding a page prepares and stages a shared working resource, then opens
 /// its editor through the same creation path as the sidebar.
 class EmptyBookPage extends ConsumerWidget {
   const EmptyBookPage({super.key});

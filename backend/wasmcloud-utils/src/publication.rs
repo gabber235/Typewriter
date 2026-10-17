@@ -2,6 +2,8 @@
 //!
 //! Captured facts preserve transaction history and sequence values. Refresh effects read current
 //! component state after commit. The executor preserves declared order and stops at first failure.
+//! Database commit and broker publication are separate operations. A publication error can leave
+//! earlier effects delivered and later effects unattempted, while the database change remains.
 
 use crate::{
     database::RecordId,
@@ -25,11 +27,16 @@ use crate::{
     },
 };
 
+/// Couples a committed domain result to the publications required before returning its response.
+///
+/// Construction does not execute or verify a database transaction. Handlers create this value
+/// only after decoding a committed result, with facts captured by that transaction.
 pub struct CommittedChange<Response> {
     response: Response,
     effects: Vec<PublicationEffect>,
 }
 
+/// A sequenced membership projection change captured at commit and persisted through JetStream.
 pub enum MembershipFact {
     UserOrganizations {
         user: String,
@@ -53,6 +60,7 @@ pub enum MembershipFact {
     },
 }
 
+/// A captured service observation sent through core messaging without stream persistence.
 pub enum TransientFact {
     Services {
         organization: String,
@@ -68,6 +76,7 @@ pub enum TransientFact {
     },
 }
 
+/// Requests a fresh read after commit, which may include changes from intervening transactions.
 pub enum ProjectionRefresh {
     Services { organization: String },
     Topology { organization: String },
@@ -80,6 +89,7 @@ pub enum PublicationEffect {
     Refresh(ProjectionRefresh),
 }
 
+/// Component supplied reader and publisher for projections whose current state must be fetched.
 pub trait ProjectionRefresher {
     fn refresh(
         &self,
@@ -87,6 +97,7 @@ pub trait ProjectionRefresher {
     ) -> impl std::future::Future<Output = Result<(), crate::otel_wasi::Error>>;
 }
 
+/// Runs publication effects in declaration order, without rollback or automatic replay.
 pub struct PublicationExecutor<Refresher> {
     pub refresher: Refresher,
 }
@@ -99,6 +110,10 @@ impl<Response> CommittedChange<Response> {
         }
     }
 
+    /// Returns the response only after every effect succeeds.
+    ///
+    /// Failure consumes this plan and returns the publication error. It does not undo the
+    /// committed domain mutation or any effect already delivered.
     pub async fn publish_with<Refresher: ProjectionRefresher>(
         self,
         publisher: &PublicationExecutor<Refresher>,
@@ -203,6 +218,7 @@ impl TransientFact {
     }
 }
 
+/// Rejects refresh effects for components whose publication plans contain captured facts only.
 pub struct CapturedOnly;
 
 impl ProjectionRefresher for CapturedOnly {

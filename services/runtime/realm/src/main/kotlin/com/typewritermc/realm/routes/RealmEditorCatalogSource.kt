@@ -28,6 +28,12 @@ data class EditorCatalogTransfer(
     val updates: List<CatalogFetchResult>,
 )
 
+/**
+ * Encodes one retained editor catalog into a bounded transfer while keeping its generation fixed.
+ *
+ * A requested generation mismatch returns the actual generation without encoding a snapshot. The initial
+ * response and update chunks belong to the same transfer; the route publishes them and owns transport failure.
+ */
 class SnapshotRealmEditorCatalogSource(
     private val catalogs: RealmCatalogStore,
     chunkSize: Int = DEFAULT_CATALOG_CHUNK_SIZE,

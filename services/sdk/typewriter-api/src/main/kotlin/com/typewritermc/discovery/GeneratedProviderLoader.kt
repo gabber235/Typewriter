@@ -49,6 +49,13 @@ data class LoadedGeneratedProviders(
     val collectionProjections: List<OwnedCollectionProjection>,
 )
 
+/**
+ * Keeps one deployment's generated providers and their class loader alive while consumers retain leases.
+ *
+ * The deployment starts with an owner reference. [close] releases that reference once; existing leases keep the
+ * loader open until their own closure. Retention remains possible after owner closure while a lease still exists.
+ * This lifetime covers loading classes and resources, not shutdown of registrar jobs or other runtime resources.
+ */
 class GeneratedProviderDeployment internal constructor(
     val providers: LoadedGeneratedProviders,
     val facts: DeploymentFacts,
@@ -93,6 +100,7 @@ class GeneratedProviderDeployment internal constructor(
     }
 }
 
+/** Couples each retained provider to its deployment so catalog consumers also retain the provider's class loader. */
 class RetainedOwnedProviderRegistry(
     private val delegate: OwnedProviderRegistry,
     private val deployment: GeneratedProviderDeployment,
@@ -139,6 +147,7 @@ private class CombinedProviderLease(
     }
 }
 
+/** Reads the tab separated provider index shared by KSP output and artifact discovery, rejecting malformed rows. */
 object GeneratedProviderIndex {
     fun parse(content: String): List<GeneratedProviderIndexEntry> {
         val kinds = GeneratedProviderKind.entries.associateBy(GeneratedProviderKind::key)
@@ -169,6 +178,17 @@ object GeneratedProviderIndex {
     }
 }
 
+/**
+ * Turns artifact provider indexes into the contributions consumed by Realm or execution catalog assembly.
+ *
+ * Source part and provider kind filters apply before instantiation. Repeated provider classes must have matching
+ * index metadata, class families, and shared artifact classes; the first matching artifact supplies their origin.
+ * Indexed providers load from this deployment and must physically belong to the artifact claiming them.
+ * Constructor dependencies share one [DeploymentRuntimeOwners] instance per load. Registrar domain selection
+ * controls binding of registrar owners; loading itself does not call [RuntimeRegistrar.register].
+ *
+ * The caller owns the returned deployment and its leases. A failed load closes the newly created class loader.
+ */
 class GeneratedProviderLoader {
     fun load(
         artifacts: List<GeneratedProviderArtifact>,

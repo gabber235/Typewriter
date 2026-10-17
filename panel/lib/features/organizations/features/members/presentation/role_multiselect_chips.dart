@@ -22,8 +22,7 @@ class RoleMultiselectChips extends StatelessWidget {
   /// Roles currently projected onto the member or draft selection.
   final List<OrganizationRole> selectedRoles;
 
-  /// Receives the requested selection. The owning provider decides whether and
-  /// how to persist it.
+  /// Receives the requested selection. The caller owns submission and errors.
   final ValueChanged<List<OrganizationRole>> onRolesChanged;
 
   /// Horizontal spacing between chips.

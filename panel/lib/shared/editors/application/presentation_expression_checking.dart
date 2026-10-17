@@ -2,7 +2,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Checks an instantiated layout under the same lexical bindings used by rendering.
+/// Checks an instantiated material under the lexical scopes used by rendering.
+/// The traversal checks inactive branches and provider result presentations too,
+/// so a currently hidden node cannot bypass binding and expression admission.
+/// This validates declared types and fixed layout constraints; expression
+/// availability and computed numeric ranges still need runtime checks.
 extension PresentationExpressionAdmission on CheckedEditorCatalog {
   List<String> presentationExpressionProblems(
     skir.PresentationMaterial material,

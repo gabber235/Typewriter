@@ -17,6 +17,11 @@ import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypewriterRecordContract
 import com.typewritermc.types.TypewriterType
 
+/**
+ * Groups authored pages through the core resource ownership relation and classifies them with independent tags.
+ * Pages and their elements remain separate resources connected by generated endpoint references, so library
+ * operations and graph reads can reason about ownership without decoding every concrete page or element type.
+ */
 @TypewriterType(id = "bbb646b300cf4dd2b7aab051854e4dd1")
 @com.typewritermc.types.TypewriterDisplay(
     name = "Book",

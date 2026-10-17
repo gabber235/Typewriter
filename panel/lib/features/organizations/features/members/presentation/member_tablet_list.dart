@@ -6,7 +6,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// It shares selection semantics with [MembersTable], but delegates row detail
 /// and role editing to [MemberTabletCard]. Animated removal temporarily ignores
-/// pointer input so a disappearing row cannot submit another action.
+/// pointer input; this wrapper does not separately exclude keyboard focus.
 class MembersTabletList extends HookConsumerWidget {
   const MembersTabletList({
     required this.members,

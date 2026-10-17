@@ -35,7 +35,10 @@ abstract class ResourceIssue with _$ResourceIssue {
   }
 }
 
-/// Derived from existing authoring and publication observations, with no mutable registry.
+/// Combines local structural and portable rule feedback with saved publication
+/// findings. Evidence determines whether a saved finding also applies to the
+/// working draft; severity alone never makes a local issue block publication.
+/// Reloading retains saved provenance without claiming it describes new edits.
 @freezed
 abstract class ResourceIssues with _$ResourceIssues {
   const factory ResourceIssues({

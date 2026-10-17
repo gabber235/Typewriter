@@ -71,6 +71,14 @@ class PortableOperationRegistry private constructor(
     }
 }
 
+/**
+ * Evaluates portable expressions against authored reads with fresh lexical state and accounting budgets per call.
+ *
+ * Missing authored inputs remain [Availability.Unavailable], while invalid operations and exhausted budgets produce
+ * diagnostics. Boolean branches short circuit; fallback expressions recover missing or null values while preserving
+ * evaluation failures. Canonical resource and catalog queries require [evaluateChecked] so each call uses its checked
+ * lexical contract and the supplied query reader's catalog matches the authored observation.
+ */
 class DefaultExpressionEvaluator(
     private val reader: ExpressionValueReader,
     private val operations: PortableOperationRegistry = PortableOperationRegistry.Standard,

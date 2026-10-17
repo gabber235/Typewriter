@@ -2,7 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns raw query text and the parsed context sent to a [SearchSource].
 ///
-/// Selector updates are merged with [baseSelectors]. A changed parsed context
+/// Source selector definitions are merged with [baseSelectors] at construction.
+/// A changed parsed context
 /// triggers one source search, so callers should use [updateQuery] for user
 /// input and [triggerQuery] only when the same context must be reissued.
 class SourceController extends ChangeNotifier {

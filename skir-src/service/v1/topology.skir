@@ -177,7 +177,8 @@ struct EngineRuntimeObservation {
   state: ChildRuntimeState;
 }
 
-// A runtime report carries the host read model and only the child states observed in that report.
+// The published host read model and current states of all assigned children after a runtime report.
+// A child omitted by the report retains its previously stored state in this projection.
 struct HostExecutionObservation {
   host: ServiceHost;
   realm: RealmRuntimeObservation?;
@@ -213,7 +214,8 @@ method WatchHostExecution(
 } = 934203;
 
 // Reports runtime observations for the assignment revision received from WatchHostExecution. Stale reports are rejected.
-// The host is marked applied only when every currently assigned child reports active.
+// The host is marked applied only when this report includes an active observation for every assigned child.
+// Omitting a child preserves its stored observation but does not count it as active for this report.
 method ReportHostExecution(
   struct {
     topology_revision: int64;

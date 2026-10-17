@@ -14,8 +14,9 @@ abstract class SurfaceAppearance with _$SurfaceAppearance {
 /// Publishes the effective background and foreground of a painted surface.
 ///
 /// This widget observes a fill painted by its owner. Translucent [color] is
-/// composed over the parent observation. Omitted foregrounds inherit; supplied
-/// foregrounds also scope ordinary text, theme typography, and icons. Explicit
+/// composed over the parent observation. An omitted primary foreground
+/// inherits. A supplied foreground also scopes text, theme typography, and
+/// icons, and derives a secondary foreground unless one is supplied. Explicit
 /// leaf colors and Material component palettes keep their own meaning.
 class Surface extends StatelessWidget {
   const Surface({

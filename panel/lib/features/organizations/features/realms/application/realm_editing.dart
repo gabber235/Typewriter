@@ -2,7 +2,14 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Typed authoring commands over the shared editing owner.
+/// Adapts Realm authoring commands to the shared [EditingWorkspace] journal.
+///
+/// The workspace owns confirmed state, ordered local groups, replay, and delivery.
+/// Each operation builds an [AuthoringEdit] branch with original fact evidence,
+/// then stages its intent into that journal. Resource bindings are view leases;
+/// closing an editor does not decide the lifetime of its pending work.
+/// [captureOperationContext] pairs the confirmed saved identity with the current
+/// local overlay for Realm operation preparation without awaiting between reads.
 final class RealmEditing implements Listenable {
   RealmEditing({
     required RealmEditPersistence persistence,

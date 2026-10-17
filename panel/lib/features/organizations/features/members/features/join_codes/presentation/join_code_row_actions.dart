@@ -1,8 +1,9 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Desktop row control for revoking one invitation code.
-/// It hides itself while its asynchronous revoke operation is in flight; the
-/// provider performs optimistic removal and restores state on failure.
+/// The action hides after confirmation and submits through shared local work.
+/// Its local flag is not reset on failure, so it stays hidden until this widget
+/// state is recreated. Pending row visibility belongs to the activity projection.
 class JoinCodeRowActions extends HookConsumerWidget {
   const JoinCodeRowActions({required this.code, super.key});
 

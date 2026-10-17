@@ -157,10 +157,3 @@ class SmallChip extends HookWidget {
     );
   }
 }
-
-// `DropdownMenu` dispatches these private intents on arrow up/down keys.
-// They are needed instead of the typical `DirectionalFocusIntent`s because
-// `DropdownMenu` does not really navigate the focus tree upon arrow up/down
-// keys: the focus stays on the text field and the menu items are given fake
-// highlights as if they are focused. Using `DirectionalFocusIntent`s will cause
-// the action to be processed by `EditableText`.

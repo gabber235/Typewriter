@@ -4,6 +4,7 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.engine.CompilationRoot
 import com.typewritermc.realm.checking.FindingSet
 
+/** Identifies one Ready assessment that the user can release while its captured inputs remain current. */
 @JvmInline
 value class PublicationCandidateId(
     val value: String,
@@ -13,6 +14,7 @@ value class PublicationCandidateId(
     }
 }
 
+/** Identifies one emitted review view, including changes that do not create a releasable candidate. */
 @JvmInline
 value class PublicationViewId(
     val value: String,
@@ -54,7 +56,13 @@ data class PublicationPendingReview(
     val notices: List<PublicationNotice> = emptyList(),
 )
 
-/** Each status carries only the data valid for that condition. */
+/**
+ * Describes saved content review separately from the selected runtime publication.
+ *
+ * Ready carries a releasable candidate. Publishing retains the frozen release delta while [PublicationPendingReview]
+ * describes later saved changes. Current means saved runtime content matches selection; it does not acknowledge
+ * application by every engine host.
+ */
 sealed interface PublicationStatus {
     data class Empty(
         val notices: List<PublicationNotice>,

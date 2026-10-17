@@ -1,5 +1,9 @@
 part of "portable_connections.dart";
 
+/// Combines sequence children with connector geometry without reordering them.
+/// Layout expressions use the enclosing scope; item anchors and branch styles
+/// use the corresponding item scope. Invalid appearance retains child content
+/// and reports diagnostics, with geometry diagnostics published after the frame.
 extension PortableHierarchySequenceRendering on skir.HierarchySequenceLayout {
   Widget renderPortableHierarchy({
     required PortablePresentationScope scope,

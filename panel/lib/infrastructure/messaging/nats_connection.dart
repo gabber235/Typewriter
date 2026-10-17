@@ -87,11 +87,16 @@ final class NatsConnectionOwner {
 
   NatsClient get client => _client;
 
+  /// Requires at least these Realm grants before repository operations proceed.
+  /// Extra admitted Realms are retained; use [refreshAuthorization] to require
+  /// an exact observed membership instead.
   Future<void> ensureRealmsAdmitted(Set<skir.RecordId> required) {
     final expected = _RealmAccess.required(Set.unmodifiable(required));
     return _enqueue(() => _admit(expected));
   }
 
+  /// Requires the admitted Realm set to equal the latest topology observation.
+  /// This also replaces a connection whose grants still include removed Realms.
   Future<void> refreshAuthorization(Set<skir.RecordId> observed) {
     final expected = _RealmAccess.exact(Set.unmodifiable(observed));
     return _enqueue(() => _admit(expected));

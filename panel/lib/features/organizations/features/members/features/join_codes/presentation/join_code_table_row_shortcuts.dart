@@ -4,7 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Delete delegates to the bulk action when this row is selected alongside an
 /// existing selection. Otherwise it opens confirmation for this code only.
-/// The wrapper does not mutate code state; callbacks supplied by the table do.
+/// Selection and copy use table callbacks. Single code revocation submits its
+/// own repository command through shared local work after confirmation.
 class JoinCodeTableRowShortcuts extends ConsumerWidget {
   const JoinCodeTableRowShortcuts({
     required this.code,

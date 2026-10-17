@@ -4,6 +4,8 @@ part "bounded_transfer_assembler.freezed.dart";
 
 final RegExp _boundedTransferIdPattern = RegExp(r"^[A-Za-z0-9_-]{1,64}$");
 
+/// Builds the update subject for one transfer, rejecting identifiers that
+/// could add subject segments or wildcard tokens. The caller owns [base].
 String boundedTransferUpdateSubject(String base, String transferId) {
   if (!_boundedTransferIdPattern.hasMatch(transferId)) {
     throw ArgumentError.value(
@@ -15,6 +17,10 @@ String boundedTransferUpdateSubject(String base, String transferId) {
   return "$base.$transferId";
 }
 
+/// One immutable byte chunk with the metadata needed to validate its transfer.
+///
+/// The digest covers the complete encoded payload, rather than this chunk.
+/// Shape and cross chunk consistency are checked by [BoundedTransferAssembler].
 final class BoundedTransferPart {
   BoundedTransferPart({
     required this.transferId,
@@ -40,6 +46,13 @@ sealed class BoundedTransferState with _$BoundedTransferState {
       BoundedTransferComplete;
 }
 
+/// Validates and reassembles one bounded encoded payload before deserialization.
+///
+/// Catalog and authoring state adapters supply chunks through [accept] or
+/// [assemble]. The first chunk must have index zero; subsequent indices may
+/// arrive in any order, exactly once, with identical transfer metadata.
+/// Completion verifies the advertised size and digest before exposing bytes.
+/// Success or rejection ends this instance and releases retained chunks.
 final class BoundedTransferAssembler {
   BoundedTransferAssembler({
     this.maximumChunkBytes = defaultMaximumTransferChunkBytes,
@@ -67,6 +80,11 @@ final class BoundedTransferAssembler {
 
   String? get transferId => _transferId;
 
+  /// Consumes chunks until complete, cancelled, timed out, or rejected.
+  ///
+  /// Every exit releases retained bytes and starts stream cancellation. Cleanup
+  /// failures are reported separately through [onCleanupFailure] or the zone,
+  /// preserving the original transfer result.
   Future<Uint8List> assemble(
     Stream<BoundedTransferPart> chunks, {
     Duration timeout = defaultBoundedTransferTimeout,
@@ -110,6 +128,7 @@ final class BoundedTransferAssembler {
     );
   }
 
+  /// Accepts one chunk, ending the transfer on completion or validation failure.
   BoundedTransferState accept(BoundedTransferPart part) {
     if (_finished) {
       throw const BoundedTransferRejected("The transfer is already finished");
@@ -222,6 +241,12 @@ final class BoundedTransferPoolComplete extends BoundedTransferPoolState {
   final Uint8List bytes;
 }
 
+/// Bounds concurrent transfer assemblies sharing one update channel.
+///
+/// Each transfer has independent metadata and an idle timer refreshed by
+/// incoming chunks. Completion, rejection, and expiration remove that transfer;
+/// count and retained byte limits bound incomplete work across the channel.
+/// The subscription owner must call [clear] when its channel ends.
 final class BoundedTransferPool {
   BoundedTransferPool({
     this.maximumActiveTransfers = defaultMaximumActiveTransfers,

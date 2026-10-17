@@ -1,3 +1,8 @@
+// Publication turns assessed saved authoring into a selected immutable runtime output set.
+// Review views and candidates describe what may be released; publication attempts record
+// storage and selection progress. Selection is a Realm decision, while each engine fetches,
+// validates, and applies the selected content through its own delivery lifecycle.
+
 import { EditExpectation } from "editor/v1/authoring_facts.skir";
 import { FindingSet } from "editor/v1/checking.skir";
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
@@ -47,11 +52,14 @@ struct ScriptContextDescriptor(811600004) {
   capabilities: [ScriptCapabilityId] = 2;
 }
 
+/// Captured implementation requirements used to fence candidate assessment and publication selection.
 struct EngineImplementationInputs(811600005) {
   signatures: [RuntimeMemberSignature] = 0;
   token: InputToken = 1;
 }
 
+/// Durable attempt progress, separate from review status. complete means the Realm selected its
+/// descriptor, while blocked or interrupted attempts do not replace the prior selected publication.
 enum PublicationState(811600006) {
   checking = 1;
   compiling = 2;
@@ -68,6 +76,9 @@ struct PublicationAttempt(811600007) {
   state: PublicationState = 3;
 }
 
+/// Reports release admission and selection. activated identifies the newly selected publication,
+/// not an acknowledgement from engine hosts. candidate_changed requires a fresh review; publishing
+/// means another release currently owns the publication gate.
 enum PublicationResult(811600008) {
   publishing = 1;
   activated: struct {
@@ -85,9 +96,13 @@ struct PublicationReport(811600009) {
   findings: [Diagnostic] = 2;
 }
 
+/// Identifies one releasable Ready assessment tied to exact saved inputs, baseline, and engine requirements.
+/// A newer review may invalidate it even when no resource revision counter is exposed.
 struct PublicationCandidateId(811600010) {
   value: string = 0;
 }
+/// Identifies one emitted review state, including checking and failure states without a candidate.
+/// It is a freshness identity rather than a sortable publication or resource revision.
 struct PublicationViewId(811600011) {
   value: string = 0;
 }
@@ -97,6 +112,8 @@ enum PublicationBaseline(811600012) {
   selected: PublicationId = 2;
 }
 
+/// Original facts under which a publication diagnostic applies to an authored value.
+/// Consumers compare this evidence with their working state before presenting it as current.
 struct DiagnosticEvidence(811600013) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
@@ -121,12 +138,15 @@ struct PublicationBlocker(811600016) {
   details: PublicationDiagnosticDetails = 0;
 }
 
+/// Semantic runtime changes relative to selection. A root update compares artifact meaning and
+/// format, independently of blob storage location or a newly allocated publication identity.
 enum PublicationChange(811600017) {
   root_added: CompilationRoot = 1;
   root_updated: CompilationRoot = 2;
   root_removed: CompilationRoot = 3;
   requirements_changed = 4;
 }
+/// A releasable change set is nonempty by construction; additional entries extend its first change.
 struct PublicationDelta(811600018) {
   first: PublicationChange = 0;
   additional: [PublicationChange] = 1;
@@ -156,6 +176,9 @@ enum PublicationFailure(811600022) {
   publication_interrupted: PublicationId = 3;
 }
 
+/// Current saved review state. ready authorizes only its issued candidate; blocked can still
+/// report confirmed changes while failed roots remain pending. During publishing, releasing is
+/// frozen and next describes later saved work without adding it to the in progress release.
 enum PublicationStatus(811600023) {
   empty: struct {
     notices: [PublicationNotice] = 0;
@@ -197,6 +220,7 @@ struct PublicationView(811600024) {
   id: PublicationViewId = 0;
   status: PublicationStatus = 1;
 }
+/// Invalidation hint naming the current review view. Query that exact identity to transfer its content.
 struct PublicationViewChanged(811600025) {
   current: PublicationViewId = 0;
 }
@@ -210,6 +234,7 @@ struct PublicationTransferUnavailable(811600027) {
   max_encoded_size: int64 = 2;
 }
 
+/// Releases only the issued candidate while its captured saved inputs and engine requirements still match.
 method PublishAuthoring(
   struct {
     candidate: PublicationCandidateId = 0;
@@ -222,6 +247,8 @@ method WatchPublication(
   struct {}
 ): PublicationViewChanged = 920021;
 
+/// Transfers one immutable review view or reports that expected is no longer current.
+/// All chunks share the view and transfer identities; later invalidations require a separate query.
 method QueryPublicationView(
   struct {
     expected: PublicationViewId = 0;

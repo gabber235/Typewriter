@@ -9,6 +9,9 @@ enum _ElementSlot { leading, center, suffix }
 /// The center and suffix are progressively omitted when the incoming width
 /// cannot preserve the configured minimum center width. The render object owns
 /// that responsive decision, so callers do not need separate breakpoint trees.
+/// A finite maximum width is required. The suffix is shown only alongside the
+/// center. Hidden children stay mounted while paint, pointer hits, semantics,
+/// and focus participation are suppressed.
 class AdaptiveLeadingLayout
     extends SlottedMultiChildRenderObjectWidget<_ElementSlot, RenderBox> {
   const AdaptiveLeadingLayout({

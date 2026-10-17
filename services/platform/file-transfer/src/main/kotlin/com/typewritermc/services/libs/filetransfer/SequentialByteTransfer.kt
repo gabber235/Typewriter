@@ -10,7 +10,13 @@ class TransferProtocolException(
     message: String,
 ) : IllegalArgumentException(message)
 
-/** Copies bounded contiguous bytes while enforcing exact progress. */
+/**
+ * Enforces the byte progress contract shared by logical file and digest blob transfers.
+ *
+ * [copy] resumes at the destination offset and requires each source chunk to agree with the declared size,
+ * completion flag, and next destination offset. It owns neither endpoint nor resumable session state.
+ * Protocol violations throw [TransferProtocolException]; endpoint failures and cancellation propagate unchanged.
+ */
 class SequentialByteTransfer(
     private val chunkSize: Int = FileTransferCoordinator.DEFAULT_CHUNK_SIZE,
 ) {

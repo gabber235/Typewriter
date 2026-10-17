@@ -1,5 +1,9 @@
 part of "portable_presentation_renderer.dart";
 
+/// Owns an inline search binding and controller for the current lexical inputs.
+/// A pending activation retains its invocation across host notifications, then
+/// subsequent sessions use refreshed bindings. A supplied HTTP client is borrowed.
+/// Hiding the search surface keeps this mounted controller and query alive.
 final class PortableSearchInput extends HookWidget {
   const PortableSearchInput({
     required this.control,

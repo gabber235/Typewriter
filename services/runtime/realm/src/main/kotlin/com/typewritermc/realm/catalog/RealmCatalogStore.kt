@@ -38,6 +38,13 @@ interface RealmCatalogLease : AuthoringCatalogLease {
     val collectionProjections: List<CollectionProjectionSpec>
 }
 
+/**
+ * Owns one assembled authoring catalog and the discovery deployment that implements its callbacks.
+ *
+ * [replace] installs only the initial incarnation; changing a running deployment creates a new store. Captured
+ * leases keep the deployment alive after store closure, and the final released lease closes retired discovery.
+ * Editor snapshots and executable services therefore share the same catalog generation and lifetime.
+ */
 class RealmCatalogStore : AutoCloseable {
     private val lock = Any()
     private var current: Retention? = null

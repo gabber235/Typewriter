@@ -1,6 +1,6 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Produces the result tree and actions consumed by the search UI.
+/// Produces the result tree and query feedback consumed by a search session.
 ///
 /// A source owns its external work and publishes immutable snapshots. The
 /// caller initializes it once, may issue multiple searches, and must dispose it

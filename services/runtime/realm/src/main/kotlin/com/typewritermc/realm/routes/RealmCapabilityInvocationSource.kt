@@ -25,6 +25,13 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 import skirout.editor.v1.capability.NotificationSeverity as WireNotificationSeverity
 import skirout.editor.v1.capability.PanelInstruction as WirePanelInstruction
 
+/**
+ * Dispatches editor computation and command invocations through a retained Realm catalog.
+ *
+ * Catalog generation, capability kind, and result type are validated before provider invocation. Computations
+ * return typed portable data; commands return panel instructions. The catalog lease bounds callback lifetime,
+ * while invocation identity is passed through for correlation and supplies no deduplication in this adapter.
+ */
 class RealmCapabilityInvocationSource(
     private val catalogs: RealmCatalogStore,
 ) {

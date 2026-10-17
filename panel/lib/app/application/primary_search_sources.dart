@@ -2,6 +2,12 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Composes the global search contribution from the route scope at opening.
+///
+/// Organization search is always available. Organization and realm route
+/// parameters add realm discovery and authoring operations respectively.
+/// Commands produce host effects so this application boundary owns navigation
+/// and selection while search sources remain independent of the router.
 PrimarySearchRequest buildPrimarySearchRequest(Ref ref) {
   final organizationId = ref.read(organizationIdProvider);
   final realmId = ref.read(realmIdProvider);

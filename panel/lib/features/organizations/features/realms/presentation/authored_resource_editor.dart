@@ -2,6 +2,10 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Selects the catalog presentation for a resource and adapts it to panel
+/// capabilities, diagnostics, location reveal and page gestures. Host lifetime
+/// follows the resource, binding and selected material; ordinary document
+/// updates refresh that host without creating a separate editing journal.
 final class AuthoredResourceEditor extends HookConsumerWidget {
   const AuthoredResourceEditor({
     required this.resource,

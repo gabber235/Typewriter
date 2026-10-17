@@ -1,10 +1,3 @@
-// Defines the desktop sidebar shell and its shared size controls.
-//
-// The sidebar is a Pane so global directional navigation can move between
-// it and route content. Its width is bounded by the viewport and kept in
-// sidebarSizeProvider, while the surrounding route decides what content it
-// displays.
-
 import "package:typewriter_panel/typewriter_panel.dart";
 
 part "sidebar_controller.dart";

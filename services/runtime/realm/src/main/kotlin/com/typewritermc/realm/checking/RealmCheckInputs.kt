@@ -28,6 +28,13 @@ import com.typewritermc.types.catalog.ResolvedRepresentation
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * Evaluates declarative check inputs within one tracked snapshot read capability.
+ *
+ * Collection patterns sharing an occurrence prefix bind to the same item or map row rather than forming
+ * unrelated tuples. Missing values defer the check, failures remain diagnostic outcomes, and tuple limits
+ * contribute incomplete read health so publication cannot treat truncated evaluation as success.
+ */
 class RealmCheckInputs(
     private val ids: () -> DiagnosticId = defaultDiagnosticIdFactory(),
 ) : CheckInputs {

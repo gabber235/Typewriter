@@ -27,7 +27,7 @@ class ApiException implements Exception {
     );
   }
 
-  /// Creates an ApiException for common error scenarios.
+  /// Rejects an operation that requires an authenticated principal.
   factory ApiException.notAuthenticated() {
     return const ApiException(code: 401, message: "User not authenticated");
   }
@@ -76,26 +76,20 @@ class ApiException implements Exception {
   /// The HTTP style category used by callers to choose recovery or presentation.
   final int code;
 
-  /// Human-readable error message.
   final String message;
 
-  /// Returns true if this is a client error (4xx).
   bool get isClientError {
     return code >= 400 && code < 500;
   }
 
-  /// Returns true if this is a server error (5xx).
   bool get isServerError {
     return code >= 500 && code < 600;
   }
 
-  /// Returns true if this is an authentication error (401).
   bool get isAuthError => code == 401;
 
-  /// Returns true if this is a forbidden error (403).
   bool get isForbidden => code == 403;
 
-  /// Returns true if this is a not found error (404).
   bool get isNotFound => code == 404;
 
   @override

@@ -1,7 +1,18 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Owns local intent and its lifecycle for one server transaction boundary.
-/// Models describe meaning; persistence captures requests; submissions own delivery.
+/// Owns the ordered local edit journal for one persistence boundary.
+///
+/// [model] interprets observations and replays semantic edits. Confirmed state
+/// comes from that boundary; working state is derived by replaying the journal
+/// over it. Groups give related edits a save policy and recovery state while
+/// preserving dependencies on earlier local facts.
+///
+/// Saving reserves resources, refreshes the baseline, and asks [persistence] to
+/// capture one immutable request. [submissions] owns delivery. Captured operation
+/// identities remain frozen until settlement so later edits survive that save.
+/// Unknown outcomes retain their captured work for explicit recovery. The
+/// creating caller or registering work driver disposes this workspace and its
+/// scheduled interactions.
 final class EditingWorkspace<S, E> extends ChangeNotifier {
   EditingWorkspace({
     required this.model,
@@ -46,6 +57,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
   bool get closed => _closed;
   bool get applying => _saving != null;
 
+  /// Creates a save group, or reuses the group associated with [key].
+  /// Reusing a key requires identical editing policies; labels may be updated
+  /// by later staged operations.
   EditGroupId createGroup({
     required String label,
     Object? key,
@@ -322,6 +336,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     return result;
   }
 
+  /// Admits a canonical observation and rebases pending local intent.
+  /// Available observations received during a save are deferred until the
+  /// active lane settles, preventing them from replacing its captured baseline.
   void acceptConfirmed(S observation) {
     if (_closed) return;
     if (_saving != null && model.isAvailable(observation)) {
@@ -751,6 +768,9 @@ final class EditingWorkspace<S, E> extends ChangeNotifier {
     _rebuild();
   }
 
+  /// Refreshes acknowledged state without replaying a submitted request.
+  /// Groups awaiting refresh release only their frozen operations after the
+  /// refresh succeeds. Later edits remain in the journal.
   Future<void> refreshConfirmed() async {
     if (_closed || _saving != null) return;
     try {

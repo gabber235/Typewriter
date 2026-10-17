@@ -1,3 +1,8 @@
+// Realm presentation search sends typed capability input and query state to a retained
+// Realm provider. A subscription returns correlated snapshots as results accumulate.
+// Search jobs outlive the startup response and end through completion, replacement,
+// explicit cancellation, failure, or the enclosing Realm scope.
+
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   OperationSearchContext,
@@ -9,9 +14,6 @@ import {
   DataValue,
   TypeTemplate,
 } from "editor/v1/type_catalog.skir";
-
-// Realm presentation search carries typed capability input and query state to a Realm owned producer. Results are
-// streamed as correlated snapshots or unavailable updates.
 
 struct RealmSearchSelector(811000001) {
   selector_id: string = 0;
@@ -40,6 +42,8 @@ enum RealmSearchSelectorExpression(811000005) {
   not: RealmSearchSelectorNotExpression = 3;
 }
 
+/// Preserves normalized text, parsed terms, selector identities, and Boolean selector structure.
+/// Providers interpret the query instead of reconstructing selected filters from display text.
 struct RealmSearchQuery(811000006) {
   normalized_query: string = 0;
   selectors: [RealmSearchSelector] = 1;
@@ -47,6 +51,8 @@ struct RealmSearchQuery(811000006) {
   terms: [string] = 3;
 }
 
+/// Starts or replaces work for one subscription. Operation context gives input searches the
+/// same confirmed saved baseline and local overlay used by action preparation.
 struct RealmPresentationSearchRequest(811000007) {
   subscription_id: string = 0;
   generation: CatalogGeneration = 1;
@@ -63,6 +69,8 @@ enum RealmPresentationSearchStatus(811000008) {
   error = 3;
 }
 
+/// Complete values accumulated for this subscription so far, not an incremental append batch.
+/// loading allows further snapshots; ready marks producer completion; error carries diagnostics.
 struct RealmPresentationSearchSnapshot(811000009) {
   subscription_id: string = 0;
   status: RealmPresentationSearchStatus = 1;
@@ -99,6 +107,7 @@ enum CancelRealmPresentationSearchResult(811000013) {
   unavailable = 3;
 }
 
+/// Requests cancellation of a source owned search job. not_found also covers work already retired.
 method CancelRealmPresentationSearch(
   CancelRealmPresentationSearchRequest
 ): CancelRealmPresentationSearchResult = 919104;

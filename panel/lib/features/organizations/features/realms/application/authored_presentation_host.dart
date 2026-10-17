@@ -2,6 +2,16 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Connects portable presentation behavior to one authored resource and its shared edit binding.
+///
+/// Display and collection projections read the current working document. Invocation
+/// contexts retain the observation that produced an action, so expression reads can
+/// become original expectations when the action stages a write. Preparation rechecks
+/// availability after suspension and reports rejected writes as portable diagnostics.
+///
+/// The host owns view metadata and its disposed flag, while [RealmEditingBinding]
+/// owns access to the shared edit group. Disposing this host prevents new presentation
+/// work without saving, discarding, or closing that group.
 final class AuthoredPresentationHost extends ChangeNotifier
     implements
         PortablePresentationHost,

@@ -2,10 +2,15 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Combines independent sources into one snapshot and selector stream.
 ///
-/// Results, guidance, and errors are concatenated with first source ownership
-/// winning for duplicate result IDs. The merged status stays
-/// loading until every child has reported and becomes error only when every
-/// child errors without results. Preview requests route by result ID.
+/// Result trees are concatenated in source order. Duplicate result IDs remain
+/// in the tree, but preview routing chooses the first source with that ID.
+/// Guidance and error IDs are deduplicated. Queries are projected onto each
+/// child's selectors; incompatible children contribute no results.
+///
+/// Nonidle progress remains loading while children are outstanding. An all idle
+/// observation remains idle, and error status requires every child to have
+/// failed with no results. Selector rejection requires agreement from all
+/// active owners, while any acceptance is sufficient.
 final class MergedSearchSource
     implements SearchSource, SearchSelectorCompletionSource {
   MergedSearchSource({required this.sources}) : assert(sources.isNotEmpty) {

@@ -187,6 +187,11 @@ fun <Source : Any, Target : Any> RealmSearch<Source>.mapValues(transform: (Sourc
         },
     )
 
+/**
+ * Bridges a discovered capability's portable request and result types to native Kotlin bindings.
+ * Decoding requires complete schema admission and reports unfinished, invalid, or unresolved content through
+ * [NativeBindingException]. This bridge does not select a provider or authorize an invocation.
+ */
 class RealmCapabilityRuntime(
     private val catalog: CheckedCatalog,
     private val bindings: NativeBindingRegistry,

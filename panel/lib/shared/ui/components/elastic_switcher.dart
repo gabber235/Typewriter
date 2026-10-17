@@ -9,8 +9,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 class ElasticSwitcher extends StatelessWidget {
   const ElasticSwitcher({required this.child, super.key});
 
-  /// The widget to display. Provide a new child (with a differing identity or
-  /// key) to trigger the transition to it.
+  /// The widget to display. Change its runtime type or key to start a transition.
   final Widget? child;
 
   @override

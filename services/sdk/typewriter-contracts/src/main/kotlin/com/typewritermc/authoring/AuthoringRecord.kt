@@ -23,6 +23,12 @@ sealed interface ArgumentSelection {
     data object Unfilled : ArgumentSelection
 }
 
+/**
+ * Tracks authored type arguments while a record is being edited.
+ *
+ * [Pending] can retain an unfilled argument without inventing a concrete type. [Complete] describes filled type
+ * arguments, not completed field values or a successful catalog check.
+ */
 @Serializable
 sealed interface TypeSelection {
     @Serializable
@@ -39,6 +45,10 @@ sealed interface TypeSelection {
     ) : TypeSelection
 }
 
+/**
+ * Stores a resource's type selection separately from its field payload so partially configured records remain editable.
+ * Nested nominal values still carry their own actual types in [DataValue.Named].
+ */
 @Serializable
 data class AuthoringRecord(
     val configuration: TypeSelection,

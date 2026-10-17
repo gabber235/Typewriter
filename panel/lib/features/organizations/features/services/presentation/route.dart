@@ -4,8 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The page watches the projected service list for names that include unsaved
 /// identity edits, while topology remains an independent live projection. The
-/// registration control sends tokens through the canonical service provider;
-/// this route only composes loading and error states around both reads.
+/// registration control submits a repository request through local work; this
+/// route composes loading and error states around both projections.
 @RoutePage()
 class ServicesPage extends ConsumerWidget {
   const ServicesPage({super.key});

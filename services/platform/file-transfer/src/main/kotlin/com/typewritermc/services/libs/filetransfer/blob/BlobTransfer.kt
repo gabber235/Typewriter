@@ -84,7 +84,15 @@ sealed interface BlobResult<out Value> {
     ) : BlobResult<Nothing>
 }
 
-/** Provides digest addressed reads and resumable verified writes. */
+/**
+ * Stores immutable artifact bytes independently from the deployment metadata that references them.
+ *
+ * Digests identify content, while [TransferId] identifies temporary upload state. A writer begins or resumes
+ * the exact [BlobMetadata], appends contiguous chunks at the accepted offset, and completes only after storage
+ * verifies byte count and digest. Publishing bytes does not select a deployment or a compiled publication.
+ * Expected absence, invalid input, and conflicting state use [BlobResult]; implementations may still throw
+ * for infrastructure failures. Callers own retry policy and must retain the transfer identity to resume.
+ */
 interface BlobEndpoint {
     suspend fun metadata(digest: ArtifactDigest): BlobResult<BlobMetadata>
 
@@ -116,7 +124,13 @@ fun <Value> BlobResult<Value>.requireValue(): Value =
         is BlobResult.Conflict -> error(reason)
     }
 
-/** Copies immutable bytes between digest endpoints with exact progress checks. */
+/**
+ * Copies one digest between endpoints while leaving final byte verification to destination completion.
+ *
+ * Existing destination metadata with the exact expected digest and size avoids transfer. The same metadata
+ * check also tolerates another writer completing during this copy. [copyVerified] does not read back or hash
+ * existing destination bytes; use [readVerified] when the caller needs independently verified bytes in memory.
+ */
 class BlobTransfer(
     private val bytes: SequentialByteTransfer = SequentialByteTransfer(),
 ) {

@@ -124,8 +124,8 @@ pub async fn persist(
 /// Serialize and reply with a handler result while preserving typed SKIR outcomes.
 ///
 /// A successful result is sent as its selected success or domain variant. An error sends
-/// the enum's generic `InternalError` variant, then returns the original error so the
-/// dispatch boundary can retain its logging and tracing context.
+/// the enum's generic `InternalError` variant, then returns the original error if that
+/// reply succeeds. A reply failure is returned instead when the broker cannot accept it.
 pub async fn reply_handler_result<R>(
     msg: types::NatsMessage,
     result: Result<R, otel_wasi::Error>,

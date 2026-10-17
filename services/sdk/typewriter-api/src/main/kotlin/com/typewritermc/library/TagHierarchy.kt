@@ -2,6 +2,11 @@ package com.typewritermc.library
 
 import com.typewritermc.types.ResourceRecord
 
+/**
+ * Answers ancestry and proposed parent links from a supplied tag snapshot, tolerating cycles during traversal.
+ * Unknown tags make ancestry indeterminate and prevent link approval. [canLink] rejects existing ancestry in either
+ * direction, including redundant transitive parent links as well as cycles.
+ */
 class TagHierarchy(
     tags: Collection<ResourceRecord<TagId, Tag>>,
 ) {

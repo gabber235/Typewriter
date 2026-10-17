@@ -13,7 +13,8 @@ typedef ActionInvoke = FutureOr<void> Function(WidgetRef ref);
 /// map. Use [ActionShortcut.intent] when the action should share the panel's
 /// canonical key map. An action is callable only when it has both a callback
 /// and at least one activator. IDs are global within the current provider and
-/// higher priority wins when multiple mounted sets register the same ID.
+/// higher priority wins in the visible registry when mounted sets share an ID.
+/// Keyboard dispatch follows Flutter's nearest shortcut and action scopes.
 @freezed
 abstract class ActionShortcut with _$ActionShortcut {
   @Assert("id != \"\"", "ID must not be empty.")
@@ -64,8 +65,8 @@ abstract class ActionShortcut with _$ActionShortcut {
 ///
 /// Each action set owns its registration through a [GlobalKey]. Re registering
 /// replaces that set's previous entries, while [sweep] removes entries whose
-/// owner is no longer mounted. The registry is the shared source for keyboard
-/// actions and the visible [ActionRow].
+/// owner is no longer mounted. The registry supplies the visible [ActionRow];
+/// keyboard handlers are installed separately by [RegisteredActionShortcuts].
 @riverpod
 class ActionShortcuts extends _$ActionShortcuts {
   @override
@@ -260,10 +261,11 @@ extension on IntentActionShortcut {
   }
 }
 
-/// Registers [shortcuts] independently of focus and renders [child].
+/// Publishes [shortcuts] in the visible action registry independently of focus.
 ///
 /// Use this for actions that belong to an always active surface. Use
-/// [ManagedActionSet] when registration must follow subtree focus.
+/// [ManagedActionSet] when registration must follow subtree focus. This widget
+/// does not install keyboard handlers; [RegisteredActionShortcuts] owns those.
 class ActionSet extends HookConsumerWidget {
   const ActionSet({required this.shortcuts, this.child, super.key});
   final List<ActionShortcut> shortcuts;

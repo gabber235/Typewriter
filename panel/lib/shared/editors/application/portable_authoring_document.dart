@@ -21,6 +21,9 @@ extension RecordPreparationTarget on skir.ValuePreparationRequest {
   };
 }
 
+/// Resource observation used by portable expressions and link planning.
+/// Reads expose values without creating persistence expectations. Catalog
+/// generation identifies their interpretation context, not a resource revision.
 abstract interface class PortableAuthoringView {
   skir.CatalogGeneration get generation;
 
@@ -35,9 +38,16 @@ abstract interface class PortableAuthoringView {
   skir.DataValue defaultValue(skir.TypeUse? type);
 }
 
+/// Mutable operation branch whose reads and intent can be captured for a save.
+///
+/// Editing stays local to the branch. Its enclosing workspace decides when to
+/// publish and persist the resulting operations and expectations.
 abstract interface class PortableAuthoringEdit
     implements PortableAuthoringView {
   int get operationCount;
+
+  /// Reads a value while recording the semantic fact this edit depends on.
+  /// Display only reads should use [read] so they do not widen save conflicts.
   PortablePathResult<skir.DataValue> expect(skir.ValueLocation location);
   void observeExpressionReads(Iterable<PortableExpressionRead> reads);
 
@@ -82,6 +92,8 @@ abstract interface class PortableAuthoringEdit
     skir.PreparedValue prepared,
   );
 
+  /// Publishes a callback's branch and expression read witnesses only if the
+  /// callback accepts. A false result abandons both mutations and witnesses.
   bool stageExpressionEdit(
     Iterable<PortableExpressionRead> reads,
     bool Function(PortableAuthoringEdit edit) edit,

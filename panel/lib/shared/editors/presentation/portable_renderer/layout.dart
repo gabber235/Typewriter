@@ -171,6 +171,9 @@ extension _PortableLayoutRendering on PortablePresentationNodeRenderer {
     };
   }
 
+  /// Direct binding reads project item locations and writers into the child
+  /// scope. Computed sequences supply local values only; evaluation does not
+  /// invent editable provenance for their items. Map repetition uses row values.
   Widget _renderRepeated(
     skir.RepeatedElement element,
     PortablePresentationScope childScope,

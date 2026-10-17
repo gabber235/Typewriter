@@ -28,6 +28,7 @@ sealed interface StructuralResult {
     ) : StructuralResult
 }
 
+/** A value admitted against [schema] with no structural problems or unfinished locations. */
 class CompleteValue internal constructor(
     val schema: CheckedType,
     val value: DataValue,
@@ -47,6 +48,7 @@ sealed interface CompletenessResult {
     ) : CompletenessResult
 }
 
+/** Checks record shape and type compatibility while allowing [DataValue.Unfilled] at otherwise valid locations. */
 fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult {
     val root = ValueLocation(AUTHORING_ROOT, ValuePath())
     return when (val configuration = configuration) {
@@ -70,6 +72,7 @@ fun AuthoringRecord.validateStructure(catalog: CheckedCatalog): StructuralResult
     }
 }
 
+/** Admits a complete value for native use, distinguishing unfinished locations from structurally invalid content. */
 fun CheckedType.complete(value: DataValue): CompletenessResult {
     val inspection = ValueInspection(resolver)
     val root = ValueLocation(AUTHORING_ROOT, ValuePath())

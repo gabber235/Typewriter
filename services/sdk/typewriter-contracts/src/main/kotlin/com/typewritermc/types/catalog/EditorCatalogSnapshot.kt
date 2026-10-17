@@ -39,6 +39,11 @@ data class TypeRecommendation(
     val occurrences: Long,
 )
 
+/**
+ * Publishes a generation's declarative authoring model to editor clients without executable provider callbacks.
+ * Includes unavailable type entries and diagnostics so consumers can explain missing capabilities as well as render
+ * valid definitions. Presentation materials and operation contributions travel with the same generation's schema.
+ */
 data class EditorCatalogSnapshot(
     val generation: CatalogGeneration,
     val types: List<PublishedType>,

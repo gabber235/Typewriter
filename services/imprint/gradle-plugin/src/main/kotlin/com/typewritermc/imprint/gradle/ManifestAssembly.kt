@@ -241,6 +241,11 @@ private fun validateIncludedTargets(
     }
 }
 
+/**
+ * Validates the exact Gradle selections against every reachable manifest requirement. Constraints accumulate
+ * across dependency paths, so revisiting an already resolved capability still checks the new intersection.
+ * This validates the selected graph rather than choosing another version when constraints conflict.
+ */
 private fun resolveCapabilityGraph(
     direct: List<ResolvedRelationship>,
     allManifests: Map<ArtifactId, ImprintManifest>,

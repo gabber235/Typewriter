@@ -181,9 +181,9 @@ final class _RenderConnectionLayerSurface extends RenderProxyBox {
 
   /// Rebuilds the overlay from current child geometry before painting children.
   ///
-  /// Hidden or invalid connections contribute neither strokes nor markers.
-  /// Recoverable resolution failures remain visible through the diagnostic
-  /// overlay, while the child content continues to paint.
+  /// Hidden connections contribute neither strokes nor markers. Invalid
+  /// declarations suppress the affected geometry, while valid bundle branches
+  /// and markers can remain. Diagnostics overlay the retained child content.
   @override
   void paint(PaintingContext context, Offset offset) {
     // Anchor positions are valid only after child layout. Resolve them during

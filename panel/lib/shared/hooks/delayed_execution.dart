@@ -6,6 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// keys makes scheduling follow the hook's normal dependency semantics, so the
 /// callback runs again only when those keys change. The callback is deferred,
 /// not executed during build.
+/// Scheduled callbacks are not canceled on disposal, so callbacks that use
+/// widget state must check whether their owner is still mounted.
 void useDelayedExecution(Function function, [List<Object?>? keys]) =>
     use(_DelayedExecutionHook(function, keys: keys));
 

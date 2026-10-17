@@ -21,6 +21,12 @@ private fun JsonElement.canonicalJson(): JsonElement =
 private inline fun <reified Value> canonicalText(value: Value): String =
     runtimeFactsJson.encodeToJsonElement(value).canonicalJson().toString()
 
+/**
+ * Normalizes the order of graph facts before semantic hashing and shard encoding.
+ *
+ * Type and relation declarations must be unique. Edges are deduplicated, while duplicate resource keys
+ * remain for runtime admission to reject. JSON object keys are normalized separately by the encoder.
+ */
 fun RuntimeCompilationFacts.canonicalized(): RuntimeCompilationFacts {
     require(types.size == types.map { type -> type.id }.toSet().size) {
         "Runtime facts contain duplicate type declarations."
@@ -51,6 +57,7 @@ fun RuntimeCompilationFacts.encodeShard(): ByteArray {
     return canonicalText(CompiledPageShard(canonical.semanticDigest(), canonical)).encodeToByteArray()
 }
 
+/** Decodes a shard and checks its semantic digest; execution catalog admission happens in the engine consumer. */
 fun ByteArray.decodeCompiledPageShard(): CompiledPageShard {
     val shard = runtimeFactsJson.decodeFromString<CompiledPageShard>(decodeToString())
     require(shard.digest == shard.facts.semanticDigest()) {

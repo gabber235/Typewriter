@@ -1,3 +1,8 @@
+// Resource operations publish additive editor affordances from catalog declarations.
+// Contributions attach shared operation definitions to matching resource types; the Realm
+// resolves current availability against a working observation. Action dispatch and authoring
+// preparation remain separate from labels, grouping, and primary operation nomination.
+
 import { EditorAction } from "editor/v1/action.skir";
 import { HeaderActionTone } from "editor/v1/presentation.skir";
 import {
@@ -6,8 +11,7 @@ import {
   TypeUse,
 } from "editor/v1/type_catalog.skir";
 
-// Resource operations are additive affordances. Their identities belong to the
-// declaration that contributes them, independently of labels and catalog builds.
+/// Stable declaration owned identity, independent of display labels and catalog generation.
 struct ResourceOperationId(812600001) {
   artifact: string = 0;
   source_part: string = 1;
@@ -57,12 +61,17 @@ struct ResourceOperationDefinition(812600007) {
   action: EditorAction = 3;
 }
 
+/// Adds operation identities to matching resource types and optionally nominates a primary action.
+/// Resolution considers all selected targets; primary nomination applies to a single resource
+/// and conflicting equally applicable nominations are rejected.
 struct ResourceOperationContribution(812600008) {
   target: TypeTemplate = 0;
   operations: [ResourceOperationId] = 1;
   primary: ResourceOperationId? = 2;
 }
 
+/// hidden omits an affordance, disabled retains its explanation, and enabled permits attempting
+/// dispatch. Availability is evaluated against current working facts and must be rechecked at preparation.
 enum OperationAvailability(812600009) {
   hidden = 1;
   disabled: string = 2;

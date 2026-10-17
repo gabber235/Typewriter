@@ -7,7 +7,8 @@ enum NotificationSlot { child, bubble }
 
 /// Overlays a notification indicator without changing the child's layout size.
 ///
-/// The child remains the only hit tested subtree. [show] controls the bubble's
+/// The render object does not forward pointer hit tests to either subtree, so
+/// place pointer interaction on an ancestor. [show] controls the bubble's
 /// appearance animation, while [semanticsLabel] gives assistive technology the
 /// meaning of the indicator. Choose a factory when a dot or capped count is
 /// sufficient; [NotificationBubble.custom] is for content with its own

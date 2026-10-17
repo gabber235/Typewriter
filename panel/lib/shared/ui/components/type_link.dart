@@ -29,6 +29,8 @@ class TypeLink extends HookWidget {
   final TextStyle? style;
   final int maxLines;
 
+  /// Uses the platform default launch mode when true, or an in app browser
+  /// view when false. The platform decides whether that creates a new tab.
   final bool openInNewTab;
 
   @override

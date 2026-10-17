@@ -2,7 +2,7 @@
 //!
 //! A service first receives a temporary registration lease through `handle_lease`. Binding is
 //! separate because it is an organization scoped operator action: the caller presents that lease,
-//! the transaction verifies its expiry and organization ownership, then atomically replaces the
+//! the transaction verifies its expiry and the target organization's existence, then atomically replaces the
 //! lease with the durable organization binding. Metadata updates and unbinding have different
 //! authorization and consistency rules, so they remain separate operations.
 //!
@@ -33,11 +33,9 @@ struct BindResult {
 
 /// Binds the service identified by a valid registration token to the addressed organization.
 ///
-/// Invalid or expired tokens and missing organizations leave the lease untouched. A successful
-/// response is the canonical service returned by the binding transaction. After commit, this
-/// handler publishes the organization snapshot and a service bound notification. Those effects
-/// are deliberately outside the transaction, so a publication failure can report an error after
-/// the binding itself is durable and a later snapshot can converge the view.
+/// Invalid or expired tokens and missing organizations leave the lease untouched. Success
+/// returns identity and role data from the committed service. Organization access is granted by
+/// messaging permissions before dispatch; the transaction does not check the actor's membership.
 #[tracing::instrument(skip(_msg, request))]
 pub async fn handle_bind(
     _msg: NatsMessage,

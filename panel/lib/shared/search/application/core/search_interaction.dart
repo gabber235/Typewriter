@@ -78,6 +78,14 @@ typedef SearchBatchCommandExecutor<P extends Object> =
       SearchCommandTarget target,
     );
 
+/// Describes an operation against a captured result batch and query.
+///
+/// Evaluation supplies visibility and an actionable disabled reason before
+/// execution. Dependencies trigger reevaluation when external availability
+/// changes. Single commands require one matching item, repeated commands invoke
+/// each matched item concurrently and merge outcomes, and batch commands receive
+/// the entire matched selection once. Host side effects are returned as data
+/// for the surface host to execute.
 abstract interface class SearchCommand {
   SearchCommandId get id;
   SearchCommandPresentation get presentation;
@@ -380,6 +388,8 @@ abstract class ResolvedSearchCommand with _$ResolvedSearchCommand {
   }) = _ResolvedSearchCommand;
 }
 
+/// Filters a session's source results using query and external dependencies.
+/// Scope projection affects visibility before commands resolve current targets.
 abstract interface class SearchScope {
   Iterable<Listenable> get dependencies;
 
@@ -506,6 +516,11 @@ abstract class SearchActivationEvaluationContext
   }) = _SearchActivationEvaluationContext;
 }
 
+/// Defines what the primary activation of a result means for this surface.
+///
+/// Picker activations can return [T]; command activations defer to a registered
+/// command. Evaluation and execution share the session dispatcher and query,
+/// allowing disabled command state to propagate to primary activation.
 abstract interface class SearchActivation<T> {
   factory SearchActivation.command({
     required SearchCommandId? Function(SearchResult result) resolve,

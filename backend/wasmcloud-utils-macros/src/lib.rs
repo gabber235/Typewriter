@@ -1,9 +1,8 @@
 //! Compile time helpers used by the handwritten Typewriter backend components.
 //!
-//! The macros keep three boundaries consistent: SurrealDB query literals are validated before
-//! compilation, broker subjects are routed to typed handlers, and generated SKIR response enums
-//! are constructed with the payload shape required by the wire contract. The runtime behavior
-//! lives in `wasmcloud_utils`; this crate only parses declarations and emits calls into it.
+//! The macros check query structure, map database outcomes into domain responses, and construct
+//! generated Skir payloads. Runtime execution lives in `wasmcloud_utils`; generated transport
+//! routes separately own broker subject dispatch.
 
 use proc_macro::TokenStream;
 use syn::parse_macro_input;
@@ -28,8 +27,9 @@ pub fn skir_response(input: TokenStream) -> TokenStream {
 
 /// Create a read query from a compile time string literal.
 ///
-/// The literal must contain at least one statement and no mutation statement. The generated
-/// value retains the final result position for typed decoding at the runtime database boundary.
+/// The literal must contain at least one statement and no recognized mutation keyword outside
+/// quoted values or comments. This is a lexical check, not a proof that called database functions
+/// are pure. The generated value retains the final result position for typed decoding.
 #[proc_macro]
 pub fn read_query(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as database_query::ReadQueryInput);

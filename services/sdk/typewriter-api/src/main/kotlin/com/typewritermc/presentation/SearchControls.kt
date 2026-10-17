@@ -46,6 +46,11 @@ interface SearchInputScope<Value, Row> :
     fun loading(body: Layout.() -> Unit)
 }
 
+/**
+ * Describes portable search sources for the consuming editor runtime to execute.
+ * Sources share the search input's result mapping and selectors. Decorations wrap in call order, so the last
+ * decoration becomes the outermost provider. Network work, query cancellation, caches, and history are owned by the consumer.
+ */
 interface SearchSources {
     fun <Row> staticValues(values: Expr<List<Row>, Handled>): SearchProviderSpec<Row>
 
@@ -165,6 +170,11 @@ interface SearchSelectorsScope {
     ): Expr<Any?, Handled>
 }
 
+/**
+ * Maps a provider row to a stable result key, a value to write on selection, and its displayed presentation.
+ * The selected value can differ from the row's type and identity. Required mappings are checked when the search
+ * input is captured; native result appearance is captured with its body through [presentation].
+ */
 interface SearchResultScope<Value, Row> {
     val row: Expr<Row, Handled>
 

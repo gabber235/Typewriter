@@ -2,9 +2,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shared interactive surface for one editor search result.
 ///
-/// Result specific widgets supply content and semantic color. The shared search controller owns
-/// selection and focus; this card only projects those flags into visual state and forwards tap
-/// callbacks. A missing callback deliberately leaves the corresponding interaction disabled.
+/// Result widgets supply content and semantic color. The controller owns
+/// selection and preview, while Flutter owns keyboard focus. This card combines
+/// supplied flags with its InkWell interaction state for descendant portable
+/// presentation. Missing callbacks disable the corresponding gestures.
 class SearchResultCard extends HookWidget {
   const SearchResultCard({
     required this.color,

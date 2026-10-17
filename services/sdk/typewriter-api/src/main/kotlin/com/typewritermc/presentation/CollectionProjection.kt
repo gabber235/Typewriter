@@ -12,6 +12,11 @@ import com.typewritermc.types.TypeTemplate
 @Retention(AnnotationRetention.BINARY)
 annotation class TypewriterCollectionProjection
 
+/**
+ * Declares a portable row view over authored resources using source paths and literal field values.
+ * Resource identity stays with the collection row rather than being copied into its content. The builder checks
+ * path ownership; catalog assembly checks source and target schemas before publishing collection dependencies.
+ */
 data class CollectionProjectionSpec(
     val sourceId: String,
     val root: TypeTemplate.Named,

@@ -4,6 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "membership_visibility.g.dart";
 
+/// Hides declined requests and revoked codes only while their commands send.
+///
+/// The canonical collections remain intact. When sending ends, visibility
+/// follows confirmed collection events and expiry instead of an optimistic
+/// deletion that would need to be rolled back.
 @riverpod
 Set<(MembershipRemovalKind, skir.RecordId)> pendingMembershipRemovals(Ref ref) {
   final work = ref.watch(localWorkProvider);
@@ -22,6 +27,10 @@ Set<(MembershipRemovalKind, skir.RecordId)> pendingMembershipRemovals(Ref ref) {
   };
 }
 
+/// Shared display clock refreshed at the next observed membership expiry.
+///
+/// Visibility providers own and cancel their timers. This local clock filters
+/// presentation; server commands still decide whether a request or code is valid.
 @riverpod
 DateTime membershipDisplayTime(Ref ref) {
   return DateTime.now();

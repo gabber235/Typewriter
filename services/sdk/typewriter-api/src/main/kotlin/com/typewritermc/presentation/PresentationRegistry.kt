@@ -10,6 +10,11 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 
+/**
+ * Selects role presentations using nominal target specificity and explicitly configured role fallback.
+ * Priority breaks ties only among equivalent maximal targets. A conflict stops fallback so another role cannot hide
+ * an ambiguous declaration; missing roles traverse configured parents in breadth first order with cycle protection.
+ */
 class DefaultPresentationRegistry(
     override val catalog: CheckedCatalog,
     descriptors: List<PresentationDescriptor>,

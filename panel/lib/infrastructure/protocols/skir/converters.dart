@@ -2,12 +2,6 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-// Bridges panel primitives and shared Skir identity values.
-//
-// This boundary keeps Flutter representations and Surreal record syntax out
-// of domain models. Resource identifiers are generated here so one identity
-// can be reused across an authoring batch and any retry of that batch.
-
 /// Converts the protocol color representation into Flutter's color value.
 extension SkirColorExtension on skir.Color {
   Color toFlutterColor() {

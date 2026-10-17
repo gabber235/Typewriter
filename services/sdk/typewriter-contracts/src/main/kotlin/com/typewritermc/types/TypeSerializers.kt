@@ -55,8 +55,6 @@ object DeclaredTypeIdSerializer : KSerializer<DeclaredTypeId> {
 
 /**
  * Preserves absent numeric constraints as null and present values as arbitrary precision decimal strings.
- *
- * Used by structural integer bounds so serialization never narrows them to a machine integer.
  */
 object NullableBigIntegerAsStringSerializer : KSerializer<BigInteger?> {
     override val descriptor: SerialDescriptor =

@@ -4,6 +4,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Checks portable expressions under declared source and temporary candidate types.
 /// Failures of a valid expression at evaluation remain separate runtime feedback.
+/// Caller resolvers supply catalog paths and canonical query contracts. The
+/// checker visits both conditional branches, unlike runtime evaluation.
+/// Numeric literals can adopt an operand width within the same numeric family;
+/// enabling [allowResultNumericWidth] also relaxes the final result width.
 List<String> checkPortableExpression(
   skir.ExpressionNode body, {
   required Map<skir.ExpressionBindingId, skir.ExpressionType> bindings,

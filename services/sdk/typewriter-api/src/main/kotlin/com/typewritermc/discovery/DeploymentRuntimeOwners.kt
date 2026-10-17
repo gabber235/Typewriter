@@ -3,6 +3,13 @@ package com.typewritermc.discovery
 import java.lang.reflect.Modifier
 import java.util.IdentityHashMap
 
+/**
+ * Shares generated provider and callback owners within one deployment by exact JVM class identity.
+ *
+ * Supplied services are borrowed instances. Other owners must belong to the deployment and expose either a Kotlin
+ * object instance or one public constructor whose dependencies can also be resolved here. Construction cycles fail
+ * before another instance is created. This registry does not own disposal; runtime resources belong to runtime scopes.
+ */
 internal class DeploymentRuntimeOwners(
     private val deploymentClassLoader: ClassLoader,
     services: Map<Class<*>, Any>,

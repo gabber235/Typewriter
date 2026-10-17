@@ -3,8 +3,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Composes the panel application boundary.
 ///
 /// This widget watches the router and appearance providers, binds live route
-/// access before router construction, and installs themes, global shortcuts,
-/// responsive breakpoints, scroll behavior, required interaction widgets, and
+/// access before installing the router configuration. It installs themes,
+/// global shortcuts, responsive breakpoints, scroll behavior, interaction widgets, and
 /// the NATS connection boundary around routed content. Route navigation also
 /// invalidates route derived providers after the frame completes.
 class TypewriterPanel extends HookConsumerWidget {

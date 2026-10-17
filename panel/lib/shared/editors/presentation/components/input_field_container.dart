@@ -5,9 +5,9 @@ typedef KeyEventBlocker = bool Function(BuildContext context, KeyEvent event);
 
 /// Coordinates the inner and surrounding focus nodes used by an input field.
 ///
-/// Instances created by the public constructors own their focus nodes and must
-/// be disposed by the creator. Instances built from an existing input focus
-/// node leave that node owned by the caller.
+/// The creator must dispose the controller. The default constructor owns both
+/// nodes; [InputFieldController.fromInputFocusNode] borrows the input node and
+/// owns only the surrounding node.
 class InputFieldController {
   InputFieldController({String? inputDebugLabel, String? surroundingDebugLabel})
     : this._(
@@ -68,7 +68,7 @@ class InputFieldController {
 }
 
 /// Container that unifies focus highlighting, surrounding focus behavior,
-/// action shortcuts, and key-event blocking for input-like widgets.
+/// and action shortcuts for inputs with separate editing and navigation focus.
 /// Supply the inner input via [child] and its [controller].
 class InputFieldContainer extends HookConsumerWidget {
   const InputFieldContainer({
@@ -84,7 +84,7 @@ class InputFieldContainer extends HookConsumerWidget {
     super.key,
   });
 
-  /// Controller that owns the input and surrounding focus nodes.
+  /// Coordinates the focus nodes; its creator retains disposal responsibility.
   final InputFieldController controller;
 
   /// The actual input widget to render (e.g. TextField, DropdownMenu).

@@ -437,6 +437,9 @@ extension _PortableCollectionRendering on PortablePresentationNodeRenderer {
   };
 }
 
+/// Borrows the source projection host but owns feedback for this referenced
+/// resource and catalog lifetime. Summary content excludes focus and pointer
+/// interaction; option content leaves row activation with its enclosing picker.
 final class _ResourceReferenceAppearance extends HookWidget {
   const _ResourceReferenceAppearance({
     required this.resource,

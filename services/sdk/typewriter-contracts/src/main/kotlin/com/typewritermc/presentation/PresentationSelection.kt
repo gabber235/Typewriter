@@ -3,6 +3,10 @@ package com.typewritermc.presentation
 import com.typewritermc.types.PresentationRole
 import com.typewritermc.types.catalog.CheckedType
 
+/**
+ * Selects the most specific target before using priority to distinguish equivalent targets within one role.
+ * Incomparable targets remain a conflict regardless of priority. Role fallback belongs to [PresentationRegistry.select].
+ */
 fun PresentationRegistry.selectWithinRole(
     role: PresentationRole,
     actual: CheckedType,

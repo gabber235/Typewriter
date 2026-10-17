@@ -1,8 +1,8 @@
 //! Serves the organization service snapshot used to initialize the service watch.
 //!
 //! The snapshot is the initial state for consumers that then process service events on the same
-//! subject. Results are scoped to one organization and sorted by
-//! service name so the initial order is deterministic.
+//! subject. Results are scoped to one organization and sorted by service name. Equal names have
+//! no additional ordering key.
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{
@@ -17,10 +17,7 @@ use wasmcloud_utils::{
 use wasmcloud_utils::database::service::ServiceRecord;
 
 #[tracing::instrument(skip_all)]
-/// Decodes the watch request and returns the current services for its organization.
-///
-/// The user and organization path parameters identify the requested scope. The request body is
-/// still decoded to enforce the Skir boundary, although the current request has no fields.
+/// Returns the current services for the organization admitted by the generated dispatcher.
 pub async fn handle_watch(
     _msg: NatsMessage,
     scope: wasmcloud_utils::transport_routes::OrganizationActorScope,
@@ -38,7 +35,7 @@ pub async fn handle_watch(
         .map(WatchOrganizationServicesResponse::List)
 }
 
-/// Reads one organization's service records in stable name order.
+/// Reads one organization's service records ordered by name.
 ///
 /// This helper is also the snapshot boundary used by the request handler. It returns a complete
 /// list, while later service state changes use the typed update stream rather than being folded

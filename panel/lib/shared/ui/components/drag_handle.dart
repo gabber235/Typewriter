@@ -9,7 +9,7 @@ typedef SizeChanged = void Function(double size);
 /// Converts the drag start dimension and logical pixel delta into a dimension.
 typedef SizeResolver = double Function(double startSize, double delta);
 
-/// Resizes an owner supplied dimension through horizontal or vertical dragging.
+/// Resizes an owner supplied dimension through dragging and keyboard actions.
 ///
 /// The handle owns only the gesture session and cursor override. The caller
 /// remains authoritative for the resized value through [getSize] and
@@ -69,22 +69,22 @@ class DragHandle extends HookConsumerWidget {
 
   final String semanticLabel;
 
-  /// The interactive hit area thickness perpendicular to [axis].
+  /// The interactive hit area thickness along the resize [axis].
   final double hitThickness;
 
-  /// The visible bar thickness perpendicular to [axis].
+  /// The visible bar thickness along the resize [axis].
   final double handleThickness;
 
   /// The corner radius of the visible bar.
   final double handleRadius;
 
-  /// The fraction of available space used for the visible bar's length along [axis].
+  /// Fraction of available space used for the bar's length across [axis].
   final double handleExtentFactor;
 
-  /// The maximum length of the visible bar along [axis].
+  /// Maximum length of the bar perpendicular to the resize [axis].
   final double maxHandleExtent;
 
-  /// If true, the visible bar appears only on hover or while dragging.
+  /// If true, the bar appears on hover, focus highlight, or while dragging.
   final bool showOnHover;
 
   /// The visible bar color. Defaults to `Theme.of(context).colorScheme.onSurface` with opacity.

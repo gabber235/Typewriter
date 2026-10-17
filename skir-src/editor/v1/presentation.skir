@@ -152,7 +152,8 @@ struct PresentationHeader(810800016) {
   content_padding: PresentationInsets? = 6;
 }
 
-// Nodes are the recursive units of a presentation. Properties gate rendering and editing, headers add node chrome, and the element supplies the node's behavior.
+/// One authored layout node. node_id scopes diagnostics and reusable inspector membership.
+/// Read only and enabled properties constrain interaction without granting persistence access.
 struct PresentationNode(810800017) {
   node_id: string = 0;
   properties: PresentationProperties = 1;
@@ -1081,6 +1082,8 @@ enum PresentationElement(810800140) {
   part: PresentationPartElement = 61;
 }
 
+/// Reusable portable layout with explicit typed inputs and dependencies. A renderer supplies
+/// current binding values and owns transient interaction state; the definition carries no widget lifecycle.
 struct PresentationDefinition(810800141) {
   presentation_id: PresentationId = 0;
   inputs: [PresentationInput] = 1;
@@ -1182,6 +1185,8 @@ enum LinkRejectionDisplay(810800155) {
   disabled = 2;
 }
 
+/// Composes inherited inspector members and default controls for fields not claimed explicitly.
+/// Exclusions suppress named field patterns or reusable parts without copying their source layouts.
 struct RemainingFieldsElement(810800156) {
   excluded: [RelativeFieldPattern] = 0;
   excluded_parts: [PresentationPartId] = 1;
@@ -1357,6 +1362,8 @@ struct InputContent(810800182) {
   suffix: PresentationNode? = 2;
 }
 
+/// Supplies inherited input appearance within its child scope. Explicit descendant properties
+/// take precedence per property; expressions retain the bindings where their layer was declared.
 struct AppearanceDefaultsElement(810800183) {
   appearance: InputAppearance = 0;
   child: PresentationNode = 1;
@@ -1384,6 +1391,8 @@ struct ExpressionMapping(810800187) {
   body: ExpressionNode = 1;
 }
 
+/// Optional display and completion transforms for an edited value. They are evaluated in
+/// an explicit input binding; applying a mapped value still goes through the owning edit scope.
 struct ValueMappings(810800188) {
   completion: ExpressionMapping? = 0;
   display: ExpressionMapping? = 1;
@@ -1731,6 +1740,8 @@ enum ResultStyle(810800234) {
   card = 2;
 }
 
+/// Describes host supplied result chrome around the portable body, shared by search options,
+/// authoring result rows, page tiles, and graph nodes where the requested role supports it.
 struct ResultAppearance(810800235) {
   style: ResultStyle? = 0;
   accent: ExpressionNode? = 1;

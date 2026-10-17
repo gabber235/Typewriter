@@ -2,8 +2,8 @@ part of "services.dart";
 
 /// Owns the live organization topology projection.
 ///
-/// The projection combines the topology watch with committed configuration
-/// changes from [ServiceResourceRepository]. [TopologyHost] contains desired
+/// The projection combines the topology watch with canonical configuration
+/// replies from [ServiceResourceRepository]. [TopologyHost] contains desired
 /// and applied configuration revisions alongside host runtime observations.
 /// Snapshots and configuration changes own child membership. Runtime reports
 /// update observed state only and cannot create or revive child resources. A

@@ -62,6 +62,15 @@ sealed interface KspTypeConversionResult {
     ) : KspTypeConversionResult
 }
 
+/**
+ * Builds the portable declaration closure reachable from one Kotlin root without emitting source.
+ * Each conversion resets its mutable traversal state. Recursive references use declaration identity
+ * to stop expansion while retaining the reference in the resulting template graph.
+ *
+ * Declaration conversion preserves owned generic parameters in templates; applied conversion requires
+ * a closed root. Successful conversion describes the graph but does not replace catalog validation of
+ * bounds, inheritance, or representation compatibility.
+ */
 class KspTypeGraphConverter(
     private val identityPolicy: KspTypeIdentityPolicy = KspTypeIdentityPolicy(::defaultIdentity),
     private val linkPolicy: KspLinkPolicy = KspLinkPolicy(::generatedEndpoint),

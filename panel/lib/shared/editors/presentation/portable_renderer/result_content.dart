@@ -1,5 +1,8 @@
 part of "../portable_presentation_renderer.dart";
 
+/// Adapts a portable result presentation to the shared row owner. Content is
+/// read only and the row retains activation and focus behavior. Invalid appearance
+/// expressions show feedback alongside the result body rather than replacing it.
 final class PortableResultContent extends StatelessWidget {
   const PortableResultContent({
     required this.node,

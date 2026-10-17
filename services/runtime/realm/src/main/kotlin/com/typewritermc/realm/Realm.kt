@@ -59,6 +59,17 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
+/**
+ * Owns the active Realm authoring services between activation and quiescence.
+ *
+ * Persistent resources are loaded into a retained [AuthoringViewStore]. The authoring repository admits edits,
+ * checks evaluate captured inputs, and the publication coordinator compiles accepted saved views into shared
+ * artifacts. Editor routes expose these services through the current host messaging session.
+ *
+ * Session replacement rebuilds routing while database, checks, and publication remain active. Shutdown retires
+ * publishers and routes before closing their snapshots and database. The managed runtime serializes activation
+ * and shutdown; the local lifecycle mutex protects router replacement within an activation.
+ */
 internal class Realm(
     private val databaseProvider: RealmDatabaseProvider,
     private val catalogs: RealmCatalogStore,

@@ -29,6 +29,9 @@ abstract class _CollectionGraphOccurrenceKey
 
 /// Projects view occurrences independently of widget construction and disclosure.
 /// Canonical keys identify resources; paths identify their separate appearances.
+/// Cycles are removed per ancestor path, so shared descendants may appear under
+/// multiple parents. The occurrence budget spans every root; reaching the depth
+/// bound alone does not mark the projection truncated.
 _CollectionGraphProjection _projectCollectionGraph({
   required Iterable<String> roots,
   required Map<String, List<String>> adjacency,

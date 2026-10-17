@@ -251,7 +251,8 @@ sealed class QuerySelectorValue with _$QuerySelectorValue {
     SourceBackedSelectorValue() => const [],
   };
 
-  /// Combines value policies, with free text taking precedence.
+  /// Combines matching policies, unioning enum candidates. Incompatible policy
+  /// kinds fail instead of widening validation to free text.
   QuerySelectorValue merge(QuerySelectorValue other) {
     return switch ((this, other)) {
       (FreeTextSelectorValue(), FreeTextSelectorValue()) => this,

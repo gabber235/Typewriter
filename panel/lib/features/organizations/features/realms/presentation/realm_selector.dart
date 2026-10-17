@@ -4,8 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The topology provider supplies the selectable projection and the route remains
 /// the selection authority. Choosing an item navigates first, so all dependent
-/// providers rebuild for the new realm and the old catalog and session can be
-/// disposed by Riverpod.
+/// providers observe the new Realm. Application retained work may keep the old
+/// authoring driver alive until its journal and submissions are settled.
 class RealmSelector extends HookConsumerWidget {
   const RealmSelector({super.key});
 

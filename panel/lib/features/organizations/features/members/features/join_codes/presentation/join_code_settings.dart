@@ -5,6 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Changes are emitted to the route but are not sent to the service until the
 /// user generates a code. Default role selection comes from organization roles;
 /// the service validates the selected role identifiers again.
+/// [initialOptions] seeds local state only on mount. Enabling automatic
+/// acceptance starts with the supplied catalog's default roles.
 class JoinCodeSettings extends HookConsumerWidget {
   const JoinCodeSettings({
     required this.onOptionsChanged,
@@ -159,7 +161,6 @@ class JoinCodeSettings extends HookConsumerWidget {
                           value: options.value.autoAcceptRoleIds.isNotEmpty,
                           onChanged: (enabled) {
                             if (enabled) {
-                              // Default to default roles
                               final defaultRoleIds = availableRoles
                                   .where((r) => r.defaultRole)
                                   .map((r) => r.roleId)

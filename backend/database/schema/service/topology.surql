@@ -1,3 +1,6 @@
+-- Host configuration, desired assignments, and reported runtime state have separate revisions.
+-- Each host owns at most one Realm and one engine. An engine may attach to another host's Realm;
+-- the reference rejects Realm deletion until dependent engines have been removed or reassigned.
 DEFINE TABLE OVERWRITE service_host SCHEMAFULL
     PERMISSIONS NONE;
 

@@ -2,6 +2,11 @@ package com.typewritermc.expression
 
 import java.util.ArrayDeque
 
+/**
+ * Runs a bounded instruction program for normalized portable patterns using Unicode code point positions.
+ * Matching and replacement charge work through the evaluator's step callback. Compilation limits program size;
+ * callers must first apply [normalizePortableRegex] to enforce the shared feature and pattern limits.
+ */
 internal class PortableRegexMatcher private constructor(
     private val instructions: List<RegexInstruction>,
     private val start: Int,

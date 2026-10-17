@@ -3,7 +3,8 @@
 //! `handle_watch` is the runtime's read side. It returns the host's current desired assignment
 //! and its `topology_revision.desired`. `handle_report` is the observation write side. It accepts
 //! only that current revision, updates submitted child states, advances the applied revision only
-//! when every assigned child is active, and publishes the resulting topology views.
+//! when the same report supplies an active observation for every assigned child, and publishes
+//! the resulting topology views. Previously stored active states do not complete a partial report.
 
 use otel_wasi::{ResultWithSlug, wasi_error};
 use serde::Deserialize;
@@ -100,9 +101,9 @@ pub async fn handle_watch(
 #[tracing::instrument(skip_all)]
 /// Applies runtime observations for the requested topology revision.
 ///
-/// Reports for an older revision are rejected without changing child or host state. For the
+/// Reports for a different revision are rejected without changing child or host state. For the
 /// current revision, only supplied child observations are written. The host becomes `ACTIVE`
-/// only when every currently assigned child is active. Failed, rolled back, or drifted child
+/// only when this report includes an active observation for every assigned child. Failed, rolled back, or drifted child
 /// states determine the corresponding host status; otherwise it remains reconciling.
 pub async fn handle_report(
     _msg: NatsMessage,
@@ -279,7 +280,8 @@ pub async fn handle_report(
 /// Publishes one compound event after a committed runtime observation.
 ///
 /// Configuration remains the owner of child membership. The report carries only the host read
-/// model and the runtime state of children observed by this report.
+/// model and the current state of all assigned children, including states retained when the
+/// report omitted an observation.
 async fn publish_report(
     organization_id: &RecordId,
     host: &ServiceHostRecord,

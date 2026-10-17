@@ -4,8 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Edit mode activation requires [canCommit] and a focused selectable element.
 /// The returned actions start previews or change viewport state; committing is
-/// routed through [TimelineCommitIntent] so pointer and keyboard edits share
-/// one owner and one persistence boundary.
+/// keyboard mode completion uses [TimelineCommitIntent]. Pointer surfaces
+/// finish previews directly, with both paths delegating to the timeline caller.
 List<ActionShortcut> buildTimelineShortcuts({
   required bool canCommit,
   required Object currentInteractionMode,

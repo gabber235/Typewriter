@@ -1,9 +1,10 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Adds keyboard commands for the current search preview and visible results.
+/// Adds keyboard commands for the current preview and source result tree.
 ///
 /// Preview commands are exposed while a result is active. Control plus digit
-/// shortcuts activate the first nine visible results.
+/// shortcuts activate the first nine results in the controller tree, including
+/// descendants of collapsed sections.
 class SearchShortcuts extends HookConsumerWidget {
   const SearchShortcuts({required this.child, super.key});
 

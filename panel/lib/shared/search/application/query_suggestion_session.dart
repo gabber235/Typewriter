@@ -2,7 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Owns asynchronous selector completion for one query editor session.
 ///
-/// A newer request replaces the previous request. Exhaustive results can serve
+/// Only a response matching the current request may publish. Work already in
+/// flight can finish after a newer request arrives. Exhaustive results can serve
 /// narrower partials with the same selector and expression scope.
 final class QuerySuggestionSession {
   QuerySuggestionSession({

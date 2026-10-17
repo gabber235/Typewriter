@@ -54,8 +54,8 @@ fun KSAnnotation.argument(name: String): Any? = arguments.singleOrNull { it.name
 /**
  * Converts an open identifier into the stable upper camel form used by generated declaration names.
  *
- * Separators and other non alphanumeric characters are discarded, so the result is suitable for a generated
- * Kotlin declaration when the input contains human supplied names.
+ * Separators and other non alphanumeric characters are discarded. The result can be empty or start with a digit;
+ * callers remain responsible for any additional Kotlin identifier constraints.
  */
 fun String.toUpperCamelIdentifier(): String =
     split(Regex("[^A-Za-z0-9]+"))

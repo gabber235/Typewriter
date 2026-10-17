@@ -21,6 +21,12 @@ Future<skir.EditorCatalogWireSnapshot> realmCatalogTransfer(
   String fetchId,
 ) => NatsRealmEditorCatalogSource(ref).fetch(organizationId, realmId);
 
+/// Transfers catalog snapshots and delegates value preparation through current Realm routes.
+///
+/// Each fetch owns a bounded assembler cancelled with its provider. The source
+/// stores no catalog cache. [prepareStep] preserves resumable preparation outcomes;
+/// [prepareValue] also exposes partial content for callers that handle unfinished
+/// values directly and therefore does not imply initialization reached ready.
 final class NatsRealmEditorCatalogSource {
   const NatsRealmEditorCatalogSource(this.ref);
 

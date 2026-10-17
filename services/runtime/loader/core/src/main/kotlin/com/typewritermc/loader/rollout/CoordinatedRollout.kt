@@ -192,7 +192,10 @@ class CoordinatedRollout(
         }
     }
 
-    /** Records failure and drives abort or exact baseline rollback before rethrowing the original failure. */
+    /**
+     * Records failure and drives abort or exact baseline rollback before the caller rethrows its failure.
+     * Compensation errors propagate and may prevent that original failure from reaching the caller.
+     */
     private suspend fun compensate(
         rollout: PersistedRollout,
         failure: Throwable,
@@ -274,7 +277,10 @@ class CoordinatedRollout(
         require(expected.all { byService.getValue(it).accepted }) { "A rollout participant rejected the command." }
     }
 
-    /** Requires every participant to report the requested projection as healthy continuously for [healthyDuration]. */
+    /**
+     * Requires healthy observations of the requested projections across [healthyDuration].
+     * Missing or unhealthy replies reset the interval; changes between probes are outside this evidence.
+     */
     private suspend fun awaitStableHealthy(
         attempt: RolloutAttempt,
         references: Map<ServiceId, ProjectionReference>,

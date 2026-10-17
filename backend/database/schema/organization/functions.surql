@@ -1,3 +1,6 @@
+-- Shared membership policy for schema guards and organization command handlers.
+-- Mutation functions run inside the caller's transaction and return projection values with
+-- their new sequences. Rust handlers publish those facts separately after the transaction commits.
 DEFINE FUNCTION OVERWRITE fn::organization::roles::valid_for(
     $roles: array<record<organization_role>>,
     $organization: record<organization>
@@ -58,6 +61,9 @@ DEFINE FUNCTION OVERWRITE fn::account::organization::teams(
     RETURN [];
 };
 
+-- Replaces assignable roles for the whole selection while retaining each member's protected roles.
+-- Default roles are used only when the combined selection would otherwise be empty. All targets
+-- and the remaining founder role holders are checked before any membership is changed.
 DEFINE FUNCTION OVERWRITE fn::organization::members::update_roles(
     $org: record<organization>,
     $users: array<record<user>>,

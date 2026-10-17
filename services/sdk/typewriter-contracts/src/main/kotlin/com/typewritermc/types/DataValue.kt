@@ -8,6 +8,14 @@ import kotlinx.serialization.Serializable
 import java.math.BigInteger
 import kotlin.time.Instant
 
+/**
+ * Portable authored content shared by schema checking, editing, expressions, and transport codecs.
+ *
+ * [Unfilled] preserves an unfinished editor value and differs from an explicit [Null]. [Named] carries the actual
+ * nominal type alongside its representation payload. Collection items and map rows retain [ItemId] identities so
+ * paths survive reordering. Constructing a value does not establish schema validity or completeness; admission
+ * checks those properties against a catalog before native decoding or publication.
+ */
 @Serializable
 sealed interface DataValue {
     @Serializable

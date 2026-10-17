@@ -14,7 +14,7 @@ extension ListX<T> on List<T> {
     return elementAt(random.nextInt(length));
   }
 
-  /// Returns [count] distinct elements in random order.
+  /// Samples [count] distinct list positions in random order.
   ///
   /// Invalid counts return an empty list rather than partially sampling.
   List<T> randomSubset(int count) {
@@ -99,7 +99,7 @@ extension IterableX<T> on Iterable<T> {
     return where((element) => !types.contains(element.runtimeType));
   }
 
-  /// Are all of a given type [T]. Returns false if the selection is empty.
+  /// Whether every element has type [S]. Returns false for an empty iterable.
   bool allAre<S extends T>() => isNotEmpty && every((t) => t is S);
 }
 

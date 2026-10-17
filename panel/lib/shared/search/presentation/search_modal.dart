@@ -2,8 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Opens a themed, keyboard accessible search route.
 ///
-/// The supplied [source] is initialized when the route creates its controller
-/// and disposed when that controller is disposed. Renderer maps translate
+/// [contributionBuilder] creates the session in the route's provider scope. Its
+/// source is initialized and disposed with the controller. Renderer maps translate
 /// source result and preview type identifiers into widgets. The returned
 /// future completes when the route is removed. [onBack] enables a previous
 /// question button that closes this route before invoking the callback.

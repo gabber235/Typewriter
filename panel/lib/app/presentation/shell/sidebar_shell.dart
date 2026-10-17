@@ -5,7 +5,8 @@ part of "sidebar.dart";
 /// The sidebar width comes from [sidebarSizeProvider]. Dragging temporarily
 /// disables the width animation so the handle tracks the pointer directly.
 /// Use [CustomAppBar] on mobile, where this widget is presented in a bottom
-/// sheet instead.
+/// sheet instead. Its [Pane] joins global directional navigation; the route
+/// supplies sidebar content while the shared controller owns resize geometry.
 class Sidebar extends HookConsumerWidget {
   const Sidebar({required this.child, super.key});
 

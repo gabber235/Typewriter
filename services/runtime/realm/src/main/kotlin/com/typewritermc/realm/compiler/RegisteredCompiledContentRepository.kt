@@ -20,6 +20,7 @@ data class PublicationReport(
     val findings: List<Diagnostic>,
 )
 
+/** Reads the Realm selected runtime descriptor separately from the latest durable publication attempt report. */
 interface PublicationResults {
     suspend fun selected(): PublishedContent?
 

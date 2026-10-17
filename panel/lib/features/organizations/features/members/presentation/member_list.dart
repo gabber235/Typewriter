@@ -4,10 +4,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Coordinates the live member projection with shared selection state.
 ///
-/// Selection is local UI state and is intersected with the latest member ids so
-/// removed or stale rows cannot remain actionable. Durable role and removal
-/// operations go through [OrganizationMembers], while this widget chooses the
-/// table or tablet list and presents loading and provider error states.
+/// Selection is local UI state and is intersected with the last rendered member
+/// ids. Bulk removal captures that intersection before confirmation and submits
+/// each repository command through shared local work. Failures leave later
+/// members eligible for removal; successful ids are cleared from selection.
+/// This widget also chooses the table or tablet list and projection error UI.
 class MembersTab extends HookConsumerWidget {
   const MembersTab({super.key});
 

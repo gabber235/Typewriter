@@ -60,6 +60,13 @@ interface AuthoringCatalogLease : AutoCloseable {
     fun retain(): AuthoringCatalogLease
 }
 
+/**
+ * Captures saved resources and their catalog as the baseline for one authoring observation.
+ *
+ * Links and graph projections are derived from the captured fields. The view store owns catalog retention;
+ * callers needing the view beyond a synchronous read hold an [AuthoringLease]. Operation overlays can share
+ * the observation identity while carrying request local values, without installing them as saved state.
+ */
 @ConsistentCopyVisibility
 data class AuthoringView internal constructor(
     val catalog: AuthoringCatalogLease,
@@ -100,6 +107,12 @@ data class AuthoringSeed(
     val resourceDefinitions: Map<ResourceId, ResourceDefinitionId> = emptyMap(),
 )
 
+/**
+ * Keeps one captured baseline and its executable catalog alive across suspension.
+ *
+ * Staged read views overlay this baseline without saving changes. Close the lease after all readers finish;
+ * creating a staged view does not independently retain its catalog.
+ */
 interface AuthoringLease : AutoCloseable {
     val root: AuthoringView
 
@@ -161,7 +174,14 @@ internal fun AuthoredReadView.graphIndex(selection: RelationSelection): Captured
         is AuthoredReadView.Working -> graphIndexes.computeIfAbsent(selection) { CapturedGraphIndex(this, selection) }
     }
 
-/** Serializes current view installation and admission while leases preserve original read values. */
+/**
+ * Owns the current saved authoring view and retains retired views while readers still lease them.
+ *
+ * Repository admission prepares and installs replacement views here after coordinating persistent writes.
+ * [changes] is an invalidation signal, so consumers capture current state rather than treating its counter
+ * as a database revision. Invalidated storage reloads on the next read or capture. Store operations are
+ * serialized internally; the repository owns serialization across a complete edit admission and persistence.
+ */
 interface AuthoringViewStore : AutoCloseable {
     /** Signals installed or invalidated saved input. Readers still capture a retained view. */
     val changes: StateFlow<Long>

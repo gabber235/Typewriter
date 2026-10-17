@@ -1,5 +1,9 @@
 part of "../portable_presentation_renderer.dart";
 
+/// Keeps authored actions in their lexical scope while merging only proven
+/// collection command equivalents. Disclosure retains the body and excludes
+/// collapsed focus. Removal focus is captured before a menu or confirmation
+/// opens, so closing it cannot invent a new recovery origin.
 final class _AuthoredPresentationHeader extends HookWidget {
   const _AuthoredPresentationHeader({
     required this.header,

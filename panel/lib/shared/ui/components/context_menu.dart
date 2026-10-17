@@ -6,7 +6,8 @@ part "context_menu.freezed.dart";
 ///
 /// Secondary click and long press open the menu at the pointer position when
 /// [enableGestures] is true. On Apple platforms, a control click opens it;
-/// other taps are delegated to [onTapUp]'s [orElse] callback. Supply [builder]
+/// other taps can be delegated through the static [onTapUp] helper's `orElse`
+/// callback. Supply [builder]
 /// when the child must be built with the menu controller.
 class ContextMenuRegion extends HookWidget {
   const ContextMenuRegion({
@@ -119,7 +120,8 @@ class ContextMenuRegion extends HookWidget {
 
   /// Creates a tap handler that applies the platform context menu policy.
   ///
-  /// Supply [onContextTap] to resolve a target before opening its actions.
+  /// [onContextTap] replaces menu opening on an Apple Control click. It must
+  /// resolve the target and open the menu itself if needed.
   static void Function(TapUpDetails) onTapUp(
     MenuController controller, {
     Function(TapUpDetails)? orElse,

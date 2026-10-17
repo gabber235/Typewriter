@@ -34,7 +34,13 @@ internal interface AuthoringSearchRepository {
     ): List<IndexedAuthoringSearchCandidate>
 }
 
-/** The caller holds the current view lock throughout the database read. */
+/**
+ * Searches the stored text projection while the caller holds the current authoring view lock.
+ *
+ * Text ranking and ownership context narrow database candidates; catalog type matching then selects results
+ * within a consistent preview transaction. Holding the view lock keeps repository writes from advancing saved
+ * state while candidate rows are matched to the supplied catalog and resource graph.
+ */
 internal class SurrealAuthoringSearchRepository(
     private val database: Surreal,
 ) : AuthoringSearchRepository {

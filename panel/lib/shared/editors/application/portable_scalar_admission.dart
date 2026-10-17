@@ -49,6 +49,9 @@ bool admitsPortableScalarValue(skir.ScalarKind expected, skir.DataValue value) {
   return false;
 }
 
+/// Converts complete input to the expected numeric scalar, falling back to the
+/// current value kind when the schema has no numeric scalar. Integer bounds are
+/// exact; float32 input is rounded to its representable value.
 skir.DataValue? admitPortableNumericInput({
   required skir.DataValue? current,
   required skir.TypeUse? expected,
@@ -69,6 +72,8 @@ skir.DataValue? admitPortableNumericInput({
   };
 }
 
+/// Admits intermediate typing states as well as complete numeric values.
+/// A true result does not imply [admitPortableNumericInput] can commit the text.
 bool acceptsPortableNumericInput({
   required skir.DataValue? current,
   required skir.TypeUse? expected,
@@ -228,7 +233,8 @@ skir.DataValue? _decimalValue(String source) {
   return skir.DataValue.wrapDecimal(canonical);
 }
 
-/// Compares integer and decimal values without narrowing their precision.
+/// Compares integer and decimal pairs exactly. A pair involving a float uses
+/// finite doubles and can lose integer or decimal precision.
 int? comparePortableNumericValues(skir.DataValue left, skir.DataValue right) {
   String? exact(skir.DataValue value) => switch (value) {
     skir.DataValue_integerWrapper(:final value) ||

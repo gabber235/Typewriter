@@ -13,6 +13,14 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import java.math.BigInteger
 
+/**
+ * Prepares editable values from catalog schemas, supplied content, and generated Kotlin constructor defaults.
+ *
+ * Ordinary defaults fill values that have no omitted constructor default. Omitted defaults are sampled only when
+ * their constructor inputs are complete; otherwise their paths remain deferred in a caller owned continuation.
+ * Resumption validates that continuation against this catalog before accepting answers and retrying deferred work.
+ * Constructor sampling can execute user code. The runtime keeps no preparation session between calls.
+ */
 class DefaultInitializationRuntime(
     private val catalog: CheckedCatalog,
     private val bindings: NativeBindingRegistry,

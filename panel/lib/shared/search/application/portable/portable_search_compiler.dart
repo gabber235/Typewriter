@@ -7,7 +7,16 @@ const portableSearchResultType = SearchResultType(
   rowRendererId: "typewriter.portable.presentation",
 );
 
-/// Compiles portable declarations into the shared search source model.
+/// Interprets catalog supplied search providers for the shared search surface.
+///
+/// Provider leaves read static values, projected collections, HTTP JSON or Realm
+/// callbacks. Wrappers reuse the shared source decorators, preserving declared
+/// composition order. Expression evaluation uses the checked catalog and
+/// invocation budget captured in [PortableSearchEnvironment].
+///
+/// [bindControl] connects result selection to a portable editor host. Search
+/// results retain source and selected values separately so presentation can
+/// bind the source row while activation writes the selected value.
 final class PortableSearchCompiler {
   const PortableSearchCompiler();
 
@@ -277,7 +286,12 @@ extension on SearchResult {
   }
 }
 
-/// Owns one compiled source graph and its committed selection stream.
+/// Connects one compiled search session to its portable editor binding.
+///
+/// Selection writes through [host] and records successful additions for history.
+/// Catalog generation mismatch rejects selection before writing. This object
+/// owns feedback and the committed selection stream. The session controller
+/// owns source disposal; disposing this binding does not dispose [source].
 final class PortableSearchBinding {
   PortableSearchBinding._({
     required this.control,
@@ -1000,6 +1014,10 @@ final class _PortableHttpSearchSource extends _PortableLeafSearchSource {
   }
 }
 
+/// Decodes external JSON against a complete checked authored type.
+/// Named representations retain their type wrapper; records reject unknown
+/// fields and require every nonnullable field. Invalid values fail with their
+/// source path so the HTTP leaf can skip one bad row without losing other rows.
 skir.DataValue _decodePortableJson(
   Object? source,
   skir.TypeUse expected,

@@ -1,6 +1,17 @@
+//! Grants each admitted panel connection access to its own membership projection consumers.
+//!
+//! Consumer identity combines actor, optional organization, connection session, and projection.
+//! The panel must use the same encoding when opening its pull consumers. Grants cover named
+//! consumer operations and the exact projection filter; they do not prove organization access,
+//! which the user policy handler checks before constructing an organization scope.
+
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use wasmcloud_utils::transport_routes::{GrantSet, MembershipProjection, SubjectToken};
 
+/// Validated connection discriminator shared by inbox names and membership consumer identities.
+///
+/// This value separates reconnects and concurrent panel connections. It is not an identity
+/// credential and does not establish the actor's permissions.
 pub struct ConnectionSession(String);
 
 impl ConnectionSession {
@@ -27,6 +38,7 @@ impl TryFrom<&str> for ConnectionSession {
     }
 }
 
+/// Permission construction scope for one connection's user or organization projections.
 pub struct MembershipConsumerScope<'a> {
     actor: &'a SubjectToken,
     organization: Option<&'a SubjectToken>,
@@ -54,6 +66,7 @@ impl<'a> MembershipConsumerScope<'a> {
         }
     }
 
+    /// Encodes the identity tuple as JSON and unpadded URL safe Base64, prefixed with `TW_`.
     pub fn consumer_name(
         &self,
         projection: MembershipProjection,

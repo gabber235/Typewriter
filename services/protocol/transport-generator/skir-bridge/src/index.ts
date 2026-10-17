@@ -84,6 +84,11 @@ function bindings(
   }
 }
 
+/**
+ * Bridges the Rust manifest compiler to Skir's resolved graph and official language name exporters.
+ * The first subprocess requests canonical symbols; the second resolves routes and returns source.
+ * Skir owns writing the returned files, so paths must stay relative to its configured output root.
+ */
 export const GENERATOR: CodeGenerator<Config> = {
   id: "typewriter-transport",
   configType: Config,

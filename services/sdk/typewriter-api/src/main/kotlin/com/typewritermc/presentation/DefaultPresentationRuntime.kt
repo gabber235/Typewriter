@@ -3,6 +3,11 @@ package com.typewritermc.presentation
 import com.typewritermc.expression.ExpressionFactories
 import java.util.IdentityHashMap
 
+/**
+ * Resolves provider references by instance identity within one catalog runtime and captures each build independently.
+ * References can register several descriptors; the checked template selects the most specific applicable target and
+ * rejects ambiguity. Layout state and dependencies belong to a fresh [PresentationBuildState] for each build.
+ */
 class DefaultPresentationRuntime : PresentationRuntime {
     private val expressions = ExpressionFactories()
 

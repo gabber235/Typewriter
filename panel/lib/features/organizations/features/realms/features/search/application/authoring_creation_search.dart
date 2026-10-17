@@ -30,6 +30,9 @@ abstract class AuthoringCreationOption with _$AuthoringCreationOption {
   String get id => "${definition.value}:$configuration";
 }
 
+/// Lists catalog creation options without allocating resources. The command
+/// resolves destination constraints when invoked, stages through the shared
+/// creation owner, and returns navigation as a host effect after admission.
 final class AuthoringCreationSearchSource implements SearchSource {
   AuthoringCreationSearchSource(this.ref);
 

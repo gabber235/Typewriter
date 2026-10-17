@@ -10,13 +10,13 @@ typedef OutlineContentBuilder = WidgetBuilder;
 ///
 /// [builder] is invoked separately for the base and each enabled outline so
 /// the same conceptual content can be painted more than once without reusing a
-/// widget instance. The base layer owns layout and hit testing; outline layers
-/// are painted only and do not determine the widget's size. [show] disables both
-/// outline layers while retaining the base subtree.
+/// widget instance. The base layer determines size and receives pointer hits;
+/// outline layers are laid out separately and painted behind it. A false
+/// [show] omits both outline layers while retaining the base subtree.
 ///
-/// Use this instead of a separate foreground overlay when the outlined content
-/// must remain the single layout and interaction owner. The builder must be
-/// safe to invoke once per enabled layer.
+/// The builder must be safe to mount once per enabled layer. Extra subtrees
+/// are not automatically excluded from focus or semantics, so use decorative
+/// content or arrange those exclusions in the builder.
 class OutlineDecorator
     extends SlottedMultiChildRenderObjectWidget<OutlineSlot, RenderBox> {
   const OutlineDecorator({

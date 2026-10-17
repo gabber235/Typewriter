@@ -19,6 +19,11 @@ sealed interface MayBeMissing : MissingPolicy
 
 sealed interface Handled : MayBeMissing
 
+/**
+ * Carries a portable expression tree rather than an eagerly read Kotlin value.
+ * [T] guides generated receiver APIs and [M] tracks whether missing authored input has been handled by the builder.
+ * Catalog checking and runtime evaluation still validate operations, bindings, and available input values.
+ */
 class Expr<T, out M : MissingPolicy> internal constructor(
     val node: ExpressionNode,
 )

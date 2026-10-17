@@ -55,6 +55,14 @@ class UnavailableRealmPresentationSearchSource : RealmPresentationSearchSource {
     override fun cancel(subscriptionId: String): Boolean = false
 }
 
+/**
+ * Owns active presentation search jobs and their retained provider catalogs.
+ *
+ * Reusing a subscription identity cancels its previous job. Provider partial batches accumulate into complete
+ * snapshots, and explicit completion marks them ready. Operation searches also retain the caller working
+ * baseline and check its saved observation before publishing updates. Explicit cancellation and the supplied
+ * scope bound lifetime; the unary startup response does not own the continuing search job.
+ */
 class CapabilityRealmPresentationSearchSource(
     private val scope: CoroutineScope,
     private val catalogs: RealmCatalogStore,

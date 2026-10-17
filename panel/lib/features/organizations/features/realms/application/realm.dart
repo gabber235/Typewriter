@@ -55,13 +55,12 @@ void realmTopologyRecovery(Ref ref) {
   });
 }
 
-@freezed
 /// UI policy derived from [RealmConnectionState].
 ///
 /// The state has no independent lifecycle or mutable authority. Widgets use
 /// [suspended] to block edits while preserving the current view, then rebuild
 /// when the connection provider emits a new state.
-/// UI interaction policy derived from [RealmConnectionState].
+@freezed
 abstract class RealmInteractionState with _$RealmInteractionState {
   const factory RealmInteractionState({
     required RealmConnectionState connectionState,

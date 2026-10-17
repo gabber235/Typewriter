@@ -3,8 +3,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Expandable mobile card for one invitation code.
 ///
 /// The code URL is deliberately blurred until the user chooses to copy or
-/// inspect it. Selection, copy, and revoke callbacks connect the card to the
-/// route level coordination and provider owned mutation.
+/// inspect it. Selection belongs to the route. Revocation submits a prepared
+/// repository command through shared local work after confirmation.
 class JoinCodeCard extends HookConsumerWidget {
   const JoinCodeCard({
     required this.code,

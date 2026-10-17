@@ -82,6 +82,11 @@ sealed class ReferenceChoice with _$ReferenceChoice {
   ) = NewEmbeddedCounterpart;
 }
 
+/// Stages membership changes against the observed target sequence. Retained
+/// occurrences keep their IDs and order; this does not reorder them to match
+/// [proposed]. New targets must have an unambiguous automatic counterpart.
+/// A caller must stage this inside its edit preparation boundary so a later
+/// failure does not publish a partially assembled operation group.
 void replacePortableLinkCollection({
   required PortableAuthoringEdit draft,
   required CheckedEditorCatalog catalog,
@@ -180,6 +185,9 @@ bool _sameResources(List<skir.ResourceId> first, List<skir.ResourceId> second) {
   return true;
 }
 
+/// Plans links from this view and the catalog relation contract. Plans are
+/// observations of the current draft, so callers must resolve them again within
+/// edit preparation after any asynchronous counterpart creation.
 extension ReferencePlanning on PortableAuthoringView {
   PortableLinkPlanResult linkPlans({
     required CheckedEditorCatalog catalog,
@@ -371,6 +379,8 @@ extension ReferencePlanning on PortableAuthoringView {
   }
 
   /// Resolves an automatic or explicitly selected inverse to stable locations.
+  /// Returns the materializations needed before connecting, without editing the
+  /// view. Ambiguous or occupied implicit counterparts require an explicit choice.
   ResolvedReference resolveReference({
     required CheckedEditorCatalog catalog,
     required PortableLinkPlan plan,

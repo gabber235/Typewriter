@@ -234,7 +234,15 @@ extension RefNatsExtension on Ref {
   ).watch(eventSubject: eventSubject);
 }
 
-/// Owns one projection subscription across connection generations.
+/// Owns one projection stream across transport interruptions.
+///
+/// A connection generation opens its event subscription before requesting a
+/// snapshot. Broker events wait behind that snapshot, and stale generations
+/// cannot emit into the active stream. Sequenced projections share admission
+/// with confirmed command facts and reload on gaps; latest projections defer
+/// merging policy to their reducers. Timeout and unavailable delivery failures
+/// retry subscription acquisition; other delivery failures end the stream.
+/// Cancellation releases subscriptions without closing the shared client.
 final class ProjectionWatcher<TData, TResponse, TEvent> {
   const ProjectionWatcher({
     required this.client,

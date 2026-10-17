@@ -2,6 +2,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Preserves the parsed query and its selector expression for Realm evaluation.
+///
+/// The flat selectors carry selector identities while the expression preserves
+/// boolean grouping. This boundary encodes an already parsed query and does not
+/// reinterpret text or apply resource specific filtering policy.
 skir.RealmSearchQuery encodeRealmSearchQuery(SearchQueryContext query) =>
     skir.RealmSearchQuery(
       normalizedQuery: query.normalizedQuery,

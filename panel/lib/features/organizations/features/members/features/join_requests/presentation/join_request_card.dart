@@ -3,9 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Presents one moderation request and its transient interaction state.
 ///
 /// The card owns expansion and per request role selection. List selection is
-/// owned by [JoinRequestsList], while durable approval and decline operations
-/// belong to [OrganizationJoinRequests]. Expiry only removes the local row;
-/// the provider remains responsible for authoritative reconciliation.
+/// owned by [JoinRequestsList]. Approval and decline execute prepared repository
+/// commands through shared local work. The countdown clears selection only;
+/// the visibility projection separately filters expired rows using local time.
 class JoinRequestCard extends HookConsumerWidget {
   const JoinRequestCard({
     required this.request,
@@ -245,7 +245,7 @@ class JoinRequestCard extends HookConsumerWidget {
     );
   }
 
-  /// Confirms a destructive action before delegating it to the provider.
+  /// Clears local selection on confirmation before submitting the decline.
   Future<void> _confirmDeclineRequest(
     BuildContext context,
     WidgetRef ref,

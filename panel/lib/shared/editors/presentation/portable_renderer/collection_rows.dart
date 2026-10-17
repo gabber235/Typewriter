@@ -34,6 +34,8 @@ abstract class _SuppliedHeaderControl with _$SuppliedHeaderControl {
 }
 
 extension _CollectionRemovalCommand on PortablePresentationScope {
+  // A resolved alias proves a bound target even without a resource location.
+  // Relation mutation still requires a concrete link occurrence location.
   PortableDiagnosticTarget? collectionCommandTarget(skir.BindingRef reference) {
     final located = location(reference);
     if (located != null) return PortableDiagnosticTarget.value(located);
@@ -64,9 +66,6 @@ extension _CollectionRemovalCommand on PortablePresentationScope {
         _ => null,
       };
 }
-// SourceReference plus the resolved owner prove a bound alias target even
-// when the host has no resource ValueLocation. Direct links still require
-// a concrete occurrence location for relation mutation.
 
 extension _HeaderCommandIdentity on _ScopedHeaderDeclaration {
   _CollectionCommand? get command => switch (item) {
@@ -81,6 +80,9 @@ extension _HeaderCommandIdentity on _ScopedHeaderDeclaration {
   };
 }
 
+/// Removes supplied controls only when raw authored declarations prove the
+/// same command, including hidden declarations. Add has no inferred equivalent,
+/// and disconnect remains distinct from removing the containing list item.
 List<_SuppliedHeaderControl> _remainingCollectionControls(
   List<_ScopedHeaderDeclaration> raw,
   List<_SuppliedHeaderControl> supplied,
@@ -95,12 +97,6 @@ List<_SuppliedHeaderControl> _remainingCollectionControls(
         control,
   ];
 }
-
-// Host default Add and picker Add have no proven authored equivalent.
-// Leave their command null. An authored append with any payload survives.
-// Disconnect is not RemoveList, even at the same source location.
-// Keep raw declarations, including hidden ones, for matching. Resolve each
-// surviving authored item once using its own scope and existing _items logic.
 
 // The caller supplies a fallback header factory.
 // Authored headers still render at their original scoped position.
@@ -216,8 +212,6 @@ skir.PresentationHeader _generatedEntryHeader(String title) =>
       headerPadding: null,
       contentPadding: null,
     );
-// Null binding retains the existing contained control diagnostic summary.
-// _GeneratedCollectionDisclosure supplies the frozen initial expansion.
 
 // Called by the existing header renderer after raw semantic matching.
 Widget _collectionHeaderLine({
@@ -544,6 +538,7 @@ Widget _collectionDragScopes(BuildContext source, Widget child) {
   return proxy;
 }
 
+// Keep the same Wrap subtree across widths to preserve both input controllers.
 Widget _inlineMapPair({
   required BuildContext context,
   required Widget keyEditor,
@@ -594,8 +589,6 @@ Widget _structuredMapBody({
     valueEditor,
   ],
 );
-// Resizing only changes SizedBox widths. It does not replace a Row
-// subtree with a Column subtree or recreate the two input controllers.
 
 extension _CollectionFocusCallers on PortablePresentationNodeRenderer {
   void runGeneratedRemove({

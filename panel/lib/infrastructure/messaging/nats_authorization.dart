@@ -2,6 +2,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "nats_authorization.freezed.dart";
 
+/// Immutable observation of the server supplied publish and subscribe grants.
+///
+/// Generated transport routes interpret these subjects for the exact client
+/// identity and connection session. This observation does not grant access or
+/// replace backend authorization.
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class ServerPermissionSnapshot with _$ServerPermissionSnapshot {
   factory ServerPermissionSnapshot({
@@ -41,6 +46,8 @@ extension ServerApiPayload on Uint8List {
 }
 
 extension ServerPermissionResponse on Map<String, Object?> {
+  /// Requires explicit allow lists with no nonempty deny lists or recursive
+  /// wildcard grants. Other shapes fail instead of inferring broader access.
   ServerPermissionSnapshot readPermissions() {
     final value = this["permissions"];
     if (value is! Map<String, dynamic>) {
@@ -75,12 +82,18 @@ extension ServerPermissionResponse on Map<String, Object?> {
 }
 
 extension NatsAuthorizationQuery on NatsClient {
+  /// Reads grants from the server after this connection is ready.
+  ///
+  /// Transport and server failures propagate. Malformed permission payloads
+  /// fail parsing rather than producing an empty or unrestricted grant set.
   Future<ServerPermissionSnapshot> queryPermissions() async {
     await waitConnected();
     final response = await request(r"$SYS.REQ.USER.INFO", Uint8List(0));
     return response.payload.decodeServerApiResponse().readPermissions();
   }
 
+  /// Waits up to ten seconds for readiness, failing on terminal failure or
+  /// closure. The temporary lifecycle subscription is released on every exit.
   Future<void> waitConnected() async {
     final admitted = Completer<void>();
     void accept(NatsConnectionState value) {

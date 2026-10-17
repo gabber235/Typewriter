@@ -8,7 +8,12 @@ typedef PortablePresentationHostBuilder = PortablePresentationHost Function(
   ValueEditing owner,
 );
 
-/// Composes one value boundary, canonical snapshot, and view factory.
+/// Reconnects transient editor views to the value driver retained by local work.
+///
+/// [persistence] supplies the stable resource key. Acquiring the registration
+/// reuses that driver and admits the latest snapshot, so rebuilding an inspector
+/// does not create a second draft. The session owns the driver and observation
+/// subscription; presentation hosts are created for their individual views.
 @freezed
 abstract class ValueEditingRegistration with _$ValueEditingRegistration {
   const factory ValueEditingRegistration({
@@ -37,6 +42,8 @@ abstract class ValueEditingRegistration with _$ValueEditingRegistration {
   PortablePresentationHost? buildPortablePresentationHost(ValueEditing owner) =>
       portablePresentation?.call(owner);
 
+  /// Returns a view of the session owned driver without acquiring a view lease.
+  /// Callers retaining the view must separately lease [driverId] in [session].
   ValueEditing acquire(LocalWorkCommands session) {
     final driver = session
         .getOrRegister<EditingWorkDriver<ValueEditDocument, ValueEdit>>(

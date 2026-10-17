@@ -1,6 +1,9 @@
 part of "resource_creation.dart";
 
 /// Owns pending values and choices until one synchronous workspace admission.
+/// Reference pickers see a private graph containing unfinished dependencies.
+/// Question checkpoints restore that graph when stepping back, so abandoned
+/// answers cannot leak resources or inverse links into the admitted edit.
 final class _ResourceCreationOperation {
   _ResourceCreationOperation({
     required this.base,

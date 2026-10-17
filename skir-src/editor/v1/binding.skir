@@ -5,6 +5,8 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 
+/// Locates a value within an expression binding scope. The binding identifies the root and
+/// path identifies a descendant; this carries no resource ownership or edit permission by itself.
 struct BindingRef(810400001) {
   path: ValuePath = 0;
   binding_id: ExpressionBindingId = 1;

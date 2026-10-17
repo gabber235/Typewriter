@@ -7,9 +7,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// A read returns loading or invalid state if any owner has that state, mixed
 /// when owners disagree, and a ready value only when all owners agree. An
 /// update is sent to every owner, but the aggregate is applied only when all
-/// owners accept the same value. [commitInteractions] owns the persistence
-/// policy for the corresponding sessions, including whether their commits are
-/// atomic. This class observes owners but never disposes them.
+/// owners accept the same value. [SelectionInteractionCommit] prepares the
+/// corresponding sessions together while each request retains its persistence
+/// boundary. This class observes owners but never disposes them.
 final class MultiEditOwner extends ChangeNotifier
     implements EditOwner, EditingControlOwner {
   MultiEditOwner({

@@ -118,7 +118,13 @@ class PageCompiledArtifactConsumer(
     }
 }
 
-/** Applies a generic activation only after every registered artifact has been decoded and assembled. */
+/**
+ * Owns the engine visible snapshot assembled from one complete publication.
+ *
+ * Consumers fill a fresh [EngineContentBuilder]. The snapshot changes only after every consumer returns,
+ * so decoding, admission, or contribution failure retains the previous snapshot. Consumers own the meaning
+ * of their facets; the gateway owns the single publication point for their combined state.
+ */
 class AssemblingEngineContentGateway(
     consumers: Collection<CompiledArtifactConsumer>,
 ) : EngineContentGateway {

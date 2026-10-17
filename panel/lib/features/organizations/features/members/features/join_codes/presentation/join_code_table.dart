@@ -6,7 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Rows expose pointer and keyboard operations through
 /// [JoinCodeTableRowShortcuts]. This widget owns focus and selection visuals,
-/// while the route and application provider own the actions and data.
+/// while the route owns selection and providers supply observed data. Row
+/// controls submit prepared repository commands through shared local work.
 class JoinCodesTable extends HookConsumerWidget {
   const JoinCodesTable({
     required this.codes,

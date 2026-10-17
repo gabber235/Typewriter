@@ -22,6 +22,11 @@ import skirout.editor.v1.presentation.MainAxisAlignment as WireMainAxisAlignment
 import skirout.editor.v1.presentation.PresentationProperties as WirePresentationProperties
 import skirout.editor.v1.type_catalog.ValuePath as WireValuePath
 
+/**
+ * Owns one layout capture's node and binding identities, lexical type information, and published dependencies.
+ * Nested layout scopes share this state while directing output into temporary targets. Target restoration runs even
+ * when a builder fails, so child capture cannot leave subsequent output attached to the wrong parent.
+ */
 internal class PresentationBuildState(
     private val binding: PresentationBuildBinding,
     private val resolvePresentation: (PresentationReference, CheckedPresentationTemplate) -> com.typewritermc.types.PresentationId?,

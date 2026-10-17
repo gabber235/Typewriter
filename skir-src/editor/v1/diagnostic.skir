@@ -1,3 +1,8 @@
+// Diagnostics distinguish invalid declarations, invalid authored structure, unfinished
+// values, and failures during initialization or evaluation. Location and rule identity
+// retain the source context needed by editors; presentation severity does not itself
+// establish saved state, check freshness, or publication admission.
+
 import {
   CheckedType,
   DataValue,
@@ -66,11 +71,14 @@ struct CompleteValue(810300008) {
   value: DataValue = 1;
 }
 
+/// Reports whether authored shape is valid under its schema, independently of unfinished input.
 enum StructuralResult(810300009) {
   valid = 1;
   invalid: [ValueProblem] = 2;
 }
 
+/// Distinguishes a value ready for native decoding from unfinished locations and invalid shape.
+/// Schema resolution alone does not prove this value specific result.
 enum CompletenessResult(810300010) {
   complete: CompleteValue = 1;
   unfinished: [ValueLocation] = 2;

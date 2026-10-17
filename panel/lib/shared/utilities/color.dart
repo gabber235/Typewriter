@@ -1,6 +1,8 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// High contrast accent colors suitable for user selectable labels.
+/// Accent palette for user selectable labels.
+///
+/// Choose a foreground with [ColorExtension.on] when using these as backgrounds.
 const safeColors = <Color>[
   Colors.pinkAccent,
   Colors.redAccent,

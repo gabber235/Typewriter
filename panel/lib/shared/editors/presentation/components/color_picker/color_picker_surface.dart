@@ -3,8 +3,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Presents the color editing controls used by [ColorPickerField].
 ///
 /// [color] remains owned by the field and its editor binding. Every valid
-/// control change is emitted through [onChanged]. This surface keeps only the
-/// last meaningful hue needed when a grayscale value is adjusted. When alpha
+/// control change is emitted through [onChanged]. This surface remembers the
+/// format choice and the last meaningful hue for grayscale adjustments. When alpha
 /// is excluded, updates are normalized to opaque values before emission.
 /// [replacing] identifies a mixed selection where the first chosen color is a
 /// replacement rather than an edit to one shared value.

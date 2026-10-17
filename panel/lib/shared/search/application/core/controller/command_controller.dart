@@ -6,7 +6,13 @@ typedef CommandSurfaceEffectCallback = FutureOr<void> Function(
   SearchSurfaceEffect effect,
 );
 
-/// Owns one active search command and publishes its lifecycle to the surface.
+/// Admits command execution and publishes feedback for one search surface.
+///
+/// A running command rejects another submission. Completion publishes its
+/// result, applies the surface effect, then executes host effects in order.
+/// Host effects can therefore continue after a surface closes. Disposal stops
+/// subsequent state publication; it does not cancel command work already begun.
+/// Thrown command or effect errors become failed feedback while mounted.
 class CommandController with ChangeNotifier {
   CommandController({
     required CommandSurfaceEffectCallback effectCallback,

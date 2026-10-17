@@ -112,6 +112,9 @@ extension PortableInspectorComposition on PortablePresentationScope {
     );
   }
 
+  /// Reserves authored destinations structurally, including hidden branches.
+  /// Replaced parts retain their fallback field reservation, preventing a
+  /// remaining fields continuation from reintroducing the displaced controls.
   PortableInspectorClaims inspectorClaims() {
     final owner = authoredAliases[_configuredValueBindingId];
     if (owner == null) return const PortableInspectorClaims();

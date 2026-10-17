@@ -1,3 +1,7 @@
+// One part of an encoded response, distinct from a resumable artifact blob upload.
+// All chunks share transfer identity, total encoded byte size, chunk count, and SHA256 digest.
+// Indices start at zero. Receivers may assemble out of order but must verify the complete size
+// and digest before decoding; a repeated index is valid only when its bytes match.
 struct BoundedTransferChunk {
   transfer_id: string = 0;
   index: int32 = 1;

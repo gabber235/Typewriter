@@ -5,9 +5,9 @@ typedef GraphResizeCallback = void Function(GraphIdentifier, int, int);
 
 /// Interactive graph surface backed by an immutable [GraphData] snapshot.
 ///
-/// Selection is read from the shared selection provider. The primary focused
-/// element is added to the active keyboard target when it is not already in the
-/// selection, so focus and multi selection remain distinct. Pointer and
+/// Selection is read from the shared selection provider. A focused item outside
+/// that selection becomes the sole keyboard target; focus inside the selection
+/// preserves the selected batch. Pointer and
 /// keyboard edits are previews until the corresponding callback receives
 /// absolute grid values. Callers own persistence and rebuild the graph with the
 /// resulting snapshot.

@@ -1,3 +1,7 @@
+// Checks evaluate retained authoring inputs and attach original fact evidence to results.
+// Execution completion and finding freshness are independent: a finished result can become
+// outdated after saved state changes, and missing input or incomplete traversal is not success.
+
 import { EditExpectation } from "editor/v1/authoring_facts.skir";
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import { EvaluationDiagnostic } from "editor/v1/expression.skir";
@@ -9,6 +13,8 @@ import {
   ValueLocation,
 } from "editor/v1/type_catalog.skir";
 
+/// Describes whether an inspection covered its requested scope. Interrupted inspections may
+/// still return useful partial matches, but cannot establish that omitted matches do not exist.
 enum InspectionCompletion(811300001) {
   complete = 1;
   interrupted: string = 2;
@@ -19,6 +25,8 @@ struct UndecidedCandidate(811300002) {
   inputs: [ValueLocation] = 1;
 }
 
+/// Evaluation completion, separate from the diagnostics it emitted. finished may still have
+/// error findings; needs_input, failed, and incomplete cannot establish publication readiness.
 enum CheckOutcome(811300003) {
   finished = 1;
   needs_input: [ValueLocation] = 2;
@@ -36,6 +44,8 @@ struct CheckInstanceId(811300005) {
   location: ValueLocation = 1;
 }
 
+/// Distinguishes a rule occurrence, its catalog incarnation, and one scheduled execution.
+/// Current finding admission rejects results from executions superseded for the same instance.
 struct CheckTicket(811300006) {
   instance: CheckInstanceId = 0;
   incarnation: string = 1;
@@ -43,6 +53,8 @@ struct CheckTicket(811300006) {
   catalog: CatalogGeneration = 3;
 }
 
+/// Findings with the execution and original facts they describe. Status records freshness;
+/// consumers retain the evidence needed to compare them with saved or local working values.
 struct FindingSet(811300007) {
   ticket: CheckTicket = 0;
   expectations: [EditExpectation] = 1;

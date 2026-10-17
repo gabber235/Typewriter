@@ -49,6 +49,13 @@ import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTransferChunk
 
+/**
+ * Exposes saved snapshot transfer, prepared edit commit, and type argument previews to the editor.
+ *
+ * A state transfer is encoded from one retained view and carries its confirmed observation identity across
+ * all chunks. Commit delegates admission to the repository; preview and preparation return proposed edits
+ * without changing saved resources. Finding freshness is evaluated against the transferred baseline.
+ */
 internal class AuthoringRoutes private constructor(
     private val repository: AuthoringRepository,
     private val snapshots: AuthoringViewStore,

@@ -265,6 +265,11 @@ extension ServiceCollectionReconciliation on List<Service>? {
         entityName: "Service",
       );
 
+  /// Accepts heartbeat changes at an unchanged identity revision.
+  ///
+  /// Every other field must match for this exception to strict canonical
+  /// reconciliation. Watch updates use arrival order for heartbeat state;
+  /// snapshot reconciliation separately retains the newest timestamp.
   CanonicalReconciliation<Service> reconcileWatched(Service incoming) {
     final values = this;
     final current = values?.firstWhereOrNull(

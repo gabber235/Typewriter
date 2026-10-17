@@ -1,3 +1,8 @@
+// The editor catalog publishes checked authoring declarations and portable presentation
+// material from one Realm catalog generation. It describes what clients can author and
+// how to present it; executable callbacks remain owned by the Realm provider catalog.
+// Saved resources reference these declarations and must be interpreted under that generation.
+
 import { CapabilityDefinition } from "editor/v1/capability.skir";
 import {
   DeclarationDiagnostic,
@@ -43,6 +48,8 @@ struct ResourceDefinitionId(810900001) {
   value: string = 0;
 }
 
+/// Gives an authored resource family its stable definition identity and navigation behavior,
+/// independently of the concrete type application currently selected by a resource.
 struct AuthoringResourceDefinition(810900002) {
   id: ResourceDefinitionId = 0;
   root: TypeDefinitionId = 1;
@@ -65,6 +72,8 @@ enum EndpointCardinality(810900005) {
   many = 2;
 }
 
+/// Declares one side of a relation. Cardinality constrains how many resources on this side
+/// one opposite resource can reference. on_delete applies when a resource on this side is deleted.
 struct EndpointDefinition(810900006) {
   id: EndpointId = 0;
   slot: EndpointSlot = 1;
@@ -73,6 +82,8 @@ struct EndpointDefinition(810900006) {
   on_delete: RelationDeletePolicy = 4;
 }
 
+/// Shared relation meaning used to validate authored references and derive graph edges.
+/// Families attach shared semantics such as ownership without relying on presentation names.
 struct RelationContract(810900007) {
   id: RelationId = 0;
   first: EndpointDefinition = 1;
@@ -167,6 +178,9 @@ struct PresentationDescriptor(810900018) {
   priority: int32 = 4;
 }
 
+/// Checked portable layout for a provider, target, and role. Dependencies describe required
+/// services and typed inputs. inheritable_nodes identifies reusable inspector material rather
+/// than granting inheritance to every node in the layout.
 struct PresentationMaterial(810900019) {
   provider: PresentationId = 0;
   target: PresentationTarget = 1;
@@ -183,6 +197,9 @@ struct RoleFallback(810900020) {
   parents: [PresentationRole] = 1;
 }
 
+/// One coherent generation of authoring types, relations, presentations, capabilities, and operations.
+/// Generation changes invalidate client assumptions across the whole snapshot; they are separate
+/// from saved resource observations and selected compiled publications.
 struct EditorCatalogWireSnapshot(810900021) {
   generation: CatalogGeneration = 0;
   types: [PublishedType] = 1;
@@ -228,6 +245,8 @@ enum CatalogFetchResult(810900026) {
   internal_error: InternalError = 4;
 }
 
+/// Announces the installed catalog generation so clients can fetch current declarations.
+/// Delivery is an invalidation hint, rather than a durable history of catalog transitions.
 struct CatalogInvalidated(810900027) {
   generation: CatalogGeneration = 0;
 }
@@ -248,6 +267,8 @@ enum PreparedContent(810900030) {
   record: AuthoringRecord = 2;
 }
 
+/// Proposed editable content after value preparation. It may carry initialization findings;
+/// preparation does not save a resource or establish that authored content is publishable.
 struct PreparedValue(810900031) {
   content: PreparedContent = 0;
   findings: [InitializationDiagnostic] = 1;
@@ -258,6 +279,9 @@ struct RequiredInput(810900032) {
   expected: TypeUse = 1;
 }
 
+/// Caller retained continuation for deferred constructor defaults and required input.
+/// Resume validates catalog, target, pending default paths, and supplied answers. The runtime
+/// retains no preparation session behind this value, and constructor sampling may execute provider code.
 struct PreparationDraft(810900033) {
   catalog: CatalogGeneration = 0;
   target: PreparationTarget = 1;
@@ -280,6 +304,8 @@ enum PreparationOperation(810900035) {
   } = 2;
 }
 
+/// Separates prepared editable content from a continuation needing caller input or unavailable
+/// preparation. ready describes completion of initialization, not saved authoring or publication.
 enum PreparationStep(810900036) {
   ready: PreparedValue = 1;
   needs_input: PreparationDraft = 2;

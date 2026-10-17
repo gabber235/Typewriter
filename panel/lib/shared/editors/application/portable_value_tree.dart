@@ -11,6 +11,12 @@ sealed class PortablePathResult<T> with _$PortablePathResult<T> {
       PortablePathUnavailable<T>;
 }
 
+/// Traverses authored paths through named wrappers without removing their type
+/// identity from returned leaves. Replacements preserve wrappers on ancestor
+/// values, but replace the entire value at the selected leaf.
+///
+/// Item segments address stable IDs rather than positions. A map row requires a
+/// following key or value segment because the row itself is not a DataValue.
 extension PortableValueTree on skir.DataValue {
   skir.DataValue get authoredPayload {
     var current = this;
@@ -94,6 +100,8 @@ extension PortableValueTree on skir.DataValue {
   ) => _replaceValue(this, path.segments.toList(), 0, replacement);
 }
 
+/// Adapts record fields to value paths. A direct field replacement may add a
+/// missing root field; nested replacements require existing parents.
 extension PortableRecordTree on skir.AuthoringRecord {
   skir.DataValue? authoredField(String name) =>
       fields.where((field) => field.name == name).firstOrNull?.value;
@@ -531,6 +539,9 @@ PortablePathResult<skir.DataValue> _replaceListItem(
   return PortablePathValue(rebuild(items: items));
 }
 
+/// Finds duplicate set values and map keys using structural DataValue equality.
+/// This is separate from duplicate item ID admission and does not normalize
+/// numeric representations or named wrappers before comparing values.
 extension PortableCollectionDiagnostics on skir.DataValue {
   PortablePathResult<List<skir.ValuePath>> duplicateCollectionRows([
     skir.ValuePath? location,

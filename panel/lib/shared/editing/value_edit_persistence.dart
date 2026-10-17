@@ -2,7 +2,11 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Pure resource boundary composed into the common workspace.
+/// Adapts one typed value resource to shared editing capture and settlement.
+///
+/// Subclasses supply canonical snapshots and a prepared value mutation. This
+/// adapter preserves the resource identity while translating revision checks,
+/// changed paths and typed mutation outcomes into workspace semantics.
 abstract class ValueEditPersistence
     implements EditPersistence<ValueEditDocument, ValueEdit> {
   const ValueEditPersistence();

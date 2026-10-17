@@ -102,8 +102,9 @@ class NormalMode extends InteractionMode
 
 /// Creates the shared Escape action that returns the panel to [NormalMode].
 ///
-/// [onInvoke] runs first when supplied. The final transition to normal mode is
-/// unconditional, so a callback cannot leave a specialized mode active.
+/// [onInvoke] is invoked before the transition. Its returned value is ignored,
+/// so asynchronous work does not delay the transition. A synchronous exception
+/// prevents the transition and propagates to the action caller.
 ///
 /// Example usage:
 /// ```dart

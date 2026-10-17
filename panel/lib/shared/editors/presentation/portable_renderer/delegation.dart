@@ -108,6 +108,9 @@ extension _PortableDelegationRendering on PortablePresentationNodeRenderer {
     PortablePresentationScope childScope,
   ) => selectInvocation(invocation, childScope).render();
 
+  /// Resolves the owning record's field presentation before the value type's
+  /// default. Field conflicts remain diagnostics; only a missing declaration
+  /// proceeds to the type default and generated native control fallback.
   EditorSelection selectDefault(
     skir.DefaultPresentationElement element,
     PortablePresentationScope caller,

@@ -185,6 +185,12 @@ internal data object CanonicalizeManifestContent : ManifestContentTransform {
         )
 }
 
+/**
+ * Combines raw local metadata, explicitly embedded archives, and selected capability contributions before
+ * validating the artifact as a whole. Contribution identity includes its authored source and source part;
+ * duplicate keys are rejected even when their bytes match. Canonical ordering happens after validation.
+ * Hosted pipelines require one entrypoint, while library pipelines reject entrypoints altogether.
+ */
 internal class ManifestContentPipeline(
     private val source: ManifestContentSource,
     private val transforms: List<ManifestContentTransform>,

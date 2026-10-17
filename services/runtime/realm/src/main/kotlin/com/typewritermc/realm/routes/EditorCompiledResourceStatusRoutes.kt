@@ -7,7 +7,7 @@ import com.typewritermc.realm.compiler.CompiledRootStatuses
 import com.typewritermc.realm.compiler.RegisteredCompiledState
 import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuilder
 
-/** Returns all requested compiled root states through one repository snapshot query. */
+/** Reports roots present in the Realm selected publication; it does not inspect engine application state. */
 internal class EditorCompiledResourceStatusRoutes(
     private val snapshots: AuthoringViewStore,
     private val statuses: CompiledRootStatuses,

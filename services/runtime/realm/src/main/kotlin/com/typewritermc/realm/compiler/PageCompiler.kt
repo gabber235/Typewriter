@@ -23,6 +23,14 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.catalog.runtimeDefinitions
 import java.security.MessageDigest
 
+/**
+ * Compiles a Page and its ownership closure from one assessed authoring view.
+ *
+ * The shard includes scalar resource records, native binding evidence, incident relation edges, and the
+ * runtime declaration closure. Edges may refer outside the shard so the engine can assemble the complete
+ * publication graph. The input fingerprint identifies captured authoring inputs; the shard semantic digest
+ * identifies canonical runtime facts and is separate from its serialized blob digest.
+ */
 internal class PageCompiler(
     private val ownershipRelations: Set<RelationId>,
     private val readiness: Map<ResourceId, ResourceReadiness>,

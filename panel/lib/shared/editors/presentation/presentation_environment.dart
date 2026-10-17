@@ -59,6 +59,9 @@ extension PortableCallerBindings
 
 extension PortableContextImports
     on Map<skir.ExpressionBindingId, PortableExpressionBinding> {
+  /// Imports require exact declared schemas and read only observations. Missing
+  /// inputs become typed unfilled values, preserving unavailable data separately
+  /// from malformed or conflicting caller input.
   Map<skir.ExpressionBindingId, PortableExpressionBinding> withContextImports({
     required CheckedEditorCatalog catalog,
     required Iterable<skir.PresentationContextInput> imports,

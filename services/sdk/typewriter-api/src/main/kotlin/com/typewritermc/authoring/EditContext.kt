@@ -7,6 +7,7 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import kotlinx.serialization.Serializable
 
+/** An edit proposal carrying its catalog generation, observed preconditions, and ordered intents for later acceptance. */
 data class PreparedEdit(
     val catalog: CatalogGeneration,
     val expectations: List<EditExpectation>,

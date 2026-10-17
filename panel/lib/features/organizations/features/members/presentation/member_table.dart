@@ -5,9 +5,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Desktop member projection with bulk selection and inline role editing.
 ///
 /// The table does not own membership data. It renders the provider snapshot,
-/// keeps selection and focus transient, and delegates mutations to the
-/// provider. Row identity is the user's record id, allowing animated updates
-/// to follow members across live add, update, and remove events.
+/// keeps selection and focus transient, and submits repository commands through
+/// shared local work. Row identity is the user's record id, allowing animated
+/// updates to follow members across live add, update, and remove events.
 class MembersTable extends HookConsumerWidget {
   const MembersTable({
     required this.members,

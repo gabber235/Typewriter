@@ -55,6 +55,10 @@ abstract class AuthoringSearchResultPayload
       id.value;
 }
 
+/// Uses Realm search to choose saved resource hits, then renders surviving hits
+/// from the current working document so local edits appear immediately. Local
+/// additions do not enter that server result set. Query revisions suppress late
+/// replies and catalog identity prevents mixing hits with another schema.
 final class RealmAuthoringSearchSource implements SearchSource {
   RealmAuthoringSearchSource({
     required this.ref,

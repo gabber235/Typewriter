@@ -2,12 +2,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "shortcut_display.freezed.dart";
 
-// The default spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
+// Base spacing between displayed keys before applying visual density.
 const double _kLabelItemDefaultSpacing = 8;
 
-// The minimum spacing between the leading icon, label, trailing icon, and
-// shortcut label in a _MenuItemLabel.
+// Compact density must retain this much separation between keys.
 const double _kLabelItemMinSpacing = 4;
 
 /// Selects the visual treatment used for keyboard shortcut keys.

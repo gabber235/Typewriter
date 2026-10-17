@@ -14,8 +14,10 @@ abstract class _RemovalFocusIntent with _$RemovalFocusIntent {
   }) = __RemovalFocusIntent;
 }
 
-// One instance per mounted collection identity and host ownership.
-// The mounted collection and rows own their FocusNodes.
+/// Coordinates focus recovery for one mounted collection and host lifetime.
+/// Recovery requires both successful local removal and observed disappearance.
+/// Another live focus target, rollback, route change or owner replacement retires
+/// the request. The collection and rows retain ownership of their FocusNodes.
 class _CollectionRemovalFocus {
   _CollectionRemovalFocus({
     required this.isCurrent,
@@ -274,8 +276,9 @@ class _CollectionRemovalFocus {
   }
 }
 
-// Uses the existing host document abstraction for both authored and bound
-// sources. Capture a canonical root reference, never an item scope snapshot.
+/// Captures canonical source identity for later live membership reads through
+/// the host document. Old invocation bindings cannot prove a row disappeared.
+/// Unavailable membership returns null, distinct from an empty collection.
 @freezed
 abstract class _LiveCollectionSource with _$LiveCollectionSource {
   const factory _LiveCollectionSource({
@@ -338,8 +341,6 @@ abstract class _LiveCollectionSource with _$LiveCollectionSource {
   }
 }
 
-// Both existing hosts expose current source values through document.
-// Do not call host.read with the old invocation snapshot for membership.
 @freezed
 abstract class _CollectionActionOrigin with _$CollectionActionOrigin {
   const factory _CollectionActionOrigin({

@@ -71,6 +71,14 @@ interface PortableValueStorage {
     suspend fun load(key: ResourceId): PortableValue?
 }
 
+/**
+ * Owns native bindings for one checked catalog, combining generated factories with framework representations.
+ *
+ * Bindings are cached by concrete type and reject checked types from another generation. Deferred bindings allow
+ * recursive record factories to refer to themselves during construction, but fail if used before initialization.
+ * Concrete definitions without a native factory retain [PortableValue] content; abstract records dispatch through
+ * the actual authored type. Native sets and maps reject duplicates that their Kotlin containers would discard.
+ */
 class FactoryNativeBindingRegistry(
     private val catalog: CheckedCatalog,
     factories: List<NativeBindingFactory>,

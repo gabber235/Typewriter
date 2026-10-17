@@ -59,6 +59,11 @@ import skirout.editor.v1.type_catalog.RelationId as SkirRelationId
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.editor.v1.type_catalog.TypeUse as SkirTypeUse
 
+/**
+ * Carries initialization continuations, observed edit expectations, ordered intents, and commit outcomes over Skir.
+ * Nested value conversion failures retain their traversal path inside the enclosing operation. Conversion preserves
+ * proposals and preconditions; continuation validation and edit acceptance still belong to their runtime owners.
+ */
 object SkirAuthoringOperationCodec {
     fun encode(value: PreparationOperation): SkirConversionResult<SkirPreparationOperation> =
         captureOperationConversion { encodePreparationOperation(value) }

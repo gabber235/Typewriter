@@ -1,5 +1,7 @@
 part of "multiselect_dropdown.dart";
 
+// The dropdown view maps navigation keys to private intents so the menu can
+// move its highlight while EditableText retains keyboard focus.
 class _PreviousIntent extends Intent {
   const _PreviousIntent();
 }

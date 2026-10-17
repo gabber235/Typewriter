@@ -60,6 +60,9 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
 
 /// Coordinates one creation action without publishing its unfinished dependencies.
 /// Each invocation owns its draft; the shared provider holds no mutable session.
+/// Scope or catalog changes cancel outstanding prompts. After all dependencies
+/// are ready, one local edit rechecks selected destinations and stages the graph;
+/// durable saving remains the shared workspace driver's responsibility.
 final class ResourceCreationSession {
   const ResourceCreationSession(this.ref, this.scope);
 

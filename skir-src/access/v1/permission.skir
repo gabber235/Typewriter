@@ -23,7 +23,7 @@ struct ResponsePermission {
 }
 
 // Policy output owned by the permission service. The auth callout converts this result into NATS
-// permissions and preserves its tags when it signs the authenticated identity.
+// permissions. Identity tags travel alongside this value in the resolution response.
 struct Permissions {
   publish: Permission;
   subscribe: Permission;

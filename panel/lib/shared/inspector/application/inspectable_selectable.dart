@@ -26,7 +26,8 @@ abstract interface class PortableMultiInspectionSurface {
 ///
 /// This is the read only inspection boundary. Implementations create a
 /// presentation from the supplied owner scope. [buildInspection] may add a
-/// header, but it does not own resource editors; the inspection session does.
+/// header. The local work session owns resource drafts; the supplied binding
+/// scope leases those owners for the inspection graph.
 abstract class InspectableSelectable<I extends SelectableIdentifier>
     extends Selectable<I> {
   const InspectableSelectable();

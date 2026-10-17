@@ -54,7 +54,8 @@ String searchTreeResultKey(String id) => "result:$id";
 ///
 /// [isCollapsed] owns expansion state outside this pure projection. Collapsed
 /// sections keep their header and count descendants, but hide descendant rows.
-/// Result shortcut numbers follow visible depth first order and stop at nine.
+/// Result shortcut numbers are assigned during recursive traversal and stop
+/// after the ninth numbered result.
 SearchTreeViewModel buildSearchTreeViewModel({
   required List<SearchNode> nodes,
   required bool Function(String sectionId) isCollapsed,

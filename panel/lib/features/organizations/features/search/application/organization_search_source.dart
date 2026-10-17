@@ -14,6 +14,10 @@ const createOrganizationSearchResultType = SearchResultType(
   label: "Create Organization",
 );
 
+/// Maintains a local search index of the supplied membership projection.
+/// Loading retains available results with stale markers, while provider errors
+/// remain visible beside those results. Navigation and creation are returned
+/// by separate commands as host effects; this source performs no mutation.
 final class OrganizationsSearchSource(
   final ValueListenable<AsyncValue<List<OrganizationData>>> organizations,
 ) implements SearchSource {

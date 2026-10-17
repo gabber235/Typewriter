@@ -2,6 +2,10 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Owns a view binding into retained Realm work, plus its review and apply
+/// controls. Rebinding or disposal detaches the view without discarding edits.
+/// Type argument changes require existing related work to be resolved first,
+/// then use Realm preview and preparation before staging through this binding.
 final class AuthoredResourceInspection extends StatefulWidget {
   const AuthoredResourceInspection({
     required this.resource,

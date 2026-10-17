@@ -35,6 +35,10 @@ extension _PortableDiagnosticSeverityPresentation on skir.DiagnosticSeverity {
   };
 }
 
+/// Routes each target to exact mounted controls, otherwise the deepest matching
+/// headers. Header ancestors summarize descendants without duplicating their
+/// direct messages. Unmatched diagnostics retain their declared fallback, so
+/// resource feedback is not silently promoted into general presentation feedback.
 @freezed
 abstract class PortableDiagnosticPlacement with _$PortableDiagnosticPlacement {
   const factory PortableDiagnosticPlacement({

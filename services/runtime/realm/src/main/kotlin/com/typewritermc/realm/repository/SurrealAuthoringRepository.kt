@@ -27,7 +27,14 @@ import com.typewritermc.types.catalog.Resolution
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-/** Owns validation, persistence, catalog installation, and coherent current reads for one Realm. */
+/**
+ * Owns admission of prepared edits into the saved authoring state for one Realm.
+ *
+ * Admission serializes catalog checks, expected fact comparison, intent replay, mandatory guard validation,
+ * storage persistence, and replacement view installation. Missing guards are rejected even when the supplied
+ * expectations match. Storage failure invalidates the view for a coherent reload before further reads.
+ * A committed edit updates saved authoring only; checking and publication have separate owners.
+ */
 internal class RealmAuthoringOwner(
     private val storage: AuthoringStorage,
     private val views: AuthoringViewStore,

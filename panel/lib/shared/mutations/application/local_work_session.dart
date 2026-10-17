@@ -40,6 +40,11 @@ abstract interface class LocalWorkCommands {
   Future<void> retry(WorkEntryId entry);
   Future<void> save(WorkEntryId entry);
   WorkDriverId register(WorkDriver driver, {WorkDestination? destination});
+
+  /// Reuses the driver with [id], or transfers ownership of a newly created one.
+  ///
+  /// A supplied destination replaces the existing owned target. The factory
+  /// must preserve [id] and the existing registration must have type [D].
   D getOrRegister<D extends WorkDriver>(
     WorkDriverId id,
     D Function() create, {
@@ -50,7 +55,7 @@ abstract interface class LocalWorkCommands {
   /// Discards the local draft when its save lifecycle permits it.
   bool discard(WorkEntryId entry);
 
-  /// Opens the current destination for [key], if one is available.
+  /// Opens the owning driver's current destination for [entry], if available.
   Future<void> open(WorkEntryId entry);
 }
 

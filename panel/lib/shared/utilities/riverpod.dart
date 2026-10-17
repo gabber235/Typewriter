@@ -99,6 +99,7 @@ extension RefExtension on Ref {
     if (didDispose) throw Exception("Debounce was disposed");
   }
 
+  /// Replays the latest provider value and closes when this reference disposes.
   Stream<StateT> streamed<StateT>(ProviderListenable<StateT> provider) {
     final subject = BehaviorSubject<StateT>();
     onDispose(subject.close);
@@ -110,6 +111,10 @@ extension RefExtension on Ref {
     return subject.stream;
   }
 
+  /// Exposes provider updates as a listenable for imperative consumers.
+  ///
+  /// The subscription follows this reference's lifetime. Consumers must remove
+  /// their listeners when done; this adapter does not dispose the notifier.
   ValueListenable<StateT> valued<StateT>(ProviderListenable<StateT> provider) {
     final notifier = ValueNotifier<StateT>(read(provider));
     listen(

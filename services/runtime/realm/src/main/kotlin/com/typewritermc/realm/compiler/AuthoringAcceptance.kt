@@ -46,6 +46,12 @@ data class EngineImplementationInputs(
     val token: InputToken,
 )
 
+/**
+ * Supplies the engine inputs that fence compilation and publication selection.
+ *
+ * [activate] checks the captured implementation before invoking the publication callback. It does not load
+ * or apply content to an engine; concrete sources own coordination of implementation changes with this check.
+ */
 interface EngineImplementationSource {
     fun capture(): EngineImplementationInputs
 
@@ -157,6 +163,14 @@ internal interface PublicationAcceptance {
     suspend fun evaluate(capture: AuthoringLease): CapturedAssessment
 }
 
+/**
+ * Establishes publication readiness for one retained saved view.
+ *
+ * Captured checks run against that view, independently of editor finding freshness. Every resource must have
+ * complete structure and a concrete native binding that can construct it; intrinsic set and map uniqueness
+ * is also checked. Findings carry the original expectations needed to relate them to later working values.
+ * Assessment itself neither stores compiled blobs nor selects a publication.
+ */
 internal class AuthoringAcceptance(
     private val snapshots: AuthoringViewStore,
     private val checks: RealmCheckRuntime,

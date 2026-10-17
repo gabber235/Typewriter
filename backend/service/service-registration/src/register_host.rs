@@ -4,6 +4,9 @@
 //! idempotent. A changed advertisement increments the host configuration `revision` and emits a
 //! topology update. It does not change the desired execution topology, which is owned by
 //! `configure_topology`.
+//!
+//! Idempotency covers the stored advertisement. If publication fails after commit, an equal retry
+//! returns the stored host without replaying that publication; watchers recover by reading a snapshot.
 
 use otel_wasi::ResultWithSlug;
 use serde::Deserialize;

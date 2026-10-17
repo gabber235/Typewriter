@@ -28,9 +28,10 @@ struct MessagingScopeRecord {
 #[tracing::instrument(skip_all)]
 /// Returns the service organization, host owned Realm, and engine attached Realm.
 ///
-/// This is a read only lookup keyed by the service identifier in the request. `NotFound` means
-/// the service record does not exist. A found service with no registered host is still returned,
-/// with both Realm relationships absent.
+/// Uses the authenticated service subject scope; the request payload does not select another
+/// service. `NotFound` means the service record does not exist. A bound service without a host
+/// has both Realm relationships absent. An unbound record cannot form the required organization
+/// scope and fails result decoding.
 pub async fn handle(
     _msg: NatsMessage,
     scope: ServiceScope,

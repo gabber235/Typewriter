@@ -57,7 +57,10 @@ String? _mappedDisplay(
       : null;
 }
 
-/// Serializes one mounted editor's writes through its existing host.
+/// Serializes one mounted input's writes and completion mappings through its host.
+/// A changed source identity retires queued work; an operation already handed to
+/// the host can finish. Completion mappings use the latest accepted input and
+/// carry expression read witnesses into the resulting write.
 class _PortableEntryEditing extends HookWidget {
   const _PortableEntryEditing({
     required this.scope,

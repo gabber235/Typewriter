@@ -73,7 +73,7 @@ class TimelineStyle {
   /// The height of the timeline ruler area at the top.
   final double rulerHeight;
 
-  /// The horizontal padding for track content.
+  /// Vertical padding above and below each track's lanes.
   final double trackPadding;
 
   /// The height of each lane (row) in the timeline.
@@ -106,16 +106,16 @@ class TimelineStyle {
   /// The available frame steps used to choose grid line intervals.
   final List<int> gridTickSteps;
 
-  /// The number of frames to keep rendered after the visible range.
+  /// Empty frame extent appended after the last element for navigation.
   final int trailingFrames;
 
   /// The minimum visual width assigned to a segment, even at low zoom.
   final double minSegmentWidth;
 
-  /// The width of keyframe indicators on the timeline.
+  /// Placement width reserved for a keyframe and its hit region.
   final double keyframeWidth;
 
-  /// The size of individual keyframe hit targets.
+  /// Visual size of the rotated keyframe marker inside its placement.
   final double keyframeSize;
 
   /// The width of edge handles for resizing segments.

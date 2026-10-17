@@ -1,5 +1,8 @@
 part of "../portable_presentation_renderer.dart";
 
+/// Adapts canonical page projections to shared graph and timeline widgets.
+/// Geometry changes return through the page host; an application interaction
+/// scope can wrap graph nodes without taking over portable presentation policy.
 extension _PortablePageRendering on PortablePresentationNodeRenderer {
   Widget _renderPageGraph(
     BuildContext context,

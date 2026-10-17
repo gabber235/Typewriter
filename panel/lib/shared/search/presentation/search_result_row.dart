@@ -2,6 +2,11 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 enum SearchResultDensity { compact, card }
 
+/// Composes a result renderer into a compact row or an accent card.
+///
+/// The entire row owns activation. Supplied leading, body and footer content is
+/// decorative: focus and pointer input are excluded so portable presentations
+/// cannot install competing child interactions inside a search result.
 final class SearchResultRow extends StatelessWidget {
   const SearchResultRow({
     required this.row,

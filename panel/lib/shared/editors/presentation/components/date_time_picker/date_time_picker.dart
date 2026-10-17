@@ -1,8 +1,8 @@
 /// Date and time controls used by typed presentation inputs.
 ///
-/// The field coordinates focus and commit or cancel semantics. Calendar and
-/// clock surfaces only emit complete candidate values, leaving binding
-/// ownership and persistence with the enclosing editor.
+/// The field coordinates focus and interaction completion. Dismiss and cancel
+/// actions both close the picker and retain emitted candidates. Calendar and
+/// clock controls emit complete values; the enclosing editor owns persistence.
 library;
 
 export "date_time_calendar.dart";

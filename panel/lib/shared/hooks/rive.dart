@@ -10,7 +10,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// ```dart
 /// final fileLoader = useRiveFileLoader.fromAsset(
 ///   "assets/animation.riv",
-///   riveFactory: Factory.rive,
+///   riveFactory: RiveFactory.rive,
 /// );
 /// ```
 const useRiveFileLoader = _RiveFileLoaderHookCreator();

@@ -1,5 +1,10 @@
 package com.typewritermc.expression
 
+/**
+ * Admits the shared portable pattern subset and expands shorthand classes to explicit cross runtime character sets.
+ * Unsupported host features remain distinct from malformed syntax. The normalized pattern still requires compilation
+ * by [PortableRegexMatcher]; this pass does not validate every character range or repetition shape.
+ */
 internal fun String.normalizePortableRegex(): PortableRegexNormalization {
     val pattern = this
     if (pattern.length > PortableExpressionLimits.MAX_REGEX_PATTERN_CODE_UNITS) {

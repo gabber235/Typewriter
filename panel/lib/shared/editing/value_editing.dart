@@ -10,7 +10,12 @@ typedef EditorMutationValidator = EditorMutationResult Function(
   skir.DataValue value,
 );
 
-/// Typed value operations over the common owner. No draft or save loop lives here.
+/// Exposes typed path editing through one group in an [EditingWorkspace].
+///
+/// The default factory owns its workspace and any privately created work
+/// session. [ValueEditing.fromWorkspace] is a borrowed view whose disposal
+/// leaves the shared owner alive. [ValueEditingRegistration] supplies this
+/// borrowed form for resource views retained by the local work session.
 final class ValueEditing
     implements EditOwner, EditingControlOwner, EditingStageOwner {
   factory ValueEditing({

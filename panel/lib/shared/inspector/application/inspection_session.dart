@@ -11,7 +11,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// Selection is read from [selectedProvider]. Focus is deliberately unrelated:
 /// selectable surfaces own focus, while this session reacts only to selection
-/// resolution and resource availability.
+/// resolution and resource availability. Shared portable surfaces are combined
+/// only when every selected resource contributes a mutually compatible surface
+/// with the same root type and catalog snapshot. Otherwise each resource keeps
+/// its own inspection content.
 final class InspectionSession extends ChangeNotifier {
   InspectionSession(this.ref)
     : owners = InspectionBindings(

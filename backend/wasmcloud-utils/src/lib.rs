@@ -85,8 +85,8 @@ macro_rules! validate_record_ids {
 
 /// Decode a SKIR message while dropping fields unknown to this component.
 ///
-/// Decoding failures are translated to `skir-decode-failed`. Dropping unknown
-/// fields keeps older and newer contract versions interoperable at this boundary.
+/// Decoding failures are translated to `skir-decode-failed`. Unknown fields are not
+/// retained for a later round trip; callers must still handle unknown enum variants.
 ///
 /// # Example
 /// ```rust,ignore

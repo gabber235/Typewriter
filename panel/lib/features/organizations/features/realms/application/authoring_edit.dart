@@ -1,6 +1,12 @@
 part of "realm_edit_model.dart";
 
-/// A private operation branch. Only the workspace can publish its changes.
+/// Owns a private working graph, ordered intent, and original fact witnesses for one operation.
+///
+/// Reads can see prior writes, while recorded expectations always come from the
+/// captured baseline. Forked preparation is adopted only after its local checks
+/// succeed. References use relation operations so inverse values and graph projections
+/// stay together. [prepare] returns proposed intent; the editing workspace owns its
+/// admission into shared local work and Realm admission owns the saved write.
 final class AuthoringEdit implements PortableAuthoringEdit {
   factory AuthoringEdit({
     required skir.CatalogGeneration generation,
@@ -208,6 +214,8 @@ final class AuthoringEdit implements PortableAuthoringEdit {
     intents: intents,
   );
 
+  /// Composes prepared intent only while its catalog and expected working facts match.
+  /// Failure leaves this branch unchanged because replay occurs on a fork.
   void applyPrepared(skir.PreparedEdit prepared) {
     if (prepared.catalog != generation) {
       throw StateError("The editor catalog changed");

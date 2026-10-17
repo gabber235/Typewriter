@@ -26,11 +26,9 @@ extension StringX on String {
 
   int? get asInt => int.tryParse(this);
 
-  /// If the string is empty, returns null
-  /// Otherwise returns the string
   String? get nullIfEmpty => isEmpty ? null : this;
 
-  /// Joins a path with another path.
+  /// Appends a dot separated path, omitting the separator when this is empty.
   String join(String other) {
     if (isEmpty) return other;
     return "$this.$other";

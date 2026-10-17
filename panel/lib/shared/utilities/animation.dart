@@ -22,7 +22,7 @@ extension AnimationExtension on Animate {
 
 /// Adds curve composition to Flutter tweens.
 extension TweenExtension<T> on Tween<T> {
-  /// Applies [curve] after this tween without changing its endpoints.
+  /// Transforms animation progress through [curve] before evaluating this tween.
   Animatable<T> curved(Curve curve) {
     return chain(CurveTween(curve: curve));
   }

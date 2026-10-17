@@ -40,7 +40,7 @@ class ContentSizeTabBarView extends StatefulWidget {
   /// The physics are modified to snap to page boundaries using
   /// [PageScrollPhysics] prior to being used.
   ///
-  /// Defaults to matching platform conventions.
+  /// Defaults to page snapping with [ClampingScrollPhysics].
   final ScrollPhysics? physics;
 
   /// {@macro flutter.widgets.scrollable.dragStartBehavior}

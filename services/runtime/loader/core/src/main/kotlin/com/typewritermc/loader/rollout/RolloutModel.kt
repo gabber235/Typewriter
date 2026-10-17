@@ -9,15 +9,7 @@ import com.typewritermc.services.libs.registrar.ServiceId
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
-/**
- * Shared state model for Realm deployment rollout.
- *
- * The coordinator publishes immutable projection references, participants apply them locally, and status probes
- * verify attempt and health state. These serializable values are also the payload model for the rollout messaging
- * contracts in the rollout communication module.
- *
- * [RealmId] identifies the Realm whose hosts participate in a rollout.
- */
+/** Identifies the logical Realm coordinated by [CoordinatedRollout] and its host participants. */
 @JvmInline
 @Serializable
 value class RealmId(

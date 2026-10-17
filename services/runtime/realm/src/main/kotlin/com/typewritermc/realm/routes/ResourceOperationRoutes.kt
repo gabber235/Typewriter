@@ -40,7 +40,13 @@ import skirout.editor.v1.authoring.CounterpartChoice as WireCounterpart
 import skirout.editor.v1.resource_operations.PreparationChoice as WireChoice
 import skirout.editor.v1.resource_operations.PreparationChoiceAnswer as WireAnswer
 
-/** The route authenticates through its generated Realm grant; all supplied working facts remain untrusted. */
+/**
+ * Adapts operation requests on generated Realm routes into validated working observations.
+ *
+ * Broker grants govern route access. This adapter validates caller supplied overlay and choice identities,
+ * while the runtime verifies catalog, saved observation, availability, and origin before preparing a preview.
+ * Input revisions are echoed for client response ordering and do not authorize saved state writes.
+ */
 internal class ResourceOperationRoutes(
     private val runtime: ResourceOperationRuntime,
     private val contracts: EditorContracts,

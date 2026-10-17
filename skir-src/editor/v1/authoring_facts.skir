@@ -1,3 +1,8 @@
+// Conflict evidence records the original logical facts consumed by authoring work.
+// Facts describe values, configuration, existence, resource selection, and derived links.
+// They are equality witnesses checked against saved state, rather than a global revision
+// or permission to write.
+
 import {
   AuthoringRecord,
   DataValue,
@@ -8,6 +13,8 @@ import {
   ValuePath,
 } from "editor/v1/type_catalog.skir";
 
+/// One directed relation edge derived from authored references. Nullable endpoint locations allow
+/// a relation to be authored on only one side; present locations retain exact occurrence identity.
 struct LinkProjection(812300001) {
   contract: RelationId = 0;
   first: ResourceId = 1;
@@ -22,6 +29,8 @@ enum TraversalDirection(812300002) {
   both = 3;
 }
 
+/// Records a saved fact required by proposed work. Missing values and absent resources are valid
+/// observations. Staged writes do not replace this original evidence with their proposed output.
 enum EditExpectation(812300003) {
   value: struct {
     at: ValueLocation = 0;
@@ -48,6 +57,7 @@ enum EditExpectation(812300003) {
   } = 6;
 }
 
+/// Pairs a required original fact with the current saved fact so the caller can refresh before retrying.
 struct ExpectationConflict(812300004) {
   expected: EditExpectation = 0;
   actual: EditExpectation = 1;

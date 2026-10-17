@@ -23,6 +23,7 @@ import com.typewritermc.types.immutableCopy
 import kotlinx.serialization.Serializable
 import java.util.concurrent.ConcurrentHashMap
 
+/** A resolved application tied to the catalog generation and resolver that established its schema. */
 class CheckedType internal constructor(
     val catalog: CatalogGeneration,
     val use: TypeUse,
@@ -63,6 +64,14 @@ sealed interface DeclarationStatus {
     ) : DeclarationStatus
 }
 
+/**
+ * Resolves contributed declarations into the schemas used by authoring, native bindings, and portable expressions.
+ *
+ * Declaration availability and application validity are separate: an available generic declaration can still reject
+ * an application's arity or bounds. Partial resolution preserves fields independent of unfinished arguments.
+ * Readability describes permitted reads through nominal ancestry and generic applications; values retain their
+ * actual type for editing and encoding.
+ */
 interface CheckedCatalog {
     val generation: CatalogGeneration
 
@@ -129,6 +138,13 @@ fun TypeTemplate.apply(arguments: Map<ParameterKey, TypeUse>): Resolution<TypeUs
         }
     }
 
+/**
+ * Owns an immutable declaration snapshot and memoized application results for one catalog generation.
+ *
+ * Construction isolates invalid declarations and their dependents while leaving unrelated definitions available.
+ * Resolution substitutes immediate field types without recursively expanding referenced record payloads, allowing
+ * recursive authored structures. Application depth and reentrant resolution are bounded with declaration diagnostics.
+ */
 class DefaultCheckedCatalog(
     override val generation: CatalogGeneration,
     declarations: List<TypeDefinition>,

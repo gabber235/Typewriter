@@ -6,8 +6,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The input list is the provider's read model. This widget owns only selected
 /// identifiers and list animation. It keeps selection intersected with visible
-/// requests, confirms bulk decline, and delegates every server mutation to the
-/// provider.
+/// requests, confirms bulk decline, and executes prepared repository commands
+/// through shared local work.
 class JoinRequestsList extends HookConsumerWidget {
   const JoinRequestsList({required this.requests, super.key});
 
@@ -22,8 +22,9 @@ class JoinRequestsList extends HookConsumerWidget {
     /// Confirms and declines the currently selected visible requests.
     ///
     /// Decline is intentionally issued one request at a time because the wire
-    /// contract exposes a single request operation. The provider performs the
-    /// optimistic removal and rollback for each operation.
+    /// contract exposes a single request operation. A failed or uncertain
+    /// submission stops the loop. Pending removal visibility belongs to the
+    /// shared activity projection, rather than mutating the observed list.
     Future<void> declineSelection() async {
       if (isDecliningSelection.value) return;
       final requestIds = requests.map((request) => request.requestId).toSet();

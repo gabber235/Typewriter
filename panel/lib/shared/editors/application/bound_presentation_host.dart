@@ -47,6 +47,9 @@ final class BoundPresentationBinding {
 /// Persistence, conflicts, remote refreshes, reservations, and save policy
 /// remain on the original editor sources. This host only exposes their current
 /// values through explicit feature owned codecs and forwards accepted writes.
+/// Writes compare their captured invocation value with the current binding
+/// before calling the writer. Disposal releases binding controls and observer
+/// subscriptions; the feature retains ownership of the underlying draft.
 final class BoundPresentationHost extends ChangeNotifier
     implements PortablePresentationHost {
   BoundPresentationHost({

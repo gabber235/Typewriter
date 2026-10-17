@@ -42,6 +42,12 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 import skirout.editor.v1.compiled_content.PublishedContent as WirePublishedContent
 
+/**
+ * Owns delivery work for one engine activation and serializes calls to its application callback.
+ *
+ * Start belongs to activation; stop must retire delivery before activation resources are released. Delivery
+ * health describes synchronization with published content separately from the hosted runtime lifecycle.
+ */
 interface EngineContentDelivery {
     val health: StateFlow<EngineContentDeliveryHealth>
 
@@ -64,7 +70,14 @@ sealed interface EngineContentDeliveryHealth {
     ) : EngineContentDeliveryHealth
 }
 
-/** One worker fetches current descriptors after hints, reconnect, and periodic recovery. */
+/**
+ * Keeps an engine synchronized with the Realm selected publication through one worker per active session.
+ *
+ * Change events are conflated hints to refetch the current descriptor, never commands to apply event payloads.
+ * The worker also fetches after session replacement and every thirty seconds, verifies referenced blobs,
+ * and awaits application before fetching again. Ordinary fetch or application failures retry after one second;
+ * stopping cancels and joins the worker before returning.
+ */
 class MessagingEngineContentDelivery(
     private val host: HostedRuntimeHost,
     private val realmId: String,

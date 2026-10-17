@@ -1,3 +1,5 @@
+-- Service invariants and desired topology transitions shared by schema assertions and handlers.
+-- Rust handlers supply the transaction boundary and publish returned changes only after commit.
 DEFINE FUNCTION OVERWRITE fn::service::valid_role($role: object) -> bool {
     IF !array::all(object::keys($role), |$key| $key IN ["type", "version", "name"]) {
         THROW "role-unknown-property-error"
@@ -110,6 +112,10 @@ DEFINE FUNCTION OVERWRITE fn::service::engine_view($engine: object) -> object {
     };
 };
 
+-- Replaces a host's complete desired assignment under its configuration revision.
+-- Child revisions advance only for changed assignments. Every accepted configuration advances
+-- the host and desired topology revisions, even if its selected children are unchanged.
+-- This function does not start or stop runtimes; hosts reconcile the returned desired state.
 DEFINE FUNCTION OVERWRITE fn::service::configure_host(
     $host_id: record<service_host>,
     $organization_id: record<organization>,

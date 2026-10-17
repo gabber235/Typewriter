@@ -73,7 +73,13 @@ internal class OperationResolutionFailure(
     cause: Throwable,
 ) : IllegalStateException("Resource operation availability failed for ${origin.owner.localIdentity}", cause)
 
-/** Resolves and prepares against a validated caller working observation without persisting it. */
+/**
+ * Resolves operation availability and prepares edits against the panel confirmed saved observation plus its overlay.
+ *
+ * The captured catalog and observation must still match before callbacks run. Preparation stages writes in
+ * [SnapshotEditContext] and returns an expectation bearing preview, input request, or failure. It never persists
+ * the panel overlay or preview; committing the resulting edit goes through the authoring repository.
+ */
 internal class ResourceOperationRuntime(
     private val snapshots: AuthoringViewStore,
 ) {

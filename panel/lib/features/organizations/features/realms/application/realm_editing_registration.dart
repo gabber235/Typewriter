@@ -44,6 +44,11 @@ RealmEditPersistence realmEditPersistence(Ref ref, AuthoringScope scope) {
   );
 }
 
+/// Registers one editing driver per authoring scope in the application local work owner.
+///
+/// Confirmed session updates feed the retained workspace. Widget providers acquire
+/// leases to that driver, so route and inspector disposal do not discard its journal.
+/// The destination supplies a route back to the Realm when pending work needs review.
 extension RealmEditingRegistration on LocalWork {
   EditingWorkDriver<AuthoringDocument, RealmPreparedEdit>
   getOrRegisterRealmEditing(AuthoringScope scope) => getOrRegisterScoped(

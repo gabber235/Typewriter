@@ -36,6 +36,13 @@ sealed interface BoundedTransferPlan {
     ) : BoundedTransferPlan
 }
 
+/**
+ * Splits an encoded messaging response into a bounded set of chunks with shared integrity metadata.
+ *
+ * This framing is independent of resumable blob storage. Every encoded response receives a transfer identity,
+ * including an empty response, and [BoundedByteTransferAssembler] verifies the complete bytes on receipt.
+ * Oversized responses produce [BoundedTransferPlan.Unavailable] before chunks are allocated.
+ */
 class BoundedByteTransferEncoder(
     private val limits: BoundedTransferLimits = BoundedTransferLimits(),
     private val nextTransferId: () -> String = { UUID.randomUUID().toString() },
@@ -69,7 +76,13 @@ class BoundedByteTransferEncoder(
     }
 }
 
-/** Assembles one bounded response and verifies its declared size and digest. */
+/**
+ * Owns the in memory parts of one encoded response until its declared size and digest can be verified.
+ *
+ * Chunks may arrive out of order. Identical duplicates are accepted; changed metadata or duplicate bytes
+ * are rejected. [accept] returns null until every index is present, then returns verified bytes. This mutable
+ * assembler requires serialized access and retains its parts, so callers discard it after completion or failure.
+ */
 class BoundedByteTransferAssembler(
     private val transferId: String,
     private val limits: BoundedTransferLimits = BoundedTransferLimits(),

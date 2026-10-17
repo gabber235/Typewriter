@@ -1,5 +1,9 @@
 part of "services.dart";
 
+// Shared portable layout vocabulary for service and topology inspectors.
+// These helpers assemble nodes and expressions; their supplied bindings keep
+// observation and edit ownership in the surrounding presentation host.
+
 skir.PresentationNode _inspectorNode(
   String id,
   skir.PresentationElement element, {

@@ -15,8 +15,8 @@ final identifierInputFormatters = <TextInputFormatter>[
 
 /// Validates identifiers accepted by panel authored resources.
 extension StringIdentifierValidation on String {
-  /// Requires at least three lowercase letters or digits separated by single
-  /// underscores. Leading, trailing, and repeated underscores are rejected.
+  /// Requires at least three characters in lowercase alphanumeric groups
+  /// separated by single underscores. The underscores count toward the length.
   bool get isValidIdentifier =>
       length >= identifierMinimumLength &&
       RegExp(identifierPattern).hasMatch(this);

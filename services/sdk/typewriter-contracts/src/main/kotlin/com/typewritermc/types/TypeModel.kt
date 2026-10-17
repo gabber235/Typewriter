@@ -121,6 +121,7 @@ enum class FloatWidth {
     FLOAT_64,
 }
 
+/** A declaration's type expression, which may still refer to the owning definition's generic parameters. */
 @Serializable
 sealed interface TypeTemplate {
     @Serializable
@@ -149,6 +150,7 @@ sealed interface TypeTemplate {
     ) : TypeTemplate
 }
 
+/** A concrete type application with no free parameters; catalog resolution still checks its validity and bounds. */
 @Serializable
 sealed interface TypeUse {
     @Serializable

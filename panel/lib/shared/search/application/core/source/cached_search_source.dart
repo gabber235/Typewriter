@@ -3,8 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Replays ready snapshots by query context while the child searches again.
 ///
 /// During loading or error, the last ready result tree can be retained and is
-/// marked stale. Preview data is cached by result ID and remains valid until
-/// this source is disposed.
+/// marked stale. Successful previews are cached by result ID for this source
+/// lifetime without freshness checks; use stable IDs whose preview can safely
+/// be reused across query contexts.
 final class CachedSearchSource extends DelegatingSearchSource {
   CachedSearchSource({
     required super.source,

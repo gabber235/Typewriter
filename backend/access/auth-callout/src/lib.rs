@@ -479,24 +479,22 @@ fn decode_auth_request(body: &[u8]) -> Result<Claims<AuthRequest>, otel_wasi::Er
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
-/// Tolerant TLS representation for the NATS authorization request.
+/// Optional TLS shape retained alongside the authorization request adapter.
 ///
-/// The upstream NATS JWT library requires fields that NATS omits when it sends verified certificate
-/// chains. This compatibility shape keeps request decoding at the boundary without weakening the
-/// subsequent authorization checks.
+/// The active [`FixedAuthRequest`] does not include this type. Its conversion supplies no TLS
+/// data to the NATS claim, so certificate fields do not participate in the callout's decision.
 pub struct FixedClientTLS {
     version: String,
     cipher: String,
-    // In the nats-jwt-rs this is not optional and thus breaks. Because it won't be added if there are any verified chains.
     certs: Option<Vec<String>>,
     verified_chains: Option<Vec<Vec<String>>>,
 }
 
 /// Decodable form of the NATS authorization request.
 ///
-/// NATS may omit one of the mutually exclusive TLS fields expected by `nats-jwt-rs`. This type
-/// accepts the wire shape, after which the callout validates the request issuer, server identity,
-/// and required audience before using any credentials from it.
+/// Omits TLS details from decoding and sets `client_tls` to `None` when converting to the library
+/// claim. The callout validates the request issuer, server identity, and required audience before
+/// using the external credentials carried in its connection options.
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
 pub struct FixedAuthRequest {

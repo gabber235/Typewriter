@@ -32,6 +32,7 @@ class DefaultPortableRuleCompiler(
         }, rule.id.origin.owner, operations).checkRuleStructure(rule.descriptor.predicate)
 }
 
+/** Detects contradictory recognized numeric and size bounds, without proving satisfiability of arbitrary predicates. */
 class DefaultPredicateReasoner : PredicateReasoner {
     override fun contradictions(rules: List<CheckedRule>): List<DeclarationDiagnostic> =
         rules

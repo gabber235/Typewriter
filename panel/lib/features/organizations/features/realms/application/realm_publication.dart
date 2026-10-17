@@ -15,7 +15,13 @@ RealmPublicationRepository realmPublicationRepository(
   realmId: realmId,
 );
 
-/// One leased observer owns publication state across popup lifetimes.
+/// Owns publication observation and reviewed candidate commands across popup lifetimes.
+///
+/// The application local work owner retains this driver while needed. Repository
+/// observations replace review state, while submission activity independently
+/// distinguishes sending and uncertain outcomes. A command is usable only for the
+/// exact ready view it captured; disposal retires listeners without deciding the
+/// outcome of an already owned submission.
 final class PublicationWorkDriver extends ChangeNotifier implements WorkDriver {
   PublicationWorkDriver(this.scope, this.repository, this.work);
   final AuthoringScope scope;

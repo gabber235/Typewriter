@@ -62,7 +62,6 @@ class JdkHttpTransport(
             .followRedirects(HttpClient.Redirect.NEVER)
             .build()
 
-    /** Executes one request and returns bounded response data or a classified transport failure. */
     override suspend fun execute(request: HttpRequest): HttpResult {
         check(!closed.get()) { "JdkHttpTransport is closed" }
         val body = request.body

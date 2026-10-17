@@ -1,5 +1,10 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Reissues the last search context when a source's external inputs change.
+///
+/// The source initializes and disposes these listeners with its own lifetime.
+/// [search] records the latest context without issuing it; change notifications
+/// invoke the supplied search callback after the optional change hook.
 class SearchRefresher {
   new(this.listerners, this._search, {this._onChange});
 

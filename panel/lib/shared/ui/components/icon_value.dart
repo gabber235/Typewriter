@@ -2,10 +2,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 part "icon_value.freezed.dart";
 
-/// Presentation safe icon input used by controls.
+/// Distinguishes an Iconify identifier from inline SVG input.
 ///
-/// Iconify names and SVG source have different validation rules. SVG
-/// validation rejects active content and external references before rendering.
+/// Construction does not validate SVG content. [Icones] applies the checks in
+/// [IconTextValidation] before rendering inline input.
 @freezed
 sealed class IconValue with _$IconValue {
   @Assert("value != \"\"", "Iconify value must not be empty.")
@@ -20,11 +20,14 @@ sealed class IconValue with _$IconValue {
   }
 }
 
-/// Syntax and safety checks shared by icon constructors and validation.
+/// Lexical admission checks used by icon rendering and authored validation.
 extension IconTextValidation on String {
   bool get isValidIconifyValue =>
       RegExp(r"^[a-z0-9\-]+:[a-z0-9\-]+$").hasMatch(this);
 
+  /// Checks the SVG envelope and rejects known active content and external links.
+  ///
+  /// This predicate neither rewrites the source nor performs full XML parsing.
   bool get isSanitizedSvg {
     final source = trimLeft().toLowerCase();
     final hasSvgRoot = RegExp(r"^(?:<\?xml[^>]*>\s*)?<svg\b").hasMatch(source);

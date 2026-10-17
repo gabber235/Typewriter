@@ -55,7 +55,14 @@ private data class AuthoredCollection(
     val representation: ResolvedRepresentation.Sequence,
 )
 
-/** Replays ordered intent over the latest compatible root and validates the complete result. */
+/**
+ * Replays authored intents and derives the persistent delta for the saved admission owner.
+ *
+ * Relation values remain canonical: writes synchronize inverse occurrences before projecting declared edges.
+ * Consecutive deletions form one deletion request so cascade, restrict, and clear policies see the complete
+ * selection. Final validation checks affected structure, relation bindings, ownership, and cardinality.
+ * Expectation comparison and persistence belong to [RealmAuthoringOwner], outside this pure planner.
+ */
 internal class AuthoringMutationPlanner(
     private val catalog: CheckedCatalog,
     private val contracts: List<RelationContract>,

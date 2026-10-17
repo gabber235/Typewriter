@@ -62,6 +62,8 @@ struct ProducerMetadata(812100009) {
   entries: [ProducerMetadataEntry] = 0;
 }
 
+// Reads the complete descriptor catalog, including tombstones. The current owner returns the
+// complete snapshot regardless of after_revision; callers must not treat it as a delta.
 method FetchSharedArtifactCatalog(
   struct {
     after_revision: int64? = 0;
@@ -71,7 +73,10 @@ method FetchSharedArtifactCatalog(
   unavailable: struct {} = 2;
 } = 910005;
 
-// Publishes a descriptor for an already uploaded blob, or a tombstone when deleted is true. A null expected revision means creation; an equal live descriptor may return unchanged.
+// Publishes a descriptor for an already uploaded blob, or a tombstone when deleted is true.
+// Live publication requires digest and size. Deletion requires an expected revision.
+// Equal live content and metadata return unchanged before revision comparison; provenance alone
+// does not change the revision. Otherwise a null expected revision means creation.
 method PublishSharedArtifact(
   struct {
     id: string = 0;

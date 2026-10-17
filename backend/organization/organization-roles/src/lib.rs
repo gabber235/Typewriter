@@ -25,7 +25,6 @@ wasmcloud_utils::export!(Component);
 
 impl Guest for Component {
     #[otel_wasi::wasi_instrument(service = "organization-roles", export)]
-    /// Dispatches a user scoped role message and preserves the generated messaging contract.
     async fn handle_message(msg: types::NatsMessage) -> Result<(), otel_wasi::Error> {
         handle_message_async(msg).await
     }

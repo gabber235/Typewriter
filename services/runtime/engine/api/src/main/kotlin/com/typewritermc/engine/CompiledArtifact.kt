@@ -56,7 +56,14 @@ data class PublishedOutput(
     val blob: CompiledBlobPointer,
 )
 
-/** Describes the complete output set selected by one successful publication. */
+/**
+ * Describes the complete runtime output set selected by one successful Realm publication.
+ *
+ * The descriptor couples immutable blob locations to their semantic artifact identities and the engine
+ * implementation that can consume them. Engines fetch and verify every output before applying the set.
+ * [catalog] identifies the authoring catalog used to compile it; runtime admission separately checks the
+ * declarations and native bindings used by each artifact against the accepted execution catalog.
+ */
 @Serializable
 data class PublishedContent(
     val publication: PublicationId,

@@ -6,6 +6,13 @@ final _configuredValueBindingId = skir.ExpressionBindingId(
 
 typedef PortableSlotBuilder = Widget Function(PortablePresentationScope scope);
 
+/// Immutable lexical rendering context. Copies borrow the host, query observer
+/// and operation results while carrying bindings, authored field claims and
+/// recursion guards into descendants. Copying a scope creates no disposal duty.
+///
+/// Read only and enabled restrictions accumulate through the helper methods.
+/// Projected writers preserve edits through aliases and named payload views;
+/// an expression value alone does not establish an editable source location.
 @Freezed(map: FreezedMapOptions.none, when: FreezedWhenOptions.none)
 abstract class PortablePresentationScope with _$PortablePresentationScope {
   factory PortablePresentationScope({
@@ -252,6 +259,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
     return host?.location(reference, context: invocation);
   }
 
+  /// Translates a lexical alias back to the nearest document binding that owns
+  /// its location. Reused binding IDs are global only when locations still match.
   skir.BindingRef? sourceReference(skir.BindingRef reference) {
     final document = host?.document;
     if (document == null) return null;
@@ -548,6 +557,8 @@ abstract class PortablePresentationScope with _$PortablePresentationScope {
   PortablePresentationScope? withConfiguredValue(skir.BindingRef reference) =>
       withBinding(reference, _configuredValueBindingId);
 
+  /// Rebinds an existing value and its schema, location and projected writer.
+  /// An unavailable source returns null rather than inventing an editable value.
   PortablePresentationScope? withBinding(
     skir.BindingRef reference,
     skir.ExpressionBindingId id,

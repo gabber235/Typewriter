@@ -7,6 +7,13 @@ part "authoring_session.g.dart";
 part "authoring_resource_repository.dart";
 part "authoring_session_state.dart";
 
+/// Owns confirmed authoring observations and the catalog that interprets them for one Realm.
+///
+/// Repository and catalog changes schedule coalesced refreshes. Lifecycle revisions
+/// prevent late responses from a replaced session from publishing into current state.
+/// Saved observations flow into the shared editing workspace, which separately owns
+/// local intent and replay. This session borrows transport repositories and releases
+/// them when the provider is disposed.
 @riverpod
 class AuthoringSession extends _$AuthoringSession {
   late AuthoringResourceRepository _repository;

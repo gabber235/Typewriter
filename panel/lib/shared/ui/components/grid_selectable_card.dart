@@ -45,7 +45,7 @@ class GridSelectableCard extends StatelessWidget {
   /// selected background gets a slight transparency shift.
   final bool isFocused;
 
-  /// Hover state. Included for parity; can be consumed by custom [header]/[footer].
+  /// Drives the hover scale and the [PresentationInteractionScope] observation.
   final bool isHovered;
 
   /// Fixed width for the card container.

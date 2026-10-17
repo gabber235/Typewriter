@@ -103,7 +103,14 @@ internal sealed interface CounterpartBinding {
     data object Missing : CounterpartBinding
 }
 
-/** Derives exact authored occurrences and rebuildable declared graph projections. */
+/**
+ * Derives relation occurrences and canonical graph projections from authored resource fields.
+ *
+ * An occurrence identifies the exact endpoint and value location that authors can edit. Projection combines
+ * agreeing opposite occurrences into one directed contract edge and reports invalid bindings as problems.
+ * Stored edge rows and graph indexes are rebuildable views of those values, never independent authoring state.
+ * Schema evidence also records unfilled locations and collection membership needed for conflict tracking.
+ */
 internal object ResourceValueMapper {
     fun discover(resources: Map<ResourceId, AuthoringRecord>): List<LinkOccurrence> =
         resources.flatMap { (source, record) ->

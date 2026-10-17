@@ -1,4 +1,8 @@
 //! Current projection refreshes owned by service registration.
+//!
+//! Binding changes request these reads after their transaction commits. Each refresh publishes
+//! current state, which can include a later mutation. Service binding refresh publishes only a
+//! bound organization; an unbound service learns that state through its binding query.
 
 use otel_wasi::ResultWithSlug;
 use wasmcloud_utils::{

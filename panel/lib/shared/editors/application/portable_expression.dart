@@ -85,6 +85,9 @@ const authoredPortableOperationIds = <String>{
   "typewriter.value.neq",
 };
 
+/// Evaluation outcome together with the lexical and resource paths observed.
+/// Unavailable input remains distinct from an invalid expression or exhausted
+/// budget so presentation can choose a fallback without hiding a failure.
 sealed class PortableExpressionResult {
   const PortableExpressionResult(this.reads);
 
@@ -108,6 +111,9 @@ final class PortableExpressionFailed extends PortableExpressionResult {
   final String message;
 }
 
+/// A read witness collected on the expression branch that actually executed.
+/// [location] connects an addressable lexical value to its authored resource;
+/// action preparation can retain that fact without making display reads writes.
 final class PortableExpressionRead {
   const PortableExpressionRead(this.binding, this.path, {this.location});
 
@@ -151,6 +157,14 @@ final class PortableExpressionBinding {
   final PortablePresentationBindingSchema? schema;
 }
 
+/// Evaluates portable expression trees against captured lexical bindings.
+///
+/// Each [evaluate] call resets step, collection and read tracking. Boolean
+/// operations, conditionals and fallbacks short circuit, so only executed reads
+/// become witnesses. Missing bindings and unfilled paths produce unavailable
+/// results; invalid operations and budget exhaustion produce typed failures.
+/// Canonical resource queries require the checked contracts supplied by
+/// [CheckedEditorCatalog.evaluateExpression].
 final class PortableExpressionEvaluator {
   PortableExpressionEvaluator(
     Map<skir.ExpressionBindingId, skir.DataValue> bindings, {
@@ -1987,6 +2001,9 @@ String _canonical(skir.DataValue value, [int depth = 0]) {
   };
 }
 
+/// Builds the semantic key used by portable equality and collection identity.
+/// Named type identity remains significant; record field and set or map order
+/// are normalized, list order is preserved, and collection item IDs are ignored.
 String canonicalAuthoredValue(skir.DataValue value) => _canonical(value);
 
 String _framed(String kind, Iterable<String> parts) {

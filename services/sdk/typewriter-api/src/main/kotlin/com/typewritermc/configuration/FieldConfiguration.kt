@@ -8,6 +8,11 @@ typealias TextConfiguration = Configuration<Text>
 typealias NumberConfiguration<N> = Configuration<Number<N>>
 typealias ConfigurationPredicate<Expressions> = Expressions.() -> Expr<Boolean, MissingPolicy>
 
+/**
+ * Declares validation for authored values through either portable expressions or native Kotlin predicates.
+ * [rule] publishes an expression recipe for shared evaluation. [check] retains a server callback that requires
+ * complete native inputs. Both return a declaration that is registered when [RuleDeclaration.error] supplies a diagnostic.
+ */
 interface Field<V, Expressions> {
     fun rule(predicate: ConfigurationPredicate<Expressions>): RuleDeclaration
 

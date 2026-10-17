@@ -3,8 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Desktop row action that confirms and delegates membership removal.
 ///
 /// The local flag removes the action after confirmation begins, preventing
-/// repeated clicks while the provider submits the operation. Server failures
-/// remain owned by the shared error and submission handling.
+/// repeated clicks while shared local work submits the repository command.
+/// This flag is not reset on failure; the action remains hidden until this
+/// widget state is recreated. Errors use the shared submission handling.
 class MemberRowActions extends HookConsumerWidget {
   const MemberRowActions({required this.member, super.key});
 

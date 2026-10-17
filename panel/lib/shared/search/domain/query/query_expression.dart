@@ -1,6 +1,12 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Projects selector expressions onto the predicates a source can evaluate.
+/// Projects selector expressions onto one source's supported predicates.
+///
+/// Unsupported positive selectors are false for that source's result domain.
+/// Boolean simplification preserves OR alternatives and negation. A null
+/// expression projection represents either a constant result; use [canMatch]
+/// or the query context projection when distinguishing an impossible query.
+/// A nonnull projected query with no expression is unconstrained.
 extension SearchSelectorExpressionProjection on SearchSelectorExpression {
   SearchSelectorExpression? projectFor(Set<String> selectorIds) {
     final projection = _project(this, selectorIds);

@@ -19,6 +19,13 @@ sealed interface Availability<out T> {
     ) : Availability<Nothing>
 }
 
+/**
+ * Reads editable authored content without requiring the entire resource to decode as a complete native value.
+ *
+ * [Availability.Unavailable] preserves locations that block a result; [Availability.Failed] carries an evaluation
+ * failure. Generated drafts and collection projections retain [readContext] and must be read through that same
+ * context, even when another observation has the same catalog generation.
+ */
 interface AuthoredReads {
     val catalog: CatalogGeneration
     val readContext: ReadContext

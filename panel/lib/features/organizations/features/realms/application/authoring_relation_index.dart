@@ -12,6 +12,11 @@ abstract class AuthoringOwnershipPath with _$AuthoringOwnershipPath {
   }) = _AuthoringOwnershipPath;
 }
 
+/// Derived ownership lookup for one working document.
+///
+/// Ownership families and endpoint cardinalities determine direction. Missing
+/// resources, ambiguous owners, and cycles are reported instead of choosing an
+/// arbitrary navigation path. The index stores no independent authored links.
 @freezed
 abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
   const factory AuthoringRelationIndex({
@@ -55,7 +60,6 @@ abstract class AuthoringRelationIndex with _$AuthoringRelationIndex {
       childSlots[relation.id] = firstOwns
           ? skir.EndpointSlot.second
           : skir.EndpointSlot.first;
-
     }
 
     final parents = <skir.ResourceId, Set<skir.ResourceId>>{};

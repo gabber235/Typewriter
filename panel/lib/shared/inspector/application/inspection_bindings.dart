@@ -5,7 +5,12 @@ abstract interface class InspectionBindingScope {
   ValueEditing editor(ValueEditingRegistration registration);
 }
 
-/// Owns installed and prospective view leases without owning drafts.
+/// Keeps editor views leased while an inspection graph is installed.
+///
+/// Driver identities deduplicate resource views. A refresh acquires its next
+/// leases before commit releases the previous set, so rebuilding a graph does
+/// not briefly dispose an otherwise idle driver. Rollback releases only the
+/// prospective leases and destinations. Resource drafts remain in [workspace].
 final class InspectionBindings implements InspectionBindingScope {
   InspectionBindings({LocalWorkCommands? workspace})
     : workspace = workspace ?? ScopedWorkSession(),

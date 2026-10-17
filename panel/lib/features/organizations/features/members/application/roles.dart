@@ -7,9 +7,9 @@ part "roles.g.dart";
 
 /// Role metadata used by membership editors.
 ///
-/// [assignable] is the client visible permission boundary for ordinary role
-/// changes. Roles that are not assignable remain visible because they are part
-/// of a member's authoritative projection, but the controls cannot edit them.
+/// [assignable] advertises whether ordinary role changes may select this role;
+/// the server still authorizes commands. Protected roles remain visible as part
+/// of a member's authoritative projection, but these controls cannot edit them.
 @freezed
 abstract class OrganizationRole with _$OrganizationRole {
   @Assert("name != \"\"", "Name must not be empty.")
@@ -92,5 +92,3 @@ extension OrganizationRoleSnapshot on skir.WatchOrganizationRolesResponse {
     ),
   };
 }
-
-/// Provider for the list of members in the current organization.

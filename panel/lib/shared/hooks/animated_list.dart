@@ -21,6 +21,8 @@ typedef AnimatedTableRemovedItemBuilder<T> = TableRow Function(
 /// use [items] for its initial item count and builder, and do not mutate the
 /// returned list. Structural changes animate by identity; payload changes for
 /// an existing identity replace the snapshot without a structural animation.
+/// Reordering retains a longest common subsequence; moved items outside that
+/// subsequence animate as removal and insertion.
 class AnimatedListHookResult<T, S extends State<StatefulWidget>> {
   const AnimatedListHookResult({required this.key, required this.items});
 
@@ -39,8 +41,8 @@ class AnimatedListHookResult<T, S extends State<StatefulWidget>> {
 ///
 /// The returned key must be assigned to that list and the returned snapshot
 /// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering preserves matching items;
-/// insertion and removal use the configured durations.
+/// stable, unique value for every item. Reordering follows
+/// [AnimatedListHookResult]; insertion and removal use the configured durations.
 AnimatedListHookResult<T, AnimatedListState> useAnimatedList<T>({
   required List<T> items,
   required Object Function(T item) identity,
@@ -71,8 +73,8 @@ AnimatedListHookResult<T, AnimatedListState> useAnimatedList<T>({
 ///
 /// The returned key must be assigned to that table and the returned snapshot
 /// must supply its initial count and row builder. [identity] must return a
-/// stable, unique value for every item. Reordering preserves matching rows;
-/// insertion and removal use the configured durations.
+/// stable, unique value for every item. Reordering follows
+/// [AnimatedListHookResult]; insertion and removal use the configured durations.
 AnimatedListHookResult<T, AnimatedTableState> useAnimatedTable<T>({
   required List<T> items,
   required Object Function(T item) identity,
@@ -103,8 +105,8 @@ AnimatedListHookResult<T, AnimatedTableState> useAnimatedTable<T>({
 ///
 /// The returned key must be assigned to that sliver and the returned snapshot
 /// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering preserves matching items;
-/// insertion and removal use the configured durations.
+/// stable, unique value for every item. Reordering follows
+/// [AnimatedListHookResult]; insertion and removal use the configured durations.
 AnimatedListHookResult<T, SliverAnimatedListState> useSliverAnimatedList<T>({
   required List<T> items,
   required Object Function(T item) identity,
@@ -135,8 +137,8 @@ AnimatedListHookResult<T, SliverAnimatedListState> useSliverAnimatedList<T>({
 ///
 /// The returned key must be assigned to that grid and the returned snapshot
 /// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering preserves matching items;
-/// insertion and removal use the configured durations.
+/// stable, unique value for every item. Reordering follows
+/// [AnimatedListHookResult]; insertion and removal use the configured durations.
 AnimatedListHookResult<T, AnimatedGridState> useAnimatedGrid<T>({
   required List<T> items,
   required Object Function(T item) identity,
@@ -167,8 +169,8 @@ AnimatedListHookResult<T, AnimatedGridState> useAnimatedGrid<T>({
 ///
 /// The returned key must be assigned to that sliver and the returned snapshot
 /// must supply its initial count and item builder. [identity] must return a
-/// stable, unique value for every item. Reordering preserves matching items;
-/// insertion and removal use the configured durations.
+/// stable, unique value for every item. Reordering follows
+/// [AnimatedListHookResult]; insertion and removal use the configured durations.
 AnimatedListHookResult<T, SliverAnimatedGridState> useSliverAnimatedGrid<T>({
   required List<T> items,
   required Object Function(T item) identity,

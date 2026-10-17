@@ -28,6 +28,10 @@ import skirout.editor.v1.type_catalog.TypeSelection as SkirTypeSelection
 import skirout.editor.v1.type_catalog.ValueLocation as SkirValueLocation
 import skirout.editor.v1.type_catalog.ValuePath as SkirValuePath
 
+/**
+ * Preserves editable record selections, identity based paths, and link locations at the Skir boundary.
+ * Nested values use [SkirDataValueCodec]'s conversion rules; pending arguments and unfinished values remain portable.
+ */
 object SkirAuthoringValueCodec {
     fun encode(value: AuthoringRecord): SkirConversionResult<SkirAuthoringRecord> = captureSkirConversion { encodeAuthoringRecord(value) }
 

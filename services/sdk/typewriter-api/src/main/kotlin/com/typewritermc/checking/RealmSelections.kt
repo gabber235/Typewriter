@@ -51,6 +51,11 @@ fun <D, S : Any> compileSelection(
     return TypedSelection(type, factory.create(configured).predicate().node)
 }
 
+/**
+ * Preserves known matches alongside candidates blocked on authored inputs and an inspection completion marker.
+ * Exact aggregates require [complete], while existence and threshold checks can answer from sufficient known
+ * matches. An interrupted inspection can remain unavailable even when it has no specific missing input locations.
+ */
 data class PartialSelection<D>(
     val knownMatches: List<D>,
     val undecided: List<UndecidedCandidate>,

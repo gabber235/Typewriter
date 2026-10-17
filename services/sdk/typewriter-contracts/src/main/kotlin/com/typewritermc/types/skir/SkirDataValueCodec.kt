@@ -26,6 +26,13 @@ import skirout.editor.v1.type_catalog.MapRow as SkirMapRow
 import skirout.editor.v1.type_catalog.ResourceId as SkirResourceId
 import skirout.kernel.v1.duration.Duration as SkirDuration
 
+/**
+ * Bridges portable authored values and generated wire values without requiring a catalog.
+ *
+ * Conversion preserves nominal type and collection identities while bounding recursive value traversal. It checks
+ * wire representability, including finite floats, decimal syntax, portable durations, and duplicate record fields.
+ * Successful conversion does not establish schema admission or completeness.
+ */
 object SkirDataValueCodec {
     fun encode(value: DataValue): SkirConversionResult<SkirDataValue> = captureSkirConversion { encodeDataValue(value) }
 

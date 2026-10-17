@@ -5,8 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The child is measured after its first frame and the [pixelScale] value is
 /// converted using the child's longest side. Until measurement is available,
 /// and for zero sized children, the child is rendered at its original scale.
-/// The widget remeasures when the animation object changes, so the animation
-/// and child can be rebuilt without transferring measurement state manually.
+/// The widget remeasures when the animation object changes. Changes to child
+/// layout alone do not refresh the stored measurement.
 /// [origin] and [alignment] retain the same meaning as [Transform.scale].
 class PixelScaleTransition extends StatefulWidget {
   const PixelScaleTransition({

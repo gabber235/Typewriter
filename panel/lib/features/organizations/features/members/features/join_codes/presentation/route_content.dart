@@ -5,6 +5,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Coordinates join code generation, live projection display, selection, and
 /// bulk revocation for the route. It keeps transient UI intent locally while
 /// [OrganizationJoinCodes] remains the owner of server backed code state.
+/// Bulk revocation submits captured visible ids sequentially and stops at the
+/// first failed or uncertain reply. Local work owns each submission separately.
 class JoinCodesTab extends HookConsumerWidget {
   const JoinCodesTab({super.key});
 

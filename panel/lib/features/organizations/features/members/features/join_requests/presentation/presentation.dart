@@ -1,5 +1,6 @@
 // Presentation owns route composition and transient interaction state only.
-// Durable request state and server mutations stay in the application provider.
+// Providers expose observed requests. Repository commands and shared local work
+// own submission and reply integration.
 
 export "join_request_actions.dart";
 export "join_request_approval.dart";

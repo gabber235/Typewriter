@@ -3,9 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 @immutable
 /// Immutable coordinate conversion and overscan state for the timeline plane.
 ///
-/// Offsets are content coordinates, not widget coordinates. Conversion methods
-/// therefore account for [horizontalOffset], while [visibleBounds] expands
-/// the viewport to keep nearby elements available during scrolling.
+/// Frame to pixel conversion returns content coordinates. [pixelToFrame]
+/// accepts a viewport local pixel and adds [horizontalOffset]. [visibleBounds]
+/// expands content bounds to retain nearby elements during scrolling.
 class TimelineViewport {
   const TimelineViewport({
     required this.headerWidth,

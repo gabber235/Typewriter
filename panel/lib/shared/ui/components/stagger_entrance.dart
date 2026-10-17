@@ -15,6 +15,8 @@ const _defaultSlideOffset = 0.05;
 ///
 /// A nested scope is treated as one contiguous group in its parent's schedule.
 /// Omitted settings inherit from the nearest parent scope.
+/// Settings are captured when the coordinator is created. Remount the scope
+/// to start another run; rebuilding with new settings does not reschedule it.
 class StaggerScope extends HookWidget {
   const StaggerScope({
     required this.child,
@@ -432,6 +434,11 @@ class _StaggerScopeMarker extends InheritedWidget {
   }
 }
 
+/// Seals one registration tree after layout and assigns it one root timeline.
+///
+/// Sealing makes later registrations immediately visible. Nested coordinators
+/// contribute ordered groups, while the root caps launch delays and owns the
+/// clock. Disabling animations reveals the run and cannot restart that run.
 class _StaggerCoordinator {
   _StaggerCoordinator({
     required this.parent,

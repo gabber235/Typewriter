@@ -2,8 +2,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Shows the time remaining until [endDate] and updates once per second.
 ///
-/// A null end date represents a resource that does not expire. Once the timer
-/// reaches zero, [onExpired] is called and the timer stops. The callback is a
+/// A null end date represents a resource that does not expire. On the first
+/// timer tick after expiry, [onExpired] is called and the timer stops. It is a
 /// notification only; ownership of expiry state remains with the caller.
 class CountdownBadge extends HookWidget {
   const CountdownBadge({

@@ -1,8 +1,12 @@
 //! Conversion and formatting boundaries between generated SKIR values and SurrealDB.
 //!
-//! The conversions preserve the supported record ID shapes in both directions. Values
-//! that the target representation cannot express are mapped to its closest explicit
-//! unknown or null form, according to the existing conversion contract.
+//! Supported record shapes retain their typed keys. Unknown Skir keys become empty string keys,
+//! unknown nested values become null, and unsupported database values become unknown Skir variants.
+//! These conversions do not validate incoming identities. The native database UUID conversion
+//! requires valid UUID text and panics otherwise.
+//!
+//! Display formatting serves diagnostics and telemetry. Database queries bind typed record IDs;
+//! callers needing a subject token extract a string identity and validate its transport grammar.
 
 use opentelemetry::Value;
 
@@ -63,7 +67,6 @@ fn is_simple_id(s: &str) -> bool {
     s.parse::<i64>().is_err()
 }
 
-/// Format a string as a record ID key: bare if simple, backtick-quoted otherwise.
 fn fmt_string_key(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     if is_simple_id(s) {
         write!(f, "{s}")
@@ -72,7 +75,6 @@ fn fmt_string_key(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     }
 }
 
-/// Format a string as a record ID value: single-quoted with internal single quotes escaped.
 fn fmt_string_value(s: &str, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "'")?;
     for c in s.chars() {

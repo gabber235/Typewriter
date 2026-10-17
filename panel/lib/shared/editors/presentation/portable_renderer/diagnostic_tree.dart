@@ -103,7 +103,9 @@ extension _PortableDocumentDiagnosticObservations
   ];
 }
 
-// Owns mounted presentation membership, not operation or document state.
+/// Owns mounted diagnostic membership. Updates are visible in [snapshot]
+/// immediately, while listener notifications coalesce after the current frame.
+/// Operation and document state remain with their existing owners.
 class PortableDiagnosticTree extends ChangeNotifier {
   final _nodes = <Object, PortableDiagnosticNode>{};
   bool _scheduled = false;

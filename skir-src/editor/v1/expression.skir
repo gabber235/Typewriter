@@ -1,3 +1,8 @@
+// Portable expressions derive values from explicit bindings and registered operations.
+// Realm evaluation tracks authored reads as conflict evidence; panel evaluation uses the
+// same expression model within presentation scopes. Budgets bound evaluation work, and
+// missing input remains distinct from callback or type failure.
+
 import {
   DataValue,
   ExpressionBindingId,
@@ -28,6 +33,8 @@ struct ConditionalExpression(810600004) {
   no: ExpressionNode = 2;
 }
 
+/// Evaluates fallback for unavailable, null, or unfilled input. Evaluation failures remain
+/// failures instead of being hidden by the fallback.
 struct OrElseExpression(810600005) {
   input: ExpressionNode = 0;
   fallback: ExpressionNode = 1;
@@ -41,6 +48,9 @@ struct CollectionExpression(810600006) {
   body: ExpressionNode? = 4;
 }
 
+/// Declarative expression tree shared by presentation producers and evaluators.
+/// Boolean and conditional branches evaluate only the needed branch; collection expressions
+/// introduce local bindings for their body rather than modifying authored state.
 enum ExpressionNode(810600007) {
   literal: DataValue = 1;
   read: ExpressionRead = 2;
@@ -63,6 +73,8 @@ struct OperationDescriptor(810600009) {
   result: ExpressionType = 2;
 }
 
+/// Limits one evaluation by executed steps and inspected collection items.
+/// Exhaustion is an evaluation failure, not a successful partial expression result.
 struct EvaluationBudget(810600010) {
   max_steps: int64 = 0;
   max_collection_items: int64 = 1;

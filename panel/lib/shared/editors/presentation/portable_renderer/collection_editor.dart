@@ -62,6 +62,10 @@ enum CollectionEntryLayout { inline, sourceHeader, disclosure }
 /// Reuses one prepared selection for classification and scoped rendering.
 ///
 /// Intrinsic body contributions stop at authored headers and structural layouts.
+/// Classification follows transparent delegation using the same prepared scope
+/// as rendering, so inherited controls and permissions determine row shape.
+/// Source headers consume collection controls once instead of nesting a second
+/// generated disclosure around the same authored collection.
 @freezed
 abstract class _CollectionEditorContinuation
     with _$CollectionEditorContinuation {

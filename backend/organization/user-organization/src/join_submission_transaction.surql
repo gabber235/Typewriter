@@ -1,3 +1,6 @@
+-- A code either admits the user immediately or creates a moderation request. Admission, single
+-- use consumption, and all affected projection sequences commit together. Returned facts let the
+-- handler publish the user and organization views without rereading later database state.
 BEGIN TRANSACTION;
 RETURN {
     LET $codes = SELECT organization.*, single_use, auto_accept_roles

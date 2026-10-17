@@ -7,6 +7,11 @@ import com.typewritermc.types.Resource
 import skirout.editor.v1.presentation.PresentationDependencies
 import skirout.editor.v1.presentation.PresentationNode
 
+/**
+ * Builds portable layout and dependency declarations for a checked type template and presentation role.
+ * Providers describe behavior for editor consumers; rendering, interaction state, and authored edits live in the
+ * consuming runtime. Catalog assembly invokes providers to publish reusable materials, including generic templates.
+ */
 interface PresentationProvider {
     fun build(binding: PresentationBuildBinding): PresentationBuildResult
 }

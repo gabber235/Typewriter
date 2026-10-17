@@ -1,3 +1,8 @@
+// Capabilities publish typed Realm operations in the editor catalog. Computations return
+// portable values, commands return panel instructions, search streams correlated snapshots,
+// and authoring capabilities prepare proposed edits. Invocation results distinguish stale
+// catalog data, invalid input, unavailable execution, and permission rejection.
+
 import { Diagnostic } from "editor/v1/diagnostic.skir";
 import {
   OperationInputDefinition,
@@ -11,10 +16,7 @@ import {
   TypeUse,
 } from "editor/v1/type_catalog.skir";
 
-// Capabilities expose typed Realm operations to editor consumers. Definitions
-// describe dispatch shape in the catalog; invocation results make correlation,
-// generation checks, authorization, decoding, and failure explicit.
-
+/// Caller correlation identity. It does not imply durable command storage or automatic deduplication.
 struct InvocationId(811200001) {
   value: string = 0;
 }
@@ -68,12 +70,16 @@ struct NotifyInstruction(811200010) {
   message: string = 1;
 }
 
+/// Client effects returned by Realm commands. These instructions direct navigation, refresh,
+/// or notification; receiving them is separate from applying them in the current panel session.
 enum PanelInstruction(811200011) {
   invalidate_resource: InvalidateResourceInstruction = 1;
   open_resource: OpenResourceInstruction = 2;
   notify: NotifyInstruction = 3;
 }
 
+/// Selects a capability under a catalog generation with portable input. Computations require
+/// the declared result type; commands require expected_result_type to be absent.
 struct CapabilityInvocationRequest(811200012) {
   invocation_id: InvocationId = 0;
   generation: CatalogGeneration = 1;

@@ -57,6 +57,17 @@ data class CapturedCheckReport(
                 results.all { result -> result.outcome !is CheckOutcome.Incomplete }
 }
 
+/**
+ * Owns discovered check instances, their running executions, and the findings exposed to editor clients.
+ *
+ * Each execution retains its authored snapshot and records the facts it reads. Completion installs current
+ * findings only while its ticket and those facts still match; invalidation marks prior findings outdated and
+ * schedules affected checks. Catalog reload retires old executions before releasing their provider leases.
+ *
+ * Publication uses [evaluateCapture] to evaluate a retained saved view independently of current editor findings.
+ * Closing cancels and joins owned jobs before releasing catalog services. Finding notifications are asynchronous
+ * hints for clients to query state, rather than the admission boundary itself.
+ */
 class RealmCheckRuntime(
     private val snapshots: AuthoringViewStore,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,

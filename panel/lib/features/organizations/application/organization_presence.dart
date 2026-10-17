@@ -36,8 +36,8 @@ abstract class ActivePanelPresence with _$ActivePanelPresence {
 /// The provider owns one session identity, its heartbeat timers, subscription,
 /// sequence counter, and cleanup. Heartbeats are best effort and remote sessions
 /// expire locally after missed heartbeats. Presence is never used as durable
-/// organization state, and malformed or out of order observations are discarded
-/// at this boundary.
+/// organization state. Unknown subject identities and older active sequence
+/// numbers are ignored; payload decoding still reports malformed wire data.
 @riverpod
 class OrganizationPresence extends _$OrganizationPresence {
   final _sessionId = uuid.v4();

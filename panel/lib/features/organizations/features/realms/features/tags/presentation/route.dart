@@ -4,7 +4,7 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
 ///
-/// Creation prepares authored defaults, commits the unfinished resource, then
+/// Creation prepares authored defaults, stages the resource locally, then
 /// opens its normal inspector. Existing tags are rendered by [TagGraph], which
 /// handles placement gestures through the same authoring session.
 @RoutePage()

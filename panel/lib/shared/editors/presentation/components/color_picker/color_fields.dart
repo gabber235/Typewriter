@@ -2,9 +2,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Switches between hexadecimal, RGB, and HSL editors for one color.
 ///
-/// The caller owns the selected format and color. Channel edits preserve the
-/// channels not being edited, and the alpha channel is exposed only when
-/// [includeAlpha] is true.
+/// The caller owns the selected format and color. Channel edits rebuild a
+/// candidate from current channels, with alpha rounded through whole percent
+/// precision. Alpha input is exposed only when [includeAlpha] is true.
 class ColorFields extends StatelessWidget {
   const ColorFields({
     required this.color,

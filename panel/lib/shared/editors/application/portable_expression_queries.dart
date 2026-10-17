@@ -411,7 +411,12 @@ abstract class _ExpressionProgramKey with _$ExpressionProgramKey {
   }) = __ExpressionProgramKey;
 }
 
-/// Compiled query signatures belong to the checked catalog and lexical schema.
+/// Caches expression checking within one catalog and lexical schema.
+///
+/// Query contracts are indexed by occurrence path in the expression tree,
+/// allowing runtime queries to use the type proved at that exact call site.
+/// Values stay outside the cache key because compilation depends on schema.
+/// Both invalid results and checked programs are retained for this owner.
 final class PortableExpressionPrograms {
   PortableExpressionPrograms(this.catalog);
   final CheckedEditorCatalog catalog;
@@ -481,6 +486,9 @@ final class PortableExpressionPrograms {
   }
 }
 
+/// Checks canonical queries against lexical schemas before evaluating them.
+/// Pure expressions use the evaluator directly, retaining support for lexical
+/// values that do not need nominal query contracts.
 extension PortableCheckedEvaluation on CheckedEditorCatalog {
   PortableExpressionResult evaluateExpression(
     skir.ExpressionNode expression, {

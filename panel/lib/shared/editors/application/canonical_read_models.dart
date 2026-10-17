@@ -3,6 +3,12 @@ part of "portable_expression.dart";
 /// Generated intrinsic schemas are read only and never appear in type choices.
 final canonicalReadModels = CanonicalReadModels();
 
+/// Bridges native Skir metadata to the intrinsic authored read schema.
+///
+/// The generated manifest defines allowed model fields in the reserved
+/// `typewriter.read` namespace. Reflection supplies their current wire values,
+/// while projection charges the invoking expression's budgets. Decoders accept
+/// this intrinsic schema when a query needs a type selection or type witness.
 final class CanonicalReadModels {
   CanonicalReadModels() {
     final manifest = jsonDecode(_canonicalReadManifest) as Map<String, dynamic>;

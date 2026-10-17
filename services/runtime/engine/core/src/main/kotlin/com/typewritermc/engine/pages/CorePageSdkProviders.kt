@@ -4,6 +4,12 @@ import com.typewritermc.authoring.PlacementSdkProvider
 import com.typewritermc.discovery.GraphDirection
 import com.typewritermc.types.PresentationRole
 
+/**
+ * Supplies inherited inspector composition for core entry roles.
+ *
+ * Priority zero leaves specialized presentations ahead of these defaults. Placement uses its SDK provider,
+ * allowing authored entry inspectors to share the core layout without owning panel widget policy.
+ */
 object CoreEntryInspectors :
     SequenceEntryPresentation,
     StaticEntryPresentation,

@@ -40,7 +40,13 @@ sealed class ResourceCounterpartResolution
       InvalidResourceCounterpart;
 }
 
-/// Pure authoring semantics. Resource and relation operations keep their facts.
+/// Supplies replay and composition semantics to the shared Realm editing workspace.
+///
+/// Replaying retains the original expectations while projecting intent onto a newer
+/// observation. Conflicting facts remain explicit even when a working projection can
+/// be produced. Composition checks that normalized intent reconstructs the reviewed
+/// proposed content before preparing a saved request. This model performs no I/O;
+/// persistence and local journal lifetime belong to their adjacent owners.
 final class RealmEditModel
     implements EditModel<AuthoringDocument, RealmPreparedEdit> {
   const RealmEditModel();

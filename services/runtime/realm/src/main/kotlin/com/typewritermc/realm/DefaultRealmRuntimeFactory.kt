@@ -49,6 +49,14 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
+/**
+ * Stages the Realm services and generated authoring catalog for one hosted deployment.
+ *
+ * Common extension contributions are loaded for authoring independently of engine source part eligibility.
+ * The catalog store takes ownership of discovery; the returned managed runtime owns that store, its application
+ * scope, and logging bridge. Activation opens database and editor services through [Realm]. The loader supplies
+ * shared artifact storage and telemetry, which remain borrowed across Realm activation and quiescence.
+ */
 class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
     override suspend fun stage(context: HostedDeploymentContext): ManagedRealmRuntime {
         val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)

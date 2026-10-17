@@ -98,6 +98,15 @@ interface DeclarationDependencyIndex {
     fun requiredDependents(id: TypeDefinitionId): Set<TypeDefinitionId>
 }
 
+/**
+ * Builds one catalog generation's published editor model and executable SDK services from owned contributions.
+ *
+ * A structural catalog first supplies schemas for collecting configuration and presentation recipes. Declaration
+ * failures then quarantine affected types and required dependents before final native bindings and operations are
+ * assembled. Unavailable declarations remain visible with diagnostics in the published snapshot.
+ * Provider callbacks remain in the returned registry rather than the portable snapshot; the caller must retain
+ * their deployment separately when catalog consumers outlive deployment replacement.
+ */
 fun CatalogContributions.assemble(context: CatalogAssemblyContext): CatalogAssembly {
     val standardDeclarations = StandardTypes.definitions.map { OwnedTypeDeclaration(STANDARD_TYPE_ORIGIN, it) }
     val assembledDeclarations = standardDeclarations + declarations

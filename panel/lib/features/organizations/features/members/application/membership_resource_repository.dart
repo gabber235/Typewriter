@@ -1,6 +1,12 @@
 part of "members.dart";
 
 /// Owns membership command preparation and confirmed projection facts.
+///
+/// Each method freezes a request for the local work controller to submit later.
+/// Accepted replies publish their captured events through the same sequenced
+/// projections as broker delivery. These streams do not replay earlier events.
+/// Repository lifetime follows [ResourceRepositories], while [organization]
+/// fixes the scope for every prepared command.
 final class MembershipResourceRepository {
   MembershipResourceRepository(this.session, this.organization);
 

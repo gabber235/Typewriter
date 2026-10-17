@@ -5,7 +5,7 @@ part of "services.dart";
 ///
 /// It is the mutation boundary, not the application state store. The backend
 /// remains authoritative. Snapshot requests provide refresh data, while
-/// [acceptService] and [acceptConfiguration] publish committed results to the
+/// [acceptService] and [acceptConfiguration] publish canonical observations to the
 /// providers that own the corresponding projections. Service identity and host
 /// runtime topology remain separate resources even when a host refers to the
 /// same service.
@@ -21,7 +21,7 @@ final class ServiceResourceRepository {
   final _identities =
       StreamController<skir.OrganizationServicesChanged>.broadcast(sync: true);
 
-  /// Committed host configuration changes for the organization.
+  /// Canonical host configurations from successful and conflicting commands.
   ///
   /// Consumers apply these changes to the topology projection. The change
   /// carries the resulting host configuration and any affected runtime
@@ -30,7 +30,7 @@ final class ServiceResourceRepository {
   Stream<skir.HostConfigurationChange> get configurations =>
       _configurations.stream;
 
-  /// Committed service identity changes for the organization.
+  /// Canonical service identities from successful and conflicting commands.
   ///
   /// The canonical service provider consumes this stream and reconciles each
   /// value by service identity and revision.
@@ -176,7 +176,7 @@ final class ServiceResourceRepository {
   /// Prepares a host configuration mutation against [revision].
   ///
   /// The expected revision is an optimistic concurrency check. The prepared
-  /// commit reserves the organization and host for mutation tracking. Callers
+  /// commit declares the organization and host for mutation tracking. Callers
   /// reconcile accepted configuration through the topology provider flow.
   PreparedCommit<skir.ConfigureServiceHostResponse> configure(
     skir.RecordId host,

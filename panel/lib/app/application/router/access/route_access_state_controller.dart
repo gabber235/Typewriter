@@ -32,7 +32,10 @@ final class RouteAccessStateController<StateT, StableState extends Object> {
   StateT get current => _current;
   Listenable get reevaluation => _reevaluation;
 
-  /// Completes when the current access state first becomes nonpending.
+  /// Waits for the pending observation to settle, or for disposal.
+  ///
+  /// Completion is a wakeup signal. Guards must read [current] again because
+  /// disposal also releases waiters without producing an access grant.
   Future<void> waitUntilReady() => _ready?.future ?? Future.value();
 
   /// Replaces the current observation and emits semantic changes when stable.

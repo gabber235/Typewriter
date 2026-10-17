@@ -37,6 +37,8 @@ part "portable_renderer/structured_inputs.dart";
 part "portable_renderer/style.dart";
 part "portable_search_input.dart";
 
+/// Renders a node in a caller owned scope. A standalone entry creates diagnostic
+/// membership around the supplied operation results, but does not own the host.
 final class PortablePresentationNodeRenderer extends StatelessWidget {
   const PortablePresentationNodeRenderer({
     required this.node,

@@ -75,6 +75,13 @@ interface CurrentCheckExecutions {
     fun ticket(instance: CheckInstanceId): CheckTicket?
 }
 
+/**
+ * Separates installation of current editor findings from evidence reuse for a captured publication.
+ *
+ * Current findings require the latest execution ticket and unchanged saved inputs. Captured acceptance instead
+ * requires a finished result matching the target catalog and captured facts, even if that execution is no longer
+ * current in the editor. These checks admit evidence; they do not rerun the callback.
+ */
 class DefaultCheckAdmission(
     private val views: AuthoringViewStore,
     private val executions: CurrentCheckExecutions,

@@ -105,7 +105,8 @@ class GraphInteractionController extends ChangeNotifier
     updateResize(id, width, height);
   }
 
-  /// Replaces the active resize preview with positive dimensions.
+  /// Replaces the active resize preview. Callers must supply positive grid
+  /// dimensions; the assertion diagnoses violations during development.
   void updateResize(GraphIdentifier id, int width, int height) {
     if (_closed) return;
     assert(width > 0 && height > 0, "Dimensions must be positive");

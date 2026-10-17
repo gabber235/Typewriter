@@ -10,8 +10,8 @@ import skirout.editor.v1.catalog.PrepareValueResult
 /**
  * Owns the transport adapters for editor catalog fetches and generation watches.
  *
- * Catalog assembly and generation authority remain in [RealmEditorCatalogSource]. This class only binds those
- * operations to the Realm router, so replacing the router does not replace the source or its snapshot owner.
+ * [RealmEditorCatalogSource] supplies retained catalog transfers from the catalog owner. This class binds
+ * those operations to the Realm router, so replacing the router does not replace its snapshot owner.
  */
 internal class EditorCatalogRoutes(
     private val source: RealmEditorCatalogSource,

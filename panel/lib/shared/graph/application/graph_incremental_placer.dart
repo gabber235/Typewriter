@@ -4,7 +4,8 @@ import "package:typewriter_panel/typewriter_panel.dart";
 ///
 /// The entire incoming group receives one integer translation, preserving its
 /// internal geometry. Candidates follow deterministic Manhattan rings around
-/// [anchor]. Search stops at the nearest guaranteed escape beyond the obstacle
+/// the requested anchor. Search stops at the nearest guaranteed escape beyond
+/// the obstacle
 /// bounds.
 final class GraphIncrementalPlacer {
   const GraphIncrementalPlacer({this.gap = 1}) : assert(gap >= 0);

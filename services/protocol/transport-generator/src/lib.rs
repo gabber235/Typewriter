@@ -1,3 +1,9 @@
+//! Compiles the transport manifest against canonical Skir symbols and language binding metadata.
+//! The manifest owns logical subjects, scopes, grants, and delivery policy. Skir exporters own target
+//! names and serializers, so emitters consume resolved bindings rather than reconstructing names.
+//! Generated clients and backend dispatch share this input, but connection and handler lifetimes
+//! remain with their consuming runtimes.
+
 pub mod dart;
 pub mod grants;
 pub mod kotlin;

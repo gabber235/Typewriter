@@ -106,7 +106,14 @@ data class OperationCatalog(
         requireNotNull(authoringProviders.singleOrNull { it.capability.id == id }) { "Authoring operation is unavailable: ${id.value}" }
 }
 
-/** Binds input tokens only after the catalog's checked types and native bindings exist. */
+/**
+ * Assembles published operation definitions together with executable callbacks after checked types and bindings exist.
+ *
+ * A declaration that fails binding contributes no partial definitions, providers, placements, or contributions;
+ * its origin and cause remain available as diagnostics and failures. Action validation then removes individual
+ * invalid definitions and their references. Navigation stays a client action; authoring operations retain a provider
+ * that decodes complete input before invoking preparation against the caller's working graph.
+ */
 fun bindOperations(
     declarations: List<OperationDeclaration>,
     catalog: CheckedCatalog,

@@ -60,6 +60,11 @@ private data class ValueVisit(
 
 private fun ValuePath.append(segment: PathSegment): ValuePath = copy(segments = segments + segment)
 
+/**
+ * Reads an identity based path through nominal wrappers, reporting structural observations for dependency tracking.
+ * A map item selects a row; a following key or value segment selects that row's content. Missing content remains
+ * distinct from traversing a value of the wrong form.
+ */
 fun DataValue.locate(
     path: ValuePath,
     onStep: (StructuralStep) -> Unit = {},
@@ -78,6 +83,7 @@ fun DataValue.locate(
     return node
 }
 
+/** Visits the root and its contents, preserving nominal wrappers at the same path and map key and value branches. */
 fun DataValue.descendants(): Sequence<LocatedValueNode> =
     sequence {
         val pending = ArrayDeque<ValueVisit>()
@@ -130,6 +136,7 @@ fun DataValue.descendants(): Sequence<LocatedValueNode> =
         }
     }
 
+/** Replaces an existing value while preserving enclosing wrappers and collection identities. */
 fun DataValue.replace(
     path: ValuePath,
     value: DataValue,
@@ -138,6 +145,7 @@ fun DataValue.replace(
         ?.let(ValueReplacement::Replaced)
         ?: ValueReplacement.Unavailable(path)
 
+/** Allows insertion of a terminal record field, but requires every parent and collection item to already exist. */
 fun DataValue.writeField(
     path: ValuePath,
     value: DataValue,

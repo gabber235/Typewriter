@@ -1,6 +1,11 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// Owns domain state and projects its available commands without a second phase machine.
+/// Adapts a domain owner into the shared local work journal.
+///
+/// The driver owns draft and save policy and publishes its available commands
+/// through [snapshot]. [ScopedWorkSession] owns registration, leases and disposal;
+/// it retains a driver after its last view closes while entries still report
+/// retained state or work. The journal does not infer a second domain lifecycle.
 abstract interface class WorkDriver implements Listenable {
   WorkDriverId get id;
   WorkDriverSnapshot get snapshot;
@@ -22,6 +27,10 @@ final class WorkLease {
   }
 }
 
+/// Session owned registration joining a driver to its current navigation target.
+///
+/// Replacing [destination] disposes the previous target. Disposing this
+/// registration releases both the target and driver, independently of leases.
 final class OwnedWorkDriver {
   OwnedWorkDriver(this.driver, this.changed, {WorkDestination? destination}) {
     this.destination = destination;

@@ -1,6 +1,5 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-/// The current state of the duration editor
 class _State {
   const _State();
 }
@@ -33,7 +32,8 @@ class _Valid<T> extends _State {
 /// The first valid edit of a mixed selection replaces the
 /// selected values. Supply [onCleared] to allow empty text to remove the value.
 /// Invalid partial input remains local while the bound value stays unchanged.
-/// A changed bound value replaces the text and resets its prior validation.
+/// External bound changes replace the text and reset validation. Echoes of this
+/// field's own valid edits retain the focused buffer and its current spelling.
 class ValidatedTextField<T> extends HookConsumerWidget {
   const ValidatedTextField({
     required this.value,

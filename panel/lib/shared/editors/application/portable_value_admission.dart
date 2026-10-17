@@ -25,7 +25,9 @@ extension PortableValueAdmission on CheckedEditorCatalog {
   bool admitsPortableValue(skir.TypeUse expected, skir.DataValue value) =>
       inspectPortableValue(expected, value).structuralProblems.isEmpty;
 
-  /// Draft admission accepts unfinished values; completeness retains their paths.
+  /// Draft admission accepts unfinished values and records their paths separately
+  /// from structural problems. It checks shape, scalar precision and item IDs,
+  /// while duplicate set values and map keys belong to collection diagnostics.
   PortableValueInspection inspectPortableValue(
     skir.TypeUse expected,
     skir.DataValue value,

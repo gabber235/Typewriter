@@ -95,7 +95,17 @@ interface PublicationAttemptStore {
     suspend fun interruptUnfinished()
 }
 
-/** Prepares saved candidates without publication effects and releases only a reviewed candidate. */
+/**
+ * Owns saved content assessment, the reviewed candidate, and selection of a new immutable publication.
+ *
+ * Refresh evaluates a retained saved view without storing blobs or changing selection. Publish freezes only
+ * the current Ready candidate after rechecking saved root, baseline, invalidation revision, and engine inputs.
+ * Blob storage precedes transactional selection of the descriptor. Engines consume that selection independently.
+ *
+ * One release runs at a time, while later saved edits can produce the next review beside the frozen release.
+ * Candidate leases keep their catalog callbacks alive through assessment and release. Closing stops observation
+ * and waits for the active release before dropping retained preparation state.
+ */
 internal class RealmPublicationCoordinator(
     private val acceptance: PublicationAcceptance,
     private val attempts: PublicationAttemptStore,

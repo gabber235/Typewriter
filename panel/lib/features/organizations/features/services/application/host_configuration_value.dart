@@ -1,5 +1,10 @@
 part of "services.dart";
 
+/// Converts the host editor's local schema to and from desired topology.
+///
+/// Matching enabled Realm and engine targets select the locally hosted Realm.
+/// The explicit Realm identifier is consulted only when that pairing does not
+/// apply. Supported targets and external Realm choices come from the snapshot.
 extension _HostConfigurationValue on HostEditorSnapshot {
   skir.DataValue _configurationValue(
     TopologyRealm? realm,

@@ -74,7 +74,8 @@ method UpdateOrganizationMemberRoles(
 } = 813953;
 
 // Removes one membership and publishes the corresponding organization change.
-// The founder cannot be removed when that would violate the organization's founder invariant.
+// The original founder cannot be removed while the organization exists. Other members cannot be
+// removed if that would leave no holder of the founder role.
 method RemoveOrganizationMember(
   struct {
     user_id: RecordId;

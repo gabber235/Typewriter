@@ -19,10 +19,6 @@ enum LoadingVariant { filled, text, outlined }
 /// its state. The named constructors select filled, text, or outlined Material
 /// treatments, with icon variants that add a leading icon without changing the
 /// action contract.
-///
-/// A controller is useful when a surrounding shortcut or action row must invoke
-/// the same operation as the button. The button remains the visual and
-/// interaction owner.
 class LoadingButton extends HookWidget {
   const LoadingButton({
     required this.child,

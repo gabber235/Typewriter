@@ -14,6 +14,12 @@ abstract interface class RealmPublicationRepository {
   Stream<PublicationObservation> watch();
 }
 
+/// Reconciles publication hints into complete, identity checked review transfers.
+///
+/// Each newer hint cancels the previous fetch and fences late completion. A view
+/// changed response follows the new identity; stream cancellation stops transfer
+/// and hint observation. Prepared publication requests use the submission owner
+/// and declare automatic replay unsupported because the original outcome may be unknown.
 final class NatsRealmPublicationRepository
     implements RealmPublicationRepository {
   NatsRealmPublicationRepository({

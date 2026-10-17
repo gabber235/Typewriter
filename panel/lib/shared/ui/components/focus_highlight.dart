@@ -24,7 +24,7 @@ enum FocusHighlighting {
   /// Only highlight when it has primary focus, otherwise don't highlight at all.
   onlyPrimary(_primaryFocus),
 
-  /// Only highlight when a child has focus.
+  /// Highlights this node or its descendants using the same focus style.
   onlyChild(_childFocus),
 
   /// Highlights when this node or one of its descendants has focus.

@@ -2,6 +2,9 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+/// Borrows the current connection for one correlated Realm search stream.
+/// Closing collection sends an explicit cancellation request because the Realm
+/// search job can outlive the request that started it.
 final class NatsRealmPresentationSearchTransport {
   const NatsRealmPresentationSearchTransport({
     required this.ref,

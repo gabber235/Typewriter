@@ -1,3 +1,8 @@
+// Saved authoring resources are the Realm canonical editable state. Clients capture one
+// AuthoringState, stage local intent, and submit a PreparedEdit with the original facts
+// it relied on. Realm admission compares those facts and validates the resulting graph
+// before saving. Checking and publication follow their own lifecycles after a commit.
+
 import {
   EditExpectation,
   ExpectationConflict,
@@ -41,6 +46,7 @@ struct AuthoringResource(812200001) {
   content: AuthoringRecord = 2;
 }
 
+/// Identifies an authored reference by endpoint and exact value location, including collection item identity.
 struct LinkOccurrenceId(812200002) {
   endpoint: EndpointId = 0;
   location: ValueLocation = 1;
@@ -52,6 +58,7 @@ struct LinkOccurrence(812200003) {
   target: LinkTarget = 2;
 }
 
+/// Describes changes to graph edges derived from authored references; edge rows are not independent edit intent.
 struct RelationProjectionDelta(812200004) {
   removals: [LinkProjection] = 0;
   created: [LinkProjection] = 1;
@@ -102,6 +109,8 @@ enum UnresolvedLink(812200012) {
   unavailable_target: LinkOccurrenceId = 2;
 }
 
+/// Supplies a resource identity, authored content, and display descriptor to portable resource presentations.
+/// Catalog choices use CatalogPresentationSubject instead because they have no resource instance.
 struct PresentationSubject(812200013) {
   resource: ResourceId = 0;
   definition: ResourceDefinitionId = 1;
@@ -132,6 +141,9 @@ struct CatalogChanged(812200017) {
   actual_generation: CatalogGeneration = 0;
 }
 
+/// Captures one saved resource graph and its catalog for editor synchronization.
+/// Findings retain their own execution evidence and freshness. All transfer chunks describe this same
+/// confirmed observation, which resource operations must echo before supplying a working overlay.
 struct AuthoringState(812200018) {
   generation: CatalogGeneration = 0;
   resources: [AuthoringResource] = 1;
@@ -197,6 +209,8 @@ struct ResourceConfigurationIntent(812200029) {
   configuration: TypeSelection = 1;
 }
 
+/// Ordered proposed mutations. Relation intent names exact authored occurrences so admission can
+/// synchronize inverses and validate the resulting graph before persistence.
 enum EditIntent(812200030) {
   create_resource: CreateResourceIntent = 1;
   delete_resource: DeleteResourceIntent = 2;
@@ -210,6 +224,9 @@ enum EditIntent(812200030) {
   configure_resource: ResourceConfigurationIntent = 10;
 }
 
+/// Carries a proposed edit and the original saved facts that justify replaying it.
+/// Matching supplied facts alone is insufficient: Realm admission independently requires guards for
+/// the affected values and relations. Preparation grants no persistence or publication authority.
 struct PreparedEdit(812200031) {
   catalog: CatalogGeneration = 0;
   expectations: [EditExpectation] = 1;
@@ -226,6 +243,9 @@ enum PreparedEditResult(812200033) {
   rejected: [ValueProblem] = 3;
 }
 
+/// committed confirms installation of saved authoring state. It does not confirm check completion,
+/// compilation, publication selection, or engine application. Conflict requires refreshing original
+/// facts; rejection reports invalid intent or missing guards; catalog_changed requires a new catalog.
 enum CommitResult(812200034) {
   committed = 1;
   conflict: [ExpectationConflict] = 2;
@@ -237,6 +257,7 @@ enum AuthoringOperation(812200035) {
   commit_prepared: PreparedEdit = 1;
 }
 
+/// Hints that clients should query saved authoring state or findings. This is not an edit log or revision counter.
 struct AuthoringChanged(812200036) {
   generation: CatalogGeneration = 0;
 }
@@ -246,6 +267,8 @@ enum LinkRepairIntent(812200037) {
   remove: LinkOccurrenceId = 2;
 }
 
+/// Proposes a fixed definition type configuration change together with all value and link repairs.
+/// Preparation rechecks expectations and regenerates repairs before yielding a committable edit.
 struct TypeArgumentChangePreview(812200038) {
   resource: ResourceId = 0;
   next: TypeSelection = 1;
@@ -312,11 +335,14 @@ struct AuthoringTransferUnavailable(812200048) {
   max_encoded_size: int64 = 3;
 }
 
-// Identifies one immutable saved authoring view. It is not a resource revision.
+/// Identifies one saved authoring observation without ordering resource changes.
+/// It remains fixed across snapshot transfer chunks. A local operation overlay echoes this identity
+/// while carrying separate proposed values; a changed saved view requires refreshing the baseline.
 struct AuthoringObservationId(812200049) {
   value: string = 0;
 }
 
+/// Transfers one retained saved snapshot using the caller transfer identity and bounded integrity metadata.
 method QueryAuthoringState(
   struct {
     generation: CatalogGeneration = 0;
@@ -362,6 +388,7 @@ method PreviewTypeArgumentChange(
   internal_error: InternalError = 2;
 } = 920013;
 
+/// Revalidates a preview and returns proposed intent. CommitPreparedEdit performs the separate saved write.
 method PrepareTypeArgumentChange(
   TypeArgumentChangePreview
 ): enum {

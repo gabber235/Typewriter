@@ -160,6 +160,10 @@ extension MembershipSubmission on WidgetRef {
     return read(resourceRepositoriesProvider).membership(organization);
   }
 
+  /// Submits through local work ownership, then interprets the typed reply.
+  ///
+  /// Any failure, including one thrown by [accept], invalidates all membership
+  /// projections before escaping so the next read can restore server state.
   Future<TResult> executeMembership<TResponse, TResult>(
     PreparedCommit<TResponse> command,
     TResult Function(TResponse) accept,

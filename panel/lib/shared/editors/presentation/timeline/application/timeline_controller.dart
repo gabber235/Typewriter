@@ -247,8 +247,8 @@ class ResizeEndTimelinePreview implements TimelinePreview {
 ///
 /// [Timeline] is the lifecycle owner and disposes this controller through the
 /// hook. The controller does not mutate [TimelineData] or persist changes. It
-/// clamps pan and zoom to nonnegative coordinates, converts pixel movement to
-/// frame deltas, and notifies listeners for every visible state transition.
+/// clamps pan offsets to nonnegative coordinates, applies caller supplied zoom
+/// bounds in [zoomAt], and converts pixel movement to frame deltas.
 class TimelineController extends ChangeNotifier {
   TimelineController({
     required TickerProvider tickerProvider,

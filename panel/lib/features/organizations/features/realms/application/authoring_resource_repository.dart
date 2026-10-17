@@ -1,5 +1,11 @@
 part of "authoring_session.dart";
 
+/// Owns authoring invalidation subscriptions for one organization and Realm.
+///
+/// Rebinding retires old listeners and fences late callbacks by transport
+/// generation. Reconnect schedules a current snapshot refresh rather than replaying
+/// events. Reads and preparation borrow the session transport; commit preparation
+/// hands delivery to its submission owner with automatic replay unsupported.
 final class AuthoringResourceRepository {
   AuthoringResourceRepository(this.session, this.organization, this.realm);
 

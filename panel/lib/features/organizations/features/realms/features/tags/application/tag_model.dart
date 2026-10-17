@@ -5,8 +5,8 @@ part of "tags.dart";
 /// [parentIds] names direct parents. The relationship is treated as a directed
 /// acyclic graph by the panel, and drag validation rejects self links, cycles,
 /// and unknown nodes. Unfinished authored fields receive display values here
-/// without changing the authoring record. Inspector values omit the identity
-/// because the editor resource owns it.
+/// without changing the authoring record. The portable inspector reads the
+/// underlying resource rather than writing this display projection.
 @freezed
 abstract class Tag with _$Tag {
   @Assert("name != \"\"", "Name must not be empty.")

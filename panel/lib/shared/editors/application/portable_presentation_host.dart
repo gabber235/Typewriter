@@ -12,11 +12,8 @@ List<PortablePresentationDiagnostic> noResourceDiagnostics(
   skir.ResourceId id,
 ) => const [];
 
-/// One value exposed to a portable presentation.
-///
-/// The binding carries its exact checked type and current value. An editable
-/// binding delegates every mutation to [PortablePresentationHost], which keeps
-/// the persistence owner outside the presentation document.
+/// Interpretation contract for a portable binding. Complete bindings expose
+/// a type use; partial bindings preserve an unfinished type selection.
 @freezed
 sealed class PortablePresentationBindingSchema
     with _$PortablePresentationBindingSchema {
@@ -28,6 +25,8 @@ sealed class PortablePresentationBindingSchema
   ) = PartialPortablePresentationBinding;
 }
 
+/// One observed value and its schema, editability and optional resource origin.
+/// Writes pass through [PortablePresentationHost] rather than mutating this value.
 @freezed
 abstract class PortablePresentationBinding with _$PortablePresentationBinding {
   const factory PortablePresentationBinding({
@@ -116,6 +115,11 @@ abstract class PortablePresentationDocument
   }) = _PortablePresentationDocument;
 }
 
+/// Immutable lexical bindings and read evidence captured for one interaction.
+///
+/// Catalog generation gates lookup, while resource locations connect bindings
+/// to authored values. Async writes use this captured observation to reject
+/// stale interaction intent rather than silently reading a new target.
 @Freezed(
   copyWith: false,
   map: FreezedMapOptions.none,

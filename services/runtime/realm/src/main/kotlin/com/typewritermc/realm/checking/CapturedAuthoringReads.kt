@@ -72,10 +72,13 @@ data class SnapshotReadHealth(
 )
 
 /**
- * Reads one immutable authored view and records the exact logical inputs used by the caller.
+ * Reads a captured or request staged authored view while recording conflict evidence from its original baseline.
  *
- * Original views provide admissible evidence. Staged views are intended for edit validation and retain the original
- * snapshot identity so callers can keep original conflict evidence separate from proposed content.
+ * Returned values come from [view], including prior operation writes in a working view. Expectations always
+ * witness [AuthoredReadView.original], allowing commit admission to compare saved inputs independently of staged
+ * output. Missing values, callback failures, and exhausted budgets are tracked separately in [health]; callers
+ * must inspect that health before treating collected evidence as complete. Each evaluation owns its recorder
+ * and mutable counters, so this reader requires serialized use.
  */
 class CapturedAuthoringReads(
     internal val view: AuthoredReadView,

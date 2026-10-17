@@ -4,9 +4,9 @@ import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
 /**
- * Identifies an authored page using a typed database key.
+ * Identifies an authored page through its shared resource identity.
  *
- * The key does not include the table name; use the library reference helpers when crossing resource boundaries.
+ * Use the library reference helpers to select the appropriate relationship endpoint when linking resources.
  */
 @JvmInline
 @Serializable

@@ -143,8 +143,9 @@ final class HostEditorSnapshot extends EditorSnapshot {
 /// Bridges the host configuration editor to the organization resource session.
 ///
 /// Refresh reads a topology snapshot. Commit preparation validates and decodes
-/// the draft, then reserves the host and publishes accepted or conflicting
-/// backend results through the repository topology stream.
+/// the draft and declares its host reservation. When that prepared command is
+/// submitted, accepted and conflicting results enter the repository topology
+/// stream before being mapped to editor outcomes.
 final class HostEditPersistence extends ValueEditPersistence {
   const HostEditPersistence(this.repository, this.hostId);
   final ServiceResourceRepository repository;

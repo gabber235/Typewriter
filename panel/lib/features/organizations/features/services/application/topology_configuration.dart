@@ -4,9 +4,9 @@ part of "services.dart";
 /// immutable projection.
 ///
 /// Configuration changes update the desired and applied revision view and
-/// replace the affected child resources. Observation changes update runtime
-/// state only. Timestamp and revision checks prevent an older observation from
-/// erasing newer knowledge when responses and watch events overlap.
+/// replace the affected child resources. Observations update runtime state and
+/// the host's applied revision. Timestamp and revision checks prevent older data
+/// from erasing newer knowledge when responses and watch events overlap.
 extension OrganizationTopologyConfiguration on OrganizationTopology {
   /// Uses incoming snapshot membership and retains accepted configuration and
   /// runtime progress only for resources that remain present.
@@ -38,8 +38,8 @@ extension OrganizationTopologyConfiguration on OrganizationTopology {
         ],
       );
 
-  /// Merges a host runtime observation without changing its desired
-  /// configuration.
+  /// Merges a host runtime observation, retaining an existing host's desired
+  /// configuration. An unknown host is inserted with the full observed record.
   OrganizationTopology applyHostObservation(TopologyHost incoming) {
     final previous = hosts.firstWhereOrNull(
       (host) => host.hostId == incoming.hostId,

@@ -7,9 +7,9 @@ part "tree_view.freezed.dart";
 /// A [RootTreeNode] is the collection boundary and has no path. An
 /// [InnerTreeNode] stores one or more path segments in [InnerTreeNode.name],
 /// its complete dot separated path in [InnerTreeNode.path], and child nodes.
-/// A [LeafTreeNode] stores the source value. Children preserve input order;
-/// callers that need display ordering must sort them at the presentation
-/// boundary.
+/// A [LeafTreeNode] stores the source value. Adding a shared prefix can move an
+/// existing inner node to the end of its siblings; callers that need display
+/// ordering must sort at the presentation boundary.
 @freezed
 class TreeNode<T> with _$TreeNode {
   /// Creates the pathless collection boundary for a tree.

@@ -160,6 +160,9 @@ final class _PortableHeaderLayout extends MultiChildRenderObjectWidget {
   }
 }
 
+/// Keeps action children mounted while overflow changes. Only visible children
+/// paint, hit test and enter semantics; the widget receives the visible end count
+/// after layout to rebuild the overflow menu without mutating during layout.
 final class _RenderPortableHeaderLayout extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _PortableHeaderParentData>,

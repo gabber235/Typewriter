@@ -7,6 +7,7 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedType
 
+/** Identity token for one authored observation; equal catalog generations do not make two observations interchangeable. */
 class ReadContext(
     val catalog: CatalogGeneration,
 )
@@ -21,6 +22,7 @@ sealed interface DraftExpectation {
     ) : DraftExpectation
 }
 
+/** Binds a draft to its observation and location while retaining both the expected schema and actual type selection. */
 data class DraftBinding(
     val catalog: CatalogGeneration,
     val readContext: ReadContext,

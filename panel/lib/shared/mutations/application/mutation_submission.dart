@@ -5,8 +5,10 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// The supplied sender must capture an immutable request and destination.
 /// Repeated attempts reuse that sender. Only protocols with verified replay
 /// support may retry an uncertain result. Concurrent attempts share one Future.
-/// A confirmed response is integrated once; integration failure is reported
-/// separately because resending could duplicate an already accepted mutation.
+/// Known results enter local integration independently of delivery. Successful
+/// integration is retained; failed integration can run again without resending
+/// an already accepted mutation. Disposal stops publication and releases owned
+/// dependencies but cannot retract a request already sent to the server.
 final class MutationSubmission<T> extends ChangeNotifier {
   MutationSubmission({
     required this.id,

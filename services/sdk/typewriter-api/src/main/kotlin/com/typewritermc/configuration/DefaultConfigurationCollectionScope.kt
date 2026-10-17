@@ -22,6 +22,11 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeTemplate
 import kotlin.reflect.KClass
 
+/**
+ * Collects a provider's portable recipes and native checks under one declaration owner.
+ * Nested field scopes share rule ordinals and collected state while extending relative paths. Collection records
+ * declarations without evaluating authored values; native predicates are bound to a catalog before execution.
+ */
 class DefaultConfigurationCollectionScope internal constructor(
     private val target: TypeDefinitionId,
     private val state: ConfigurationCollectionState,

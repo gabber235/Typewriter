@@ -3,9 +3,9 @@ import "package:typewriter_panel/typewriter_panel.dart";
 /// Responsive member row for touch layouts.
 ///
 /// The collapsed header handles selection and keyboard actions. Expansion
-/// reveals role editing and removal without changing the provider contract used
-/// by the desktop table. Role choices come from the live role catalog, so a
-/// stale member row cannot invent assignable roles.
+/// reveals role editing and removal through the same repository commands as
+/// the desktop table. Role choices use the observed catalog's assignable flag;
+/// the server remains responsible for validating requested role changes.
 class MemberTabletCard extends HookConsumerWidget {
   const MemberTabletCard({
     required this.member,

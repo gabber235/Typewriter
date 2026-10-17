@@ -33,6 +33,9 @@ final class _HierarchyRenderSurface extends MultiChildRenderObjectWidget {
   }
 }
 
+/// Measures child content before resolving connector targets and spacing.
+/// Marker clearance may expand authored spacing, and a flattened single child
+/// omits indentation. Strokes paint behind children and own no hit targets.
 final class _RenderHierarchySurface extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, _HierarchyParentData>,

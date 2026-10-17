@@ -1,5 +1,8 @@
 part of "../portable_presentation_renderer.dart";
 
+/// Captures an appearance declaration with the lexical bindings it was authored
+/// under. Each property inherits from the nearest layer defining that property;
+/// expressions keep their original bindings after nested control rebinding.
 @freezed
 abstract class PortableAppearanceLayer with _$PortableAppearanceLayer {
   const factory PortableAppearanceLayer({

@@ -25,9 +25,9 @@ enum NatsFailureKind {
 
 /// Observable lifecycle of a [NatsClient].
 ///
-/// Terminal failures retain their typed cause. [NatsClosed] is reserved for an
-/// explicit local close, so consumers never need to infer failure from a bare
-/// status value.
+/// Terminal failures retain their typed cause. [NatsClosed] represents closure
+/// without a transport error, including explicit local shutdown; it does not
+/// by itself distinguish who initiated closure.
 @freezed
 sealed class NatsConnectionState with _$NatsConnectionState {
   const factory NatsConnectionState.connecting() = NatsConnecting;

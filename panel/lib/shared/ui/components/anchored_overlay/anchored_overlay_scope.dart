@@ -12,7 +12,9 @@ class AnchoredOverlayScope extends StatefulWidget {
 
   /// Returns this scope's bounds in [overlayBox] coordinates, when laid out.
   ///
-  /// Returns null before either render object has a usable size.
+  /// Returns null when no laid out scope is available. The caller supplies a
+  /// laid out [overlayBox]. Only the origin is transformed, so this assumes
+  /// that scope and overlay sizes use the same scale and orientation.
   static Rect? maybeScopeBoundsInOverlay(
     BuildContext context, {
     required RenderBox overlayBox,
