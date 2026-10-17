@@ -448,9 +448,9 @@ mod tests {
     #[test]
     fn complete_route_inventory_parses() {
         let manifest = Manifest::parse(include_str!("../../transport-routes.yaml")).unwrap();
-        assert_eq!(manifest.routes.len(), 62);
+        assert_eq!(manifest.routes.len(), 64);
         let symbols = manifest.requested_symbols();
-        assert_eq!(symbols.methods.len(), 52);
+        assert_eq!(symbols.methods.len(), 54);
         assert_eq!(symbols.records.len(), 17);
         manifest
             .validate_component_subscriptions(
@@ -466,6 +466,79 @@ mod tests {
                 )
                 .is_err()
         );
+    }
+
+    #[test]
+    fn resource_operation_routes_preserve_subjects_and_role_grants() {
+        let manifest = Manifest::parse(include_str!("../../transport-routes.yaml")).unwrap();
+        for (name, method_name, expected_subject, expected_operation, expected_failure) in [
+            (
+                "resource_operations_resolve",
+                "ResolveResourceOperations",
+                "service.to.{realm}.organization.{organization}.realm.editor.resources.operations.resolve",
+                "editor.resources.operations.resolve",
+                "resource-operations-resolve-failed",
+            ),
+            (
+                "authoring_action_prepare",
+                "PrepareAuthoringAction",
+                "service.to.{realm}.organization.{organization}.realm.editor.resources.actions.prepare",
+                "editor.resources.actions.prepare",
+                "authoring-action-prepare-failed",
+            ),
+        ] {
+            let route = manifest
+                .routes
+                .iter()
+                .find(|route| route.name.to_string() == name)
+                .expect("resource operation route is present");
+            assert_eq!(route.scope, ScopeKind::Realm, "{name} scope");
+            assert!(
+                route.subscription.is_none(),
+                "{name} is not an internal subscription"
+            );
+            let Flow::Unary {
+                method,
+                requests,
+                operation,
+                failure_slug,
+            } = &route.flow
+            else {
+                panic!("{name} must use a unary request");
+            };
+            assert_eq!(
+                method.module, "editor/v1/resource_operations.skir",
+                "{name} module"
+            );
+            assert_eq!(method.path, [method_name], "{name} Skir method");
+            assert_eq!(operation, expected_operation, "{name} operation");
+            assert_eq!(failure_slug, expected_failure, "{name} failure identity");
+            let subject = SubjectTemplate::try_from(expected_subject.to_owned()).unwrap();
+            assert_eq!(
+                requests,
+                &BTreeMap::from([(Side::Panel, subject.clone()), (Side::Service, subject),]),
+                "{name} endpoints"
+            );
+            assert_eq!(route.grants.len(), 2, "{name} has exactly two grants");
+            assert_eq!(
+                route.grants.iter().cloned().collect::<BTreeSet<_>>(),
+                BTreeSet::from([
+                    Grant {
+                        role: Role::OrganizationMember,
+                        side: Side::Panel,
+                        channel: Channel::Request,
+                        direction: Direction::Publish
+                    },
+                    Grant {
+                        role: Role::RealmCoordinator,
+                        side: Side::Service,
+                        channel: Channel::Request,
+                        direction: Direction::Subscribe
+                    },
+                ]),
+                "{name} authorization policy"
+            );
+        }
     }
 
     #[test]

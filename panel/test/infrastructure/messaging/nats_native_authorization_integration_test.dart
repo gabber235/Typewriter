@@ -483,4 +483,91 @@ void main() {
     skip: skipReason,
     timeout: const Timeout(Duration(seconds: 60)),
   );
+
+  test(
+    "native resource routes admit only the finite realm grants",
+    () async {
+      final admin = await NatsConnection.connect(
+        NatsOptions(
+          servers: [NatsServer.parse(serverUrl!)],
+          authentication: NatsAuthentication.userPassword(
+            adminUser!,
+            adminPassword!,
+          ),
+        ),
+      );
+      addTearDown(admin.close);
+      const suffixes = ["operations.resolve", "actions.prepare"];
+      const realms = [
+        "fixture-realm",
+        "fixture-added-realm",
+        "fixture-ungranted-realm",
+      ];
+      for (final realm in realms) {
+        for (final suffix in suffixes) {
+          final subject =
+              "service.to.$realm.organization.fixture-organization."
+              "realm.editor.resources.$suffix";
+          final responder = await admin.subscribe(subject);
+          addTearDown(responder.unsubscribe);
+          final listener = responder.messages.listen((message) {
+            unawaited(admin.reply(message, message.payload));
+          });
+          addTearDown(listener.cancel);
+        }
+      }
+      await admin.flush();
+      final cases = [
+        ("current", _currentSeed, _currentSession, {"fixture-realm"}),
+        ("rejected", _rejectedSeed, _rejectedSession, {"fixture-realm"}),
+        (
+          "accepted",
+          _acceptedSeed,
+          _acceptedSession,
+          {"fixture-realm", "fixture-added-realm"},
+        ),
+      ];
+      for (final fixture in cases) {
+        final connection = await NatsConnection.connect(
+          NatsOptions(
+            servers: [NatsServer.parse(serverUrl)],
+            authentication: NatsAuthentication.nkey(fixture.$2),
+            requestInboxPrefix: "_INBOX.fixture-user.${fixture.$3}",
+          ),
+        );
+        addTearDown(connection.close);
+        for (final realm in realms) {
+          for (final suffix in suffixes) {
+            final subject =
+                "service.to.$realm.organization.fixture-organization."
+                "realm.editor.resources.$suffix";
+            if (fixture.$4.contains(realm)) {
+              final response = await connection.request(subject, const [42]);
+              expect(response.payload, [42], reason: "${fixture.$1} $subject");
+            } else {
+              final denied = connection.events
+                  .firstWhere((event) {
+                    if (event is! NatsServerError) return false;
+                    final error = event.error;
+                    return error is NatsPermissionException &&
+                        error.operation == NatsPermissionOperation.publish &&
+                        error.subject == subject;
+                  })
+                  .timeout(const Duration(seconds: 10));
+              await connection.publish(subject, const [42]);
+              await connection.flush();
+              final event = await denied;
+              expect(
+                event,
+                isA<NatsServerError>(),
+                reason: "${fixture.$1} must not publish $subject",
+              );
+            }
+          }
+        }
+      }
+    },
+    skip: skipReason,
+    timeout: const Timeout(Duration(seconds: 60)),
+  );
 }
