@@ -26,6 +26,8 @@ import com.typewritermc.operations.ResolvedResourceOperation
 import com.typewritermc.operations.ResolvedResourceOperations
 import com.typewritermc.operations.ResourceClonePreparation
 import com.typewritermc.operations.ResourceLayoutPreparation
+import com.typewritermc.operations.ResourceOperationContribution
+import com.typewritermc.operations.ResourceOperationDefinition
 import com.typewritermc.operations.ResourceOperationId
 import com.typewritermc.operations.ResourceRelationPreparation
 import com.typewritermc.operations.UnavailableAuthoredValue
@@ -112,11 +114,15 @@ internal class ResourceOperationRuntime(
             val edit = SnapshotEditContext(baseline, invocation.invocationId)
             val catalog = baseline.catalog.operations
             val operation = catalog.requireAuthoring(capability)
-            val resolved = resolve(invocation, baseline, edit.capturedReads)
-            val available =
-                resolved.operations.firstOrNull {
-                    (it.definition.action as? EditorAction.AuthoringWrapper)?.value?.capability?.value == capability.value
+            val applicable = invocation.applicableIn(baseline, edit.capturedReads)
+            val definition =
+                applicable.definitions.firstOrNull { definition ->
+                    (definition.action as? EditorAction.AuthoringWrapper)
+                        ?.value
+                        ?.capability
+                        ?.value == capability.value
                 }
+            val available = definition?.evaluateFor(invocation, baseline, edit.capturedReads)
             if (available?.availability != OperationAvailability.Enabled) {
                 return OperationPreparationResult.Unavailable(
                     (available?.availability as? OperationAvailability.Disabled)?.reason
@@ -162,72 +168,121 @@ internal class ResourceOperationRuntime(
             }
         }
 
+    private data class ApplicableOperations(
+        val definitions: List<ResourceOperationDefinition>,
+        val primaryContributions: List<ResourceOperationContribution>,
+    )
+
+    private fun OperationInvocation.applicableIn(
+        view: AuthoringView,
+        reads: CapturedAuthoringReads,
+    ): ApplicableOperations {
+        val catalog = view.catalog.operations
+        val targets =
+            this.targets.map { id ->
+                requireNotNull(view.resources[id]) { "The operation target is unavailable" }
+            }
+        this.targets.forEach { id ->
+            reads.observeInput(InputIdentity.Existence(id))
+            reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
+        }
+        val contributions =
+            targets.map { record ->
+                catalog.contributions.filter { matches(record, it.target, view) }
+            }
+        val covered =
+            contributions
+                .map { rows -> rows.flatMap { it.operations }.toSet() }
+                .reduce(Set<ResourceOperationId>::intersect)
+        return ApplicableOperations(
+            definitions =
+                catalog.definitions.filter { definition ->
+                    definition.id in covered && matches(targets, definition.targets, view)
+                },
+            primaryContributions = if (targets.size == 1) contributions.single().filter { it.primary != null } else emptyList(),
+        )
+    }
+
+    private fun ResourceOperationDefinition.evaluateFor(
+        invocation: OperationInvocation,
+        view: AuthoringView,
+        reads: CapturedAuthoringReads,
+    ): ResolvedResourceOperation? {
+        val action = this.action as? EditorAction.AuthoringWrapper
+        val provider =
+            action?.let {
+                view.catalog.operations.requireAuthoring(CapabilityId(it.value.capability.value))
+            }
+        val targets = invocation.targets.map(view.resources::getValue)
+        if (provider != null && !matches(targets, provider.descriptor.targets, view)) return null
+        val availability =
+            if (provider == null) {
+                OperationAvailability.Enabled
+            } else {
+                try {
+                    val value =
+                        provider.builtin?.let { builtin ->
+                            BuiltinOperationAvailability(view, reads).availability(builtin, invocation.targets)
+                        } ?: provider.availability(invocation.targets, reads)
+                    val health = reads.health()
+                    check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
+                        "Operation availability reads did not produce complete evidence: $health"
+                    }
+                    value
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Exception) {
+                    throw OperationResolutionFailure(provider.origin, failure)
+                }
+            }
+        return if (availability == OperationAvailability.Hidden) {
+            null
+        } else {
+            ResolvedResourceOperation(this, availability)
+        }
+    }
+
     private fun resolve(
         invocation: OperationInvocation,
         view: AuthoringView,
         reads: CapturedAuthoringReads,
     ): ResolvedResourceOperations {
-        val catalog = view.catalog.operations
-        val targets = invocation.targets.map { requireNotNull(view.resources[it]) { "The operation target is unavailable" } }
-        invocation.targets.forEach { id ->
-            reads.observeInput(InputIdentity.Existence(id))
-            reads.observeInput(InputIdentity.Form(ValueLocation(id, ValuePath())))
-        }
-        val applicable = targets.map { record -> catalog.contributions.filter { matches(record, it.target, view) } }
-        val covered =
-            applicable
-                .map { contributions ->
-                    contributions.flatMap { it.operations }.toSet()
-                }.reduce(Set<ResourceOperationId>::intersect)
+        val applicable = invocation.applicableIn(view, reads)
         val items =
-            catalog.definitions
-                .filter { definition ->
-                    definition.id in covered &&
-                        matches(targets, definition.targets, view)
-                }.mapNotNull { definition ->
-                    val authoring = definition.action as? EditorAction.AuthoringWrapper
-                    val provider = authoring?.let { catalog.requireAuthoring(CapabilityId(it.value.capability.value)) }
-                    if (provider != null && !matches(targets, provider.descriptor.targets, view)) return@mapNotNull null
-                    val availability =
-                        if (provider == null) {
-                            OperationAvailability.Enabled
-                        } else {
-                            try {
-                                val available =
-                                    provider.builtin?.let { BuiltinOperationAvailability(view, reads).availability(it, invocation.targets) }
-                                        ?: provider.availability(invocation.targets, reads)
-                                val health = reads.health()
-                                check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
-                                    "Operation availability reads did not produce complete evidence: $health"
-                                }
-                                available
-                            } catch (cancelled: CancellationException) {
-                                throw cancelled
-                            } catch (failure: Exception) {
-                                throw OperationResolutionFailure(provider.origin, failure)
-                            }
-                        }
-                    if (availability == OperationAvailability.Hidden) null else ResolvedResourceOperation(definition, availability)
+            applicable.definitions
+                .mapNotNull { definition ->
+                    val callbackReads = CapturedAuthoringReads(AuthoredReadView.Original(view))
+                    definition.evaluateFor(invocation, view, callbackReads)
                 }.sortedWith(
-                    compareBy({
-                        it.definition.presentation.group.ordinal
-                    }, { it.definition.presentation.order }, { it.definition.id.capability.value }),
+                    compareBy(
+                        { it.definition.presentation.group.ordinal },
+                        { it.definition.presentation.order },
+                        { it.definition.id.capability.value },
+                    ),
                 )
-        val nominees = if (targets.size == 1) applicable.single().filter { it.primary != null } else emptyList()
+        val primary = applicable.primaryIn(items, view)
+        val health = reads.health()
+        check(health.failures.isEmpty() && health.incomplete.isEmpty()) {
+            "Operation availability reads did not produce complete evidence"
+        }
+        return ResolvedResourceOperations(items, primary)
+    }
+
+    private fun ApplicableOperations.primaryIn(
+        items: List<ResolvedResourceOperation>,
+        view: AuthoringView,
+    ): ResourceOperationId? {
         val maximal =
-            nominees
+            primaryContributions
                 .filter { candidate ->
-                    nominees.none { other ->
+                    primaryContributions.none { other ->
                         other.target.definition != candidate.target.definition &&
                             view.catalog.checked.isNominalSubtype(other.target.definition, candidate.target.definition)
                     }
                 }.mapNotNull { it.primary }
                 .distinct()
         require(maximal.size <= 1) { "Resource operations have conflicting primary nominations" }
-        val primary = maximal.singleOrNull()?.takeIf { id -> items.any { it.definition.id == id } }
-        val health = reads.health()
-        check(health.failures.isEmpty() && health.incomplete.isEmpty()) { "Operation availability reads did not produce complete evidence" }
-        return ResolvedResourceOperations(items, primary)
+        return maximal.singleOrNull()?.takeIf { id -> items.any { it.definition.id == id } }
     }
 
     private fun matches(

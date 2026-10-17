@@ -184,6 +184,25 @@ val ResourceOperationRoutesTest by testSuite {
         }
     }
 
+    test("preparing one action ignores an unrelated failing availability callback while menu resolution still fails") {
+        runTest {
+            CoreOperationsFixture(withFailingAvailability = true).use { fixture ->
+                (fixture.resolve("tag") is ResolveResourceOperationsResult.FailedWrapper) shouldBe true
+                val request = fixture.prepare(BuiltinResourceOperation.Delete, "tag")
+                (fixture.routes.prepare(request) is AuthoringActionResult.PreviewWrapper) shouldBe true
+                val unavailable =
+                    request.copy(
+                        capability =
+                            skirout.editor.v1.type_catalog.CapabilityId(
+                                value = fixture.brokenCapability,
+                            ),
+                    )
+                // The selected callback failure is still reported at the existing route boundary.
+                (fixture.routes.prepare(unavailable) is AuthoringActionResult.FailedWrapper) shouldBe true
+            }
+        }
+    }
+
     test("changed saved observations and catalogs produce typed refresh responses") {
         CoreOperationsFixture().use { fixture ->
             val request = fixture.resolveRequest("book")
@@ -213,10 +232,12 @@ val ResourceOperationRoutesTest by testSuite {
 private class CoreOperationsFixture(
     withPages: Boolean = false,
     withDeleteAlias: Boolean = false,
+    withFailingAvailability: Boolean = false,
 ) : AutoCloseable {
     private val catalogs = RealmCatalogStore()
     val snapshots: InMemoryAuthoringViewStore
     val routes: ResourceOperationRoutes
+    val brokenCapability: String
 
     init {
         val artifact =
@@ -231,7 +252,26 @@ private class CoreOperationsFixture(
                 DiscoveryDomains.Realm,
                 runtimeServices = mapOf(PresentationRuntime::class.java to DefaultPresentationRuntime()),
             )
-        val loaded = deployment.providers.contributions
+        val original = deployment.providers.contributions
+        val loaded =
+            if (withFailingAvailability) {
+                val failing =
+                    com.typewritermc.operations.collectOperations(
+                        original.declarations.first().origin,
+                        "fixture.FailingOperations",
+                        TypeTemplate.Named(TagDefinition.id),
+                        com.typewritermc.library.TagDraftProjection,
+                    ) { scope ->
+                        scope.operation("broken", com.typewritermc.operations.noInput()) {
+                            label("Broken availability")
+                            availability { error("Unselected callback failure") }
+                            prepare { error("Unavailable operation must never prepare") }
+                        }
+                    }
+                original.copy(operations = original.operations + failing)
+            } else {
+                original
+            }
         val contributions =
             if (withDeleteAlias) {
                 val alias =
@@ -297,6 +337,13 @@ private class CoreOperationsFixture(
                 contributions
             }
         val assembly = fixtureContributions.assemble(CatalogAssemblyContext(CatalogGeneration("core-operations")))
+        brokenCapability =
+            assembly.operations.definitions
+                .firstOrNull { it.id.local == "broken" }
+                ?.id
+                ?.capability
+                ?.value
+                .orEmpty()
         catalogs.replace(RealmCatalogIncarnation(assembly, deployment))
         val lease = catalogs.captureCurrent()
 
