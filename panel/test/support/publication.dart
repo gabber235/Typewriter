@@ -49,64 +49,15 @@ skir.PublicationStatus blockedPublicationStatus() =>
       pendingRoots: const [],
     );
 
-/// Replays its current observation on each watch, as the transport snapshot does.
-class TestPublicationRepository implements RealmPublicationRepository {
-  TestPublicationRepository(this.scope);
-  final AuthoringScope scope;
-  final observations = StreamController<PublicationObservation>.broadcast(
-    sync: true,
-  );
-  PublicationObservation current = PublicationObservation.available(
-    skir.PublicationView(
-      id: skir.PublicationViewId(value: "first"),
-      status: readyPublicationStatus(),
-    ),
-  );
-  final candidates = <skir.PublicationCandidateId>[];
-  Future<SubmissionResult<skir.PublishAuthoringResponse>> Function()? send;
-  void emit(skir.PublicationStatus status, {String id = "next"}) => observe(
-    PublicationObservation.available(
-      skir.PublicationView(
-        id: skir.PublicationViewId(value: id),
-        status: status,
-      ),
-    ),
-  );
-  void observe(PublicationObservation value) {
-    current = value;
-    observations.add(value);
-  }
-
-  @override
-  Stream<PublicationObservation> watch() async* {
-    yield current;
-    yield* observations.stream;
-  }
-
-  @override
-  PreparedCommit<skir.PublishAuthoringResponse> preparePublish(
-    skir.PublicationCandidateId candidate,
-  ) => PreparedCommit(
-    id: Object(),
-    label: "Publish saved content",
-    resources: {WorkDriverId(domain: "publication", scope: scope)},
-    replay: SubmissionReplay.unsupported,
-    send: () async {
-      candidates.add(candidate);
-      return await send?.call() ??
-          SubmissionConfirmed(
-            skir.PublishAuthoringResponse.wrapResult(
-              skir.PublicationResult.noChanges,
-            ),
-          );
-    },
-  );
-  @override
-  Future<List<skir.CompiledResourceStatus>> states(
-    skir.CompilationStatusSelection selection,
-  ) async => [];
-  Future<void> close() => observations.close();
-}
+PublicationObservation publicationObservation(
+  skir.PublicationStatus status, {
+  String id = "first",
+}) => PublicationObservation.available(
+  skir.PublicationView(
+    id: skir.PublicationViewId(value: id),
+    status: status,
+  ),
+);
 
 Future<void> waitForPublication(bool Function() predicate) async {
   for (var index = 0; index < 100 && !predicate(); index++) {

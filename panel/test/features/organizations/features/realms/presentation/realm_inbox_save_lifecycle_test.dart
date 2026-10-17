@@ -170,7 +170,10 @@ Future<ProviderContainer> _mount(
   WidgetTester tester,
   _SaveBoundary boundary,
 ) async {
-  final publication = TestPublicationRepository(_scope);
+  final publication = TestPublicationRepository(
+    _scope,
+    initial: publicationObservation(readyPublicationStatus()),
+  );
   addTearDown(publication.close);
   await tester.pumpTestApp(
     child: Scaffold(body: RealmInboxButton(scope: _scope)),
@@ -178,6 +181,7 @@ Future<ProviderContainer> _mount(
       ...authoringFixtureOverrides(
         scope: _scope,
         document: _document("Original"),
+        publication: publication,
       ),
       realmEditPersistenceProvider(_scope).overrideWithValue(
         fixtureRealmPersistence(
@@ -189,10 +193,6 @@ Future<ProviderContainer> _mount(
         _scope.organizationId,
         _scope.realmId,
       ).overrideWithValue(const AuthoringSessionState()),
-      realmPublicationRepositoryProvider(
-        _scope.organizationId,
-        _scope.realmId,
-      ).overrideWithValue(publication),
     ],
   );
   return ProviderScope.containerOf(

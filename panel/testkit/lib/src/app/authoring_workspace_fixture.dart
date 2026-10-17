@@ -2,6 +2,7 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "publication_fixture.dart";
 import "realm_catalog_fixture.dart";
 import "../shared/testing/testing.dart";
 
@@ -63,6 +64,8 @@ final class ScriptedAuthoringRequest {
 }
 
 /// Fixtures replace external observations and capabilities. Production workspace and queries run unchanged.
+/// Default publication repositories belong to each provider key. A supplied
+/// [publication] must match that scope and remains owned by its caller.
 List<Override> authoringFixtureOverrides({
   AuthoringScope? scope,
   DisplayState? state,
@@ -74,6 +77,7 @@ List<Override> authoringFixtureOverrides({
   CheckedEditorCatalog? catalog,
   ScriptedAuthoringTransport? transport,
   AsyncValue<AuthoringDocument>? observation,
+  TestPublicationRepository? publication,
   AuthoredResourceCommands? commands,
   AuthoredResourceCommands Function(Ref, ScriptedAuthoringTransport)?
   commandsFactory,
@@ -108,6 +112,33 @@ List<Override> authoringFixtureOverrides({
         onRequest: onRequest,
       );
   return [
+    realmPublicationRepositoryProvider.overrideWith((ref, scopeIds) {
+      final (organizationId, realmId) = scopeIds;
+      final requested = AuthoringScope(
+        organizationId: organizationId,
+        realmId: realmId,
+      );
+      final supplied = publication;
+      if (supplied != null) {
+        if (supplied.scope != requested) {
+          throw StateError(
+            "Publication fixture scope does not match the requested realm",
+          );
+        }
+        return supplied;
+      }
+      final repository = TestPublicationRepository(
+        requested,
+        initial: PublicationObservation.available(
+          skir.PublicationView(
+            id: skir.PublicationViewId(value: "fixture:empty"),
+            status: skir.PublicationStatus.createEmpty(notices: const []),
+          ),
+        ),
+      );
+      ref.onDispose(() => unawaited(repository.close()));
+      return repository;
+    }),
     selectedAuthoringScopeProvider.overrideWith(
       (ref) =>
           scope ??

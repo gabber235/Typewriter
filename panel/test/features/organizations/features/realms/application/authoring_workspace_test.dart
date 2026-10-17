@@ -674,9 +674,9 @@ void main() {
     "publication journal observation survives view release while sending",
     () async {
       final work = ScopedWorkSession();
-      addTearDown(work.dispose);
       final repository = _WorkPublicationRepository(() => _text("Saved"));
       addTearDown(repository.close);
+      addTearDown(work.dispose);
       final gate = Completer<void>();
       repository.sendGate = gate;
       final driver = PublicationWorkDriver(_workScope, repository, work)
@@ -794,7 +794,6 @@ void main() {
         initial: _document(),
       );
       final work = ScopedWorkSession();
-      addTearDown(work.dispose);
       final graph = EditingWorkDriver(
         id: WorkDriverId(domain: "authoring", scope: _workScope),
         workspace: workspace.workspace,
@@ -807,8 +806,9 @@ void main() {
         ..start();
       work.register(publication);
       final publicationLease = work.lease(publication.id);
-      addTearDown(publicationLease.release);
       addTearDown(repository.close);
+      addTearDown(work.dispose);
+      addTearDown(publicationLease.release);
       workspace.edit(
         label: "Pending rename",
         policy: EditorCommitPolicy.applyResource,
@@ -836,10 +836,10 @@ void main() {
 
   test("uncertain publication retains activity without offering replay or draft commands", () async {
     final work = ScopedWorkSession();
-    addTearDown(work.dispose);
     final repository = _WorkPublicationRepository(() => _text("Saved"))
       ..uncertain = true;
     addTearDown(repository.close);
+    addTearDown(work.dispose);
     final driver = PublicationWorkDriver(_workScope, repository, work)..start();
     work.register(driver);
     final lease = work.lease(driver.id);
@@ -1664,7 +1664,11 @@ final _workScope = AuthoringScope(
 );
 
 final class _WorkPublicationRepository extends TestPublicationRepository {
-  _WorkPublicationRepository(this.saved) : super(_workScope);
+  _WorkPublicationRepository(this.saved)
+    : super(
+        _workScope,
+        initial: publicationObservation(readyPublicationStatus()),
+      );
   final skir.DataValue Function() saved;
   final publishedValues = <skir.DataValue>[];
   final queriedSelections = <skir.CompilationStatusSelection>[];

@@ -720,13 +720,19 @@ Future<RealmInboxState> _inbox({
   skir.PublicationStatus? status,
 }) async {
   final document = fixtureAuthoringDocument(books: [_book]);
-  final publication = TestPublicationRepository(_scope);
-  addTearDown(publication.close);
   final review = status ?? _blocked([blocker!, ...additional]);
-  publication.emit(review);
+  final publication = TestPublicationRepository(
+    _scope,
+    initial: publicationObservation(review, id: "next"),
+  );
+  addTearDown(publication.close);
   final container = ProviderContainer.test(
     overrides: [
-      ...authoringFixtureOverrides(scope: _scope, document: document),
+      ...authoringFixtureOverrides(
+        scope: _scope,
+        document: document,
+        publication: publication,
+      ),
       authoringSessionProvider(
         _scope.organizationId,
         _scope.realmId,
@@ -743,10 +749,6 @@ Future<RealmInboxState> _inbox({
           ),
         ),
       ),
-      realmPublicationRepositoryProvider(
-        _scope.organizationId,
-        _scope.realmId,
-      ).overrideWithValue(publication),
     ],
   );
   final subscription = container.listen(realmInboxProvider(_scope), (_, _) {});
@@ -785,7 +787,10 @@ _navigation({
     ),
   );
   addTearDown(router.dispose);
-  final publication = TestPublicationRepository(_scope);
+  final publication = TestPublicationRepository(
+    _scope,
+    initial: publicationObservation(readyPublicationStatus()),
+  );
   addTearDown(publication.close);
   final container = ProviderContainer.test(
     overrides: [
@@ -793,15 +798,12 @@ _navigation({
         scope: _scope,
         document: document,
         transport: transport,
+        publication: publication,
       ),
       if (transport == null)
         workingAuthoringDocumentProvider(_scope).overrideWith(
           (ref) => loading ? const AsyncLoading() : AsyncData(document!),
         ),
-      realmPublicationRepositoryProvider(
-        _scope.organizationId,
-        _scope.realmId,
-      ).overrideWithValue(publication),
       appRouterProvider.overrideWithValue(router),
       if (registry != null)
         authoringResourceNavigationRegistryProvider.overrideWithValue(registry),
