@@ -214,7 +214,13 @@ val SyntheticDiscoveryTest by testSuite {
         val repeatedChecked = (catalog.resolve(RepeatedMessageDefinition.use) as Resolution.Ready).value
         val repeatedFields =
             (
-                repeated.build(PresentationBuildBinding(repeatedChecked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)).layout.element as
+                repeated
+                    .build(
+                        PresentationBuildBinding(
+                            repeatedChecked.presentationTemplate(),
+                            PresentationRole.WORKSPACE_EDITOR,
+                        ),
+                    ).layout.element as
                     PresentationElement.ChildrenWrapper
             ).value
                 .axisNodes()
