@@ -56,7 +56,7 @@ final class MemoryColorLibraryStorage implements ColorLibraryStorage {
   void write(String value) => this.value = value;
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 ColorLibraryStorage colorLibraryStorage(Ref ref) =>
     const LocalColorLibraryStorage();
 
