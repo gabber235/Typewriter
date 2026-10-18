@@ -1,6 +1,7 @@
 package com.typewritermc.operations
 
 import com.typewritermc.capability.CapabilityId
+import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.types.TypeTemplate
 import kotlinx.serialization.Serializable
 import skirout.editor.v1.action.EditorAction
@@ -53,6 +54,7 @@ data class OperationConfirmation(
     }
 }
 
+/** Shared operation appearance. Tone applies to both surfaces; variant controls inspector emphasis only. */
 data class OperationPresentation(
     val label: String,
     val description: String = "",
@@ -61,6 +63,8 @@ data class OperationPresentation(
     val order: Int = 0,
     val confirmation: OperationConfirmation? = null,
     val tone: ActionTone = ActionTone.Neutral,
+    val variant: ButtonVariant = ButtonVariant.Outlined,
+    val showInInspector: Boolean = true,
 ) {
     init {
         require(label.isNotBlank()) { "An operation requires a visible label." }

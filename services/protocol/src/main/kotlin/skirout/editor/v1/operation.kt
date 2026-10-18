@@ -529,6 +529,10 @@ sealed interface OperationPresentation_OrMutable {
     val order: kotlin.Int;
     val tone: skirout.editor.v1.presentation.HeaderActionTone;
     val confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable?;
+    /** Inspector button emphasis, independent of tone. Context menu rows ignore this variant. */
+    val variant: skirout.editor.v1.presentation.ButtonVariant;
+    /** Whether this operation also appears among inspector controls. Menus and shortcuts remain available. */
+    val showInInspector: kotlin.Boolean;
 
     fun toFrozen(): skirout.editor.v1.operation.OperationPresentation;
 }
@@ -543,6 +547,8 @@ class OperationPresentation private constructor(
     override val order: kotlin.Int,
     override val tone: skirout.editor.v1.presentation.HeaderActionTone,
     override val confirmation: skirout.editor.v1.operation.OperationConfirmation?,
+    override val variant: skirout.editor.v1.presentation.ButtonVariant,
+    override val showInInspector: kotlin.Boolean,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
         null,
 ): skirout.editor.v1.operation.OperationPresentation_OrMutable {
@@ -556,6 +562,8 @@ class OperationPresentation private constructor(
         order: kotlin.Int,
         tone: skirout.editor.v1.presentation.HeaderActionTone,
         confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable?,
+        variant: skirout.editor.v1.presentation.ButtonVariant,
+        showInInspector: kotlin.Boolean,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
             null,
     ): this(
@@ -566,6 +574,8 @@ class OperationPresentation private constructor(
         order,
         tone,
         if (confirmation != null) confirmation.toFrozen() else null,
+        variant,
+        showInInspector,
         _unrecognizedFields,
     ) {}
 
@@ -581,6 +591,8 @@ class OperationPresentation private constructor(
         order = this.order,
         tone = this.tone,
         confirmation = this.confirmation,
+        variant = this.variant,
+        showInInspector = this.showInInspector,
     );
 
     /** Returns a shallow copy of this instance with the specified fields replaced. */
@@ -601,6 +613,10 @@ class OperationPresentation private constructor(
             this.tone,
         confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
             this.confirmation,
+        variant: skirout.editor.v1.presentation.ButtonVariant =
+            this.variant,
+        showInInspector: kotlin.Boolean =
+            this.showInInspector,
     ) = skirout.editor.v1.operation.OperationPresentation(
         label,
         description,
@@ -609,6 +625,8 @@ class OperationPresentation private constructor(
         order,
         tone,
         if (confirmation != null) confirmation.toFrozen() else null,
+        variant,
+        showInInspector,
         this._unrecognizedFields,
     );
 
@@ -616,11 +634,11 @@ class OperationPresentation private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.operation.OperationPresentation && this.label == other.label && this.description == other.description && this.icon == other.icon && this.group == other.group && this.order == other.order && this.tone == other.tone && this.confirmation == other.confirmation);
+        return this === other || (other is skirout.editor.v1.operation.OperationPresentation && this.label == other.label && this.description == other.description && this.icon == other.icon && this.group == other.group && this.order == other.order && this.tone == other.tone && this.confirmation == other.confirmation && this.variant == other.variant && this.showInInspector == other.showInInspector);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.label, this.description, this.icon, this.group, this.order, this.tone, this.confirmation).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.label, this.description, this.icon, this.group, this.order, this.tone, this.confirmation, this.variant, this.showInInspector).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -648,6 +666,10 @@ class OperationPresentation private constructor(
             skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
         override var confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
             null,
+        override var variant: skirout.editor.v1.presentation.ButtonVariant =
+            skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
+        override var showInInspector: kotlin.Boolean =
+            false,
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.operation.OperationPresentation>? =
             null,
     ): skirout.editor.v1.operation.OperationPresentation_OrMutable {
@@ -660,6 +682,8 @@ class OperationPresentation private constructor(
             order = this.order,
             tone = this.tone,
             confirmation = this.confirmation,
+            variant = this.variant,
+            showInInspector = this.showInInspector,
             _unrecognizedFields = this._unrecognizedFields,
         );
     }
@@ -674,6 +698,8 @@ class OperationPresentation private constructor(
                 0,
                 skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
                 null,
+                skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
+                false,
             );
 
         /** Returns an instance with all fields set to their default values. */
@@ -701,6 +727,10 @@ class OperationPresentation private constructor(
                 skirout.editor.v1.presentation.HeaderActionTone.UNKNOWN,
             confirmation: skirout.editor.v1.operation.OperationConfirmation_OrMutable? =
                 null,
+            variant: skirout.editor.v1.presentation.ButtonVariant =
+                skirout.editor.v1.presentation.ButtonVariant.UNKNOWN,
+            showInInspector: kotlin.Boolean =
+                false,
         ) = skirout.editor.v1.operation.OperationPresentation(
             label = label,
             description = description,
@@ -709,6 +739,8 @@ class OperationPresentation private constructor(
             order = order,
             tone = tone,
             confirmation = confirmation,
+            variant = variant,
+            showInInspector = showInInspector,
             _unrecognizedFields = null,
         );
 
@@ -1872,6 +1904,24 @@ private object _SerializerRegistry {
             "",
             { it.confirmation },
             { mut, v -> mut.confirmation = v },
+        );
+        OperationPresentationSerializerImpl.addField(
+            "variant",
+            "variant",
+            7,
+            skirout.editor.v1.presentation.ButtonVariant.serializer,
+            "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.",
+            { it.variant },
+            { mut, v -> mut.variant = v },
+        );
+        OperationPresentationSerializerImpl.addField(
+            "show_in_inspector",
+            "showInInspector",
+            8,
+            build.skir.Serializers.bool,
+            "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.",
+            { it.showInInspector },
+            { mut, v -> mut.showInInspector = v },
         );
         OperationPresentationSerializerImpl.finalizeStruct();
 

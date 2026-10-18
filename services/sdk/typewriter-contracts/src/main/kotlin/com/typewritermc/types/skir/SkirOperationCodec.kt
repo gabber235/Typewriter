@@ -9,6 +9,7 @@ import com.typewritermc.operations.ResolvedResourceOperations
 import com.typewritermc.operations.ResourceOperationContribution
 import com.typewritermc.operations.ResourceOperationDefinition
 import com.typewritermc.operations.ResourceOperationId
+import com.typewritermc.presentation.ButtonVariant
 import skirout.editor.v1.presentation.HeaderActionTone
 import skirout.editor.v1.operation.OperationAvailability as WireAvailability
 import skirout.editor.v1.operation.OperationConfirmation as WireConfirmation
@@ -75,6 +76,13 @@ internal fun ConversionScope.encode(value: ResourceOperationDefinition): WireDef
                         ActionTone.Destructive -> HeaderActionTone.DESTRUCTIVE
                     },
                 confirmation = value.presentation.confirmation?.toWire(),
+                showInInspector = value.presentation.showInInspector,
+                variant =
+                    when (value.presentation.variant) {
+                        ButtonVariant.Filled -> skirout.editor.v1.presentation.ButtonVariant.FILLED
+                        ButtonVariant.Outlined -> skirout.editor.v1.presentation.ButtonVariant.OUTLINED
+                        ButtonVariant.Text -> skirout.editor.v1.presentation.ButtonVariant.TEXT
+                    },
             ),
         targets = encode(value.targets),
         action = value.action,

@@ -378,6 +378,8 @@ AuthoredResourceCommands _pageOperationCommands(
                     .toFrozen(),
                 targets: skir.OperationTargets.contributedSingle,
                 presentation: skir.OperationPresentation(
+                  showInInspector: true,
+                  variant: skir.ButtonVariant.outlined,
                   label: "Edit",
                   description: "Inspect this page",
                   icon: "",

@@ -13,6 +13,7 @@ import com.typewritermc.authoring.read
 import com.typewritermc.authoring.replace
 import com.typewritermc.capability.CapabilityId
 import com.typewritermc.discovery.ProviderOrigin
+import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.presentation.PresentationReference
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeTemplate
@@ -97,6 +98,12 @@ interface ResourceOperationBuilder<D : ResourceDraft, I> {
     fun confirmation(value: OperationConfirmation)
 
     fun tone(value: ActionTone)
+
+    /** Sets inspector button emphasis without changing context menu appearance. */
+    fun variant(value: ButtonVariant)
+
+    /** Controls inspector visibility without removing the operation from menus or shortcuts. */
+    fun showInInspector(value: Boolean)
 
     /**
      * Evaluates against the invocation's captured working graph. Keep this callback stateless and free of effects.
@@ -288,6 +295,9 @@ class ResourceOperationsBuildScope<D : ResourceDraft> internal constructor(
                 override val presentation =
                     OperationPresentation(
                         operation.label,
+                        icon = operation.icon,
+                        variant = operation.variant,
+                        showInInspector = operation.showInInspector,
                         group =
                             when (operation) {
                                 BuiltinResourceOperation.Open -> OperationGroup.Navigation
@@ -355,6 +365,8 @@ private class OperationBuilder<D : ResourceDraft, I> : ResourceOperationBuilder<
     private var order = 0
     private var confirmation: OperationConfirmation? = null
     private var tone = ActionTone.Neutral
+    private var variant = ButtonVariant.Outlined
+    private var showInInspector = true
     var single = false
     var available: OperationReadScope<D>.() -> OperationAvailability = { OperationAvailability.Enabled }
     var preparation: (suspend OperationPrepareScope<D, I>.() -> Unit)? = null
@@ -392,6 +404,14 @@ private class OperationBuilder<D : ResourceDraft, I> : ResourceOperationBuilder<
         tone = value
     }
 
+    override fun variant(value: ButtonVariant) {
+        variant = value
+    }
+
+    override fun showInInspector(value: Boolean) {
+        showInInspector = value
+    }
+
     override fun availability(body: OperationReadScope<D>.() -> OperationAvailability) {
         available = body
     }
@@ -403,7 +423,7 @@ private class OperationBuilder<D : ResourceDraft, I> : ResourceOperationBuilder<
 
     fun presentation(): OperationPresentation {
         require(label.isNotBlank()) { "An operation requires a label." }
-        return OperationPresentation(label, description, icon, group, order, confirmation, tone)
+        return OperationPresentation(label, description, icon, group, order, confirmation, tone, variant, showInInspector)
     }
 }
 

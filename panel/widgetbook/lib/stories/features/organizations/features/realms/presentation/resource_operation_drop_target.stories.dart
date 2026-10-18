@@ -124,6 +124,12 @@ AuthoringDocument _operationDocument() {
             ? skir.OperationTargets.contributedSingle
             : skir.OperationTargets.contributedSelection,
         presentation: skir.OperationPresentation(
+          showInInspector: key != "edit",
+          variant: switch (key) {
+            "open" => skir.ButtonVariant.text,
+            "delete" => skir.ButtonVariant.filled,
+            _ => skir.ButtonVariant.outlined,
+          },
           label: {
             "open": "Open",
             "edit": "Edit",
@@ -133,7 +139,12 @@ AuthoringDocument _operationDocument() {
           description: key == "moveToPage"
               ? "Move the captured entries to another page"
               : "Apply to the captured resource",
-          icon: "",
+          icon: {
+            "open": "mdi:open-in-new",
+            "edit": "mdi:pencil",
+            "moveToPage": "mdi:file-move-outline",
+            "delete": "mdi:delete-outline",
+          }[key]!,
           group: key == "open"
               ? skir.OperationGroup.navigation
               : skir.OperationGroup.edit,

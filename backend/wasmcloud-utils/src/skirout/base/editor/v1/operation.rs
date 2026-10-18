@@ -214,6 +214,10 @@ pub struct OperationPresentation {
     pub order: i32,
     pub tone: crate::skirout::base::editor::v1::presentation::HeaderActionTone,
     pub confirmation: Option<OperationConfirmation>,
+    /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+    pub variant: crate::skirout::base::editor::v1::presentation::ButtonVariant,
+    /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+    pub show_in_inspector: bool,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<OperationPresentation>>,
 }
@@ -715,6 +719,8 @@ fn initialize_module_serializers() {
                 |x: &OperationPresentation| &x.confirmation,
                 |x: &mut OperationPresentation, v| x.confirmation = v,
             );
+            (*a).add_field("variant", 7, crate::skirout::base::editor::v1::presentation::ButtonVariant::serializer(), "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.", |x: &OperationPresentation| &x.variant, |x: &mut OperationPresentation, v| x.variant = v);
+            (*a).add_field("show_in_inspector", 8, crate::skir_client::Serializer::bool(), "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.", |x: &OperationPresentation| &x.show_in_inspector, |x: &mut OperationPresentation, v| x.show_in_inspector = v);
             (*a).finalize();
         }
         unsafe {

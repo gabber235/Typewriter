@@ -4,7 +4,7 @@
 // preparation remain separate from labels, grouping, and primary operation nomination.
 
 import { EditorAction } from "editor/v1/action.skir";
-import { HeaderActionTone } from "editor/v1/presentation.skir";
+import { ButtonVariant, HeaderActionTone } from "editor/v1/presentation.skir";
 import {
   PresentationId,
   TypeTemplate,
@@ -47,6 +47,10 @@ struct OperationPresentation(812600005) {
   order: int32 = 4;
   tone: HeaderActionTone = 5;
   confirmation: OperationConfirmation? = 6;
+  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+  variant: ButtonVariant = 7;
+  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+  show_in_inspector: bool = 8;
 }
 
 struct OperationInputDefinition(812600006) {

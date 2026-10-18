@@ -1,21 +1,25 @@
 package com.typewritermc.operations
 
 import com.typewritermc.authoring.ResourceDraft
+import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypewriterType
 
 enum class BuiltinResourceOperation(
     val local: String,
     val label: String,
+    val icon: String,
+    val variant: ButtonVariant = ButtonVariant.Outlined,
+    val showInInspector: Boolean = true,
 ) {
-    Open("open", "Open"),
-    Edit("edit", "Edit"),
-    MoveToPage("moveToPage", "Move to page"),
-    MoveToBook("moveToBook", "Move to book"),
-    LinkWith("linkWith", "Link with"),
-    Duplicate("duplicate", "Duplicate"),
-    LinkWithDuplicate("linkWithDuplicate", "Link with duplicate"),
-    Delete("delete", "Delete"),
+    Open("open", "Open", "mdi:open-in-new", ButtonVariant.Text),
+    Edit("edit", "Edit", "mdi:pencil", showInInspector = false),
+    MoveToPage("moveToPage", "Move to page", "mdi:file-move-outline"),
+    MoveToBook("moveToBook", "Move to book", "mdi:book-arrow-right-outline"),
+    LinkWith("linkWith", "Link with", "mdi:link-variant"),
+    Duplicate("duplicate", "Duplicate", "mdi:content-copy"),
+    LinkWithDuplicate("linkWithDuplicate", "Link with duplicate", "mdi:link-variant-plus"),
+    Delete("delete", "Delete", "mdi:delete-outline", ButtonVariant.Filled),
     ;
 
     val id: ResourceOperationId

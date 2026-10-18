@@ -631,6 +631,12 @@ sealed class OperationPresentation_orMutable {
   _lib_editor_v1_presentation.HeaderActionTone get tone;
   OperationConfirmation_orMutable? get confirmation;
 
+  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+  _lib_editor_v1_presentation.ButtonVariant get variant;
+
+  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+  _core.bool get showInInspector;
+
   OperationPresentation toFrozen();
 }
 
@@ -650,6 +656,14 @@ final class OperationPresentation implements OperationPresentation_orMutable {
   final _lib_editor_v1_presentation.HeaderActionTone tone;
   @_core.override
   final OperationConfirmation? confirmation;
+
+  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+  @_core.override
+  final _lib_editor_v1_presentation.ButtonVariant variant;
+
+  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+  @_core.override
+  final _core.bool showInInspector;
   _skir.internal__UnrecognizedFields? _u;
 
   factory OperationPresentation({
@@ -660,6 +674,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     required _core.int order,
     required _lib_editor_v1_presentation.HeaderActionTone tone,
     required OperationConfirmation_orMutable? confirmation,
+    required _lib_editor_v1_presentation.ButtonVariant variant,
+    required _core.bool showInInspector,
   }) => OperationPresentation._(
     label,
     description,
@@ -668,6 +684,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     order,
     tone,
     (confirmation != null) ? confirmation.toFrozen() : null,
+    variant,
+    showInInspector,
   );
 
   OperationPresentation._(
@@ -678,6 +696,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
+    this.variant,
+    this.showInInspector,
   );
 
   /// Default instance with all fields set to their default values.
@@ -689,6 +709,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     0,
     _lib_editor_v1_presentation.HeaderActionTone.unknown,
     null,
+    _lib_editor_v1_presentation.ButtonVariant.unknown,
+    false,
   );
 
   /// Returns a new mutable instance.
@@ -702,6 +724,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         0,
         _lib_editor_v1_presentation.HeaderActionTone.unknown,
         null,
+        _lib_editor_v1_presentation.ButtonVariant.unknown,
+        false,
       );
 
   /// Returns this instance (no operation).
@@ -718,6 +742,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
+    this.variant,
+    this.showInInspector,
   );
 
   @_core.override
@@ -741,6 +767,8 @@ final class OperationPresentation implements OperationPresentation_orMutable {
     this.order,
     this.tone,
     this.confirmation,
+    this.variant,
+    this.showInInspector,
   ];
 
   @_core.override
@@ -816,6 +844,24 @@ final class OperationPresentation implements OperationPresentation_orMutable {
         (it) => it.confirmation,
         (it, v) => it.confirmation = v,
       );
+      _serializerBuilder.addField(
+        "variant",
+        "variant",
+        7,
+        _lib_editor_v1_presentation.ButtonVariant.serializer,
+        "Inspector button emphasis, independent of tone. Context menu rows ignore this variant.",
+        (it) => it.variant,
+        (it, v) => it.variant = v,
+      );
+      _serializerBuilder.addField(
+        "show_in_inspector",
+        "showInInspector",
+        8,
+        _skir.Serializers.bool,
+        "Whether this operation also appears among inspector controls. Menus and shortcuts remain available.",
+        (it) => it.showInInspector,
+        (it, v) => it.showInInspector = v,
+      );
       _serializerBuilder.finalize();
     }
     return _serializerBuilder.serializer;
@@ -842,6 +888,12 @@ final class OperationPresentation_mutable
   _core.int order;
   _lib_editor_v1_presentation.HeaderActionTone tone;
   OperationConfirmation_orMutable? confirmation;
+
+  /// Inspector button emphasis, independent of tone. Context menu rows ignore this variant.
+  _lib_editor_v1_presentation.ButtonVariant variant;
+
+  /// Whether this operation also appears among inspector controls. Menus and shortcuts remain available.
+  _core.bool showInInspector;
   _skir.internal__UnrecognizedFields? _u;
 
   OperationPresentation_mutable._(
@@ -852,6 +904,8 @@ final class OperationPresentation_mutable
     this.order,
     this.tone,
     this.confirmation,
+    this.variant,
+    this.showInInspector,
   );
 
   /// Returns a deeply immutable copy of this instance.
@@ -864,6 +918,8 @@ final class OperationPresentation_mutable
     order: this.order,
     tone: this.tone,
     confirmation: this.confirmation,
+    variant: this.variant,
+    showInInspector: this.showInInspector,
   ).._u = this._u;
 }
 

@@ -7,6 +7,42 @@ import "package:typewriter_testkit/typewriter_testkit.dart";
 import "../../../../../support/test_utils.dart";
 
 void main() {
+  for (final edit in [false, true]) {
+    testWidgets(
+      "inspector visibility preserves context operations, edit: $edit",
+      (tester) async {
+        final adapter = _Navigation();
+        await _pump(tester, adapter, edit: edit, showInspector: true);
+        tester.container().read(selectionProvider.notifier).selectAll([
+          AuthoringResourceIdentifier.inScope(_scope, _first),
+        ]);
+        await tester.pumpAndSettle();
+        final inspector = find.byType(InspectorOperations);
+        expect(
+          find.descendant(
+            of: inspector,
+            matching: find.text(edit ? "Edit" : "Open"),
+          ),
+          edit ? findsNothing : findsOneWidget,
+        );
+        expect(
+          find.descendant(of: inspector, matching: find.text("Operations")),
+          edit ? findsNothing : findsOneWidget,
+        );
+        await tester.tap(
+          find.byKey(ValueKey(_first)),
+          buttons: kSecondaryMouseButton,
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.widgetWithText(MenuItemButton, edit ? "Edit" : "Open"),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets("declared navigation confirmation can cancel before opening", (
     tester,
   ) async {
@@ -138,6 +174,7 @@ Future<void> _pump(
   bool disabled = false,
   bool edit = false,
   bool confirmation = false,
+  bool showInspector = false,
 }) async {
   var document = fixtureAuthoringDocument(
     books: [
@@ -177,6 +214,8 @@ Future<void> _pump(
     id: openId,
     targets: skir.OperationTargets.contributedSingle,
     presentation: skir.OperationPresentation(
+      showInInspector: !edit,
+      variant: skir.ButtonVariant.text,
       label: edit ? "Edit" : "Open",
       description: "Open this book",
       icon: "",
@@ -235,6 +274,8 @@ Future<void> _pump(
     ],
     child: Row(
       children: [
+        if (showInspector)
+          const SizedBox(width: 180, child: InspectorOperations()),
         if (edit)
           Consumer(
             builder: (context, ref, _) {

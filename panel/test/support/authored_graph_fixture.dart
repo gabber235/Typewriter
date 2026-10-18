@@ -229,6 +229,8 @@ final class AuthoredGraphFixture {
                 .toFrozen(),
             targets: skir.OperationTargets.contributedSelection,
             presentation: skir.OperationPresentation(
+              showInInspector: true,
+              variant: skir.ButtonVariant.outlined,
               label: {
                 "moveToPage": "Move to page",
                 "linkWith": "Link with",

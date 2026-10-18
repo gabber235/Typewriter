@@ -334,8 +334,6 @@ interface SliderInputScope<N> : InputAppearanceScope {
 
 enum class ChoicePresentation { Automatic, Dropdown, Segmented, Radio }
 
-enum class ButtonVariant { Filled, Outlined, Text }
-
 enum class PopupSide { Automatic, Above, Below }
 
 interface SelectInputScope<V> :

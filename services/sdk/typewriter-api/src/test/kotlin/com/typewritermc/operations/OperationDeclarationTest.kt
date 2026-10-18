@@ -21,6 +21,7 @@ import com.typewritermc.imprint.ArtifactId
 import com.typewritermc.imprint.ContributionName
 import com.typewritermc.imprint.ContributionSourceId
 import com.typewritermc.imprint.ProducerId
+import com.typewritermc.presentation.ButtonVariant
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.DeclarationOwner
 import com.typewritermc.types.EndpointId
@@ -33,11 +34,79 @@ import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.DefaultCheckedCatalog
+import com.typewritermc.types.skir.SkirOperationCodec
 import com.typewritermc.types.skir.getOrThrow
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
 val OperationDeclarationTest by testSuite {
+    test("declared appearance survives operation encoding independently of tone") {
+        ButtonVariant.entries.forEach { variant ->
+            val declaration =
+                collectOperations(origin(), "fixture.Ops", TypeTemplate.Named(target), projection) { scope ->
+                    scope.operation("example", noInput()) {
+                        label("Example")
+                        icon("mdi:delete-outline")
+                        tone(ActionTone.Destructive)
+                        variant(variant)
+                        showInInspector(false)
+                        prepare { }
+                    }
+                }
+            declaration.failure shouldBe null
+            val collected = declaration.operations.single()
+            val encoded =
+                SkirOperationCodec
+                    .encode(
+                        ResolvedResourceOperations(
+                            listOf(
+                                ResolvedResourceOperation(
+                                    ResourceOperationDefinition(
+                                        collected.id,
+                                        collected.presentation,
+                                        collected.targets,
+                                        skirout.editor.v1.action.EditorAction.UNKNOWN,
+                                    ),
+                                    OperationAvailability.Enabled,
+                                ),
+                            ),
+                            null,
+                        ),
+                    ).getOrThrow()
+            val appearance =
+                encoded.operations
+                    .single()
+                    .definition.presentation
+            appearance.icon shouldBe "mdi:delete-outline"
+            appearance.showInInspector shouldBe false
+            appearance.tone shouldBe skirout.editor.v1.presentation.HeaderActionTone.DESTRUCTIVE
+            appearance.variant shouldBe
+                when (variant) {
+                    ButtonVariant.Filled -> skirout.editor.v1.presentation.ButtonVariant.FILLED
+                    ButtonVariant.Outlined -> skirout.editor.v1.presentation.ButtonVariant.OUTLINED
+                    ButtonVariant.Text -> skirout.editor.v1.presentation.ButtonVariant.TEXT
+                }
+        }
+    }
+
+    test("built in operations declare icons and inspector emphasis") {
+        val declaration =
+            collectOperations(origin(), "fixture.Ops", TypeTemplate.Named(target), projection) { scope ->
+                BuiltinResourceOperation.entries.forEach(scope::builtin)
+            }
+        declaration.failure shouldBe null
+        declaration.operations.forEach { operation ->
+            operation.presentation.icon.isNullOrBlank() shouldBe false
+        }
+        val presentations = declaration.operations.associate { it.builtin to it.presentation }
+        presentations.getValue(BuiltinResourceOperation.Open).variant shouldBe ButtonVariant.Text
+        presentations.getValue(BuiltinResourceOperation.Edit).showInInspector shouldBe false
+        presentations.getValue(BuiltinResourceOperation.Duplicate).variant shouldBe ButtonVariant.Outlined
+        presentations.getValue(BuiltinResourceOperation.Delete).variant shouldBe ButtonVariant.Filled
+        presentations.filterKeys { it != BuiltinResourceOperation.Edit }.values.all { it.showInInspector } shouldBe true
+        presentations.getValue(BuiltinResourceOperation.Delete).tone shouldBe ActionTone.Destructive
+    }
+
     test("duplicate local IDs become an attributed catalog failure without publishing tentative callbacks") {
         val declaration =
             collectOperations(origin(), "fixture.Ops", TypeTemplate.Named(target), projection) { scope ->

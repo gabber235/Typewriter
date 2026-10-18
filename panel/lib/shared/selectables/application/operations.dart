@@ -22,6 +22,9 @@ abstract class SelectionOperation {
   /// Human readable description displayed in tooltips and shortcut displays.
   String get description;
 
+  /// Whether this operation is offered among the inspector controls.
+  bool get showInInspector => true;
+
   /// Returns whether this operation is valid for [selection].
   ///
   /// Callers use this as a fast, side effect free availability check. An empty

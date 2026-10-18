@@ -220,6 +220,8 @@ class ResourceSelectionOperation extends SelectionOperation {
   @override
   String get description => operation.definition.presentation.description;
   @override
+  bool get showInInspector => operation.definition.presentation.showInInspector;
+  @override
   bool canExecuteOn(List<Selectable> selection) => true;
 
   @override
@@ -276,8 +278,7 @@ class ResourceSelectionOperation extends SelectionOperation {
   @override
   Widget inspectorButton(List<Selectable> selection) => Consumer(
     builder: (context, ref, _) => ResourceOperationButton(
-      label: name,
-      description: description,
+      presentation: operation.definition.presentation,
       disabledReason: disabledReason,
       onInvoke: enabled ? () => executeOn(ref) : null,
     ),
