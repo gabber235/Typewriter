@@ -14,7 +14,7 @@ paper = "1.21.4-R0.1-SNAPSHOT"
 semver = "3.1.0"
 kotlinpoet = "2.4.0"
 
-skir = "61126dc8c89776a073e2d4bae55108aeb38bb37f"
+skir = "239cf0fbcb5128bbf243e637064f7ead078b6ee7"
 okio = "3.18.2"
 
 nats = "0.9.1"
