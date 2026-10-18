@@ -198,7 +198,7 @@ class Dropdown<T extends Object> extends HookWidget {
                 suffixIcon: Padding(
                   padding: inputDecorationTheme?.isCollapsed == true
                       ? EdgeInsets.zero
-                      : const EdgeInsets.all(4),
+                      : EdgeInsets.all(context.spacing.space1),
                   child: IconButton(
                     focusNode: toggleFocusNode,
                     isSelected: menu.isOpen,
