@@ -130,8 +130,9 @@ extension PresentationExpressionAdmission on CheckedEditorCatalog {
           if (selected == null) {
             errors.add("missing_resource_action_context");
           } else {
-            if (selected.declaredUse() case final use?)
+            if (selected.declaredUse() case final use?) {
               check(value.targets, use, env, missing: false);
+            }
           }
           final capability = snapshot.capabilities
               .whereType<skir.CapabilityDefinition_authoringWrapper>()
