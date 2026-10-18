@@ -409,7 +409,9 @@ val DefaultPresentationRuntimeTest by testSuite {
             textStyle(TextStyle(weight = 500))
         }
         val result =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
                     val scope = NumberControl::class as kotlin.reflect.KClass<NumberControl<Int>>
@@ -479,7 +481,9 @@ val DefaultPresentationRuntimeTest by testSuite {
                 noBorder()
             }
         val result =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 with(build) {
                     val text: PresentedField<String, TextControl> = value(TextControl::class)
                     withInputAppearance(shared) {
@@ -506,7 +510,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("default metadata"), StandardTypes.definitions)
         val checked = catalog.ready(TypeUse.Scalar(ScalarKind.Text))
         val result =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 val text: PresentedField<String, TextControl> = build.value(TextControl::class)
                 text {
                     prefix { text(literal("prefix")) }
@@ -1082,7 +1088,9 @@ val DefaultPresentationRuntimeTest by testSuite {
             kind: ScalarKind,
         ): String =
             runtime
-                .build(PresentationBuildBinding(catalog.ready(TypeUse.Scalar(kind)).presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) {
+                .build(
+                    PresentationBuildBinding(catalog.ready(TypeUse.Scalar(kind)).presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+                ) {
                     it.invoke(reference) {}
                 }.dependencies.presentations
                 .single()
@@ -1224,7 +1232,9 @@ val DefaultPresentationRuntimeTest by testSuite {
         val catalog = DefaultCheckedCatalog(CatalogGeneration("presentation inventory"), listOf(definition))
         val checked = (catalog.resolve(TypeUse.Named(id)) as Resolution.Ready).value
         val root =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 with(build) {
                     val title: PresentedField<String, TextControl> = field("title", TextControl::class)
 
@@ -1356,7 +1366,9 @@ val DefaultPresentationRuntimeTest by testSuite {
             )
         val checked = catalog.ready(TypeUse.Named(subjectId))
         val root =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
                     val list: PresentedField<List<String>, ListControl<TextControl>> =
@@ -1428,7 +1440,9 @@ val DefaultPresentationRuntimeTest by testSuite {
             }
 
         val nestedRemainder =
-            DefaultPresentationRuntime().build(PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR)) { build ->
+            DefaultPresentationRuntime().build(
+                PresentationBuildBinding(checked.presentationTemplate(), PresentationRole.WORKSPACE_EDITOR),
+            ) { build ->
                 with(build) {
                     @Suppress("UNCHECKED_CAST")
                     val positionField: PresentedField<Any, RecordControl<TestPositionScope>> =
@@ -1911,7 +1925,8 @@ val DefaultPresentationRuntimeTest by testSuite {
             )
 
         (registry.select(PresentationRole.WORKSPACE_EDITOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe named.id
-        (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected).descriptor.id shouldBe fallbackFirst.id
+        (registry.select(PresentationRole.REFERENCE_PICKER_RESULT, checked) as PresentationSelection.Selected).descriptor.id shouldBe
+            fallbackFirst.id
     }
 
     test("reference pickers fall back to previews without sharing editing or search roles") {
@@ -1943,7 +1958,8 @@ val DefaultPresentationRuntimeTest by testSuite {
         val registry = DefaultPresentationRegistry(catalog, listOf(inspector))
 
         (registry.select(PresentationRole.INSPECTOR, checked) as PresentationSelection.Selected).descriptor.id shouldBe inspector.id
-        registry.select(PresentationRole.WORKSPACE_EDITOR, checked) shouldBe PresentationSelection.Missing(PresentationRole.WORKSPACE_EDITOR)
+        registry.select(PresentationRole.WORKSPACE_EDITOR, checked) shouldBe
+            PresentationSelection.Missing(PresentationRole.WORKSPACE_EDITOR)
     }
 
     test("reports incomparable generic presentation targets as a conflict before priority") {
