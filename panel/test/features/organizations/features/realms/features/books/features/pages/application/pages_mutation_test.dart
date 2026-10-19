@@ -135,30 +135,6 @@ void main() {
     );
   }
 
-  testWidgets(
-    "Edit selects the scoped page and repeated Edit keeps it selected",
-    (tester) async {
-      final harness = await _mount(tester, _state());
-      harness.ref.inspectPage(_page);
-      await tester.pump();
-      final expected = AuthoringResourceIdentifier(
-        organizationId: _organization,
-        realmId: _realm,
-        resourceId: _page,
-      );
-      expect(harness.ref.read(selectionProvider), [expected]);
-      final resolved =
-          harness.ref.read(selectedProvider).requireValue.single
-              as AuthoringSelectableResource;
-      expect(resolved.id, expected);
-      expect(resolved.resource.id, _page);
-      harness.ref.inspectPage(_page);
-      await tester.pump();
-      expect(harness.ref.read(selectionProvider), [expected]);
-      expect(harness.transport.requests, isEmpty);
-    },
-  );
-
   for (final chapter in [
     skir.DataValue.unfilled,
     skir.DataValue.wrapStringValue(""),

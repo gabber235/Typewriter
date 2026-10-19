@@ -24,9 +24,8 @@ final class SelectionEditingCoordinator {
   EditorMutationResult update(
     List<EditOwner> owners,
     skir.ValuePath path,
-    skir.DataValue value, {
-    EditorStructuralMutation? structuralMutation,
-  }) {
+    skir.DataValue value,
+  ) {
     final holds = [
       for (final owner in owners)
         if (owner case final EditingStageOwner staged) staged.holdStage(),
@@ -37,13 +36,7 @@ final class SelectionEditingCoordinator {
           .aggregateEditorMutationsFor(path);
       if (validation is! AppliedEditorMutation) return validation;
       final result = owners
-          .map(
-            (owner) => owner.update(
-              path,
-              validation.value,
-              structuralMutation: structuralMutation,
-            ),
-          )
+          .map((owner) => owner.update(path, validation.value))
           .aggregateEditorMutationsFor(path);
       if (result is! AppliedEditorMutation) {
         for (final hold in holds) {

@@ -96,53 +96,15 @@ final class EditorCommit {
   final skir.DataValue rootValue;
   final skir.DataValue baseValue;
   final Set<skir.ValuePath> changedPaths;
-  final List<EditorStructuralMutation> mutations;
+  final List<EditorSetValue> mutations;
 }
 
-/// Describes one structural operation included in an [EditorCommit].
+/// Describes one value assignment included in an [EditorCommit].
 ///
-/// These operations preserve intent that a value diff cannot reliably recover,
-/// such as map membership and concrete type replacement. The path is relative
-/// to the commit root and [prefixedBy] is used when a nested operation becomes
-/// part of a larger structural edit.
-sealed class EditorStructuralMutation {
-  const EditorStructuralMutation(this.path);
+/// The path is relative to the commit root.
+final class EditorSetValue {
+  const EditorSetValue(this.path, this.value);
 
   final skir.ValuePath path;
-
-  EditorStructuralMutation prefixedBy(skir.ValuePath prefix) {
-    final next = prefix.followedBy(path);
-    return switch (this) {
-      EditorSetValue(:final value) => EditorSetValue(next, value),
-      EditorPutMapEntries(:final entries) => EditorPutMapEntries(next, entries),
-      EditorRemoveMapEntries(:final keys) => EditorRemoveMapEntries(next, keys),
-      EditorReplaceConcreteType(:final concreteType, :final value) =>
-        EditorReplaceConcreteType(next, concreteType, value),
-    };
-  }
-}
-
-final class EditorSetValue extends EditorStructuralMutation {
-  const EditorSetValue(super.path, this.value);
-
-  final skir.DataValue value;
-}
-
-final class EditorPutMapEntries extends EditorStructuralMutation {
-  const EditorPutMapEntries(super.path, this.entries);
-
-  final List<skir.MapRow> entries;
-}
-
-final class EditorRemoveMapEntries extends EditorStructuralMutation {
-  const EditorRemoveMapEntries(super.path, this.keys);
-
-  final List<skir.DataValue> keys;
-}
-
-final class EditorReplaceConcreteType extends EditorStructuralMutation {
-  const EditorReplaceConcreteType(super.path, this.concreteType, this.value);
-
-  final skir.NamedTypeUse concreteType;
   final skir.DataValue value;
 }

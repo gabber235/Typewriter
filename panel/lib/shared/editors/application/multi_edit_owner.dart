@@ -61,17 +61,8 @@ final class MultiEditOwner extends ChangeNotifier
   }
 
   @override
-  EditorMutationResult update(
-    skir.ValuePath path,
-    skir.DataValue value, {
-    EditorStructuralMutation? structuralMutation,
-  }) {
-    return const SelectionEditingCoordinator().update(
-      owners,
-      path,
-      value,
-      structuralMutation: structuralMutation,
-    );
+  EditorMutationResult update(skir.ValuePath path, skir.DataValue value) {
+    return const SelectionEditingCoordinator().update(owners, path, value);
   }
 
   @override

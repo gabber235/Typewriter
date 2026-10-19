@@ -31,7 +31,7 @@ abstract class ValueEdit with _$ValueEdit {
     required ValueEditDocument baseline,
     required skir.DataValue proposed,
     required Set<skir.ValuePath> paths,
-    @Default([]) List<EditorStructuralMutation> mutations,
+    @Default([]) List<EditorSetValue> mutations,
   }) = _ValueEdit;
 }
 

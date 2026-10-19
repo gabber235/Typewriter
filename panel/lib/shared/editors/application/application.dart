@@ -12,7 +12,6 @@ export "portable_duration_admission.dart";
 export "portable_editor_diagnostics.dart";
 export "portable_expression.dart";
 export "portable_expression_checking.dart";
-export "portable_initialization_diagnostics.dart";
 export "portable_link_choices.dart";
 export "portable_presentation_diagnostic.dart";
 export "portable_presentation_host.dart";

@@ -114,11 +114,7 @@ final class ValueEditing
         ])
       : snapshot.validate(path, value);
   @override
-  EditorMutationResult update(
-    skir.ValuePath path,
-    skir.DataValue value, {
-    EditorStructuralMutation? structuralMutation,
-  }) {
+  EditorMutationResult update(skir.ValuePath path, skir.DataValue value) {
     final hold = workspace.holdStage();
     try {
       final admitted = validate(path, value);
@@ -146,9 +142,7 @@ final class ValueEditing
           baseline: before,
           proposed: next,
           paths: {path},
-          mutations: [
-            structuralMutation ?? EditorSetValue(path, admitted.value),
-          ],
+          mutations: [EditorSetValue(path, admitted.value)],
         ),
       );
       return result is EditStageRejected

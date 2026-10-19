@@ -286,7 +286,7 @@ as bool,
 /// @nodoc
 mixin _$ValueEdit {
 
- ValueEditDocument get baseline; skir.DataValue get proposed; Set<skir.ValuePath> get paths; List<EditorStructuralMutation> get mutations;
+ ValueEditDocument get baseline; skir.DataValue get proposed; Set<skir.ValuePath> get paths; List<EditorSetValue> get mutations;
 /// Create a copy of ValueEdit
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -322,7 +322,7 @@ abstract mixin class $ValueEditCopyWith<$Res>  {
   factory $ValueEditCopyWith(ValueEdit value, $Res Function(ValueEdit) _then) = _$ValueEditCopyWithImpl;
 @useResult
 $Res call({
- ValueEditDocument baseline, skir.DataValue proposed, Set<skir.ValuePath> paths, List<EditorStructuralMutation> mutations
+ ValueEditDocument baseline, skir.DataValue proposed, Set<skir.ValuePath> paths, List<EditorSetValue> mutations
 });
 
 
@@ -345,7 +345,7 @@ baseline: null == baseline ? _self.baseline : baseline // ignore: cast_nullable_
 as ValueEditDocument,proposed: null == proposed ? _self.proposed : proposed // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,paths: null == paths ? _self.paths : paths // ignore: cast_nullable_to_non_nullable
 as Set<skir.ValuePath>,mutations: null == mutations ? _self.mutations : mutations // ignore: cast_nullable_to_non_nullable
-as List<EditorStructuralMutation>,
+as List<EditorSetValue>,
   ));
 }
 /// Create a copy of ValueEdit
@@ -439,7 +439,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorStructuralMutation> mutations)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorSetValue> mutations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ValueEdit() when $default != null:
 return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case _:
@@ -460,7 +460,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorStructuralMutation> mutations)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorSetValue> mutations)  $default,) {final _that = this;
 switch (_that) {
 case _ValueEdit():
 return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case _:
@@ -480,7 +480,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorStructuralMutation> mutations)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ValueEditDocument baseline,  skir.DataValue proposed,  Set<skir.ValuePath> paths,  List<EditorSetValue> mutations)?  $default,) {final _that = this;
 switch (_that) {
 case _ValueEdit() when $default != null:
 return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case _:
@@ -495,7 +495,7 @@ return $default(_that.baseline,_that.proposed,_that.paths,_that.mutations);case 
 
 
 class _ValueEdit implements ValueEdit {
-  const _ValueEdit({required this.baseline, required this.proposed, required  Set<skir.ValuePath> paths,  List<EditorStructuralMutation> mutations = const []}): _paths = paths,_mutations = mutations;
+  const _ValueEdit({required this.baseline, required this.proposed, required  Set<skir.ValuePath> paths,  List<EditorSetValue> mutations = const []}): _paths = paths,_mutations = mutations;
   
 
 @override final  ValueEditDocument baseline;
@@ -507,8 +507,8 @@ class _ValueEdit implements ValueEdit {
   return EqualUnmodifiableSetView(_paths);
 }
 
- final  List<EditorStructuralMutation> _mutations;
-@override@JsonKey() List<EditorStructuralMutation> get mutations {
+ final  List<EditorSetValue> _mutations;
+@override@JsonKey() List<EditorSetValue> get mutations {
   if (_mutations is EqualUnmodifiableListView) return _mutations;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_mutations);
@@ -547,7 +547,7 @@ abstract mixin class _$ValueEditCopyWith<$Res> implements $ValueEditCopyWith<$Re
   factory _$ValueEditCopyWith(_ValueEdit value, $Res Function(_ValueEdit) _then) = __$ValueEditCopyWithImpl;
 @override @useResult
 $Res call({
- ValueEditDocument baseline, skir.DataValue proposed, Set<skir.ValuePath> paths, List<EditorStructuralMutation> mutations
+ ValueEditDocument baseline, skir.DataValue proposed, Set<skir.ValuePath> paths, List<EditorSetValue> mutations
 });
 
 
@@ -570,7 +570,7 @@ baseline: null == baseline ? _self.baseline : baseline // ignore: cast_nullable_
 as ValueEditDocument,proposed: null == proposed ? _self.proposed : proposed // ignore: cast_nullable_to_non_nullable
 as skir.DataValue,paths: null == paths ? _self._paths : paths // ignore: cast_nullable_to_non_nullable
 as Set<skir.ValuePath>,mutations: null == mutations ? _self._mutations : mutations // ignore: cast_nullable_to_non_nullable
-as List<EditorStructuralMutation>,
+as List<EditorSetValue>,
   ));
 }
 

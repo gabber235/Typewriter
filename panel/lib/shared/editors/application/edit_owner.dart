@@ -27,13 +27,8 @@ abstract interface class EditOwner implements Listenable {
   /// Applies a validated edit to the local draft.
   ///
   /// The result is typed so invalid input cannot be mistaken for an applied
-  /// change. Structural metadata is retained when supplied, allowing an owner
-  /// to preserve the operation for later persistence or reconciliation.
-  EditorMutationResult update(
-    skir.ValuePath path,
-    skir.DataValue value, {
-    EditorStructuralMutation? structuralMutation,
-  });
+  /// change.
+  EditorMutationResult update(skir.ValuePath path, skir.DataValue value);
 
   /// Opens a reversible interaction whose lifetime ends with its session.
   ///
