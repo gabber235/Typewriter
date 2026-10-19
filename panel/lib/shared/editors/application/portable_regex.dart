@@ -1,25 +1,16 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
-sealed class PortableRegexNormalization {
-  const PortableRegexNormalization();
-}
+part "portable_regex.freezed.dart";
 
-final class PortableRegexReady extends PortableRegexNormalization {
-  const PortableRegexReady(this.pattern);
-
-  final String pattern;
-}
-
-final class PortableRegexInvalid extends PortableRegexNormalization {
-  const PortableRegexInvalid(this.reason);
-
-  final String reason;
-}
-
-final class PortableRegexUnsupported extends PortableRegexNormalization {
-  const PortableRegexUnsupported(this.reason);
-
-  final String reason;
+/// The outcome of admitting a pattern into the shared portable regex subset.
+@freezed
+sealed class PortableRegexNormalization with _$PortableRegexNormalization {
+  const factory PortableRegexNormalization.ready(String pattern) =
+      PortableRegexReady;
+  const factory PortableRegexNormalization.invalid(String reason) =
+      PortableRegexInvalid;
+  const factory PortableRegexNormalization.unsupported(String reason) =
+      PortableRegexUnsupported;
 }
 
 /// Admits the shared regex subset and expands host dependent shorthands to

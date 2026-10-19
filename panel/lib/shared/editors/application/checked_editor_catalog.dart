@@ -28,48 +28,26 @@ final class AppliedEndpointBinding {
   bool get isAvailable => containingResource != null && target != null;
 }
 
-sealed class EditorPresentationSelection {
-  const EditorPresentationSelection();
-}
-
-final class SelectedEditorPresentation extends EditorPresentationSelection {
-  const SelectedEditorPresentation({
-    required this.requestedRole,
-    required this.resolvedRole,
-    required this.descriptor,
-    required this.material,
-  });
-
-  final skir.PresentationRole requestedRole;
-  final skir.PresentationRole resolvedRole;
-  final skir.PresentationDescriptor descriptor;
-  final skir.PresentationMaterial material;
-}
-
-final class MissingEditorPresentation extends EditorPresentationSelection {
-  const MissingEditorPresentation(this.requestedRole);
-
-  final skir.PresentationRole requestedRole;
-}
-
-final class ConflictingEditorPresentation extends EditorPresentationSelection {
-  const ConflictingEditorPresentation({
-    required this.role,
-    required this.candidates,
-  });
-
-  final skir.PresentationRole role;
-  final List<skir.PresentationId> candidates;
-}
-
-final class UnavailableEditorPresentation extends EditorPresentationSelection {
-  const UnavailableEditorPresentation({
-    required this.role,
-    required this.presentation,
-  });
-
-  final skir.PresentationRole role;
-  final skir.PresentationId presentation;
+/// The outcome of choosing one presentation for a requested role.
+@freezed
+sealed class EditorPresentationSelection with _$EditorPresentationSelection {
+  const factory EditorPresentationSelection.selected({
+    required skir.PresentationRole requestedRole,
+    required skir.PresentationRole resolvedRole,
+    required skir.PresentationDescriptor descriptor,
+    required skir.PresentationMaterial material,
+  }) = SelectedEditorPresentation;
+  const factory EditorPresentationSelection.missing(
+    skir.PresentationRole requestedRole,
+  ) = MissingEditorPresentation;
+  const factory EditorPresentationSelection.conflicting({
+    required skir.PresentationRole role,
+    required List<skir.PresentationId> candidates,
+  }) = ConflictingEditorPresentation;
+  const factory EditorPresentationSelection.unavailable({
+    required skir.PresentationRole role,
+    required skir.PresentationId presentation,
+  }) = UnavailableEditorPresentation;
 }
 
 /// Identifies a source control within one compiled material and role.
@@ -2322,26 +2300,13 @@ bool _patternMatchesPath(
   return true;
 }
 
-sealed class TypeArgumentChoice {
-  const TypeArgumentChoice();
-
+/// Whether a type argument choice was admitted into the pending selection.
+@freezed
+sealed class TypeArgumentChoice with _$TypeArgumentChoice {
   const factory TypeArgumentChoice.accepted(skir.TypeSelection selection) =
       TypeArgumentAccepted;
-
   const factory TypeArgumentChoice.rejected(String message) =
       TypeArgumentRejected;
-}
-
-final class TypeArgumentAccepted extends TypeArgumentChoice {
-  const TypeArgumentAccepted(this.selection);
-
-  final skir.TypeSelection selection;
-}
-
-final class TypeArgumentRejected extends TypeArgumentChoice {
-  const TypeArgumentRejected(this.message);
-
-  final String message;
 }
 
 extension _AuthoredReferenceValues on skir.AuthoringRecord {

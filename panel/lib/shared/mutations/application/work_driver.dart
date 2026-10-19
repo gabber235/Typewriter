@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "work_driver.freezed.dart";
+
 /// Adapts a domain owner into the shared local work journal.
 ///
 /// The driver owns draft and save policy and publishes its available commands
@@ -79,10 +81,12 @@ abstract interface class WorkReviewProvider {
 }
 
 /// A disposable view. Its driver remains owned by the session.
-final class WorkReviewContent {
-  WorkReviewContent({required this.body, this.dispose});
-  final Widget body;
-  final VoidCallback? dispose;
+@freezed
+abstract class WorkReviewContent with _$WorkReviewContent {
+  const factory WorkReviewContent({
+    required Widget body,
+    VoidCallback? dispose,
+  }) = _WorkReviewContent;
 }
 
 /// Keeps the same driver alive while a retained work view is open.

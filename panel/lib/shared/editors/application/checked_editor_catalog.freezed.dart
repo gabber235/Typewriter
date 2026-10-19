@@ -13,6 +13,466 @@ part of 'checked_editor_catalog.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$EditorPresentationSelection {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is EditorPresentationSelection);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'EditorPresentationSelection()';
+}
+
+
+}
+
+/// @nodoc
+class $EditorPresentationSelectionCopyWith<$Res>  {
+$EditorPresentationSelectionCopyWith(EditorPresentationSelection _, $Res Function(EditorPresentationSelection) __);
+}
+
+
+/// Adds pattern-matching-related methods to [EditorPresentationSelection].
+extension EditorPresentationSelectionPatterns on EditorPresentationSelection {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( SelectedEditorPresentation value)?  selected,TResult Function( MissingEditorPresentation value)?  missing,TResult Function( ConflictingEditorPresentation value)?  conflicting,TResult Function( UnavailableEditorPresentation value)?  unavailable,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case SelectedEditorPresentation() when selected != null:
+return selected(_that);case MissingEditorPresentation() when missing != null:
+return missing(_that);case ConflictingEditorPresentation() when conflicting != null:
+return conflicting(_that);case UnavailableEditorPresentation() when unavailable != null:
+return unavailable(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( SelectedEditorPresentation value)  selected,required TResult Function( MissingEditorPresentation value)  missing,required TResult Function( ConflictingEditorPresentation value)  conflicting,required TResult Function( UnavailableEditorPresentation value)  unavailable,}){
+final _that = this;
+switch (_that) {
+case SelectedEditorPresentation():
+return selected(_that);case MissingEditorPresentation():
+return missing(_that);case ConflictingEditorPresentation():
+return conflicting(_that);case UnavailableEditorPresentation():
+return unavailable(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( SelectedEditorPresentation value)?  selected,TResult? Function( MissingEditorPresentation value)?  missing,TResult? Function( ConflictingEditorPresentation value)?  conflicting,TResult? Function( UnavailableEditorPresentation value)?  unavailable,}){
+final _that = this;
+switch (_that) {
+case SelectedEditorPresentation() when selected != null:
+return selected(_that);case MissingEditorPresentation() when missing != null:
+return missing(_that);case ConflictingEditorPresentation() when conflicting != null:
+return conflicting(_that);case UnavailableEditorPresentation() when unavailable != null:
+return unavailable(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.PresentationRole requestedRole,  skir.PresentationRole resolvedRole,  skir.PresentationDescriptor descriptor,  skir.PresentationMaterial material)?  selected,TResult Function( skir.PresentationRole requestedRole)?  missing,TResult Function( skir.PresentationRole role,  List<skir.PresentationId> candidates)?  conflicting,TResult Function( skir.PresentationRole role,  skir.PresentationId presentation)?  unavailable,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case SelectedEditorPresentation() when selected != null:
+return selected(_that.requestedRole,_that.resolvedRole,_that.descriptor,_that.material);case MissingEditorPresentation() when missing != null:
+return missing(_that.requestedRole);case ConflictingEditorPresentation() when conflicting != null:
+return conflicting(_that.role,_that.candidates);case UnavailableEditorPresentation() when unavailable != null:
+return unavailable(_that.role,_that.presentation);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.PresentationRole requestedRole,  skir.PresentationRole resolvedRole,  skir.PresentationDescriptor descriptor,  skir.PresentationMaterial material)  selected,required TResult Function( skir.PresentationRole requestedRole)  missing,required TResult Function( skir.PresentationRole role,  List<skir.PresentationId> candidates)  conflicting,required TResult Function( skir.PresentationRole role,  skir.PresentationId presentation)  unavailable,}) {final _that = this;
+switch (_that) {
+case SelectedEditorPresentation():
+return selected(_that.requestedRole,_that.resolvedRole,_that.descriptor,_that.material);case MissingEditorPresentation():
+return missing(_that.requestedRole);case ConflictingEditorPresentation():
+return conflicting(_that.role,_that.candidates);case UnavailableEditorPresentation():
+return unavailable(_that.role,_that.presentation);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.PresentationRole requestedRole,  skir.PresentationRole resolvedRole,  skir.PresentationDescriptor descriptor,  skir.PresentationMaterial material)?  selected,TResult? Function( skir.PresentationRole requestedRole)?  missing,TResult? Function( skir.PresentationRole role,  List<skir.PresentationId> candidates)?  conflicting,TResult? Function( skir.PresentationRole role,  skir.PresentationId presentation)?  unavailable,}) {final _that = this;
+switch (_that) {
+case SelectedEditorPresentation() when selected != null:
+return selected(_that.requestedRole,_that.resolvedRole,_that.descriptor,_that.material);case MissingEditorPresentation() when missing != null:
+return missing(_that.requestedRole);case ConflictingEditorPresentation() when conflicting != null:
+return conflicting(_that.role,_that.candidates);case UnavailableEditorPresentation() when unavailable != null:
+return unavailable(_that.role,_that.presentation);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class SelectedEditorPresentation implements EditorPresentationSelection {
+  const SelectedEditorPresentation({required this.requestedRole, required this.resolvedRole, required this.descriptor, required this.material});
+  
+
+ final  skir.PresentationRole requestedRole;
+ final  skir.PresentationRole resolvedRole;
+ final  skir.PresentationDescriptor descriptor;
+ final  skir.PresentationMaterial material;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SelectedEditorPresentationCopyWith<SelectedEditorPresentation> get copyWith => _$SelectedEditorPresentationCopyWithImpl<SelectedEditorPresentation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SelectedEditorPresentation&&(identical(other.requestedRole, requestedRole) || other.requestedRole == requestedRole)&&(identical(other.resolvedRole, resolvedRole) || other.resolvedRole == resolvedRole)&&(identical(other.descriptor, descriptor) || other.descriptor == descriptor)&&(identical(other.material, material) || other.material == material));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,requestedRole,resolvedRole,descriptor,material);
+}
+
+@override
+String toString() {
+    return 'EditorPresentationSelection.selected(requestedRole: $requestedRole, resolvedRole: $resolvedRole, descriptor: $descriptor, material: $material)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SelectedEditorPresentationCopyWith<$Res> implements $EditorPresentationSelectionCopyWith<$Res> {
+  factory $SelectedEditorPresentationCopyWith(SelectedEditorPresentation value, $Res Function(SelectedEditorPresentation) _then) = _$SelectedEditorPresentationCopyWithImpl;
+@useResult
+$Res call({
+ skir.PresentationRole requestedRole, skir.PresentationRole resolvedRole, skir.PresentationDescriptor descriptor, skir.PresentationMaterial material
+});
+
+
+
+
+}
+/// @nodoc
+class _$SelectedEditorPresentationCopyWithImpl<$Res>
+    implements $SelectedEditorPresentationCopyWith<$Res> {
+  _$SelectedEditorPresentationCopyWithImpl(this._self, this._then);
+
+  final SelectedEditorPresentation _self;
+  final $Res Function(SelectedEditorPresentation) _then;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? requestedRole = null,Object? resolvedRole = null,Object? descriptor = null,Object? material = null,}) {
+  return _then(SelectedEditorPresentation(
+requestedRole: null == requestedRole ? _self.requestedRole : requestedRole // ignore: cast_nullable_to_non_nullable
+as skir.PresentationRole,resolvedRole: null == resolvedRole ? _self.resolvedRole : resolvedRole // ignore: cast_nullable_to_non_nullable
+as skir.PresentationRole,descriptor: null == descriptor ? _self.descriptor : descriptor // ignore: cast_nullable_to_non_nullable
+as skir.PresentationDescriptor,material: null == material ? _self.material : material // ignore: cast_nullable_to_non_nullable
+as skir.PresentationMaterial,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class MissingEditorPresentation implements EditorPresentationSelection {
+  const MissingEditorPresentation(this.requestedRole);
+  
+
+ final  skir.PresentationRole requestedRole;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$MissingEditorPresentationCopyWith<MissingEditorPresentation> get copyWith => _$MissingEditorPresentationCopyWithImpl<MissingEditorPresentation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is MissingEditorPresentation&&(identical(other.requestedRole, requestedRole) || other.requestedRole == requestedRole));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,requestedRole);
+}
+
+@override
+String toString() {
+    return 'EditorPresentationSelection.missing(requestedRole: $requestedRole)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $MissingEditorPresentationCopyWith<$Res> implements $EditorPresentationSelectionCopyWith<$Res> {
+  factory $MissingEditorPresentationCopyWith(MissingEditorPresentation value, $Res Function(MissingEditorPresentation) _then) = _$MissingEditorPresentationCopyWithImpl;
+@useResult
+$Res call({
+ skir.PresentationRole requestedRole
+});
+
+
+
+
+}
+/// @nodoc
+class _$MissingEditorPresentationCopyWithImpl<$Res>
+    implements $MissingEditorPresentationCopyWith<$Res> {
+  _$MissingEditorPresentationCopyWithImpl(this._self, this._then);
+
+  final MissingEditorPresentation _self;
+  final $Res Function(MissingEditorPresentation) _then;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? requestedRole = null,}) {
+  return _then(MissingEditorPresentation(
+null == requestedRole ? _self.requestedRole : requestedRole // ignore: cast_nullable_to_non_nullable
+as skir.PresentationRole,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class ConflictingEditorPresentation implements EditorPresentationSelection {
+  const ConflictingEditorPresentation({required this.role, required  List<skir.PresentationId> candidates}): _candidates = candidates;
+  
+
+ final  skir.PresentationRole role;
+ final  List<skir.PresentationId> _candidates;
+ List<skir.PresentationId> get candidates {
+  if (_candidates is EqualUnmodifiableListView) return _candidates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_candidates);
+}
+
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ConflictingEditorPresentationCopyWith<ConflictingEditorPresentation> get copyWith => _$ConflictingEditorPresentationCopyWithImpl<ConflictingEditorPresentation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ConflictingEditorPresentation&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.candidates, _candidates));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,role,const DeepCollectionEquality().hash(_candidates));
+}
+
+@override
+String toString() {
+    return 'EditorPresentationSelection.conflicting(role: $role, candidates: $candidates)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ConflictingEditorPresentationCopyWith<$Res> implements $EditorPresentationSelectionCopyWith<$Res> {
+  factory $ConflictingEditorPresentationCopyWith(ConflictingEditorPresentation value, $Res Function(ConflictingEditorPresentation) _then) = _$ConflictingEditorPresentationCopyWithImpl;
+@useResult
+$Res call({
+ skir.PresentationRole role, List<skir.PresentationId> candidates
+});
+
+
+
+
+}
+/// @nodoc
+class _$ConflictingEditorPresentationCopyWithImpl<$Res>
+    implements $ConflictingEditorPresentationCopyWith<$Res> {
+  _$ConflictingEditorPresentationCopyWithImpl(this._self, this._then);
+
+  final ConflictingEditorPresentation _self;
+  final $Res Function(ConflictingEditorPresentation) _then;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? role = null,Object? candidates = null,}) {
+  return _then(ConflictingEditorPresentation(
+role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as skir.PresentationRole,candidates: null == candidates ? _self._candidates : candidates // ignore: cast_nullable_to_non_nullable
+as List<skir.PresentationId>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class UnavailableEditorPresentation implements EditorPresentationSelection {
+  const UnavailableEditorPresentation({required this.role, required this.presentation});
+  
+
+ final  skir.PresentationRole role;
+ final  skir.PresentationId presentation;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UnavailableEditorPresentationCopyWith<UnavailableEditorPresentation> get copyWith => _$UnavailableEditorPresentationCopyWithImpl<UnavailableEditorPresentation>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is UnavailableEditorPresentation&&(identical(other.role, role) || other.role == role)&&(identical(other.presentation, presentation) || other.presentation == presentation));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,role,presentation);
+}
+
+@override
+String toString() {
+    return 'EditorPresentationSelection.unavailable(role: $role, presentation: $presentation)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UnavailableEditorPresentationCopyWith<$Res> implements $EditorPresentationSelectionCopyWith<$Res> {
+  factory $UnavailableEditorPresentationCopyWith(UnavailableEditorPresentation value, $Res Function(UnavailableEditorPresentation) _then) = _$UnavailableEditorPresentationCopyWithImpl;
+@useResult
+$Res call({
+ skir.PresentationRole role, skir.PresentationId presentation
+});
+
+
+
+
+}
+/// @nodoc
+class _$UnavailableEditorPresentationCopyWithImpl<$Res>
+    implements $UnavailableEditorPresentationCopyWith<$Res> {
+  _$UnavailableEditorPresentationCopyWithImpl(this._self, this._then);
+
+  final UnavailableEditorPresentation _self;
+  final $Res Function(UnavailableEditorPresentation) _then;
+
+/// Create a copy of EditorPresentationSelection
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? role = null,Object? presentation = null,}) {
+  return _then(UnavailableEditorPresentation(
+role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
+as skir.PresentationRole,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
+as skir.PresentationId,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$EditorFieldPresentationIdentity {
 
  skir.PresentationId get provider; skir.TypeTemplate get subject; skir.PresentationRole get role; String get field; String get nodeId;
@@ -2814,5 +3274,301 @@ String toString() {
 
 
 
+
+/// @nodoc
+mixin _$TypeArgumentChoice {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeArgumentChoice);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'TypeArgumentChoice()';
+}
+
+
+}
+
+/// @nodoc
+class $TypeArgumentChoiceCopyWith<$Res>  {
+$TypeArgumentChoiceCopyWith(TypeArgumentChoice _, $Res Function(TypeArgumentChoice) __);
+}
+
+
+/// Adds pattern-matching-related methods to [TypeArgumentChoice].
+extension TypeArgumentChoicePatterns on TypeArgumentChoice {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( TypeArgumentAccepted value)?  accepted,TResult Function( TypeArgumentRejected value)?  rejected,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case TypeArgumentAccepted() when accepted != null:
+return accepted(_that);case TypeArgumentRejected() when rejected != null:
+return rejected(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( TypeArgumentAccepted value)  accepted,required TResult Function( TypeArgumentRejected value)  rejected,}){
+final _that = this;
+switch (_that) {
+case TypeArgumentAccepted():
+return accepted(_that);case TypeArgumentRejected():
+return rejected(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( TypeArgumentAccepted value)?  accepted,TResult? Function( TypeArgumentRejected value)?  rejected,}){
+final _that = this;
+switch (_that) {
+case TypeArgumentAccepted() when accepted != null:
+return accepted(_that);case TypeArgumentRejected() when rejected != null:
+return rejected(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.TypeSelection selection)?  accepted,TResult Function( String message)?  rejected,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case TypeArgumentAccepted() when accepted != null:
+return accepted(_that.selection);case TypeArgumentRejected() when rejected != null:
+return rejected(_that.message);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.TypeSelection selection)  accepted,required TResult Function( String message)  rejected,}) {final _that = this;
+switch (_that) {
+case TypeArgumentAccepted():
+return accepted(_that.selection);case TypeArgumentRejected():
+return rejected(_that.message);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.TypeSelection selection)?  accepted,TResult? Function( String message)?  rejected,}) {final _that = this;
+switch (_that) {
+case TypeArgumentAccepted() when accepted != null:
+return accepted(_that.selection);case TypeArgumentRejected() when rejected != null:
+return rejected(_that.message);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class TypeArgumentAccepted implements TypeArgumentChoice {
+  const TypeArgumentAccepted(this.selection);
+  
+
+ final  skir.TypeSelection selection;
+
+/// Create a copy of TypeArgumentChoice
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TypeArgumentAcceptedCopyWith<TypeArgumentAccepted> get copyWith => _$TypeArgumentAcceptedCopyWithImpl<TypeArgumentAccepted>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeArgumentAccepted&&(identical(other.selection, selection) || other.selection == selection));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,selection);
+}
+
+@override
+String toString() {
+    return 'TypeArgumentChoice.accepted(selection: $selection)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TypeArgumentAcceptedCopyWith<$Res> implements $TypeArgumentChoiceCopyWith<$Res> {
+  factory $TypeArgumentAcceptedCopyWith(TypeArgumentAccepted value, $Res Function(TypeArgumentAccepted) _then) = _$TypeArgumentAcceptedCopyWithImpl;
+@useResult
+$Res call({
+ skir.TypeSelection selection
+});
+
+
+
+
+}
+/// @nodoc
+class _$TypeArgumentAcceptedCopyWithImpl<$Res>
+    implements $TypeArgumentAcceptedCopyWith<$Res> {
+  _$TypeArgumentAcceptedCopyWithImpl(this._self, this._then);
+
+  final TypeArgumentAccepted _self;
+  final $Res Function(TypeArgumentAccepted) _then;
+
+/// Create a copy of TypeArgumentChoice
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? selection = null,}) {
+  return _then(TypeArgumentAccepted(
+null == selection ? _self.selection : selection // ignore: cast_nullable_to_non_nullable
+as skir.TypeSelection,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class TypeArgumentRejected implements TypeArgumentChoice {
+  const TypeArgumentRejected(this.message);
+  
+
+ final  String message;
+
+/// Create a copy of TypeArgumentChoice
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TypeArgumentRejectedCopyWith<TypeArgumentRejected> get copyWith => _$TypeArgumentRejectedCopyWithImpl<TypeArgumentRejected>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is TypeArgumentRejected&&(identical(other.message, message) || other.message == message));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,message);
+}
+
+@override
+String toString() {
+    return 'TypeArgumentChoice.rejected(message: $message)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TypeArgumentRejectedCopyWith<$Res> implements $TypeArgumentChoiceCopyWith<$Res> {
+  factory $TypeArgumentRejectedCopyWith(TypeArgumentRejected value, $Res Function(TypeArgumentRejected) _then) = _$TypeArgumentRejectedCopyWithImpl;
+@useResult
+$Res call({
+ String message
+});
+
+
+
+
+}
+/// @nodoc
+class _$TypeArgumentRejectedCopyWithImpl<$Res>
+    implements $TypeArgumentRejectedCopyWith<$Res> {
+  _$TypeArgumentRejectedCopyWithImpl(this._self, this._then);
+
+  final TypeArgumentRejected _self;
+  final $Res Function(TypeArgumentRejected) _then;
+
+/// Create a copy of TypeArgumentChoice
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = null,}) {
+  return _then(TypeArgumentRejected(
+null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
 
 // dart format on

@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editor_save_state.freezed.dart";
+
 /// Describes the strongest save condition currently affecting a path.
 ///
 /// `saved` means the path is settled against canonical state. `pending` and
@@ -27,16 +29,13 @@ enum EditorSavePhase {
 /// `remote` is the newer canonical choice. Keeping all three lets a caller
 /// choose deliberately instead of losing the evidence that caused the
 /// conflict.
-final class EditorPathConflict {
-  const EditorPathConflict({
-    required this.base,
-    required this.local,
-    required this.remote,
-  });
-
-  final skir.DataValue base;
-  final skir.DataValue local;
-  final skir.DataValue remote;
+@freezed
+abstract class EditorPathConflict with _$EditorPathConflict {
+  const factory EditorPathConflict({
+    required skir.DataValue base,
+    required skir.DataValue local,
+    required skir.DataValue remote,
+  }) = _EditorPathConflict;
 }
 
 /// Identifies why the persistence boundary repeatedly rejected a commit.
@@ -77,26 +76,18 @@ final class EditorContentionDetails {
 /// while canonical content remains unchanged. Callers use [canRetry] and the
 /// typed details instead of guessing from a completed future or from content
 /// equality.
-final class EditorSaveState {
-  const EditorSaveState({
-    required this.phase,
-    this.path,
-    this.replayAvailable = false,
-    this.submissionId,
-    this.conflict,
-    this.contention,
-    this.diagnostics = const [],
-  });
-
-  const EditorSaveState.idle() : this(phase: EditorSavePhase.idle);
-
-  final EditorSavePhase phase;
-  final skir.ValuePath? path;
-  final bool replayAvailable;
-  final Object? submissionId;
-  final EditorPathConflict? conflict;
-  final EditorContentionDetails? contention;
-  final List<EditorDiagnostic> diagnostics;
+@freezed
+abstract class EditorSaveState with _$EditorSaveState {
+  const factory EditorSaveState({
+    required EditorSavePhase phase,
+    skir.ValuePath? path,
+    @Default(false) bool replayAvailable,
+    Object? submissionId,
+    EditorPathConflict? conflict,
+    EditorContentionDetails? contention,
+    @Default([]) List<EditorDiagnostic> diagnostics,
+  }) = _EditorSaveState;
+  const EditorSaveState._();
 
   bool get canRetry =>
       (phase == EditorSavePhase.uncertain && replayAvailable) ||

@@ -226,19 +226,14 @@ final class BoundedTransferAssembler {
   }
 }
 
-sealed class BoundedTransferPoolState {
-  const BoundedTransferPoolState();
-}
-
-final class BoundedTransferPoolPending extends BoundedTransferPoolState {
-  const BoundedTransferPoolPending();
-}
-
-final class BoundedTransferPoolComplete extends BoundedTransferPoolState {
-  const BoundedTransferPoolComplete(this.transferId, this.bytes);
-
-  final String transferId;
-  final Uint8List bytes;
+/// Progress of one transfer accepted by a [BoundedTransferPool].
+@freezed
+sealed class BoundedTransferPoolState with _$BoundedTransferPoolState {
+  const factory BoundedTransferPoolState.pending() = BoundedTransferPoolPending;
+  const factory BoundedTransferPoolState.complete(
+    String transferId,
+    Uint8List bytes,
+  ) = BoundedTransferPoolComplete;
 }
 
 /// Bounds concurrent transfer assemblies sharing one update channel.

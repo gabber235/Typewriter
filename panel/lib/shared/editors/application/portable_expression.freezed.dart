@@ -13,6 +13,436 @@ part of 'portable_expression.dart';
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
+mixin _$PortableExpressionResult {
+
+ List<PortableExpressionRead> get reads;
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExpressionResultCopyWith<PortableExpressionResult> get copyWith => _$PortableExpressionResultCopyWithImpl<PortableExpressionResult>(this as PortableExpressionResult, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as PortableExpressionResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionResult&&const DeepCollectionEquality().equals(other.reads, _this.reads));
+}
+
+
+@override
+int get hashCode {
+  final _this = this as PortableExpressionResult;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.reads));
+}
+
+@override
+String toString() {
+  final _this = this as PortableExpressionResult;
+  return 'PortableExpressionResult(reads: ${_this.reads})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExpressionResultCopyWith<$Res>  {
+  factory $PortableExpressionResultCopyWith(PortableExpressionResult value, $Res Function(PortableExpressionResult) _then) = _$PortableExpressionResultCopyWithImpl;
+@useResult
+$Res call({
+ List<PortableExpressionRead> reads
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableExpressionResultCopyWithImpl<$Res>
+    implements $PortableExpressionResultCopyWith<$Res> {
+  _$PortableExpressionResultCopyWithImpl(this._self, this._then);
+
+  final PortableExpressionResult _self;
+  final $Res Function(PortableExpressionResult) _then;
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? reads = null,}) {
+  return _then(_self.copyWith(
+reads: null == reads ? _self.reads : reads // ignore: cast_nullable_to_non_nullable
+as List<PortableExpressionRead>,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [PortableExpressionResult].
+extension PortableExpressionResultPatterns on PortableExpressionResult {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( PortableExpressionAvailable value)?  available,TResult Function( PortableExpressionUnavailable value)?  unavailable,TResult Function( PortableExpressionFailed value)?  failed,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case PortableExpressionAvailable() when available != null:
+return available(_that);case PortableExpressionUnavailable() when unavailable != null:
+return unavailable(_that);case PortableExpressionFailed() when failed != null:
+return failed(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( PortableExpressionAvailable value)  available,required TResult Function( PortableExpressionUnavailable value)  unavailable,required TResult Function( PortableExpressionFailed value)  failed,}){
+final _that = this;
+switch (_that) {
+case PortableExpressionAvailable():
+return available(_that);case PortableExpressionUnavailable():
+return unavailable(_that);case PortableExpressionFailed():
+return failed(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( PortableExpressionAvailable value)?  available,TResult? Function( PortableExpressionUnavailable value)?  unavailable,TResult? Function( PortableExpressionFailed value)?  failed,}){
+final _that = this;
+switch (_that) {
+case PortableExpressionAvailable() when available != null:
+return available(_that);case PortableExpressionUnavailable() when unavailable != null:
+return unavailable(_that);case PortableExpressionFailed() when failed != null:
+return failed(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( skir.DataValue value,  List<PortableExpressionRead> reads)?  available,TResult Function( List<PortableExpressionRead> reads)?  unavailable,TResult Function( String code,  String message,  List<PortableExpressionRead> reads)?  failed,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case PortableExpressionAvailable() when available != null:
+return available(_that.value,_that.reads);case PortableExpressionUnavailable() when unavailable != null:
+return unavailable(_that.reads);case PortableExpressionFailed() when failed != null:
+return failed(_that.code,_that.message,_that.reads);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( skir.DataValue value,  List<PortableExpressionRead> reads)  available,required TResult Function( List<PortableExpressionRead> reads)  unavailable,required TResult Function( String code,  String message,  List<PortableExpressionRead> reads)  failed,}) {final _that = this;
+switch (_that) {
+case PortableExpressionAvailable():
+return available(_that.value,_that.reads);case PortableExpressionUnavailable():
+return unavailable(_that.reads);case PortableExpressionFailed():
+return failed(_that.code,_that.message,_that.reads);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( skir.DataValue value,  List<PortableExpressionRead> reads)?  available,TResult? Function( List<PortableExpressionRead> reads)?  unavailable,TResult? Function( String code,  String message,  List<PortableExpressionRead> reads)?  failed,}) {final _that = this;
+switch (_that) {
+case PortableExpressionAvailable() when available != null:
+return available(_that.value,_that.reads);case PortableExpressionUnavailable() when unavailable != null:
+return unavailable(_that.reads);case PortableExpressionFailed() when failed != null:
+return failed(_that.code,_that.message,_that.reads);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class PortableExpressionAvailable implements PortableExpressionResult {
+  const PortableExpressionAvailable(this.value,  List<PortableExpressionRead> reads): _reads = reads;
+  
+
+ final  skir.DataValue value;
+ final  List<PortableExpressionRead> _reads;
+@override List<PortableExpressionRead> get reads {
+  if (_reads is EqualUnmodifiableListView) return _reads;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_reads);
+}
+
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExpressionAvailableCopyWith<PortableExpressionAvailable> get copyWith => _$PortableExpressionAvailableCopyWithImpl<PortableExpressionAvailable>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionAvailable&&(identical(other.value, value) || other.value == value)&&const DeepCollectionEquality().equals(other.reads, _reads));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,value,const DeepCollectionEquality().hash(_reads));
+}
+
+@override
+String toString() {
+    return 'PortableExpressionResult.available(value: $value, reads: $reads)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExpressionAvailableCopyWith<$Res> implements $PortableExpressionResultCopyWith<$Res> {
+  factory $PortableExpressionAvailableCopyWith(PortableExpressionAvailable value, $Res Function(PortableExpressionAvailable) _then) = _$PortableExpressionAvailableCopyWithImpl;
+@override @useResult
+$Res call({
+ skir.DataValue value, List<PortableExpressionRead> reads
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableExpressionAvailableCopyWithImpl<$Res>
+    implements $PortableExpressionAvailableCopyWith<$Res> {
+  _$PortableExpressionAvailableCopyWithImpl(this._self, this._then);
+
+  final PortableExpressionAvailable _self;
+  final $Res Function(PortableExpressionAvailable) _then;
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? reads = null,}) {
+  return _then(PortableExpressionAvailable(
+null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as skir.DataValue,null == reads ? _self._reads : reads // ignore: cast_nullable_to_non_nullable
+as List<PortableExpressionRead>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class PortableExpressionUnavailable implements PortableExpressionResult {
+  const PortableExpressionUnavailable( List<PortableExpressionRead> reads): _reads = reads;
+  
+
+ final  List<PortableExpressionRead> _reads;
+@override List<PortableExpressionRead> get reads {
+  if (_reads is EqualUnmodifiableListView) return _reads;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_reads);
+}
+
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExpressionUnavailableCopyWith<PortableExpressionUnavailable> get copyWith => _$PortableExpressionUnavailableCopyWithImpl<PortableExpressionUnavailable>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionUnavailable&&const DeepCollectionEquality().equals(other.reads, _reads));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_reads));
+}
+
+@override
+String toString() {
+    return 'PortableExpressionResult.unavailable(reads: $reads)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExpressionUnavailableCopyWith<$Res> implements $PortableExpressionResultCopyWith<$Res> {
+  factory $PortableExpressionUnavailableCopyWith(PortableExpressionUnavailable value, $Res Function(PortableExpressionUnavailable) _then) = _$PortableExpressionUnavailableCopyWithImpl;
+@override @useResult
+$Res call({
+ List<PortableExpressionRead> reads
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableExpressionUnavailableCopyWithImpl<$Res>
+    implements $PortableExpressionUnavailableCopyWith<$Res> {
+  _$PortableExpressionUnavailableCopyWithImpl(this._self, this._then);
+
+  final PortableExpressionUnavailable _self;
+  final $Res Function(PortableExpressionUnavailable) _then;
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? reads = null,}) {
+  return _then(PortableExpressionUnavailable(
+null == reads ? _self._reads : reads // ignore: cast_nullable_to_non_nullable
+as List<PortableExpressionRead>,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class PortableExpressionFailed implements PortableExpressionResult {
+  const PortableExpressionFailed(this.code, this.message,  List<PortableExpressionRead> reads): _reads = reads;
+  
+
+ final  String code;
+ final  String message;
+ final  List<PortableExpressionRead> _reads;
+@override List<PortableExpressionRead> get reads {
+  if (_reads is EqualUnmodifiableListView) return _reads;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_reads);
+}
+
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PortableExpressionFailedCopyWith<PortableExpressionFailed> get copyWith => _$PortableExpressionFailedCopyWithImpl<PortableExpressionFailed>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PortableExpressionFailed&&(identical(other.code, code) || other.code == code)&&(identical(other.message, message) || other.message == message)&&const DeepCollectionEquality().equals(other.reads, _reads));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,code,message,const DeepCollectionEquality().hash(_reads));
+}
+
+@override
+String toString() {
+    return 'PortableExpressionResult.failed(code: $code, message: $message, reads: $reads)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PortableExpressionFailedCopyWith<$Res> implements $PortableExpressionResultCopyWith<$Res> {
+  factory $PortableExpressionFailedCopyWith(PortableExpressionFailed value, $Res Function(PortableExpressionFailed) _then) = _$PortableExpressionFailedCopyWithImpl;
+@override @useResult
+$Res call({
+ String code, String message, List<PortableExpressionRead> reads
+});
+
+
+
+
+}
+/// @nodoc
+class _$PortableExpressionFailedCopyWithImpl<$Res>
+    implements $PortableExpressionFailedCopyWith<$Res> {
+  _$PortableExpressionFailedCopyWithImpl(this._self, this._then);
+
+  final PortableExpressionFailed _self;
+  final $Res Function(PortableExpressionFailed) _then;
+
+/// Create a copy of PortableExpressionResult
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? message = null,Object? reads = null,}) {
+  return _then(PortableExpressionFailed(
+null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String,null == reads ? _self._reads : reads // ignore: cast_nullable_to_non_nullable
+as List<PortableExpressionRead>,
+  ));
+}
+
+
+}
+
+/// @nodoc
 mixin _$PortableExpressionQueries {
 
  CheckedEditorCatalog get catalog; PortableAuthoringView? get authored;

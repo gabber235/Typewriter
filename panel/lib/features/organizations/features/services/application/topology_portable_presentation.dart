@@ -397,7 +397,7 @@ BoundPresentationHost topologyHostPortableHost({
                           realm.targetEngine.versionConstraint,
                         ) ==
                         selectedEngineTarget())
-                      (
+                      _TopologySelectOption(
                         id: realm.realmId.id,
                         label: realm.ownerHost.name.formatted,
                         value: realm.realmId.id,
@@ -539,12 +539,22 @@ String _topologyLabel(String field) {
   };
 }
 
-List<({String id, String label, String value})> _targetOptions(
+/// One option offered by a topology select input.
+@freezed
+abstract class _TopologySelectOption with _$TopologySelectOption {
+  const factory _TopologySelectOption({
+    required String id,
+    required String label,
+    required String value,
+  }) = __TopologySelectOption;
+}
+
+List<_TopologySelectOption> _targetOptions(
   Map<String, List<String>> targets,
 ) => [
   for (final entry in targets.entries)
     for (final version in entry.value)
-      (
+      _TopologySelectOption(
         id: _encodeTarget(entry.key, version),
         label: _targetLabel(
           TopologyEngineTarget(engineId: entry.key, versionConstraint: version),
@@ -557,7 +567,7 @@ skir.PresentationNode _portableSelect(
   String id,
   skir.ExpressionBindingId bindingId,
   String label,
-  List<({String id, String label, String value})> options,
+  List<_TopologySelectOption> options,
 ) => skir.PresentationNode(
   nodeId: id,
   properties: skir.PresentationProperties.defaultInstance,

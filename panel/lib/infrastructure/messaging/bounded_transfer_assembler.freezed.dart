@@ -272,4 +272,266 @@ as Uint8List,
 
 }
 
+/// @nodoc
+mixin _$BoundedTransferPoolState {
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is BoundedTransferPoolState);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'BoundedTransferPoolState()';
+}
+
+
+}
+
+/// @nodoc
+class $BoundedTransferPoolStateCopyWith<$Res>  {
+$BoundedTransferPoolStateCopyWith(BoundedTransferPoolState _, $Res Function(BoundedTransferPoolState) __);
+}
+
+
+/// Adds pattern-matching-related methods to [BoundedTransferPoolState].
+extension BoundedTransferPoolStatePatterns on BoundedTransferPoolState {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( BoundedTransferPoolPending value)?  pending,TResult Function( BoundedTransferPoolComplete value)?  complete,required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending() when pending != null:
+return pending(_that);case BoundedTransferPoolComplete() when complete != null:
+return complete(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( BoundedTransferPoolPending value)  pending,required TResult Function( BoundedTransferPoolComplete value)  complete,}){
+final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending():
+return pending(_that);case BoundedTransferPoolComplete():
+return complete(_that);}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( BoundedTransferPoolPending value)?  pending,TResult? Function( BoundedTransferPoolComplete value)?  complete,}){
+final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending() when pending != null:
+return pending(_that);case BoundedTransferPoolComplete() when complete != null:
+return complete(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  pending,TResult Function( String transferId,  Uint8List bytes)?  complete,required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending() when pending != null:
+return pending();case BoundedTransferPoolComplete() when complete != null:
+return complete(_that.transferId,_that.bytes);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  pending,required TResult Function( String transferId,  Uint8List bytes)  complete,}) {final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending():
+return pending();case BoundedTransferPoolComplete():
+return complete(_that.transferId,_that.bytes);}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  pending,TResult? Function( String transferId,  Uint8List bytes)?  complete,}) {final _that = this;
+switch (_that) {
+case BoundedTransferPoolPending() when pending != null:
+return pending();case BoundedTransferPoolComplete() when complete != null:
+return complete(_that.transferId,_that.bytes);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+
+
+class BoundedTransferPoolPending implements BoundedTransferPoolState {
+  const BoundedTransferPoolPending();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is BoundedTransferPoolPending);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+    return 'BoundedTransferPoolState.pending()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class BoundedTransferPoolComplete implements BoundedTransferPoolState {
+  const BoundedTransferPoolComplete(this.transferId, this.bytes);
+  
+
+ final  String transferId;
+ final  Uint8List bytes;
+
+/// Create a copy of BoundedTransferPoolState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BoundedTransferPoolCompleteCopyWith<BoundedTransferPoolComplete> get copyWith => _$BoundedTransferPoolCompleteCopyWithImpl<BoundedTransferPoolComplete>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is BoundedTransferPoolComplete&&(identical(other.transferId, transferId) || other.transferId == transferId)&&const DeepCollectionEquality().equals(other.bytes, bytes));
+}
+
+
+@override
+int get hashCode {
+    return Object.hash(runtimeType,transferId,const DeepCollectionEquality().hash(bytes));
+}
+
+@override
+String toString() {
+    return 'BoundedTransferPoolState.complete(transferId: $transferId, bytes: $bytes)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $BoundedTransferPoolCompleteCopyWith<$Res> implements $BoundedTransferPoolStateCopyWith<$Res> {
+  factory $BoundedTransferPoolCompleteCopyWith(BoundedTransferPoolComplete value, $Res Function(BoundedTransferPoolComplete) _then) = _$BoundedTransferPoolCompleteCopyWithImpl;
+@useResult
+$Res call({
+ String transferId, Uint8List bytes
+});
+
+
+
+
+}
+/// @nodoc
+class _$BoundedTransferPoolCompleteCopyWithImpl<$Res>
+    implements $BoundedTransferPoolCompleteCopyWith<$Res> {
+  _$BoundedTransferPoolCompleteCopyWithImpl(this._self, this._then);
+
+  final BoundedTransferPoolComplete _self;
+  final $Res Function(BoundedTransferPoolComplete) _then;
+
+/// Create a copy of BoundedTransferPoolState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? transferId = null,Object? bytes = null,}) {
+  return _then(BoundedTransferPoolComplete(
+null == transferId ? _self.transferId : transferId // ignore: cast_nullable_to_non_nullable
+as String,null == bytes ? _self.bytes : bytes // ignore: cast_nullable_to_non_nullable
+as Uint8List,
+  ));
+}
+
+
+}
+
 // dart format on

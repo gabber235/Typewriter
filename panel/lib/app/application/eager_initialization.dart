@@ -1,5 +1,7 @@
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "eager_initialization.freezed.dart";
+
 /// Resolves global startup dependencies before exposing the application shell.
 ///
 /// Providers are watched in dependency order. Telemetry and sentinel
@@ -14,67 +16,78 @@ class EagerInitialization extends ConsumerWidget {
   /// Converts an asynchronous dependency into either its value or a boundary
   /// widget. A null value is valid and therefore remains distinct from an
   /// error or loading state. Retry recomputes the owner of the failed dependency.
-  (T?, Widget?) require<T>(AsyncValue<T> value, VoidCallback retry) {
+  _StartupDependency<T> _require<T>(AsyncValue<T> value, VoidCallback retry) {
     if (value.hasError) {
-      return (null, _Error(value.error!, retry));
+      return _StartupDependency.blocked(_Error(value.error!, retry));
     }
     if (value.isLoading) {
-      return (null, const _Loading());
+      return const _StartupDependency.blocked(_Loading());
     }
-    return (value.value, null);
+    return _StartupDependency.ready(value.value);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final (_, otelWidget) = require(
-      ref.watch(panelTelemetryProvider),
-      () => ref.invalidate(panelTelemetryProvider),
-    );
-    if (otelWidget != null) {
-      return otelWidget;
+    if (_require(
+          ref.watch(panelTelemetryProvider),
+          () => ref.invalidate(panelTelemetryProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
     // Fetch sentinel credentials before authentication checks
-    final (_, sentinelWidget) = require(
-      ref.watch(sentinelCredentialsProvider),
-      () => ref.invalidate(sentinelCredentialsProvider),
-    );
-    if (sentinelWidget != null) {
-      return sentinelWidget;
+    if (_require(
+          ref.watch(sentinelCredentialsProvider),
+          () => ref.invalidate(sentinelCredentialsProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
-    final (isAuthenticated, authenticatedWidget) = require(
+    switch (_require(
       ref.watch(isAuthenticatedProvider),
       () => ref.invalidate(authProvider),
-    );
-    if (authenticatedWidget != null) {
-      return authenticatedWidget;
-    }
-    if (isAuthenticated != true) {
-      return child;
+    )) {
+      case _BlockedDependency(:final boundary):
+        return boundary;
+      case _ReadyDependency(:final value) when value != true:
+        return child;
+      case _ReadyDependency():
+        break;
     }
 
-    final (token, accessWidget) = require(
+    switch (_require(
       ref.watch(accessTokenProvider),
       () => ref.invalidate(authProvider),
-    );
-    if (accessWidget != null) {
-      return accessWidget;
-    }
-    if (token == null) {
-      return child;
+    )) {
+      case _BlockedDependency(:final boundary):
+        return boundary;
+      case _ReadyDependency(:final value) when value == null:
+        return child;
+      case _ReadyDependency():
+        break;
     }
 
-    final (_, authUserInfoWidget) = require(
-      ref.watch(authUserInfoProvider),
-      () => ref.invalidate(authProvider),
-    );
-    if (authUserInfoWidget != null) {
-      return authUserInfoWidget;
+    if (_require(
+          ref.watch(authUserInfoProvider),
+          () => ref.invalidate(authProvider),
+        )
+        case _BlockedDependency(:final boundary)) {
+      return boundary;
     }
 
     return child;
   }
+}
+
+/// A startup dependency that is either resolved or represented by the boundary
+/// widget shown while it loads or after it fails.
+@freezed
+sealed class _StartupDependency<T> with _$StartupDependency<T> {
+  const factory _StartupDependency.ready(T? value) = _ReadyDependency<T>;
+  const factory _StartupDependency.blocked(Widget boundary) =
+      _BlockedDependency<T>;
 }
 
 class _Loading extends HookWidget {

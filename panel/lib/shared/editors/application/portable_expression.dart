@@ -12,27 +12,20 @@ part "canonical_read_models.generated.dart";
 /// Evaluation outcome together with the lexical and resource paths observed.
 /// Unavailable input remains distinct from an invalid expression or exhausted
 /// budget so presentation can choose a fallback without hiding a failure.
-sealed class PortableExpressionResult {
-  const PortableExpressionResult(this.reads);
-
-  final List<PortableExpressionRead> reads;
-}
-
-final class PortableExpressionAvailable extends PortableExpressionResult {
-  const PortableExpressionAvailable(this.value, super.reads);
-
-  final skir.DataValue value;
-}
-
-final class PortableExpressionUnavailable extends PortableExpressionResult {
-  const PortableExpressionUnavailable(super.reads);
-}
-
-final class PortableExpressionFailed extends PortableExpressionResult {
-  const PortableExpressionFailed(this.code, this.message, super.reads);
-
-  final String code;
-  final String message;
+@freezed
+sealed class PortableExpressionResult with _$PortableExpressionResult {
+  const factory PortableExpressionResult.available(
+    skir.DataValue value,
+    List<PortableExpressionRead> reads,
+  ) = PortableExpressionAvailable;
+  const factory PortableExpressionResult.unavailable(
+    List<PortableExpressionRead> reads,
+  ) = PortableExpressionUnavailable;
+  const factory PortableExpressionResult.failed(
+    String code,
+    String message,
+    List<PortableExpressionRead> reads,
+  ) = PortableExpressionFailed;
 }
 
 final class PortableExpressionBinding {

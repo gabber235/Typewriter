@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+part "editor_document.freezed.dart";
+
 /// Defines how local and remote values may be combined at a path.
 ///
 /// `atomic` and `orderedList` preserve the local value and report a conflict
@@ -17,34 +19,26 @@ enum EditorMergePolicy { atomic, record, set, orderedList }
 /// meaningful only with the value it identifies. Advancing one without the
 /// other could make a commit target the wrong canonical content, so callers
 /// replace them together through `copyWith` or a new `EditorDocument`.
+/// Equality compares the whole observation, while [hasSameMetadata] ignores
+/// the value and revision.
 ///
 /// Type metadata, merge policy, diagnostics, and read only status travel with
 /// that observation. The document is immutable and owned by the editor source;
 /// presentation code may retain it as a stable snapshot but must not infer
 /// local unsaved content from it.
-final class EditorDocument {
-  const EditorDocument({
-    required this.rootType,
-    required this.catalog,
-    required this.confirmedValue,
-    required this.revision,
-    this.mergePolicies = const {},
-    this.diagnostics = const [],
-    this.readOnly = false,
-  }) : assert(revision >= 0, "Revision must not be negative.");
-
-  final skir.TypeUse rootType;
-  final CheckedEditorCatalog catalog;
-  final skir.DataValue confirmedValue;
-  final int revision;
-  final Map<skir.ValuePath, EditorMergePolicy> mergePolicies;
-  final List<EditorDiagnostic> diagnostics;
-  final bool readOnly;
-
-  bool hasSameContent(EditorDocument other) =>
-      hasSameMetadata(other) &&
-      confirmedValue == other.confirmedValue &&
-      revision == other.revision;
+@freezed
+abstract class EditorDocument with _$EditorDocument {
+  @Assert("revision >= 0", "Revision must not be negative.")
+  const factory EditorDocument({
+    required skir.TypeUse rootType,
+    required CheckedEditorCatalog catalog,
+    required skir.DataValue confirmedValue,
+    required int revision,
+    @Default({}) Map<skir.ValuePath, EditorMergePolicy> mergePolicies,
+    @Default([]) List<EditorDiagnostic> diagnostics,
+    @Default(false) bool readOnly,
+  }) = _EditorDocument;
+  const EditorDocument._();
 
   bool hasSameMetadata(EditorDocument other) =>
       rootType == other.rootType &&
@@ -52,24 +46,6 @@ final class EditorDocument {
       mapEquals(mergePolicies, other.mergePolicies) &&
       listEquals(diagnostics, other.diagnostics) &&
       readOnly == other.readOnly;
-
-  EditorDocument copyWith({
-    skir.TypeUse? rootType,
-    CheckedEditorCatalog? catalog,
-    skir.DataValue? confirmedValue,
-    int? revision,
-    Map<skir.ValuePath, EditorMergePolicy>? mergePolicies,
-    List<EditorDiagnostic>? diagnostics,
-    bool? readOnly,
-  }) => EditorDocument(
-    rootType: rootType ?? this.rootType,
-    catalog: catalog ?? this.catalog,
-    confirmedValue: confirmedValue ?? this.confirmedValue,
-    revision: revision ?? this.revision,
-    mergePolicies: mergePolicies ?? this.mergePolicies,
-    diagnostics: diagnostics ?? this.diagnostics,
-    readOnly: readOnly ?? this.readOnly,
-  );
 }
 
 /// An immutable persistence request captured from one editor state.
@@ -80,31 +56,25 @@ final class EditorDocument {
 /// `changedPaths` and `mutations` describe the intended delta. A committer
 /// must treat this as one consistency boundary and return a typed result rather
 /// than implying acceptance from completion alone.
-final class EditorCommit {
-  const EditorCommit({
-    required this.expectedRevision,
-    required this.localRevision,
-    required this.rootValue,
-    required this.baseValue,
-    required this.changedPaths,
-    this.mutations = const [],
-  }) : assert(expectedRevision >= 0, "Expected revision must not be negative."),
-       assert(localRevision >= 0, "Local revision must not be negative.");
-
-  final int expectedRevision;
-  final int localRevision;
-  final skir.DataValue rootValue;
-  final skir.DataValue baseValue;
-  final Set<skir.ValuePath> changedPaths;
-  final List<EditorSetValue> mutations;
+@freezed
+abstract class EditorCommit with _$EditorCommit {
+  @Assert("expectedRevision >= 0", "Expected revision must not be negative.")
+  @Assert("localRevision >= 0", "Local revision must not be negative.")
+  const factory EditorCommit({
+    required int expectedRevision,
+    required int localRevision,
+    required skir.DataValue rootValue,
+    required skir.DataValue baseValue,
+    required Set<skir.ValuePath> changedPaths,
+    @Default([]) List<EditorSetValue> mutations,
+  }) = _EditorCommit;
 }
 
 /// Describes one value assignment included in an [EditorCommit].
 ///
 /// The path is relative to the commit root.
-final class EditorSetValue {
-  const EditorSetValue(this.path, this.value);
-
-  final skir.ValuePath path;
-  final skir.DataValue value;
+@freezed
+abstract class EditorSetValue with _$EditorSetValue {
+  const factory EditorSetValue(skir.ValuePath path, skir.DataValue value) =
+      _EditorSetValue;
 }
