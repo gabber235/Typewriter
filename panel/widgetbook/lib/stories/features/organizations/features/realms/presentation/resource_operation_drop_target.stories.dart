@@ -28,8 +28,9 @@ Widget resourceOperationDropTargetStory(BuildContext context) {
 Widget resourceOperationDropTargetExample({
   bool available = true,
   bool delayed = true,
+  bool dropEnabled = true,
 }) => AuthoringFixtureApp(
-  scenario: (available, delayed),
+  scenario: (available, delayed, dropEnabled),
   createDocument: _operationDocument,
   createCommands: (ref, transport) =>
       _commands(ref, transport, available, delayed),
@@ -53,7 +54,7 @@ Widget resourceOperationDropTargetExample({
       const RealmInteractionState(connectionState: RealmConnectionState.online),
     ),
   ],
-  child: const CompiledEntryGraphScene(),
+  child: CompiledEntryGraphScene(dropEnabled: dropEnabled),
 );
 
 final _inputId = skir.TypeDefinitionId(

@@ -40,8 +40,15 @@ Widget compiledEntryGraphStory({
 
 /// Keeps the real page host, node presentation and sidebar transfer mounted.
 class CompiledEntryGraphScene extends HookConsumerWidget {
-  const CompiledEntryGraphScene({this.readOnly = false, super.key});
+  const CompiledEntryGraphScene({
+    this.readOnly = false,
+    this.dropEnabled = true,
+    super.key,
+  });
   final bool readOnly;
+
+  /// Whether the Village evening sidebar entry accepts dropped entry nodes.
+  final bool dropEnabled;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,7 +83,7 @@ class CompiledEntryGraphScene extends HookConsumerWidget {
                     page: compiledEntryDestinationId,
                     workspace: workspace,
                     authoringScope: scope,
-                    enabled: !readOnly,
+                    enabled: dropEnabled && !readOnly,
                     child: const ListTile(
                       title: Text("Village evening"),
                       leading: Icon(Icons.article_outlined),
