@@ -146,7 +146,7 @@ class LinkProjection private constructor(
         );
 
         /**
-         * If the value of [contract] is already mutable, returns it as is.
+         * If the value of [contract] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [contract] and returns it.
          */
         val mutableContract: skirout.editor.v1.type_catalog.RelationId.Mutable get() {
@@ -162,7 +162,7 @@ class LinkProjection private constructor(
         }
 
         /**
-         * If the value of [first] is already mutable, returns it as is.
+         * If the value of [first] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [first] and returns it.
          */
         val mutableFirst: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -178,7 +178,7 @@ class LinkProjection private constructor(
         }
 
         /**
-         * If the value of [second] is already mutable, returns it as is.
+         * If the value of [second] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [second] and returns it.
          */
         val mutableSecond: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -657,7 +657,7 @@ sealed class EditExpectation private constructor() {
             );
 
             /**
-             * If the value of [at] is already mutable, returns it as is.
+             * If the value of [at] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
              */
             val mutableAt: skirout.editor.v1.type_catalog.ValueLocation.Mutable get() {
@@ -797,7 +797,7 @@ sealed class EditExpectation private constructor() {
             );
 
             /**
-             * If the value of [id] is already mutable, returns it as is.
+             * If the value of [id] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
              */
             val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -937,7 +937,7 @@ sealed class EditExpectation private constructor() {
             );
 
             /**
-             * If the value of [id] is already mutable, returns it as is.
+             * If the value of [id] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
              */
             val mutableId: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -1077,7 +1077,7 @@ sealed class EditExpectation private constructor() {
             );
 
             /**
-             * If the value of [at] is already mutable, returns it as is.
+             * If the value of [at] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [at] and returns it.
              */
             val mutableAt: skirout.editor.v1.type_catalog.ValueLocation.Mutable get() {
@@ -1239,7 +1239,7 @@ sealed class EditExpectation private constructor() {
             );
 
             /**
-             * If the value of [resource] is already mutable, returns it as is.
+             * If the value of [resource] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
              */
             val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -1255,7 +1255,7 @@ sealed class EditExpectation private constructor() {
             }
 
             /**
-             * If the value of [contract] is already mutable, returns it as is.
+             * If the value of [contract] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [contract] and returns it.
              */
             val mutableContract: skirout.editor.v1.type_catalog.RelationId.Mutable get() {
@@ -1271,7 +1271,7 @@ sealed class EditExpectation private constructor() {
             }
 
             /**
-             * If the value of [expected] is already mutable, returns it as is.
+             * If the value of [expected] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
              */
             val mutableExpected: kotlin.collections.MutableList<skirout.editor.v1.authoring_facts.LinkProjection_OrMutable> get() {

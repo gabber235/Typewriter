@@ -232,7 +232,7 @@ class SearchCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as is.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -387,7 +387,7 @@ class ComputationCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as is.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -531,7 +531,7 @@ class CommandCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as is.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -970,7 +970,7 @@ class InvalidateResourceInstruction private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as is.
+         * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.capability.ResourceAddress.Mutable get() {
@@ -1095,7 +1095,7 @@ class OpenResourceInstruction private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as is.
+         * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.capability.ResourceAddress.Mutable get() {
@@ -1641,7 +1641,7 @@ class CapabilityInvocationRequest private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -1657,7 +1657,7 @@ class CapabilityInvocationRequest private constructor(
         }
 
         /**
-         * If the value of [generation] is already mutable, returns it as is.
+         * If the value of [generation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [generation] and returns it.
          */
         val mutableGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -1673,7 +1673,7 @@ class CapabilityInvocationRequest private constructor(
         }
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as is.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -1825,7 +1825,7 @@ class ComputationSuccess private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -1965,7 +1965,7 @@ class CommandSuccess private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -1981,7 +1981,7 @@ class CommandSuccess private constructor(
         }
 
         /**
-         * If the value of [instructions] is already mutable, returns it as is.
+         * If the value of [instructions] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [instructions] and returns it.
          */
         val mutableInstructions: kotlin.collections.MutableList<skirout.editor.v1.capability.PanelInstruction> get() {
@@ -2121,7 +2121,7 @@ class CapabilityPermissionDenied private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2261,7 +2261,7 @@ class StaleCatalogGeneration private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2277,7 +2277,7 @@ class StaleCatalogGeneration private constructor(
         }
 
         /**
-         * If the value of [actualGeneration] is already mutable, returns it as is.
+         * If the value of [actualGeneration] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [actualGeneration] and returns it.
          */
         val mutableActualGeneration: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -2417,7 +2417,7 @@ class CapabilityFailure private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -2433,7 +2433,7 @@ class CapabilityFailure private constructor(
         }
 
         /**
-         * If the value of [diagnostics] is already mutable, returns it as is.
+         * If the value of [diagnostics] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
          */
         val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.diagnostic.Diagnostic_OrMutable> get() {
@@ -3010,7 +3010,7 @@ class AuthoringCapabilityDefinition private constructor(
         );
 
         /**
-         * If the value of [capabilityId] is already mutable, returns it as is.
+         * If the value of [capabilityId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capabilityId] and returns it.
          */
         val mutableCapabilityId: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {

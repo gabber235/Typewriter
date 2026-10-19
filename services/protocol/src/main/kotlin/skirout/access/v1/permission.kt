@@ -421,7 +421,7 @@ class Permission private constructor(
         );
 
         /**
-         * If the value of [allow] is already mutable, returns it as is.
+         * If the value of [allow] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [allow] and returns it.
          */
         val mutableAllow: kotlin.collections.MutableList<kotlin.String> get() {
@@ -437,7 +437,7 @@ class Permission private constructor(
         }
 
         /**
-         * If the value of [deny] is already mutable, returns it as is.
+         * If the value of [deny] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [deny] and returns it.
          */
         val mutableDeny: kotlin.collections.MutableList<kotlin.String> get() {
@@ -712,7 +712,7 @@ class Permissions private constructor(
         );
 
         /**
-         * If the value of [publish] is already mutable, returns it as is.
+         * If the value of [publish] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [publish] and returns it.
          */
         val mutablePublish: skirout.access.v1.permission.Permission.Mutable get() {
@@ -728,7 +728,7 @@ class Permissions private constructor(
         }
 
         /**
-         * If the value of [subscribe] is already mutable, returns it as is.
+         * If the value of [subscribe] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [subscribe] and returns it.
          */
         val mutableSubscribe: skirout.access.v1.permission.Permission.Mutable get() {
@@ -996,7 +996,7 @@ class GetEntityPermissionResponse private constructor(
         );
 
         /**
-         * If the value of [permissions] is already mutable, returns it as is.
+         * If the value of [permissions] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [permissions] and returns it.
          */
         val mutablePermissions: skirout.access.v1.permission.Permissions.Mutable get() {
@@ -1012,7 +1012,7 @@ class GetEntityPermissionResponse private constructor(
         }
 
         /**
-         * If the value of [tags] is already mutable, returns it as is.
+         * If the value of [tags] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [tags] and returns it.
          */
         val mutableTags: kotlin.collections.MutableList<kotlin.String> get() {

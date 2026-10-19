@@ -1076,7 +1076,7 @@ class ServiceHost private constructor(
         );
 
         /**
-         * If the value of [hostId] is already mutable, returns it as is.
+         * If the value of [hostId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
          */
         val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1092,7 +1092,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as is.
+         * If the value of [serviceId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1108,7 +1108,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [supportedEngines] is already mutable, returns it as is.
+         * If the value of [supportedEngines] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
          */
         val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {
@@ -1124,7 +1124,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [topologyRevision] is already mutable, returns it as is.
+         * If the value of [topologyRevision] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [topologyRevision] and returns it.
          */
         val mutableTopologyRevision: skirout.service.v1.topology.ReconciledRevision.Mutable get() {
@@ -1140,7 +1140,7 @@ class ServiceHost private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as is.
+         * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.HostRuntimeState.Mutable get() {
@@ -1304,7 +1304,7 @@ class OwnerHost private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as is.
+         * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1477,7 +1477,7 @@ class RealmInstance private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as is.
+         * If the value of [realmId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1493,7 +1493,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as is.
+         * If the value of [ownerHost] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -1509,7 +1509,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [targetEngine] is already mutable, returns it as is.
+         * If the value of [targetEngine] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [targetEngine] and returns it.
          */
         val mutableTargetEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -1525,7 +1525,7 @@ class RealmInstance private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as is.
+         * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -1677,7 +1677,7 @@ class RealmInfo private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as is.
+         * If the value of [realmId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1693,7 +1693,7 @@ class RealmInfo private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as is.
+         * If the value of [ownerHost] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -1877,7 +1877,7 @@ class EngineInstance private constructor(
         );
 
         /**
-         * If the value of [engineId] is already mutable, returns it as is.
+         * If the value of [engineId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
          */
         val mutableEngineId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1893,7 +1893,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [ownerHost] is already mutable, returns it as is.
+         * If the value of [ownerHost] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [ownerHost] and returns it.
          */
         val mutableOwnerHost: skirout.service.v1.topology.OwnerHost.Mutable get() {
@@ -1909,7 +1909,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [realm] is already mutable, returns it as is.
+         * If the value of [realm] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realm] and returns it.
          */
         val mutableRealm: skirout.service.v1.topology.RealmInfo.Mutable get() {
@@ -1925,7 +1925,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [target] is already mutable, returns it as is.
+         * If the value of [target] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -1941,7 +1941,7 @@ class EngineInstance private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as is.
+         * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -2086,7 +2086,7 @@ class HostedRealmConfiguration private constructor(
         );
 
         /**
-         * If the value of [primaryEngine] is already mutable, returns it as is.
+         * If the value of [primaryEngine] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [primaryEngine] and returns it.
          */
         val mutablePrimaryEngine: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -2302,7 +2302,7 @@ sealed class EngineRealmSelection private constructor() {
             );
 
             /**
-             * If the value of [realmId] is already mutable, returns it as is.
+             * If the value of [realmId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
              */
             val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2439,7 +2439,7 @@ class HostedEngineConfiguration private constructor(
         );
 
         /**
-         * If the value of [target] is already mutable, returns it as is.
+         * If the value of [target] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
          */
         val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -2725,7 +2725,7 @@ class HostConfigurationChange private constructor(
         );
 
         /**
-         * If the value of [host] is already mutable, returns it as is.
+         * If the value of [host] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
          */
         val mutableHost: skirout.service.v1.topology.ServiceHost.Mutable get() {
@@ -2741,7 +2741,7 @@ class HostConfigurationChange private constructor(
         }
 
         /**
-         * If the value of [removedResources] is already mutable, returns it as is.
+         * If the value of [removedResources] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [removedResources] and returns it.
          */
         val mutableRemovedResources: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2900,7 +2900,7 @@ class ConfigureServiceHostRequest private constructor(
         );
 
         /**
-         * If the value of [hostId] is already mutable, returns it as is.
+         * If the value of [hostId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [hostId] and returns it.
          */
         val mutableHostId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2916,7 +2916,7 @@ class ConfigureServiceHostRequest private constructor(
         }
 
         /**
-         * If the value of [execution] is already mutable, returns it as is.
+         * If the value of [execution] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [execution] and returns it.
          */
         val mutableExecution: skirout.service.v1.topology.HostExecutionConfiguration.Mutable get() {
@@ -3318,7 +3318,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [actual] is already mutable, returns it as is.
+             * If the value of [actual] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
              */
             val mutableActual: skirout.service.v1.topology.HostConfigurationChange.Mutable get() {
@@ -3552,7 +3552,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [target] is already mutable, returns it as is.
+             * If the value of [target] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [target] and returns it.
              */
             val mutableTarget: skirout.service.v1.topology.EngineTarget.Mutable get() {
@@ -3677,7 +3677,7 @@ sealed class ConfigureServiceHostResponse private constructor() {
             );
 
             /**
-             * If the value of [realmId] is already mutable, returns it as is.
+             * If the value of [realmId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
              */
             val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -3825,7 +3825,7 @@ class OrganizationTopologySnapshot private constructor(
         );
 
         /**
-         * If the value of [hosts] is already mutable, returns it as is.
+         * If the value of [hosts] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [hosts] and returns it.
          */
         val mutableHosts: kotlin.collections.MutableList<skirout.service.v1.topology.ServiceHost_OrMutable> get() {
@@ -3841,7 +3841,7 @@ class OrganizationTopologySnapshot private constructor(
         }
 
         /**
-         * If the value of [realms] is already mutable, returns it as is.
+         * If the value of [realms] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realms] and returns it.
          */
         val mutableRealms: kotlin.collections.MutableList<skirout.service.v1.topology.RealmInstance_OrMutable> get() {
@@ -3857,7 +3857,7 @@ class OrganizationTopologySnapshot private constructor(
         }
 
         /**
-         * If the value of [engines] is already mutable, returns it as is.
+         * If the value of [engines] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [engines] and returns it.
          */
         val mutableEngines: kotlin.collections.MutableList<skirout.service.v1.topology.EngineInstance_OrMutable> get() {
@@ -4001,7 +4001,7 @@ class RealmRuntimeObservation private constructor(
         );
 
         /**
-         * If the value of [realmId] is already mutable, returns it as is.
+         * If the value of [realmId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [realmId] and returns it.
          */
         val mutableRealmId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -4017,7 +4017,7 @@ class RealmRuntimeObservation private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as is.
+         * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -4157,7 +4157,7 @@ class EngineRuntimeObservation private constructor(
         );
 
         /**
-         * If the value of [engineId] is already mutable, returns it as is.
+         * If the value of [engineId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [engineId] and returns it.
          */
         val mutableEngineId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -4173,7 +4173,7 @@ class EngineRuntimeObservation private constructor(
         }
 
         /**
-         * If the value of [state] is already mutable, returns it as is.
+         * If the value of [state] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [state] and returns it.
          */
         val mutableState: skirout.service.v1.topology.ChildRuntimeState.Mutable get() {
@@ -4324,7 +4324,7 @@ class HostExecutionObservation private constructor(
         );
 
         /**
-         * If the value of [host] is already mutable, returns it as is.
+         * If the value of [host] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [host] and returns it.
          */
         val mutableHost: skirout.service.v1.topology.ServiceHost.Mutable get() {
@@ -5748,7 +5748,7 @@ class GetServiceMessagingScopeRequest private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as is.
+         * If the value of [serviceId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -6114,7 +6114,7 @@ class RegisterServiceHostRequest private constructor(
         );
 
         /**
-         * If the value of [supportedEngines] is already mutable, returns it as is.
+         * If the value of [supportedEngines] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [supportedEngines] and returns it.
          */
         val mutableSupportedEngines: kotlin.collections.MutableList<skirout.service.v1.topology.SupportedEngine_OrMutable> get() {

@@ -500,7 +500,7 @@ class UpdateOrganizationServiceRequest private constructor(
         );
 
         /**
-         * If the value of [serviceId] is already mutable, returns it as is.
+         * If the value of [serviceId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [serviceId] and returns it.
          */
         val mutableServiceId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -873,7 +873,7 @@ sealed class UpdateOrganizationServiceResponse private constructor() {
             );
 
             /**
-             * If the value of [actual] is already mutable, returns it as is.
+             * If the value of [actual] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
              */
             val mutableActual: skirout.service.v1.service.Service.Mutable get() {

@@ -541,7 +541,7 @@ class SubmitUserJoinRequestRequest private constructor(
         );
 
         /**
-         * If the value of [code] is already mutable, returns it as is.
+         * If the value of [code] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
          */
         val mutableCode: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -994,7 +994,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [request] is already mutable, returns it as is.
+             * If the value of [request] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [request] and returns it.
              */
             val mutableRequest: skirout.organization.v1.join_request.UserJoinRequest.Mutable get() {
@@ -1010,7 +1010,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
             }
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.join_request.UserJoinRequestsChanged.Mutable get() {
@@ -1150,7 +1150,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [member] is already mutable, returns it as is.
+             * If the value of [member] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [member] and returns it.
              */
             val mutableMember: skirout.organization.v1.join_request.AutoAcceptedMember.Mutable get() {
@@ -1166,7 +1166,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
             }
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.organization.UserOrganizationsChanged.Mutable get() {
@@ -1295,7 +1295,7 @@ sealed class SubmitUserJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [code] is already mutable, returns it as is.
+             * If the value of [code] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
              */
             val mutableCode: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1741,7 +1741,7 @@ class CancelUserJoinRequestRequest private constructor(
         );
 
         /**
-         * If the value of [requestId] is already mutable, returns it as is.
+         * If the value of [requestId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
          */
         val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2036,7 +2036,7 @@ sealed class CancelUserJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.join_request.UserJoinRequestsChanged.Mutable get() {
@@ -2161,7 +2161,7 @@ sealed class CancelUserJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [requestId] is already mutable, returns it as is.
+             * If the value of [requestId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
              */
             val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {

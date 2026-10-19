@@ -112,7 +112,7 @@ class ExpressionInput private constructor(
         );
 
         /**
-         * If the value of [binding] is already mutable, returns it as is.
+         * If the value of [binding] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [binding] and returns it.
          */
         val mutableBinding: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
@@ -128,7 +128,7 @@ class ExpressionInput private constructor(
         }
 
         /**
-         * If the value of [path] is already mutable, returns it as is.
+         * If the value of [path] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
          */
         val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -284,7 +284,7 @@ class ExpressionLocal private constructor(
         );
 
         /**
-         * If the value of [path] is already mutable, returns it as is.
+         * If the value of [path] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
          */
         val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -9820,7 +9820,7 @@ class ExpressionBinding private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as is.
+         * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.type_catalog.ExpressionBindingId.Mutable get() {
@@ -9836,7 +9836,7 @@ class ExpressionBinding private constructor(
         }
 
         /**
-         * If the value of [location] is already mutable, returns it as is.
+         * If the value of [location] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [location] and returns it.
          */
         val mutableLocation: skirout.editor.v1.type_catalog.ValueLocation.Mutable get() {
@@ -9965,7 +9965,7 @@ class ExpressionBindings private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as is.
+         * If the value of [values] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.editor.v1.expression.ExpressionBinding_OrMutable> get() {
@@ -10112,7 +10112,7 @@ class EvaluationDiagnostic private constructor(
         );
 
         /**
-         * If the value of [locations] is already mutable, returns it as is.
+         * If the value of [locations] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [locations] and returns it.
          */
         val mutableLocations: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ValueLocation_OrMutable> get() {

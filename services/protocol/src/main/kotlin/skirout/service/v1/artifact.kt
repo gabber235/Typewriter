@@ -293,7 +293,7 @@ class BlobMetadata private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as is.
+         * If the value of [digest] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {
@@ -1286,7 +1286,7 @@ class SharedArtifactCatalog private constructor(
         );
 
         /**
-         * If the value of [artifacts] is already mutable, returns it as is.
+         * If the value of [artifacts] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [artifacts] and returns it.
          */
         val mutableArtifacts: kotlin.collections.MutableList<skirout.service.v1.artifact.SharedArtifactDescriptor_OrMutable> get() {
@@ -1539,7 +1539,7 @@ class ProducerMetadata private constructor(
         );
 
         /**
-         * If the value of [entries] is already mutable, returns it as is.
+         * If the value of [entries] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [entries] and returns it.
          */
         val mutableEntries: kotlin.collections.MutableList<skirout.service.v1.artifact.ProducerMetadataEntry_OrMutable> get() {
@@ -2482,7 +2482,7 @@ class ReadArtifactBlobRequest private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as is.
+         * If the value of [digest] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {
@@ -3065,7 +3065,7 @@ class BeginArtifactBlobWriteRequest private constructor(
         );
 
         /**
-         * If the value of [expected] is already mutable, returns it as is.
+         * If the value of [expected] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [expected] and returns it.
          */
         val mutableExpected: skirout.service.v1.artifact.BlobMetadata.Mutable get() {
@@ -5279,7 +5279,7 @@ class FetchArtifactBlobMetadataRequest private constructor(
         );
 
         /**
-         * If the value of [digest] is already mutable, returns it as is.
+         * If the value of [digest] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [digest] and returns it.
          */
         val mutableDigest: skirout.service.v1.artifact.ArtifactDigest.Mutable get() {

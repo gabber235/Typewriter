@@ -163,7 +163,7 @@ class OrganizationJoinRequest private constructor(
         );
 
         /**
-         * If the value of [requestId] is already mutable, returns it as is.
+         * If the value of [requestId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
          */
         val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -179,7 +179,7 @@ class OrganizationJoinRequest private constructor(
         }
 
         /**
-         * If the value of [userId] is already mutable, returns it as is.
+         * If the value of [userId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [userId] and returns it.
          */
         val mutableUserId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -383,7 +383,7 @@ class UserJoinRequest private constructor(
         );
 
         /**
-         * If the value of [requestId] is already mutable, returns it as is.
+         * If the value of [requestId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
          */
         val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -399,7 +399,7 @@ class UserJoinRequest private constructor(
         }
 
         /**
-         * If the value of [organizationId] is already mutable, returns it as is.
+         * If the value of [organizationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
          */
         val mutableOrganizationId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -555,7 +555,7 @@ class OrganizationJoinRequestsSnapshot private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as is.
+         * If the value of [values] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.organization.v1.join_request.OrganizationJoinRequest_OrMutable> get() {
@@ -819,7 +819,7 @@ class OrganizationJoinRequestsChanged private constructor(
         );
 
         /**
-         * If the value of [changes] is already mutable, returns it as is.
+         * If the value of [changes] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
          */
         val mutableChanges: kotlin.collections.MutableList<skirout.organization.v1.join_request.OrganizationJoinRequestsChange> get() {
@@ -959,7 +959,7 @@ class UserJoinRequestsSnapshot private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as is.
+         * If the value of [values] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.organization.v1.join_request.UserJoinRequest_OrMutable> get() {
@@ -1221,7 +1221,7 @@ class UserJoinRequestsChanged private constructor(
         );
 
         /**
-         * If the value of [changes] is already mutable, returns it as is.
+         * If the value of [changes] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
          */
         val mutableChanges: kotlin.collections.MutableList<skirout.organization.v1.join_request.UserJoinRequestsChange> get() {
@@ -1383,7 +1383,7 @@ class AutoAcceptedMember private constructor(
         );
 
         /**
-         * If the value of [organizationId] is already mutable, returns it as is.
+         * If the value of [organizationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [organizationId] and returns it.
          */
         val mutableOrganizationId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1399,7 +1399,7 @@ class AutoAcceptedMember private constructor(
         }
 
         /**
-         * If the value of [roles] is already mutable, returns it as is.
+         * If the value of [roles] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [roles] and returns it.
          */
         val mutableRoles: kotlin.collections.MutableList<skirout.organization.v1.role.OrganizationRole_OrMutable> get() {
@@ -1769,7 +1769,7 @@ class ApprovedOrganizationJoinRequest private constructor(
         );
 
         /**
-         * If the value of [requestId] is already mutable, returns it as is.
+         * If the value of [requestId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
          */
         val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -1785,7 +1785,7 @@ class ApprovedOrganizationJoinRequest private constructor(
         }
 
         /**
-         * If the value of [member] is already mutable, returns it as is.
+         * If the value of [member] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [member] and returns it.
          */
         val mutableMember: skirout.organization.v1.member.OrganizationMember.Mutable get() {
@@ -1925,7 +1925,7 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
         );
 
         /**
-         * If the value of [requestIds] is already mutable, returns it as is.
+         * If the value of [requestIds] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestIds] and returns it.
          */
         val mutableRequestIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1941,7 +1941,7 @@ class ApproveOrganizationJoinRequestsRequest private constructor(
         }
 
         /**
-         * If the value of [roleIds] is already mutable, returns it as is.
+         * If the value of [roleIds] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
          */
         val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2415,7 +2415,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             );
 
             /**
-             * If the value of [approvals] is already mutable, returns it as is.
+             * If the value of [approvals] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [approvals] and returns it.
              */
             val mutableApprovals: kotlin.collections.MutableList<skirout.organization.v1.join_request.ApprovedOrganizationJoinRequest_OrMutable> get() {
@@ -2431,7 +2431,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             }
 
             /**
-             * If the value of [joinRequestsEvent] is already mutable, returns it as is.
+             * If the value of [joinRequestsEvent] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [joinRequestsEvent] and returns it.
              */
             val mutableJoinRequestsEvent: skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.Mutable get() {
@@ -2447,7 +2447,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             }
 
             /**
-             * If the value of [membersEvent] is already mutable, returns it as is.
+             * If the value of [membersEvent] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [membersEvent] and returns it.
              */
             val mutableMembersEvent: skirout.organization.v1.member.OrganizationMembersChanged.Mutable get() {
@@ -2580,7 +2580,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             );
 
             /**
-             * If the value of [requestIds] is already mutable, returns it as is.
+             * If the value of [requestIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [requestIds] and returns it.
              */
             val mutableRequestIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2705,7 +2705,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2830,7 +2830,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -3035,7 +3035,7 @@ sealed class ApproveOrganizationJoinRequestsResponse private constructor() {
             );
 
             /**
-             * If the value of [userIds] is already mutable, returns it as is.
+             * If the value of [userIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [userIds] and returns it.
              */
             val mutableUserIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -3241,7 +3241,7 @@ class DeclineOrganizationJoinRequestRequest private constructor(
         );
 
         /**
-         * If the value of [requestId] is already mutable, returns it as is.
+         * If the value of [requestId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
          */
         val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -3536,7 +3536,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.join_request.OrganizationJoinRequestsChanged.Mutable get() {
@@ -3661,7 +3661,7 @@ sealed class DeclineOrganizationJoinRequestResponse private constructor() {
             );
 
             /**
-             * If the value of [requestId] is already mutable, returns it as is.
+             * If the value of [requestId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [requestId] and returns it.
              */
             val mutableRequestId: skirout.kernel.v1.record_id.RecordId.Mutable get() {

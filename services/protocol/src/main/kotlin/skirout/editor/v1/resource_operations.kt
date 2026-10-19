@@ -108,7 +108,7 @@ class OperationOrigin private constructor(
         );
 
         /**
-         * If the value of [occurrences] is already mutable, returns it as is.
+         * If the value of [occurrences] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [occurrences] and returns it.
          */
         val mutableOccurrences: kotlin.collections.MutableList<skirout.editor.v1.authoring.LinkOccurrence_OrMutable> get() {
@@ -276,7 +276,7 @@ class OperationInvocation private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -292,7 +292,7 @@ class OperationInvocation private constructor(
         }
 
         /**
-         * If the value of [catalog] is already mutable, returns it as is.
+         * If the value of [catalog] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [catalog] and returns it.
          */
         val mutableCatalog: skirout.editor.v1.type_catalog.CatalogGeneration.Mutable get() {
@@ -308,7 +308,7 @@ class OperationInvocation private constructor(
         }
 
         /**
-         * If the value of [targets] is already mutable, returns it as is.
+         * If the value of [targets] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [targets] and returns it.
          */
         val mutableTargets: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
@@ -324,7 +324,7 @@ class OperationInvocation private constructor(
         }
 
         /**
-         * If the value of [origin] is already mutable, returns it as is.
+         * If the value of [origin] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [origin] and returns it.
          */
         val mutableOrigin: skirout.editor.v1.resource_operations.OperationOrigin.Mutable get() {
@@ -472,7 +472,7 @@ class OperationResourceUpsert private constructor(
         );
 
         /**
-         * If the value of [resource] is already mutable, returns it as is.
+         * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
@@ -488,7 +488,7 @@ class OperationResourceUpsert private constructor(
         }
 
         /**
-         * If the value of [content] is already mutable, returns it as is.
+         * If the value of [content] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [content] and returns it.
          */
         val mutableContent: skirout.editor.v1.type_catalog.AuthoringRecord.Mutable get() {
@@ -633,7 +633,7 @@ class OperationWorkingOverlay private constructor(
         );
 
         /**
-         * If the value of [upserts] is already mutable, returns it as is.
+         * If the value of [upserts] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [upserts] and returns it.
          */
         val mutableUpserts: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.OperationResourceUpsert_OrMutable> get() {
@@ -649,7 +649,7 @@ class OperationWorkingOverlay private constructor(
         }
 
         /**
-         * If the value of [removals] is already mutable, returns it as is.
+         * If the value of [removals] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [removals] and returns it.
          */
         val mutableRemovals: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ResourceId_OrMutable> get() {
@@ -794,7 +794,7 @@ class OperationWorkingContext private constructor(
         );
 
         /**
-         * If the value of [confirmedObservation] is already mutable, returns it as is.
+         * If the value of [confirmedObservation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [confirmedObservation] and returns it.
          */
         val mutableConfirmedObservation: skirout.editor.v1.authoring.AuthoringObservationId.Mutable get() {
@@ -810,7 +810,7 @@ class OperationWorkingContext private constructor(
         }
 
         /**
-         * If the value of [overlay] is already mutable, returns it as is.
+         * If the value of [overlay] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [overlay] and returns it.
          */
         val mutableOverlay: skirout.editor.v1.resource_operations.OperationWorkingOverlay.Mutable get() {
@@ -1059,7 +1059,7 @@ class PreparationSourceOption private constructor(
         );
 
         /**
-         * If the value of [occurrence] is already mutable, returns it as is.
+         * If the value of [occurrence] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [occurrence] and returns it.
          */
         val mutableOccurrence: skirout.editor.v1.authoring.LinkOccurrence.Mutable get() {
@@ -1453,7 +1453,7 @@ sealed class PreparationChoice private constructor() {
             );
 
             /**
-             * If the value of [choiceId] is already mutable, returns it as is.
+             * If the value of [choiceId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
              */
             val mutableChoiceId: skirout.editor.v1.resource_operations.PreparationChoiceId.Mutable get() {
@@ -1469,7 +1469,7 @@ sealed class PreparationChoice private constructor() {
             }
 
             /**
-             * If the value of [candidates] is already mutable, returns it as is.
+             * If the value of [candidates] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [candidates] and returns it.
              */
             val mutableCandidates: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.PreparationSourceOption_OrMutable> get() {
@@ -1635,7 +1635,7 @@ sealed class PreparationChoice private constructor() {
             );
 
             /**
-             * If the value of [choiceId] is already mutable, returns it as is.
+             * If the value of [choiceId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
              */
             val mutableChoiceId: skirout.editor.v1.resource_operations.PreparationChoiceId.Mutable get() {
@@ -1651,7 +1651,7 @@ sealed class PreparationChoice private constructor() {
             }
 
             /**
-             * If the value of [source] is already mutable, returns it as is.
+             * If the value of [source] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [source] and returns it.
              */
             val mutableSource: skirout.editor.v1.authoring.LinkOccurrence.Mutable get() {
@@ -1667,7 +1667,7 @@ sealed class PreparationChoice private constructor() {
             }
 
             /**
-             * If the value of [candidates] is already mutable, returns it as is.
+             * If the value of [candidates] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [candidates] and returns it.
              */
             val mutableCandidates: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.PreparationCounterpartOption_OrMutable> get() {
@@ -1929,7 +1929,7 @@ sealed class PreparationChoiceAnswer private constructor() {
             );
 
             /**
-             * If the value of [choiceId] is already mutable, returns it as is.
+             * If the value of [choiceId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
              */
             val mutableChoiceId: skirout.editor.v1.resource_operations.PreparationChoiceId.Mutable get() {
@@ -1945,7 +1945,7 @@ sealed class PreparationChoiceAnswer private constructor() {
             }
 
             /**
-             * If the value of [occurrence] is already mutable, returns it as is.
+             * If the value of [occurrence] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [occurrence] and returns it.
              */
             val mutableOccurrence: skirout.editor.v1.authoring.LinkOccurrence.Mutable get() {
@@ -2085,7 +2085,7 @@ sealed class PreparationChoiceAnswer private constructor() {
             );
 
             /**
-             * If the value of [choiceId] is already mutable, returns it as is.
+             * If the value of [choiceId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [choiceId] and returns it.
              */
             val mutableChoiceId: skirout.editor.v1.resource_operations.PreparationChoiceId.Mutable get() {
@@ -2237,7 +2237,7 @@ class OperationInputProblem private constructor(
         );
 
         /**
-         * If the value of [path] is already mutable, returns it as is.
+         * If the value of [path] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [path] and returns it.
          */
         val mutablePath: skirout.editor.v1.type_catalog.ValuePath.Mutable get() {
@@ -2450,7 +2450,7 @@ class StaleAuthoringObservation private constructor(
         );
 
         /**
-         * If the value of [actual] is already mutable, returns it as is.
+         * If the value of [actual] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [actual] and returns it.
          */
         val mutableActual: skirout.editor.v1.authoring.AuthoringObservationId.Mutable get() {
@@ -2575,7 +2575,7 @@ class ResourceOperationFailure private constructor(
         );
 
         /**
-         * If the value of [diagnostics] is already mutable, returns it as is.
+         * If the value of [diagnostics] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [diagnostics] and returns it.
          */
         val mutableDiagnostics: kotlin.collections.MutableList<skirout.editor.v1.authoring.AuthoringDiagnostic_OrMutable> get() {
@@ -2711,7 +2711,7 @@ class ResolveResourceOperationsRequest private constructor(
         );
 
         /**
-         * If the value of [invocation] is already mutable, returns it as is.
+         * If the value of [invocation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
          */
         val mutableInvocation: skirout.editor.v1.resource_operations.OperationInvocation.Mutable get() {
@@ -2727,7 +2727,7 @@ class ResolveResourceOperationsRequest private constructor(
         }
 
         /**
-         * If the value of [context] is already mutable, returns it as is.
+         * If the value of [context] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
          */
         val mutableContext: skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable get() {
@@ -3180,7 +3180,7 @@ class PrepareAuthoringActionRequest private constructor(
         );
 
         /**
-         * If the value of [invocation] is already mutable, returns it as is.
+         * If the value of [invocation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
          */
         val mutableInvocation: skirout.editor.v1.resource_operations.OperationInvocation.Mutable get() {
@@ -3196,7 +3196,7 @@ class PrepareAuthoringActionRequest private constructor(
         }
 
         /**
-         * If the value of [capability] is already mutable, returns it as is.
+         * If the value of [capability] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [capability] and returns it.
          */
         val mutableCapability: skirout.editor.v1.type_catalog.CapabilityId.Mutable get() {
@@ -3212,7 +3212,7 @@ class PrepareAuthoringActionRequest private constructor(
         }
 
         /**
-         * If the value of [context] is already mutable, returns it as is.
+         * If the value of [context] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
          */
         val mutableContext: skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable get() {
@@ -3228,7 +3228,7 @@ class PrepareAuthoringActionRequest private constructor(
         }
 
         /**
-         * If the value of [choices] is already mutable, returns it as is.
+         * If the value of [choices] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [choices] and returns it.
          */
         val mutableChoices: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.PreparationChoiceAnswer> get() {
@@ -3417,7 +3417,7 @@ class AuthoringActionNeedsInput private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -3433,7 +3433,7 @@ class AuthoringActionNeedsInput private constructor(
         }
 
         /**
-         * If the value of [problems] is already mutable, returns it as is.
+         * If the value of [problems] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [problems] and returns it.
          */
         val mutableProblems: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.OperationInputProblem_OrMutable> get() {
@@ -3449,7 +3449,7 @@ class AuthoringActionNeedsInput private constructor(
         }
 
         /**
-         * If the value of [choices] is already mutable, returns it as is.
+         * If the value of [choices] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [choices] and returns it.
          */
         val mutableChoices: kotlin.collections.MutableList<skirout.editor.v1.resource_operations.PreparationChoice> get() {
@@ -3639,7 +3639,7 @@ class AuthoringActionPreview private constructor(
         );
 
         /**
-         * If the value of [invocationId] is already mutable, returns it as is.
+         * If the value of [invocationId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocationId] and returns it.
          */
         val mutableInvocationId: skirout.editor.v1.capability.InvocationId.Mutable get() {
@@ -3655,7 +3655,7 @@ class AuthoringActionPreview private constructor(
         }
 
         /**
-         * If the value of [edit] is already mutable, returns it as is.
+         * If the value of [edit] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [edit] and returns it.
          */
         val mutableEdit: skirout.editor.v1.authoring.PreparedEdit.Mutable get() {
@@ -4168,7 +4168,7 @@ class OperationSearchContext private constructor(
         );
 
         /**
-         * If the value of [invocation] is already mutable, returns it as is.
+         * If the value of [invocation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [invocation] and returns it.
          */
         val mutableInvocation: skirout.editor.v1.resource_operations.OperationInvocation.Mutable get() {
@@ -4184,7 +4184,7 @@ class OperationSearchContext private constructor(
         }
 
         /**
-         * If the value of [context] is already mutable, returns it as is.
+         * If the value of [context] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [context] and returns it.
          */
         val mutableContext: skirout.editor.v1.resource_operations.OperationWorkingContext.Mutable get() {

@@ -986,7 +986,7 @@ class ResourceOperationDefinition private constructor(
         );
 
         /**
-         * If the value of [id] is already mutable, returns it as is.
+         * If the value of [id] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
          */
         val mutableId: skirout.editor.v1.operation.ResourceOperationId.Mutable get() {
@@ -1002,7 +1002,7 @@ class ResourceOperationDefinition private constructor(
         }
 
         /**
-         * If the value of [presentation] is already mutable, returns it as is.
+         * If the value of [presentation] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [presentation] and returns it.
          */
         val mutablePresentation: skirout.editor.v1.operation.OperationPresentation.Mutable get() {
@@ -1167,7 +1167,7 @@ class ResourceOperationContribution private constructor(
         );
 
         /**
-         * If the value of [operations] is already mutable, returns it as is.
+         * If the value of [operations] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
          */
         val mutableOperations: kotlin.collections.MutableList<skirout.editor.v1.operation.ResourceOperationId_OrMutable> get() {
@@ -1405,7 +1405,7 @@ class ResolvedResourceOperation private constructor(
         );
 
         /**
-         * If the value of [definition] is already mutable, returns it as is.
+         * If the value of [definition] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [definition] and returns it.
          */
         val mutableDefinition: skirout.editor.v1.operation.ResourceOperationDefinition.Mutable get() {
@@ -1545,7 +1545,7 @@ class ResolvedResourceOperations private constructor(
         );
 
         /**
-         * If the value of [operations] is already mutable, returns it as is.
+         * If the value of [operations] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [operations] and returns it.
          */
         val mutableOperations: kotlin.collections.MutableList<skirout.editor.v1.operation.ResolvedResourceOperation_OrMutable> get() {

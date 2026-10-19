@@ -141,7 +141,7 @@ class JoinCode private constructor(
         );
 
         /**
-         * If the value of [code] is already mutable, returns it as is.
+         * If the value of [code] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
          */
         val mutableCode: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -157,7 +157,7 @@ class JoinCode private constructor(
         }
 
         /**
-         * If the value of [autoAccept] is already mutable, returns it as is.
+         * If the value of [autoAccept] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [autoAccept] and returns it.
          */
         val mutableAutoAccept: skirout.organization.v1.join_codes.JoinCode.AutoAccept.Mutable get() {
@@ -297,7 +297,7 @@ class JoinCode private constructor(
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -434,7 +434,7 @@ class OrganizationJoinCodesSnapshot private constructor(
         );
 
         /**
-         * If the value of [values] is already mutable, returns it as is.
+         * If the value of [values] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [values] and returns it.
          */
         val mutableValues: kotlin.collections.MutableList<skirout.organization.v1.join_codes.JoinCode_OrMutable> get() {
@@ -694,7 +694,7 @@ class OrganizationJoinCodesChanged private constructor(
         );
 
         /**
-         * If the value of [changes] is already mutable, returns it as is.
+         * If the value of [changes] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [changes] and returns it.
          */
         val mutableChanges: kotlin.collections.MutableList<skirout.organization.v1.join_codes.OrganizationJoinCodesChange> get() {
@@ -1067,7 +1067,7 @@ class GenerateOrganizationJoinCodeRequest private constructor(
         );
 
         /**
-         * If the value of [autoAccept] is already mutable, returns it as is.
+         * If the value of [autoAccept] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [autoAccept] and returns it.
          */
         val mutableAutoAccept: skirout.organization.v1.join_codes.GenerateOrganizationJoinCodeRequest.AutoAccept.Mutable get() {
@@ -1291,7 +1291,7 @@ class GenerateOrganizationJoinCodeRequest private constructor(
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1662,7 +1662,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [code] is already mutable, returns it as is.
+             * If the value of [code] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [code] and returns it.
              */
             val mutableCode: skirout.organization.v1.join_codes.JoinCode.Mutable get() {
@@ -1678,7 +1678,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
             }
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.join_codes.OrganizationJoinCodesChanged.Mutable get() {
@@ -1807,7 +1807,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -1932,7 +1932,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [roleIds] is already mutable, returns it as is.
+             * If the value of [roleIds] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [roleIds] and returns it.
              */
             val mutableRoleIds: kotlin.collections.MutableList<skirout.kernel.v1.record_id.RecordId_OrMutable> get() {
@@ -2057,7 +2057,7 @@ sealed class GenerateOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [duration] is already mutable, returns it as is.
+             * If the value of [duration] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [duration] and returns it.
              */
             val mutableDuration: skirout.kernel.v1.duration.Duration.Mutable get() {
@@ -2183,7 +2183,7 @@ class RevokeOrganizationJoinCodeRequest private constructor(
         );
 
         /**
-         * If the value of [codeId] is already mutable, returns it as is.
+         * If the value of [codeId] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [codeId] and returns it.
          */
         val mutableCodeId: skirout.kernel.v1.record_id.RecordId.Mutable get() {
@@ -2478,7 +2478,7 @@ sealed class RevokeOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [event] is already mutable, returns it as is.
+             * If the value of [event] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [event] and returns it.
              */
             val mutableEvent: skirout.organization.v1.join_codes.OrganizationJoinCodesChanged.Mutable get() {
@@ -2603,7 +2603,7 @@ sealed class RevokeOrganizationJoinCodeResponse private constructor() {
             );
 
             /**
-             * If the value of [codeId] is already mutable, returns it as is.
+             * If the value of [codeId] is already mutable, returns it as-is.
              * Otherwise, makes a mutable copy, assigns it back to [codeId] and returns it.
              */
             val mutableCodeId: skirout.kernel.v1.record_id.RecordId.Mutable get() {

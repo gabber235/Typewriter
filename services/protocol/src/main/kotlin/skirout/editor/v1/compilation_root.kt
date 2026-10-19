@@ -222,7 +222,7 @@ class CompilationRoot private constructor(
         );
 
         /**
-         * If the value of [projection] is already mutable, returns it as is.
+         * If the value of [projection] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [projection] and returns it.
          */
         val mutableProjection: skirout.editor.v1.compilation_root.CompilationProjectionId.Mutable get() {
@@ -238,7 +238,7 @@ class CompilationRoot private constructor(
         }
 
         /**
-         * If the value of [resource] is already mutable, returns it as is.
+         * If the value of [resource] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [resource] and returns it.
          */
         val mutableResource: skirout.editor.v1.type_catalog.ResourceId.Mutable get() {
