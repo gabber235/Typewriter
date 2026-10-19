@@ -90,10 +90,7 @@ final class AuthoringSelectableResource
       Book.fromAuthoring(resource).title,
     final definition when definition == coreTagResourceDefinition =>
       Tag.fromAuthoring(resource).name,
-    _ =>
-      resource.content.authoredField("name")?.authoredString ??
-          resource.content.authoredField("title")?.authoredString ??
-          id.resourceId.value,
+    _ => resource.content.authoredLabel ?? id.resourceId.value,
   };
 
   Color get color => switch (resource.definition) {

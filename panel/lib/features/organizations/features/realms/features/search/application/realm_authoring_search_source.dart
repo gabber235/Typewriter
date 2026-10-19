@@ -50,8 +50,7 @@ abstract class AuthoringSearchResultPayload
 
   String get title =>
       subject.descriptor.authoredString ??
-      subject.content.authoredField("name")?.authoredString ??
-      subject.content.authoredField("title")?.authoredString ??
+      subject.content.authoredLabel ??
       id.value;
 }
 

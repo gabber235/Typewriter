@@ -200,7 +200,5 @@ extension _ConflictValueDisplay on skir.DataValue {
 
 extension _ConflictResourceDisplay on skir.ResourceId {
   String label(AuthoringDocument document) =>
-      document.resource(this)?.authoredField("name")?.authoredString ??
-      document.resource(this)?.authoredField("title")?.authoredString ??
-      value;
+      document.resource(this)?.authoredLabel ?? value;
 }

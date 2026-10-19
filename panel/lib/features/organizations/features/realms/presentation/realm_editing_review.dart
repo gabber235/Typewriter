@@ -95,22 +95,8 @@ final class RealmEditingReview extends HookWidget {
             for (final resource
                 in group.resources.whereType<skir.ResourceId>()) ...[
               Text(
-                proposed
-                        .resource(resource)
-                        ?.authoredField("name")
-                        ?.authoredString ??
-                    proposed
-                        .resource(resource)
-                        ?.authoredField("title")
-                        ?.authoredString ??
-                    confirmed
-                        ?.resource(resource)
-                        ?.authoredField("name")
-                        ?.authoredString ??
-                    confirmed
-                        ?.resource(resource)
-                        ?.authoredField("title")
-                        ?.authoredString ??
+                proposed.resource(resource)?.authoredLabel ??
+                    confirmed?.resource(resource)?.authoredLabel ??
                     "Resource",
               ),
               SizedBox(height: context.spacing.space2),

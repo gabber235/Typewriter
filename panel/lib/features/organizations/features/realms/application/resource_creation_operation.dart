@@ -319,12 +319,7 @@ final class _ResourceCreationOperation {
       if (!childContext.accepts(target.resource, view, catalog)) continue;
       final record = view.resource(target.resource)!;
       final type = catalog.typeSelectionName(record.configuration);
-      final title =
-          [
-            record.authoredField("name")?.authoredString,
-            record.authoredField("title")?.authoredString,
-          ].nonNulls.where((value) => value.trim().isNotEmpty).firstOrNull ??
-          type;
+      final title = record.authoredLabel ?? type;
       final display = catalog.selectionDisplay(record.configuration);
       final resolved = <ResolvedReference>[];
       if (target.disabledReason case final reason?) {

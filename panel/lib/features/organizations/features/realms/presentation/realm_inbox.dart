@@ -202,11 +202,7 @@ class RealmInboxContent extends ConsumerWidget {
         if (resource.definition == coreTagResourceDefinition) {
           return Tag.fromAuthoring(resource).name;
         }
-        return (resource.content.authoredField("name")?.authoredString)
-            .displayLabel(
-              (resource.content.authoredField("title")?.authoredString)
-                  .displayLabel(id.value),
-            );
+        return resource.content.authoredLabel ?? id.value;
       },
       onClose: onClose,
       openLocation: (location) async {

@@ -18,6 +18,7 @@ export "authored_capability_transport.dart";
 export "authored_local_rules.dart";
 export "authored_presentation_host.dart";
 export "authored_resource_commands.dart";
+export "authored_resource_label.dart";
 export "authoring_placement.dart";
 export "authoring_relation_index.dart";
 export "authoring_resource_drag.dart";
