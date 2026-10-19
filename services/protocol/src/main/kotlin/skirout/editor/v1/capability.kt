@@ -3072,7 +3072,7 @@ val InvokeRealmComputation: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "InvokeRealmComputation",
-        919101,
+        920004,
         skirout.editor.v1.capability.CapabilityInvocationRequest.serializer,
         skirout.editor.v1.capability.ComputationResult.serializer,
         "",
@@ -3085,7 +3085,7 @@ val InvokeRealmCommand: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "InvokeRealmCommand",
-        919102,
+        920005,
         skirout.editor.v1.capability.CapabilityInvocationRequest.serializer,
         skirout.editor.v1.capability.CommandResult.serializer,
         "",

@@ -6730,7 +6730,7 @@ val FetchEditorCatalog: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "FetchEditorCatalog",
-        910001,
+        920001,
         skirout.editor.v1.catalog.CatalogFetchRequest.serializer,
         skirout.editor.v1.catalog.CatalogFetchResult.serializer,
         "",
@@ -6743,7 +6743,7 @@ val WatchEditorCatalog: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchEditorCatalog",
-        910002,
+        920002,
         skirout.editor.v1.catalog.WatchEditorCatalogRequest.serializer,
         skirout.editor.v1.catalog.CatalogInvalidated.serializer,
         "",
@@ -6756,7 +6756,7 @@ val PrepareValue: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PrepareValue",
-        910003,
+        920003,
         skirout.editor.v1.catalog.PreparationOperation.serializer,
         skirout.editor.v1.catalog.PrepareValueResult.serializer,
         "",

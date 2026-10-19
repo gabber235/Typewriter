@@ -1125,7 +1125,7 @@ pub fn query_published_content_method()
         crate::skir_client::Method<QueryPublishedContentRequest, QueryPublishedContentResponse>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryPublishedContent".to_string(),
-        number: 920004_i64,
+        number: 920008_i64,
         request_serializer: QueryPublishedContentRequest::serializer(),
         response_serializer: QueryPublishedContentResponse::serializer(),
         doc: "".to_string(),
@@ -1144,7 +1144,7 @@ pub fn query_compiled_resource_status_method() -> &'static crate::skir_client::M
         >,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "QueryCompiledResourceStatus".to_string(),
-        number: 920005_i64,
+        number: 920009_i64,
         request_serializer: QueryCompiledResourceStatusRequest::serializer(),
         response_serializer: QueryCompiledResourceStatusResponse::serializer(),
         doc: "".to_string(),

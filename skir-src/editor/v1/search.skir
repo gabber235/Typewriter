@@ -95,7 +95,7 @@ enum RealmPresentationSearchUpdate(811000011) {
 
 method WatchRealmPresentationSearch(
   RealmPresentationSearchRequest
-): RealmPresentationSearchUpdate = 919103;
+): RealmPresentationSearchUpdate = 920006;
 
 struct CancelRealmPresentationSearchRequest(811000012) {
   subscription_id: string = 0;
@@ -110,4 +110,4 @@ enum CancelRealmPresentationSearchResult(811000013) {
 /// Requests cancellation of a source owned search job. not_found also covers work already retired.
 method CancelRealmPresentationSearch(
   CancelRealmPresentationSearchRequest
-): CancelRealmPresentationSearchResult = 919104;
+): CancelRealmPresentationSearchResult = 920007;

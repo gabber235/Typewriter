@@ -27,6 +27,7 @@ function run(command: string, args: string[], cwd?: string): void {
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
+run("bun", ["services/protocol/check-skir-ids.ts", "skir-src"]);
 run("cargo", [
   "build", "--locked", "--release", "--manifest-path",
   "services/protocol/transport-generator/Cargo.toml",

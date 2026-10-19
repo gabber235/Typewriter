@@ -3288,7 +3288,7 @@ final class AuthoringCapabilityDefinition_mutable
 final _skir.Method<CapabilityInvocationRequest, ComputationResult>
 invokeRealmComputationMethod = _skir.Method(
   "InvokeRealmComputation",
-  919101,
+  920004,
   CapabilityInvocationRequest.serializer,
   ComputationResult.serializer,
   "",
@@ -3297,7 +3297,7 @@ invokeRealmComputationMethod = _skir.Method(
 final _skir.Method<CapabilityInvocationRequest, CommandResult>
 invokeRealmCommandMethod = _skir.Method(
   "InvokeRealmCommand",
-  919102,
+  920005,
   CapabilityInvocationRequest.serializer,
   CommandResult.serializer,
   "",

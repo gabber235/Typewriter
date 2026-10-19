@@ -1562,7 +1562,7 @@ pub fn invoke_realm_computation_method()
         crate::skir_client::Method<CapabilityInvocationRequest, ComputationResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "InvokeRealmComputation".to_string(),
-        number: 919101_i64,
+        number: 920004_i64,
         request_serializer: CapabilityInvocationRequest::serializer(),
         response_serializer: ComputationResult::serializer(),
         doc: "".to_string(),
@@ -1576,7 +1576,7 @@ pub fn invoke_realm_command_method()
         crate::skir_client::Method<CapabilityInvocationRequest, CommandResult>,
     > = std::sync::LazyLock::new(|| crate::skir_client::Method {
         name: "InvokeRealmCommand".to_string(),
-        number: 919102_i64,
+        number: 920005_i64,
         request_serializer: CapabilityInvocationRequest::serializer(),
         response_serializer: CommandResult::serializer(),
         doc: "".to_string(),

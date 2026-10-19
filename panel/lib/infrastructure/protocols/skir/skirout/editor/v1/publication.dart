@@ -6206,7 +6206,7 @@ final class QueryPublicationViewResponse_internalErrorWrapper
 final _skir.Method<PublishAuthoringRequest, PublishAuthoringResponse>
 publishAuthoringMethod = _skir.Method(
   "PublishAuthoring",
-  920020,
+  920017,
   PublishAuthoringRequest.serializer,
   PublishAuthoringResponse.serializer,
   "Releases only the issued candidate while its captured saved inputs and engine requirements still match.",
@@ -6215,7 +6215,7 @@ publishAuthoringMethod = _skir.Method(
 final _skir.Method<WatchPublicationRequest, PublicationViewChanged>
 watchPublicationMethod = _skir.Method(
   "WatchPublication",
-  920021,
+  920018,
   WatchPublicationRequest.serializer,
   PublicationViewChanged.serializer,
   "",
@@ -6226,7 +6226,7 @@ watchPublicationMethod = _skir.Method(
 final _skir.Method<QueryPublicationViewRequest, QueryPublicationViewResponse>
 queryPublicationViewMethod = _skir.Method(
   "QueryPublicationView",
-  920022,
+  920019,
   QueryPublicationViewRequest.serializer,
   QueryPublicationViewResponse.serializer,
   "Transfers one immutable review view or reports that expected is no longer current.\nAll chunks share the view and transfer identities; later invalidations require a separate query.",

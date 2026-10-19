@@ -5770,7 +5770,7 @@ val FetchSharedArtifactCatalog: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "FetchSharedArtifactCatalog",
-        910005,
+        910001,
         skirout.service.v1.artifact.FetchSharedArtifactCatalogRequest.serializer,
         skirout.service.v1.artifact.FetchSharedArtifactCatalogResponse.serializer,
         "",
@@ -5783,7 +5783,7 @@ val PublishSharedArtifact: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "PublishSharedArtifact",
-        910006,
+        910002,
         skirout.service.v1.artifact.PublishSharedArtifactRequest.serializer,
         skirout.service.v1.artifact.PublishSharedArtifactResponse.serializer,
         "",
@@ -5796,7 +5796,7 @@ val ReadArtifactBlob: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "ReadArtifactBlob",
-        910007,
+        910003,
         skirout.service.v1.artifact.ReadArtifactBlobRequest.serializer,
         skirout.service.v1.artifact.ReadArtifactBlobResponse.serializer,
         "",
@@ -5809,7 +5809,7 @@ val BeginArtifactBlobWrite: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "BeginArtifactBlobWrite",
-        910008,
+        910004,
         skirout.service.v1.artifact.BeginArtifactBlobWriteRequest.serializer,
         skirout.service.v1.artifact.BeginArtifactBlobWriteResponse.serializer,
         "",
@@ -5822,7 +5822,7 @@ val WriteArtifactBlobChunk: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WriteArtifactBlobChunk",
-        910009,
+        910005,
         skirout.service.v1.artifact.WriteArtifactBlobChunkRequest.serializer,
         skirout.service.v1.artifact.WriteArtifactBlobChunkResponse.serializer,
         "",
@@ -5835,7 +5835,7 @@ val CompleteArtifactBlobWrite: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CompleteArtifactBlobWrite",
-        910010,
+        910006,
         skirout.service.v1.artifact.CompleteArtifactBlobWriteRequest.serializer,
         skirout.service.v1.artifact.CompleteArtifactBlobWriteResponse.serializer,
         "",
@@ -5848,7 +5848,7 @@ val FetchArtifactBlobMetadata: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "FetchArtifactBlobMetadata",
-        910011,
+        910007,
         skirout.service.v1.artifact.FetchArtifactBlobMetadataRequest.serializer,
         skirout.service.v1.artifact.FetchArtifactBlobMetadataResponse.serializer,
         "",

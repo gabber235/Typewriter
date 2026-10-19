@@ -332,29 +332,29 @@ struct RelationFamilyId(810100071) {
   value: string = 0;
 }
 
-struct ScalarResolvedRepresentation(810100073) {
+struct ScalarResolvedRepresentation(810100072) {
   kind: ScalarKind = 0;
 }
-struct RecordResolvedRepresentation(810100074) {
+struct RecordResolvedRepresentation(810100073) {
   fields: [ResolvedField|key] = 0;
   abstract: bool = 1;
 }
-struct SequenceResolvedRepresentation(810100075) {
+struct SequenceResolvedRepresentation(810100074) {
   item: TypeUse = 0;
   kind: CollectionKind = 1;
 }
-struct MappingResolvedRepresentation(810100076) {
+struct MappingResolvedRepresentation(810100075) {
   key: TypeUse = 0;
   value: TypeUse = 1;
 }
-struct EnumerationResolvedRepresentation(810100077) {
+struct EnumerationResolvedRepresentation(810100076) {
   cases: [EnumVariant|key] = 0;
 }
-struct LinkResolvedRepresentation(810100078) {
+struct LinkResolvedRepresentation(810100077) {
   endpoint: EndpointId = 0;
   target: TypeUse = 1;
 }
-enum ResolvedRepresentation(810100079) {
+enum ResolvedRepresentation(810100078) {
   scalar: ScalarResolvedRepresentation = 1;
   record: RecordResolvedRepresentation = 2;
   sequence: SequenceResolvedRepresentation = 3;
@@ -362,13 +362,13 @@ enum ResolvedRepresentation(810100079) {
   enumeration: EnumerationResolvedRepresentation = 5;
   link: LinkResolvedRepresentation = 6;
 }
-struct ResolvedField(810100080) {
+struct ResolvedField(810100079) {
   key: string = 0;
   declaration_owner: TypeDefinitionId = 1;
   type: TypeUse = 2;
   guarantees: [RuleId] = 3;
 }
-struct AppliedSchema(810100081) {
+struct AppliedSchema(810100080) {
   use: TypeUse = 0;
   representation: ResolvedRepresentation = 1;
   fields: [ResolvedField|key] = 2;
@@ -376,41 +376,41 @@ struct AppliedSchema(810100081) {
 }
 /// Applied type evidence bound to a specific checked catalog generation.
 /// A resolved schema is separate from proving that a particular authored value is complete.
-struct CheckedType(810100082) {
+struct CheckedType(810100081) {
   catalog: CatalogGeneration = 0;
   use: TypeUse = 1;
   schema: AppliedSchema = 2;
 }
-struct ArgumentLocation(810100083) {
+struct ArgumentLocation(810100082) {
   index: int32 = 0;
 }
-struct DependentField(810100084) {
+struct DependentField(810100083) {
   owner: FieldOwner = 0;
   type: TypeTemplate = 1;
   missing: [ParameterKey] = 2;
 }
-struct PartialSchema(810100085) {
+struct PartialSchema(810100084) {
   known_fields: [ResolvedField|key] = 0;
   dependent_fields: [DependentField] = 1;
   pending_arguments: [ArgumentLocation] = 2;
 }
 
-struct ContributionSourceId(810100086) {
+struct ContributionSourceId(810100085) {
   value: string = 0;
 }
-struct ProducerId(810100087) {
+struct ProducerId(810100086) {
   value: string = 0;
 }
-struct ContributionName(810100088) {
+struct ContributionName(810100087) {
   value: string = 0;
 }
-struct ContributionKey(810100089) {
+struct ContributionKey(810100088) {
   source: ContributionSourceId = 0;
   source_part: string = 1;
   producer: ProducerId = 2;
   name: ContributionName = 3;
 }
-struct DeclarationOwner(810100090) {
+struct DeclarationOwner(810100089) {
   source: ContributionKey = 0;
   local_identity: string = 1;
 }

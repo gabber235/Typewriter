@@ -347,12 +347,12 @@ enum AuthoringNavigationHandler(810900040) {
 
 method FetchEditorCatalog(
   CatalogFetchRequest
-): CatalogFetchResult = 910001;
+): CatalogFetchResult = 920001;
 
 method WatchEditorCatalog(
   struct {}
-): CatalogInvalidated = 910002;
+): CatalogInvalidated = 920002;
 
 method PrepareValue(
   PreparationOperation
-): PrepareValueResult = 910003;
+): PrepareValueResult = 920003;

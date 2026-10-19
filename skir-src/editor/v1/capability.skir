@@ -137,8 +137,8 @@ struct AuthoringCapabilityDefinition(811200020) {
 
 method InvokeRealmComputation(
   CapabilityInvocationRequest
-): ComputationResult = 919101;
+): ComputationResult = 920004;
 
 method InvokeRealmCommand(
   CapabilityInvocationRequest
-): CommandResult = 919102;
+): CommandResult = 920005;

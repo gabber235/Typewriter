@@ -7536,7 +7536,7 @@ final class WatchEditorCatalogRequest_mutable
 final _skir.Method<CatalogFetchRequest, CatalogFetchResult>
 fetchEditorCatalogMethod = _skir.Method(
   "FetchEditorCatalog",
-  910001,
+  920001,
   CatalogFetchRequest.serializer,
   CatalogFetchResult.serializer,
   "",
@@ -7545,7 +7545,7 @@ fetchEditorCatalogMethod = _skir.Method(
 final _skir.Method<WatchEditorCatalogRequest, CatalogInvalidated>
 watchEditorCatalogMethod = _skir.Method(
   "WatchEditorCatalog",
-  910002,
+  920002,
   WatchEditorCatalogRequest.serializer,
   CatalogInvalidated.serializer,
   "",
@@ -7554,7 +7554,7 @@ watchEditorCatalogMethod = _skir.Method(
 final _skir.Method<PreparationOperation, PrepareValueResult>
 prepareValueMethod = _skir.Method(
   "PrepareValue",
-  910003,
+  920003,
   PreparationOperation.serializer,
   PrepareValueResult.serializer,
   "",

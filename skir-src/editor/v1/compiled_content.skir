@@ -13,47 +13,47 @@ import { InternalError } from "kernel/v1/errors.skir";
 
 /// Addresses serialized bytes by lowercase SHA 256 digest and exact byte count.
 /// This digest can differ from the semantic digest of the decoded artifact.
-struct CompiledBlobPointer(810900102) {
+struct CompiledBlobPointer(811500001) {
   digest: string = 0;
   size: int64 = 1;
 }
-struct CompiledArtifactReference(810900103) {
+struct CompiledArtifactReference(811500002) {
   root: CompilationRoot = 0;
   format_revision: int32 = 1;
   media_type: string = 2;
   semantic_digest: string = 3;
 }
-struct PublishedOutput(810900104) {
+struct PublishedOutput(811500003) {
   reference: CompiledArtifactReference = 0;
   blob: CompiledBlobPointer = 1;
 }
 /// Complete selected runtime descriptor, including the implementation requirements under which
 /// its outputs were compiled. Engines fetch the whole set before contributing a visible snapshot.
-struct PublishedContent(810900105) {
+struct PublishedContent(811500004) {
   publication: PublicationId = 0;
   format_revision: int32 = 1;
   catalog: CatalogGeneration = 2;
   implementation_token: string = 3;
   outputs: [PublishedOutput] = 4;
 }
-struct PublishedContentChunk(810900106) {
+struct PublishedContentChunk(811500005) {
   transfer: BoundedTransferChunk = 0;
 }
 /// Membership in the Realm selected publication. active does not confirm application by any engine,
 /// nor that the currently saved root still compiles to the selected artifact.
-enum CompiledResourceState(810900107) {
+enum CompiledResourceState(811500006) {
   not_compiled = 1;
   active: PublicationId = 2;
 }
-struct CompiledResourceStatus(810900108) {
+struct CompiledResourceStatus(811500007) {
   root: CompilationRoot = 0;
   state: CompiledResourceState = 1;
 }
 /// Hint to refetch current selection. The event carries no descriptor or ordered publication log.
-struct CompiledContentChanged(810900109) {
+struct CompiledContentChanged(811500008) {
   generation: CatalogGeneration = 0;
 }
-enum CompilationStatusSelection(810900110) {
+enum CompilationStatusSelection(811500009) {
   all_roots = 1;
   supplied_roots: [CompilationRoot] = 2;
 }
@@ -67,7 +67,7 @@ method QueryPublishedContent(
   absent: struct {} = 2;
   unavailable: struct {} = 3;
   internal_error: InternalError = 4;
-} = 920004;
+} = 920008;
 
 method QueryCompiledResourceStatus(
   struct {
@@ -78,4 +78,4 @@ method QueryCompiledResourceStatus(
     statuses: [CompiledResourceStatus] = 0;
   } = 1;
   internal_error: InternalError = 2;
-} = 920005;
+} = 920009;

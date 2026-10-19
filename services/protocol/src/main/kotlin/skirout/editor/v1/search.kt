@@ -2017,7 +2017,7 @@ val WatchRealmPresentationSearch: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "WatchRealmPresentationSearch",
-        919103,
+        920006,
         skirout.editor.v1.search.RealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.RealmPresentationSearchUpdate.serializer,
         "",
@@ -2031,7 +2031,7 @@ val CancelRealmPresentationSearch: build.skir.service.Method<
 > by kotlin.lazy {
     build.skir.service.Method(
         "CancelRealmPresentationSearch",
-        919104,
+        920007,
         skirout.editor.v1.search.CancelRealmPresentationSearchRequest.serializer,
         skirout.editor.v1.search.CancelRealmPresentationSearchResult.serializer,
         "Requests cancellation of a source owned search job. not_found also covers work already retired.",

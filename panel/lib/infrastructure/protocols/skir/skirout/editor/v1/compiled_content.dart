@@ -2304,7 +2304,7 @@ final class QueryCompiledResourceStatusResponse_internalErrorWrapper
 final _skir.Method<QueryPublishedContentRequest, QueryPublishedContentResponse>
 queryPublishedContentMethod = _skir.Method(
   "QueryPublishedContent",
-  920004,
+  920008,
   QueryPublishedContentRequest.serializer,
   QueryPublishedContentResponse.serializer,
   "",
@@ -2316,7 +2316,7 @@ final _skir.Method<
 >
 queryCompiledResourceStatusMethod = _skir.Method(
   "QueryCompiledResourceStatus",
-  920005,
+  920009,
   QueryCompiledResourceStatusRequest.serializer,
   QueryCompiledResourceStatusResponse.serializer,
   "",

@@ -71,7 +71,7 @@ method FetchSharedArtifactCatalog(
 ): enum {
   success: SharedArtifactCatalog = 1;
   unavailable: struct {} = 2;
-} = 910005;
+} = 910001;
 
 // Publishes a descriptor for an already uploaded blob, or a tombstone when deleted is true.
 // Live publication requires digest and size. Deletion requires an expected revision.
@@ -94,7 +94,7 @@ method PublishSharedArtifact(
   unchanged: SharedArtifactDescriptor = 2;
   conflict: SharedArtifactDescriptor? = 3;
   unavailable: struct {} = 4;
-} = 910006;
+} = 910002;
 
 // Reads a bounded byte range from immutable blob content. The response offset and complete flag provide the continuation contract.
 method ReadArtifactBlob(
@@ -110,7 +110,7 @@ method ReadArtifactBlob(
     reason: string = 0;
   } = 3;
   unavailable: struct {} = 4;
-} = 910007;
+} = 910003;
 
 // Starts or resumes a transfer for the expected digest and size. The returned offset is the next accepted byte for the transfer.
 method BeginArtifactBlobWrite(
@@ -129,7 +129,7 @@ method BeginArtifactBlobWrite(
     reason: string = 0;
   } = 3;
   unavailable: struct {} = 4;
-} = 910008;
+} = 910004;
 
 // Appends a chunk at the requested transfer offset. Accepted returns the next offset; invalid and conflict reject the write.
 method WriteArtifactBlobChunk(
@@ -150,7 +150,7 @@ method WriteArtifactBlobChunk(
     reason: string = 0;
   } = 4;
   unavailable: struct {} = 5;
-} = 910009;
+} = 910005;
 
 // Finalizes a transfer and verifies the expected digest and size.
 method CompleteArtifactBlobWrite(
@@ -167,7 +167,7 @@ method CompleteArtifactBlobWrite(
     reason: string = 0;
   } = 4;
   unavailable: struct {} = 5;
-} = 910010;
+} = 910006;
 
 method FetchArtifactBlobMetadata(
   struct {
@@ -180,4 +180,4 @@ method FetchArtifactBlobMetadata(
     reason: string = 0;
   } = 3;
   unavailable: struct {} = 4;
-} = 910011;
+} = 910007;

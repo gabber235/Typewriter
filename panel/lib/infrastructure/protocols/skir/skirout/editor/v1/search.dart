@@ -2348,7 +2348,7 @@ final _skir.Method<
 >
 watchRealmPresentationSearchMethod = _skir.Method(
   "WatchRealmPresentationSearch",
-  919103,
+  920006,
   RealmPresentationSearchRequest.serializer,
   RealmPresentationSearchUpdate.serializer,
   "",
@@ -2361,7 +2361,7 @@ final _skir.Method<
 >
 cancelRealmPresentationSearchMethod = _skir.Method(
   "CancelRealmPresentationSearch",
-  919104,
+  920007,
   CancelRealmPresentationSearchRequest.serializer,
   CancelRealmPresentationSearchResult.serializer,
   "Requests cancellation of a source owned search job. not_found also covers work already retired.",

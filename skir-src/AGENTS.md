@@ -10,10 +10,9 @@ Only use these top-level folders:
 - `access`
 - `organization`
 - `service`
-- `library`
 - `editor`
 
-Each bounded context owns its own version folders, such as `library/v1` or `service/v1`. These folders do not imply a stability promise before release.
+Each bounded context owns its own version folders, such as `editor/v1` or `service/v1`. These folders do not imply a stability promise before release.
 
 ## Core Design Rules
 
@@ -30,4 +29,5 @@ Each bounded context owns its own version folders, such as `library/v1` or `serv
 - Typewriter has not been released. Make breaking contract changes directly in the existing `v1` folders when they improve the model, and update all consumers together.
 - Do not increment contract versions or revisions, or preserve unreleased shapes with migrations, compatibility aliases, deprecation stages, or parallel version folders.
 - Keep declaration IDs and field or variant numbers contiguous and ascending within their respective sequences. Renumber after changes instead of reserving gaps for compatibility.
+- Each file numbers its declarations from its own unique prefix, such as `810700001`, `810700002`, and so on in `editor/v1/action.skir`. Each bounded context numbers its methods from its own range, such as `920001` onward for `editor`. `bun run generate:protocol` checks declaration and variant numbering before generating.
 - Define compatibility and versioning guarantees when a contract is actually published as stable.
