@@ -13,7 +13,11 @@ import com.typewritermc.authoring.PreparedEdit
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableCopy
+import com.typewritermc.authoring.item
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredTypeAt
 import com.typewritermc.types.DataValue
@@ -380,13 +384,3 @@ private fun EditIntent.freeze(): EditIntent =
 
 private fun ValuePath.atOrBelow(other: ValuePath) =
     segments.size >= other.segments.size && segments.take(other.segments.size) == other.segments
-
-private fun ValuePath.item(id: ItemId) = ValuePath(segments + PathSegment.Item(id))
-
-private fun ValueLocation.item(id: ItemId) = copy(path = path.item(id))
-
-private fun ValueLocation.field(name: String) = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))

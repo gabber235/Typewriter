@@ -58,8 +58,6 @@ private data class ValueVisit(
     val depth: Int,
 )
 
-private fun ValuePath.append(segment: PathSegment): ValuePath = copy(segments = segments + segment)
-
 /**
  * Reads an identity based path through nominal wrappers, reporting structural observations for dependency tracking.
  * A map item selects a row; a following key or value segment selects that row's content. Missing content remains

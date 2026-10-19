@@ -304,12 +304,6 @@ private fun requireContext(
 @Suppress("UNCHECKED_CAST")
 private fun <V> Availability<*>.cast(): Availability<V> = this as Availability<V>
 
-private fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapValue))
-
 private fun <V> projectionFailure(
     code: String,
     message: String,
@@ -321,5 +315,3 @@ class GenericField<Owner>(
     val path: ValuePath,
     val template: TypeTemplate,
 )
-
-fun ValueLocation.append(relative: ValuePath): ValueLocation = copy(path = ValuePath(path.segments + relative.segments))

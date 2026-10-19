@@ -418,14 +418,6 @@ private fun Double.fits(width: FloatWidth): Boolean =
 
 private fun String.isCanonicalDecimal(): Boolean = runCatching { requireCanonicalDecimal("Decimal value") }.isSuccess
 
-private fun ValueLocation.field(name: String) = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.item(id: ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))
-
 private fun DeclarationDiagnostic.asValueProblem(at: ValueLocation) = ValueProblem(at, code)
 
 private val AUTHORING_ROOT = ResourceId("authoring")

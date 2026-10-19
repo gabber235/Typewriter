@@ -25,7 +25,6 @@ import com.typewritermc.codegen.appliedUseCode
 import com.typewritermc.codegen.completeUseCode
 import com.typewritermc.codegen.kotlinCode
 import com.typewritermc.codegen.kotlinLiteral
-import com.typewritermc.codegen.parameterKeys
 import com.typewritermc.codegen.portableScalarKind
 import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
@@ -49,6 +48,9 @@ import com.typewritermc.types.ksp.EndpointUsageValidator
 import com.typewritermc.types.ksp.KspTypeConversionResult
 import com.typewritermc.types.ksp.KspTypeGraphConverter
 import com.typewritermc.types.ksp.OwnedFieldDeclaration
+import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.substitute
+import com.typewritermc.types.toTemplate
 
 class TypewriterTypeProcessorProvider : SymbolProcessorProvider {
     override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor =
@@ -1485,7 +1487,7 @@ $descriptors,
             if (count == 0) {
                 "${root}DraftProjection"
             } else {
-                val uses = application.arguments.map { it.toOperationTemplate() }
+                val uses = application.arguments.map { it.toTemplate() }
                 val projections =
                     nativeTypes.mapIndexed {
                         index,
@@ -1505,7 +1507,7 @@ class $name : com.typewritermc.discovery.GeneratedResourceOperationProvider {
         com.typewritermc.operations.collectOperations(
             origin = origin,
             declaration = ${owner.kotlinLiteral()},
-            target = ${application.toOperationTemplate().kotlinCode()},
+            target = ${application.toTemplate().kotlinCode()},
             projection = $projection,
         ) { build ->
             with($reference) { ${root}OperationsScopeImpl$allArguments(build).operations() }
@@ -1719,14 +1721,6 @@ private fun discoverEndpointBindings(
     visit(root, emptyList(), false, root.definition, emptySet())
     return bindings.distinct()
 }
-
-private fun TypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.Parameter -> arguments[key] ?: this
-        is TypeTemplate.Named -> copy(arguments = this.arguments.map { it.substitute(arguments) })
-        is TypeTemplate.Nullable -> copy(value = value.substitute(arguments))
-        is TypeTemplate.Scalar -> this
-    }
 
 private enum class ProviderKind(
     val suffix: String,
@@ -3308,10 +3302,3 @@ private val SET_TYPES =
     setOf("kotlin.collections.Set", "kotlin.collections.MutableSet", "kotlin.collections.HashSet", "kotlin.collections.LinkedHashSet")
 private val MAP_TYPES =
     setOf("kotlin.collections.Map", "kotlin.collections.MutableMap", "kotlin.collections.HashMap", "kotlin.collections.LinkedHashMap")
-
-private fun TypeUse.toOperationTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toOperationTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toOperationTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
-    }

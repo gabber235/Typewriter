@@ -10,6 +10,10 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.item
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.realm.repository.AuthoringMutationPlanner
@@ -516,11 +520,3 @@ private val TypeSelection.definition
             is TypeSelection.Complete -> use.definition
             is TypeSelection.Pending -> definition
         }
-
-private fun ValueLocation.field(name: String) = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.item(id: com.typewritermc.authoring.ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))

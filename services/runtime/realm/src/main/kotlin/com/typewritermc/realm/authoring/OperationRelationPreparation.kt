@@ -14,6 +14,7 @@ import com.typewritermc.authoring.ResourceDraft
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.item
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.library.TAG_PARENTS_RELATION_ID
 import com.typewritermc.operations.OperationConfirmation
@@ -362,8 +363,6 @@ internal class OperationRelationPreparation(
         edit.capturedReads.observeInput(InputIdentity.Incoming(source.target.resource, null))
     }
 }
-
-private fun ValueLocation.item(id: ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
 
 private fun DataValue.unfilled(): Boolean =
     when (this) {

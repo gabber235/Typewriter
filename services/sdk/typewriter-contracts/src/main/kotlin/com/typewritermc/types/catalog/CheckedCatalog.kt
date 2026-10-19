@@ -21,6 +21,9 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.parameterKeys
+import com.typewritermc.types.substitute
+import com.typewritermc.types.toTemplate
 import kotlinx.serialization.Serializable
 import java.util.concurrent.ConcurrentHashMap
 
@@ -1001,14 +1004,6 @@ private fun <T, R> Iterable<T>.mapResolution(transform: (T) -> Resolution<R>): R
     return Resolution.Ready(values)
 }
 
-private fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
-    when (this) {
-        is TypeTemplate.Parameter -> setOf(key)
-        is TypeTemplate.Named -> arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
-        is TypeTemplate.Nullable -> value.parameterKeys()
-        is TypeTemplate.Scalar -> emptySet()
-    }
-
 private fun RepresentationTemplate.templates(): List<TypeTemplate> =
     when (this) {
         is RepresentationTemplate.Scalar,
@@ -1041,21 +1036,6 @@ private fun TypeTemplate.substituteKnown(bindings: Map<ParameterKey, TypeUse>): 
         is TypeTemplate.Named -> copy(arguments = arguments.map { it.substituteKnown(bindings) })
         is TypeTemplate.Nullable -> copy(value = value.substituteKnown(bindings))
         is TypeTemplate.Scalar -> this
-    }
-
-private fun TypeTemplate.substitute(bindings: Map<ParameterKey, TypeTemplate>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.Parameter -> bindings[key] ?: this
-        is TypeTemplate.Named -> copy(arguments = arguments.map { it.substitute(bindings) })
-        is TypeTemplate.Nullable -> copy(value = value.substitute(bindings))
-        is TypeTemplate.Scalar -> this
-    }
-
-private fun TypeUse.toTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
     }
 
 /** Reports declaration readiness from this catalog generation's canonical quarantine. */

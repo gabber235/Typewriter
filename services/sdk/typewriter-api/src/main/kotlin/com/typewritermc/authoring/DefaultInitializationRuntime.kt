@@ -828,12 +828,6 @@ private fun TypeSelection.completeUse(): TypeUse.Named? =
         }
     }
 
-private fun ValuePath.append(segment: PathSegment): ValuePath = ValuePath(segments + segment)
-
-private fun ValuePath.field(name: String): ValuePath = append(PathSegment.Field(name))
-
-private fun ValuePath.item(id: ItemId): ValuePath = append(PathSegment.Item(id))
-
 private fun PreparedContent.portableValue(): DataValue =
     when (this) {
         is PreparedContent.Value -> value

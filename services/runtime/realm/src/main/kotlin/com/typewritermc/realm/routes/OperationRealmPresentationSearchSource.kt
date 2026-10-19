@@ -27,6 +27,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -131,11 +132,7 @@ internal class OperationRealmPresentationSearchSource(
                                     }
                                 }
                             }.map { (id, record) ->
-                                val label =
-                                    listOf("title", "name")
-                                        .firstNotNullOfOrNull { field -> record.fields[field]?.displayText() }
-                                        ?.takeIf { it.isNotBlank() } ?: "Unnamed resource"
-                                OperationResourceOption(id, label)
+                                OperationResourceOption(id, record.displayLabel ?: "Unnamed resource")
                             }.filter { query.isEmpty() || query in it.label.lowercase() }
                             .sortedWith(
                                 compareBy({ it.label.lowercase() }, { it.id.value }),
@@ -237,19 +234,5 @@ internal fun staleSearch(
                     .AuthoringObservationId(value = actual),
         ),
 )
-
-private fun DataValue.displayText(): String? =
-    when (this) {
-        is DataValue.StringValue -> value
-        is DataValue.Named -> payload.displayText()
-        else -> null
-    }
-
-private fun TypeUse.toTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
-    }
 
 private const val MAX_RESULTS = 100

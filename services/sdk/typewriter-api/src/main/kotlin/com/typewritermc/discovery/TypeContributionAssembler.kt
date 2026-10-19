@@ -60,10 +60,12 @@ import com.typewritermc.types.catalog.isReady
 import com.typewritermc.types.encodeGeneratedDefault
 import com.typewritermc.types.immutableCopy
 import com.typewritermc.types.immutableListCopy
+import com.typewritermc.types.parameterKeys
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
+import com.typewritermc.types.substitute
 import java.util.concurrent.CancellationException
 
 data class OwnedTypeDeclaration(
@@ -543,14 +545,6 @@ private fun TypeTemplate.acceptsLiteral(
     val checked = (catalog.resolve(use) as? Resolution.Ready)?.value ?: return false
     return checked.complete(value) !is CompletenessResult.Invalid
 }
-
-private fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
-    when (this) {
-        is TypeTemplate.Parameter -> setOf(key)
-        is TypeTemplate.Named -> arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
-        is TypeTemplate.Nullable -> value.parameterKeys()
-        is TypeTemplate.Scalar -> emptySet()
-    }
 
 private fun TypeTemplate.templateAt(
     path: ValuePath,
@@ -1286,14 +1280,6 @@ private fun collectTemplateFields(
     }
     return TemplateFieldsResult(fieldOrder.mapNotNull(merged::get), diagnostics.distinct())
 }
-
-private fun TypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): TypeTemplate =
-    when (this) {
-        is TypeTemplate.Parameter -> arguments[key] ?: this
-        is TypeTemplate.Named -> copy(arguments = this.arguments.map { it.substitute(arguments) })
-        is TypeTemplate.Nullable -> copy(value = value.substitute(arguments))
-        is TypeTemplate.Scalar -> this
-    }
 
 private fun DeclarationStatus.diagnostics(): List<DeclarationDiagnostic> =
     when (this) {

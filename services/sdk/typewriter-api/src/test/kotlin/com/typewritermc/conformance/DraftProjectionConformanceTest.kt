@@ -16,8 +16,12 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.draftViewProjection
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.item
 import com.typewritermc.authoring.listDraftProjection
 import com.typewritermc.authoring.mapDraftProjection
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.authoring.nativeReadProjection
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.PartialSelection
@@ -36,6 +40,7 @@ import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
+import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import java.math.BigInteger
@@ -244,20 +249,10 @@ private class FixtureDraftReads(
     override fun <D> select(query: TypedSelection<D>): PartialSelection<D> = error("Selections are outside this fixture.")
 }
 
-private fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload else this
-
 private fun <T> failed(
     code: String,
     location: ValueLocation,
 ): Availability<T> = Availability.Failed(EvaluationDiagnostic(code, code, listOf(location)))
-
-private fun ValueLocation.field(name: String): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapValue))
 
 private val INT_USE = TypeUse.Scalar(ScalarKind.Integer(IntegerWidth.SIGNED_32))
 private val TEXT_USE = TypeUse.Scalar(ScalarKind.Text)

@@ -9,6 +9,7 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.CheckOutcome
@@ -377,8 +378,6 @@ private fun intrinsicCollectionProblems(
             }
         }
     }
-
-private fun ValueLocation.append(vararg segments: PathSegment): ValueLocation = copy(path = ValuePath(path.segments + segments))
 
 private fun diagnostic(
     code: String,

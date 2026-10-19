@@ -9,6 +9,7 @@ import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.BoundControl
@@ -269,7 +270,7 @@ internal class RuntimeControlBinding(
                 ) {
                     state.type(type.type)
                     val id =
-                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.template()))) {
+                        requireNotNull(state.presentationId(type.reference, state.type.rebind(type.type.toTemplate()))) {
                             "A concrete form presentation must be registered before use."
                         }
                     forms +=

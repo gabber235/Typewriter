@@ -27,6 +27,30 @@ data class ValueLocation(
     val path: ValuePath,
 )
 
+fun ValuePath.append(vararg segments: PathSegment): ValuePath = ValuePath(this.segments + segments)
+
+fun ValuePath.append(relative: ValuePath): ValuePath = ValuePath(segments + relative.segments)
+
+fun ValuePath.field(name: String): ValuePath = append(PathSegment.Field(name))
+
+fun ValuePath.item(id: ItemId): ValuePath = append(PathSegment.Item(id))
+
+fun ValuePath.mapKey(): ValuePath = append(PathSegment.MapKey)
+
+fun ValuePath.mapValue(): ValuePath = append(PathSegment.MapValue)
+
+fun ValueLocation.append(vararg segments: PathSegment): ValueLocation = copy(path = path.append(*segments))
+
+fun ValueLocation.append(relative: ValuePath): ValueLocation = copy(path = path.append(relative))
+
+fun ValueLocation.field(name: String): ValueLocation = copy(path = path.field(name))
+
+fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = path.item(id))
+
+fun ValueLocation.mapKey(): ValueLocation = copy(path = path.mapKey())
+
+fun ValueLocation.mapValue(): ValueLocation = copy(path = path.mapValue())
+
 @Serializable
 sealed interface PathSegment {
     @Serializable

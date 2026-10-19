@@ -18,6 +18,7 @@ import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.ValueProblem
 import com.typewritermc.authoring.ValueReplacement
+import com.typewritermc.authoring.item
 import com.typewritermc.authoring.locate
 import com.typewritermc.authoring.validateStructure
 import com.typewritermc.authoring.writeField
@@ -948,8 +949,6 @@ private fun problem(
     resource: ResourceId,
     code: String,
 ): ValueProblem = ValueProblem(ValueLocation(resource, ValuePath()), code)
-
-private fun ValueLocation.item(id: ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
 
 private fun projectionKey(value: com.typewritermc.authoring.LinkProjection): String =
     "${value.contract.value}:${value.first.value}:${value.second.value}:${value.firstLocation}:${value.secondLocation}"

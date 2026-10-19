@@ -18,6 +18,7 @@ import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import skirout.editor.v1.capability.CapabilityInvocationRequest
 import skirout.editor.v1.capability.CommandResult
 import skirout.editor.v1.capability.ComputationResult
@@ -182,13 +183,6 @@ private fun skirout.editor.v1.type_catalog.TypeTemplate.decode(): TypeTemplate? 
     when (val result = SkirTypeCodec.decode(this)) {
         is SkirConversionResult.Success -> result.value
         is SkirConversionResult.Failure -> null
-    }
-
-private fun TypeUse.toTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
     }
 
 private fun invalidComputation(

@@ -14,7 +14,11 @@ import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.definitionFor
+import com.typewritermc.authoring.field
 import com.typewritermc.authoring.immutableAuthoringCopy
+import com.typewritermc.authoring.item
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.ConfigurationRecipe
@@ -426,13 +430,5 @@ private fun TypeSelection.definition(): com.typewritermc.types.TypeDefinitionId 
         is TypeSelection.Complete -> use.definition
         is TypeSelection.Pending -> definition
     }
-
-private fun ValueLocation.field(name: String): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapValue))
 
 internal val RESOURCE_SELECTION_INPUT: InputIdentity = InputIdentity.Selection(SelectionId("realm.resources"))

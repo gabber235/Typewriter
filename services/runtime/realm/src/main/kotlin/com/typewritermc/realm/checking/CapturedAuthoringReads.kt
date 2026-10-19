@@ -19,8 +19,13 @@ import com.typewritermc.authoring.TraversalDirection
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.append
 import com.typewritermc.authoring.complete
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.item
 import com.typewritermc.authoring.locate
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.DraftType
 import com.typewritermc.checking.InputIdentity
@@ -47,6 +52,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.canonicalValueKey
 import com.typewritermc.types.catalog.CheckedType
 import com.typewritermc.types.catalog.Resolution
+import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.ExpressionNode
 import java.util.concurrent.CancellationException
 
@@ -1068,18 +1074,6 @@ private enum class CollectionPart {
 
 private fun CheckedType.represents(definition: TypeDefinitionId): Boolean =
     (use as? TypeUse.Named)?.definition == definition || schema.ancestors.any { it.definition == definition }
-
-private fun DataValue.unwrapNamed(): DataValue = (this as? DataValue.Named)?.payload ?: this
-
-private fun ValueLocation.append(relative: ValuePath): ValueLocation = copy(path = ValuePath(path.segments + relative.segments))
-
-private fun ValueLocation.field(name: String): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Field(name)))
-
-private fun ValueLocation.item(id: ItemId): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue(): ValueLocation = copy(path = ValuePath(path.segments + PathSegment.MapValue))
 
 @Suppress("UNCHECKED_CAST")
 private fun <T> Availability<*>.cast(): Availability<T> = this as Availability<T>

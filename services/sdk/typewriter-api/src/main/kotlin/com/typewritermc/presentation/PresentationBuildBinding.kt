@@ -12,6 +12,7 @@ import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
 import com.typewritermc.types.catalog.apply
 import com.typewritermc.types.catalog.resolve
+import com.typewritermc.types.toTemplate
 import skirout.editor.v1.expression.ExpressionNode
 
 class PresentationBuildBinding(
@@ -98,13 +99,13 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
     }
 
     return CheckedPresentationTemplate(
-        type = use.template(),
+        type = use.toTemplate(),
         fieldResolver = { parent, name ->
             resolve(parent)
                 .schema.fields
                 .singleOrNull { it.key == name }
                 ?.type
-                ?.template()
+                ?.toTemplate()
         },
         nestedResolver = { parent, slot ->
             val checked = resolve(parent)
@@ -115,18 +116,18 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
 
                 NestedPresentationSlot.Items -> {
                     val representation = checked.schema.representation as? ResolvedRepresentation.Sequence
-                    representation?.let { PresentationNestedTemplate(it.item.template(), it.kind) }
+                    representation?.let { PresentationNestedTemplate(it.item.toTemplate(), it.kind) }
                 }
 
                 NestedPresentationSlot.Keys -> {
                     val representation = checked.schema.representation as? ResolvedRepresentation.Mapping
-                    representation?.let { PresentationNestedTemplate(it.key.template()) }
+                    representation?.let { PresentationNestedTemplate(it.key.toTemplate()) }
                 }
 
                 NestedPresentationSlot.Values -> {
                     when (val representation = checked.schema.representation) {
-                        is ResolvedRepresentation.Mapping -> PresentationNestedTemplate(representation.value.template())
-                        else -> (checked.use as? TypeUse.Nullable)?.let { PresentationNestedTemplate(it.value.template()) }
+                        is ResolvedRepresentation.Mapping -> PresentationNestedTemplate(representation.value.toTemplate())
+                        else -> (checked.use as? TypeUse.Nullable)?.let { PresentationNestedTemplate(it.value.toTemplate()) }
                     }
                 }
             }
@@ -152,13 +153,6 @@ fun CheckedType.presentationTemplate(): CheckedPresentationTemplate {
         },
     )
 }
-
-internal fun TypeUse.template(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map(TypeUse::template))
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.template())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
-    }
 
 interface Layout :
     PresentationContent,

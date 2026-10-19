@@ -10,6 +10,7 @@ import com.typewritermc.expression.ExpressionBindingId
 import com.typewritermc.expression.ExpressionBindings
 import com.typewritermc.expression.ExpressionValueReader
 import com.typewritermc.types.DataValue
+import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.ExpressionNode
 
 internal class RealmExpressionRuntime(
@@ -77,5 +78,3 @@ internal class RealmSelectionPredicateEvaluator(
 }
 
 private val CONFIGURED_VALUE = ExpressionBindingId("configured_value")
-
-private fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this

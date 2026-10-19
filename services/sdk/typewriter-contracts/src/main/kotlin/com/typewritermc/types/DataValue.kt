@@ -132,6 +132,9 @@ sealed interface DataValue {
     ) : DataValue
 }
 
+/** Returns the structural value beneath every nominal wrapper. */
+tailrec fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
+
 @Serializable
 data class ListItem(
     val id: ItemId,

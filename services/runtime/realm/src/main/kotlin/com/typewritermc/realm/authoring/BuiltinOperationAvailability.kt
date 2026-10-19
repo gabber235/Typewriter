@@ -1,10 +1,9 @@
 package com.typewritermc.realm.authoring
 
 import com.typewritermc.authoring.ItemId
-import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
-import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.item
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.BuiltinResourceOperation
 import com.typewritermc.operations.OperationAvailability
@@ -141,10 +140,7 @@ internal class BuiltinOperationAvailability(
                     val locations = evidence.values.map { it to false }.toMutableList()
                     if (binding is CounterpartBinding.Collection) {
                         locations +=
-                            binding.location.copy(
-                                path = ValuePath(binding.location.path.segments + PathSegment.Item(ItemId("availability"))),
-                            ) to
-                            true
+                            binding.location.item(ItemId("availability")) to true
                     }
                     locations.forEach { (at, collection) ->
                         reads.observeInput(InputIdentity.Value(at))

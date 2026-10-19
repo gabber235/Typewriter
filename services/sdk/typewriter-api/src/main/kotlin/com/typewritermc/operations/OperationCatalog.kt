@@ -37,6 +37,7 @@ import com.typewritermc.types.catalog.isNominalSubtype
 import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import skirout.editor.v1.expression.ExpressionNode
 import kotlin.reflect.KClass
 
@@ -390,7 +391,7 @@ private fun validateResourceActions(
                 check(action.value.targets, selection)
                 action.value.initialInput?.let { expression ->
                     val input = requireNotNull(capability.requestType) { "An operation without input cannot provide initial input." }
-                    check(expression, input.toOperationTemplate())
+                    check(expression, input.toTemplate())
                 }
             }
 
@@ -406,7 +407,7 @@ private fun validateResourceActions(
                                 .filterIsInstance<RealmCapabilityDescriptor.Command>()
                                 .singleOrNull { it.id.value == realm.value.capabilityId.value }
                         requireNotNull(capability) { "Missing command capability for ${definition.id}." }
-                        check(realm.value.payload, capability.requestType.toOperationTemplate())
+                        check(realm.value.payload, capability.requestType.toTemplate())
                     }
 
                     else -> {
@@ -421,13 +422,6 @@ private fun validateResourceActions(
         }
     }
 }
-
-private fun TypeUse.toOperationTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toOperationTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toOperationTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
-    }
 
 private fun kotlin.reflect.KType.resolveOperationType(declarations: List<OwnedTypeDeclaration>): TypeUse {
     val native = classifier as? KClass<*> ?: error("Operation input type arguments must be closed.")

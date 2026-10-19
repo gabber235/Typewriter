@@ -17,6 +17,8 @@ import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.append
+import com.typewritermc.authoring.item
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.configuration.FieldPatternSegment
@@ -2236,8 +2238,6 @@ private fun operationBaseline(
         ResourceValueMapper.discover(resources).associateBy { it.id },
     )
 }
-
-private fun ValuePath.item(id: ItemId) = ValuePath(segments + PathSegment.Item(id))
 
 private fun pairContract(families: Set<RelationFamilyId> = emptySet()) =
     RelationContract(

@@ -10,6 +10,7 @@ import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.CheckedCatalog
 import com.typewritermc.types.catalog.Resolution
 import com.typewritermc.types.catalog.ResolvedRepresentation
+import com.typewritermc.types.unwrapNamed
 
 internal fun AuthoringRecord.authoredTypeAt(
     path: ValuePath,
@@ -73,19 +74,19 @@ internal fun AuthoringRecord.authoredTypeAt(
                 type = resolved.value.schema.fields
                     .singleOrNull { it.key == segment.name }
                     ?.type ?: return null
-                value = value.unwrapNamed().recordField(segment.name)
+                value = value?.unwrapNamed().recordField(segment.name)
             }
 
             is PathSegment.Item -> {
                 when (val representation = resolved.value.schema.representation) {
                     is ResolvedRepresentation.Sequence -> {
                         type = representation.item
-                        value = value.unwrapNamed().collectionItem(segment)
+                        value = value?.unwrapNamed().collectionItem(segment)
                     }
 
                     is ResolvedRepresentation.Mapping -> {
                         mapping = representation
-                        mapRow = (value.unwrapNamed() as? DataValue.MapValue)?.rows?.singleOrNull { it.id == segment.id }
+                        mapRow = (value?.unwrapNamed() as? DataValue.MapValue)?.rows?.singleOrNull { it.id == segment.id }
                     }
 
                     else -> {
@@ -110,12 +111,6 @@ internal fun AuthoringRecord.authoredTypeAt(
 private fun TypeUse.traversable(): TypeUse = if (this is TypeUse.Nullable) value else this
 
 private fun DataValue?.namedPayload(): Pair<TypeUse.Named, DataValue>? = (this as? DataValue.Named)?.let { it.actualType to it.payload }
-
-private fun DataValue?.unwrapNamed(): DataValue? =
-    when (this) {
-        is DataValue.Named -> payload.unwrapNamed()
-        else -> this
-    }
 
 private fun DataValue?.recordField(name: String): DataValue? = (this as? DataValue.Record)?.fields?.get(name)
 

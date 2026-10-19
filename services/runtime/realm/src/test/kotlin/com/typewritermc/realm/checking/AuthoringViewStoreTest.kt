@@ -10,6 +10,7 @@ import com.typewritermc.authoring.SelectionId
 import com.typewritermc.authoring.TypeSelection
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.append
 import com.typewritermc.authoring.boundCollectionPath
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CatalogGeneration
@@ -427,8 +428,6 @@ internal fun collectTokens(
         }
     }
 }
-
-internal fun ValueLocation.append(vararg segments: PathSegment): ValueLocation = copy(path = ValuePath(path.segments + segments))
 
 internal fun location(
     resource: ResourceId,

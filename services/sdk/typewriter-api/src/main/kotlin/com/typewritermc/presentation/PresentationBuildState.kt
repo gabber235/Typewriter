@@ -7,6 +7,7 @@ import com.typewritermc.types.TypeTemplate
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import skirout.editor.v1.binding.BindingRef
 import skirout.editor.v1.expression.ExpressionNode
 import skirout.editor.v1.presentation.AxisChild
@@ -105,7 +106,7 @@ internal class PresentationBuildState(
                     bindingId = key.wire(),
                     valueType = SkirTypeCodec.encode(use).getOrThrow(),
                 )
-            expressionTypes[key] = use.template()
+            expressionTypes[key] = use.toTemplate()
             type(use)
         }
         when (action) {
@@ -114,7 +115,7 @@ internal class PresentationBuildState(
                 declare("context:selection", selection)
                 val expression =
                     action.value.resource
-                val errors = type.checkExpression(expression, expressionTypes, resource.template(), expressionTypes.keys)
+                val errors = type.checkExpression(expression, expressionTypes, resource.toTemplate(), expressionTypes.keys)
                 require(errors.isEmpty()) { "Invalid resource navigation expression: ${errors.joinToString()}." }
             }
 
@@ -124,7 +125,7 @@ internal class PresentationBuildState(
                 capability(com.typewritermc.capability.CapabilityId(action.value.capability.value))
                 val expression =
                     action.value.targets
-                val errors = type.checkExpression(expression, expressionTypes, selection.template(), expressionTypes.keys)
+                val errors = type.checkExpression(expression, expressionTypes, selection.toTemplate(), expressionTypes.keys)
                 require(errors.isEmpty()) { "Invalid authoring target expression: ${errors.joinToString()}." }
             }
 

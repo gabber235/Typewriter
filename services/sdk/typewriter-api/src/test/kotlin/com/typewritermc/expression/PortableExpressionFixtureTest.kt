@@ -24,6 +24,7 @@ import com.typewritermc.types.catalog.resolve
 import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.unwrapNamed
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json

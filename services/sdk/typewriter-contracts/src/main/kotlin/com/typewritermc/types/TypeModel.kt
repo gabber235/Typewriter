@@ -173,6 +173,32 @@ sealed interface TypeUse {
     ) : TypeUse
 }
 
+/** Lifts a concrete type application into a template with no free parameters. */
+fun TypeUse.toTemplate(): TypeTemplate =
+    when (this) {
+        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
+        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
+        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
+    }
+
+/** Collects the generic parameters this template refers to, in first occurrence order. */
+fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
+    when (this) {
+        is TypeTemplate.Parameter -> setOf(key)
+        is TypeTemplate.Named -> arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
+        is TypeTemplate.Nullable -> value.parameterKeys()
+        is TypeTemplate.Scalar -> emptySet()
+    }
+
+/** Replaces parameters bound in [arguments], leaving unbound parameters symbolic. */
+fun TypeTemplate.substitute(arguments: Map<ParameterKey, TypeTemplate>): TypeTemplate =
+    when (this) {
+        is TypeTemplate.Parameter -> arguments[key] ?: this
+        is TypeTemplate.Named -> copy(arguments = this.arguments.map { it.substitute(arguments) })
+        is TypeTemplate.Nullable -> copy(value = value.substitute(arguments))
+        is TypeTemplate.Scalar -> this
+    }
+
 @Serializable
 data class TypeDefinition(
     val id: TypeDefinitionId,

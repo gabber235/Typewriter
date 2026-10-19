@@ -10,6 +10,10 @@ import com.typewritermc.authoring.LinkOccurrenceId
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
+import com.typewritermc.authoring.item
+import com.typewritermc.authoring.mapKey
+import com.typewritermc.authoring.mapValue
 import com.typewritermc.checking.InputIdentity
 import com.typewritermc.operations.CloneResult
 import com.typewritermc.operations.GraphGroupPlacement
@@ -199,7 +203,7 @@ internal class OperationClonePreparation(
             }
             val parent = ValuePath(oldPath.segments.dropLast(1))
             val fresh = operation.identities.item("clone-owner:${ValueLocation(edge.first, oldPath).identityKey()}")
-            val at = ValueLocation(edge.first, ValuePath(parent.segments + PathSegment.Item(fresh)))
+            val at = ValueLocation(edge.first, parent.item(fresh))
             val endpoint =
                 baseline.catalog.relations
                     .single { it.id == edge.contract }
@@ -244,14 +248,6 @@ internal class OperationClonePreparation(
 private fun AuthoringRecord.hasGraphPlacement(): Boolean =
     (fields["placement"] as? DataValue.Named)?.actualType?.definition?.type ==
         TypeId.Declared(DeclaredTypeId.parse(GRAPH_PLACEMENT_TYPE_ID))
-
-private fun ValueLocation.field(key: String) = copy(path = ValuePath(path.segments + PathSegment.Field(key)))
-
-private fun ValueLocation.item(id: ItemId) = copy(path = ValuePath(path.segments + PathSegment.Item(id)))
-
-private fun ValueLocation.mapKey() = copy(path = ValuePath(path.segments + PathSegment.MapKey))
-
-private fun ValueLocation.mapValue() = copy(path = ValuePath(path.segments + PathSegment.MapValue))
 
 private fun ValueLocation.identityKey(): String =
     "${resource.value.length}:${resource.value}" +

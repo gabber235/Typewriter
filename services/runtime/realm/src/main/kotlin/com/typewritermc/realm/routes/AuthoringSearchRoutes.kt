@@ -92,7 +92,7 @@ private fun IndexedAuthoringSearchCandidate.toWire(
                 resource = wireResource,
                 definition = resourceDefinition,
                 content = SkirAuthoringValueCodec.encode(record).getOrThrow(),
-                descriptor = SkirDataValueCodec.encode(DataValue.StringValue(record.displayName(this.resource))).getOrThrow(),
+                descriptor = SkirDataValueCodec.encode(DataValue.StringValue(record.displayLabel ?: resource.value)).getOrThrow(),
             ),
         context =
             SkirPortableValue(
@@ -102,12 +102,13 @@ private fun IndexedAuthoringSearchCandidate.toWire(
     )
 }
 
-private fun AuthoringRecord.displayName(resource: ResourceId): String =
-    sequenceOf("name", "title")
-        .mapNotNull(fields::get)
-        .mapNotNull { it.displayText() }
-        .firstOrNull(String::isNotBlank)
-        ?: resource.value
+/** Labels a resource for editor search results from its first non blank name or title field. */
+internal val AuthoringRecord.displayLabel: String?
+    get() =
+        sequenceOf("name", "title")
+            .mapNotNull(fields::get)
+            .mapNotNull { it.displayText() }
+            .firstOrNull(String::isNotBlank)
 
 private fun DataValue.displayText(): String? =
     when (this) {

@@ -5,6 +5,7 @@ import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.PathSegment
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.append
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.ListItem
 import com.typewritermc.types.MapRow
@@ -13,6 +14,7 @@ import com.typewritermc.types.skir.SkirAuthoringValueCodec
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.unwrapNamed
 import skirout.editor.v1.expression.BoundDirection
 import skirout.editor.v1.expression.ConditionalExpression
 import skirout.editor.v1.expression.EntryBranch
@@ -1377,10 +1379,6 @@ private fun DataValue.at(path: ValuePath): DataValue {
     return current
 }
 
-private fun ValueLocation.append(path: ValuePath): ValueLocation = copy(path = ValuePath(this.path.segments + path.segments))
-
-internal fun DataValue.unwrapNamed(): DataValue = if (this is DataValue.Named) payload.unwrapNamed() else this
-
 private fun DataValue.boolean(): Boolean =
     (unwrapNamed() as? DataValue.Boolean)?.value
         ?: throw OperationFailure("expected_boolean", "The expression value is not Boolean.")
@@ -2203,8 +2201,6 @@ private val PORTABLE_WHITESPACE =
         0x3000,
         0xFEFF,
     )
-
-private fun ValuePath.append(other: ValuePath) = ValuePath(segments + other.segments)
 
 private fun EntryBranch.pathSegment(): PathSegment =
     when (this) {

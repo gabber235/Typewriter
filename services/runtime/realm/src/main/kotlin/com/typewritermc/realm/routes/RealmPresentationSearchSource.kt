@@ -22,6 +22,7 @@ import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import com.typewritermc.types.skir.SkirTypeCodec
 import com.typewritermc.types.skir.getOrThrow
+import com.typewritermc.types.toTemplate
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -290,10 +291,3 @@ internal fun unavailableRealmPresentationSearchUpdate(
         subscriptionId = subscriptionId,
         diagnostics = listOf(realmDiagnostic(message)),
     )
-
-private fun TypeUse.toTemplate(): TypeTemplate =
-    when (this) {
-        is TypeUse.Named -> TypeTemplate.Named(definition, arguments.map { it.toTemplate() })
-        is TypeUse.Nullable -> TypeTemplate.Nullable(value.toTemplate())
-        is TypeUse.Scalar -> TypeTemplate.Scalar(kind)
-    }

@@ -113,14 +113,6 @@ fun TypeTemplate.completeUseCode(): CodeBlock =
         }
     }
 
-fun TypeTemplate.parameterKeys(): Set<ParameterKey> =
-    when (this) {
-        is TypeTemplate.Parameter -> setOf(key)
-        is TypeTemplate.Named -> arguments.flatMapTo(linkedSetOf()) { it.parameterKeys() }
-        is TypeTemplate.Nullable -> value.parameterKeys()
-        is TypeTemplate.Scalar -> emptySet()
-    }
-
 fun ScalarKind.kotlinCode(): CodeBlock =
     when (this) {
         ScalarKind.Unit -> CodeBlock.of("%T", ScalarKind.Unit::class)
