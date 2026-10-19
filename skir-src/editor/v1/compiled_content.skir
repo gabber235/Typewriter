@@ -4,7 +4,6 @@
 // application are separate facts.
 
 import { CompilationRoot } from "editor/v1/compilation_root.skir";
-import { RuntimeMemberSignature } from "editor/v1/publication.skir";
 import {
   CatalogGeneration,
   PublicationId,
@@ -35,8 +34,7 @@ struct PublishedContent(810900105) {
   format_revision: int32 = 1;
   catalog: CatalogGeneration = 2;
   implementation_token: string = 3;
-  runtime_signatures: [RuntimeMemberSignature] = 4;
-  outputs: [PublishedOutput] = 5;
+  outputs: [PublishedOutput] = 4;
 }
 struct PublishedContentChunk(810900106) {
   transfer: BoundedTransferChunk = 0;

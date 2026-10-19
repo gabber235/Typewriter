@@ -16,7 +16,6 @@ import "dart:core" as _core;
 import "package:skir_client/skir_client.dart" as _skir;
 
 import "./compilation_root.dart" as _lib_editor_v1_compilation_root;
-import "./publication.dart" as _lib_editor_v1_publication;
 import "./type_catalog.dart" as _lib_editor_v1_type_catalog;
 import "../../kernel/v1/bounded_transfer.dart"
     as _lib_kernel_v1_bounded_transfer;
@@ -489,8 +488,6 @@ sealed class PublishedContent_orMutable {
   _core.int get formatRevision;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable get catalog;
   _core.String get implementationToken;
-  _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable>
-  get runtimeSignatures;
   _core.Iterable<PublishedOutput_orMutable> get outputs;
 
   PublishedContent toFrozen();
@@ -510,9 +507,6 @@ final class PublishedContent implements PublishedContent_orMutable {
   @_core.override
   final _core.String implementationToken;
   @_core.override
-  final _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature>
-  runtimeSignatures;
-  @_core.override
   final _core.Iterable<PublishedOutput> outputs;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -521,17 +515,12 @@ final class PublishedContent implements PublishedContent_orMutable {
     required _core.int formatRevision,
     required _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog,
     required _core.String implementationToken,
-    required _core.Iterable<
-      _lib_editor_v1_publication.RuntimeMemberSignature_orMutable
-    >
-    runtimeSignatures,
     required _core.Iterable<PublishedOutput_orMutable> outputs,
   }) => PublishedContent._(
     publication.toFrozen(),
     formatRevision,
     catalog.toFrozen(),
     implementationToken,
-    _skir.internal__frozenMappedCopy(runtimeSignatures, (it) => it.toFrozen()),
     _skir.internal__frozenMappedCopy(outputs, (it) => it.toFrozen()),
   );
 
@@ -540,7 +529,6 @@ final class PublishedContent implements PublishedContent_orMutable {
     this.formatRevision,
     this.catalog,
     this.implementationToken,
-    this.runtimeSignatures,
     this.outputs,
   );
 
@@ -551,7 +539,6 @@ final class PublishedContent implements PublishedContent_orMutable {
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
     _skir.KeyedIterable.empty,
-    _skir.KeyedIterable.empty,
   );
 
   /// Returns a new mutable instance.
@@ -561,7 +548,6 @@ final class PublishedContent implements PublishedContent_orMutable {
     0,
     _lib_editor_v1_type_catalog.CatalogGeneration.defaultInstance,
     "",
-    _skir.KeyedIterable.empty,
     _skir.KeyedIterable.empty,
   );
 
@@ -576,7 +562,6 @@ final class PublishedContent implements PublishedContent_orMutable {
     this.formatRevision,
     this.catalog,
     this.implementationToken,
-    this.runtimeSignatures,
     this.outputs,
   );
 
@@ -598,7 +583,6 @@ final class PublishedContent implements PublishedContent_orMutable {
     this.formatRevision,
     this.catalog,
     this.implementationToken,
-    this.runtimeSignatures,
     this.outputs,
   ];
 
@@ -646,20 +630,9 @@ final class PublishedContent implements PublishedContent_orMutable {
         (it, v) => it.implementationToken = v,
       );
       _serializerBuilder.addField(
-        "runtime_signatures",
-        "runtimeSignatures",
+        "outputs",
+        "outputs",
         4,
-        _skir.Serializers.iterable(
-          _lib_editor_v1_publication.RuntimeMemberSignature.serializer,
-        ),
-        "",
-        (it) => it.runtimeSignatures,
-        (it, v) => it.runtimeSignatures = v,
-      );
-      _serializerBuilder.addField(
-        "outputs",
-        "outputs",
-        5,
         _skir.Serializers.iterable(PublishedOutput.serializer),
         "",
         (it) => it.outputs,
@@ -687,8 +660,6 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
   _core.int formatRevision;
   _lib_editor_v1_type_catalog.CatalogGeneration_orMutable catalog;
   _core.String implementationToken;
-  _core.Iterable<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable>
-  runtimeSignatures;
   _core.Iterable<PublishedOutput_orMutable> outputs;
   _skir.internal__UnrecognizedFields? _u;
 
@@ -697,7 +668,6 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     this.formatRevision,
     this.catalog,
     this.implementationToken,
-    this.runtimeSignatures,
     this.outputs,
   );
 
@@ -725,21 +695,6 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     }
   }
 
-  /// If the value of [runtimeSignatures] is already mutable, returns it as-is.
-  /// Otherwise, makes a mutable copy, assigns it back to [runtimeSignatures] and returns it.
-  _core.List<_lib_editor_v1_publication.RuntimeMemberSignature_orMutable>
-  get mutableRuntimeSignatures {
-    final value = this.runtimeSignatures;
-    if (value
-        is _skir.internal__MutableList<
-          _lib_editor_v1_publication.RuntimeMemberSignature_orMutable
-        >) {
-      return value;
-    } else {
-      return this.runtimeSignatures = _skir.internal__MutableList([...value]);
-    }
-  }
-
   /// If the value of [outputs] is already mutable, returns it as-is.
   /// Otherwise, makes a mutable copy, assigns it back to [outputs] and returns it.
   _core.List<PublishedOutput_orMutable> get mutableOutputs {
@@ -758,7 +713,6 @@ final class PublishedContent_mutable implements PublishedContent_orMutable {
     formatRevision: this.formatRevision,
     catalog: this.catalog,
     implementationToken: this.implementationToken,
-    runtimeSignatures: this.runtimeSignatures,
     outputs: this.outputs,
   ).._u = this._u;
 }

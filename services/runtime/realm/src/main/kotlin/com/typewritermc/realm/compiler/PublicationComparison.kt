@@ -11,7 +11,6 @@ data class PublicationRuntimeContent(
     val formatRevision: Int,
     val roots: Map<CompilationRoot, CompiledArtifactReference>,
     val implementationToken: String,
-    val signatures: Set<com.typewritermc.scripting.RuntimeMemberSignature>,
 ) {
     companion object {
         fun selected(content: PublishedContent) =
@@ -19,7 +18,6 @@ data class PublicationRuntimeContent(
                 content.formatRevision,
                 content.outputs.associate { it.reference.root to it.reference },
                 content.implementationToken,
-                content.runtimeSignatures,
             )
 
         fun prepared(
@@ -29,7 +27,6 @@ data class PublicationRuntimeContent(
             PUBLISHED_CONTENT_FORMAT_REVISION,
             artifacts.associate { it.root to CompiledArtifactReference(it.root, it.formatRevision, it.mediaType, it.semanticDigest) },
             engine.token.value,
-            engine.signatures,
         )
     }
 }
@@ -124,7 +121,7 @@ sealed interface PublicationComparison {
                 if (selected != null &&
                     (
                         selected.formatRevision != PUBLISHED_CONTENT_FORMAT_REVISION ||
-                            selected.implementationToken != engine.token.value || selected.signatures != engine.signatures
+                            selected.implementationToken != engine.token.value
                     )
                 ) {
                     add(PublicationChange.RequirementsChanged)

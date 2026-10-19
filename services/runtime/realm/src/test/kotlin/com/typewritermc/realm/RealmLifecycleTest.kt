@@ -494,7 +494,7 @@ private class RealmLifecycleFixture(
             registrars = emptyList(),
             facts = DeploymentFacts(),
             preparationEvaluator = PreparationEvaluator { _, _ -> error("Preparation is not used by lifecycle tests.") },
-            engine = StagedEngineImplementationSource(EngineImplementationInputs(emptySet(), InputToken("engine"))),
+            engine = StagedEngineImplementationSource(EngineImplementationInputs(InputToken("engine"))),
             catalogActivator =
                 catalogActivator ?: RealmCatalogActivator { repository, catalog ->
                     repository.activateCatalog(catalog, install = {}, publish = {})

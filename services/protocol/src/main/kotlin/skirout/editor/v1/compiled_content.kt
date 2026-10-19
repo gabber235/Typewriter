@@ -480,7 +480,6 @@ sealed interface PublishedContent_OrMutable {
     val formatRevision: kotlin.Int;
     val catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable;
     val implementationToken: kotlin.String;
-    val runtimeSignatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable>;
     val outputs: kotlin.collections.List<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable>;
 
     fun toFrozen(): skirout.editor.v1.compiled_content.PublishedContent;
@@ -498,7 +497,6 @@ class PublishedContent private constructor(
     override val formatRevision: kotlin.Int,
     override val catalog: skirout.editor.v1.type_catalog.CatalogGeneration,
     override val implementationToken: kotlin.String,
-    override val runtimeSignatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature>,
     override val outputs: kotlin.collections.List<skirout.editor.v1.compiled_content.PublishedOutput>,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContent>? =
         null,
@@ -510,7 +508,6 @@ class PublishedContent private constructor(
         formatRevision: kotlin.Int,
         catalog: skirout.editor.v1.type_catalog.CatalogGeneration_OrMutable,
         implementationToken: kotlin.String,
-        runtimeSignatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable>,
         outputs: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable>,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContent>? =
             null,
@@ -519,7 +516,6 @@ class PublishedContent private constructor(
         formatRevision,
         catalog.toFrozen(),
         implementationToken,
-        build.skir.internal.toFrozenList(runtimeSignatures, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outputs, { it.toFrozen() }),
         _unrecognizedFields,
     ) {}
@@ -533,7 +529,6 @@ class PublishedContent private constructor(
         formatRevision = this.formatRevision,
         catalog = this.catalog,
         implementationToken = this.implementationToken,
-        runtimeSignatures = this.runtimeSignatures,
         outputs = this.outputs,
     );
 
@@ -549,8 +544,6 @@ class PublishedContent private constructor(
             this.catalog,
         implementationToken: kotlin.String =
             this.implementationToken,
-        runtimeSignatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-            this.runtimeSignatures,
         outputs: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable> =
             this.outputs,
     ) = skirout.editor.v1.compiled_content.PublishedContent(
@@ -558,7 +551,6 @@ class PublishedContent private constructor(
         formatRevision,
         catalog.toFrozen(),
         implementationToken,
-        build.skir.internal.toFrozenList(runtimeSignatures, { it.toFrozen() }),
         build.skir.internal.toFrozenList(outputs, { it.toFrozen() }),
         this._unrecognizedFields,
     );
@@ -567,11 +559,11 @@ class PublishedContent private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.compiled_content.PublishedContent && this.publication == other.publication && this.formatRevision == other.formatRevision && this.catalog == other.catalog && this.implementationToken == other.implementationToken && this.runtimeSignatures == other.runtimeSignatures && this.outputs == other.outputs);
+        return this === other || (other is skirout.editor.v1.compiled_content.PublishedContent && this.publication == other.publication && this.formatRevision == other.formatRevision && this.catalog == other.catalog && this.implementationToken == other.implementationToken && this.outputs == other.outputs);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.publication, this.formatRevision, this.catalog, this.implementationToken, this.runtimeSignatures, this.outputs).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.publication, this.formatRevision, this.catalog, this.implementationToken, this.outputs).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -593,8 +585,6 @@ class PublishedContent private constructor(
             skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
         override var implementationToken: kotlin.String =
             "",
-        override var runtimeSignatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
         override var outputs: kotlin.collections.List<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable> =
             build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.PublishedOutput>(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.compiled_content.PublishedContent>? =
@@ -606,7 +596,6 @@ class PublishedContent private constructor(
             formatRevision = this.formatRevision,
             catalog = this.catalog,
             implementationToken = this.implementationToken,
-            runtimeSignatures = this.runtimeSignatures,
             outputs = this.outputs,
             _unrecognizedFields = this._unrecognizedFields,
         );
@@ -644,22 +633,6 @@ class PublishedContent private constructor(
         }
 
         /**
-         * If the value of [runtimeSignatures] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [runtimeSignatures] and returns it.
-         */
-        val mutableRuntimeSignatures: kotlin.collections.MutableList<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> get() {
-            var value = this.runtimeSignatures;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.runtimeSignatures = value;
-                    value;
-                }
-            }
-        }
-
-        /**
          * If the value of [outputs] is already mutable, returns it as-is.
          * Otherwise, makes a mutable copy, assigns it back to [outputs] and returns it.
          */
@@ -683,7 +656,6 @@ class PublishedContent private constructor(
                 0,
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
                 "",
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.PublishedOutput>(),
             );
 
@@ -706,8 +678,6 @@ class PublishedContent private constructor(
                 skirout.editor.v1.type_catalog.CatalogGeneration.partial(),
             implementationToken: kotlin.String =
                 "",
-            runtimeSignatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
             outputs: kotlin.collections.Iterable<skirout.editor.v1.compiled_content.PublishedOutput_OrMutable> =
                 build.skir.internal.emptyFrozenList<skirout.editor.v1.compiled_content.PublishedOutput>(),
         ) = skirout.editor.v1.compiled_content.PublishedContent(
@@ -715,7 +685,6 @@ class PublishedContent private constructor(
             formatRevision = formatRevision,
             catalog = catalog,
             implementationToken = implementationToken,
-            runtimeSignatures = runtimeSignatures,
             outputs = outputs,
             _unrecognizedFields = null,
         );
@@ -2460,20 +2429,9 @@ private object _SerializerRegistry {
             { mut, v -> mut.implementationToken = v },
         );
         PublishedContentSerializerImpl.addField(
-            "runtime_signatures",
-            "runtimeSignatures",
+            "outputs",
+            "outputs",
             4,
-            build.skir.Serializers.list(
-                skirout.editor.v1.publication.RuntimeMemberSignature.serializer,
-            ),
-            "",
-            { it.runtimeSignatures },
-            { mut, v -> mut.runtimeSignatures = v },
-        );
-        PublishedContentSerializerImpl.addField(
-            "outputs",
-            "outputs",
-            5,
             build.skir.Serializers.list(
                 _SerializerRegistry.PublishedOutputSerializer,
             ),

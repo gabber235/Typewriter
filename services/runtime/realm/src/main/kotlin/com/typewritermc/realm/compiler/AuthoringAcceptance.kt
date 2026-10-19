@@ -21,7 +21,6 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
-import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.ResourceId
@@ -42,7 +41,6 @@ data class NativeBindingRequirement(
 
 @Serializable
 data class EngineImplementationInputs(
-    val signatures: Set<RuntimeMemberSignature>,
     val token: InputToken,
 )
 

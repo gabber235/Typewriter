@@ -74,7 +74,6 @@ private fun published(root: CompilationRoot): PublishedContent =
         formatRevision = com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         catalog = CatalogGeneration("catalog"),
         implementationToken = "implementation",
-        runtimeSignatures = emptySet(),
         outputs =
             listOf(
                 PublishedOutput(

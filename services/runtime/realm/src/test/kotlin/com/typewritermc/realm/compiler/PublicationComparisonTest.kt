@@ -11,11 +11,7 @@ import com.typewritermc.engine.CompiledBlobPointer
 import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
-import com.typewritermc.scripting.RuntimeMemberId
-import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
-import com.typewritermc.types.ScalarKind
-import com.typewritermc.types.TypeUse
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -50,23 +46,16 @@ val PublicationComparisonTest by testSuite {
                 listOf(PublicationChange.RootUpdated(original.root))
         }
     }
-    test("token and signature changes are meaningful even with no roots") {
+    test("token changes are meaningful even with no roots") {
         val selected = comparisonSelected(comparisonArtifact()).copy(outputs = emptyList())
-        val signature =
-            RuntimeMemberSignature(RuntimeMemberId("fixture.member"), null, emptyList(), TypeUse.Scalar(ScalarKind.Text), emptySet())
-        listOf(
-            EngineImplementationInputs(emptySet(), InputToken("new")),
-            EngineImplementationInputs(setOf(signature), InputToken("implementation")),
-        ).forEach { engine ->
-            PublicationComparison
-                .between(
-                    selected,
-                    emptyList(),
-                    engine,
-                ).shouldBeInstanceOf<PublicationComparison.Changed>()
-                .delta.allChanges shouldBe
-                listOf(PublicationChange.RequirementsChanged)
-        }
+        PublicationComparison
+            .between(
+                selected,
+                emptyList(),
+                EngineImplementationInputs(InputToken("new")),
+            ).shouldBeInstanceOf<PublicationComparison.Changed>()
+            .delta.allChanges shouldBe
+            listOf(PublicationChange.RequirementsChanged)
         PublicationComparison.between(null, emptyList(), testEngineInputs()) shouldBe PublicationComparison.Unchanged
     }
     test("old envelope format requires explicit publication even without changed output") {
@@ -114,7 +103,6 @@ private fun comparisonSelected(artifact: CompiledArtifact) =
         com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog"),
         "implementation",
-        emptySet(),
         listOf(
             PublishedOutput(
                 CompiledArtifactReference(artifact.root, artifact.formatRevision, artifact.mediaType, artifact.semanticDigest),

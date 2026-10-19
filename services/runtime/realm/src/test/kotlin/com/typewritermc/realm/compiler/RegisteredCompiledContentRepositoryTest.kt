@@ -132,7 +132,7 @@ internal fun publicationDatabase(): Surreal =
         MigrationResources().loadRealmSchema().forEach { query(it.script).take(0) }
     }
 
-internal fun testEngineInputs() = EngineImplementationInputs(emptySet(), InputToken("implementation"))
+internal fun testEngineInputs() = EngineImplementationInputs(InputToken("implementation"))
 
 internal fun testPublishedContent(
     id: String,
@@ -143,7 +143,6 @@ internal fun testPublishedContent(
         com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog"),
         "implementation",
-        emptySet(),
         listOf(
             PublishedOutput(
                 CompiledArtifactReference(

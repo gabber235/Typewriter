@@ -5,7 +5,6 @@ import com.typewritermc.discovery.RuntimeRegistrar
 import com.typewritermc.engine.LoadedPublishedContent
 import com.typewritermc.loader.api.RuntimeHealth
 import com.typewritermc.loader.api.StagedHostedRuntime
-import com.typewritermc.scripting.RuntimeMemberSignature
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +22,6 @@ class ReloadableEngineRuntime(
     private val parentScope: CoroutineScope,
     private val implementationToken: String,
     private val enforceImplementationCompatibility: Boolean = true,
-    private val runtimeSignatures: Set<RuntimeMemberSignature>,
     private val contentGateway: EngineContentGateway? = null,
     private val contentDelivery: EngineContentDelivery? = null,
 ) : StagedHostedRuntime {
@@ -59,9 +57,6 @@ class ReloadableEngineRuntime(
             require(content.descriptor.implementationToken == implementationToken) {
                 "Compiled content targets a different engine implementation."
             }
-        }
-        require(content.descriptor.runtimeSignatures == runtimeSignatures) {
-            "Compiled content requires a different runtime member signature set."
         }
         val current = lastContent
         if (current?.descriptor?.publication == content.descriptor.publication) {

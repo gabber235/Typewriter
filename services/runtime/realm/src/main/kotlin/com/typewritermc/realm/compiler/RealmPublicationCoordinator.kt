@@ -368,7 +368,7 @@ internal class RealmPublicationCoordinator(
                 notifyTransition(attempt, onTransition)
             }
             announce(PublicationState.Compiling)
-            val content = artifacts.store(id, catalog, inputs.token.value, inputs.signatures, frozen.candidate.artifacts)
+            val content = artifacts.store(id, catalog, inputs.token.value, frozen.candidate.artifacts)
             attempts.phase(id, PublicationState.Activating)
             synchronized(lock) {
                 releasing = frozen.copy(phase = PublicationActivationPhase.Activating)

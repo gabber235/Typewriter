@@ -155,8 +155,6 @@ pub struct PublishedContent {
     pub format_revision: i32,
     pub catalog: crate::skirout::base::editor::v1::type_catalog::CatalogGeneration,
     pub implementation_token: String,
-    pub runtime_signatures:
-        Vec<crate::skirout::base::editor::v1::publication::RuntimeMemberSignature>,
     pub outputs: Vec<PublishedOutput>,
     /// Set this to None when you're creating a struct.
     pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<PublishedContent>>,
@@ -867,10 +865,9 @@ fn initialize_module_serializers() {
                 |x: &PublishedContent| &x.implementation_token,
                 |x: &mut PublishedContent, v| x.implementation_token = v,
             );
-            (*a).add_field("runtime_signatures", 4, crate::skir_client::Serializer::array(crate::skirout::base::editor::v1::publication::RuntimeMemberSignature::serializer()), "", |x: &PublishedContent| &x.runtime_signatures, |x: &mut PublishedContent, v| x.runtime_signatures = v);
             (*a).add_field(
                 "outputs",
-                5,
+                4,
                 crate::skir_client::Serializer::array(
                     crate::skir_client::internal::struct_serializer_from_static(
                         PublishedOutput::_adapter(),

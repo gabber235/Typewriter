@@ -3015,86 +3015,6 @@ impl CanonicalValueHash {
 }
 
 // ==============================================================================
-// struct RuntimeMemberId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct RuntimeMemberId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<RuntimeMemberId>>,
-}
-
-impl RuntimeMemberId {
-    pub fn default_ref() -> &'static RuntimeMemberId {
-        static D: std::sync::LazyLock<RuntimeMemberId> =
-            std::sync::LazyLock::new(RuntimeMemberId::default);
-        &D
-    }
-}
-
-impl RuntimeMemberId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<RuntimeMemberId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<RuntimeMemberId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "RuntimeMemberId",
-                "",
-                |x: &RuntimeMemberId| &x._unrecognized,
-                |x: &mut RuntimeMemberId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<RuntimeMemberId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(RuntimeMemberId::_adapter())
-    }
-}
-
-// ==============================================================================
-// struct ScriptCapabilityId
-// ==============================================================================
-
-#[derive(Clone, Debug, PartialEq, Default)]
-pub struct ScriptCapabilityId {
-    pub value: String,
-    /// Set this to None when you're creating a struct.
-    pub _unrecognized: Option<crate::skir_client::UnrecognizedFields<ScriptCapabilityId>>,
-}
-
-impl ScriptCapabilityId {
-    pub fn default_ref() -> &'static ScriptCapabilityId {
-        static D: std::sync::LazyLock<ScriptCapabilityId> =
-            std::sync::LazyLock::new(ScriptCapabilityId::default);
-        &D
-    }
-}
-
-impl ScriptCapabilityId {
-    fn _adapter() -> &'static crate::skir_client::internal::StructAdapter<ScriptCapabilityId> {
-        static ADAPTER: std::sync::LazyLock<
-            crate::skir_client::internal::StructAdapter<ScriptCapabilityId>,
-        > = std::sync::LazyLock::new(|| {
-            crate::skir_client::internal::StructAdapter::new(
-                "editor/v1/type_catalog.skir",
-                "ScriptCapabilityId",
-                "",
-                |x: &ScriptCapabilityId| &x._unrecognized,
-                |x: &mut ScriptCapabilityId, u| x._unrecognized = u,
-            )
-        });
-        &*ADAPTER
-    }
-    pub fn serializer() -> crate::skir_client::Serializer<ScriptCapabilityId> {
-        initialize_module_serializers();
-        crate::skir_client::internal::struct_serializer_from_static(ScriptCapabilityId::_adapter())
-    }
-}
-
-// ==============================================================================
 // struct RelationId
 // ==============================================================================
 
@@ -5605,32 +5525,6 @@ fn initialize_module_serializers() {
                 "",
                 |x: &CanonicalValueHash| &x.value,
                 |x: &mut CanonicalValueHash, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<RuntimeMemberId> =
-                RuntimeMemberId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &RuntimeMemberId| &x.value,
-                |x: &mut RuntimeMemberId, v| x.value = v,
-            );
-            (*a).finalize();
-        }
-        unsafe {
-            let a: *mut crate::skir_client::internal::StructAdapter<ScriptCapabilityId> =
-                ScriptCapabilityId::_adapter() as *const _ as *mut _;
-            (*a).add_field(
-                "value",
-                0,
-                crate::skir_client::Serializer::string(),
-                "",
-                |x: &ScriptCapabilityId| &x.value,
-                |x: &mut ScriptCapabilityId, v| x.value = v,
             );
             (*a).finalize();
         }

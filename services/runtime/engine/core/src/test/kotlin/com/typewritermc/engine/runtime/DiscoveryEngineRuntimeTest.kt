@@ -153,7 +153,6 @@ private fun TestScope.runtime(
             parentScope = this,
             implementationToken = "implementation",
             enforceImplementationCompatibility = enforceImplementationCompatibility,
-            runtimeSignatures = emptySet(),
             contentGateway =
                 revisions?.let { values ->
                     EngineContentGateway {
@@ -179,7 +178,6 @@ private fun content(
             com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
             CatalogGeneration("catalog:1"),
             implementationToken,
-            emptySet(),
             emptyList(),
         ),
         emptyList(),

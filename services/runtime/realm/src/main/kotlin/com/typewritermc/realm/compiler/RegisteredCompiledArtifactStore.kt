@@ -11,7 +11,6 @@ import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.loader.api.artifact.PublicationBlobRetention
 import com.typewritermc.loader.api.artifact.PublicationBlobRoots
-import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
 import com.typewritermc.services.libs.filetransfer.blob.BlobMetadata
@@ -29,7 +28,6 @@ class RegisteredCompiledArtifactStore(
         publication: PublicationId,
         catalog: CatalogGeneration,
         implementationToken: String,
-        runtimeSignatures: Set<RuntimeMemberSignature>,
         artifacts: Collection<CompiledArtifact>,
     ): PublishedContent {
         val sources = artifacts.map { it to ByteArrayBlobSource(it.payload) }
@@ -51,7 +49,6 @@ class RegisteredCompiledArtifactStore(
             PUBLISHED_CONTENT_FORMAT_REVISION,
             catalog,
             implementationToken,
-            runtimeSignatures,
             outputs,
         )
     }

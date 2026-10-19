@@ -185,7 +185,6 @@ val RealmPublicationCoordinatorTest by testSuite {
                 com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
                 CatalogGeneration("other"),
                 "implementation",
-                emptySet(),
                 emptyList(),
             )
         fixture.publisher.publish(fixture.ready().candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
@@ -283,7 +282,7 @@ val RealmPublicationCoordinatorTest by testSuite {
         val fixture = PublicationFixture()
         fixture.publisher.refresh()
         val candidate = fixture.ready()
-        fixture.engineInputs = EngineImplementationInputs(emptySet(), com.typewritermc.checking.InputToken("new"))
+        fixture.engineInputs = EngineImplementationInputs(com.typewritermc.checking.InputToken("new"))
         fixture.publisher.publish(candidate.candidate).shouldBeInstanceOf<PublicationResult.CandidateChanged>()
         fixture.attempts.started shouldBe 0
         fixture.blobRequests shouldBe 0

@@ -9168,224 +9168,6 @@ class CanonicalValueHash private constructor(
     }
 }
 
-sealed interface RuntimeMemberId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.RuntimeMemberId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuntimeMemberId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RuntimeMemberId>? =
-        null,
-): skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RuntimeMemberId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.RuntimeMemberId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.RuntimeMemberId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuntimeMemberIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuntimeMemberId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.RuntimeMemberId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.RuntimeMemberId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.RuntimeMemberId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuntimeMemberId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.RuntimeMemberId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuntimeMemberId] instances. */
-        val serializer get() = _SerializerRegistry.RuntimeMemberIdSerializer;
-
-        /** Describes the [RuntimeMemberId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuntimeMemberIdSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ScriptCapabilityId_OrMutable {
-    val value: kotlin.String;
-
-    fun toFrozen(): skirout.editor.v1.type_catalog.ScriptCapabilityId;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ScriptCapabilityId private constructor(
-    override val value: kotlin.String,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ScriptCapabilityId>? =
-        null,
-): skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ScriptCapabilityId>? =
-            null,
-    ): this(
-        value,
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        value = this.value,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        value: kotlin.String =
-            this.value,
-    ) = skirout.editor.v1.type_catalog.ScriptCapabilityId(
-        value,
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.type_catalog.ScriptCapabilityId && this.value == other.value);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.value).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ScriptCapabilityIdSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ScriptCapabilityId]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var value: kotlin.String =
-            "",
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.type_catalog.ScriptCapabilityId>? =
-            null,
-    ): skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.type_catalog.ScriptCapabilityId(
-            value = this.value,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.type_catalog.ScriptCapabilityId(
-                "",
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ScriptCapabilityId].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            value: kotlin.String =
-                "",
-        ) = skirout.editor.v1.type_catalog.ScriptCapabilityId(
-            value = value,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ScriptCapabilityId] instances. */
-        val serializer get() = _SerializerRegistry.ScriptCapabilityIdSerializer;
-
-        /** Describes the [ScriptCapabilityId] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ScriptCapabilityIdSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface RelationId_OrMutable {
     val value: kotlin.String;
 
@@ -13315,18 +13097,6 @@ private object _SerializerRegistry {
 
     val RuleOriginSerializer = build.skir.internal.makeSerializer(RuleOriginSerializerImpl);
 
-    val RuntimeMemberIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:RuntimeMemberId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuntimeMemberIdSerializer = build.skir.internal.makeSerializer(RuntimeMemberIdSerializerImpl);
-
     val ScalarKindSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.type_catalog.ScalarKind, skirout.editor.v1.type_catalog.ScalarKind.Unknown>(
             recordId = "editor/v1/type_catalog.skir:ScalarKind",
@@ -13363,18 +13133,6 @@ private object _SerializerRegistry {
     );
 
     val ScalarResolvedRepresentationSerializer = build.skir.internal.makeSerializer(ScalarResolvedRepresentationSerializerImpl);
-
-    val ScriptCapabilityIdSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/type_catalog.skir:ScriptCapabilityId",
-        doc = "",
-        defaultInstance = skirout.editor.v1.type_catalog.ScriptCapabilityId.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.type_catalog.ScriptCapabilityId.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ScriptCapabilityIdSerializer = build.skir.internal.makeSerializer(ScriptCapabilityIdSerializerImpl);
 
     val SelectionIdSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/type_catalog.skir:SelectionId",
@@ -15139,17 +14897,6 @@ private object _SerializerRegistry {
         );
         RuleOriginSerializerImpl.finalizeStruct();
 
-        RuntimeMemberIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        RuntimeMemberIdSerializerImpl.finalizeStruct();
-
         ScalarKindSerializerImpl.addConstantVariant(
             1,
             "unit",
@@ -15240,17 +14987,6 @@ private object _SerializerRegistry {
             { mut, v -> mut.kind = v },
         );
         ScalarResolvedRepresentationSerializerImpl.finalizeStruct();
-
-        ScriptCapabilityIdSerializerImpl.addField(
-            "value",
-            "value",
-            0,
-            build.skir.Serializers.string,
-            "",
-            { it.value },
-            { mut, v -> mut.value = v },
-        );
-        ScriptCapabilityIdSerializerImpl.finalizeStruct();
 
         SelectionIdSerializerImpl.addField(
             "value",

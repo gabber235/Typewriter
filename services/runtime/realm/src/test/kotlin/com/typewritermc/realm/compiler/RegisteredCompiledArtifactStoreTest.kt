@@ -24,15 +24,15 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val blobs = InMemoryBlobEndpoint()
         val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
         val firstArtifact = 'a'.compiledArtifact("first")
-        val first = store.store(PublicationId("first"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
-        val second = store.store(PublicationId("second"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(firstArtifact))
+        val first = store.store(PublicationId("first"), CatalogGeneration("catalog"), "implementation", listOf(firstArtifact))
+        val second = store.store(PublicationId("second"), CatalogGeneration("catalog"), "implementation", listOf(firstArtifact))
         first.outputs.single().blob shouldBe second.outputs.single().blob
         val replacement = 'b'.compiledArtifact("replacement")
-        val third = store.store(PublicationId("third"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(replacement))
+        val third = store.store(PublicationId("third"), CatalogGeneration("catalog"), "implementation", listOf(replacement))
         third.outputs.map { it.reference.root } shouldBe listOf(replacement.root)
         third.publication shouldBe PublicationId("third")
         third.formatRevision shouldBe com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION
-        val empty = store.store(PublicationId("empty"), CatalogGeneration("catalog"), "implementation", emptySet(), emptyList())
+        val empty = store.store(PublicationId("empty"), CatalogGeneration("catalog"), "implementation", emptyList())
         empty.outputs shouldBe emptyList()
     }
     test("unchanged selected output restores missing exact bytes without a new publication") {
@@ -40,7 +40,7 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val pins = TestPublicationRetention()
         val store = RegisteredCompiledArtifactStore(blobs, pins)
         val artifact = 'a'.compiledArtifact("root")
-        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(artifact))
+        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", listOf(artifact))
         store.selected(selected)
         val digest =
             selected.outputs
@@ -60,7 +60,7 @@ val RegisteredCompiledArtifactStoreTest by testSuite {
         val blobs = InMemoryBlobEndpoint()
         val store = RegisteredCompiledArtifactStore(blobs, TestPublicationRetention())
         val artifact = 'a'.compiledArtifact("root")
-        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", emptySet(), listOf(artifact))
+        val selected = store.store(PublicationId("selected"), CatalogGeneration("catalog"), "implementation", listOf(artifact))
         val digest =
             ArtifactDigest(
                 com.typewritermc.services.libs.filetransfer.blob.DigestAlgorithm.SHA_256,

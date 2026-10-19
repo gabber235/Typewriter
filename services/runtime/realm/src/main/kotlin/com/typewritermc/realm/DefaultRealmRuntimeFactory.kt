@@ -130,10 +130,7 @@ class DefaultRealmRuntimeFactory : RealmRuntimeFactory {
                         },
                     engine =
                         StagedEngineImplementationSource(
-                            EngineImplementationInputs(
-                                signatures = emptySet(),
-                                token = InputToken(context.publicationTarget.fingerprint()),
-                            ),
+                            EngineImplementationInputs(InputToken(context.publicationTarget.fingerprint())),
                         ),
                 )
             return DefaultManagedRealmRuntime(

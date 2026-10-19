@@ -13,7 +13,6 @@ import com.typewritermc.engine.ContentDigest
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.engine.PublishedOutput
 import com.typewritermc.engine.RuntimeCompilationFacts
-import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.services.libs.filetransfer.blob.ArtifactDigest
 import com.typewritermc.services.libs.filetransfer.blob.BlobChunk
 import com.typewritermc.services.libs.filetransfer.blob.BlobEndpoint
@@ -165,7 +164,6 @@ private fun activation(
         com.typewritermc.engine.PUBLISHED_CONTENT_FORMAT_REVISION,
         CatalogGeneration("catalog:1"),
         "implementation",
-        emptySet(),
         outputs,
     )
 }

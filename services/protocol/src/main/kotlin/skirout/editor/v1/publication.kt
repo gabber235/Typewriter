@@ -20,785 +20,7 @@ import build.skir.internal.MustNameArguments as _MustNameArguments;
 import build.skir.internal.UnrecognizedFields as _UnrecognizedFields;
 import build.skir.internal.UnrecognizedVariant as _UnrecognizedVariant;
 
-sealed interface OwnedPortableTypes_OrMutable {
-    val owner: skirout.editor.v1.type_catalog.DeclarationOwner_OrMutable;
-    val definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.OwnedPortableTypes;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class OwnedPortableTypes private constructor(
-    override val owner: skirout.editor.v1.type_catalog.DeclarationOwner,
-    override val definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.OwnedPortableTypes>? =
-        null,
-): skirout.editor.v1.publication.OwnedPortableTypes_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        owner: skirout.editor.v1.type_catalog.DeclarationOwner_OrMutable,
-        definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.OwnedPortableTypes>? =
-            null,
-    ): this(
-        owner.toFrozen(),
-        build.skir.internal.toFrozenList(definitions, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        owner = this.owner,
-        definitions = this.definitions,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        owner: skirout.editor.v1.type_catalog.DeclarationOwner_OrMutable =
-            this.owner,
-        definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-            this.definitions,
-    ) = skirout.editor.v1.publication.OwnedPortableTypes(
-        owner.toFrozen(),
-        build.skir.internal.toFrozenList(definitions, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.OwnedPortableTypes && this.owner == other.owner && this.definitions == other.definitions);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.owner, this.definitions).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.OwnedPortableTypesSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [OwnedPortableTypes]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var owner: skirout.editor.v1.type_catalog.DeclarationOwner_OrMutable =
-            skirout.editor.v1.type_catalog.DeclarationOwner.partial(),
-        override var definitions: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.OwnedPortableTypes>? =
-            null,
-    ): skirout.editor.v1.publication.OwnedPortableTypes_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.OwnedPortableTypes(
-            owner = this.owner,
-            definitions = this.definitions,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [owner] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [owner] and returns it.
-         */
-        val mutableOwner: skirout.editor.v1.type_catalog.DeclarationOwner.Mutable get() {
-            var value = this.owner;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.DeclarationOwner -> {
-                    value = value.toMutable();
-                    this.owner = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.DeclarationOwner.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [definitions] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [definitions] and returns it.
-         */
-        val mutableDefinitions: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> get() {
-            var value = this.definitions;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.definitions = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.OwnedPortableTypes(
-                skirout.editor.v1.type_catalog.DeclarationOwner.partial(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [OwnedPortableTypes].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            owner: skirout.editor.v1.type_catalog.DeclarationOwner_OrMutable =
-                skirout.editor.v1.type_catalog.DeclarationOwner.partial(),
-            definitions: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinition_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinition>(),
-        ) = skirout.editor.v1.publication.OwnedPortableTypes(
-            owner = owner,
-            definitions = definitions,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [OwnedPortableTypes] instances. */
-        val serializer get() = _SerializerRegistry.OwnedPortableTypesSerializer;
-
-        /** Describes the [OwnedPortableTypes] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.OwnedPortableTypesSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuntimeMemberTemplate_OrMutable {
-    val id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable;
-    val receiver: skirout.editor.v1.type_catalog.TypeTemplate?;
-    val arguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate>;
-    val result: skirout.editor.v1.type_catalog.TypeTemplate;
-    val requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.RuntimeMemberTemplate;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuntimeMemberTemplate private constructor(
-    override val id: skirout.editor.v1.type_catalog.RuntimeMemberId,
-    override val receiver: skirout.editor.v1.type_catalog.TypeTemplate?,
-    override val arguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate>,
-    override val result: skirout.editor.v1.type_catalog.TypeTemplate,
-    override val requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberTemplate>? =
-        null,
-): skirout.editor.v1.publication.RuntimeMemberTemplate_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable,
-        receiver: skirout.editor.v1.type_catalog.TypeTemplate?,
-        arguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate>,
-        result: skirout.editor.v1.type_catalog.TypeTemplate,
-        requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberTemplate>? =
-            null,
-    ): this(
-        id.toFrozen(),
-        receiver,
-        build.skir.internal.toFrozenList(arguments),
-        result,
-        build.skir.internal.toFrozenList(requiredCapabilities, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        id = this.id,
-        receiver = this.receiver,
-        arguments = this.arguments,
-        result = this.result,
-        requiredCapabilities = this.requiredCapabilities,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-            this.id,
-        receiver: skirout.editor.v1.type_catalog.TypeTemplate? =
-            this.receiver,
-        arguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate> =
-            this.arguments,
-        result: skirout.editor.v1.type_catalog.TypeTemplate =
-            this.result,
-        requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            this.requiredCapabilities,
-    ) = skirout.editor.v1.publication.RuntimeMemberTemplate(
-        id.toFrozen(),
-        receiver,
-        build.skir.internal.toFrozenList(arguments),
-        result,
-        build.skir.internal.toFrozenList(requiredCapabilities, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.RuntimeMemberTemplate && this.id == other.id && this.receiver == other.receiver && this.arguments == other.arguments && this.result == other.result && this.requiredCapabilities == other.requiredCapabilities);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.receiver, this.arguments, this.result, this.requiredCapabilities).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuntimeMemberTemplateSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuntimeMemberTemplate]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-            skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-        override var receiver: skirout.editor.v1.type_catalog.TypeTemplate? =
-            null,
-        override var arguments: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeTemplate> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
-        override var result: skirout.editor.v1.type_catalog.TypeTemplate =
-            skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-        override var requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberTemplate>? =
-            null,
-    ): skirout.editor.v1.publication.RuntimeMemberTemplate_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.RuntimeMemberTemplate(
-            id = this.id,
-            receiver = this.receiver,
-            arguments = this.arguments,
-            result = this.result,
-            requiredCapabilities = this.requiredCapabilities,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [id] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-         */
-        val mutableId: skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable get() {
-            var value = this.id;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.RuntimeMemberId -> {
-                    value = value.toMutable();
-                    this.id = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [arguments] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [arguments] and returns it.
-         */
-        val mutableArguments: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeTemplate> get() {
-            var value = this.arguments;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.arguments = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [requiredCapabilities] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
-         */
-        val mutableRequiredCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
-            var value = this.requiredCapabilities;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.requiredCapabilities = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.RuntimeMemberTemplate(
-                skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-                null,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuntimeMemberTemplate].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-                skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-            receiver: skirout.editor.v1.type_catalog.TypeTemplate? =
-                null,
-            arguments: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeTemplate> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeTemplate>(),
-            result: skirout.editor.v1.type_catalog.TypeTemplate =
-                skirout.editor.v1.type_catalog.TypeTemplate.UNKNOWN,
-            requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        ) = skirout.editor.v1.publication.RuntimeMemberTemplate(
-            id = id,
-            receiver = receiver,
-            arguments = arguments,
-            result = result,
-            requiredCapabilities = requiredCapabilities,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuntimeMemberTemplate] instances. */
-        val serializer get() = _SerializerRegistry.RuntimeMemberTemplateSerializer;
-
-        /** Describes the [RuntimeMemberTemplate] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuntimeMemberTemplateSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface RuntimeMemberSignature_OrMutable {
-    val id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable;
-    val receiver: skirout.editor.v1.type_catalog.TypeUse?;
-    val parameters: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeUse>;
-    val result: skirout.editor.v1.type_catalog.TypeUse;
-    val requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.RuntimeMemberSignature;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class RuntimeMemberSignature private constructor(
-    override val id: skirout.editor.v1.type_catalog.RuntimeMemberId,
-    override val receiver: skirout.editor.v1.type_catalog.TypeUse?,
-    override val parameters: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeUse>,
-    override val result: skirout.editor.v1.type_catalog.TypeUse,
-    override val requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberSignature>? =
-        null,
-): skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable,
-        receiver: skirout.editor.v1.type_catalog.TypeUse?,
-        parameters: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeUse>,
-        result: skirout.editor.v1.type_catalog.TypeUse,
-        requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberSignature>? =
-            null,
-    ): this(
-        id.toFrozen(),
-        receiver,
-        build.skir.internal.toFrozenList(parameters),
-        result,
-        build.skir.internal.toFrozenList(requiredCapabilities, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        id = this.id,
-        receiver = this.receiver,
-        parameters = this.parameters,
-        result = this.result,
-        requiredCapabilities = this.requiredCapabilities,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-            this.id,
-        receiver: skirout.editor.v1.type_catalog.TypeUse? =
-            this.receiver,
-        parameters: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeUse> =
-            this.parameters,
-        result: skirout.editor.v1.type_catalog.TypeUse =
-            this.result,
-        requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            this.requiredCapabilities,
-    ) = skirout.editor.v1.publication.RuntimeMemberSignature(
-        id.toFrozen(),
-        receiver,
-        build.skir.internal.toFrozenList(parameters),
-        result,
-        build.skir.internal.toFrozenList(requiredCapabilities, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.RuntimeMemberSignature && this.id == other.id && this.receiver == other.receiver && this.parameters == other.parameters && this.result == other.result && this.requiredCapabilities == other.requiredCapabilities);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.id, this.receiver, this.parameters, this.result, this.requiredCapabilities).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.RuntimeMemberSignatureSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [RuntimeMemberSignature]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-            skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-        override var receiver: skirout.editor.v1.type_catalog.TypeUse? =
-            null,
-        override var parameters: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeUse> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeUse>(),
-        override var result: skirout.editor.v1.type_catalog.TypeUse =
-            skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-        override var requiredCapabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.RuntimeMemberSignature>? =
-            null,
-    ): skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.RuntimeMemberSignature(
-            id = this.id,
-            receiver = this.receiver,
-            parameters = this.parameters,
-            result = this.result,
-            requiredCapabilities = this.requiredCapabilities,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [id] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [id] and returns it.
-         */
-        val mutableId: skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable get() {
-            var value = this.id;
-            return when (value) {
-                is skirout.editor.v1.type_catalog.RuntimeMemberId -> {
-                    value = value.toMutable();
-                    this.id = value;
-                    return value;
-                }
-                is skirout.editor.v1.type_catalog.RuntimeMemberId.Mutable -> value;
-            }
-        }
-
-        /**
-         * If the value of [parameters] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [parameters] and returns it.
-         */
-        val mutableParameters: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeUse> get() {
-            var value = this.parameters;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.parameters = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [requiredCapabilities] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [requiredCapabilities] and returns it.
-         */
-        val mutableRequiredCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
-            var value = this.requiredCapabilities;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.requiredCapabilities = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.RuntimeMemberSignature(
-                skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-                null,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeUse>(),
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [RuntimeMemberSignature].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            id: skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable =
-                skirout.editor.v1.type_catalog.RuntimeMemberId.partial(),
-            receiver: skirout.editor.v1.type_catalog.TypeUse? =
-                null,
-            parameters: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeUse> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeUse>(),
-            result: skirout.editor.v1.type_catalog.TypeUse =
-                skirout.editor.v1.type_catalog.TypeUse.UNKNOWN,
-            requiredCapabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        ) = skirout.editor.v1.publication.RuntimeMemberSignature(
-            id = id,
-            receiver = receiver,
-            parameters = parameters,
-            result = result,
-            requiredCapabilities = requiredCapabilities,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [RuntimeMemberSignature] instances. */
-        val serializer get() = _SerializerRegistry.RuntimeMemberSignatureSerializer;
-
-        /** Describes the [RuntimeMemberSignature] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.RuntimeMemberSignatureSerializerImpl.typeDescriptor;
-    }
-}
-
-sealed interface ScriptContextDescriptor_OrMutable {
-    val types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable>;
-    val members: kotlin.collections.List<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable>;
-    val capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>;
-
-    fun toFrozen(): skirout.editor.v1.publication.ScriptContextDescriptor;
-}
-
-/** Deeply immutable. */
-@kotlin.Suppress("UNUSED_PARAMETER")
-class ScriptContextDescriptor private constructor(
-    override val types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId>,
-    override val members: kotlin.collections.List<skirout.editor.v1.type_catalog.RuntimeMemberId>,
-    override val capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId>,
-    internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.ScriptContextDescriptor>? =
-        null,
-): skirout.editor.v1.publication.ScriptContextDescriptor_OrMutable {
-    constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable>,
-        members: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable>,
-        capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable>,
-        _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.ScriptContextDescriptor>? =
-            null,
-    ): this(
-        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(members, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(capabilities, { it.toFrozen() }),
-        _unrecognizedFields,
-    ) {}
-
-    @kotlin.Deprecated("Already frozen", kotlin.ReplaceWith("this"))
-    override fun toFrozen() = this;
-
-    /** Returns a mutable shallow copy of this instance */
-    fun toMutable() = Mutable(
-        types = this.types,
-        members = this.members,
-        capabilities = this.capabilities,
-    );
-
-    /** Returns a shallow copy of this instance with the specified fields replaced. */
-    fun copy(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
-            this.types,
-        members: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable> =
-            this.members,
-        capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            this.capabilities,
-    ) = skirout.editor.v1.publication.ScriptContextDescriptor(
-        build.skir.internal.toFrozenList(types, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(members, { it.toFrozen() }),
-        build.skir.internal.toFrozenList(capabilities, { it.toFrozen() }),
-        this._unrecognizedFields,
-    );
-
-    @kotlin.Deprecated("No point in creating an exact copy of an immutable object", kotlin.ReplaceWith("this"))
-    fun copy() = this;
-
-    override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.ScriptContextDescriptor && this.types == other.types && this.members == other.members && this.capabilities == other.capabilities);
-    }
-
-    override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.types, this.members, this.capabilities).hashCode();
-    }
-
-    override fun toString(): kotlin.String {
-        return build.skir.internal.toStringImpl(
-            this,
-            _SerializerRegistry.ScriptContextDescriptorSerializerImpl,
-        )
-    }
-
-    /** Mutable version of [ScriptContextDescriptor]. */
-    class Mutable internal constructor(
-        _mustNameArguments: _MustNameArguments =
-            _MustNameArguments,
-        override var types: kotlin.collections.List<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-        override var members: kotlin.collections.List<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RuntimeMemberId>(),
-        override var capabilities: kotlin.collections.List<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.ScriptContextDescriptor>? =
-            null,
-    ): skirout.editor.v1.publication.ScriptContextDescriptor_OrMutable {
-        /** Returns a deeply immutable copy of this instance */
-        override fun toFrozen() = skirout.editor.v1.publication.ScriptContextDescriptor(
-            types = this.types,
-            members = this.members,
-            capabilities = this.capabilities,
-            _unrecognizedFields = this._unrecognizedFields,
-        );
-
-        /**
-         * If the value of [types] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [types] and returns it.
-         */
-        val mutableTypes: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> get() {
-            var value = this.types;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.types = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [members] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [members] and returns it.
-         */
-        val mutableMembers: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable> get() {
-            var value = this.members;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.members = value;
-                    value;
-                }
-            }
-        }
-
-        /**
-         * If the value of [capabilities] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [capabilities] and returns it.
-         */
-        val mutableCapabilities: kotlin.collections.MutableList<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> get() {
-            var value = this.capabilities;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.capabilities = value;
-                    value;
-                }
-            }
-        }
-    }
-
-    companion object {
-        private val default =
-            skirout.editor.v1.publication.ScriptContextDescriptor(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RuntimeMemberId>(),
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-            );
-
-        /** Returns an instance with all fields set to their default values. */
-        fun partial() = default;
-
-        /**
-         * Creates a new instance of [ScriptContextDescriptor].
-         * Unlike the constructor, does not require all fields to be specified.
-         * Missing fields will be set to their default values.
-         */
-        fun partial(
-            _mustNameArguments: _MustNameArguments =
-                _MustNameArguments,
-            types: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.TypeDefinitionId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.TypeDefinitionId>(),
-            members: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.RuntimeMemberId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.RuntimeMemberId>(),
-            capabilities: kotlin.collections.Iterable<skirout.editor.v1.type_catalog.ScriptCapabilityId_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.type_catalog.ScriptCapabilityId>(),
-        ) = skirout.editor.v1.publication.ScriptContextDescriptor(
-            types = types,
-            members = members,
-            capabilities = capabilities,
-            _unrecognizedFields = null,
-        );
-
-        /** Serializer for [ScriptContextDescriptor] instances. */
-        val serializer get() = _SerializerRegistry.ScriptContextDescriptorSerializer;
-
-        /** Describes the [ScriptContextDescriptor] type. Provides runtime introspection capabilities. */
-        val typeDescriptor get() = _SerializerRegistry.ScriptContextDescriptorSerializerImpl.typeDescriptor;
-    }
-}
-
 sealed interface EngineImplementationInputs_OrMutable {
-    val signatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable>;
     val token: skirout.editor.v1.type_catalog.InputToken_OrMutable;
 
     fun toFrozen(): skirout.editor.v1.publication.EngineImplementationInputs;
@@ -811,7 +33,6 @@ sealed interface EngineImplementationInputs_OrMutable {
  */
 @kotlin.Suppress("UNUSED_PARAMETER")
 class EngineImplementationInputs private constructor(
-    override val signatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature>,
     override val token: skirout.editor.v1.type_catalog.InputToken,
     internal val _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.EngineImplementationInputs>? =
         null,
@@ -819,12 +40,10 @@ class EngineImplementationInputs private constructor(
     constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        signatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable>,
         token: skirout.editor.v1.type_catalog.InputToken_OrMutable,
         _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.EngineImplementationInputs>? =
             null,
     ): this(
-        build.skir.internal.toFrozenList(signatures, { it.toFrozen() }),
         token.toFrozen(),
         _unrecognizedFields,
     ) {}
@@ -834,7 +53,6 @@ class EngineImplementationInputs private constructor(
 
     /** Returns a mutable shallow copy of this instance */
     fun toMutable() = Mutable(
-        signatures = this.signatures,
         token = this.token,
     );
 
@@ -842,12 +60,9 @@ class EngineImplementationInputs private constructor(
     fun copy(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        signatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-            this.signatures,
         token: skirout.editor.v1.type_catalog.InputToken_OrMutable =
             this.token,
     ) = skirout.editor.v1.publication.EngineImplementationInputs(
-        build.skir.internal.toFrozenList(signatures, { it.toFrozen() }),
         token.toFrozen(),
         this._unrecognizedFields,
     );
@@ -856,11 +71,11 @@ class EngineImplementationInputs private constructor(
     fun copy() = this;
 
     override fun equals(other: kotlin.Any?): kotlin.Boolean {
-        return this === other || (other is skirout.editor.v1.publication.EngineImplementationInputs && this.signatures == other.signatures && this.token == other.token);
+        return this === other || (other is skirout.editor.v1.publication.EngineImplementationInputs && this.token == other.token);
     }
 
     override fun hashCode(): kotlin.Int {
-        return kotlin.collections.listOf<kotlin.Any?>(this.signatures, this.token).hashCode();
+        return kotlin.collections.listOf<kotlin.Any?>(this.token).hashCode();
     }
 
     override fun toString(): kotlin.String {
@@ -874,8 +89,6 @@ class EngineImplementationInputs private constructor(
     class Mutable internal constructor(
         _mustNameArguments: _MustNameArguments =
             _MustNameArguments,
-        override var signatures: kotlin.collections.List<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-            build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
         override var token: skirout.editor.v1.type_catalog.InputToken_OrMutable =
             skirout.editor.v1.type_catalog.InputToken.partial(),
         internal var _unrecognizedFields: _UnrecognizedFields<skirout.editor.v1.publication.EngineImplementationInputs>? =
@@ -883,26 +96,9 @@ class EngineImplementationInputs private constructor(
     ): skirout.editor.v1.publication.EngineImplementationInputs_OrMutable {
         /** Returns a deeply immutable copy of this instance */
         override fun toFrozen() = skirout.editor.v1.publication.EngineImplementationInputs(
-            signatures = this.signatures,
             token = this.token,
             _unrecognizedFields = this._unrecognizedFields,
         );
-
-        /**
-         * If the value of [signatures] is already mutable, returns it as-is.
-         * Otherwise, makes a mutable copy, assigns it back to [signatures] and returns it.
-         */
-        val mutableSignatures: kotlin.collections.MutableList<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> get() {
-            var value = this.signatures;
-            return when (value) {
-                is build.skir.internal.MutableList -> value;
-                else -> {
-                    value = build.skir.internal.MutableList(value);
-                    this.signatures = value;
-                    value;
-                }
-            }
-        }
 
         /**
          * If the value of [token] is already mutable, returns it as-is.
@@ -924,7 +120,6 @@ class EngineImplementationInputs private constructor(
     companion object {
         private val default =
             skirout.editor.v1.publication.EngineImplementationInputs(
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
                 skirout.editor.v1.type_catalog.InputToken.partial(),
             );
 
@@ -939,12 +134,9 @@ class EngineImplementationInputs private constructor(
         fun partial(
             _mustNameArguments: _MustNameArguments =
                 _MustNameArguments,
-            signatures: kotlin.collections.Iterable<skirout.editor.v1.publication.RuntimeMemberSignature_OrMutable> =
-                build.skir.internal.emptyFrozenList<skirout.editor.v1.publication.RuntimeMemberSignature>(),
             token: skirout.editor.v1.type_catalog.InputToken_OrMutable =
                 skirout.editor.v1.type_catalog.InputToken.partial(),
         ) = skirout.editor.v1.publication.EngineImplementationInputs(
-            signatures = signatures,
             token = token,
             _unrecognizedFields = null,
         );
@@ -6454,18 +5646,6 @@ private object _SerializerRegistry {
 
     val EngineImplementationInputsSerializer = build.skir.internal.makeSerializer(EngineImplementationInputsSerializerImpl);
 
-    val OwnedPortableTypesSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:OwnedPortableTypes",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.OwnedPortableTypes.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.OwnedPortableTypes.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val OwnedPortableTypesSerializer = build.skir.internal.makeSerializer(OwnedPortableTypesSerializerImpl);
-
     val PublicationActivationPhaseSerializerImpl =
         build.skir.internal.EnumSerializer.create<skirout.editor.v1.publication.PublicationActivationPhase, skirout.editor.v1.publication.PublicationActivationPhase.Unknown>(
             recordId = "editor/v1/publication.skir:PublicationActivationPhase",
@@ -6872,42 +6052,6 @@ private object _SerializerRegistry {
 
     val QueryPublicationViewResponseSerializer = build.skir.internal.makeSerializer(QueryPublicationViewResponseSerializerImpl);
 
-    val RuntimeMemberSignatureSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:RuntimeMemberSignature",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.RuntimeMemberSignature.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.RuntimeMemberSignature.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuntimeMemberSignatureSerializer = build.skir.internal.makeSerializer(RuntimeMemberSignatureSerializerImpl);
-
-    val RuntimeMemberTemplateSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:RuntimeMemberTemplate",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.RuntimeMemberTemplate.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.RuntimeMemberTemplate.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val RuntimeMemberTemplateSerializer = build.skir.internal.makeSerializer(RuntimeMemberTemplateSerializerImpl);
-
-    val ScriptContextDescriptorSerializerImpl = build.skir.internal.StructSerializer(
-        recordId = "editor/v1/publication.skir:ScriptContextDescriptor",
-        doc = "",
-        defaultInstance = skirout.editor.v1.publication.ScriptContextDescriptor.partial(),
-        newMutableFn = { it?.toMutable() ?: skirout.editor.v1.publication.ScriptContextDescriptor.Mutable() },
-        toFrozenFn = { it.toFrozen() },
-        getUnrecognizedFields = { it._unrecognizedFields },
-        setUnrecognizedFields = { m, u -> m._unrecognizedFields = u },
-    );
-
-    val ScriptContextDescriptorSerializer = build.skir.internal.makeSerializer(ScriptContextDescriptorSerializerImpl);
-
     val WatchPublicationRequestSerializerImpl = build.skir.internal.StructSerializer(
         recordId = "editor/v1/publication.skir:WatchPublicationRequest",
         doc = "",
@@ -6944,48 +6088,15 @@ private object _SerializerRegistry {
         DiagnosticEvidenceSerializerImpl.finalizeStruct();
 
         EngineImplementationInputsSerializerImpl.addField(
-            "signatures",
-            "signatures",
+            "token",
+            "token",
             0,
-            build.skir.Serializers.list(
-                _SerializerRegistry.RuntimeMemberSignatureSerializer,
-            ),
-            "",
-            { it.signatures },
-            { mut, v -> mut.signatures = v },
-        );
-        EngineImplementationInputsSerializerImpl.addField(
-            "token",
-            "token",
-            1,
             skirout.editor.v1.type_catalog.InputToken.serializer,
             "",
             { it.token },
             { mut, v -> mut.token = v },
         );
         EngineImplementationInputsSerializerImpl.finalizeStruct();
-
-        OwnedPortableTypesSerializerImpl.addField(
-            "owner",
-            "owner",
-            0,
-            skirout.editor.v1.type_catalog.DeclarationOwner.serializer,
-            "",
-            { it.owner },
-            { mut, v -> mut.owner = v },
-        );
-        OwnedPortableTypesSerializerImpl.addField(
-            "definitions",
-            "definitions",
-            1,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.TypeDefinition.serializer,
-            ),
-            "",
-            { it.definitions },
-            { mut, v -> mut.definitions = v },
-        );
-        OwnedPortableTypesSerializerImpl.finalizeStruct();
 
         PublicationActivationPhaseSerializerImpl.addConstantVariant(
             1,
@@ -7943,147 +7054,6 @@ private object _SerializerRegistry {
             { it.value },
         );
         QueryPublicationViewResponseSerializerImpl.finalizeEnum();
-
-        RuntimeMemberSignatureSerializerImpl.addField(
-            "id",
-            "id",
-            0,
-            skirout.editor.v1.type_catalog.RuntimeMemberId.serializer,
-            "",
-            { it.id },
-            { mut, v -> mut.id = v },
-        );
-        RuntimeMemberSignatureSerializerImpl.addField(
-            "receiver",
-            "receiver",
-            1,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.TypeUse.serializer,
-            ),
-            "",
-            { it.receiver },
-            { mut, v -> mut.receiver = v },
-        );
-        RuntimeMemberSignatureSerializerImpl.addField(
-            "parameters",
-            "parameters",
-            2,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.TypeUse.serializer,
-            ),
-            "",
-            { it.parameters },
-            { mut, v -> mut.parameters = v },
-        );
-        RuntimeMemberSignatureSerializerImpl.addField(
-            "result",
-            "result",
-            3,
-            skirout.editor.v1.type_catalog.TypeUse.serializer,
-            "",
-            { it.result },
-            { mut, v -> mut.result = v },
-        );
-        RuntimeMemberSignatureSerializerImpl.addField(
-            "required_capabilities",
-            "requiredCapabilities",
-            4,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ScriptCapabilityId.serializer,
-            ),
-            "",
-            { it.requiredCapabilities },
-            { mut, v -> mut.requiredCapabilities = v },
-        );
-        RuntimeMemberSignatureSerializerImpl.finalizeStruct();
-
-        RuntimeMemberTemplateSerializerImpl.addField(
-            "id",
-            "id",
-            0,
-            skirout.editor.v1.type_catalog.RuntimeMemberId.serializer,
-            "",
-            { it.id },
-            { mut, v -> mut.id = v },
-        );
-        RuntimeMemberTemplateSerializerImpl.addField(
-            "receiver",
-            "receiver",
-            1,
-            build.skir.Serializers.optional(
-                skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            ),
-            "",
-            { it.receiver },
-            { mut, v -> mut.receiver = v },
-        );
-        RuntimeMemberTemplateSerializerImpl.addField(
-            "arguments",
-            "arguments",
-            2,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            ),
-            "",
-            { it.arguments },
-            { mut, v -> mut.arguments = v },
-        );
-        RuntimeMemberTemplateSerializerImpl.addField(
-            "result",
-            "result",
-            3,
-            skirout.editor.v1.type_catalog.TypeTemplate.serializer,
-            "",
-            { it.result },
-            { mut, v -> mut.result = v },
-        );
-        RuntimeMemberTemplateSerializerImpl.addField(
-            "required_capabilities",
-            "requiredCapabilities",
-            4,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ScriptCapabilityId.serializer,
-            ),
-            "",
-            { it.requiredCapabilities },
-            { mut, v -> mut.requiredCapabilities = v },
-        );
-        RuntimeMemberTemplateSerializerImpl.finalizeStruct();
-
-        ScriptContextDescriptorSerializerImpl.addField(
-            "types",
-            "types",
-            0,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.TypeDefinitionId.serializer,
-            ),
-            "",
-            { it.types },
-            { mut, v -> mut.types = v },
-        );
-        ScriptContextDescriptorSerializerImpl.addField(
-            "members",
-            "members",
-            1,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.RuntimeMemberId.serializer,
-            ),
-            "",
-            { it.members },
-            { mut, v -> mut.members = v },
-        );
-        ScriptContextDescriptorSerializerImpl.addField(
-            "capabilities",
-            "capabilities",
-            2,
-            build.skir.Serializers.list(
-                skirout.editor.v1.type_catalog.ScriptCapabilityId.serializer,
-            ),
-            "",
-            { it.capabilities },
-            { mut, v -> mut.capabilities = v },
-        );
-        ScriptContextDescriptorSerializerImpl.finalizeStruct();
 
         WatchPublicationRequestSerializerImpl.finalizeStruct();
     }

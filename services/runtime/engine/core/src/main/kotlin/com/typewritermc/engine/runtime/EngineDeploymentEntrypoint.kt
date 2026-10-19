@@ -67,7 +67,6 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 implementationToken = implementation.fingerprint(),
                 enforceImplementationCompatibility =
                     context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                runtimeSignatures = emptySet(),
                 contentGateway =
                     AssemblingEngineContentGateway(
                         listOf(

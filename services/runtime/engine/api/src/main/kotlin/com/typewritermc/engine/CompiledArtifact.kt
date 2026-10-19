@@ -2,7 +2,6 @@ package com.typewritermc.engine
 
 import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
-import com.typewritermc.scripting.RuntimeMemberSignature
 import com.typewritermc.types.ResourceId
 import kotlinx.serialization.Serializable
 
@@ -72,7 +71,6 @@ data class PublishedContent(
     val formatRevision: Int,
     val catalog: CatalogGeneration,
     val implementationToken: String,
-    val runtimeSignatures: Set<RuntimeMemberSignature>,
     val outputs: List<PublishedOutput>,
 ) {
     init {
