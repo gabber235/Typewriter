@@ -9,3 +9,18 @@
 *.mdx linguist-vendored=false
 *.mdx linguist-generated=false
 *.mdx linguist-documentation=false
+
+# Generated outputs. GitHub collapses these in pull request diffs.
+**/skirout/** linguist-generated=true
+*.g.dart linguist-generated=true
+*.freezed.dart linguist-generated=true
+*.gr.dart linguist-generated=true
+*.generated.dart linguist-generated=true
+/skir-snapshot.json linguist-generated=true
+/bun.lock linguist-generated=true
+/wkg.lock linguist-generated=true
+**/Cargo.lock linguist-generated=true
+**/pubspec.lock linguist-generated=true
+**/flutter/generated_plugin_registrant.* linguist-generated=true
+**/flutter/generated_plugins.cmake linguist-generated=true
+**/Flutter/GeneratedPluginRegistrant.swift linguist-generated=true
