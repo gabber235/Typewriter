@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test(
@@ -9,7 +10,7 @@ void main() {
     () {
       final descriptor = _descriptor("base", _base);
       final source = _text("name");
-      final display = _node(
+      final display = presentationNode(
         "display",
         skir.PresentationElement.wrapBadge(
           (skir.BadgeContent.defaultInstance.toMutable()
@@ -49,7 +50,7 @@ void main() {
         final descriptor = _descriptor("base", _base);
         final call = _part("inner.call", inner, null);
         final direct = _text("direct");
-        final body = _column(
+        final body = presentationColumn(
           "outer.body",
           nestedFirst ? [call, direct] : [direct, call],
         );
@@ -78,7 +79,7 @@ void main() {
     final key = skir.PresentationPartId(owner: _base, name: "heading");
     final base = _descriptor("base", _base);
     final child = _descriptor("child", _child);
-    final hidden = _node(
+    final hidden = presentationNode(
       "conditional",
       skir.PresentationElement.createConditional(
         condition: skir.ExpressionNode.wrapLiteral(
@@ -107,7 +108,7 @@ void main() {
 
   test("a malformed name member leaves a valid sibling member available", () {
     final descriptor = _descriptor("base", _base);
-    final invalid = _node(
+    final invalid = presentationNode(
       "name",
       skir.PresentationElement.wrapToggleInput(
         (skir.ToggleControl.defaultInstance.toMutable()
@@ -148,7 +149,7 @@ void main() {
                 path: skir.ValuePath.defaultInstance,
               ))
             .toFrozen();
-    final request = _node(
+    final request = presentationNode(
       "request",
       skir.PresentationElement.createDefaultPresentation(
         control: control,
@@ -176,7 +177,7 @@ void main() {
     () {
       final family = _descriptor("family", _base);
       final child = _descriptor("child", _child);
-      final source = _node(
+      final source = presentationNode(
         "wrong",
         skir.PresentationElement.wrapToggleInput(
           (skir.ToggleControl.defaultInstance.toMutable()
@@ -219,7 +220,7 @@ void main() {
   test("a structural source cannot omit the canonical neutral root", () {
     final family = _descriptor("family", _base);
     final child = _descriptor("child", _child);
-    final remainder = _node(
+    final remainder = presentationNode(
       "remaining",
       skir.PresentationElement.createRemainingFields(
         excluded: const [],
@@ -290,7 +291,7 @@ void main() {
   test("part footprints reject owner remainders and accept scoped descendant remainders", () {
     final key = skir.PresentationPartId(owner: _base, name: "details");
     final descriptor = _descriptor("base", _base);
-    final remainder = _node(
+    final remainder = presentationNode(
       "remaining",
       skir.PresentationElement.createRemainingFields(
         excluded: const [],
@@ -319,7 +320,7 @@ void main() {
       ),
       isA<MissingEditorFieldPresentation>(),
     );
-    final scoped = _node(
+    final scoped = presentationNode(
       "scope",
       skir.PresentationElement.createScopedBinding(
         binding: _control("nested").binding,
@@ -348,7 +349,7 @@ void main() {
     () {
       final key = skir.PresentationPartId(owner: _base, name: "details");
       final descriptor = _descriptor("base", _base);
-      final body = _node(
+      final body = presentationNode(
         "nested.scope",
         skir.PresentationElement.createScopedBinding(
           binding: _control("nested").binding,
@@ -375,7 +376,7 @@ void main() {
   test("ancestor layout skips equivalent target alternatives and preserves members", () {
     final family = _descriptor("family", _base);
     final alternative = _descriptor("alternative", _child, priority: -1);
-    final remainder = _node(
+    final remainder = presentationNode(
       "remainder",
       skir.PresentationElement.createRemainingFields(
         excluded: const [],
@@ -410,7 +411,7 @@ void main() {
         final nodes = [
           _text("name"),
           for (var i = 0; i < count; i++)
-            _node(
+            presentationNode(
               "remaining.$i",
               skir.PresentationElement.createRemainingFields(
                 excluded: const [],
@@ -441,7 +442,7 @@ void main() {
   test("placeholder positions do not compete with concrete field behavior", () {
     final base = _descriptor("base", _base);
     final child = _descriptor("child", _child);
-    final request = _node(
+    final request = presentationNode(
       "request",
       skir.PresentationElement.createDefaultPresentation(
         control: _control("name"),
@@ -468,7 +469,7 @@ void main() {
     final base = _descriptor("base", _base);
     final child = _descriptor("child", _child);
     final baseBody = _text("name");
-    final childBody = _node(
+    final childBody = presentationNode(
       "display",
       skir.PresentationElement.createSpacer(width: null, height: null),
     );
@@ -542,7 +543,7 @@ void main() {
   test("sibling expression reads and scoped editors of the same field are reusable", () {
     final descriptor = _descriptor("child", _child);
     final alias = skir.ExpressionBindingId(value: "owned");
-    final nested = _node(
+    final nested = presentationNode(
       "nested",
       skir.PresentationElement.wrapTextInput(
         (skir.TextControl.defaultInstance.toMutable()
@@ -560,7 +561,7 @@ void main() {
                 binding: skir.ExpressionBindingId(value: "configured_value"),
                 path: _control("sibling").binding.path,
               )
-              ..prefix = _node(
+              ..prefix = presentationNode(
                 "scope",
                 skir.PresentationElement.createScopedBinding(
                   binding: _control("name").binding,
@@ -569,7 +570,7 @@ void main() {
                 ),
               ))
             .toFrozen();
-    final source = _node(
+    final source = presentationNode(
       "name",
       skir.PresentationElement.wrapTextInput(
         (skir.TextControl.defaultInstance.toMutable()..control = control)
@@ -611,7 +612,7 @@ void main() {
         final descriptor = _descriptor("child", _child);
         final sibling = _text("foreign", field: "sibling");
         final alias = skir.ExpressionBindingId(value: "local");
-        final local = _node(
+        final local = presentationNode(
           "local",
           skir.PresentationElement.wrapTextInput(
             (skir.TextControl.defaultInstance.toMutable()
@@ -629,7 +630,7 @@ void main() {
             skir.PresentationPartId(owner: _base, name: "heading"),
             placement == "part_definition" ? _text("owned") : null,
           ),
-          "hidden" => _node(
+          "hidden" => presentationNode(
             "hidden",
             skir.PresentationElement.createConditional(
               condition: skir.ExpressionNode.wrapLiteral(
@@ -639,7 +640,7 @@ void main() {
               whenFalse: null,
             ),
           ),
-          "unknown_scope" || "foreign_scope" => _node(
+          "unknown_scope" || "foreign_scope" => presentationNode(
             "scope",
             skir.PresentationElement.createScopedBinding(
               binding: placement == "foreign_scope"
@@ -652,14 +653,14 @@ void main() {
               child: local,
             ),
           ),
-          "remaining" => _node(
+          "remaining" => presentationNode(
             "remaining",
             skir.PresentationElement.createRemainingFields(
               excluded: const [],
               excludedParts: const [],
             ),
           ),
-          "invocation" || "custom_invocation" => _node(
+          "invocation" || "custom_invocation" => presentationNode(
             "invocation",
             skir.PresentationElement.wrapInvocation(
               skir.PresentationInvocation(
@@ -882,7 +883,7 @@ void main() {
       [
         _material(base, [_text("base.name")]),
         _material(child, [
-          _node(
+          presentationNode(
             "child.name",
             skir.PresentationElement.createDefaultPresentation(
               control: _control("name"),
@@ -916,7 +917,7 @@ void main() {
           "duplicate" => [_text("bad"), _text("bad")],
           "unknown_field" => [_text("bad", field: "other")],
           "wrong_type" => [
-            _node(
+            presentationNode(
               "bad",
               skir.PresentationElement.wrapToggleInput(
                 (skir.ToggleControl.defaultInstance.toMutable()
@@ -981,7 +982,7 @@ void main() {
     () {
       final prefix = _text("prefix");
       final option = _text("option");
-      final node = _node(
+      final node = presentationNode(
         "choice",
         skir.PresentationElement.wrapSelectInput(
           (skir.SelectControl.defaultInstance.toMutable()
@@ -1070,7 +1071,7 @@ void main() {
         [
           _material(
             descriptor,
-            [_text("name"), _node("display", display)],
+            [_text("name"), presentationNode("display", display)],
             references: ["name"],
           ),
         ],
@@ -1131,7 +1132,7 @@ skir.PresentationMaterial _material(
   subject: skir.TypeTemplate.wrapNamed(
     (descriptor.target as skir.PresentationTarget_namedWrapper).value,
   ),
-  layout: _column("root", nodes),
+  layout: presentationColumn("root", nodes),
   dependencies: skir.PresentationDependencies.defaultInstance,
   resultAppearance: null,
   inheritableNodes: references ?? [for (final node in nodes) node.nodeId],
@@ -1210,35 +1211,21 @@ skir.BoundControl _control(String field) =>
           ))
         .toFrozen();
 
-skir.PresentationNode _text(String id, {String field = "name"}) => _node(
-  id,
-  skir.PresentationElement.wrapTextInput(
-    (skir.TextControl.defaultInstance.toMutable()..control = _control(field))
-        .toFrozen(),
-  ),
-);
-
-skir.PresentationNode _column(
-  String id,
-  List<skir.PresentationNode> children,
-) => _node(
-  id,
-  skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.createColumn(
-      children: [for (final child in children) skir.AxisChild.wrapFixed(child)],
-      layout: skir.AxisChildrenLayout.defaultInstance,
-    ),
-  ),
-);
-
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    (skir.PresentationNode.defaultInstance.toMutable()
-          ..nodeId = id
-          ..element = element)
-        .toFrozen();
+skir.PresentationNode _text(String id, {String field = "name"}) =>
+    presentationNode(
+      id,
+      skir.PresentationElement.wrapTextInput(
+        (skir.TextControl.defaultInstance.toMutable()
+              ..control = _control(field))
+            .toFrozen(),
+      ),
+    );
 
 skir.PresentationNode _part(
   String id,
   skir.PresentationPartId key,
   skir.PresentationNode? body,
-) => _node(id, skir.PresentationElement.createPart(key: key, body: body));
+) => presentationNode(
+  id,
+  skir.PresentationElement.createPart(key: key, body: body),
+);

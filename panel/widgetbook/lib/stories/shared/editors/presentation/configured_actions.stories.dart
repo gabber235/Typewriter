@@ -102,25 +102,13 @@ final _textType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
 final _action = skir.EditorAction.wrapRealm(
   skir.RealmEditorAction.createReload(),
 );
-skir.ExpressionNode _literal(String value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
-skir.ExpressionNode _number(double value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));
 skir.PresentationColor _paint(int value) => skir.PresentationColor.wrapValue(
   skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger(value.toString())),
 );
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: element,
-    );
-
 skir.ActionAppearance _appearance(skir.ButtonVariant variant) =>
     (skir.ActionAppearance.mutable()
           ..variant = variant
-          ..tooltip = _literal("Keyboard accessible action")
+          ..tooltip = textLiteral("Keyboard accessible action")
           ..appearance =
               (skir.InputAppearance.mutable()
                     ..density = skir.ControlDensity.compact
@@ -132,32 +120,32 @@ skir.ActionAppearance _appearance(skir.ButtonVariant variant) =>
         .toFrozen();
 
 skir.PresentationNode _actions() {
-  final resetIcon = _node(
+  final resetIcon = presentationNode(
     "reset.icon",
     skir.PresentationElement.createIcon(
-      name: _literal("material-symbols:restart-alt"),
+      name: textLiteral("material-symbols:restart-alt"),
       color: null,
-      size: _number(18),
+      size: numberLiteral(18),
       semanticLabel: null,
     ),
   );
   final menu = skir.MenuElement.mutable()
-    ..label = _literal("Options")
+    ..label = textLiteral("Options")
     ..appearance = _appearance(skir.ButtonVariant.text)
     ..popup =
         (skir.PopupAppearance.mutable()
-              ..minimumWidth = _number(240)
-              ..maximumWidth = _number(300)
-              ..maximumExtent = _number(280)
+              ..minimumWidth = numberLiteral(240)
+              ..maximumWidth = numberLiteral(300)
+              ..maximumExtent = numberLiteral(280)
               ..padding = skir.PresentationInsets.wrapAll(12)
               ..radius = skir.PresentationRadius.medium)
             .toFrozen()
     ..items = [
       (skir.MenuItem.mutable()
             ..itemId = "apply"
-            ..label = _literal("Apply")
+            ..label = textLiteral("Apply")
             ..action = _action
-            ..description = _literal("Apply this action")
+            ..description = textLiteral("Apply this action")
             ..icon = (resetIcon.toMutable()..nodeId = "menu.apply.icon")
                 .toFrozen())
           .toFrozen(),
@@ -167,15 +155,15 @@ skir.PresentationNode _actions() {
           .toFrozen(),
       (skir.MenuItem.mutable()
             ..itemId = "blocked"
-            ..label = _literal("Unavailable")
+            ..label = textLiteral("Unavailable")
             ..action = _action
             ..enabledIf = skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapBoolean(false),
             )
-            ..disabledReason = _literal("A selection is required"))
+            ..disabledReason = textLiteral("A selection is required"))
           .toFrozen(),
     ];
-  return _node(
+  return presentationNode(
     "actions",
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
@@ -188,11 +176,11 @@ skir.PresentationNode _actions() {
         ),
         children: [
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "reset",
               skir.PresentationElement.wrapButton(
                 (skir.ButtonElement.mutable()
-                      ..label = _literal("Reset")
+                      ..label = textLiteral("Reset")
                       ..action = _action
                       ..appearance = _appearance(skir.ButtonVariant.outlined)
                       ..icon = resetIcon)
@@ -201,23 +189,23 @@ skir.PresentationNode _actions() {
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "default",
               skir.PresentationElement.wrapButton(
                 (skir.ButtonElement.mutable()
-                      ..label = _literal("Native default")
+                      ..label = textLiteral("Native default")
                       ..action = _action)
                     .toFrozen(),
               ),
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "icon",
               skir.PresentationElement.wrapIconButton(
                 (skir.IconButtonElement.mutable()
-                      ..icon = _literal("mdi:content-save")
-                      ..semanticLabel = _literal("Save")
+                      ..icon = textLiteral("mdi:content-save")
+                      ..semanticLabel = textLiteral("Save")
                       ..action = _action
                       ..appearance = _appearance(skir.ButtonVariant.filled))
                     .toFrozen(),
@@ -225,10 +213,13 @@ skir.PresentationNode _actions() {
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node("menu", skir.PresentationElement.wrapMenu(menu.toFrozen())),
+            presentationNode(
+              "menu",
+              skir.PresentationElement.wrapMenu(menu.toFrozen()),
+            ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "status",
               skir.PresentationElement.wrapText(
                 (skir.TextContent.mutable()
@@ -251,7 +242,7 @@ skir.PresentationNode _projections() {
       (skir.BoundControl.mutable()
             ..binding = skir.BindingRef(bindingId: _page, path: editorRootPath))
           .toFrozen();
-  final graph = _node(
+  final graph = presentationNode(
     "graph",
     skir.PresentationElement.wrapPageGraph(
       (skir.PageGraphElement.mutable()
@@ -259,14 +250,14 @@ skir.PresentationNode _projections() {
             ..direction = skir.PageGraphDirection.leftToRight
             ..appearance =
                 (skir.PageGraphAppearance.mutable()
-                      ..cellSize = _number(60)
+                      ..cellSize = numberLiteral(60)
                       ..edgeColor = _paint(0xff7354bf)
                       ..cardPadding = skir.PresentationInsets.wrapAll(8))
                     .toFrozen())
           .toFrozen(),
     ),
   );
-  final timeline = _node(
+  final timeline = presentationNode(
     "timeline",
     skir.PresentationElement.wrapPageTimeline(
       (skir.PageTimelineElement.mutable()
@@ -283,7 +274,7 @@ skir.PresentationNode _projections() {
           .toFrozen(),
     ),
   );
-  return _node(
+  return presentationNode(
     "projections",
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
@@ -489,24 +480,24 @@ skir.PresentationNode _displays() {
             ..appearance = paint
             ..icon = skir.InputAdornment.none)
           .toFrozen();
-  final progress = _node(
+  final progress = presentationNode(
     "display.progress",
     skir.PresentationElement.wrapProgress(
       (skir.ProgressContent.mutable()
-            ..value = _number(3)
-            ..maximum = _number(10)
-            ..label = _literal("Progress")
+            ..value = numberLiteral(3)
+            ..maximum = numberLiteral(10)
+            ..label = textLiteral("Progress")
             ..appearance =
                 (skir.ProgressAppearance.mutable()
                       ..color = _paint(0xff7354bf)
                       ..backgroundColor = _paint(0xffe5dcfa)
-                      ..minimumHeight = _number(12)
+                      ..minimumHeight = numberLiteral(12)
                       ..radius = skir.PresentationRadius.small)
                     .toFrozen())
           .toFrozen(),
     ),
   );
-  final tabs = _node(
+  final tabs = presentationNode(
     "display.tabs",
     skir.PresentationElement.wrapTabs(
       (skir.TabsLayout.mutable()
@@ -516,33 +507,33 @@ skir.PresentationNode _displays() {
             ..tabs = [
               (skir.TabItem.mutable()
                     ..tabId = "summary"
-                    ..label = _literal("Summary")
-                    ..child = _node(
+                    ..label = textLiteral("Summary")
+                    ..child = presentationNode(
                       "summary.body",
                       skir.PresentationElement.wrapText(
                         (skir.TextContent.mutable()
-                              ..value = _literal("Summary content"))
+                              ..value = textLiteral("Summary content"))
                             .toFrozen(),
                       ),
                     ))
                   .toFrozen(),
               (skir.TabItem.mutable()
                     ..tabId = "details"
-                    ..label = _literal("Details")
-                    ..icon = _node(
+                    ..label = textLiteral("Details")
+                    ..icon = presentationNode(
                       "details.icon",
                       skir.PresentationElement.createIcon(
-                        name: _literal("mdi:information-outline"),
+                        name: textLiteral("mdi:information-outline"),
                         semanticLabel: null,
                         color: null,
-                        size: _number(18),
+                        size: numberLiteral(18),
                       ),
                     )
-                    ..child = _node(
+                    ..child = presentationNode(
                       "details.body",
                       skir.PresentationElement.wrapText(
                         (skir.TextContent.mutable()
-                              ..value = _literal("Detail content"))
+                              ..value = textLiteral("Detail content"))
                             .toFrozen(),
                       ),
                     ))
@@ -551,7 +542,7 @@ skir.PresentationNode _displays() {
           .toFrozen(),
     ),
   );
-  return _node(
+  return presentationNode(
     "displays",
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
@@ -564,37 +555,37 @@ skir.PresentationNode _displays() {
         ),
         children: [
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.badge",
               skir.PresentationElement.wrapBadge(
                 (skir.BadgeContent.mutable()
-                      ..label = _literal("Configured badge")
+                      ..label = textLiteral("Configured badge")
                       ..options = display)
                     .toFrozen(),
               ),
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.chip",
               skir.PresentationElement.wrapChip(
                 (skir.ChipContent.mutable()
-                      ..label = _literal("Configured chip")
+                      ..label = textLiteral("Configured chip")
                       ..options = display)
                     .toFrozen(),
               ),
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.status",
               skir.PresentationElement.wrapStatus(
                 (skir.StatusContent.mutable()
-                      ..value = _literal("ready")
+                      ..value = textLiteral("ready")
                       ..fallback =
                           (skir.StatusAppearance.mutable()
                                 ..tone = skir.StatusTone.success
-                                ..label = _literal("Ready")
+                                ..label = textLiteral("Ready")
                                 ..options = display)
                               .toFrozen())
                     .toFrozen(),
@@ -602,7 +593,7 @@ skir.PresentationNode _displays() {
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.progress.width",
               skir.PresentationElement.createPadding(
                 child: progress,
@@ -614,31 +605,31 @@ skir.PresentationNode _displays() {
             ),
           ),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.divider",
               skir.PresentationElement.wrapDivider(
                 (skir.DividerAppearance.mutable()
                       ..color = _paint(0xff7354bf)
-                      ..thickness = _number(3)
-                      ..space = _number(20)
-                      ..indent = _number(4)
-                      ..endIndent = _number(8))
+                      ..thickness = numberLiteral(3)
+                      ..space = numberLiteral(20)
+                      ..indent = numberLiteral(4)
+                      ..endIndent = numberLiteral(8))
                     .toFrozen(),
               ),
             ),
           ),
           skir.AxisChild.wrapFixed(tabs),
           skir.AxisChild.wrapFixed(
-            _node(
+            presentationNode(
               "display.tooltip",
               skir.PresentationElement.wrapTooltip(
                 (skir.TooltipElement.mutable()
-                      ..message = _literal("Configured help")
-                      ..child = _node(
+                      ..message = textLiteral("Configured help")
+                      ..child = presentationNode(
                         "help.label",
                         skir.PresentationElement.wrapText(
                           (skir.TextContent.mutable()
-                                ..value = _literal("Focus for help"))
+                                ..value = textLiteral("Focus for help"))
                               .toFrozen(),
                         ),
                       )

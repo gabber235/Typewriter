@@ -233,13 +233,13 @@ final _gallery = skir.PresentationNode(
   element: skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createGrid(
       children: [
-        _node(
-          "title",
+        presentationNode(
+          "authored.scalar.title",
           skir.PresentationElement.createTextInput(
             control: _control(_title, "Title"),
             content:
                 (skir.InputContent.mutable()
-                      ..placeholder = _literal("Quest objective"))
+                      ..placeholder = textLiteral("Quest objective"))
                     .toFrozen(),
             appearance: null,
             entry: null,
@@ -247,35 +247,35 @@ final _gallery = skir.PresentationNode(
             options: skir.TextEditingOptions.defaultInstance,
           ),
         ),
-        _node(
-          "count",
+        presentationNode(
+          "authored.scalar.count",
           skir.PresentationElement.wrapNumericInput(
             (skir.NumericControl.mutable()..control = _control(_count, "Count"))
                 .toFrozen(),
           ),
         ),
-        _node(
-          "enabled",
+        presentationNode(
+          "authored.scalar.enabled",
           skir.PresentationElement.wrapToggleInput(
             (skir.ToggleControl.mutable()
                   ..control = _control(_enabled, "Enabled"))
                 .toFrozen(),
           ),
         ),
-        _node(
-          "intensity",
+        presentationNode(
+          "authored.scalar.intensity",
           skir.PresentationElement.createSliderInput(
             control: _control(_intensity, "Intensity"),
-            minimum: _literal(skir.DataValue.wrapFloat(0)),
-            maximum: _literal(skir.DataValue.wrapFloat(1)),
-            divisions: _literal(skir.DataValue.wrapInteger("20")),
+            minimum: literalExpression(skir.DataValue.wrapFloat(0)),
+            maximum: literalExpression(skir.DataValue.wrapFloat(1)),
+            divisions: literalExpression(skir.DataValue.wrapInteger("20")),
             appearance: null,
             mappings: null,
             options: null,
           ),
         ),
-        _node(
-          "startsAt",
+        presentationNode(
+          "authored.scalar.startsAt",
           skir.PresentationElement.createDateTimeInput(
             control: _control(_startsAt, "Starts at"),
             includeDate: true,
@@ -288,16 +288,16 @@ final _gallery = skir.PresentationNode(
             options: null,
           ),
         ),
-        _node(
-          "duration",
+        presentationNode(
+          "authored.scalar.duration",
           skir.PresentationElement.wrapDurationInput(
             (skir.DurationControl.mutable()
                   ..control = _control(_duration, "Duration in milliseconds"))
                 .toFrozen(),
           ),
         ),
-        _node(
-          "color",
+        presentationNode(
+          "authored.scalar.color",
           skir.PresentationElement.createColorInput(
             control: _control(_color, "Color"),
             includeAlpha: true,
@@ -309,8 +309,8 @@ final _gallery = skir.PresentationNode(
             options: null,
           ),
         ),
-        _node(
-          "bytes",
+        presentationNode(
+          "authored.scalar.bytes",
           skir.PresentationElement.wrapBytesInput(
             (skir.BytesControl.mutable()
                   ..control = _control(_bytes, "Binary payload"))
@@ -335,8 +335,8 @@ final _interactionGallery = skir.PresentationNode(
     skir.ChildrenElement.createColumn(
       children: [
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.status",
+          presentationNode(
+            "authored.scalar.interaction.status",
             skir.PresentationElement.createTextInput(
               control: _controlRef(_fieldReference("status"), "Status"),
               appearance: null,
@@ -348,8 +348,8 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.enabled",
+          presentationNode(
+            "authored.scalar.interaction.enabled",
             skir.PresentationElement.wrapToggleInput(
               (skir.ToggleControl.mutable()
                     ..control = _controlRef(
@@ -361,21 +361,27 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.conditional",
+          presentationNode(
+            "authored.scalar.interaction.conditional",
             skir.PresentationElement.createConditional(
               condition: skir.ExpressionNode.createInput(
                 binding: _interactionRoot,
                 path: _fieldPath("enabled"),
               ),
-              whenTrue: _textNode("conditional.visible", "Details are visible"),
-              whenFalse: _textNode("conditional.hidden", "Details are hidden"),
+              whenTrue: presentationText(
+                "conditional.visible",
+                textLiteral("Details are visible"),
+              ),
+              whenFalse: presentationText(
+                "conditional.hidden",
+                textLiteral("Details are hidden"),
+              ),
             ),
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.tabs",
+          presentationNode(
+            "authored.scalar.interaction.tabs",
             skir.PresentationElement.createTabs(
               tabs: [
                 _tab("general", "General", "General settings"),
@@ -391,8 +397,8 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.list",
+          presentationNode(
+            "authored.scalar.interaction.list",
             skir.PresentationElement.createListInput(
               control: _controlRef(_fieldReference("items"), "Items"),
               itemPresentation: _reorderableListItem,
@@ -407,14 +413,14 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.add_item",
+          presentationNode(
+            "authored.scalar.interaction.add_item",
             skir.PresentationElement.createButton(
-              label: _literal("Add item"),
+              label: textLiteral("Add item"),
               action: skir.EditorAction.wrapLocal(
                 skir.LocalEditorAction.createAppendListItem(
                   target: _fieldReference("items"),
-                  value: _literal("Item 4"),
+                  value: textLiteral("Item 4"),
                 ),
               ),
               appearance: null,
@@ -423,8 +429,8 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.map",
+          presentationNode(
+            "authored.scalar.interaction.map",
             skir.PresentationElement.createMapInput(
               control: _controlRef(_fieldReference("metadata"), "Metadata"),
               keyPresentation: null,
@@ -439,15 +445,15 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.add_row",
+          presentationNode(
+            "authored.scalar.interaction.add_row",
             skir.PresentationElement.createButton(
-              label: _literal("Add entry"),
+              label: textLiteral("Add entry"),
               action: skir.EditorAction.wrapLocal(
                 skir.LocalEditorAction.createInsertMapRow(
                   target: _fieldReference("metadata"),
-                  key: _literal("chapter"),
-                  value: _literal("Arrival"),
+                  key: textLiteral("chapter"),
+                  value: textLiteral("Arrival"),
                 ),
               ),
               appearance: null,
@@ -456,10 +462,10 @@ final _interactionGallery = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
-            "interaction.reload",
+          presentationNode(
+            "authored.scalar.interaction.reload",
             skir.PresentationElement.createButton(
-              label: _literal("Reload from Realm"),
+              label: textLiteral("Reload from Realm"),
               action: skir.EditorAction.wrapRealm(
                 skir.RealmEditorAction.createReload(),
               ),
@@ -483,31 +489,31 @@ final _interactionGallery = skir.PresentationNode(
       bindingId: _interactionRoot,
       path: skir.ValuePath(segments: const []),
     ),
-    title: skir.PresentationHeaderTitle.wrapText(_literal("Quest actions")),
-    description: _literal("Portable header actions use the current draft"),
+    title: skir.PresentationHeaderTitle.wrapText(textLiteral("Quest actions")),
+    description: textLiteral("Portable header actions use the current draft"),
     initiallyExpanded: true,
     items: [
       skir.HeaderItem.createButton(
         itemId: skir.HeaderItemId(namespace: "widgetbook", name: "archive"),
-        icon: _literal("archive"),
-        label: _literal("Archive"),
-        tooltip: _literal("Archive quest"),
+        icon: textLiteral("archive"),
+        label: textLiteral("Archive"),
+        tooltip: textLiteral("Archive quest"),
         action: skir.EditorAction.wrapLocal(
           skir.LocalEditorAction.createSetValue(
             target: _fieldReference("status"),
-            value: _literal("Archived quest"),
+            value: textLiteral("Archived quest"),
           ),
         ),
-        priority: _literal(skir.DataValue.wrapInteger("10")),
+        priority: literalExpression(skir.DataValue.wrapInteger("10")),
         visibleIf: null,
         enabledIf: null,
         tone: skir.HeaderActionTone.destructive,
         confirmation: skir.HeaderActionConfirmation(
-          title: _literal("Archive quest?"),
-          message: _literal(
+          title: textLiteral("Archive quest?"),
+          message: textLiteral(
             "The quest will no longer be available to players.",
           ),
-          confirmationLabel: _literal("Archive"),
+          confirmationLabel: textLiteral("Archive"),
         ),
         placement: skir.HeaderActionPlacement.end,
       ),
@@ -538,7 +544,7 @@ final _interactionGallery = skir.PresentationNode(
           namespace: "widgetbook",
           name: "unavailable_label",
         ),
-        icon: _literal("material-symbols:edit"),
+        icon: textLiteral("material-symbols:edit"),
         label: skir.ExpressionNode.createInput(
           binding: skir.ExpressionBindingId(value: "missing_header_value"),
           path: skir.ValuePath(segments: const []),
@@ -547,7 +553,7 @@ final _interactionGallery = skir.PresentationNode(
         action: skir.EditorAction.wrapLocal(
           skir.LocalEditorAction.createSetValue(
             target: _fieldReference("status"),
-            value: _literal("Unavailable action selected"),
+            value: textLiteral("Unavailable action selected"),
           ),
         ),
         priority: null,
@@ -572,13 +578,13 @@ skir.HeaderItem _statusHeaderButton(
   skir.HeaderActionPlacement placement,
 ) => skir.HeaderItem.createButton(
   itemId: skir.HeaderItemId(namespace: "widgetbook", name: name),
-  icon: _literal("material-symbols:edit"),
-  label: _literal(label),
-  tooltip: _literal(label),
+  icon: textLiteral("material-symbols:edit"),
+  label: textLiteral(label),
+  tooltip: textLiteral(label),
   action: skir.EditorAction.wrapLocal(
     skir.LocalEditorAction.createSetValue(
       target: _fieldReference("status"),
-      value: _literal("$label selected"),
+      value: textLiteral("$label selected"),
     ),
   ),
   priority: null,
@@ -630,12 +636,12 @@ final _reorderableListItem = skir.PresentationNode(
           namespace: "widgetbook",
           name: "reorder_item",
         ),
-        label: _literal("Reorder item"),
+        label: textLiteral("Reorder item"),
         source: skir.BindingRef(
           bindingId: _listItemBinding,
           path: skir.ValuePath(segments: const []),
         ),
-        tooltip: _literal("Reorder item"),
+        tooltip: textLiteral("Reorder item"),
         visibleIf: null,
         enabledIf: null,
       ),
@@ -647,33 +653,10 @@ final _reorderableListItem = skir.PresentationNode(
 
 skir.TabItem _tab(String id, String label, String content) => skir.TabItem(
   tabId: id,
-  label: _literal(label),
-  child: _textNode("tab.$id", content),
+  label: textLiteral(label),
+  child: presentationText("tab.$id", textLiteral(content)),
   icon: null,
 );
-
-skir.PresentationNode _textNode(String id, String value) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createText(
-        value: _literal(value),
-        color: null,
-        sizing: null,
-        fontWeight: null,
-        fontItalic: null,
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: null,
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: null,
-        semanticLabel: null,
-        paragraph: skir.TextParagraph.defaultInstance,
-      ),
-      header: null,
-    );
 
 AuthoringEdit _interactionDraft() {
   final configuration = _namedType("InteractionStory");
@@ -854,18 +837,10 @@ skir.BindingRef _fieldReference(String name) =>
 skir.BoundControl _controlRef(skir.BindingRef reference, String label) =>
     skir.BoundControl(
       binding: reference,
-      label: _literal(label),
+      label: textLiteral(label),
       description: null,
       prefix: null,
       semanticLabel: null,
-    );
-
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    skir.PresentationNode(
-      nodeId: "authored.scalar.$id",
-      properties: skir.PresentationProperties.defaultInstance,
-      element: element,
-      header: null,
     );
 
 skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
@@ -874,17 +849,11 @@ skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
         bindingId: binding,
         path: skir.ValuePath(segments: const []),
       ),
-      label: _literal(skir.DataValue.wrapStringValue(label)),
+      label: literalExpression(skir.DataValue.wrapStringValue(label)),
       description: null,
       prefix: null,
       semanticLabel: null,
     );
-
-skir.ExpressionNode _literal(Object value) => skir.ExpressionNode.wrapLiteral(
-  value is skir.DataValue
-      ? value
-      : skir.DataValue.wrapStringValue(value as String),
-);
 
 final _title = skir.ExpressionBindingId(value: "title");
 final _count = skir.ExpressionBindingId(value: "count");

@@ -3,6 +3,7 @@ import "package:http/testing.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test(
@@ -15,7 +16,7 @@ void main() {
       );
       final fixture = _fixture(
         provider: skir.SearchProvider.createHttpJson(
-          uri: _literal("https://example.test/choices"),
+          uri: textLiteral("https://example.test/choices"),
           parameters: const [],
           resultPath: r"$.results[*]",
           resultType: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
@@ -299,13 +300,13 @@ void main() {
     final storage = _MemoryHistoryStorage();
     final first = skir.SearchProvider.createHistory(
       historyKey: "first",
-      label: _literal("First"),
+      label: textLiteral("First"),
       capacity: 5,
       child: _staticProvider(["same"]),
     );
     final second = skir.SearchProvider.createHistory(
       historyKey: "second",
-      label: _literal("Second"),
+      label: textLiteral("Second"),
       capacity: 5,
       child: _staticProvider(["same"]),
     );
@@ -589,9 +590,6 @@ skir.SearchProvider _staticProvider(
     selectors: const [],
   );
 }
-
-skir.ExpressionNode _literal(String value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
 
 skir.EditorCatalogWireSnapshot _catalog(skir.CatalogGeneration generation) =>
     skir.EditorCatalogWireSnapshot(

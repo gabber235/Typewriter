@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../../../support/test_utils.dart";
 
@@ -19,8 +20,11 @@ void main() {
           bindingId: _lookupBinding,
           path: skir.ValuePath(segments: const []),
         ),
-        found: _textNode("found", _read(_rowBinding, "name")),
-        missing: _textNode(
+        found: presentationText(
+          "found",
+          inputExpression(_rowBinding, field: "name"),
+        ),
+        missing: presentationText(
           "missing",
           skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapStringValue("Missing"),
@@ -72,7 +76,10 @@ void main() {
               skir.ChildrenElement.createColumn(
                 children: [
                   skir.AxisChild.wrapFixed(
-                    _textNode("graph.name", _read(_rowBinding, "name")),
+                    presentationText(
+                      "graph.name",
+                      inputExpression(_rowBinding, field: "name"),
+                    ),
                   ),
                   skir.AxisChild.wrapFixed(childSlot),
                 ],
@@ -277,7 +284,7 @@ void main() {
         skir.ExpressionNode.createConditional(
           test: skir.ExpressionNode.createValueCompare(
             operation: skir.ValueCompareOperation.equal,
-            left: _read(_rowBinding, "name"),
+            left: inputExpression(_rowBinding, field: "name"),
             right: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapStringValue("Alpha"),
             ),
@@ -291,8 +298,8 @@ void main() {
         ),
       );
       final connector = skir.ConnectorStyle(
-        stroke: skir.ConnectorStroke(color: color, width: _number(2)),
-        cornerRadius: _number(8),
+        stroke: skir.ConnectorStroke(color: color, width: numberLiteral(2)),
+        cornerRadius: numberLiteral(8),
         startMarker: null,
         endMarker: null,
       );
@@ -303,9 +310,9 @@ void main() {
             unaryConnector: connector,
             trunkConnector: connector,
             branchConnector: connector,
-            itemSpacing: _number(24),
-            indentation: _number(16),
-            leadingSpacing: _number(16),
+            itemSpacing: numberLiteral(24),
+            indentation: numberLiteral(16),
+            leadingSpacing: numberLiteral(16),
             itemAnchor: skir.ConnectorAnchor.center,
             flattenSingleItem: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapBoolean(true),
@@ -365,8 +372,11 @@ void main() {
           bindingId: _lookupBinding,
           path: skir.ValuePath(segments: const []),
         ),
-        found: _textNode("projected.name", _read(_rowBinding, "name")),
-        missing: _textNode(
+        found: presentationText(
+          "projected.name",
+          inputExpression(_rowBinding, field: "name"),
+        ),
+        missing: presentationText(
           "projected.missing",
           skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapStringValue("Missing"),
@@ -396,8 +406,11 @@ void main() {
           bindingId: _lookupBinding,
           path: skir.ValuePath(segments: const []),
         ),
-        found: _textNode("unfinished.found", _read(_rowBinding, "name")),
-        missing: _textNode(
+        found: presentationText(
+          "unfinished.found",
+          inputExpression(_rowBinding, field: "name"),
+        ),
+        missing: presentationText(
           "unfinished.missing",
           skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapStringValue("Choose a tag"),
@@ -435,7 +448,10 @@ void main() {
         relationId: "next",
         direction: skir.CollectionGraphDirection.forward,
         maximumDepth: 8,
-        node: _textNode("unfinished.node", _read(_rowBinding, "name")),
+        node: presentationText(
+          "unfinished.node",
+          inputExpression(_rowBinding, field: "name"),
+        ),
         childrenBindingId: _childrenBinding,
         childBindingId: _childBinding,
         children: _sequence(_slotNode("unfinished.child", "graph.child")),
@@ -466,8 +482,11 @@ void main() {
           bindingId: _lookupBinding,
           path: skir.ValuePath(segments: const []),
         ),
-        found: _textNode("duplicate.found", _read(_rowBinding, "name")),
-        missing: _textNode(
+        found: presentationText(
+          "duplicate.found",
+          inputExpression(_rowBinding, field: "name"),
+        ),
+        missing: presentationText(
           "duplicate.missing",
           skir.ExpressionNode.wrapLiteral(
             skir.DataValue.wrapStringValue("Missing"),
@@ -515,7 +534,7 @@ _nestedMaterialFixture() {
       arguments: const [],
     ),
     rowBindingId: _rowBinding,
-    key: _read(_rowBinding, "name"),
+    key: inputExpression(_rowBinding, field: "name"),
     selectability: skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapBoolean(true),
     ),
@@ -545,8 +564,11 @@ _nestedMaterialFixture() {
         bindingId: _nestedLookupBinding,
         path: skir.ValuePath(segments: const []),
       ),
-      found: _textNode("nested.found", _read(_rowBinding, "name")),
-      missing: _textNode(
+      found: presentationText(
+        "nested.found",
+        inputExpression(_rowBinding, field: "name"),
+      ),
+      missing: presentationText(
         "nested.missing",
         skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("Missing"),
@@ -786,7 +808,7 @@ _fixture({
     ),
     rowBindingId: _rowBinding,
     key: projected
-        ? _read(_rowBinding, "name")
+        ? inputExpression(_rowBinding, field: "name")
         : skir.ExpressionNode.createInput(
             binding: _resourceBinding,
             path: skir.ValuePath(segments: const []),
@@ -797,7 +819,7 @@ _fixture({
     relations: [
       skir.PresentationCollectionRelationDefinition(
         relationId: "next",
-        targets: _read(_rowBinding, "next"),
+        targets: inputExpression(_rowBinding, field: "next"),
       ),
     ],
     projection: projected
@@ -919,7 +941,10 @@ skir.PresentationNode _graphNode({
             children: [
               if (!disclosure)
                 skir.AxisChild.wrapFixed(
-                  _textNode("graph.name", _read(_rowBinding, "name")),
+                  presentationText(
+                    "graph.name",
+                    inputExpression(_rowBinding, field: "name"),
+                  ),
                 ),
               skir.AxisChild.wrapFixed(childSlot),
             ],
@@ -936,7 +961,7 @@ skir.PresentationNode _graphNode({
             ? skir.PresentationHeader(
                 binding: null,
                 title: skir.PresentationHeaderTitle.wrapText(
-                  _read(_rowBinding, "name"),
+                  inputExpression(_rowBinding, field: "name"),
                 ),
                 description: null,
                 initiallyExpanded: false,
@@ -1031,44 +1056,8 @@ skir.EffectiveFieldTemplate _effective(
   rules: const [],
 );
 
-skir.ExpressionNode _read(skir.ExpressionBindingId id, String field) =>
-    skir.ExpressionNode.createInput(
-      binding: id,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field)],
-      ),
-    );
-
-skir.PresentationNode _textNode(String id, skir.ExpressionNode value) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createText(
-        value: value,
-        color: null,
-        sizing: null,
-        fontWeight: null,
-        fontItalic: null,
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: null,
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: null,
-        semanticLabel: null,
-        paragraph: skir.TextParagraph.defaultInstance,
-      ),
-      header: null,
-    );
-
 skir.PresentationNode _slotNode(String id, String slot) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: skir.PresentationElement.createSlot(slotId: slot),
-      header: null,
-    );
+    presentationNode(id, skir.PresentationElement.createSlot(slotId: slot));
 
 skir.SequencePresentation _sequence(skir.PresentationNode item) =>
     skir.SequencePresentation(
@@ -1114,6 +1103,3 @@ final _nestedLookupBinding = skir.ExpressionBindingId(
 final _rootsBinding = skir.ExpressionBindingId(value: "graph.roots");
 final _childrenBinding = skir.ExpressionBindingId(value: "graph.children");
 final _childBinding = skir.ExpressionBindingId(value: "graph.child");
-
-skir.ExpressionNode _number(double value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));

@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../shared/editors/presentation_builders.dart";
+
 import "authoring_workspace_fixture.dart";
 import "compiled_tag_inheritance_fixture.dart";
 
@@ -119,12 +121,12 @@ final class CollectionEditorScenario extends ChangeNotifier {
     final control =
         (skir.BoundControl.mutable()
               ..binding = reference
-              ..label = _text("Quest entries"))
+              ..label = textLiteral("Quest entries"))
             .toFrozen();
     final item = example == CollectionEditorExample.authoredSteps
         ? _authoredStep(reference)
         : example == CollectionEditorExample.nestedLists && confirmRemoval
-        ? _authoredStep(reference, title: _text("Nested steps"))
+        ? _authoredStep(reference, title: textLiteral("Nested steps"))
         : null;
     final element = switch (example) {
       CollectionEditorExample.directLinks =>
@@ -203,10 +205,10 @@ final class CollectionEditorScenario extends ChangeNotifier {
                         namespace: "fixture",
                         name: "remove",
                       ),
-                      icon: _text(
+                      icon: textLiteral(
                         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>',
                       ),
-                      label: _text("Remove step"),
+                      label: textLiteral("Remove step"),
                       tooltip: null,
                       action: skir.EditorAction.wrapLocal(
                         skir.LocalEditorAction.createRemoveListItem(
@@ -219,11 +221,11 @@ final class CollectionEditorScenario extends ChangeNotifier {
                       enabledIf: null,
                       tone: skir.HeaderActionTone.destructive,
                       confirmation: skir.HeaderActionConfirmation(
-                        title: _text("Remove this step?"),
-                        message: _text(
+                        title: textLiteral("Remove this step?"),
+                        message: textLiteral(
                           "The step will be removed from this draft.",
                         ),
-                        confirmationLabel: _text("Remove step"),
+                        confirmationLabel: textLiteral("Remove step"),
                       ),
                       placement: skir.HeaderActionPlacement.end,
                     ),
@@ -272,9 +274,6 @@ final class CollectionEditorScenarioView extends StatelessWidget {
     },
   );
 }
-
-skir.ExpressionNode _text(String value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
 
 skir.TypeDefinitionId _id(String name) => skir.TypeDefinitionId(
   typeId: skir.TypeId.createQualified(

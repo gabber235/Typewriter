@@ -350,13 +350,13 @@ final _root = skir.PresentationNode(
     skir.ChildrenElement.createColumn(
       children: [
         skir.AxisChild.wrapFixed(
-          _node(
+          presentationNode(
             "title",
             skir.PresentationElement.createTextInput(
               control: _control(_title, "Title"),
               content:
                   (skir.InputContent.mutable()
-                        ..placeholder = _literal("Quest objective"))
+                        ..placeholder = textLiteral("Quest objective"))
                       .toFrozen(),
               appearance: null,
               entry: null,
@@ -366,7 +366,7 @@ final _root = skir.PresentationNode(
           ),
         ),
         skir.AxisChild.wrapFixed(
-          _node(
+          presentationNode(
             "count",
             skir.PresentationElement.wrapNumericInput(
               (skir.NumericControl.mutable()
@@ -391,9 +391,9 @@ final _root = skir.PresentationNode(
       path: skir.ValuePath(segments: const []),
     ),
     title: skir.PresentationHeaderTitle.wrapText(
-      _literal("Portable presentation host"),
+      textLiteral("Portable presentation host"),
     ),
-    description: _literal("Bindings keep persistence outside the renderer"),
+    description: textLiteral("Bindings keep persistence outside the renderer"),
     initiallyExpanded: true,
     items: const [],
     headerPadding: null,
@@ -401,28 +401,18 @@ final _root = skir.PresentationNode(
   ),
 );
 
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: element,
-      header: null,
-    );
-
 skir.BoundControl _control(skir.ExpressionBindingId binding, String label) =>
     skir.BoundControl(
       binding: skir.BindingRef(
         bindingId: binding,
         path: skir.ValuePath(segments: const []),
       ),
-      label: _literal(label),
+      label: textLiteral(label),
       description: null,
       prefix: null,
       semanticLabel: null,
     );
 
-skir.ExpressionNode _literal(String value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
 // Add alongside the existing portable renderer stories.
 @widgetbook.UseCase(name: "Field validation", type: PortableDiagnosticFrame)
 Widget portableFieldValidationUseCase(BuildContext context) =>

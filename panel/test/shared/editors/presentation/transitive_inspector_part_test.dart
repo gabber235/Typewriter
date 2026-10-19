@@ -43,34 +43,34 @@ void main() {
 
 InheritedInspectorLayoutScenario _scenario({required bool childCallsOuter}) =>
     InheritedInspectorLayoutScenario(
-      childLayout: _column("child", [
+      childLayout: inheritedFieldColumn([
         inspectorLayoutPart(
           "child.part",
           childCallsOuter ? inspectorDetailsPart : inspectorHeadingPart,
         ),
         inspectorLayoutRemainder("child.remaining"),
-      ]),
+      ], id: "child"),
       childInheritableNodes: ["child", "child.part", "child.remaining"],
-      familyLayout: _column("family", [
+      familyLayout: inheritedFieldColumn([
         inspectorLayoutPart(
           "family.outer",
           inspectorDetailsPart,
-          body: _column("family.outer.body", [
+          body: inheritedFieldColumn([
             inspectorLayoutPart("family.outer.heading", inspectorHeadingPart),
-            inheritedFieldNode(
+            presentationNode(
               "family.outer.content",
               skir.PresentationElement.wrapText(
                 (skir.TextContent.mutable()
-                      ..value = inheritedFieldText("Outer content"))
+                      ..value = textLiteral("Outer content"))
                     .toFrozen(),
               ),
             ),
-          ]),
+          ], id: "family.outer.body"),
         ),
         if (childCallsOuter)
           inspectorLayoutPart("family.heading", inspectorHeadingPart),
         inspectorLayoutRemainder("family.remaining"),
-      ]),
+      ], id: "family"),
       familyInheritableNodes: [
         "family",
         "family.outer",
@@ -89,8 +89,3 @@ Future<void> _pump(
     ),
   ),
 );
-
-skir.PresentationNode _column(
-  String id,
-  List<skir.PresentationNode> children,
-) => (inheritedFieldColumn(children).toMutable()..nodeId = id).toFrozen();

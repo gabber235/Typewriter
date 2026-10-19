@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   final configured = skir.ExpressionBindingId(value: "configured_value");
@@ -365,10 +366,7 @@ skir.PresentationNode _field(String name, skir.ExpressionBindingId id) => _node(
   ),
 );
 skir.PresentationNode _node(skir.PresentationElement element) =>
-    (skir.PresentationNode.defaultInstance.toMutable()
-          ..nodeId = element.kind.name
-          ..element = element)
-        .toFrozen();
+    presentationNode(element.kind.name, element);
 skir.PresentationNode _column(List<skir.PresentationNode> nodes) => _node(
   skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.wrapColumn(

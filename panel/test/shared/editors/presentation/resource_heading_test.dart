@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -257,7 +258,10 @@ void main() {
   testWidgets("ordinary and exact sizing retain the normal text path", (
     tester,
   ) async {
-    for (final sizing in [null, skir.TextSizing.wrapExact(_number(22.5))]) {
+    for (final sizing in [
+      null,
+      skir.TextSizing.wrapExact(numberLiteral(22.5)),
+    ]) {
       await tester.pumpTestApp(
         child: Material(
           child: PortablePresentationNodeRenderer(
@@ -282,7 +286,7 @@ void main() {
       _fit(18.5, 40),
       skir.TextSizing.createFit(
         minimum: skir.ExpressionBindingId(value: "missing").readExpression(),
-        maximum: _number(40),
+        maximum: numberLiteral(40),
       ),
     ]) {
       await tester.pumpTestApp(
@@ -306,7 +310,7 @@ void main() {
         (skir.RichTextContent.mutable()
               ..style = skir.TextStyleOverride(
                 color: null,
-                fontWeight: _number(600),
+                fontWeight: numberLiteral(600),
                 fontItalic: null,
                 decoration: null,
               )
@@ -328,8 +332,8 @@ void main() {
                     color: skir.PresentationColor.wrapValue(
                       Colors.red.portableExpression,
                     ),
-                    fontWeight: _number(700),
-                    fontItalic: _number(1),
+                    fontWeight: numberLiteral(700),
+                    fontItalic: numberLiteral(1),
                     decoration: "underline".portableExpression,
                   ),
                 ),
@@ -437,7 +441,7 @@ void main() {
         ),
       ),
     );
-    await pump(skir.TextSizing.wrapExact(_number(40)));
+    await pump(skir.TextSizing.wrapExact(numberLiteral(40)));
     expect(_fontSize(_paragraph(tester, "Scaled")), 72);
     await pump(_fit(18, 40));
     expect(_fontSize(_paragraph(tester, "Scaled")), closeTo(56, 0.001));
@@ -459,10 +463,10 @@ PortablePresentationScope _scope() => PortablePresentationScope(
   bindings: const {},
   budget: skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 100),
 );
-skir.ExpressionNode _number(double value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(value));
-skir.TextSizing _fit(double min, double max) =>
-    skir.TextSizing.createFit(minimum: _number(min), maximum: _number(max));
+skir.TextSizing _fit(double min, double max) => skir.TextSizing.createFit(
+  minimum: numberLiteral(min),
+  maximum: numberLiteral(max),
+);
 skir.PresentationNode _text(String text, {skir.TextSizing? sizing}) =>
     skir.PresentationNode(
       nodeId: "text",

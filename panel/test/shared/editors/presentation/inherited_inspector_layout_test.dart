@@ -17,9 +17,9 @@ void main() {
         skir.ExpressionBindingId(value: "first"),
         skir.ExpressionBindingId(value: "second"),
       ];
-      final root = _column("records", [
+      final root = inheritedFieldColumn([
         for (final id in ids)
-          inheritedFieldNode(
+          presentationNode(
             id.value,
             skir.PresentationElement.createDefaultPresentation(
               control:
@@ -32,7 +32,7 @@ void main() {
               presentationId: null,
             ),
           ),
-      ]);
+      ], id: "records");
       final host = BoundPresentationHost(
         catalog: fixture.catalog,
         root: () => root,
@@ -94,11 +94,11 @@ void main() {
     final contextId = skir.ExpressionBindingId(value: "context:test.heading");
     final textType = skir.TypeUse.wrapScalar(skir.ScalarKind.text);
     final fixture = InheritedInspectorLayoutScenario(
-      sourceLayout: _column("source", [
+      sourceLayout: inheritedFieldColumn([
         inspectorLayoutPart(
           "source.heading",
           inspectorHeadingPart,
-          body: inheritedFieldNode(
+          body: presentationNode(
             "source.body",
             skir.PresentationElement.wrapText(
               (skir.TextContent.mutable()
@@ -111,7 +111,7 @@ void main() {
           ),
         ),
         inspectorLayoutRemainder("source.remaining"),
-      ]),
+      ], id: "source"),
       sourceInheritableNodes: ["source", "source.heading", "source.remaining"],
       sourceDependencies:
           (skir.PresentationDependencies.mutable()
@@ -179,10 +179,10 @@ void main() {
     "a child message precedes the inherited name and trailing placement",
     (tester) async {
       final fixture = InheritedInspectorLayoutScenario(
-        childLayout: _column("child", [
+        childLayout: inheritedFieldColumn([
           _input("child.message", "message"),
           inspectorLayoutRemainder("child.remaining"),
-        ]),
+        ], id: "child"),
       );
       addTearDown(fixture.dispose);
       await _pump(tester, fixture);
@@ -210,10 +210,10 @@ void main() {
     "an explicit field after the remainder is reserved before expansion",
     (tester) async {
       final fixture = InheritedInspectorLayoutScenario(
-        childLayout: _column("child", [
+        childLayout: inheritedFieldColumn([
           inspectorLayoutRemainder("child.remaining"),
           _input("child.placement", "placement"),
-        ]),
+        ], id: "child"),
       );
       addTearDown(fixture.dispose);
       await _pump(tester, fixture);
@@ -231,13 +231,13 @@ void main() {
     (tester) async {
       for (final explicit in [false, true]) {
         final fixture = InheritedInspectorLayoutScenario(
-          childLayout: _column("child", [
+          childLayout: inheritedFieldColumn([
             inspectorLayoutRemainder(
               "child.remaining",
               excludedFields: ["placement"],
             ),
             if (explicit) _input("child.placement", "placement"),
-          ]),
+          ], id: "child"),
         );
         await _pump(tester, fixture);
         expect(_values(tester), [
@@ -256,13 +256,16 @@ void main() {
     "excluded parts reserve their fields but allow an explicit local name",
     (tester) async {
       final fixture = _detailsFixture(
-        child: _column("child", [
-          _request("child.name", "name"),
+        child: inheritedFieldColumn([
+          inheritedFieldRequest(
+            control: inheritedFieldControl(field: "name"),
+            id: "child.name",
+          ),
           inspectorLayoutRemainder(
             "child.remaining",
             excludedParts: [inspectorDetailsPart],
           ),
-        ]),
+        ], id: "child"),
       );
       addTearDown(fixture.dispose);
       await _pump(tester, fixture);
@@ -288,10 +291,13 @@ void main() {
     tester,
   ) async {
     final fixture = _detailsFixture(
-      child: _column("child", [
-        _request("child.name", "name"),
+      child: inheritedFieldColumn([
+        inheritedFieldRequest(
+          control: inheritedFieldControl(field: "name"),
+          id: "child.name",
+        ),
         inspectorLayoutRemainder("child.remaining"),
-      ]),
+      ], id: "child"),
     );
     addTearDown(fixture.dispose);
     await _pump(tester, fixture);
@@ -324,8 +330,8 @@ void main() {
     tester,
   ) async {
     final fixture = _detailsFixture(
-      child: _column("child", [
-        inheritedFieldNode(
+      child: inheritedFieldColumn([
+        presentationNode(
           "hidden",
           skir.PresentationElement.createConditional(
             condition: skir.ExpressionNode.wrapLiteral(
@@ -339,7 +345,7 @@ void main() {
           ),
         ),
         inspectorLayoutRemainder("child.remaining"),
-      ]),
+      ], id: "child"),
     );
     addTearDown(fixture.dispose);
     await _pump(tester, fixture);
@@ -349,10 +355,10 @@ void main() {
 
   testWidgets("a part after the remainder is rendered once", (tester) async {
     final fixture = _detailsFixture(
-      child: _column("child", [
+      child: inheritedFieldColumn([
         inspectorLayoutRemainder("child.remaining"),
         inspectorLayoutPart("child.details", inspectorDetailsPart),
-      ]),
+      ], id: "child"),
     );
     addTearDown(fixture.dispose);
     await _pump(tester, fixture);
@@ -364,7 +370,7 @@ void main() {
     tester,
   ) async {
     final fixture = InheritedInspectorLayoutScenario(
-      childLayout: inheritedFieldNode(
+      childLayout: presentationNode(
         "child.alias",
         skir.PresentationElement.createScopedBinding(
           binding: skir.BindingRef(
@@ -384,12 +390,15 @@ void main() {
   testWidgets("unmarked source headings stay local", (tester) async {
     final fixture = InheritedInspectorLayoutScenario(
       childLayout: inspectorLayoutRemainder("child.remaining"),
-      familyLayout: _column("family", [
-        _text("family.local", "Local family title"),
-        _request("family.name", "name"),
+      familyLayout: inheritedFieldColumn([
+        presentationText("family.local", textLiteral("Local family title")),
+        inheritedFieldRequest(
+          control: inheritedFieldControl(field: "name"),
+          id: "family.name",
+        ),
         inspectorLayoutRemainder("family.remaining"),
         _input("family.placement", "placement"),
-      ]),
+      ], id: "family"),
       familyInheritableNodes: [
         "family",
         "family.name",
@@ -409,18 +418,24 @@ InheritedInspectorLayoutScenario _detailsFixture({
   required skir.PresentationNode child,
 }) => InheritedInspectorLayoutScenario(
   childLayout: child,
-  familyLayout: _column("family", [
+  familyLayout: inheritedFieldColumn([
     inspectorLayoutPart(
       "family.details",
       inspectorDetailsPart,
-      body: _column("details", [
-        _text("details.title", "Details"),
-        _request("details.name", "name"),
-        _request("details.placement", "placement"),
-      ]),
+      body: inheritedFieldColumn([
+        presentationText("details.title", textLiteral("Details")),
+        inheritedFieldRequest(
+          control: inheritedFieldControl(field: "name"),
+          id: "details.name",
+        ),
+        inheritedFieldRequest(
+          control: inheritedFieldControl(field: "placement"),
+          id: "details.placement",
+        ),
+      ], id: "details"),
     ),
     inspectorLayoutRemainder("family.remaining"),
-  ]),
+  ], id: "family"),
   familyInheritableNodes: ["family", "family.details", "family.remaining"],
 );
 
@@ -440,22 +455,5 @@ List<String> _values(WidgetTester tester) => tester
     .map((entry) => entry.controller.text)
     .toList();
 
-skir.PresentationNode _column(
-  String id,
-  List<skir.PresentationNode> children,
-) => (inheritedFieldColumn(children).toMutable()..nodeId = id).toFrozen();
-
-skir.PresentationNode _request(String id, String field) =>
-    (inheritedFieldRequest(
-      control: inheritedFieldControl(field: field),
-    ).toMutable()..nodeId = id).toFrozen();
-
 skir.PresentationNode _input(String id, String field) =>
     inheritedFieldTextInput(id, control: inheritedFieldControl(field: field));
-
-skir.PresentationNode _text(String id, String value) => inheritedFieldNode(
-  id,
-  skir.PresentationElement.wrapText(
-    (skir.TextContent.mutable()..value = inheritedFieldText(value)).toFrozen(),
-  ),
-);

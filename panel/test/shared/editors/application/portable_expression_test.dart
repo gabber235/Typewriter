@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 void main() {
   test("matches the shared portable expression corpus", () async {
@@ -920,10 +921,10 @@ void main() {
 
   test("evaluates the complete collection expression vocabulary", () {
     final input = _list("source", ["3", "1", "2", "1"]);
-    final itemRead = _local(0);
-    final accumulatorRead = _local(0);
-    final leftRead = _local(0);
-    final rightRead = _local(1);
+    final itemRead = localExpression(0);
+    final accumulatorRead = localExpression(0);
+    final leftRead = localExpression(0);
+    final rightRead = localExpression(1);
     final one = skir.ExpressionNode.wrapLiteral(
       skir.DataValue.wrapInteger("1"),
     );
@@ -1181,7 +1182,7 @@ void main() {
             body: skir.ExpressionNode.createNumberArithmetic(
               operation: skir.NumberArithmeticOperation.add,
               first: accumulatorRead,
-              second: _local(1),
+              second: localExpression(1),
               remaining: [],
             ),
           ),
@@ -1200,7 +1201,7 @@ void main() {
             body: skir.ExpressionNode.createNumberArithmetic(
               operation: skir.NumberArithmeticOperation.add,
               first: accumulatorRead,
-              second: _local(1),
+              second: localExpression(1),
               remaining: [],
             ),
           ),
@@ -1230,7 +1231,7 @@ void main() {
     final input = _list("source", ["3", "1", "2"]);
     final predicate = skir.ExpressionNode.createNumberCompare(
       operation: skir.NumberCompareOperation.greater,
-      left: _local(0),
+      left: localExpression(0),
       right: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("2")),
     );
     final shortCircuit =
@@ -1252,7 +1253,7 @@ void main() {
         ).evaluate(
           skir.ExpressionNode.createMap(
             source: skir.ExpressionNode.wrapLiteral(input),
-            body: _local(0),
+            body: localExpression(0),
           ),
         );
     expect(exhausted, isA<PortableExpressionFailed>());
@@ -1268,7 +1269,7 @@ void main() {
             initial: skir.ExpressionNode.wrapLiteral(
               skir.DataValue.wrapInteger("0"),
             ),
-            body: _local(2),
+            body: localExpression(2),
           ),
         );
     expect(invalidLocal, isA<PortableExpressionFailed>());
@@ -1278,13 +1279,6 @@ void main() {
     );
   });
 }
-
-skir.ExpressionNode _local(int slot, {int depth = 0}) =>
-    skir.ExpressionNode.createLocal(
-      depth: depth,
-      slot: slot,
-      path: skir.ValuePath.defaultInstance,
-    );
 
 List<int> _integerItems(skir.DataValue value) {
   final list = value as skir.DataValue_listValueWrapper;

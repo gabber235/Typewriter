@@ -77,7 +77,7 @@ void main() {
                       if (item case skir.HeaderItem_buttonWrapper(:final value))
                         skir.HeaderItem.wrapButton(
                           (value.toMutable()
-                                ..visibleIf = _literal(
+                                ..visibleIf = literalExpression(
                                   skir.DataValue.wrapBoolean(false),
                                 ))
                               .toFrozen(),
@@ -140,7 +140,7 @@ void main() {
   ) async {
     final actions = <skir.EditorAction>[];
     final navigation = skir.EditorAction.createNavigate(
-      resource: _text("quest:details"),
+      resource: textLiteral("quest:details"),
       mode: skir.ResourceNavigationMode.open,
     );
     final scenario = CollectionEditorScenario(
@@ -187,7 +187,7 @@ void main() {
     final actions = <skir.EditorAction>[];
     final deletion = skir.EditorAction.createAuthoring(
       capability: skir.CapabilityId(value: "fixture:deleteQuest"),
-      targets: _literal(
+      targets: literalExpression(
         skir.DataValue.createListValue(
           items: [
             skir.ListItem(
@@ -302,18 +302,14 @@ skir.PresentationNode _aliasCollection(skir.PresentationNode root) {
   );
 }
 
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _text(String value) =>
-    _literal(skir.DataValue.wrapStringValue(value));
 skir.HeaderItem _button(String id, String label, skir.EditorAction action) =>
     skir.HeaderItem.createButton(
       itemId: skir.HeaderItemId(namespace: "fixture", name: id),
-      icon: _text(
+      icon: textLiteral(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> '
         '<path d="M4 4h16v16H4z"/></svg>',
       ),
-      label: _text(label),
+      label: textLiteral(label),
       tooltip: null,
       action: action,
       priority: null,

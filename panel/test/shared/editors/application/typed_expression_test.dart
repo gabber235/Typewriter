@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 final _catalog = CheckedEditorCatalog(
   skir.EditorCatalogWireSnapshot.defaultInstance,
@@ -15,16 +16,6 @@ final _i64 = skir.TypeUse.wrapScalar(
   skir.ScalarKind.createInteger(width: skir.IntegerWidth.signedSixtyFour),
 );
 final _budget = skir.EvaluationBudget(maxSteps: 1000, maxCollectionItems: 1000);
-skir.ExpressionNode _integer(int value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapInteger("$value"));
-skir.ExpressionNode _local([int depth = 0, int slot = 0]) =>
-    skir.ExpressionNode.createLocal(
-      depth: depth,
-      slot: slot,
-      path: editorRootPath,
-    );
-skir.ExpressionNode _input() =>
-    skir.ExpressionNode.createInput(binding: _rows, path: editorRootPath);
 skir.DataValue _list(List<String> values) => skir.DataValue.createListValue(
   items: [
     for (final (index, value) in values.indexed)
@@ -52,12 +43,12 @@ PortableExpressionResult _evaluate(
 void main() {
   test("fold gives its accumulator the initial type and retains a bound body width", () {
     final expression = skir.ExpressionNode.createFold(
-      source: _input(),
-      initial: _integer(0),
+      source: inputExpression(_rows),
+      initial: integerLiteral(0),
       body: skir.ExpressionNode.createNumberArithmetic(
         operation: skir.NumberArithmeticOperation.add,
-        first: _local(),
-        second: _local(0, 1),
+        first: localExpression(0),
+        second: localExpression(1),
         remaining: const [],
       ),
     );
@@ -98,19 +89,19 @@ void main() {
     "nested lambda reads the outer accumulator without using the outer item",
     () {
       final expression = skir.ExpressionNode.createFold(
-        source: _input(),
-        initial: _integer(0),
+        source: inputExpression(_rows),
+        initial: integerLiteral(0),
         body: skir.ExpressionNode.createCollectionAccess(
           source: skir.ExpressionNode.createMap(
             source: skir.ExpressionNode.wrapLiteral(_list(["unused"])),
             body: skir.ExpressionNode.createNumberArithmetic(
               operation: skir.NumberArithmeticOperation.add,
-              first: _local(1, 0),
-              second: _integer(1),
+              first: localExpression(0, depth: 1),
+              second: integerLiteral(1),
               remaining: const [],
             ),
           ),
-          index: _integer(0),
+          index: integerLiteral(0),
         ),
       );
       expect(
@@ -132,13 +123,13 @@ void main() {
     final source = skir.ExpressionNode.wrapLiteral(_list(["aa", "b", "aa"]));
     final mapped = skir.ExpressionNode.createMap(
       source: source,
-      body: skir.ExpressionNode.wrapTextLength(_local()),
+      body: skir.ExpressionNode.wrapTextLength(localExpression(0)),
     );
     expect(_check(mapped, expected: listType(nominalType(_i64))), isEmpty);
     final flattened = skir.ExpressionNode.createFlatMap(
       source: source,
       body: skir.ExpressionNode.createTextSplit(
-        source: _local(),
+        source: localExpression(0),
         separator: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue(""),
         ),
@@ -154,7 +145,7 @@ void main() {
     );
     final grouped = skir.ExpressionNode.createGroupBy(
       source: source,
-      body: _local(),
+      body: localExpression(0),
     );
     expect(
       _check(
@@ -193,7 +184,7 @@ void main() {
       final branch = skir.ExpressionNode.createConditional(
         test: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapBoolean(true)),
         yes: literal,
-        no: _input(),
+        no: inputExpression(_rows),
       );
       final narrower = nominalType(
         skir.TypeUse.wrapScalar(
@@ -245,15 +236,23 @@ void main() {
         mayBeMissing: false,
       );
       expect(
-        _check(_input(), inputs: {_rows: nullable}, expected: list),
+        _check(
+          inputExpression(_rows),
+          inputs: {_rows: nullable},
+          expected: list,
+        ),
         contains("incompatible_expression_result_type"),
       );
       expect(
-        _check(_input(), inputs: {_rows: list}, expected: nullable),
+        _check(
+          inputExpression(_rows),
+          inputs: {_rows: list},
+          expected: nullable,
+        ),
         isEmpty,
       );
       final fallback = skir.ExpressionNode.createOrElse(
-        input: _input(),
+        input: inputExpression(_rows),
         fallback: skir.ExpressionNode.wrapLiteral(_list(["fallback"])),
       );
       expect(
@@ -267,12 +266,15 @@ void main() {
         _list(["fallback"]),
       );
       expect(
-        (_evaluate(_input(), {
+        (_evaluate(inputExpression(_rows), {
           _rows: skir.DataValue.null_,
         }) as PortableExpressionAvailable).value,
         skir.DataValue.null_,
       );
-      expect(_evaluate(_input()), isA<PortableExpressionUnavailable>());
+      expect(
+        _evaluate(inputExpression(_rows)),
+        isA<PortableExpressionUnavailable>(),
+      );
       expect(
         _check(
           skir.ExpressionNode.createOrElse(
@@ -296,7 +298,7 @@ void main() {
     );
     final inputs = {unrelated: unresolved};
     expect(
-      _check(_integer(1), inputs: inputs, expected: nominalType(_i32)),
+      _check(integerLiteral(1), inputs: inputs, expected: nominalType(_i32)),
       isEmpty,
     );
     expect(
@@ -345,8 +347,8 @@ void main() {
       arguments: [_text],
     );
     final mapped = skir.ExpressionNode.createMap(
-      source: _input(),
-      body: _local(),
+      source: inputExpression(_rows),
+      body: localExpression(0),
     );
     expect(
       checkPortableExpression(
@@ -358,7 +360,7 @@ void main() {
       isEmpty,
     );
     final filtered = skir.ExpressionNode.createFilter(
-      source: _input(),
+      source: inputExpression(_rows),
       body: skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapBoolean(true)),
     );
     expect(
@@ -384,9 +386,9 @@ void main() {
       arguments: [_text, _i32],
     );
     final mappedValues = skir.ExpressionNode.createMap(
-      source: _input(),
+      source: inputExpression(_rows),
       body: skir.ExpressionNode.createEntryProjection(
-        source: _local(),
+        source: localExpression(0),
         branch: skir.EntryBranch.value,
       ),
     );
@@ -403,7 +405,7 @@ void main() {
       skir.DataValue.wrapStringValue("item"),
     );
     final access = skir.ExpressionNode.createCollectionAccess(
-      source: _input(),
+      source: inputExpression(_rows),
       index: keyExpression,
     );
     expect(
@@ -416,7 +418,7 @@ void main() {
       isEmpty,
     );
     final membership = skir.ExpressionNode.createCollectionContains(
-      source: _input(),
+      source: inputExpression(_rows),
       value: keyExpression,
     );
     expect(
@@ -459,10 +461,10 @@ void main() {
       arguments: const [],
     );
     final upper = skir.ExpressionNode.createMap(
-      source: _input(),
+      source: inputExpression(_rows),
       body: skir.ExpressionNode.createTextUnary(
         operation: skir.TextUnaryOperation.upper,
-        source: _local(),
+        source: localExpression(0),
       ),
     );
     expect(
@@ -512,7 +514,7 @@ void main() {
       arguments: [skir.ArgumentSelection.unfilled],
     );
     final expression = skir.ExpressionNode.createField(
-      source: _input(),
+      source: inputExpression(_rows),
       name: "title",
     );
     expect(
@@ -542,15 +544,15 @@ void main() {
   });
 
   test("invalid frame addresses and unknown operations fail admission and evaluation", () {
-    expect(_check(_local()), ["invalid_expression_local"]);
+    expect(_check(localExpression(0)), ["invalid_expression_local"]);
     expect(
-      (_evaluate(_local()) as PortableExpressionFailed).code,
+      (_evaluate(localExpression(0)) as PortableExpressionFailed).code,
       "invalid_expression_local",
     );
     final expression = skir.ExpressionNode.createNumberArithmetic(
       operation: skir.NumberArithmeticOperation.unknown,
-      first: _integer(1),
-      second: _integer(2),
+      first: integerLiteral(1),
+      second: integerLiteral(2),
       remaining: const [],
     );
     expect(_check(expression), ["unknown_expression_operation"]);
@@ -591,7 +593,7 @@ void main() {
         ],
       );
       final expression = skir.ExpressionNode.createMap(
-        source: _input(),
+        source: inputExpression(_rows),
         body: skir.ExpressionNode.createLocal(depth: 0, slot: 0, path: path),
       );
       final type = mapType(

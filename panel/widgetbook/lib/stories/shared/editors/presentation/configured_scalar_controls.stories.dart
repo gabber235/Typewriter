@@ -78,18 +78,6 @@ class ConfiguredScalarGallery extends HookWidget {
   }
 }
 
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _text(String value) =>
-    _literal(skir.DataValue.wrapStringValue(value));
-skir.ExpressionNode _number(double value) =>
-    _literal(skir.DataValue.wrapFloat(value));
-skir.PresentationNode _node(String name, skir.PresentationElement element) =>
-    (skir.PresentationNode.mutable()
-          ..nodeId = "scalar.$name"
-          ..element = element)
-        .toFrozen();
-
 BoundPresentationHost _scalarHost({
   required bool readOnly,
   required bool compact,
@@ -127,13 +115,13 @@ BoundPresentationHost _scalarHost({
               bindingId: skir.ExpressionBindingId(value: name),
               path: editorRootPath,
             )
-            ..label = _text(label)
-            ..semanticLabel = _text(label))
+            ..label = textLiteral(label)
+            ..semanticLabel = textLiteral(label))
           .toFrozen();
   final content =
       (skir.InputContent.mutable()
             ..leading = noIcon ? skir.InputAdornment.none : null
-            ..placeholder = _text("Enter a value"))
+            ..placeholder = textLiteral("Enter a value"))
           .toFrozen();
   final candidate = skir.ExpressionBindingId(value: "candidate");
   final read = skir.ExpressionNode.createInput(
@@ -145,15 +133,15 @@ BoundPresentationHost _scalarHost({
       inputBinding: candidate,
       body: skir.ExpressionNode.createNumberRound(
         source: read,
-        increment: _number(0.5),
-        rounding: _text("NearestTiesToEven"),
+        increment: numberLiteral(0.5),
+        rounding: textLiteral("NearestTiesToEven"),
       ),
     ),
     display: null,
   );
   final nodes = <skir.PresentationNode>[
-    _node(
-      "text",
+    presentationNode(
+      "scalar.text",
       skir.PresentationElement.wrapTextInput(
         (skir.TextControl.mutable()
               ..control = control("text", "Checkpoint name")
@@ -169,8 +157,8 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "number",
+    presentationNode(
+      "scalar.number",
       skir.PresentationElement.wrapNumericInput(
         (skir.NumericControl.mutable()
               ..control = control("number", "Placement offset")
@@ -178,23 +166,23 @@ BoundPresentationHost _scalarHost({
               ..mappings = mappings
               ..options =
                   (skir.NumericInteractionOptions.mutable()
-                        ..minimum = _number(0)
-                        ..maximum = _number(100)
-                        ..step = _number(0.5)
+                        ..minimum = numberLiteral(0)
+                        ..maximum = numberLiteral(100)
+                        ..step = numberLiteral(0.5)
                         ..steppers = skir.NumericSteppers.inline)
                       .toFrozen())
             .toFrozen(),
       ),
     ),
-    _node(
-      "duration",
+    presentationNode(
+      "scalar.duration",
       skir.PresentationElement.wrapDurationInput(
         (skir.DurationControl.mutable()
               ..control = control("duration", "Delay")
               ..content = content
               ..options =
                   (skir.DurationInteractionOptions.mutable()
-                        ..step = _literal(
+                        ..step = literalExpression(
                           skir.DataValue.createDuration(
                             value: skir.Duration(milliseconds: 1000),
                           ),
@@ -203,8 +191,8 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "bytes",
+    presentationNode(
+      "scalar.bytes",
       skir.PresentationElement.wrapBytesInput(
         (skir.BytesControl.mutable()
               ..control = control("bytes", "Payload")
@@ -217,8 +205,8 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "date",
+    presentationNode(
+      "scalar.date",
       skir.PresentationElement.wrapDateTimeInput(
         (skir.DateTimeControl.mutable()
               ..control = control("date", "Starts at")
@@ -228,8 +216,8 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "color",
+    presentationNode(
+      "scalar.color",
       skir.PresentationElement.wrapColorInput(
         (skir.ColorControl.mutable()
               ..control = control("color", "Tag color")
@@ -244,28 +232,28 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "toggle",
+    presentationNode(
+      "scalar.toggle",
       skir.PresentationElement.wrapToggleInput(
         (skir.ToggleControl.mutable()
               ..control = control("toggle", "Visible")
               ..options =
                   (skir.ToggleInteractionOptions.mutable()
                         ..presentation = skir.TogglePresentation.checkbox
-                        ..trueLabel = _text("Shown")
-                        ..falseLabel = _text("Hidden"))
+                        ..trueLabel = textLiteral("Shown")
+                        ..falseLabel = textLiteral("Hidden"))
                       .toFrozen())
             .toFrozen(),
       ),
     ),
-    _node(
-      "slider",
+    presentationNode(
+      "scalar.slider",
       skir.PresentationElement.wrapSliderInput(
         (skir.SliderControl.mutable()
               ..control = control("slider", "Opacity")
-              ..minimum = _number(0)
-              ..maximum = _number(100)
-              ..divisions = _literal(skir.DataValue.wrapInteger("10"))
+              ..minimum = numberLiteral(0)
+              ..maximum = numberLiteral(100)
+              ..divisions = literalExpression(skir.DataValue.wrapInteger("10"))
               ..options =
                   (skir.SliderInteractionOptions.mutable()
                         ..showValue = skir.SliderValueDisplay.always
@@ -274,8 +262,8 @@ BoundPresentationHost _scalarHost({
             .toFrozen(),
       ),
     ),
-    _node(
-      "choice",
+    presentationNode(
+      "scalar.choice",
       skir.PresentationElement.wrapSelectInput(
         (skir.SelectControl.mutable()
               ..control = control("choice", "Alignment")
@@ -287,16 +275,16 @@ BoundPresentationHost _scalarHost({
                 for (final value in ["left", "center", "right"])
                   (skir.SelectOption.mutable()
                         ..optionId = value
-                        ..label = _text(value)
-                        ..value = _text(value))
+                        ..label = textLiteral(value)
+                        ..value = textLiteral(value))
                       .toFrozen(),
               ])
             .toFrozen(),
       ),
     ),
   ];
-  final body = _node(
-    "column",
+  final body = presentationNode(
+    "scalar.column",
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
         layout: skir.AxisChildrenLayout(
@@ -310,8 +298,8 @@ BoundPresentationHost _scalarHost({
       ),
     ),
   );
-  final root = _node(
-    "appearance",
+  final root = presentationNode(
+    "scalar.appearance",
     skir.PresentationElement.wrapAppearanceDefaults(
       skir.AppearanceDefaultsElement(
         appearance:
@@ -322,7 +310,7 @@ BoundPresentationHost _scalarHost({
                   ..radius = skir.PresentationRadius.medium
                   ..border = skir.BorderOverride.none
                   ..iconColor = skir.PresentationColor.wrapValue(
-                    _literal(skir.DataValue.wrapInteger("4285756607")),
+                    literalExpression(skir.DataValue.wrapInteger("4285756607")),
                   ))
                 .toFrozen(),
         child: body,

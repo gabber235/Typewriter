@@ -11,7 +11,7 @@ void main() {
       final catalog = _catalog();
       final first = _document(catalog, "First");
       final second = _document(catalog, "Second");
-      final expression = _field(
+      final expression = fieldExpression(
         _query(skir.ExpressionQuery.wrapResourceValue),
         "name",
       );
@@ -39,7 +39,7 @@ void main() {
       skir.ExpressionQuery.wrapCatalogDeclaration(configuration),
     );
     final color = skir.ExpressionNode.wrapColorParse(
-      _field(_field(declaration, "display"), "color"),
+      fieldExpression(fieldExpression(declaration, "display"), "color"),
     );
     final result = _evaluate(catalog, _document(catalog, "Page"), color);
     expect(
@@ -95,7 +95,7 @@ void main() {
         arguments: const [skir.ArgumentSelection.unfilled],
       ),
     );
-    final name = _field(
+    final name = fieldExpression(
       _query(skir.ExpressionQuery.wrapResourceValue, generic: true),
       "name",
     );
@@ -109,7 +109,7 @@ void main() {
       _evaluate(
         catalog,
         document,
-        _field(_field(declaration, "display"), "name"),
+        fieldExpression(fieldExpression(declaration, "display"), "name"),
       ).value.authoredString,
       "Page",
     );
@@ -164,15 +164,18 @@ void main() {
         ),
       );
       final expression = skir.ExpressionNode.createOrElse(
-        input: _field(_field(declaration, "display"), "color"),
-        fallback: _literal(skir.DataValue.wrapStringValue("fallback")),
+        input: fieldExpression(
+          fieldExpression(declaration, "display"),
+          "color",
+        ),
+        fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
       );
       expect(
         _evaluate(catalog, document, expression).value.authoredString,
         "fallback",
       );
       final invalid = catalog.evaluateExpression(
-        _field(declaration, "unknown"),
+        fieldExpression(declaration, "unknown"),
         bindings: _bindings,
         budget: _budget,
         queries: PortableExpressionQueries(
@@ -207,7 +210,7 @@ void main() {
       final leaf = _evaluate(
         catalog,
         document,
-        _field(_field(declaration, "display"), "color"),
+        fieldExpression(fieldExpression(declaration, "display"), "color"),
       );
       expect(leaf.value.authoredString, "#336699");
     },
@@ -297,7 +300,7 @@ void main() {
     );
     final left = skir.ExpressionBindingId(value: "left");
     final right = skir.ExpressionBindingId(value: "right");
-    final body = _field(
+    final body = fieldExpression(
       skir.ExpressionNode.wrapQuery(
         skir.ExpressionQuery.wrapResourceValue(
           skir.ResourceQuerySource.wrapReference(
@@ -318,14 +321,16 @@ void main() {
               binding: source,
               path: editorRootPath,
             ),
-            fallback: _literal(skir.DataValue.createListValue(items: const [])),
+            fallback: literalExpression(
+              skir.DataValue.createListValue(items: const []),
+            ),
           ),
           body: body,
         );
     skir.ExpressionNode join(skir.ExpressionNode source) =>
         skir.ExpressionNode.createTextJoin(
           source: source,
-          separator: _literal(skir.DataValue.wrapStringValue("")),
+          separator: literalExpression(skir.DataValue.wrapStringValue("")),
         );
     final result = catalog.evaluateExpression(
       skir.ExpressionNode.createTextInterpolate(
@@ -399,7 +404,7 @@ void main() {
         ),
       );
       final result = aliasScope.evaluate(
-        _field(
+        fieldExpression(
           skir.ExpressionNode.wrapQuery(
             skir.ExpressionQuery.wrapResourceValue(
               skir.ResourceQuerySource.wrapReference(
@@ -539,7 +544,7 @@ void main() {
             from: original,
           );
           expect(concurrent, isA<EditStaged>());
-          final expression = _field(
+          final expression = fieldExpression(
             _query(skir.ExpressionQuery.wrapResourceValue),
             "name",
           );
@@ -672,10 +677,12 @@ void main() {
         () {},
         (_) {},
       );
-      final expression = _field(
-        _field(
+      final expression = fieldExpression(
+        fieldExpression(
           skir.ExpressionNode.wrapQuery(
-            skir.ExpressionQuery.wrapCatalogDeclaration(_literal(encoded)),
+            skir.ExpressionQuery.wrapCatalogDeclaration(
+              literalExpression(encoded),
+            ),
           ),
           "display",
         ),
@@ -720,8 +727,11 @@ void main() {
       },
     );
     final expression = skir.ExpressionNode.createOrElse(
-      input: _field(_query(skir.ExpressionQuery.wrapResourceValue), "name"),
-      fallback: _literal(skir.DataValue.wrapStringValue("fallback")),
+      input: fieldExpression(
+        _query(skir.ExpressionQuery.wrapResourceValue),
+        "name",
+      ),
+      fallback: literalExpression(skir.DataValue.wrapStringValue("fallback")),
     );
     final result = catalog.evaluateExpression(
       expression,
@@ -734,14 +744,14 @@ void main() {
     final malformed = PortableExpressionEvaluator(const {}, budget: _budget)
         .evaluate(
           skir.ExpressionNode.wrapColorParse(
-            _literal(skir.DataValue.wrapStringValue("#notrgb")),
+            literalExpression(skir.DataValue.wrapStringValue("#notrgb")),
           ),
         );
     expect(malformed, isA<PortableExpressionFailed>());
     final blank = PortableExpressionEvaluator(const {}, budget: _budget)
         .evaluate(
           skir.ExpressionNode.wrapColorParse(
-            _literal(skir.DataValue.wrapStringValue(" ")),
+            literalExpression(skir.DataValue.wrapStringValue(" ")),
           ),
         );
     expect(blank, isA<PortableExpressionUnavailable>());
@@ -751,18 +761,18 @@ void main() {
     () {
       final catalog = _catalog();
       final missing = skir.ExpressionBindingId(value: "missing");
-      final layout = _textNode(
-        _literal(skir.DataValue.wrapStringValue("Title")),
+      final layout = presentationText(
         "body",
+        literalExpression(skir.DataValue.wrapStringValue("Title")),
       );
       final appearance =
           (skir.ResultAppearance.mutable()
-                ..leading = _textNode(
+                ..leading = presentationText(
+                  "leading",
                   skir.ExpressionNode.createInput(
                     binding: missing,
                     path: editorRootPath,
                   ),
-                  "leading",
                 ))
               .toFrozen();
       final material = _resultMaterial(layout, appearance: appearance);
@@ -814,9 +824,9 @@ void main() {
 
   test("clipped axes reject flexible children and columns at admission", () {
     final catalog = _catalog();
-    final child = _textNode(
-      _literal(skir.DataValue.wrapStringValue("Content")),
+    final child = presentationText(
       "child",
+      literalExpression(skir.DataValue.wrapStringValue("Content")),
     );
     final clipped = (skir.AxisChildrenLayout.mutable()..clipOverflow = true)
         .toFrozen();
@@ -887,8 +897,10 @@ void main() {
     addTearDown(operations.dispose);
     final host = BoundPresentationHost(
       catalog: catalog,
-      root: () =>
-          _textNode(_literal(skir.DataValue.wrapStringValue("Label")), "label"),
+      root: () => presentationText(
+        "label",
+        literalExpression(skir.DataValue.wrapStringValue("Label")),
+      ),
       bindings: const [],
       budget: _budget,
     );
@@ -1026,11 +1038,6 @@ skir.ExpressionNode _query(
     ),
   ),
 );
-
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _field(skir.ExpressionNode value, String name) =>
-    skir.ExpressionNode.createField(source: value, name: name);
 
 CheckedEditorCatalog _catalog({bool generic = false, bool display = true}) {
   final name = skir.FieldDeclaration(
@@ -1208,13 +1215,6 @@ final _namePath = skir.ValuePath(
   segments: [skir.PathSegment.createField(name: "name")],
 );
 
-skir.PresentationNode _textNode(skir.ExpressionNode expression, String id) =>
-    (skir.PresentationNode.mutable()
-          ..nodeId = id
-          ..element = skir.PresentationElement.wrapText(
-            (skir.TextContent.mutable()..value = expression).toFrozen(),
-          ))
-        .toFrozen();
 skir.PresentationMaterial _resultMaterial(
   skir.PresentationNode layout, {
   skir.ResultAppearance? appearance,

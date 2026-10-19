@@ -1,6 +1,7 @@
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 CheckedEditorCatalog authoringSearchStoryCatalog() {
   final definitions = authoringSearchStoryDefinitions;
@@ -150,8 +151,18 @@ skir.PresentationNode _resultLayout(String kind) => skir.PresentationNode(
   element: skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createColumn(
       children: [
-        skir.AxisChild.wrapFixed(_text("$kind.name", "name")),
-        skir.AxisChild.wrapFixed(_text("$kind.summary", "summary")),
+        skir.AxisChild.wrapFixed(
+          presentationText(
+            "$kind.name",
+            inputExpression(configuredValueBindingId, field: "name"),
+          ),
+        ),
+        skir.AxisChild.wrapFixed(
+          presentationText(
+            "$kind.summary",
+            inputExpression(configuredValueBindingId, field: "summary"),
+          ),
+        ),
       ],
       layout: skir.AxisChildrenLayout(
         clipOverflow: false,
@@ -161,33 +172,6 @@ skir.PresentationNode _resultLayout(String kind) => skir.PresentationNode(
         crossAxisAlignment: skir.CrossAxisAlignment.start,
       ),
     ),
-  ),
-  header: null,
-);
-
-skir.PresentationNode _text(String id, String field) => skir.PresentationNode(
-  nodeId: id,
-  properties: skir.PresentationProperties.defaultInstance,
-  element: skir.PresentationElement.createText(
-    value: skir.ExpressionNode.createInput(
-      binding: configuredValueBindingId,
-      path: skir.ValuePath(
-        segments: [skir.PathSegment.createField(name: field)],
-      ),
-    ),
-    color: null,
-    sizing: null,
-    fontWeight: null,
-    fontItalic: null,
-    fontOpticalSize: null,
-    fontSlant: null,
-    fontWidth: null,
-    textAlignment: null,
-    lineHeight: null,
-    letterSpacing: null,
-    decoration: null,
-    semanticLabel: null,
-    paragraph: skir.TextParagraph.defaultInstance,
   ),
   header: null,
 );

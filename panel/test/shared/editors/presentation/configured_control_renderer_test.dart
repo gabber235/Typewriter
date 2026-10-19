@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -41,14 +42,14 @@ void main() {
           bindingId: configured,
           path: editorRootPath,
         );
-        skir.PresentationNode field(String label) => _node(
+        skir.PresentationNode field(String label) => presentationNode(
           label,
           skir.PresentationElement.wrapTextInput(
             (skir.TextControl.mutable()
                   ..control = (skir.BoundControl.mutable()
                     ..binding = innerReference
-                    ..label = _text(label)
-                    ..semanticLabel = _text(label)))
+                    ..label = textLiteral(label)
+                    ..semanticLabel = textLiteral(label)))
                 .toFrozen(),
           ),
         );
@@ -58,14 +59,14 @@ void main() {
             value: skir.ExpressionNode.wrapLiteral(named("action")),
           ),
         );
-        final body = _column([
+        final body = presentationColumn("column", [
           field("Left input"),
           field("Right input"),
-          _node(
+          presentationNode(
             "action",
             skir.PresentationElement.wrapButton(
               (skir.ButtonElement.mutable()
-                    ..label = _text("Apply value")
+                    ..label = textLiteral("Apply value")
                     ..action = action)
                   .toFrozen(),
             ),
@@ -103,14 +104,14 @@ void main() {
         );
         var value = named("initial");
         final writes = <skir.DataValue>[];
-        final root = _node(
+        final root = presentationNode(
           "default",
           skir.PresentationElement.wrapDefaultPresentation(
             (skir.DefaultPresentationElement.mutable()
                   ..control = (skir.BoundControl.mutable()
                     ..binding = rootReference
-                    ..label = _text("Compound guidance")
-                    ..description = _text("Edit either view"))
+                    ..label = textLiteral("Compound guidance")
+                    ..description = textLiteral("Edit either view"))
                   ..presentationId = provider)
                 .toFrozen(),
           ),
@@ -209,16 +210,16 @@ void main() {
           inputBinding: candidate,
           body: skir.ExpressionNode.createNumberRound(
             source: read,
-            increment: _literal(skir.DataValue.wrapFloat(0.5)),
-            rounding: _text("NearestTiesToEven"),
+            increment: literalExpression(skir.DataValue.wrapFloat(0.5)),
+            rounding: textLiteral("NearestTiesToEven"),
           ),
         ),
         display: skir.ExpressionMapping(
           inputBinding: candidate,
           body: skir.ExpressionNode.createNumberFormat(
             source: read,
-            fractionDigits: _literal(skir.DataValue.wrapInteger("2")),
-            locale: _text("en_US"),
+            fractionDigits: literalExpression(skir.DataValue.wrapInteger("2")),
+            locale: textLiteral("en_US"),
           ),
         ),
       );
@@ -238,7 +239,7 @@ void main() {
         catalog: CheckedEditorCatalog(
           skir.EditorCatalogWireSnapshot.defaultInstance,
         ),
-        root: () => _node(
+        root: () => presentationNode(
           "numeric",
           skir.PresentationElement.wrapNumericInput(control),
         ),
@@ -330,8 +331,8 @@ void main() {
                       binding: candidate,
                       path: editorRootPath,
                     ),
-                    increment: _literal(skir.DataValue.wrapFloat(0.1)),
-                    rounding: _text("NearestTiesToEven"),
+                    increment: literalExpression(skir.DataValue.wrapFloat(0.1)),
+                    rounding: textLiteral("NearestTiesToEven"),
                   ),
                 ),
               ))
@@ -340,8 +341,10 @@ void main() {
       catalog: CheckedEditorCatalog(
         skir.EditorCatalogWireSnapshot.defaultInstance,
       ),
-      root: () =>
-          _node("float32", skir.PresentationElement.wrapNumericInput(control)),
+      root: () => presentationNode(
+        "float32",
+        skir.PresentationElement.wrapNumericInput(control),
+      ),
       bindings: [
         BoundPresentationBinding(
           id: id,
@@ -386,7 +389,7 @@ void main() {
         catalog: CheckedEditorCatalog(
           skir.EditorCatalogWireSnapshot.defaultInstance,
         ),
-        root: () => _node(
+        root: () => presentationNode(
           "duration",
           skir.PresentationElement.wrapDurationInput(
             (skir.DurationControl.mutable()
@@ -500,7 +503,7 @@ void main() {
       final id = skir.ExpressionBindingId(value: "states");
       skir.PresentationColor paint(int value) =>
           skir.PresentationColor.wrapValue(
-            _literal(skir.DataValue.wrapInteger(value.toString())),
+            literalExpression(skir.DataValue.wrapInteger(value.toString())),
           );
       final policy = skir.PresentationColor.wrapStates(
         skir.PresentationStateColor(
@@ -529,7 +532,7 @@ void main() {
                     bindingId: id,
                     path: editorRootPath,
                   )
-                  ..label = _text("Native states"))
+                  ..label = textLiteral("Native states"))
                 ..appearance =
                     (skir.InputAppearance.mutable()
                           ..labelStyle =
@@ -542,8 +545,10 @@ void main() {
         catalog: CheckedEditorCatalog(
           skir.EditorCatalogWireSnapshot.defaultInstance,
         ),
-        root: () =>
-            _node("states", skir.PresentationElement.wrapNumericInput(control)),
+        root: () => presentationNode(
+          "states",
+          skir.PresentationElement.wrapNumericInput(control),
+        ),
         bindings: [
           BoundPresentationBinding(
             id: id,
@@ -590,7 +595,7 @@ void main() {
       final configured = skir.ExpressionBindingId(value: "configured_value");
       final number = skir.ExpressionBindingId(value: "number");
       var value = skir.DataValue.wrapFloat(3);
-      final root = _node(
+      final root = presentationNode(
         "group",
         skir.PresentationElement.wrapAppearanceDefaults(
           skir.AppearanceDefaultsElement(
@@ -603,7 +608,7 @@ void main() {
                         ),
                       ))
                     .toFrozen(),
-            child: _node(
+            child: presentationNode(
               "alias",
               skir.PresentationElement.wrapScopedBinding(
                 skir.ScopedBindingElement(
@@ -612,7 +617,7 @@ void main() {
                     path: editorRootPath,
                   ),
                   scopeBindingId: configured,
-                  child: _node(
+                  child: presentationNode(
                     "number",
                     skir.PresentationElement.wrapNumericInput(
                       (skir.NumericControl.mutable()
@@ -677,24 +682,3 @@ void main() {
     },
   );
 }
-
-skir.ExpressionNode _text(String text) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(text));
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    (skir.PresentationNode.mutable()
-          ..nodeId = id
-          ..element = element)
-        .toFrozen();
-skir.PresentationNode _column(List<skir.PresentationNode> children) => _node(
-  "column",
-  skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.wrapColumn(
-      (skir.AxisChildrenElement.mutable()
-            ..children = children.map(skir.AxisChild.wrapFixed))
-          .toFrozen(),
-    ),
-  ),
-);
-
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);

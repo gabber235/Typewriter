@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -87,14 +88,14 @@ void main() {
         ],
         fallback: _color(accent),
       );
-      final label = _node(
+      final label = presentationNode(
         "label",
         skir.PresentationElement.wrapText(
           (skir.TextContent.mutable()..value = "Adventure".portableExpression)
               .toFrozen(),
         ),
       );
-      final icon = _node(
+      final icon = presentationNode(
         "icon",
         skir.PresentationElement.createIcon(
           name: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>'
@@ -104,7 +105,7 @@ void main() {
           semanticLabel: null,
         ),
       );
-      final row = _node(
+      final row = presentationNode(
         "row",
         skir.PresentationElement.wrapChildren(
           skir.ChildrenElement.createRow(
@@ -124,7 +125,7 @@ void main() {
       );
       final root = _column(
         "root",
-        _node(
+        presentationNode(
           "surface",
           skir.PresentationElement.createContainer(
             backgroundColor: fill,
@@ -134,7 +135,7 @@ void main() {
             radius: skir.PresentationRadius.large,
             child: _column(
               "body",
-              _node(
+              presentationNode(
                 "alignment",
                 skir.PresentationElement.createAlign(
                   alignment: skir.PresentationAlignment.center,
@@ -218,10 +219,10 @@ void main() {
     tester,
   ) async {
     const canvas = Color(0xff112233);
-    final root = _node(
+    final root = presentationNode(
       "surface",
       skir.PresentationElement.createContainer(
-        child: _node(
+        child: presentationNode(
           "label",
           skir.PresentationElement.wrapText(
             (skir.TextContent.mutable()
@@ -423,28 +424,17 @@ void main() {
   });
 }
 
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: element,
-    );
-skir.PresentationNode _column(String id, skir.PresentationNode child) => _node(
-  id,
-  skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.createColumn(
+skir.PresentationNode _column(String id, skir.PresentationNode child) =>
+    presentationColumn(
+      id,
+      [child],
       layout: skir.AxisChildrenLayout(
         clipOverflow: false,
-
         spacing: 0,
         mainAxisAlignment: skir.MainAxisAlignment.start,
         crossAxisAlignment: skir.CrossAxisAlignment.stretch,
       ),
-      children: [skir.AxisChild.wrapFixed(child)],
-    ),
-  ),
-);
+    );
 
 skir.PresentationColor _color(Color color) =>
     skir.PresentationColor.wrapValue(color.portableExpression);

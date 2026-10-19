@@ -56,7 +56,7 @@ void main() {
             bindingId: inheritedConfiguredValue,
             path: editorRootPath.field("name").field("first"),
           );
-        final hiddenPrefix = inheritedFieldNode(
+        final hiddenPrefix = presentationNode(
           "source.prefix",
           skir.PresentationElement.wrapConditional(
             (skir.ConditionalElement.mutable()
@@ -91,7 +91,7 @@ void main() {
             ),
           ),
           additionalTypes: [published],
-          sourceName: inheritedFieldNode(
+          sourceName: presentationNode(
             "element.name",
             skir.PresentationElement.wrapRecordInput(
               (skir.RecordControl.mutable()
@@ -99,7 +99,7 @@ void main() {
                       label: "Name",
                       prefix: hiddenPrefix,
                     )
-                    ..fieldPresentation = inheritedFieldNode(
+                    ..fieldPresentation = presentationNode(
                       "source.body",
                       skir.PresentationElement.wrapScopedBinding(
                         skir.ScopedBindingElement(
@@ -117,7 +117,12 @@ void main() {
           ),
           layout: inheritedFieldRequest(
             control: inheritedFieldControl(
-              prefix: replacePrefix ? _prefix("Local prefix") : null,
+              prefix: replacePrefix
+                  ? presentationText(
+                      "Local prefix",
+                      textLiteral("Local prefix"),
+                    )
+                  : null,
             ),
           ),
         );
@@ -282,7 +287,7 @@ void main() {
       nameType: skir.TypeTemplate.createNullable(
         value: skir.TypeTemplate.wrapScalar(skir.ScalarKind.text),
       ),
-      sourceName: inheritedFieldNode(
+      sourceName: presentationNode(
         "element.name",
         skir.PresentationElement.wrapNullableInput(
           (skir.NullableControl.mutable()
@@ -348,7 +353,7 @@ void main() {
                         .toFrozen(),
                   ])
                 .toFrozen();
-        final slot = inheritedFieldNode(
+        final slot = presentationNode(
           "scope.probe",
           skir.PresentationElement.wrapSlot(
             skir.PresentationSlotElement(slotId: "probe"),
@@ -640,12 +645,17 @@ void main() {
         "element.name",
         control: inheritedFieldControl(
           label: "Name",
-          prefix: _prefix("Inherited prefix"),
+          prefix: presentationText(
+            "Inherited prefix",
+            textLiteral("Inherited prefix"),
+          ),
         ),
         trim: true,
       ),
       layout: inheritedFieldRequest(
-        control: inheritedFieldControl(prefix: _prefix("Local prefix")),
+        control: inheritedFieldControl(
+          prefix: presentationText("Local prefix", textLiteral("Local prefix")),
+        ),
       ),
     );
     addTearDown(fixture.dispose);
@@ -658,7 +668,7 @@ void main() {
   testWidgets("hidden name requests stay reserved from remaining fields", (
     tester,
   ) async {
-    final hidden = inheritedFieldNode(
+    final hidden = presentationNode(
       "hidden.name",
       skir.PresentationElement.wrapConditional(
         (skir.ConditionalElement.mutable()
@@ -789,18 +799,11 @@ Future<void> _pump(
 EditableText _editable(WidgetTester tester, int index) =>
     tester.widget<EditableText>(find.byType(EditableText).at(index));
 
-skir.PresentationNode _prefix(String label) => inheritedFieldNode(
-  label,
-  skir.PresentationElement.wrapText(
-    (skir.TextContent.mutable()..value = inheritedFieldText(label)).toFrozen(),
-  ),
-);
-
 skir.PresentationNode _siblingEditingName() => inheritedFieldTextInput(
   "element.name",
   control: inheritedFieldControl(
     label: "Name",
-    prefix: inheritedFieldNode(
+    prefix: presentationNode(
       "element.message.hidden",
       skir.PresentationElement.wrapConditional(
         (skir.ConditionalElement.mutable()

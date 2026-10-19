@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -322,12 +323,14 @@ void main() {
           (fixture.control.toMutable()
                 ..popup =
                     (skir.PopupAppearance.mutable()
-                          ..minimumWidth = _number(420)
-                          ..maximumWidth = _number(480)
-                          ..maximumExtent = _number(160)
+                          ..minimumWidth = numberLiteral(420)
+                          ..maximumWidth = numberLiteral(480)
+                          ..maximumExtent = numberLiteral(160)
                           ..padding = skir.PresentationInsets.wrapAll(6)
                           ..fill = skir.PresentationColor.wrapValue(
-                            _literal(skir.DataValue.wrapInteger("4278255360")),
+                            literalExpression(
+                              skir.DataValue.wrapInteger("4278255360"),
+                            ),
                           ))
                         .toFrozen())
               .toFrozen();
@@ -391,17 +394,17 @@ final class _SearchFixture {
                         bindingId: target,
                         path: editorRootPath,
                       )
-                      ..label = _text("Icon identifier"))
+                      ..label = textLiteral("Icon identifier"))
                     .toFrozen()
             ..selectionMode = multiple
                 ? skir.SearchSelectionMode.multiple
                 : skir.SearchSelectionMode.single
             ..queryBindingId = query
             ..summaryBindingId = skir.ExpressionBindingId(value: "summary")
-            ..maximumExtent = _number(220)
-            ..placeholder = _text("Search icons")
+            ..maximumExtent = numberLiteral(220)
+            ..placeholder = textLiteral("Search icons")
             ..provider = skir.SearchProvider.createStaticValues(
-              values: _literal(
+              values: literalExpression(
                 skir.DataValue.createListValue(
                   items: [
                     for (final name in ["Book", "Map", "Star"])
@@ -423,7 +426,7 @@ final class _SearchFixture {
                         leading: null,
 
                         style: skir.ResultStyle.card,
-                        kindLabel: _text("reward"),
+                        kindLabel: textLiteral("reward"),
                       )
                     : null,
                 presentation:
@@ -531,13 +534,6 @@ final class _SearchFixture {
     expect(find.byType(QueryBar), findsOneWidget);
   }
 }
-
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _text(String value) =>
-    _literal(skir.DataValue.wrapStringValue(value));
-skir.ExpressionNode _number(double value) =>
-    _literal(skir.DataValue.wrapFloat(value));
 
 final _listDefinition = skir.TypeDefinitionId(
   typeId: skir.TypeId.createQualified(namespace: "test", name: "IconList"),

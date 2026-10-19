@@ -23,7 +23,7 @@ void main() {
     };
     final activePresentations = <skir.PresentationId>{presentation};
     final slots = <String, skir.PresentationNode>{
-      "body": _visualText("retained.body", "Body"),
+      "body": presentationText("retained.body", textLiteral("Body")),
     };
     final slotBuilders = <String, PortableSlotBuilder>{
       "body": (_) => const SizedBox.shrink(),
@@ -120,7 +120,9 @@ void main() {
         resource: compiledInheritanceBookId,
         readOnly: true,
         enabled: false,
-        slots: {"body": _visualText("page.body", "Page content")},
+        slots: {
+          "body": presentationText("page.body", textLiteral("Page content")),
+        },
         slotBuilders: {"body": (_) => const Text("Page content")},
         projectedWriters: {
           pageField: (_, _, {reads = const []}) =>
@@ -214,9 +216,9 @@ void main() {
               verticalSpacing: 12,
             ),
             children: [
-              _visualText("grid.first", "Alpha"),
-              _visualText("grid.second", "Beta"),
-              _visualText("grid.third", "Gamma"),
+              presentationText("grid.first", textLiteral("Alpha")),
+              presentationText("grid.second", textLiteral("Beta")),
+              presentationText("grid.third", textLiteral("Gamma")),
             ],
           ),
         ),
@@ -252,7 +254,7 @@ void main() {
 
   testWidgets("text content retains inherited typography", (tester) async {
     final host = _TestPortableHost(
-      root: _visualText("typography", "Inherited text"),
+      root: presentationText("typography", textLiteral("Inherited text")),
     );
     addTearDown(host.dispose);
     await tester.pumpTestApp(
@@ -273,7 +275,7 @@ void main() {
         nodeId: "section",
         properties: skir.PresentationProperties.defaultInstance,
         element: skir.PresentationElement.createSection(
-          child: _visualText("section.body", "Section body"),
+          child: presentationText("section.body", textLiteral("Section body")),
           border: null,
         ),
         header: skir.PresentationHeader(
@@ -630,7 +632,7 @@ void main() {
     await tester.pumpTestApp(
       child: Material(
         child: PortablePresentationNodeRenderer(
-          node: _node(
+          node: presentationNode(
             "icon",
             skir.PresentationElement.createIcon(
               name: skir.ExpressionNode.wrapLiteral(
@@ -682,7 +684,7 @@ void main() {
 
     skir.PresentationNode tagCard(String tagName) {
       final label = tagName.isEmpty ? "Unnamed tag" : tagName;
-      final icon = _node(
+      final icon = presentationNode(
         "tag.icon",
         skir.PresentationElement.createIcon(
           name: skir.ExpressionNode.wrapLiteral(
@@ -698,12 +700,12 @@ void main() {
           size: null,
         ),
       );
-      final coloredIcon = _node(
+      final coloredIcon = presentationNode(
         "tag.icon.color",
         skir.PresentationElement.createContainer(
           foregroundColor: null,
           transitionMilliseconds: 0,
-          child: _node(
+          child: presentationNode(
             "tag.icon.padding",
             skir.PresentationElement.createPadding(
               child: icon,
@@ -722,7 +724,7 @@ void main() {
           radius: skir.PresentationRadius.none,
         ),
       );
-      final center = _node(
+      final center = presentationNode(
         "tag.name",
         skir.PresentationElement.createText(
           value: skir.ExpressionNode.wrapLiteral(
@@ -743,7 +745,7 @@ void main() {
           paragraph: skir.TextParagraph.defaultInstance,
         ),
       );
-      final card = _node(
+      final card = presentationNode(
         "tag.card",
         skir.PresentationElement.createAdaptiveLeading(
           leading: coloredIcon,
@@ -755,7 +757,7 @@ void main() {
           minimumCenterWidth: 80,
         ),
       );
-      return _node(
+      return presentationNode(
         "tag.root",
         skir.PresentationElement.wrapChildren(
           skir.ChildrenElement.createColumn(
@@ -835,47 +837,48 @@ void main() {
     tester,
   ) async {
     const color = Color(0xFF884422);
-    skir.PresentationNode textNode(skir.ExpressionNode weight) => _node(
-      "styled.text",
-      skir.PresentationElement.createText(
-        value: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapStringValue("Styled title"),
-        ),
-        color: skir.PresentationColor.wrapValue(
-          skir.ExpressionNode.wrapLiteral(
-            skir.DataValue.wrapInteger(color.toARGB32().toString()),
+    skir.PresentationNode textNode(skir.ExpressionNode weight) =>
+        presentationNode(
+          "styled.text",
+          skir.PresentationElement.createText(
+            value: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("Styled title"),
+            ),
+            color: skir.PresentationColor.wrapValue(
+              skir.ExpressionNode.wrapLiteral(
+                skir.DataValue.wrapInteger(color.toARGB32().toString()),
+              ),
+            ),
+            sizing: skir.TextSizing.wrapExact(
+              skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(22)),
+            ),
+            fontWeight: weight,
+            fontItalic: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapFloat(1),
+            ),
+            fontOpticalSize: null,
+            fontSlant: null,
+            fontWidth: null,
+            textAlignment: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("center"),
+            ),
+            lineHeight: null,
+            letterSpacing: null,
+            decoration: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("underline"),
+            ),
+            semanticLabel: skir.ExpressionNode.wrapLiteral(
+              skir.DataValue.wrapStringValue("Styled heading"),
+            ),
+            paragraph: skir.TextParagraph(
+              maxLines: 1,
+              overflow: skir.PresentationTextOverflow.ellipsis,
+              softWrap: false,
+              selectable: false,
+              tone: skir.PresentationTextTone.primary,
+            ),
           ),
-        ),
-        sizing: skir.TextSizing.wrapExact(
-          skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapFloat(22)),
-        ),
-        fontWeight: weight,
-        fontItalic: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapFloat(1),
-        ),
-        fontOpticalSize: null,
-        fontSlant: null,
-        fontWidth: null,
-        textAlignment: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapStringValue("center"),
-        ),
-        lineHeight: null,
-        letterSpacing: null,
-        decoration: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapStringValue("underline"),
-        ),
-        semanticLabel: skir.ExpressionNode.wrapLiteral(
-          skir.DataValue.wrapStringValue("Styled heading"),
-        ),
-        paragraph: skir.TextParagraph(
-          maxLines: 1,
-          overflow: skir.PresentationTextOverflow.ellipsis,
-          softWrap: false,
-          selectable: false,
-          tone: skir.PresentationTextTone.primary,
-        ),
-      ),
-    );
+        );
     final scope = PortablePresentationScope(
       operations: testPortableOperations(),
       bindings: const {},
@@ -1018,7 +1021,7 @@ void main() {
       onWrite: (reference, value) => writes.add((reference, value)),
     );
     addTearDown(host.dispose);
-    final node = _node(
+    final node = presentationNode(
       "placement",
       skir.PresentationElement.createRecordInput(
         control: skir.BoundControl(
@@ -1028,7 +1031,7 @@ void main() {
           prefix: null,
           semanticLabel: null,
         ),
-        fieldPresentation: _node(
+        fieldPresentation: presentationNode(
           "placement.x",
           skir.PresentationElement.wrapNumericInput(
             (skir.NumericControl.mutable()
@@ -1588,7 +1591,7 @@ void main() {
       startMarker: null,
       endMarker: null,
     );
-    skir.PresentationNode hierarchy(List<String> values) => _node(
+    skir.PresentationNode hierarchy(List<String> values) => presentationNode(
       "hierarchy",
       skir.PresentationElement.createRepeated(
         source: skir.ExpressionNode.wrapLiteral(
@@ -1604,7 +1607,7 @@ void main() {
         ),
         itemBindingId: itemBinding,
         presentation: skir.SequencePresentation(
-          item: _node(
+          item: presentationNode(
             "hierarchy.item",
             skir.PresentationElement.createText(
               value: skir.ExpressionNode.createInput(
@@ -1719,7 +1722,7 @@ void main() {
     document: document,
     widget: Material(
       child: PortablePresentationNodeRenderer(
-        node: _node(
+        node: presentationNode(
           "collection",
           skir.PresentationElement.wrapListInput(
             skir.ListControl(
@@ -1774,7 +1777,7 @@ void main() {
     document: document,
     widget: Material(
       child: PortablePresentationNodeRenderer(
-        node: _node(
+        node: presentationNode(
           "map",
           skir.PresentationElement.wrapMapInput(
             skir.MapControl(
@@ -1867,7 +1870,7 @@ _linkCollectionFixture({
     definition: rootDefinition,
     arguments: const [],
   );
-  final appearanceText = _node(
+  final appearanceText = presentationNode(
     "node.reference.name",
     skir.PresentationElement.createText(
       value: skir.ExpressionNode.createInput(
@@ -1891,7 +1894,7 @@ _linkCollectionFixture({
       paragraph: skir.TextParagraph.defaultInstance,
     ),
   );
-  final appearanceIcon = _node(
+  final appearanceIcon = presentationNode(
     "node.reference.icon",
     skir.PresentationElement.createIcon(
       name: skir.ExpressionNode.wrapLiteral(
@@ -1907,12 +1910,12 @@ _linkCollectionFixture({
       size: null,
     ),
   );
-  final coloredIcon = _node(
+  final coloredIcon = presentationNode(
     "node.reference.icon.color",
     skir.PresentationElement.createContainer(
       foregroundColor: null,
       transitionMilliseconds: 0,
-      child: _node(
+      child: presentationNode(
         "node.reference.icon.padding",
         skir.PresentationElement.createPadding(
           child: appearanceIcon,
@@ -1931,7 +1934,7 @@ _linkCollectionFixture({
       radius: skir.PresentationRadius.none,
     ),
   );
-  final appearanceCard = _node(
+  final appearanceCard = presentationNode(
     "node.reference.card",
     skir.PresentationElement.createAdaptiveLeading(
       leading: coloredIcon,
@@ -1943,7 +1946,7 @@ _linkCollectionFixture({
       minimumCenterWidth: 80,
     ),
   );
-  final appearanceLayout = _node(
+  final appearanceLayout = presentationNode(
     "node.reference.root",
     skir.PresentationElement.wrapChildren(
       skir.ChildrenElement.createColumn(
@@ -2216,7 +2219,7 @@ _linkCollectionFixture({
     widget: Material(
       child: PortablePresentationNodeRenderer(
         node: directCollection
-            ? _node(
+            ? presentationNode(
                 "links.direct",
                 skir.PresentationElement.wrapLinkInput(
                   skir.LinkControl(
@@ -2243,12 +2246,12 @@ _linkCollectionFixture({
                   ),
                 ),
               )
-            : _node(
+            : presentationNode(
                 "links",
                 skir.PresentationElement.wrapSetInput(
                   skir.SetControl(
                     control: _boundControl(collectionReference),
-                    itemPresentation: _node(
+                    itemPresentation: presentationNode(
                       "link.item",
                       skir.PresentationElement.wrapLinkInput(
                         skir.LinkControl(
@@ -2754,13 +2757,13 @@ final _control = skir.BoundControl(
   prefix: null,
   semanticLabel: null,
 );
-final _numericNode = _node(
+final _numericNode = presentationNode(
   "numeric",
   skir.PresentationElement.wrapNumericInput(
     (skir.NumericControl.mutable()..control = _control).toFrozen(),
   ),
 );
-final _polymorphicNode = _node(
+final _polymorphicNode = presentationNode(
   "polymorphic",
   skir.PresentationElement.createPolymorphicInput(
     control: skir.BoundControl(
@@ -2778,7 +2781,7 @@ final _polymorphicNode = _node(
         label: skir.ExpressionNode.wrapLiteral(
           skir.DataValue.wrapStringValue("Iconify"),
         ),
-        presentation: _node(
+        presentation: presentationNode(
           "polymorphic.iconify",
           skir.PresentationElement.createInvocation(
             presentationId: _iconifyPresentation,
@@ -2850,7 +2853,7 @@ final _polymorphicCatalog = CheckedEditorCatalog(
           arguments: const [],
         ),
         role: skir.PresentationRole.inspector,
-        layout: _node(
+        layout: presentationNode(
           "iconify.value",
           skir.PresentationElement.createTextInput(
             control: skir.BoundControl(
@@ -2885,14 +2888,14 @@ final _polymorphicCatalog = CheckedEditorCatalog(
     roleFallbacks: const [],
   ),
 );
-final _actionNode = _node(
+final _actionNode = presentationNode(
   "action.root",
   skir.PresentationElement.wrapChildren(
     skir.ChildrenElement.createColumn(
       children: [
         skir.AxisChild.wrapFixed(_numericNode),
         skir.AxisChild.wrapFixed(
-          _node(
+          presentationNode(
             "action.button",
             skir.PresentationElement.createButton(
               label: skir.ExpressionNode.wrapLiteral(
@@ -2922,7 +2925,7 @@ final _actionNode = _node(
     ),
   ),
 );
-final _compactNode = _node(
+final _compactNode = presentationNode(
   "compact.root",
   skir.PresentationElement.createText(
     value: skir.ExpressionNode.wrapLiteral(
@@ -3052,28 +3055,6 @@ final _overflowHeaderNode = skir.PresentationNode(
   ),
 );
 
-skir.PresentationNode _node(String id, skir.PresentationElement element) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      element: element,
-      header: null,
-    );
-
-skir.PresentationNode _visualText(String id, String value) =>
-    skir.PresentationNode(
-      nodeId: id,
-      properties: skir.PresentationProperties.defaultInstance,
-      header: null,
-      element: skir.PresentationElement.wrapText(
-        (skir.TextContent.defaultInstance.toMutable()
-              ..value = skir.ExpressionNode.wrapLiteral(
-                skir.DataValue.wrapStringValue(value),
-              ))
-            .toFrozen(),
-      ),
-    );
-
 ScopedWorkSession _workSession() {
   final session = ScopedWorkSession();
   addTearDown(session.dispose);
@@ -3088,7 +3069,7 @@ void registerConfiguredCollectionTests() {
     "composite metadata prefix remains an independent interactive sibling",
     (tester) async {
       final semantics = tester.ensureSemantics();
-      final prefix = _node(
+      final prefix = presentationNode(
         "collection.prefix.action",
         skir.PresentationElement.createButton(
           label: text("Prefix insertion"),
@@ -3196,7 +3177,10 @@ void registerConfiguredCollectionTests() {
         allowAdd: true,
         content: skir.CollectionContent(
           addLabel: text("New coordinate"),
-          empty: _visualText("configured.empty", "No coordinates"),
+          empty: presentationText(
+            "configured.empty",
+            textLiteral("No coordinates"),
+          ),
           operationDensity: skir.ControlDensity.compact,
 
           emptyText: null,
@@ -3261,7 +3245,10 @@ void registerConfiguredCollectionTests() {
         ),
         content: skir.CollectionContent(
           removeLabel: text("Remove coordinate"),
-          removeIcon: _visualText("configured.remove", "Remove glyph"),
+          removeIcon: presentationText(
+            "configured.remove",
+            textLiteral("Remove glyph"),
+          ),
 
           emptyText: null,
           empty: null,
@@ -3670,7 +3657,7 @@ void registerRemainingFieldsTests() {
         onWrite: (reference, value) => writes.add((reference, value)),
       );
       addTearDown(host.dispose);
-      skir.PresentationNode field(String name) => _node(
+      skir.PresentationNode field(String name) => presentationNode(
         "authored.$name",
         skir.PresentationElement.wrapNumericInput(
           (skir.NumericControl.mutable()
@@ -3697,7 +3684,7 @@ void registerRemainingFieldsTests() {
               .toFrozen(),
         ),
       );
-      final remaining = _node(
+      final remaining = presentationNode(
         "remaining",
         skir.PresentationElement.wrapRemainingFields(
           skir.RemainingFieldsElement(
@@ -3710,7 +3697,7 @@ void registerRemainingFieldsTests() {
           ),
         ),
       );
-      final hidden = _node(
+      final hidden = presentationNode(
         "hidden.X",
         skir.PresentationElement.wrapConditional(
           (skir.ConditionalElement.mutable()
@@ -3721,7 +3708,7 @@ void registerRemainingFieldsTests() {
               .toFrozen(),
         ),
       );
-      final row = _node(
+      final row = presentationNode(
         "authored.row",
         skir.PresentationElement.wrapChildren(
           skir.ChildrenElement.createRow(
@@ -3743,7 +3730,7 @@ void registerRemainingFieldsTests() {
           ),
         ),
       );
-      final layout = _node(
+      final layout = presentationNode(
         "record",
         skir.PresentationElement.wrapChildren(
           skir.ChildrenElement.createColumn(

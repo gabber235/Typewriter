@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../shared/editors/presentation_builders.dart";
+
 enum InheritedFieldVariant { inherited, localLabel, explicitControl, disabled }
 
 /// A declared Element policy consumed by a custom Action inspector.
@@ -53,7 +55,7 @@ final class InheritedFieldPresentationScenario {
     final baseLayout = nestedOwners
         ? inheritedFieldColumn([
             for (final field in ["first", "second"])
-              inheritedFieldNode(
+              presentationNode(
                 "envelope.$field",
                 skir.PresentationElement.wrapScopedBinding(
                   skir.ScopedBindingElement(
@@ -203,9 +205,6 @@ final _elementProvider = skir.PresentationId(
 );
 final _actionProvider = skir.PresentationId(namespace: "test", name: "action");
 
-skir.ExpressionNode inheritedFieldText(String value) =>
-    skir.ExpressionNode.wrapLiteral(skir.DataValue.wrapStringValue(value));
-
 skir.BoundControl inheritedFieldControl({
   String field = "name",
   String? label,
@@ -217,21 +216,23 @@ skir.BoundControl inheritedFieldControl({
             bindingId: inheritedConfiguredValue,
             path: editorRootPath.field(field),
           )
-          ..label = label == null ? null : inheritedFieldText(label)
+          ..label = label == null ? null : textLiteral(label)
           ..semanticLabel = semanticLabel == null
               ? null
-              : inheritedFieldText(semanticLabel)
+              : textLiteral(semanticLabel)
           ..prefix = prefix)
         .toFrozen();
 
-skir.PresentationNode inheritedFieldRequest({skir.BoundControl? control}) =>
-    inheritedFieldNode(
-      "action.name",
-      skir.PresentationElement.createDefaultPresentation(
-        control: control ?? inheritedFieldControl(),
-        presentationId: null,
-      ),
-    );
+skir.PresentationNode inheritedFieldRequest({
+  skir.BoundControl? control,
+  String id = "action.name",
+}) => presentationNode(
+  id,
+  skir.PresentationElement.createDefaultPresentation(
+    control: control ?? inheritedFieldControl(),
+    presentationId: null,
+  ),
+);
 
 skir.PresentationNode inheritedFieldTextInput(
   String id, {
@@ -239,7 +240,7 @@ skir.PresentationNode inheritedFieldTextInput(
   bool trim = false,
 }) {
   final candidate = skir.ExpressionBindingId(value: "completion_candidate");
-  return inheritedFieldNode(
+  return presentationNode(
     id,
     skir.PresentationElement.wrapTextInput(
       (skir.TextControl.mutable()
@@ -264,33 +265,21 @@ skir.PresentationNode inheritedFieldTextInput(
   );
 }
 
-skir.PresentationNode inheritedFieldNode(
-  String id,
-  skir.PresentationElement element,
-) =>
-    (skir.PresentationNode.mutable()
-          ..nodeId = id
-          ..element = element)
-        .toFrozen();
-
 skir.PresentationNode inheritedFieldColumn(
-  List<skir.PresentationNode> children,
-) => inheritedFieldNode(
-  "action.layout",
-  skir.PresentationElement.wrapChildren(
-    skir.ChildrenElement.createColumn(
-      children: children.map(skir.AxisChild.wrapFixed).toList(),
-      layout: skir.AxisChildrenLayout(
-        spacing: 8,
-        clipOverflow: false,
-        mainAxisAlignment: skir.MainAxisAlignment.start,
-        crossAxisAlignment: skir.CrossAxisAlignment.stretch,
-      ),
-    ),
+  List<skir.PresentationNode> children, {
+  String id = "action.layout",
+}) => presentationColumn(
+  id,
+  children,
+  layout: skir.AxisChildrenLayout(
+    spacing: 8,
+    clipOverflow: false,
+    mainAxisAlignment: skir.MainAxisAlignment.start,
+    crossAxisAlignment: skir.CrossAxisAlignment.stretch,
   ),
 );
 
-final inheritedFieldRemaining = inheritedFieldNode(
+final inheritedFieldRemaining = presentationNode(
   "action.remaining",
   skir.PresentationElement.wrapRemainingFields(
     skir.RemainingFieldsElement(excluded: const [], excludedParts: const []),

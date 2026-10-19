@@ -2,6 +2,7 @@ import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
+import "package:typewriter_testkit/typewriter_testkit.dart";
 
 import "../../../support/test_utils.dart";
 
@@ -18,13 +19,13 @@ void main() {
             (skir.SelectControl.mutable()
                   ..control =
                       (fixture.control.toMutable()
-                            ..label = _text("Realm target"))
+                            ..label = textLiteral("Realm target"))
                           .toFrozen()
                   ..options = [
                     (skir.SelectOption.mutable()
                           ..optionId = "paper"
-                          ..label = _text("typewritermc:paper")
-                          ..value = _text("paper"))
+                          ..label = textLiteral("typewritermc:paper")
+                          ..value = textLiteral("paper"))
                         .toFrozen(),
                   ]
                   ..appearance = configured
@@ -35,7 +36,7 @@ void main() {
                   ..popup = configured
                       ? (skir.PopupAppearance.mutable()
                               ..fill = skir.PresentationColor.wrapValue(
-                                _literal(
+                                literalExpression(
                                   skir.DataValue.wrapInteger("4278190335"),
                                 ),
                               ))
@@ -126,7 +127,8 @@ void main() {
             (skir.PresentationNode.mutable()
                   ..nodeId = "glyph"
                   ..element = skir.PresentationElement.wrapText(
-                    (skir.TextContent.mutable()..value = _text("X")).toFrozen(),
+                    (skir.TextContent.mutable()..value = textLiteral("X"))
+                        .toFrozen(),
                   ))
                 .toFrozen();
         final leading = wrapped
@@ -152,9 +154,9 @@ void main() {
                           .toFrozen()
                   ..appearance =
                       (skir.InputAppearance.mutable()
-                            ..iconSize = wrapped ? _number(22) : null
+                            ..iconSize = wrapped ? numberLiteral(22) : null
                             ..iconColor = skir.PresentationColor.wrapValue(
-                              _literal(
+                              literalExpression(
                                 skir.DataValue.wrapInteger("4292030255"),
                               ),
                             ))
@@ -190,10 +192,14 @@ void main() {
             (text.toMutable()
                   ..element = skir.PresentationElement.wrapText(
                     (skir.TextContent.mutable()
-                          ..value = _text("X")
-                          ..sizing = skir.TextSizing.wrapExact(_number(24))
+                          ..value = textLiteral("X")
+                          ..sizing = skir.TextSizing.wrapExact(
+                            numberLiteral(24),
+                          )
                           ..color = skir.PresentationColor.wrapValue(
-                            _literal(skir.DataValue.wrapInteger("4278255360")),
+                            literalExpression(
+                              skir.DataValue.wrapInteger("4278255360"),
+                            ),
                           ))
                         .toFrozen(),
                   ))
@@ -201,7 +207,8 @@ void main() {
         final configured =
             (input.toMutable()
                   ..appearance =
-                      (input.appearance!.toMutable()..iconSize = _number(20))
+                      (input.appearance!.toMutable()
+                            ..iconSize = numberLiteral(20))
                           .toFrozen()
                   ..content =
                       (input.content!.toMutable()
@@ -238,7 +245,7 @@ void main() {
                 ..content =
                     (skir.InputContent.mutable()
                           ..leading = skir.InputAdornment.none
-                          ..placeholder = _text("Checkpoint"))
+                          ..placeholder = textLiteral("Checkpoint"))
                         .toFrozen()
                 ..options =
                     (skir.TextEditingOptions.mutable()
@@ -326,7 +333,7 @@ void main() {
                           ..showSwatch = false
                           ..showCopyAction = false
                           ..showFormatSelector = false
-                          ..offeredSwatches = _literal(
+                          ..offeredSwatches = literalExpression(
                             skir.DataValue.createListValue(
                               items: [
                                 skir.ListItem(
@@ -341,9 +348,9 @@ void main() {
                         .toFrozen()
                 ..popup =
                     (skir.PopupAppearance.mutable()
-                          ..minimumWidth = _number(250)
-                          ..maximumWidth = _number(400)
-                          ..maximumExtent = _number(500)
+                          ..minimumWidth = numberLiteral(250)
+                          ..maximumWidth = numberLiteral(400)
+                          ..maximumExtent = numberLiteral(500)
                           ..padding = skir.PresentationInsets.wrapAll(12)
                           ..radius = skir.PresentationRadius.large)
                         .toFrozen())
@@ -386,13 +393,13 @@ void main() {
                 ..includeTime = true
                 ..options =
                     (skir.DateTimeInteractionOptions.mutable()
-                          ..minimum = _literal(
+                          ..minimum = literalExpression(
                             skir.DataValue.wrapTimestamp(minimum),
                           )
-                          ..maximum = _literal(
+                          ..maximum = literalExpression(
                             skir.DataValue.wrapTimestamp(maximum),
                           )
-                          ..timeIncrement = _literal(
+                          ..timeIncrement = literalExpression(
                             skir.DataValue.createDuration(
                               value: skir.Duration(milliseconds: 90000),
                             ),
@@ -432,10 +439,10 @@ void main() {
                 ..control = fixture.control
                 ..options =
                     (skir.NumericInteractionOptions.mutable()
-                          ..editingLocale = _text("de_DE")
-                          ..minimum = _number(0)
-                          ..maximum = _number(2)
-                          ..step = _number(0.25)
+                          ..editingLocale = textLiteral("de_DE")
+                          ..minimum = numberLiteral(0)
+                          ..maximum = numberLiteral(2)
+                          ..step = numberLiteral(0.25)
                           ..steppers = skir.NumericSteppers.inline)
                         .toFrozen())
               .toFrozen();
@@ -473,8 +480,8 @@ void main() {
                   (skir.ToggleInteractionOptions.mutable()
                         ..presentation = skir.TogglePresentation.checkbox
                         ..position = skir.TogglePosition.leading
-                        ..trueLabel = _text("Visible")
-                        ..falseLabel = _text("Hidden"))
+                        ..trueLabel = textLiteral("Visible")
+                        ..falseLabel = textLiteral("Hidden"))
                       .toFrozen())
             .toFrozen();
     await fixture.pump(tester, skir.PresentationElement.wrapToggleInput(input));
@@ -500,9 +507,11 @@ void main() {
       final input =
           (skir.SliderControl.mutable()
                 ..control = fixture.control
-                ..minimum = _number(0)
-                ..maximum = _number(100)
-                ..divisions = _literal(skir.DataValue.wrapInteger("10"))
+                ..minimum = numberLiteral(0)
+                ..maximum = numberLiteral(100)
+                ..divisions = literalExpression(
+                  skir.DataValue.wrapInteger("10"),
+                )
                 ..options =
                     (skir.SliderInteractionOptions.mutable()
                           ..showValue = skir.SliderValueDisplay.always
@@ -549,8 +558,8 @@ void main() {
                   for (final name in ["first", "second"])
                     (skir.SelectOption.mutable()
                           ..optionId = name
-                          ..label = _text(name)
-                          ..value = _text(name))
+                          ..label = textLiteral(name)
+                          ..value = textLiteral(name))
                         .toFrozen(),
                 ]
                 ..optionsConfig =
@@ -559,10 +568,10 @@ void main() {
                           ..optionOverrides = [
                             (skir.ChoiceOptionAppearance.mutable()
                                   ..optionId = "second"
-                                  ..enabledIf = _literal(
+                                  ..enabledIf = literalExpression(
                                     skir.DataValue.wrapBoolean(false),
                                   )
-                                  ..disabledReason = _text(
+                                  ..disabledReason = textLiteral(
                                     "Unavailable in this state",
                                   ))
                                 .toFrozen(),
@@ -593,7 +602,7 @@ void main() {
       );
       skir.PresentationColor paint(int value) =>
           skir.PresentationColor.wrapValue(
-            _literal(skir.DataValue.wrapInteger(value.toString())),
+            literalExpression(skir.DataValue.wrapInteger(value.toString())),
           );
       final appearance =
           (skir.InputAppearance.mutable()
@@ -609,15 +618,16 @@ void main() {
               .toFrozen();
       final input = skir.SelectControl.mutable()
         ..control =
-            (fixture.control.toMutable()..label = _text("Configured selector"))
+            (fixture.control.toMutable()
+                  ..label = textLiteral("Configured selector"))
                 .toFrozen()
         ..appearance = appearance
         ..options = [
           for (final name in ["first", "second"])
             (skir.SelectOption.mutable()
                   ..optionId = name
-                  ..label = _text(name)
-                  ..value = _text(name))
+                  ..label = textLiteral(name)
+                  ..value = textLiteral(name))
                 .toFrozen(),
         ]
         ..optionsConfig =
@@ -681,8 +691,8 @@ void main() {
       final input =
           (skir.SliderControl.mutable()
                 ..control = fixture.control
-                ..minimum = _number(0)
-                ..maximum = _number(10)
+                ..minimum = numberLiteral(0)
+                ..maximum = numberLiteral(10)
                 ..appearance =
                     (skir.InputAppearance.mutable()
                           ..density = skir.ControlDensity.compact
@@ -734,7 +744,8 @@ void main() {
           (skir.PresentationNode.mutable()
                 ..nodeId = "leading"
                 ..element = skir.PresentationElement.wrapText(
-                  (skir.TextContent.mutable()..value = _text("Tag decoration"))
+                  (skir.TextContent.mutable()
+                        ..value = textLiteral("Tag decoration"))
                       .toFrozen(),
                 ))
               .toFrozen();
@@ -768,7 +779,7 @@ void main() {
       (tester) async {
         skir.PresentationColor paint(int value) =>
             skir.PresentationColor.wrapValue(
-              _literal(skir.DataValue.wrapInteger(value.toString())),
+              literalExpression(skir.DataValue.wrapInteger(value.toString())),
             );
         final policy = skir.PresentationColor.wrapStates(
           skir.PresentationStateColor(
@@ -970,10 +981,3 @@ class _Fixture {
     );
   }
 }
-
-skir.ExpressionNode _literal(skir.DataValue value) =>
-    skir.ExpressionNode.wrapLiteral(value);
-skir.ExpressionNode _text(String value) =>
-    _literal(skir.DataValue.wrapStringValue(value));
-skir.ExpressionNode _number(double value) =>
-    _literal(skir.DataValue.wrapFloat(value));

@@ -2,6 +2,8 @@ import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
     as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../shared/editors/presentation_builders.dart";
+
 import "inherited_field_presentation_fixture.dart";
 
 enum InheritedInspectorLayoutVariant {
@@ -29,7 +31,7 @@ final class InheritedInspectorLayoutScenario {
         variant == InheritedInspectorLayoutVariant.replacedDetails;
     final source =
         sourceLayout ??
-        _column("element.layout", [
+        inheritedFieldColumn([
           inheritedFieldTextInput(
             "element.name",
             control: inheritedFieldControl(label: "Name"),
@@ -38,24 +40,36 @@ final class InheritedInspectorLayoutScenario {
           inspectorLayoutPart(
             "element.heading",
             inspectorHeadingPart,
-            body: _text("element.heading.body", "Entry heading"),
+            body: presentationText(
+              "element.heading.body",
+              textLiteral("Entry heading"),
+            ),
           ),
           inspectorLayoutRemainder("element.remaining"),
-        ]);
+        ], id: "element.layout");
     final family =
         familyLayout ??
-        _column("family.layout", [
+        inheritedFieldColumn([
           if (replacingDetails)
             inspectorLayoutPart(
               "family.details",
               inspectorDetailsPart,
-              body: _column("family.details.body", [
-                _request("family.details.name", "name"),
-                _request("family.details.placement", "placement"),
-              ]),
+              body: inheritedFieldColumn([
+                inheritedFieldRequest(
+                  control: inheritedFieldControl(field: "name"),
+                  id: "family.details.name",
+                ),
+                inheritedFieldRequest(
+                  control: inheritedFieldControl(field: "placement"),
+                  id: "family.details.placement",
+                ),
+              ], id: "family.details.body"),
             )
           else
-            _request("family.name", "name"),
+            inheritedFieldRequest(
+              control: inheritedFieldControl(field: "name"),
+              id: "family.name",
+            ),
           inspectorLayoutPart("family.heading", inspectorHeadingPart),
           inspectorLayoutRemainder("family.remaining"),
           if (!replacingDetails)
@@ -66,16 +80,22 @@ final class InheritedInspectorLayoutScenario {
                 label: "Placement",
               ),
             ),
-        ]);
+        ], id: "family.layout");
     final child =
         childLayout ??
-        _column("message.layout", [
-          _request("message.name", "name"),
+        inheritedFieldColumn([
+          inheritedFieldRequest(
+            control: inheritedFieldControl(field: "name"),
+            id: "message.name",
+          ),
           if (replacingDetails)
             inspectorLayoutPart(
               "message.details",
               inspectorDetailsPart,
-              body: _text("message.details.body", "Details replaced"),
+              body: presentationText(
+                "message.details.body",
+                textLiteral("Details replaced"),
+              ),
             )
           else if (variant != InheritedInspectorLayoutVariant.excludedHeading)
             inspectorLayoutPart("message.heading", inspectorHeadingPart),
@@ -90,7 +110,7 @@ final class InheritedInspectorLayoutScenario {
                 ? [inspectorHeadingPart]
                 : const [],
           ),
-        ]);
+        ], id: "message.layout");
     final sourceMaterial = _material(
       _elementProvider,
       inspectorElementDefinition,
@@ -268,7 +288,7 @@ skir.PresentationNode inspectorLayoutPart(
   String id,
   skir.PresentationPartId key, {
   skir.PresentationNode? body,
-}) => inheritedFieldNode(
+}) => presentationNode(
   id,
   skir.PresentationElement.createPart(key: key, body: body),
 );
@@ -277,7 +297,7 @@ skir.PresentationNode inspectorLayoutRemainder(
   String id, {
   List<String> excludedFields = const [],
   List<skir.PresentationPartId> excludedParts = const [],
-}) => inheritedFieldNode(
+}) => presentationNode(
   id,
   skir.PresentationElement.wrapRemainingFields(
     skir.RemainingFieldsElement(
@@ -289,23 +309,6 @@ skir.PresentationNode inspectorLayoutRemainder(
       ],
       excludedParts: excludedParts,
     ),
-  ),
-);
-
-skir.PresentationNode _column(
-  String id,
-  List<skir.PresentationNode> children,
-) => (inheritedFieldColumn(children).toMutable()..nodeId = id).toFrozen();
-
-skir.PresentationNode _request(String id, String field) =>
-    (inheritedFieldRequest(
-      control: inheritedFieldControl(field: field),
-    ).toMutable()..nodeId = id).toFrozen();
-
-skir.PresentationNode _text(String id, String value) => inheritedFieldNode(
-  id,
-  skir.PresentationElement.wrapText(
-    (skir.TextContent.mutable()..value = inheritedFieldText(value)).toFrozen(),
   ),
 );
 
