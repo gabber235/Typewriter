@@ -1,7 +1,7 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
-import "loading_button_test_support.dart";
+import "../../../../support/test_utils.dart";
 
 enum _IconButtonVariant { standard, filled, outlined }
 
@@ -42,7 +42,7 @@ void main() {
         final completer = Completer<void>();
         var invocations = 0;
 
-        await tester.pumpLoadingButtonApp(
+        await tester.pumpTestApp(
           child: Center(
             child: variant.button(
               icon: const Icon(Icons.add),
@@ -76,7 +76,7 @@ void main() {
       });
 
       testWidgets("shows a snackbar and tooltip on failure", (tester) async {
-        await tester.pumpLoadingButtonApp(
+        await tester.pumpTestApp(
           child: Center(
             child: variant.button(
               icon: const Icon(Icons.warning),
@@ -105,7 +105,7 @@ void main() {
     final controller = LoadingButtonController();
     var invoked = false;
 
-    await tester.pumpLoadingButtonApp(
+    await tester.pumpTestApp(
       child: Center(
         child: LoadingIconButton(
           controller: controller,
@@ -134,7 +134,7 @@ void main() {
   testWidgets("matches the configured icon size while loading", (tester) async {
     final completer = Completer<void>();
 
-    await tester.pumpLoadingButtonApp(
+    await tester.pumpTestApp(
       child: Center(
         child: LoadingIconButton(
           iconSize: 32,

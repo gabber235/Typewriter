@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../support/test_utils.dart";
+
 final class _RecordingProtection implements WorkSessionUnloadProtection {
   final List<bool> values = [];
   bool disposed = false;
@@ -21,15 +23,15 @@ void main() {
   ) async {
     final protection = _RecordingProtection();
 
-    await tester.pumpWidget(
-      WorkSessionUnloadBinding(
+    await tester.pumpTestApp(
+      child: WorkSessionUnloadBinding(
         protected: false,
         protection: protection,
         child: const SizedBox(),
       ),
     );
-    await tester.pumpWidget(
-      WorkSessionUnloadBinding(
+    await tester.pumpTestApp(
+      child: WorkSessionUnloadBinding(
         protected: true,
         protection: protection,
         child: const SizedBox(),
@@ -47,15 +49,15 @@ void main() {
     final first = _RecordingProtection();
     final second = _RecordingProtection();
 
-    await tester.pumpWidget(
-      WorkSessionUnloadBinding(
+    await tester.pumpTestApp(
+      child: WorkSessionUnloadBinding(
         protected: true,
         protection: first,
         child: const SizedBox(),
       ),
     );
-    await tester.pumpWidget(
-      WorkSessionUnloadBinding(
+    await tester.pumpTestApp(
+      child: WorkSessionUnloadBinding(
         protected: true,
         protection: second,
         child: const SizedBox(),

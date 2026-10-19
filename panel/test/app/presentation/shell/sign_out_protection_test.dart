@@ -1,6 +1,8 @@
 import "package:flutter_test/flutter_test.dart";
 import "package:typewriter_panel/typewriter_panel.dart";
 
+import "../../../support/test_utils.dart";
+
 final class _RecordingAuth extends Auth {
   int signOutCalls = 0;
 
@@ -23,18 +25,19 @@ void main() {
     var routerReads = 0;
     addTearDown(controller.dispose);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          workSessionLossProvider.overrideWithValue(controller),
-          appRouterProvider.overrideWith((ref) {
-            routerReads++;
-            throw StateError("Account policy must not construct routing");
-          }),
-          authProvider.overrideWith(() => auth),
-        ],
-        child: const MaterialApp(home: Scaffold(body: SignOutButton())),
-      ),
+    await tester.pumpTestApp(
+      overrides: [
+        workSessionLossProvider.overrideWithValue(controller),
+        appRouterProvider.overrideWith((ref) {
+          routerReads++;
+          throw StateError("Account policy must not construct routing");
+        }),
+        authProvider.overrideWith(() => auth),
+        // The shared shell resolves its scope from these route parameters.
+        organizationIdProvider.overrideWithValue(null),
+        realmIdProvider.overrideWithValue(null),
+      ],
+      child: const SignOutButton(),
     );
 
     await tester.tap(find.text("Sign out"));
