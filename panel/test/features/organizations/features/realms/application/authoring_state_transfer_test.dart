@@ -7,7 +7,7 @@ void main() {
   test("current state chunks assemble without revision metadata", () async {
     final state = _state();
     final chunks = _chunks(state);
-    final received = await AuthoringStateTransferAssembler().assemble(
+    final received = await authoringStateTransferAssembler().assemble(
       Stream.fromIterable(chunks),
     );
     expect(received, state);
@@ -19,7 +19,7 @@ void main() {
       transfer: chunks.last.transfer,
     );
     await expectLater(
-      AuthoringStateTransferAssembler().assemble(
+      authoringStateTransferAssembler().assemble(
         Stream.fromIterable([chunks.first, replacement]),
       ),
       throwsA(isA<BoundedTransferRejected>()),
@@ -31,13 +31,13 @@ void main() {
       generation: skir.CatalogGeneration(value: "other"),
     );
     await expectLater(
-      AuthoringStateTransferAssembler().assemble(Stream.fromIterable(chunks)),
+      authoringStateTransferAssembler().assemble(Stream.fromIterable(chunks)),
       throwsA(isA<BoundedTransferRejected>()),
     );
   });
   test("missing chunks do not expose partial current state", () async {
     await expectLater(
-      AuthoringStateTransferAssembler().assemble(
+      authoringStateTransferAssembler().assemble(
         Stream.fromIterable(_chunks(_state()).take(1)),
       ),
       throwsA(isA<BoundedTransferRejected>()),

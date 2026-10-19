@@ -84,40 +84,32 @@ final class NatsRealmPublicationRepository
           expected: expected,
           transferId: transferId,
         ).watch(transport, organizationId: organizationId, realmId: realmId);
-        final bytes = await BoundedTransferAssembler().assemble(
-          responses.map((response) {
-            if (response case skir.QueryPublicationViewResponse_changedWrapper(
-              :final value,
-            )) {
-              throw PublicationViewChanged(value.current);
-            }
-            if (response case skir.QueryPublicationViewResponse_chunkWrapper(
-              :final value,
-            )) {
-              if (value.view != expected ||
-                  value.transfer.transferId != transferId) {
-                throw const BoundedTransferRejected(
-                  "Publication transfer identity changed",
-                );
-              }
-              final chunk = value.transfer;
-              return BoundedTransferPart(
-                transferId: chunk.transferId,
-                index: chunk.index,
-                chunkCount: chunk.chunkCount,
-                encodedSize: chunk.encodedSize,
-                sha256: chunk.sha256,
-                payload: chunk.payload.asUnmodifiableList,
-              );
-            }
-            throw StateError("Publication review is unavailable");
-          }),
+        final assembler =
+            GenerationCheckedTransferAssembler<
+              skir.PublicationViewChunk,
+              skir.PublicationViewId,
+              skir.PublicationView
+            >(
+              subject: "publication review",
+              chunkGeneration: (chunk) => chunk.view,
+              chunkTransfer: (chunk) => chunk.transfer,
+              decode: skir.PublicationView.serializer.fromBytes,
+              decodedGeneration: (view) => view.id,
+              expectedGeneration: expected,
+              expectedTransferId: transferId,
+            );
+        final view = await assembler.assemble(
+          responses.map(
+            (response) => switch (response) {
+              skir.QueryPublicationViewResponse_changedWrapper(:final value) =>
+                throw PublicationViewChanged(value.current),
+              skir.QueryPublicationViewResponse_chunkWrapper(:final value) =>
+                value,
+              _ => throw StateError("Publication review is unavailable"),
+            },
+          ),
           cancelled: stop.future,
         );
-        final view = skir.PublicationView.serializer.fromBytes(bytes);
-        if (view.id != expected) {
-          throw StateError("Publication review does not match its transfer");
-        }
         if (requestGeneration == generation) {
           output.add(PublicationObservation.available(view));
         }

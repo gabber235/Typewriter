@@ -113,7 +113,7 @@ final class AuthoringResourceRepository {
       organizationId: organization,
       realmId: realm,
     );
-    final assembler = AuthoringStateTransferAssembler();
+    final assembler = authoringStateTransferAssembler();
     final result = await assembler.assemble(
       responses.map(
         (response) => switch (response) {
@@ -334,4 +334,28 @@ extension PreparedEditResources on skir.PreparedEdit {
       }
     }
   }
+}
+
+/// Assembles one authored snapshot whose chunks share its catalog generation.
+GenerationCheckedTransferAssembler<
+  skir.AuthoringStateTransferChunk,
+  skir.CatalogGeneration,
+  skir.AuthoringState
+>
+authoringStateTransferAssembler() => GenerationCheckedTransferAssembler(
+  subject: "authored snapshot",
+  chunkGeneration: (chunk) => chunk.generation,
+  chunkTransfer: (chunk) => chunk.transfer,
+  decode: skir.AuthoringState.serializer.fromBytes,
+  decodedGeneration: (state) => state.generation,
+);
+
+final class AuthoringStateTransferUnavailable implements Exception {
+  const AuthoringStateTransferUnavailable(this.value);
+
+  final skir.AuthoringTransferUnavailable value;
+
+  @override
+  String toString() =>
+      "The authored snapshot is ${value.encodedSize} bytes, above the ${value.maxEncodedSize} byte transfer limit";
 }

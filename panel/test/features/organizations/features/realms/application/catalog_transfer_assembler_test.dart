@@ -6,19 +6,28 @@ import "package:typewriter_panel/typewriter_panel.dart";
 void main() {
   test("adopts a complete transfer only after every validated chunk", () {
     final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 3);
-    final assembler = CatalogTransferAssembler();
+    final assembler = catalogTransferAssembler();
 
-    expect(assembler.accept(fixture.chunk(0)), isA<CatalogTransferPending>());
-    expect(assembler.accept(fixture.chunk(2)), isA<CatalogTransferPending>());
+    expect(
+      assembler.accept(fixture.chunk(0)),
+      isA<GenerationCheckedTransferPending<skir.EditorCatalogWireSnapshot>>(),
+    );
+    expect(
+      assembler.accept(fixture.chunk(2)),
+      isA<GenerationCheckedTransferPending<skir.EditorCatalogWireSnapshot>>(),
+    );
     final completed = assembler.accept(fixture.chunk(1));
 
-    expect(completed, isA<CatalogTransferComplete>());
-    expect((completed as CatalogTransferComplete).snapshot, fixture.snapshot);
+    expect(
+      completed,
+      isA<GenerationCheckedTransferComplete<skir.EditorCatalogWireSnapshot>>()
+          .having((state) => state.value, "value", fixture.snapshot),
+    );
   });
 
   test("rejects chunks belonging to another scoped transfer", () {
     final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
-    final assembler = CatalogTransferAssembler()..accept(fixture.chunk(0));
+    final assembler = catalogTransferAssembler()..accept(fixture.chunk(0));
 
     expect(
       () => assembler.accept(
@@ -34,25 +43,25 @@ void main() {
           ),
         ),
       ),
-      throwsA(isA<CatalogTransferRejected>()),
+      throwsA(isA<BoundedTransferRejected>()),
     );
   });
 
   test("rejects duplicate indexes and changed shared metadata", () {
     final fixture = _TransferFixture(_snapshot("catalog:2"), chunkCount: 2);
-    final duplicates = CatalogTransferAssembler()..accept(fixture.chunk(0));
+    final duplicates = catalogTransferAssembler()..accept(fixture.chunk(0));
 
     expect(
       () => duplicates.accept(fixture.chunk(0)),
-      throwsA(isA<CatalogTransferRejected>()),
+      throwsA(isA<BoundedTransferRejected>()),
     );
 
-    final changed = CatalogTransferAssembler()..accept(fixture.chunk(0));
+    final changed = catalogTransferAssembler()..accept(fixture.chunk(0));
     expect(
       () => changed.accept(
         fixture.chunk(1, sha256Value: List.filled(64, "0").join()),
       ),
-      throwsA(isA<CatalogTransferRejected>()),
+      throwsA(isA<BoundedTransferRejected>()),
     );
   });
 
@@ -65,14 +74,14 @@ void main() {
     corrupted[0] ^= 1;
 
     await expectLater(
-      CatalogTransferAssembler().assemble(
+      catalogTransferAssembler().assemble(
         Stream.fromIterable([
           fixture.chunk(0),
           fixture.chunk(1, payload: corrupted),
         ]),
       ),
       throwsA(
-        isA<CatalogTransferRejected>().having(
+        isA<BoundedTransferRejected>().having(
           (error) => error.message,
           "message",
           contains("digest"),
@@ -89,7 +98,7 @@ void main() {
     chunks.add(fixture.chunk(0));
 
     try {
-      adopted = await CatalogTransferAssembler().assemble(
+      adopted = await catalogTransferAssembler().assemble(
         chunks.stream,
         timeout: const Duration(milliseconds: 10),
       );
@@ -107,7 +116,7 @@ void main() {
     final cancelled = Completer<void>();
     var sourceCancelled = false;
     chunks.onCancel = () => sourceCancelled = true;
-    final assembly = CatalogTransferAssembler().assemble(
+    final assembly = catalogTransferAssembler().assemble(
       chunks.stream,
       cancelled: cancelled.future,
     );
@@ -127,7 +136,7 @@ void main() {
       final fixture = _TransferFixture(snapshot, chunkCount: 12);
       expect(fixture.encoded.length, greaterThan(4 * 1024 * 1024));
 
-      final decoded = await CatalogTransferAssembler().assemble(
+      final decoded = await catalogTransferAssembler().assemble(
         Stream.fromIterable([
           fixture.chunk(0),
           for (var index = fixture.chunkCount - 1; index > 0; index--)
@@ -148,7 +157,7 @@ void main() {
       transfer: skir.BoundedTransferChunk(
         transferId: chunk.transfer.transferId,
         index: 0,
-        chunkCount: maximumCatalogTransferChunks + 1,
+        chunkCount: defaultMaximumTransferChunks + 1,
         encodedSize: chunk.transfer.encodedSize,
         sha256: chunk.transfer.sha256,
         payload: chunk.transfer.payload,
@@ -156,8 +165,8 @@ void main() {
     );
 
     expect(
-      () => CatalogTransferAssembler().accept(oversizedCount),
-      throwsA(isA<CatalogTransferRejected>()),
+      () => catalogTransferAssembler().accept(oversizedCount),
+      throwsA(isA<BoundedTransferRejected>()),
     );
 
     final underreported = skir.CatalogTransferChunk(
@@ -172,8 +181,8 @@ void main() {
       ),
     );
     expect(
-      () => CatalogTransferAssembler().accept(underreported),
-      throwsA(isA<CatalogTransferRejected>()),
+      () => catalogTransferAssembler().accept(underreported),
+      throwsA(isA<BoundedTransferRejected>()),
     );
   });
 
@@ -185,9 +194,9 @@ void main() {
     );
 
     expect(
-      () => CatalogTransferAssembler().accept(fixture.chunk(0)),
+      () => catalogTransferAssembler().accept(fixture.chunk(0)),
       throwsA(
-        isA<CatalogTransferRejected>().having(
+        isA<BoundedTransferRejected>().having(
           (error) => error.message,
           "message",
           contains("generation"),

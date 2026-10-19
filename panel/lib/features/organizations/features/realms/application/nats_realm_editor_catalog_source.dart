@@ -42,7 +42,7 @@ final class NatsRealmEditorCatalogSource {
       expectedGeneration: expectedGeneration,
       transferId: transferId,
     );
-    final assembler = CatalogTransferAssembler();
+    final assembler = catalogTransferAssembler();
     final disposed = Completer<void>();
     ref.onDispose(() {
       if (!disposed.isCompleted) disposed.complete();
@@ -120,6 +120,20 @@ final class NatsRealmEditorCatalogSource {
     };
   }
 }
+
+/// Assembles one catalog snapshot whose chunks share its generation.
+GenerationCheckedTransferAssembler<
+  skir.CatalogTransferChunk,
+  skir.CatalogGeneration,
+  skir.EditorCatalogWireSnapshot
+>
+catalogTransferAssembler() => GenerationCheckedTransferAssembler(
+  subject: "catalog",
+  chunkGeneration: (chunk) => chunk.generation,
+  chunkTransfer: (chunk) => chunk.transfer,
+  decode: skir.EditorCatalogWireSnapshot.serializer.fromBytes,
+  decodedGeneration: (snapshot) => snapshot.generation,
+);
 
 final class CatalogGenerationChanged implements Exception {
   const CatalogGenerationChanged(this.actual);
