@@ -3,6 +3,7 @@ package com.typewritermc.services.libs.communicator.skir
 import build.skir.Serializer
 import build.skir.UnrecognizedValuesPolicy
 import build.skir.service.Method
+import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.communicator.address.AddressTemplate
 import com.typewritermc.services.libs.communicator.address.MessageAddress
 import com.typewritermc.services.libs.communicator.contract.OperationName
@@ -29,7 +30,7 @@ fun <Value : Any> Serializer<Value>.asPayloadCodec(
     object : PayloadCodec<Value> {
         override fun encode(value: Value): Payload = Payload.copyOf(toBytes(value).toByteArray())
 
-        override fun decode(payload: Payload): Value = fromBytes(payload.toByteArray(), unrecognizedValues)
+        override fun decode(payload: Payload): Value = fromBoundedBytes(payload.toByteArray(), unrecognizedValues)
     }
 
 /** Creates a unary contract using the request and response serializers declared by [method]. */

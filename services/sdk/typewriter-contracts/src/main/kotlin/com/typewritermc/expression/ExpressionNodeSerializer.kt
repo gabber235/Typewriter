@@ -1,11 +1,11 @@
 package com.typewritermc.expression
 
+import com.typewritermc.protocol.skir.fromBoundedBytes
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import okio.ByteString.Companion.toByteString
 import skirout.editor.v1.expression.ExpressionNode
 
 /** Keeps generated expression syntax opaque to domain DTO serialization in JSON and CBOR. */
@@ -21,5 +21,5 @@ object ExpressionNodeSerializer : KSerializer<ExpressionNode> {
     }
 
     override fun deserialize(decoder: Decoder): ExpressionNode =
-        ExpressionNode.serializer.fromBytes(decoder.decodeSerializableValue(bytes).toByteString())
+        ExpressionNode.serializer.fromBoundedBytes(decoder.decodeSerializableValue(bytes))
 }

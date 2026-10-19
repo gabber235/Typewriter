@@ -1,5 +1,6 @@
 package com.typewritermc.types
 
+import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.types.skir.SkirConversionResult
 import com.typewritermc.types.skir.SkirDataValueCodec
 import de.infix.testBalloon.framework.core.testSuite
@@ -53,6 +54,15 @@ val SkirValueDepthTest by testSuite {
         val excessiveResult = decodeOnProductionStack(PreparedEdit.serializer.toBytes(excessive).toByteArray())
         excessiveResult.exceptionOrNull().shouldBeInstanceOf<IllegalArgumentException>()
     }
+
+    test("hostile binary and JSON nesting fail with a normal exception instead of exhausting the stack") {
+        val depth = 100_000
+        val binary = "skir".encodeToByteArray() + ByteArray(depth) { 247.toByte() } + byteArrayOf(0)
+        val json = ("[".repeat(depth) + "]".repeat(depth)).encodeToByteArray()
+
+        decodeOnProductionStack(binary).exceptionOrNull().shouldBeInstanceOf<IllegalArgumentException>()
+        decodeOnProductionStack(json).exceptionOrNull().shouldBeInstanceOf<IllegalArgumentException>()
+    }
 }
 
 private fun wireValue(depth: Int): WireValue {
@@ -73,7 +83,7 @@ private fun decodeOnProductionStack(bytes: ByteArray): Result<PreparedEdit> {
     val thread =
         Thread(
             null,
-            { result.set(runCatching { PreparedEdit.serializer.fromBytes(bytes) }) },
+            { result.set(runCatching { PreparedEdit.serializer.fromBoundedBytes(bytes) }) },
             "prepared edit depth",
             1024L * 1024L,
         )

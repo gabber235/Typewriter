@@ -14,7 +14,7 @@ paper = "1.21.4-R0.1-SNAPSHOT"
 semver = "3.1.0"
 kotlinpoet = "2.4.0"
 
-skir = "239cf0fbcb5128bbf243e637064f7ead078b6ee7"
+skir = "1.0.17"
 okio = "3.18.2"
 
 nats = "0.9.1"
@@ -61,7 +61,7 @@ test-balloon-kotest-assertions = {module = "de.infix.testBalloon:testBalloon-int
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 
-skir-client = { module = "com.github.gabber235:skir-kotlin-client", version.ref = "skir"}
+skir-client = { module = "build.skir:skir-client", version.ref = "skir" }
 okio = { module = "com.squareup.okio:okio-jvm", version.ref = "okio" }
 
 nats-core = { module = "io.github.n-hass:natskt-core", version.ref = "nats" }

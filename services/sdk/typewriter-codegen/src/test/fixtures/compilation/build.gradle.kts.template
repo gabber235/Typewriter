@@ -5,11 +5,6 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven("https://jitpack.io") {
-        content {
-            includeModule("com.github.gabber235", "skir-kotlin-client")
-        }
-    }
 }
 
 val repository = file(providers.gradleProperty("typewriterRepository").get())

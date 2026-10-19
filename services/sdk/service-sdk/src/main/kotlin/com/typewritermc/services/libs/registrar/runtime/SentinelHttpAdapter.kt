@@ -1,5 +1,6 @@
 package com.typewritermc.services.libs.registrar.runtime
 
+import com.typewritermc.protocol.skir.fromBoundedBytes
 import com.typewritermc.services.libs.http.core.HttpMethod
 import com.typewritermc.services.libs.http.core.HttpOperation
 import com.typewritermc.services.libs.http.core.HttpRequest
@@ -74,7 +75,7 @@ class TypewriterSentinelProvider(
         if (!result.response.headers.hasSkirMediaType()) return protocol()
         val response =
             try {
-                GetSentinelCredentialsResponse.serializer.fromBytes(result.response.body)
+                GetSentinelCredentialsResponse.serializer.fromBoundedBytes(result.response.body)
             } catch (failure: Throwable) {
                 failure.rethrowExceptional()
                 return protocol()
