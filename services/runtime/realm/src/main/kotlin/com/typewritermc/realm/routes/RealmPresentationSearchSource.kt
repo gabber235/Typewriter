@@ -67,8 +67,8 @@ class UnavailableRealmPresentationSearchSource : RealmPresentationSearchSource {
 class CapabilityRealmPresentationSearchSource(
     private val scope: CoroutineScope,
     private val catalogs: RealmCatalogStore,
-    private val snapshots: AuthoringViewStore? = null,
-    private val operationSearch: RealmPresentationSearchSource? = snapshots?.let { OperationRealmPresentationSearchSource(scope, it) },
+    private val views: AuthoringViewStore,
+    private val operationSearch: RealmPresentationSearchSource = OperationRealmPresentationSearchSource(scope, views),
 ) : RealmPresentationSearchSource {
     private val subscriptions = ConcurrentHashMap<String, Job>()
 
@@ -78,11 +78,10 @@ class CapabilityRealmPresentationSearchSource(
     ): RealmPresentationSearchUpdate {
         cancel(request.subscriptionId)
         if (OperationSearch.descriptors.any { it.id.value == request.capabilityId.value }) {
-            return operationSearch?.watch(request, updates)
-                ?: unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Operation search is unavailable")
+            return operationSearch.watch(request, updates)
         }
         val catalog =
-            runCatching { catalogs.captureCurrent() }.getOrNull()
+            catalogs.captureCurrentOrNull()
                 ?: return unavailableRealmPresentationSearchUpdate(request.subscriptionId, "Realm catalog is unavailable")
         validate(request, catalog)?.let { failure ->
             catalog.close()
@@ -174,14 +173,13 @@ class CapabilityRealmPresentationSearchSource(
                 job.cancel()
                 true
             } ?: false
-        val operation = operationSearch?.cancel(subscriptionId) ?: false
+        val operation = operationSearch.cancel(subscriptionId)
         return ordinary || operation
     }
 
     private fun captureOperation(request: RealmPresentationSearchRequest): CapturedOperationSearch? {
         val context = request.operationContext ?: return null
-        val store = requireNotNull(snapshots) { "Operation search observations are unavailable." }
-        val lease = store.capture()
+        val lease = views.capture()
         try {
             require(
                 context.inputRevision >= 0 && request.generation == context.invocation.catalog &&
@@ -197,7 +195,7 @@ class CapabilityRealmPresentationSearchSource(
                 invocation,
                 CapturedAuthoringReads(AuthoredReadView.Original(baseline)),
                 captured.confirmed,
-                store,
+                views,
             )
         } catch (failure: Throwable) {
             lease.close()
@@ -245,14 +243,14 @@ private data class CapturedOperationSearch(
     val invocation: com.typewritermc.operations.OperationInvocation,
     val reads: CapturedAuthoringReads,
     val observation: String,
-    val snapshots: AuthoringViewStore,
+    val views: AuthoringViewStore,
 ) {
     val context get() = ResourceOperationSearchContext(invocation, reads)
 
     fun requireCurrent() {
         val health = reads.health()
         check(health.failures.isEmpty() && health.incomplete.isEmpty()) { "Operation search reads did not produce complete evidence" }
-        val actual = snapshots.read { it.observationId }
+        val actual = views.read { it.observationId }
         if (actual != observation) throw StaleOperationObservation(actual)
     }
 }

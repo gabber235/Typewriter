@@ -13,7 +13,10 @@ import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
+import com.typewritermc.services.libs.telemetry.ErrorSlug
+import com.typewritermc.services.libs.telemetry.mainSpanScope
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import io.opentelemetry.context.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -112,7 +115,7 @@ internal class RealmPublicationCoordinator(
     private val engine: EngineImplementationSource,
     private val compilation: CompiledArtifactProducerRegistry,
     private val results: PublicationResults,
-    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet> = { emptyList() },
+    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
 ) {
     private val gate = Mutex()
     private val evaluation = Mutex()
@@ -477,6 +480,7 @@ internal class RealmPublicationCoordinator(
             callback(attempt)
         } catch (failure: Exception) {
             failure.rethrowExceptional()
+            Context.current().mainSpanScope()?.recordDegraded(TRANSITION_NOTIFICATION_FAILURE, failure)
         }
     }
 
@@ -588,3 +592,5 @@ internal fun PublicationState.storageName(): String =
     }
 
 internal val publicationsCodec = StructuredDatabaseCodec(authoringStorageJson)
+
+private val TRANSITION_NOTIFICATION_FAILURE = ErrorSlug.of("realm-publication-transition-notification-failed")

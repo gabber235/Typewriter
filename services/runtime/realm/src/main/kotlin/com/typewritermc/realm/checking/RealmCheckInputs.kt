@@ -11,7 +11,6 @@ import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.boundPath
 import com.typewritermc.checking.CheckEvaluation
 import com.typewritermc.checking.CheckInput
-import com.typewritermc.checking.CheckInputs
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.Diagnostic
@@ -29,7 +28,7 @@ import com.typewritermc.types.catalog.ResolvedRepresentation
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Evaluates declarative check inputs within one tracked snapshot read capability.
+ * Evaluates declarative check inputs within the tracked captured reads of one check execution.
  *
  * Collection patterns sharing an occurrence prefix bind to the same item or map row rather than forming
  * unrelated tuples. Missing values defer the check, failures remain diagnostic outcomes, and tuple limits
@@ -37,28 +36,18 @@ import java.util.concurrent.atomic.AtomicLong
  */
 class RealmCheckInputs(
     private val ids: () -> DiagnosticId = defaultDiagnosticIdFactory(),
-) : CheckInputs {
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun evaluate(
+) {
+    context(reads: CapturedAuthoringReads)
+    fun evaluate(
         recipe: CheckRecipe,
         subject: DraftBinding,
     ): CheckEvaluation {
-        val snapshotReads =
-            reads as? CapturedAuthoringReads
-                ?: return failed(
-                    recipe,
-                    EvaluationDiagnostic(
-                        "untracked_reads",
-                        "Check inputs require Realm snapshot reads.",
-                        listOf(subject.location),
-                    ),
-                )
         val candidates =
             recipe.inputs.map { input ->
                 val expected =
-                    expectedType(subject, input.path, snapshotReads.view.original.catalog.checked)
+                    expectedType(subject, input.path, reads.view.original.catalog.checked)
                         ?: return CheckEvaluation(CheckOutcome.NeedsInput(listOf(subject.location)), emptyList())
-                snapshotReads.expand(subject.location, input.path).map { location ->
+                reads.expand(subject.location, input.path).map { location ->
                     InputCandidate(input, location, occurrenceBindings(subject.location, input.path, location), expected)
                 }
             }
@@ -67,7 +56,7 @@ class RealmCheckInputs(
             candidates.fold(listOf(InputTuple())) { tuples, inputCandidates ->
                 tuples.flatMap { tuple ->
                     inputCandidates.mapNotNull { candidate ->
-                        if (snapshotReads.admitCheckTuple()) tuple.merge(candidate) else null
+                        if (reads.admitCheckTuple()) tuple.merge(candidate) else null
                     }
                 }
             }
@@ -76,7 +65,7 @@ class RealmCheckInputs(
         tuples.forEach { tuple ->
             val values =
                 tuple.candidates.map { candidate ->
-                    snapshotReads.portable(boundPath<Any?>(candidate.location, candidate.expected))
+                    reads.portable(boundPath<Any?>(candidate.location, candidate.expected))
                 }
             values.filterIsInstance<Availability.Unavailable>().flatMapTo(missing, Availability.Unavailable::locations)
             val failure = values.filterIsInstance<Availability.Failed>().firstOrNull()
@@ -88,7 +77,7 @@ class RealmCheckInputs(
             }
             try {
                 if (!recipe.predicate.invoke(complete)) {
-                    findings += finding(recipe, subject, tuple, snapshotReads)
+                    findings += finding(recipe, subject, tuple, reads)
                 }
             } catch (failure: Exception) {
                 failure.rethrowExceptional()

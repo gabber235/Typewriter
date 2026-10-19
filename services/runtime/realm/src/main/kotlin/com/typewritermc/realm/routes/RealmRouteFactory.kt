@@ -25,28 +25,23 @@ internal class RealmRouteFactory(
     private val editorCatalog: RealmEditorCatalogSource,
     private val preparation: InitializationRuntime,
     private val presentationSearch: RealmPresentationSearchSource,
-    private val capabilityInvocations: RealmCapabilityInvocationSource? = null,
-    private val checkEvents: EditorCheckEvents? = null,
+    private val capabilityInvocations: RealmCapabilityInvocationSource,
+    private val editorUpdates: EditorUpdatePublisher,
 ) {
     fun create(
         address: RealmRouteScope,
         communicator: Communicator,
     ): CommunicatorRoutes {
         val contracts = EditorContracts(address)
-        checkEvents?.apply {
-            bindFindings(checks::findings)
-            configure(contracts, address, communicator)
-        }
-        val authoringRoutes =
-            checkEvents?.let { AuthoringRoutes(authoring, snapshots, it, contracts = contracts) }
-                ?: AuthoringRoutes(authoring, snapshots, checks::findings, contracts = contracts)
+        editorUpdates.configure(contracts, address, communicator)
+        val authoringRoutes = AuthoringRoutes(authoring, snapshots, checks::findings, contracts = contracts)
         val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, snapshots, contracts)
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, contracts)
         val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(snapshots, compiledRootStatuses, contracts)
         val publicationRoutes = PublicationRoutes(publisher, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, preparation, contracts)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
-        val capabilityInvocationRoutes = capabilityInvocations?.let { RealmCapabilityInvocationRoutes(it, contracts) }
+        val capabilityInvocationRoutes = RealmCapabilityInvocationRoutes(capabilityInvocations, contracts)
         val resourceOperationRoutes =
             ResourceOperationRoutes(
                 com.typewritermc.realm.authoring
@@ -61,7 +56,7 @@ internal class RealmRouteFactory(
             publicationRoutes.register(this)
             editorCatalogRoutes.register(this)
             presentationSearchRoutes.register(this)
-            capabilityInvocationRoutes?.register(this)
+            capabilityInvocationRoutes.register(this)
             resourceOperationRoutes.register(this)
         }
     }

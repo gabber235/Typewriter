@@ -368,6 +368,9 @@ private class RepairCatalogLease(
             AuthoringResourceDefinition(ResourceDefinitionId("reward"), REWARD),
         )
 
+    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val operations = com.typewritermc.operations.OperationCatalog()
+
     override fun retain(): AuthoringCatalogLease = RepairCatalogLease(generation)
 
     override fun close() = Unit

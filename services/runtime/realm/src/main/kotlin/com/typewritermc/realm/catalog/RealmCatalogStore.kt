@@ -64,6 +64,12 @@ class RealmCatalogStore : AutoCloseable {
             retain(requireNotNull(current) { "Realm catalog is not installed." })
         }
 
+    /** Captures the installed catalog, or returns null while none is installed or after the store closed. */
+    fun captureCurrentOrNull(): RealmCatalogLease? =
+        synchronized(lock) {
+            current?.takeUnless { closed }?.let(::retain)
+        }
+
     fun replace(incarnation: RealmCatalogIncarnation) {
         val installed =
             synchronized(lock) {

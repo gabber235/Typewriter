@@ -56,35 +56,13 @@ import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTra
  * all chunks. Commit delegates admission to the repository; preview and preparation return proposed edits
  * without changing saved resources. Finding freshness is evaluated against the transferred baseline.
  */
-internal class AuthoringRoutes private constructor(
+internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
     private val snapshots: AuthoringViewStore,
-    private val captureFindings: suspend (com.typewritermc.realm.authoring.AuthoringView) -> CapturedFindings,
+    private val findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
     private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
     private val contracts: EditorContracts,
 ) {
-    constructor(
-        repository: AuthoringRepository,
-        snapshots: AuthoringViewStore,
-        events: EditorCheckEvents,
-        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
-        contracts: EditorContracts,
-    ) : this(repository, snapshots, events::capture, typeArguments, contracts)
-
-    constructor(
-        repository: AuthoringRepository,
-        snapshots: AuthoringViewStore,
-        findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
-        typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
-        contracts: EditorContracts,
-    ) : this(
-        repository,
-        snapshots,
-        { root -> captureFindings(root, findings()) },
-        typeArguments,
-        contracts,
-    )
-
     fun register(builder: CommunicatorRoutesBuilder) =
         with(builder) {
             watch(contracts.queryAuthoringState) { call ->
@@ -148,7 +126,7 @@ internal class AuthoringRoutes private constructor(
                         secondLocation = link.secondLocation?.let { SkirAuthoringValueCodec.encode(it).getOrThrow() },
                     )
                 }
-            val capturedFindings = captureFindings(root)
+            val capturedFindings = captureFindings(root, findings())
             val authored =
                 SkirAuthoringState(
                     generation = SkirCatalogGeneration(value = root.catalog.generation.value),

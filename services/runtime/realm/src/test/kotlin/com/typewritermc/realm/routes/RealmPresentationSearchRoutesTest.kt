@@ -1,8 +1,11 @@
 package com.typewritermc.realm.routes
 
 import com.typewritermc.operations.OperationSearch
+import com.typewritermc.realm.authoring.AuthoringSeed
+import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
 import com.typewritermc.realm.catalog.RealmCatalogStore
 import com.typewritermc.realm.catalog.installTestCatalog
+import com.typewritermc.realm.checking.TestCatalogLease
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
@@ -27,7 +30,8 @@ val RealmPresentationSearchRoutesTest by testSuite {
             RealmCatalogStore().use { catalogs ->
                 catalogs.installTestCatalog("generation")
                 val operation = PendingSearchSource(backgroundScope)
-                val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, operationSearch = operation)
+                val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
+                val source = CapabilityRealmPresentationSearchSource(backgroundScope, catalogs, views, operation)
                 source.watch(validSearchRequest().copy(capabilityId = CapabilityId(value = OperationSearch.compatibleBooks.id.value))) { }
                 runCurrent()
                 operation.active.toSet() shouldBe setOf("search")
@@ -38,6 +42,7 @@ val RealmPresentationSearchRoutesTest by testSuite {
                 (replacement as RealmPresentationSearchUpdate.SnapshotWrapper).value.status shouldBe RealmPresentationSearchStatus.ERROR
                 operation.active.toSet() shouldBe emptySet()
                 source.cancel("search") shouldBe false
+                views.close()
             }
         }
     }

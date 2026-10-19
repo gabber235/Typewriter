@@ -622,6 +622,9 @@ private class GraphCatalogLease(
     override val resources: List<AuthoringResourceDefinition> =
         listOf(AuthoringResourceDefinition(ResourceDefinitionId("node"), NODE))
 
+    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val operations = com.typewritermc.operations.OperationCatalog()
+
     override fun retain(): AuthoringCatalogLease = GraphCatalogLease(generation)
 
     override fun close() = Unit

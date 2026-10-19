@@ -3,7 +3,6 @@ package com.typewritermc.realm.authoring
 import com.typewritermc.authoring.Availability
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.GraphEndpoint
-import com.typewritermc.authoring.GraphReads
 import com.typewritermc.authoring.GraphStep
 import com.typewritermc.authoring.LinkInspectionQuery
 import com.typewritermc.authoring.LinkInspectionResult
@@ -30,7 +29,6 @@ import com.typewritermc.checking.ResourceTypeMatch
 import com.typewritermc.checking.UndecidedCandidate
 import com.typewritermc.expression.EvaluationDiagnostic
 import com.typewritermc.realm.checking.CapturedAuthoringReads
-import com.typewritermc.realm.checking.SnapshotReadCapability
 import com.typewritermc.realm.repository.LinkSchemaCapabilities
 import com.typewritermc.realm.repository.ResourceValueMapper
 import com.typewritermc.types.DataValue
@@ -43,12 +41,11 @@ import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeUse
 import com.typewritermc.types.catalog.Resolution
 
-/** Traverses only the graph derived from the retained authored snapshot. */
-internal object RealmGraphReads : GraphReads {
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun <D : ResourceDraft> reachable(query: ReachabilityQuery<D>): ReachabilityResult<D> {
-        val snapshot = reads.requireCapturedAuthoringReads()
-        val graph = CapturedGraph(snapshot, query.links)
+/** Traverses only the graph derived from the retained authored reads. */
+internal object RealmGraphReads {
+    context(reads: CapturedAuthoringReads)
+    fun <D : ResourceDraft> reachable(query: ReachabilityQuery<D>): ReachabilityResult<D> {
+        val graph = CapturedGraph(reads, query.links)
         val queue = ArrayDeque<Pair<ResourceId, Int>>()
         query.seeds.sortedBy(ResourceId::value).forEach { queue += it to 0 }
         val visited = linkedSetOf<ResourceId>()
@@ -60,7 +57,7 @@ internal object RealmGraphReads : GraphReads {
             val (resource, depth) = queue.removeFirst()
             if (!visited.add(resource)) continue
             if (visited.size > query.budget.maxResources) {
-                completion = interrupted(snapshot, "resource budget exceeded")
+                completion = interrupted(reads, "resource budget exceeded")
                 break
             }
             when (val bound = graph.bind(resource, query.type)) {
@@ -73,7 +70,7 @@ internal object RealmGraphReads : GraphReads {
             if (maxDepth != null && depth >= maxDepth) continue
             for (edge in graph.edgesFrom(resource)) {
                 if (++links > query.budget.maxLinks) {
-                    completion = interrupted(snapshot, "link budget exceeded")
+                    completion = interrupted(reads, "link budget exceeded")
                     break
                 }
                 queue += edge.to to (depth + 1)
@@ -82,18 +79,17 @@ internal object RealmGraphReads : GraphReads {
         }
         val unresolved = visited.flatMap(graph::unresolvedAt).distinct()
         if (completion is InspectionCompletion.Complete && unresolved.any { it is UnresolvedLink.UnavailableTarget }) {
-            completion = interrupted(snapshot, "selected link target unavailable")
+            completion = interrupted(reads, "selected link target unavailable")
         }
-        return ReachabilityResult(resources, unresolved, undecided, snapshot.health().failures, completion)
+        return ReachabilityResult(resources, unresolved, undecided, reads.health().failures, completion)
     }
 
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun incomingResources(
+    context(reads: CapturedAuthoringReads)
+    fun incomingResources(
         target: ResourceId,
         family: RelationFamilyId,
     ): PartialSelection<ResourceDraft> {
-        val snapshot = reads.requireCapturedAuthoringReads()
-        val graph = CapturedGraph(snapshot, RelationSelection.Family(family, TraversalDirection.Forward))
+        val graph = CapturedGraph(reads, RelationSelection.Family(family, TraversalDirection.Forward))
         graph.observeAt(target)
         val known = mutableListOf<ResourceDraft>()
         val undecided = mutableListOf<UndecidedCandidate>()
@@ -105,13 +101,12 @@ internal object RealmGraphReads : GraphReads {
             }
         }
         undecided += graph.undecidedIncoming(target)
-        return PartialSelection(known, undecided, InspectionCompletion.Complete, snapshot.health().failures)
+        return PartialSelection(known, undecided, InspectionCompletion.Complete, reads.health().failures)
     }
 
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun routes(query: RouteQuery): RouteResult {
-        val snapshot = reads.requireCapturedAuthoringReads()
-        val graph = CapturedGraph(snapshot, query.links)
+    context(reads: CapturedAuthoringReads)
+    fun routes(query: RouteQuery): RouteResult {
+        val graph = CapturedGraph(reads, query.links)
         val paths = mutableListOf<List<GraphStep>>()
         var steps = 0L
         var links = 0L
@@ -122,14 +117,14 @@ internal object RealmGraphReads : GraphReads {
         while (queue.isNotEmpty()) {
             val state = queue.removeFirst()
             if (state.resource !in inspected && inspected.size.toLong() >= query.budget.maxResources) {
-                completion = interrupted(snapshot, "resource budget exceeded")
+                completion = interrupted(reads, "resource budget exceeded")
                 break
             }
             inspected += state.resource
             graph.observeAt(state.resource)
             if (state.resource == query.target) {
                 if (paths.size.toLong() >= query.budget.maxRoutes) {
-                    completion = interrupted(snapshot, "route budget exceeded")
+                    completion = interrupted(reads, "route budget exceeded")
                     break
                 }
                 paths += state.steps
@@ -138,7 +133,7 @@ internal object RealmGraphReads : GraphReads {
             if (state.steps.size >= query.maxDepth) continue
             for (edge in graph.edgesFrom(state.resource)) {
                 if (++links > query.budget.maxLinks || ++steps > query.budget.maxSteps) {
-                    completion = interrupted(snapshot, "route step budget exceeded")
+                    completion = interrupted(reads, "route step budget exceeded")
                     break
                 }
                 if (edge.to in state.visited) continue
@@ -148,15 +143,14 @@ internal object RealmGraphReads : GraphReads {
         }
         val unresolved = inspected.flatMap(graph::unresolvedAt).distinct()
         if (completion is InspectionCompletion.Complete && unresolved.any { it is UnresolvedLink.UnavailableTarget }) {
-            completion = interrupted(snapshot, "selected link target unavailable")
+            completion = interrupted(reads, "selected link target unavailable")
         }
-        return RouteResult(paths, unresolved, snapshot.health().failures, completion)
+        return RouteResult(paths, unresolved, reads.health().failures, completion)
     }
 
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun occurrences(query: LinkInspectionQuery): LinkInspectionResult {
-        val snapshot = reads.requireCapturedAuthoringReads()
-        val graph = CapturedGraph(snapshot, query.links)
+    context(reads: CapturedAuthoringReads)
+    fun occurrences(query: LinkInspectionQuery): LinkInspectionResult {
+        val graph = CapturedGraph(reads, query.links)
         val occurrences = mutableListOf<LinkOccurrence>()
         var inspected = 0L
         var completion: InspectionCompletion = InspectionCompletion.Complete
@@ -164,26 +158,25 @@ internal object RealmGraphReads : GraphReads {
             graph.observeAt(resource)
             for (occurrence in graph.occurrencesAt(resource)) {
                 if (++inspected > query.budget.maxLinks) {
-                    completion = interrupted(snapshot, "occurrence budget exceeded")
+                    completion = interrupted(reads, "occurrence budget exceeded")
                     break@occurrenceLoop
                 }
-                snapshot.observeInput(InputIdentity.Value(occurrence.id.location))
+                reads.observeInput(InputIdentity.Value(occurrence.id.location))
                 occurrences += occurrence
             }
         }
         val unresolved = query.sources.flatMap(graph::unresolvedAt).distinct()
         if (completion is InspectionCompletion.Complete && unresolved.any { it is UnresolvedLink.UnavailableTarget }) {
-            completion = interrupted(snapshot, "selected link target unavailable")
+            completion = interrupted(reads, "selected link target unavailable")
         }
-        return LinkInspectionResult(occurrences, unresolved, snapshot.health().failures, completion)
+        return LinkInspectionResult(occurrences, unresolved, reads.health().failures, completion)
     }
 
-    context(reads: com.typewritermc.authoring.AuthoredReads)
-    override fun follow(occurrence: LinkOccurrence): Availability<DraftBinding> {
-        val snapshot = reads.requireCapturedAuthoringReads()
-        snapshot.observeInput(InputIdentity.Value(occurrence.id.location))
-        snapshot.observeInput(InputIdentity.Existence(occurrence.target.resource))
-        return snapshot.resourceBinding(occurrence.target.resource)
+    context(reads: CapturedAuthoringReads)
+    fun follow(occurrence: LinkOccurrence): Availability<DraftBinding> {
+        reads.observeInput(InputIdentity.Value(occurrence.id.location))
+        reads.observeInput(InputIdentity.Existence(occurrence.target.resource))
+        return reads.resourceBinding(occurrence.target.resource)
     }
 }
 
@@ -455,10 +448,6 @@ private fun rawValue(
     val fields = record?.fields ?: return null
     return (DataValue.Record(fields).locate(path) as? LocatedPortableValue.Value)?.value
 }
-
-private fun com.typewritermc.authoring.AuthoredReads.requireCapturedAuthoringReads(): CapturedAuthoringReads =
-    (this as? SnapshotReadCapability)?.snapshotReads
-        ?: error("Graph reads require the retained Realm snapshot capability.")
 
 private fun interrupted(
     reads: CapturedAuthoringReads,

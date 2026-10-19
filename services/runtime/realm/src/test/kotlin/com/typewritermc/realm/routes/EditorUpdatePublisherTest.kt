@@ -18,6 +18,7 @@ import com.typewritermc.realm.checking.CheckTicket
 import com.typewritermc.realm.checking.FindingSet
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.checking.record
+import com.typewritermc.realm.compiler.PublicationFixture
 import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.MessageTransport
@@ -32,7 +33,9 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -40,12 +43,12 @@ import kotlinx.coroutines.yield
 import skirout.editor.v1.authoring.AuthoringChanged
 import kotlin.time.Duration.Companion.seconds
 
-val EditorCheckEventsTest by testSuite {
+val EditorUpdatePublisherTest by testSuite {
     test("configuration and commit signals publish current catalog hints") {
         runTest {
-            val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-            val events = EditorCheckEvents(views, backgroundScope)
+            val publication = PublicationFixture()
             HintConnection().use { connection ->
+                val events = connection.editorUpdates(publication, backgroundScope)
                 try {
                     events.configure(connection.contracts, connection.address, connection.communicator)
                     connection.transport.awaitCount(1)
@@ -54,16 +57,16 @@ val EditorCheckEventsTest by testSuite {
                     connection.transport.hints().map { it.generation.value } shouldBe listOf("catalog", "catalog")
                 } finally {
                     events.close()
-                    views.close()
+                    publication.close()
                 }
             }
         }
     }
     test("failed hints do not retain operation history or retry without a new signal") {
         runTest {
-            val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-            val events = EditorCheckEvents(views, backgroundScope)
+            val publication = PublicationFixture()
             HintConnection().use { connection ->
+                val events = connection.editorUpdates(publication, backgroundScope)
                 try {
                     connection.transport.failNextPublish(TransportError.Unavailable())
                     events.configure(connection.contracts, connection.address, connection.communicator)
@@ -72,21 +75,20 @@ val EditorCheckEventsTest by testSuite {
                     connection.transport.hints().size shouldBe 1
                     events.committed()
                     connection.transport.awaitCount(2)
-                    events.capture(views.capture().use { it.root }).findings shouldBe emptyList()
                 } finally {
                     events.close()
-                    views.close()
+                    publication.close()
                 }
             }
         }
     }
     test("connection replacement cancels a blocked send and sends a fresh hint") {
         runTest {
-            val views = InMemoryAuthoringViewStore(TestCatalogLease(), AuthoringSeed(emptyMap()))
-            val events = EditorCheckEvents(views, backgroundScope)
+            val publication = PublicationFixture()
             val blocked = BlockingPublishTransport()
             val telemetry = TelemetryTestHarness.create()
             HintConnection().use { replacement ->
+                val events = replacement.editorUpdates(publication, backgroundScope)
                 try {
                     events.configure(
                         replacement.contracts,
@@ -99,7 +101,7 @@ val EditorCheckEventsTest by testSuite {
                     replacement.transport.awaitCount(1)
                 } finally {
                     events.close()
-                    views.close()
+                    publication.close()
                     blocked.close()
                     telemetry.close()
                 }
@@ -150,6 +152,11 @@ private class HintConnection : AutoCloseable {
     private val telemetry = TelemetryTestHarness.create()
     val communicator = Communicator(transport, telemetry.telemetry, ContextPropagators.noop())
 
+    fun editorUpdates(
+        publication: PublicationFixture,
+        scope: CoroutineScope,
+    ) = EditorUpdatePublisher(publication.views, publication.publisher, emptyFlow(), telemetry.telemetry, scope)
+
     override fun close() {
         transport.close()
         telemetry.close()
@@ -176,7 +183,10 @@ private class BlockingPublishTransport(
 private fun FakeMessageTransport.hints(): List<AuthoringChanged> =
     actions
         .filterIsInstance<FakeMessageTransport.Action.Publish>()
-        .map { AuthoringChanged.serializer.fromBytes(it.message.payload.toByteArray()) }
+        .filter {
+            it.message.address.value
+                .endsWith(".editor.authoring.changed")
+        }.map { AuthoringChanged.serializer.fromBytes(it.message.payload.toByteArray()) }
 
 private suspend fun FakeMessageTransport.awaitCount(count: Int) =
     withTimeout(2.seconds) {

@@ -308,6 +308,7 @@ internal class TestCatalogLease private constructor(
     override val nativeBindings: NativeBindingRegistry = FactoryNativeBindingRegistry(checked, nativeBindingFactories)
     override val resources: List<AuthoringResourceDefinition> =
         listOf(AuthoringResourceDefinition(ResourceDefinitionId("test"), resourceRoot))
+    override val operations = com.typewritermc.operations.OperationCatalog()
     internal val openCount: Int get() = state.open.get()
 
     override fun retain(): AuthoringCatalogLease {

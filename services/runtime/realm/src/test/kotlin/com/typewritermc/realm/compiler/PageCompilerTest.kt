@@ -219,6 +219,9 @@ private class CompilerCatalogLease private constructor(
             AuthoringResourceDefinition(ResourceDefinitionId("child"), CHILD),
         )
 
+    override val configuration: List<com.typewritermc.configuration.ConfigurationRecipe> = emptyList()
+    override val operations = com.typewritermc.operations.OperationCatalog()
+
     override fun retain(): AuthoringCatalogLease {
         references.incrementAndGet()
         return CompilerCatalogLease(references)

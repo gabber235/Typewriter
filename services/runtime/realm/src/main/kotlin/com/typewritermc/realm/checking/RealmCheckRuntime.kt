@@ -36,6 +36,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -77,10 +80,17 @@ class RealmCheckRuntime(
     private val checkInputs: RealmCheckInputs = RealmCheckInputs(),
     private val selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
     private val readLimits: SnapshotReadLimits = SnapshotReadLimits(),
-    private val onFindingsChanged: suspend (CheckTicket) -> Unit = {},
 ) : CheckScheduler,
     CurrentCheckExecutions {
     private val lock = Any()
+    private val mutableFindingChanges =
+        MutableSharedFlow<Unit>(
+            extraBufferCapacity = 1,
+            onBufferOverflow = BufferOverflow.DROP_OLDEST,
+        )
+
+    /** Coalesced hints that published or removed current findings changed. */
+    val findingChanges: SharedFlow<Unit> = mutableFindingChanges
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val nextIncarnation = AtomicLong()
     private val nextExecution = AtomicLong()
@@ -286,9 +296,7 @@ class RealmCheckRuntime(
                     }
                     tickets
                 }
-            removedTickets
-                .distinctBy { ticket -> ticket.catalog }
-                .forEach { ticket -> scope.launch { onFindingsChanged(ticket) } }
+            if (removedTickets.isNotEmpty()) mutableFindingChanges.tryEmit(Unit)
         } finally {
             retained.lease.close()
         }
@@ -424,24 +432,24 @@ class RealmCheckRuntime(
                 state.job = null
                 when (admission) {
                     AdmissionResult.Published -> {
-                        result.ticket
+                        true
                     }
 
                     AdmissionResult.RetryRequired -> {
                         state.findings = state.findings?.copy(status = FindingStatus.Outdated)
                         scheduleLocked(state)
-                        null
+                        false
                     }
 
                     AdmissionResult.Captured,
                     AdmissionResult.Discarded,
                     -> {
                         dependencies.retire(id)
-                        null
+                        false
                     }
                 }
             }
-        if (changed != null) scope.launch { onFindingsChanged(changed) }
+        if (changed) mutableFindingChanges.tryEmit(Unit)
     }
 
     private fun evaluate(

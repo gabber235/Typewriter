@@ -57,11 +57,8 @@ interface AuthoringCatalogLease : AutoCloseable {
     val relations: List<RelationContract>
     val endpointBindings: List<EndpointBindingTemplate>
     val resources: List<AuthoringResourceDefinition>
-        get() = emptyList()
     val configuration: List<ConfigurationRecipe>
-        get() = emptyList()
     val operations: com.typewritermc.operations.OperationCatalog
-        get() = com.typewritermc.operations.OperationCatalog()
 
     fun retain(): AuthoringCatalogLease
 }

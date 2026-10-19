@@ -92,10 +92,7 @@ class CapturedAuthoringReads(
     private val predicates: SelectionPredicateEvaluator = MissingSelectionPredicateEvaluator,
     private val limits: SnapshotReadLimits = SnapshotReadLimits(),
     override val readContext: ReadContext = view.readContext,
-) : AuthoredReads,
-    SnapshotReadCapability {
-    override val snapshotReads: CapturedAuthoringReads
-        get() = this
+) : AuthoredReads {
     override val catalog: CatalogGeneration = view.original.catalog.generation
 
     private var reads = 0L
@@ -1017,10 +1014,6 @@ class CapturedAuthoringReads(
     private fun markIncomplete(reason: String) {
         incomplete += reason
     }
-}
-
-internal interface SnapshotReadCapability {
-    val snapshotReads: CapturedAuthoringReads
 }
 
 internal object MissingSelectionPredicateEvaluator : SelectionPredicateEvaluator {

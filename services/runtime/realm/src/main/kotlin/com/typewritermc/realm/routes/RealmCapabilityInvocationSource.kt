@@ -38,7 +38,7 @@ class RealmCapabilityInvocationSource(
 ) {
     suspend fun computation(request: CapabilityInvocationRequest): ComputationResult {
         val catalog =
-            runCatching { catalogs.captureCurrent() }.getOrNull()
+            catalogs.captureCurrentOrNull()
                 ?: return unavailableComputation(request, "Realm catalog is unavailable")
         catalog.use {
             validateBase(request, it.generation.value)?.let { failure ->
@@ -81,7 +81,7 @@ class RealmCapabilityInvocationSource(
 
     suspend fun command(request: CapabilityInvocationRequest): CommandResult {
         val catalog =
-            runCatching { catalogs.captureCurrent() }.getOrNull()
+            catalogs.captureCurrentOrNull()
                 ?: return unavailableCommand(request, "Realm catalog is unavailable")
         catalog.use {
             validateBase(request, it.generation.value)?.let { failure ->

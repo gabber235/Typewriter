@@ -29,7 +29,7 @@ import com.typewritermc.realm.repository.AuthoringRepository
 import com.typewritermc.realm.repository.RealmAuthoringOwner
 import com.typewritermc.realm.repository.SurrealAuthoringStorage
 import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
-import com.typewritermc.realm.routes.EditorCheckEvents
+import com.typewritermc.realm.routes.EditorUpdatePublisher
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmRouteFactory
 import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
@@ -91,7 +91,7 @@ internal class Realm(
     private var snapshots: AuthoringViewStore? = null
     private var checks: RealmCheckRuntime? = null
     private var publication: RealmPublicationCoordinator? = null
-    private var checkEvents: EditorCheckEvents? = null
+    private var editorUpdates: EditorUpdatePublisher? = null
     private var registrarScope: RealmRuntimeScope? = null
     private var routeFactory: RealmRouteFactory? = null
     private var router: CommunicatorRouter? = null
@@ -113,12 +113,8 @@ internal class Realm(
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkEvents = EditorCheckEvents(snapshotStore, scope)
-            this.checkEvents = checkEvents
-            val checkRuntime = RealmCheckRuntime(snapshotStore, onFindingsChanged = checkEvents::publishChanged)
+            val checkRuntime = RealmCheckRuntime(snapshotStore)
             checks = checkRuntime
-            checkRuntime.reloadCatalog()
-            val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, checkEvents)
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer()))
             val publisher =
@@ -136,9 +132,12 @@ internal class Realm(
                     findings = checkRuntime::findings,
                 )
             this.publication = publisher
+            val editorUpdates = EditorUpdatePublisher(snapshotStore, publisher, checkRuntime.findingChanges, telemetry, scope)
+            this.editorUpdates = editorUpdates
+            checkRuntime.reloadCatalog()
+            val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, editorUpdates)
             publisher.recoverInterrupted()
             publisher.start(scope, snapshotStore.changes)
-            checkEvents.bindPublication(publisher)
             val preparation =
                 PreparationCoordinator(
                     catalog = catalogs::captureCurrent,
@@ -162,7 +161,7 @@ internal class Realm(
                     preparation = preparation,
                     presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs, snapshotStore),
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
-                    checkEvents = checkEvents,
+                    editorUpdates = editorUpdates,
                 )
             val routesReady = CompletableDeferred<Unit>()
             serviceMonitor =
@@ -211,8 +210,8 @@ internal class Realm(
             publication = null
             attempt { checks?.close() }
             checks = null
-            attempt { checkEvents?.close() }
-            checkEvents = null
+            attempt { editorUpdates?.close() }
+            editorUpdates = null
             attempt { registrarScope?.shutdown() }
             registrarScope = null
             attempt { snapshots?.close() }
@@ -232,7 +231,7 @@ internal class Realm(
             router = null
             routerSession = null
             previous?.closeIfNeeded("replace")
-            checkEvents?.unconfigure()
+            editorUpdates?.unconfigure()
             if (session == null) {
                 catalogInvalidations.stop()
                 return@withLock null
@@ -305,7 +304,7 @@ private object DefaultRealmCatalogActivator : RealmCatalogActivator {
 private class CheckingAuthoringRepository(
     private val delegate: AuthoringRepository,
     private val checks: RealmCheckRuntime,
-    private val events: EditorCheckEvents,
+    private val events: EditorUpdatePublisher,
 ) : AuthoringRepository {
     override suspend fun commit(edit: com.typewritermc.authoring.PreparedEdit): CommitResult =
         delegate.commit(edit).also { result ->
