@@ -195,7 +195,7 @@ internal class ResourceOperationRoutes(
                         problems =
                             result.missing.map {
                                 OperationInputProblem(
-                                    path = SkirAuthoringValueCodec.encode(it.path).getOrThrow(),
+                                    path = SkirAuthoringValueCodec.encode(it).getOrThrow(),
                                     code = "required",
                                     message = "Complete this input",
                                 )

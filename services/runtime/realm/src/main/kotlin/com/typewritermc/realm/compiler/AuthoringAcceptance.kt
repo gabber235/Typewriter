@@ -23,6 +23,7 @@ import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.checking.CheckAdmissionTarget
 import com.typewritermc.realm.checking.RealmCheckRuntime
 import com.typewritermc.services.libs.utils.rethrowExceptional
+import com.typewritermc.services.libs.utils.sha256Hex
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.NativeBindingException
 import com.typewritermc.types.ResourceId
@@ -196,7 +197,7 @@ internal class AuthoringAcceptance(
                                 is CheckOutcome.NeedsInput -> {
                                     result.findings +
                                         outcome.locations.ifEmpty { listOf(result.ticket.instance.location) }.map { location ->
-                                            diagnostic("check_needs_input", "A required check input is unavailable.", location)
+                                            publicationDiagnostic("check_needs_input", "A required check input is unavailable.", location)
                                         }
                                 }
 
@@ -206,7 +207,7 @@ internal class AuthoringAcceptance(
 
                                 is CheckOutcome.Incomplete -> {
                                     result.findings +
-                                        diagnostic("check_incomplete", outcome.reason, result.ticket.instance.location)
+                                        publicationDiagnostic("check_incomplete", outcome.reason, result.ticket.instance.location)
                                 }
                             }
                         emitted.forEach { finding ->
@@ -231,7 +232,11 @@ internal class AuthoringAcceptance(
                 val actual = (record.configuration as? TypeSelection.Complete)?.use
                 if (actual == null) {
                     findings +=
-                        diagnostic("pending_type", "Resource ${id.value} has incomplete type arguments.", ValueLocation(id, ValuePath()))
+                        publicationDiagnostic(
+                            "pending_type",
+                            "Resource ${id.value} has incomplete type arguments.",
+                            ValueLocation(id, ValuePath()),
+                        )
                     blocked()
                     return@forEach
                 }
@@ -241,25 +246,30 @@ internal class AuthoringAcceptance(
                 val checked = (resolved as? com.typewritermc.types.catalog.Resolution.Ready)?.value
                 if (checked == null) {
                     findings +=
-                        diagnostic("unresolved_type", "Resource ${id.value} uses an unavailable type.", ValueLocation(id, ValuePath()))
+                        publicationDiagnostic(
+                            "unresolved_type",
+                            "Resource ${id.value} uses an unavailable type.",
+                            ValueLocation(id, ValuePath()),
+                        )
                     blocked()
                     return@forEach
                 }
                 val value = DataValue.Named(actual, DataValue.Record(record.fields))
                 intrinsicCollectionProblems(value, ValueLocation(id, ValuePath())).forEach { problem ->
-                    findings += diagnostic(problem.code, problem.message, problem.location)
+                    findings += publicationDiagnostic(problem.code, problem.message, problem.location)
                 }
                 when (val complete = checked.complete(value)) {
                     is CompletenessResult.Unfinished -> {
                         complete.locations.forEach { location ->
-                            findings += diagnostic("unfinished_value", "A required value is unfinished.", location.copy(resource = id))
+                            findings +=
+                                publicationDiagnostic("unfinished_value", "A required value is unfinished.", location.copy(resource = id))
                         }
                     }
 
                     is CompletenessResult.Invalid -> {
                         complete.problems.forEach { problem ->
                             findings +=
-                                diagnostic(
+                                publicationDiagnostic(
                                     problem.code,
                                     "The authored value is structurally invalid.",
                                     problem.location.copy(resource = id),
@@ -286,14 +296,19 @@ internal class AuthoringAcceptance(
                         } catch (failure: Exception) {
                             failure.rethrowExceptional()
                             val code = (failure as? NativeBindingException)?.code ?: "native_construction_failed"
-                            findings += diagnostic(code, failure.message ?: "Native construction failed.", ValueLocation(id, ValuePath()))
+                            findings +=
+                                publicationDiagnostic(
+                                    code,
+                                    failure.message ?: "Native construction failed.",
+                                    ValueLocation(id, ValuePath()),
+                                )
                         }
                     }
                 }
                 if (findings.size > firstFinding) blocked()
             }
             if (!report.complete) {
-                findings += diagnostic("check_coverage_incomplete", "Required captured checks did not complete.", null)
+                findings += publicationDiagnostic("check_coverage_incomplete", "Required captured checks did not complete.", null)
             }
             CapturedAssessment(resources, report, findings.distinctBy { it.id }, evidence)
         }
@@ -376,14 +391,17 @@ private fun intrinsicCollectionProblems(
         }
     }
 
-private fun diagnostic(
+/**
+ * Builds a publication finding. The identity digests location, code, and message so distinct findings
+ * never share an id while repeated identical findings collapse.
+ */
+internal fun publicationDiagnostic(
     code: String,
     message: String,
-    location: ValueLocation?,
-): Diagnostic {
-    val identity = "${location?.resource?.value.orEmpty()}:${location?.path}:$code"
-    return Diagnostic(
-        id = DiagnosticId("publication:${identity.hashCode().toUInt().toString(16)}"),
+    location: ValueLocation? = null,
+): Diagnostic =
+    Diagnostic(
+        id = DiagnosticId("publication:${"$location\u0000$code\u0000$message".sha256Hex()}"),
         origin = RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
         code = code,
         message = message,
@@ -391,7 +409,6 @@ private fun diagnostic(
         primary = location,
         related = emptyList(),
     )
-}
 
-private val PUBLICATION_DIAGNOSTIC_TYPE =
+internal val PUBLICATION_DIAGNOSTIC_TYPE =
     TypeDefinitionId(TypeId.Qualified("typewriter", "publication"), 1)

@@ -76,9 +76,11 @@ internal class RealmAuthoringOwner(
                 val conflicts = values.conflicts(edit.expectations)
                 if (conflicts.isNotEmpty()) return@read CommitResult.Conflict(conflicts)
                 val planner = AuthoringMutationPlanner(current.catalog.checked, current.catalog.relations, current.catalog.endpointBindings)
-                val planned = planner.plan(current.resources, edit)
-                if (planned is MutationPlanningResult.Rejected) return@read CommitResult.Rejected(planned.problems)
-                val raw = (planned as MutationPlanningResult.Accepted).plan
+                val raw =
+                    when (val planned = planner.plan(current.resources, edit)) {
+                        is MutationPlanningResult.Rejected -> return@read CommitResult.Rejected(planned.problems)
+                        is MutationPlanningResult.Accepted -> planned.plan
+                    }
                 val required =
                     values.requiredExpectations(
                         edit,
@@ -146,6 +148,10 @@ internal class SurrealAuthoringStorage(
     }
 }
 
+/**
+ * Locates a required expectation for a missing-guard problem. Required expectations are always
+ * resource scoped; the realm-wide resource id set is only observed by reads and never required.
+ */
 internal fun EditExpectation.location(): ValueLocation =
     when (this) {
         is EditExpectation.Value -> at
@@ -153,5 +159,5 @@ internal fun EditExpectation.location(): ValueLocation =
         is EditExpectation.Resource -> ValueLocation(id, ValuePath())
         is EditExpectation.ResourceExists -> ValueLocation(id, ValuePath())
         is EditExpectation.Links -> ValueLocation(resource, ValuePath())
-        is EditExpectation.ResourceIds -> ValueLocation(ResourceId("realm"), ValuePath())
+        is EditExpectation.ResourceIds -> error("Resource id set expectations are never required for commit admission.")
     }

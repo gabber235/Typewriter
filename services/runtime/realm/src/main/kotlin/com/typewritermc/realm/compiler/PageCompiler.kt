@@ -225,14 +225,7 @@ internal fun compilationDiagnostic(
 ): com.typewritermc.checking.Diagnostic =
     com.typewritermc.checking.Diagnostic(
         com.typewritermc.authoring.DiagnosticId("publication:compiler:$location:${target?.value}:$code"),
-        com.typewritermc.configuration.RuleOrigin(
-            com.typewritermc.types.TypeDefinitionId(
-                com.typewritermc.types.TypeId
-                    .Qualified("typewriter", "publication"),
-                1,
-            ),
-            0,
-        ),
+        com.typewritermc.configuration.RuleOrigin(PUBLICATION_DIAGNOSTIC_TYPE, 0),
         code,
         message,
         severity,

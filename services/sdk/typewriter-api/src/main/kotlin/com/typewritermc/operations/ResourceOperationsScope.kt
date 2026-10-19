@@ -135,6 +135,11 @@ class UnavailableAuthoredValue(
     val locations: List<ValueLocation>,
 ) : IllegalStateException("Required authored values are missing")
 
+/** The operation input value is not yet complete at [paths], relative to the input root. */
+class UnfinishedOperationInput(
+    val paths: List<ValuePath>,
+) : IllegalStateException("Operation input is unfinished")
+
 class FailedAuthoredValue(
     val diagnostic: com.typewritermc.expression.EvaluationDiagnostic,
 ) : IllegalStateException(diagnostic.toString())

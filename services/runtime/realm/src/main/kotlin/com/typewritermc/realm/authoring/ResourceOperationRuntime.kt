@@ -31,6 +31,7 @@ import com.typewritermc.operations.ResourceOperationDefinition
 import com.typewritermc.operations.ResourceOperationId
 import com.typewritermc.operations.ResourceRelationPreparation
 import com.typewritermc.operations.UnavailableAuthoredValue
+import com.typewritermc.operations.UnfinishedOperationInput
 import com.typewritermc.operations.asClosedUse
 import com.typewritermc.realm.checking.CapturedAuthoringReads
 import com.typewritermc.services.libs.utils.rethrowExceptional
@@ -51,7 +52,7 @@ internal sealed interface OperationPreparationResult {
     data class NeedsInput(
         val input: DataValue?,
         val choices: List<PreparationChoice>,
-        val missing: List<ValueLocation> = emptyList(),
+        val missing: List<ValuePath> = emptyList(),
     ) : OperationPreparationResult
 
     data class Invalid(
@@ -136,9 +137,7 @@ internal class ResourceOperationRuntime(
                     is CompletenessResult.Unfinished -> return OperationPreparationResult.NeedsInput(
                         input,
                         emptyList(),
-                        checked.locations.map {
-                            ValueLocation(ResourceId("operation-input"), it.path)
-                        },
+                        checked.locations.map { it.path },
                     )
 
                     is CompletenessResult.Invalid -> return OperationPreparationResult.Invalid(checked.problems)
@@ -156,12 +155,10 @@ internal class ResourceOperationRuntime(
                 )
             } catch (needed: NeedsChoices) {
                 OperationPreparationResult.NeedsInput(input, needed.requests)
+            } catch (unfinished: UnfinishedOperationInput) {
+                OperationPreparationResult.NeedsInput(input, emptyList(), unfinished.paths)
             } catch (missing: UnavailableAuthoredValue) {
-                if (missing.locations.all { it.resource.value == "operation-input" }) {
-                    OperationPreparationResult.NeedsInput(input, emptyList(), missing.locations)
-                } else {
-                    OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
-                }
+                OperationPreparationResult.Invalid(missing.locations.map { ValueProblem(it, "required_authored_value_missing") })
             } catch (failure: Exception) {
                 failure.rethrowExceptional()
                 OperationPreparationResult.Failed(failure)

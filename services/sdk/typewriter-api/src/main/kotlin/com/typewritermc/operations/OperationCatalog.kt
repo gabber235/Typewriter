@@ -3,7 +3,6 @@ package com.typewritermc.operations
 import com.typewritermc.authoring.AuthoredReads
 import com.typewritermc.authoring.CompletenessResult
 import com.typewritermc.authoring.PathSegment
-import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.authoring.complete
 import com.typewritermc.authoring.map
@@ -52,13 +51,7 @@ class BoundOperationInput internal constructor(
         requireNotNull(value) { "Operation input is required." }
         return when (val result = schema.complete(value)) {
             is CompletenessResult.Complete -> requireNotNull(binding).decode(result.value)
-
-            is CompletenessResult.Unfinished -> throw UnavailableAuthoredValue(
-                result.locations.map {
-                    ValueLocation(ResourceId("operation-input"), it.path)
-                },
-            )
-
+            is CompletenessResult.Unfinished -> throw UnfinishedOperationInput(result.locations.map { it.path })
             is CompletenessResult.Invalid -> throw IllegalArgumentException(result.problems.joinToString())
         }
     }

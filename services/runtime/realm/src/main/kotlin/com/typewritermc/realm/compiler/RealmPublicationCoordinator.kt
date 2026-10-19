@@ -7,7 +7,6 @@ import com.typewritermc.authoring.PublicationId
 import com.typewritermc.checking.CatalogGeneration
 import com.typewritermc.checking.Diagnostic
 import com.typewritermc.checking.DiagnosticSeverity
-import com.typewritermc.configuration.RuleOrigin
 import com.typewritermc.engine.CompiledArtifact
 import com.typewritermc.engine.PublishedContent
 import com.typewritermc.realm.authoring.authoringStorageJson
@@ -15,8 +14,6 @@ import com.typewritermc.realm.repository.conflicts
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
 import com.typewritermc.realm.repository.utils.inTransaction
 import com.typewritermc.services.libs.utils.rethrowExceptional
-import com.typewritermc.types.TypeDefinitionId
-import com.typewritermc.types.TypeId
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -591,19 +588,3 @@ internal fun PublicationState.storageName(): String =
     }
 
 internal val publicationsCodec = StructuredDatabaseCodec(authoringStorageJson)
-
-internal fun publicationDiagnostic(
-    code: String,
-    message: String,
-): Diagnostic =
-    Diagnostic(
-        id = DiagnosticId("publication:${code.hashCode().toUInt().toString(16)}"),
-        origin = RuleOrigin(PUBLICATION_TYPE, 0),
-        code = code,
-        message = message,
-        severity = DiagnosticSeverity.Error,
-        primary = null,
-        related = emptyList(),
-    )
-
-private val PUBLICATION_TYPE = TypeDefinitionId(TypeId.Qualified("typewriter", "publication"), 1)

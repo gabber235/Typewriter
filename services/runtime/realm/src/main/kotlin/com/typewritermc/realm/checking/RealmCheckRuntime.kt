@@ -5,6 +5,7 @@ import com.typewritermc.authoring.DiagnosticId
 import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.authoring.ValuePath
+import com.typewritermc.authoring.field
 import com.typewritermc.checking.CheckContext
 import com.typewritermc.checking.CheckOutcome
 import com.typewritermc.checking.Diagnostic
@@ -329,11 +330,11 @@ class RealmCheckRuntime(
                         }
 
                         is CheckPlan.Realm -> {
-                            listOf(plan.subject(REALM_LOCATION))
+                            listOf(plan.subject(REALM_SUBJECT_KEY))
                         }
 
                         is CheckPlan.RegistrationFailure -> {
-                            listOf(plan.subject(REALM_LOCATION))
+                            listOf(plan.subject(REALM_SUBJECT_KEY))
                         }
 
                         is CheckPlan.DiscoveryFailure -> {
@@ -350,7 +351,7 @@ class RealmCheckRuntime(
                                     plan.rule.origin,
                                     "check_discovery_incomplete",
                                     outcome.reason,
-                                    DISCOVERY_LOCATION,
+                                    at = null,
                                 ),
                             )
                         } else {
@@ -363,7 +364,7 @@ class RealmCheckRuntime(
                                 outcome = outcome,
                                 findings = findings,
                                 observed = reads.observations().flatMap { it.dependencies() },
-                            ).subject(DISCOVERY_LOCATION)
+                            ).subject(DISCOVERY_SUBJECT_KEY)
                 }
             }
             SubjectDiscovery(subjects, incompleteRules)
@@ -566,7 +567,7 @@ class RealmCheckRuntime(
                                 subject.plan.rule.origin,
                                 "check_callback_failed",
                                 failure.message ?: failure::class.simpleName.orEmpty(),
-                                subject.location,
+                                subject.findingLocation,
                             ),
                         ),
                     )
@@ -607,7 +608,7 @@ class RealmCheckRuntime(
                                     owned.ruleOrigin,
                                     "check_registration_failed",
                                     failure.message ?: failure::class.simpleName.orEmpty(),
-                                    REALM_LOCATION,
+                                    at = null,
                                 ),
                         )
                 }
@@ -626,7 +627,7 @@ class RealmCheckRuntime(
         origin: RuleOrigin,
         code: String,
         message: String,
-        at: ValueLocation,
+        at: ValueLocation?,
         related: List<ValueLocation> = emptyList(),
     ): Diagnostic =
         Diagnostic(
@@ -799,12 +800,25 @@ private data class SubjectDiscovery(
     val incompleteRules: Set<RuleId>,
 )
 
+/**
+ * One scheduled rule occurrence. [location] keys the check instance on the wire, where realm-wide
+ * subjects use the reserved [REALM_SUBJECT_KEY] and [DISCOVERY_SUBJECT_KEY] because the check
+ * instance contract requires a location.
+ */
 private data class CheckSubject(
     val plan: CheckPlan,
     val location: ValueLocation,
     val ownerLocation: ValueLocation = location,
 ) {
     val id: CheckInstanceId = CheckInstanceId(plan.rule, location)
+
+    /** Location findings for this subject anchor to; realm-wide subjects have none. */
+    val findingLocation: ValueLocation?
+        get() =
+            when (plan) {
+                is CheckPlan.Simple, is CheckPlan.Portable, is CheckPlan.Each<*> -> location
+                is CheckPlan.Realm, is CheckPlan.RegistrationFailure, is CheckPlan.DiscoveryFailure -> null
+            }
 }
 
 private fun CheckPlan.subject(location: ValueLocation): CheckSubject = CheckSubject(this, location)
@@ -860,14 +874,5 @@ private fun mergeOutcome(
         else -> tracked
     }
 
-private val REALM_LOCATION = ValueLocation(ResourceId("typewriter.realm"), ValuePath())
-private val DISCOVERY_LOCATION =
-    ValueLocation(
-        ResourceId("typewriter.discovery"),
-        ValuePath(
-            listOf(
-                com.typewritermc.authoring.PathSegment
-                    .Field("subjects"),
-            ),
-        ),
-    )
+private val REALM_SUBJECT_KEY = ValueLocation(ResourceId("typewriter.realm"), ValuePath())
+private val DISCOVERY_SUBJECT_KEY = ValueLocation(ResourceId("typewriter.discovery"), ValuePath().field("subjects"))
