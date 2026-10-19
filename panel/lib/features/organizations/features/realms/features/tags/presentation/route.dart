@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Hosts tag creation and the projected inheritance graph.
@@ -13,43 +11,12 @@ class TagsPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scope = ref.watch(selectedAuthoringScopeProvider);
     final tagsAsync = ref.watch(workingTagsProvider);
     final viewportCenter = useRef<Offset?>(null);
-    final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
-    final definitionId = coreTagResourceDefinition;
-    final definition = document?.catalog.snapshot.resourceDefinitions
-        .where((candidate) => candidate.id == definitionId)
-        .firstOrNull;
-    final selection = definition == null
-        ? null
-        : document?.catalog.beginSelection(definition.root);
-    final canCreate =
-        scope != null &&
-        selection != null &&
-        selection != skir.TypeSelection.unknown;
-
-    Future<void> handleCreateTag() async {
-      final current = definition == null
-          ? null
-          : ref
-                .read(selectedWorkingAuthoringDocumentProvider)
-                .value
-                ?.catalog
-                .beginSelection(definition.root);
-      if (current == null || current == skir.TypeSelection.unknown) {
-        throw StateError("Tag creation is unavailable");
-      }
-      await ref
-          .read(resourceCreationProvider(scope!))
-          .createAndReveal(
-            context: context,
-            request: ResourceCreationRequest(
-              definition: definitionId,
-              configuration: current,
-            ),
-          );
-    }
+    final createTag = ref.watchResourceCreation(
+      context,
+      coreTagResourceDefinition,
+    );
 
     return Pane(
       id: "tags",
@@ -75,12 +42,12 @@ class TagsPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: canCreate ? (_) => handleCreateTag() : null,
+              onInvoke: createTag == null ? null : (_) => createTag(),
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: canCreate ? handleCreateTag : null,
+            onPressed: createTag,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -96,7 +63,7 @@ class TagsPage extends HookConsumerWidget {
                         return EmptyScreen(
                           title: "No tags yet",
                           buttonText: "Create Tag",
-                          onPressed: canCreate ? handleCreateTag : null,
+                          onPressed: createTag,
                         );
                       }
                       return TagGraph(

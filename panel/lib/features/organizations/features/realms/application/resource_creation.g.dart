@@ -91,3 +91,121 @@ final class ResourceCreationFamily extends $Family
   @override
   String toString() => r'resourceCreationProvider';
 }
+
+/// Resolves the creation template for [definition] in the selected Realm.
+///
+/// Null means creation is unavailable: no Realm is selected, its working
+/// catalog is not ready, or the catalog cannot configure the definition.
+
+@ProviderFor(selectedResourceCreationTemplate)
+final selectedResourceCreationTemplateProvider =
+    SelectedResourceCreationTemplateFamily._();
+
+/// Resolves the creation template for [definition] in the selected Realm.
+///
+/// Null means creation is unavailable: no Realm is selected, its working
+/// catalog is not ready, or the catalog cannot configure the definition.
+
+final class SelectedResourceCreationTemplateProvider
+    extends
+        $FunctionalProvider<
+          ResourceCreationTemplate?,
+          ResourceCreationTemplate?,
+          ResourceCreationTemplate?
+        >
+    with $Provider<ResourceCreationTemplate?> {
+  /// Resolves the creation template for [definition] in the selected Realm.
+  ///
+  /// Null means creation is unavailable: no Realm is selected, its working
+  /// catalog is not ready, or the catalog cannot configure the definition.
+  SelectedResourceCreationTemplateProvider._({
+    required SelectedResourceCreationTemplateFamily super.from,
+    required skir.ResourceDefinitionId super.argument,
+  }) : super(
+         retry: null,
+         name: r'selectedResourceCreationTemplateProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$selectedResourceCreationTemplateHash();
+
+  @override
+  String toString() {
+    return r'selectedResourceCreationTemplateProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<ResourceCreationTemplate?> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ResourceCreationTemplate? create(Ref ref) {
+    final argument = this.argument as skir.ResourceDefinitionId;
+    return selectedResourceCreationTemplate(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ResourceCreationTemplate? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ResourceCreationTemplate?>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SelectedResourceCreationTemplateProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$selectedResourceCreationTemplateHash() =>
+    r'40cb0d7d714a14dc301eede49125454679554417';
+
+/// Resolves the creation template for [definition] in the selected Realm.
+///
+/// Null means creation is unavailable: no Realm is selected, its working
+/// catalog is not ready, or the catalog cannot configure the definition.
+
+final class SelectedResourceCreationTemplateFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          ResourceCreationTemplate?,
+          skir.ResourceDefinitionId
+        > {
+  SelectedResourceCreationTemplateFamily._()
+    : super(
+        retry: null,
+        name: r'selectedResourceCreationTemplateProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Resolves the creation template for [definition] in the selected Realm.
+  ///
+  /// Null means creation is unavailable: no Realm is selected, its working
+  /// catalog is not ready, or the catalog cannot configure the definition.
+
+  SelectedResourceCreationTemplateProvider call(
+    skir.ResourceDefinitionId definition,
+  ) => SelectedResourceCreationTemplateProvider._(
+    argument: definition,
+    from: this,
+  );
+
+  @override
+  String toString() => r'selectedResourceCreationTemplateProvider';
+}

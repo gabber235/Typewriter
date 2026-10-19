@@ -58,6 +58,23 @@ extension ResourceCreationCatalog on CheckedEditorCatalog? {
   }
 }
 
+/// Resolves the creation template for [definition] in the selected Realm.
+///
+/// Null means creation is unavailable: no Realm is selected, its working
+/// catalog is not ready, or the catalog cannot configure the definition.
+@riverpod
+ResourceCreationTemplate? selectedResourceCreationTemplate(
+  Ref ref,
+  skir.ResourceDefinitionId definition,
+) {
+  if (ref.watch(selectedAuthoringScopeProvider) == null) return null;
+  return ref
+      .watch(selectedWorkingAuthoringDocumentProvider)
+      .value
+      ?.catalog
+      .resourceCreationTemplate(definition.value);
+}
+
 /// Coordinates one creation action without publishing its unfinished dependencies.
 /// Each invocation owns its draft; the shared provider holds no mutable session.
 /// Scope or catalog changes cancel outstanding prompts. After all dependencies

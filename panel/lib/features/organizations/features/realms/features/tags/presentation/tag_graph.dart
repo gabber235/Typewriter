@@ -60,34 +60,15 @@ class TagGraph extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tags = ref.watch(workingTagsProvider);
-    final scope = ref.watch(selectedAuthoringScopeProvider);
+    final createTag = ref.watchResourceCreation(
+      context,
+      coreTagResourceDefinition,
+    );
 
     return tags(
       name: "tags",
       builder: (tagList) {
-        if (tagList.isEmpty) {
-          final template =
-              (ref
-                      .read(selectedWorkingAuthoringDocumentProvider)
-                      .value
-                      ?.catalog)
-                  .resourceCreationTemplate(coreTagResourceDefinition.value);
-          return EmptyTagsPage(
-            onCreateTag: template == null || scope == null
-                ? null
-                : () async {
-                    await ref
-                        .read(resourceCreationProvider(scope))
-                        .createAndReveal(
-                          context: context,
-                          request: ResourceCreationRequest(
-                            definition: template.definition,
-                            configuration: template.configuration,
-                          ),
-                        );
-                  },
-          );
-        }
+        if (tagList.isEmpty) return EmptyTagsPage(onCreateTag: createTag);
 
         final from = ref
             .read(selectedWorkingAuthoringDocumentProvider)

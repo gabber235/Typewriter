@@ -1,5 +1,3 @@
-import "package:typewriter_panel/infrastructure/protocols/skir/skir.dart"
-    as skir;
 import "package:typewriter_panel/typewriter_panel.dart";
 
 /// Book library route.
@@ -14,44 +12,13 @@ class LibraryPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scope = ref.watch(selectedAuthoringScopeProvider);
     final searchController = useTextEditingController();
     final searchQuery = useState("");
     final filteredBooks = ref.watch(filteredBooksProvider(searchQuery.value));
-    final document = ref.watch(selectedWorkingAuthoringDocumentProvider).value;
-    final definitionId = coreBookResourceDefinition;
-    final definition = document?.catalog.snapshot.resourceDefinitions
-        .where((candidate) => candidate.id == definitionId)
-        .firstOrNull;
-    final selection = definition == null
-        ? null
-        : document?.catalog.beginSelection(definition.root);
-    final canCreate =
-        scope != null &&
-        selection != null &&
-        selection != skir.TypeSelection.unknown;
-
-    Future<void> handleCreateBook() async {
-      final current = definition == null
-          ? null
-          : ref
-                .read(selectedWorkingAuthoringDocumentProvider)
-                .value
-                ?.catalog
-                .beginSelection(definition.root);
-      if (current == null || current == skir.TypeSelection.unknown) {
-        throw StateError("Book creation is unavailable");
-      }
-      await ref
-          .read(resourceCreationProvider(scope!))
-          .createAndReveal(
-            context: context,
-            request: ResourceCreationRequest(
-              definition: definitionId,
-              configuration: current,
-            ),
-          );
-    }
+    final createBook = ref.watchResourceCreation(
+      context,
+      coreBookResourceDefinition,
+    );
 
     return Pane(
       id: "library",
@@ -77,12 +44,12 @@ class LibraryPage extends HookConsumerWidget {
               ],
               priority: 100,
               icon: const Icon(Icons.add),
-              onInvoke: canCreate ? (_) => handleCreateBook() : null,
+              onInvoke: createBook == null ? null : (_) => createBook(),
             ),
           ],
           child: FloatingButton(
             icon: const Icon(Icons.add),
-            onPressed: canCreate ? handleCreateBook : null,
+            onPressed: createBook,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -112,7 +79,7 @@ class LibraryPage extends HookConsumerWidget {
                               ? "Insert your favorite story here"
                               : "No books match your search",
                           buttonText: "Create Book",
-                          onPressed: canCreate ? handleCreateBook : null,
+                          onPressed: createBook,
                         );
                       }
 
