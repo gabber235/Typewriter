@@ -10,6 +10,7 @@ import com.typewritermc.configuration.FieldPatternSegment
 import com.typewritermc.configuration.RelativeFieldPattern
 import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.PageCompileResult
+import com.typewritermc.engine.relation
 import com.typewritermc.realm.authoring.AuthoringCatalogLease
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.InMemoryAuthoringViewStore
@@ -61,7 +62,7 @@ val PageCompilerTest by testSuite {
             result.shard.facts.edges.single().let { edge ->
                 edge.source.source shouldBe pageId
                 edge.target.source shouldBe childId
-                (edge.origin as CompiledEdgeOrigin.Relation).relation shouldBe OWNERSHIP
+                edge.relation shouldBe OWNERSHIP
             }
         }
     }

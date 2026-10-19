@@ -14,6 +14,7 @@ import com.typewritermc.engine.PageCompileResult
 import com.typewritermc.engine.RuntimeCompilationFacts
 import com.typewritermc.engine.RuntimeRelationFact
 import com.typewritermc.engine.canonicalized
+import com.typewritermc.engine.relation
 import com.typewritermc.engine.semanticDigest
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.services.libs.utils.sha256Hex
@@ -156,7 +157,7 @@ internal class PageCompiler(
         val runtimeResources = resources.map { (id, record) -> record.compile(id, (readiness.getValue(id) as ResourceReadiness.Ready)) }
         val relationIds =
             projectedEdges.mapTo(linkedSetOf()) { edge ->
-                (edge.origin as CompiledEdgeOrigin.Relation).relation
+                edge.relation
             }
         val facts =
             RuntimeCompilationFacts(

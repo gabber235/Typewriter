@@ -86,7 +86,7 @@ internal class Realm(
     private val catalogActivator: RealmCatalogActivator = DefaultRealmCatalogActivator,
 ) {
     private val lifecycle = Mutex()
-    private val catalogInvalidations = RealmCatalogInvalidationProcess(catalogs, scope, telemetry)
+    private val catalogInvalidations = RealmCatalogInvalidationProcess(catalogs, scope, telemetry, retryPolicy, delayScheduler)
     private var database: Surreal? = null
     private var snapshots: AuthoringViewStore? = null
     private var checks: RealmCheckRuntime? = null

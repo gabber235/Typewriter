@@ -75,6 +75,13 @@ data class CompiledEdge(
     val origin: CompiledEdgeOrigin,
 )
 
+/** The declared relation this edge projects. */
+val CompiledEdge.relation: RelationId
+    get() =
+        when (val origin = origin) {
+            is CompiledEdgeOrigin.Relation -> origin.relation
+        }
+
 /**
  * Identifies compiled content using 64 lowercase SHA256 hexadecimal characters.
  *

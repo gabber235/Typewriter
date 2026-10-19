@@ -8,13 +8,14 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.telemetry.ErrorSlug
 import com.typewritermc.services.libs.telemetry.ServiceTelemetry
 import com.typewritermc.services.libs.telemetry.mainSpan
+import com.typewritermc.services.libs.utils.DelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import com.typewritermc.services.libs.utils.rethrowExceptional
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -26,13 +27,15 @@ import skirout.editor.v1.type_catalog.CatalogGeneration
 /**
  * Publishes discovery generation invalidations independently of client request lifetimes. Replacing the
  * communicator cancels and joins the old publisher before subscribing on the new connection. Failed publications
- * retry until successful. Each communicator receives the installed generation before routes are exposed. A newer
+ * retry under the injected retry policy until successful. Each communicator receives the installed generation before routes are exposed. A newer
  * generation cancels the older retry loop.
  */
 class RealmCatalogInvalidationProcess internal constructor(
     private val catalogs: RealmCatalogStore,
     private val scope: CoroutineScope,
     private val telemetry: ServiceTelemetry,
+    private val retryPolicy: RetryPolicy,
+    private val delayScheduler: DelayScheduler,
 ) {
     private var publisher: Job? = null
 
@@ -56,6 +59,7 @@ class RealmCatalogInvalidationProcess internal constructor(
                     .map { it.value }
                     .distinctUntilChanged()
                     .collectLatest { generation ->
+                        var retry = 0L
                         while (true) {
                             val published =
                                 runCatching {
@@ -82,7 +86,7 @@ class RealmCatalogInvalidationProcess internal constructor(
                                 announced.complete(Unit)
                                 break
                             }
-                            delay(INVALIDATION_RETRY_DELAY)
+                            delayScheduler.delay(retryPolicy.delayFor(retry++))
                         }
                     }
             }
@@ -99,5 +103,3 @@ class RealmCatalogInvalidationProcess internal constructor(
         publisher = null
     }
 }
-
-private val INVALIDATION_RETRY_DELAY = kotlin.time.Duration.parse("250ms")

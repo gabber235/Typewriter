@@ -1,8 +1,8 @@
 package com.typewritermc.engine.runtime
 
 import com.typewritermc.authoring.descendants
-import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.relation
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.RelationContract
 import com.typewritermc.types.catalog.CheckedCatalog
@@ -30,9 +30,7 @@ internal fun RuntimeCompilationFacts.requireAccepted(
     }
 
     val expectedRelations =
-        edges.mapTo(linkedSetOf()) { edge ->
-            (edge.origin as CompiledEdgeOrigin.Relation).relation
-        }
+        edges.mapTo(linkedSetOf()) { edge -> edge.relation }
     val relationIds =
         this.relations
             .map { fact -> fact.relation }

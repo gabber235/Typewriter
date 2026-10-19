@@ -57,7 +57,7 @@ internal class BuiltinOperationAvailability(
                 }
             }
 
-            else -> {
+            BuiltinResourceOperation.Open, BuiltinResourceOperation.Edit, BuiltinResourceOperation.Delete -> {
                 OperationAvailability.Enabled
             }
         }

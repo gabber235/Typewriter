@@ -5,10 +5,10 @@ import com.typewritermc.authoring.complete
 import com.typewritermc.elements.Cue
 import com.typewritermc.elements.Element
 import com.typewritermc.engine.CompiledEdge
-import com.typewritermc.engine.CompiledEdgeOrigin
 import com.typewritermc.engine.CompiledResource
 import com.typewritermc.engine.CompiledResourceKey
 import com.typewritermc.engine.RuntimeCompilationFacts
+import com.typewritermc.engine.relation
 import com.typewritermc.library.Page
 import com.typewritermc.types.NativeBindingRegistry
 import com.typewritermc.types.RelationContract
@@ -39,7 +39,7 @@ class CompiledResourceGraph private constructor(
         edges
             .singleOrNull { edge ->
                 edge.target == key &&
-                    (edge.origin as? CompiledEdgeOrigin.Relation)?.relation in ownershipRelations
+                    edge.relation in ownershipRelations
             }?.source
 
     fun pageOf(key: CompiledResourceKey): CompiledResourceKey? {
@@ -74,9 +74,8 @@ class CompiledResourceGraph private constructor(
             }
             val knownRelations = relations.associateBy(RelationContract::id)
             edges.forEach { edge ->
-                val relation = edge.origin as CompiledEdgeOrigin.Relation
-                require(relation.relation in knownRelations) {
-                    "Compiled edge uses unknown relation ${relation.relation.value}."
+                require(edge.relation in knownRelations) {
+                    "Compiled edge uses unknown relation ${edge.relation.value}."
                 }
             }
             val decoded =

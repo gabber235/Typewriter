@@ -8,6 +8,8 @@ import com.typewritermc.services.libs.communicator.client.Communicator
 import com.typewritermc.services.libs.communicator.testing.FakeMessageTransport
 import com.typewritermc.services.libs.communicator.transport.TransportError
 import com.typewritermc.services.libs.telemetry.testing.TelemetryTestHarness
+import com.typewritermc.services.libs.utils.CoroutineDelayScheduler
+import com.typewritermc.services.libs.utils.RetryPolicy
 import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -32,7 +34,7 @@ val RealmCatalogInvalidationProcessTest by testSuite {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("initial")
-            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
+            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry, TEST_RETRY_POLICY, CoroutineDelayScheduler)
             try {
                 transport.failNextPublish(TransportError.Unavailable())
                 process.replaceCommunicator(
@@ -80,7 +82,7 @@ val RealmCatalogInvalidationProcessTest by testSuite {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("a")
-            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry)
+            val process = RealmCatalogInvalidationProcess(catalogs, scope, telemetry.telemetry, TEST_RETRY_POLICY, CoroutineDelayScheduler)
             try {
                 process.replaceCommunicator(
                     communicator,
@@ -130,3 +132,5 @@ private suspend fun awaitPublicationCount(
         }
         error("Publication wait ended unexpectedly")
     } ?: error("Expected $count catalog invalidations but observed ${transport.actions}.")
+
+private val TEST_RETRY_POLICY = RetryPolicy.fixed(10.milliseconds)

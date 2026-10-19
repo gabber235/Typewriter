@@ -55,26 +55,42 @@ class EngineDeploymentEntrypoint : HostedRuntimeEntrypoint {
                 acceptedKinds = EXECUTION_PROVIDER_KINDS,
                 parentClassLoader = requireNotNull(javaClass.classLoader),
             )
-        val parentScope = CoroutineScope(Dispatchers.Default)
+        val deploymentScope = CoroutineScope(Dispatchers.Default)
         return try {
             val assembly =
                 deployment.providers.contributions.assemble(
                     CatalogAssemblyContext(CatalogGeneration(executionCatalogIdentity(artifacts))),
                 )
-            ReloadableEngineRuntime(
-                deployment = deployment,
-                registrars = deployment.providers.registrars.map { it.registrar },
-                parentScope = parentScope,
-                implementationToken = implementation.fingerprint(),
-                enforceImplementationCompatibility =
-                    context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
-                contentGateway = PageContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
-                contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, parentScope),
-            )
+            val runtime =
+                ReloadableEngineRuntime(
+                    deployment = deployment,
+                    registrars = deployment.providers.registrars.map { it.registrar },
+                    parentScope = deploymentScope,
+                    implementationToken = implementation.fingerprint(),
+                    enforceImplementationCompatibility =
+                        context.identity.placement == RuntimePlacement.PRIMARY_ENGINE,
+                    contentGateway = PageContentGateway(assembly.checked, assembly.bindings, assembly.snapshot.relations),
+                    contentDelivery = MessagingEngineContentDelivery(context.host, context.identity.realmId, deploymentScope),
+                )
+            ScopedEngineRuntime(runtime, deploymentScope)
         } catch (failure: Throwable) {
-            parentScope.cancel()
+            deploymentScope.cancel()
             runCatching { deployment.close() }.exceptionOrNull()?.let(failure::addSuppressed)
             throw failure
+        }
+    }
+}
+
+/** Owns the coroutine scope of one staged engine deployment and cancels it after final closure. */
+private class ScopedEngineRuntime(
+    private val runtime: ReloadableEngineRuntime,
+    private val scope: CoroutineScope,
+) : StagedHostedRuntime by runtime {
+    override suspend fun close() {
+        try {
+            runtime.close()
+        } finally {
+            scope.cancel()
         }
     }
 }
