@@ -14557,7 +14557,7 @@ const Map<String, MinecraftMaterial> materials = {
   "music_disc_bounce": MinecraftMaterial(
     name: "Music Disc Bounce",
     since: McVersion.v26_2,
-    properties: [MaterialProperty.item],
+    properties: [MaterialProperty.item, MaterialProperty.record],
     icon: "assets/materials/music_disc_bounce.png",
   ),
   "polished_cinnabar": MinecraftMaterial(

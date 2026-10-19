@@ -27,7 +27,8 @@ enum McVersion implements Comparable<McVersion> {
 
   static McVersion? tryParse(String? id) {
     if (id == null) return null;
-    return McVersion.values.firstWhereOrNull((e) => id.startsWith(e.id));
+    return McVersion.values
+        .firstWhereOrNull((e) => id == e.id || id.startsWith("${e.id}."));
   }
 
   @override
