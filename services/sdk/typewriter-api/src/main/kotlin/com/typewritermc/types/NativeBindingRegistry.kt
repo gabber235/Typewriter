@@ -49,26 +49,12 @@ class NativeBindingException(
     message: String,
 ) : IllegalArgumentException(message)
 
-data class NativeBindingKey(
-    val actual: TypeUse.Named,
-    val provider: NativeBindingId,
-)
-
 sealed interface NativeValidationResult {
     data object Valid : NativeValidationResult
 
     data class Rejected(
         val findings: List<Diagnostic>,
     ) : NativeValidationResult
-}
-
-interface PortableValueStorage {
-    suspend fun store(
-        key: ResourceId,
-        value: PortableValue,
-    )
-
-    suspend fun load(key: ResourceId): PortableValue?
 }
 
 /**

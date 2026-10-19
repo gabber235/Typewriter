@@ -1,3 +1,0 @@
-package com.typewritermc.realm.repository
-
-internal typealias SurrealResourceGraphStore = SurrealDeclaredRelationStore

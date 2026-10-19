@@ -78,16 +78,6 @@ interface ReadProjection<V> {
     fun read(location: ValueLocation): Availability<V>
 }
 
-class ExactReadProjection<V>(
-    private val codec: DraftCodec<V>,
-) : ReadProjection<V> {
-    override val expected: TypeUse = codec.expected
-
-    context(reads: AuthoredReads)
-    override fun read(location: ValueLocation): Availability<V> =
-        reads.binding(boundPath<V>(location, expected)).flatMap { binding -> codec.read(binding) }
-}
-
 fun <V> nativeReadProjection(expected: TypeUse): ReadProjection<V> =
     object : ReadProjection<V> {
         override val expected: TypeUse = expected

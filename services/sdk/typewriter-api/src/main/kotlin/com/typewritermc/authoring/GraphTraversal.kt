@@ -170,18 +170,4 @@ fun <D : ResourceDraft> ResourceId.reachable(
 ): ReachabilityResult<D> = graph.reachable(ReachabilityQuery(setOf(this), links, type, maxDepth, budget))
 
 context(reads: AuthoredReads, graph: GraphReads)
-fun ResourceId.routesTo(
-    target: ResourceId,
-    links: RelationSelection,
-    maxDepth: Int,
-    budget: TraversalBudget = TraversalBudget(),
-): RouteResult = graph.routes(RouteQuery(setOf(this), target, links, maxDepth, budget))
-
-context(reads: AuthoredReads, graph: GraphReads)
-fun ResourceId.linkOccurrences(
-    links: RelationSelection,
-    budget: TraversalBudget = TraversalBudget(),
-): LinkInspectionResult = graph.occurrences(LinkInspectionQuery(setOf(this), links, budget))
-
-context(reads: AuthoredReads, graph: GraphReads)
 fun LinkOccurrence.follow(): Availability<DraftBinding> = graph.follow(this)

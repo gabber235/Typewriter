@@ -63,10 +63,6 @@ interface OwnedProviderRegistry {
 
 interface ProviderLease : AutoCloseable
 
-fun interface ProviderLeaseOwner {
-    fun retain(origin: ProviderOrigin): ProviderLease
-}
-
 data class CatalogContributions(
     val declarations: List<OwnedTypeDeclaration>,
     val relations: List<RelationContract> = emptyList(),

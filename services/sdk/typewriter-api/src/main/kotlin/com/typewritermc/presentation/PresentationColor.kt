@@ -89,10 +89,6 @@ fun themeColor(role: PresentationThemeColor): PresentationColor = PresentationCo
 
 fun ambientBackground(): PresentationColor = PresentationColor.Ambient(PresentationAmbientColor.Background)
 
-fun ambientForeground(): PresentationColor = PresentationColor.Ambient(PresentationAmbientColor.Foreground)
-
-fun ambientSecondaryForeground(): PresentationColor = PresentationColor.Ambient(PresentationAmbientColor.SecondaryForeground)
-
 /** Derives the existing tonal foreground after compositing over the observed surface. */
 fun PresentationColor.on(): PresentationColor = PresentationColor.Contrast(this, PresentationContrastMode.Tonal)
 

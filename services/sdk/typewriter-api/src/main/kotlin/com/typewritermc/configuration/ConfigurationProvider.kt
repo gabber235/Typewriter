@@ -1,7 +1,5 @@
 package com.typewritermc.configuration
 
-import com.typewritermc.authoring.AuthoredReads
-import com.typewritermc.authoring.DraftBinding
 import com.typewritermc.authoring.ValueLocation
 import com.typewritermc.checking.CheckRecipe
 import com.typewritermc.checking.Diagnostic
@@ -61,14 +59,6 @@ fun interface PortableConstantEncoder {
         expected: TypeTemplate,
         value: Any?,
     ): com.typewritermc.types.DataValue
-}
-
-interface RuleEvaluator {
-    context(reads: AuthoredReads)
-    fun evaluate(
-        rule: CheckedRule,
-        subject: DraftBinding,
-    ): RuleEvaluation
 }
 
 sealed interface RuleEvaluation {

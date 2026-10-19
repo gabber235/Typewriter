@@ -1,5 +1,8 @@
 package com.typewritermc.services.libs.filetransfer
 
+import com.typewritermc.services.libs.filetransfer.blob.DEFAULT_CHUNK_SIZE
+import com.typewritermc.services.libs.filetransfer.blob.MAXIMUM_CHUNK_SIZE
+
 data class ByteTransferChunk(
     val offset: Long,
     val bytes: ByteArray,
@@ -11,17 +14,17 @@ class TransferProtocolException(
 ) : IllegalArgumentException(message)
 
 /**
- * Enforces the byte progress contract shared by logical file and digest blob transfers.
+ * Enforces the byte progress contract shared by digest blob transfers.
  *
  * [copy] resumes at the destination offset and requires each source chunk to agree with the declared size,
  * completion flag, and next destination offset. It owns neither endpoint nor resumable session state.
  * Protocol violations throw [TransferProtocolException]; endpoint failures and cancellation propagate unchanged.
  */
 class SequentialByteTransfer(
-    private val chunkSize: Int = FileTransferCoordinator.DEFAULT_CHUNK_SIZE,
+    private val chunkSize: Int = DEFAULT_CHUNK_SIZE,
 ) {
     init {
-        require(chunkSize in 1..FileTransferCoordinator.MAXIMUM_CHUNK_SIZE)
+        require(chunkSize in 1..MAXIMUM_CHUNK_SIZE)
     }
 
     suspend fun copy(
