@@ -29,7 +29,7 @@ import com.typewritermc.operations.PreparationChoices
 import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.OperationLayoutPreparation
 import com.typewritermc.realm.authoring.RuntimeOperationPreparation
-import com.typewritermc.realm.authoring.SnapshotEditContext
+import com.typewritermc.realm.authoring.WorkingViewEditContext
 import com.typewritermc.types.CollectionKind
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointBindingTemplate
@@ -203,7 +203,7 @@ class AuthoringMutationPlannerTest {
                 }
             try {
                 val working = baseline.copy(catalog = catalog)
-                val edit = SnapshotEditContext(working, "exact-layout")
+                val edit = WorkingViewEditContext(working, "exact-layout")
                 val layouts = OperationLayoutPreparation(edit, working)
                 val session =
                     RuntimeOperationPreparation(
@@ -483,7 +483,7 @@ class AuthoringMutationPlannerTest {
                 )
             val baseline = operationBaseline(resources, listOf(parentContract(RelationDeletePolicy.CASCADE, RelationDeletePolicy.CLEAR)))
             try {
-                val edit = SnapshotEditContext(baseline, "delete-overlap")
+                val edit = WorkingViewEditContext(baseline, "delete-overlap")
                 val session =
                     RuntimeOperationPreparation(
                         OperationInvocation("delete-overlap", listOf(parent, child)),
@@ -541,7 +541,7 @@ class AuthoringMutationPlannerTest {
                     ),
                 )
             try {
-                val edit = SnapshotEditContext(baseline, "move-selection")
+                val edit = WorkingViewEditContext(baseline, "move-selection")
                 val origin = OperationOrigin(from, baseline.links.values.filter { it.source == from })
                 val session =
                     RuntimeOperationPreparation(
@@ -588,7 +588,7 @@ class AuthoringMutationPlannerTest {
                 )
             val baseline = operationBaseline(resources, listOf(pairContract(setOf(RelationFamilyId(RESOURCE_OWNERSHIP_FAMILY_ID)))))
             try {
-                val edit = SnapshotEditContext(baseline, "impossible-move")
+                val edit = WorkingViewEditContext(baseline, "impossible-move")
                 val session =
                     RuntimeOperationPreparation(
                         OperationInvocation("impossible-move", listOf(childA, childB)),
@@ -664,7 +664,7 @@ class AuthoringMutationPlannerTest {
                     ),
                 )
             try {
-                val edit = SnapshotEditContext(baseline, "clone-closure")
+                val edit = WorkingViewEditContext(baseline, "clone-closure")
                 val session =
                     RuntimeOperationPreparation(
                         OperationInvocation("clone-closure", listOf(book, page)),
@@ -761,7 +761,7 @@ class AuthoringMutationPlannerTest {
                 )
             val baseline = operationBaseline(resources, listOf(manyContract()))
             try {
-                val edit = SnapshotEditContext(baseline, "clone-outside")
+                val edit = WorkingViewEditContext(baseline, "clone-outside")
                 val session =
                     RuntimeOperationPreparation(OperationInvocation("clone-outside", listOf(source)), PreparationChoices(), edit, baseline)
                 val copy = with(session) { cloner.duplicateOwned(listOf(source)).selectedCopies.single() }
@@ -787,7 +787,7 @@ class AuthoringMutationPlannerTest {
                 )
             val baseline = operationBaseline(resources, listOf(pairContract()))
             try {
-                val edit = SnapshotEditContext(baseline, "clone-scalar")
+                val edit = WorkingViewEditContext(baseline, "clone-scalar")
                 val session =
                     RuntimeOperationPreparation(OperationInvocation("clone-scalar", listOf(source)), PreparationChoices(), edit, baseline)
                 var rejected = false

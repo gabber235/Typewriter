@@ -18,7 +18,7 @@ import com.typewritermc.realm.authoring.AuthoringViewDelta
 import com.typewritermc.realm.authoring.AuthoringViewStore
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.search.authoredSearchText
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
@@ -133,7 +133,7 @@ internal class SurrealAuthoringStorage(
                     .query(
                         "UPSERT ONLY \$resource SET definition = \$definition, content = \$content, search = \$search;",
                         mapOf(
-                            "resource" to id.unifiedSurrealId(),
+                            "resource" to id.surrealRecordId(),
                             "definition" to definition.value,
                             "content" to authoredDatabaseValues.encode(AuthoringRecord.serializer(), record),
                             "search" to mapOf("text" to authoredSearchText(id, definition, record)),
@@ -142,7 +142,7 @@ internal class SurrealAuthoringStorage(
             }
             relationStore.apply(relations, transaction)
             plan.removedResources.forEach { id ->
-                transaction.query("DELETE ONLY \$resource;", mapOf("resource" to id.unifiedSurrealId())).take(0)
+                transaction.query("DELETE ONLY \$resource;", mapOf("resource" to id.surrealRecordId())).take(0)
             }
         }
     }

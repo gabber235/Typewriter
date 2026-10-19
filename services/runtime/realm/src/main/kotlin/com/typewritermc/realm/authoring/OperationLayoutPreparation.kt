@@ -22,7 +22,7 @@ import com.typewritermc.types.ownsResources
 
 /** Selects declared destination policy without inferring domain layout from presentation. */
 internal class OperationLayoutPreparation(
-    private val edit: SnapshotEditContext,
+    private val edit: WorkingViewEditContext,
     private val baseline: AuthoringView,
 ) : ResourceLayoutPreparation {
     context(operation: OperationPreparation)

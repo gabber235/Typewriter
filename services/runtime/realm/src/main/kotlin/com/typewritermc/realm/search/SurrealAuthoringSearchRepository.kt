@@ -8,8 +8,8 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.authoring.ownershipRelationIds
 import com.typewritermc.realm.repository.utils.inPreviewTransaction
-import com.typewritermc.realm.repository.utils.toUnifiedResourceId
-import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.realm.repository.utils.surrealRecordId
+import com.typewritermc.realm.repository.utils.toResourceId
 import com.typewritermc.types.ResourceId
 import com.typewritermc.types.TypeDefinitionId
 import com.typewritermc.types.TypeUse
@@ -60,7 +60,7 @@ internal class SurrealAuthoringSearchRepository(
         }
         if (contexts.isNotEmpty()) {
             predicates += "id IN \$contexts"
-            bindings["contexts"] = view.ownershipClosure(contexts).map(ResourceId::unifiedSurrealId)
+            bindings["contexts"] = view.ownershipClosure(contexts).map(ResourceId::surrealRecordId)
         }
         val where =
             predicates
@@ -89,7 +89,7 @@ internal class SurrealAuthoringSearchRepository(
                     if (record.matches(roots, target, view.catalog.checked)) {
                         candidates +=
                             IndexedAuthoringSearchCandidate(
-                                row.get("id").getRecordId().toUnifiedResourceId(),
+                                row.get("id").getRecordId().toResourceId(),
                                 ResourceDefinitionId(row.get("definition").getString()),
                                 record,
                                 row.get("text").getString(),

@@ -58,9 +58,9 @@ import skirout.kernel.v1.bounded_transfer.BoundedTransferChunk as SkirBoundedTra
  */
 internal class AuthoringRoutes(
     private val repository: AuthoringRepository,
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     private val findings: () -> List<com.typewritermc.realm.checking.FindingSet>,
-    private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(snapshots),
+    private val typeArguments: TypeArgumentOperations = DefaultTypeArgumentOperations(views),
     private val contracts: EditorContracts,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
@@ -88,7 +88,7 @@ internal class AuthoringRoutes(
         }
 
     private suspend fun query(request: QueryAuthoringStateRequest): AuthoringStateTransfer {
-        val lease = snapshots.capture()
+        val lease = views.capture()
         lease.use { snapshot ->
             val root = snapshot.root
             if (root.catalog.generation.value != request.generation.value) {
@@ -176,7 +176,7 @@ internal class AuthoringRoutes(
     private fun preview(request: PreviewTypeArgumentChangeRequest): TypePreviewResult {
         val requested = SkirAuthoringValueCodec.decode(request.requested).getOrThrow()
         val requestedCatalog = CatalogGeneration(request.catalog.value)
-        val lease = snapshots.capture()
+        val lease = views.capture()
         lease.use { snapshot ->
             if (snapshot.root.catalog.generation != requestedCatalog) {
                 return TypePreviewResult.InvalidArguments(

@@ -28,7 +28,7 @@ import skirout.editor.v1.typed_value.PortableValue as SkirPortableValue
 
 internal class AuthoringSearchRoutes(
     private val repository: AuthoringSearchRepository,
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     private val contracts: EditorContracts,
 ) {
     fun register(builder: CommunicatorRoutesBuilder) =
@@ -37,7 +37,7 @@ internal class AuthoringSearchRoutes(
         }
 
     internal fun search(request: SearchAuthoringRequest): SearchAuthoringResponse =
-        snapshots.read { root ->
+        views.read { root ->
             if (root.catalog.generation.value != request.generation.value) {
                 return@read SearchAuthoringResponse.createCatalogChanged(
                     actualGeneration = SkirCatalogGeneration(value = root.catalog.generation.value),

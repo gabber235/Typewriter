@@ -17,7 +17,7 @@ import com.typewritermc.services.libs.communicator.router.communicatorRoutes
 internal class RealmRouteFactory(
     private val authoring: AuthoringRepository,
     private val authoringSearch: AuthoringSearchRepository,
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     private val checks: RealmCheckRuntime,
     private val compiledContent: PublicationResults,
     private val compiledRootStatuses: CompiledRootStatuses,
@@ -34,10 +34,10 @@ internal class RealmRouteFactory(
     ): CommunicatorRoutes {
         val contracts = EditorContracts(address)
         editorUpdates.configure(contracts, address, communicator)
-        val authoringRoutes = AuthoringRoutes(authoring, snapshots, checks::findings, contracts = contracts)
-        val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, snapshots, contracts)
+        val authoringRoutes = AuthoringRoutes(authoring, views, checks::findings, contracts = contracts)
+        val authoringSearchRoutes = AuthoringSearchRoutes(authoringSearch, views, contracts)
         val compiledContentRoutes = EditorCompiledContentRoutes(compiledContent, contracts)
-        val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(snapshots, compiledRootStatuses, contracts)
+        val compiledResourceStatusRoutes = EditorCompiledResourceStatusRoutes(views, compiledRootStatuses, contracts)
         val publicationRoutes = PublicationRoutes(publisher, contracts, address)
         val editorCatalogRoutes = EditorCatalogRoutes(editorCatalog, preparation, contracts)
         val presentationSearchRoutes = RealmPresentationSearchRoutes(presentationSearch, contracts, address)
@@ -45,7 +45,7 @@ internal class RealmRouteFactory(
         val resourceOperationRoutes =
             ResourceOperationRoutes(
                 com.typewritermc.realm.authoring
-                    .ResourceOperationRuntime(snapshots),
+                    .ResourceOperationRuntime(views),
                 contracts,
             )
         return communicatorRoutes {

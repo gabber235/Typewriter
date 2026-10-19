@@ -172,12 +172,12 @@ internal interface PublicationAcceptance {
  * Assessment itself neither stores compiled blobs nor selects a publication.
  */
 internal class AuthoringAcceptance(
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     private val checks: RealmCheckRuntime,
 ) : PublicationAcceptance {
-    override fun capture(): AuthoringLease = snapshots.capture()
+    override fun capture(): AuthoringLease = views.capture()
 
-    override fun <T> withCurrent(block: (AuthoringView) -> T): T = snapshots.read(block)
+    override fun <T> withCurrent(block: (AuthoringView) -> T): T = views.read(block)
 
     override suspend fun evaluate(capture: AuthoringLease): CapturedAssessment {
         val snapshot = capture

@@ -6,7 +6,7 @@ import com.typewritermc.authoring.LinkProjection
 import com.typewritermc.authoring.RelationProjectionDelta
 import com.typewritermc.authoring.ValuePath
 import com.typewritermc.realm.repository.utils.StructuredDatabaseCodec
-import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.realm.repository.utils.surrealRecordId
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
@@ -77,8 +77,8 @@ private fun Transaction.requireStored(projection: LinkProjection): StoredDeclare
                 "WHERE contract = \$contract AND in = \$first AND out = \$second;",
             mapOf(
                 "contract" to projection.contract.value,
-                "first" to projection.first.unifiedSurrealId(),
-                "second" to projection.second.unifiedSurrealId(),
+                "first" to projection.first.surrealRecordId(),
+                "second" to projection.second.surrealRecordId(),
             ),
         ).take(0).getArray().map { row ->
             val value = row.getObject()
@@ -111,8 +111,8 @@ private fun StoredDeclaredEdge.copyLocations(projection: LinkProjection): Stored
 private fun StoredDeclaredEdge.bindings(): Map<String, Any?> =
     mapOf(
         "edge" to RecordId("resource_relation", physicalId),
-        "first" to source.unifiedSurrealId(),
-        "second" to target.unifiedSurrealId(),
+        "first" to source.surrealRecordId(),
+        "second" to target.surrealRecordId(),
         "contract" to relation.value,
         "first_location" to sourceLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },
         "second_location" to targetLocation?.let { relationDatabaseValues.encode(ValuePath.serializer(), it) },

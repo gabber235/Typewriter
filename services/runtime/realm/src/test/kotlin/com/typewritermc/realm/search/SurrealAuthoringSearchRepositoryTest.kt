@@ -12,7 +12,7 @@ import com.typewritermc.realm.authoring.AuthoringView
 import com.typewritermc.realm.authoring.authoringStorageJson
 import com.typewritermc.realm.checking.TestCatalogLease
 import com.typewritermc.realm.repository.ResourceValueMapper
-import com.typewritermc.realm.repository.utils.unifiedSurrealId
+import com.typewritermc.realm.repository.utils.surrealRecordId
 import com.typewritermc.realm.schema.openTestDatabase
 import com.typewritermc.types.DataValue
 import com.typewritermc.types.EndpointCardinality
@@ -211,7 +211,7 @@ private fun Surreal.insertSearchRow(
     query(
         "CREATE ONLY \$resource CONTENT { definition: \$definition, content: \$content, search: { text: \$text } };",
         mapOf(
-            "resource" to resource.unifiedSurrealId(),
+            "resource" to resource.surrealRecordId(),
             "definition" to ResourceDefinitionId("test.resource").value,
             "content" to
                 com.typewritermc.realm.authoring.authoredDatabaseValues

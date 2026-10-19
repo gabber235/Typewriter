@@ -26,7 +26,7 @@ import com.typewritermc.types.immutableListCopy
 import java.util.UUID
 
 /** A request owned edit context. Reads see prior writes and expectations witness its working baseline. */
-internal class SnapshotEditContext(
+internal class WorkingViewEditContext(
     private val baseline: AuthoringView,
     private val invocationId: String,
     private val working: AuthoredReadView.Working = AuthoredReadView.Working(baseline),

@@ -604,7 +604,7 @@ val RealmCheckRuntimeTest by testSuite {
                 RealmCheckRuntime(
                     store,
                     StandardTestDispatcher(testScheduler),
-                    readLimits = SnapshotReadLimits(maxOccurrenceValues = 1),
+                    readLimits = ViewReadLimits(maxOccurrenceValues = 1),
                 )
 
             runtime.reloadCatalog()

@@ -74,12 +74,12 @@ data class CapturedCheckReport(
  * hints for clients to query state, rather than the admission boundary itself.
  */
 class RealmCheckRuntime(
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val dependencies: ReverseDependencyIndex = DefaultReverseDependencyIndex(),
     private val checkInputs: RealmCheckInputs = RealmCheckInputs(),
     private val selectionPredicates: SelectionPredicateEvaluator = RealmSelectionPredicateEvaluator(),
-    private val readLimits: SnapshotReadLimits = SnapshotReadLimits(),
+    private val readLimits: ViewReadLimits = ViewReadLimits(),
 ) : CheckScheduler,
     CurrentCheckExecutions {
     private val lock = Any()
@@ -102,7 +102,7 @@ class RealmCheckRuntime(
     private var closed = false
 
     suspend fun reloadCatalog() {
-        val lease = snapshots.capture()
+        val lease = views.capture()
         val replacement =
             try {
                 collectCatalog(lease)
@@ -133,7 +133,7 @@ class RealmCheckRuntime(
     }
 
     fun invalidateCurrent() {
-        snapshots.capture().use { lease ->
+        views.capture().use { lease ->
             val values = lease.root.values
             synchronized(lock) {
                 if (closed) return
@@ -192,7 +192,7 @@ class RealmCheckRuntime(
         }
 
     suspend fun evaluateCapture(target: CheckAdmissionTarget.CapturedAcceptance): CapturedCheckReport {
-        var snapshot: AuthoringLease? = snapshots.retain(target.view.readContext)
+        var snapshot: AuthoringLease? = views.retain(target.view.readContext)
         var catalog: ActiveCatalog? = null
         return try {
             val captured = requireNotNull(snapshot)
@@ -204,7 +204,7 @@ class RealmCheckRuntime(
             val active = requireNotNull(catalog)
             val subjects = discoverSubjects(active, active.snapshot).subjects
             val required = subjects.mapTo(linkedSetOf()) { subject -> subject.id }
-            val admission = DefaultCheckAdmission(snapshots, this)
+            val admission = DefaultCheckAdmission(views, this)
             val results =
                 subjects.map { subject ->
                     val result = evaluate(active, subject, target)
@@ -306,7 +306,7 @@ class RealmCheckRuntime(
         catalog: ActiveCatalog,
         retained: AuthoringLease? = null,
     ): SubjectDiscovery {
-        val lease = retained ?: snapshots.capture()
+        val lease = retained ?: views.capture()
         return try {
             if (lease.root.catalog.generation != catalog.generation) return SubjectDiscovery(emptyList(), emptySet())
             val subjects = mutableListOf<CheckSubject>()
@@ -383,7 +383,7 @@ class RealmCheckRuntime(
 
     private fun scheduleLocked(state: InstanceState) {
         val catalog = activeCatalog ?: return
-        val lease = snapshots.capture()
+        val lease = views.capture()
         if (lease.root.catalog.generation != catalog.generation) {
             lease.close()
             return
@@ -425,7 +425,7 @@ class RealmCheckRuntime(
                 if (state.ticket != result.ticket) return
                 dependencies.replace(id, result.expectations)
                 val admission =
-                    DefaultCheckAdmission(snapshots, this).requireCurrentExecutionAndInputs(result) {
+                    DefaultCheckAdmission(views, this).requireCurrentExecutionAndInputs(result) {
                         state.findings =
                             FindingSet(result.ticket, result.expectations, result.outcome, result.findings, FindingStatus.Current)
                     }
@@ -459,7 +459,7 @@ class RealmCheckRuntime(
         ticket: CheckTicket? = null,
         suppliedLease: AuthoringLease? = null,
     ): CheckResult {
-        val lease = suppliedLease ?: snapshots.retain((target as CheckAdmissionTarget.CapturedAcceptance).view.readContext)
+        val lease = suppliedLease ?: views.retain((target as CheckAdmissionTarget.CapturedAcceptance).view.readContext)
         val actualTicket =
             ticket ?: CheckTicket(
                 instance = subject.id,
@@ -836,7 +836,7 @@ private fun CheckPlan.subject(
     ownerLocation: ValueLocation,
 ): CheckSubject = CheckSubject(this, location, ownerLocation)
 
-internal fun SnapshotReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
+internal fun ViewReadHealth.outcome(origin: RuleOrigin): CheckOutcome =
     when {
         incomplete.isNotEmpty() -> {
             CheckOutcome.Incomplete(incomplete.joinToString())

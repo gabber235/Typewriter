@@ -34,7 +34,7 @@ data class EditorCatalogTransfer(
  * A requested generation mismatch returns the actual generation without encoding a snapshot. The initial
  * response and update chunks belong to the same transfer; the route publishes them and owns transport failure.
  */
-class SnapshotRealmEditorCatalogSource(
+class RetainedRealmEditorCatalogSource(
     private val catalogs: RealmCatalogStore,
     chunkSize: Int = DEFAULT_CATALOG_CHUNK_SIZE,
     maxChunks: Int = MAX_CATALOG_CHUNKS,

@@ -70,7 +70,7 @@ val AuthoringRoutesTest by testSuite {
             val catalogs = RealmCatalogStore().also { it.installTestCatalog("catalog") }
             val catalogIdentity = InputIdentity.Catalog(CatalogGeneration("catalog"))
             val tombstone = InputIdentity.Existence(ResourceId("removed"))
-            val snapshots =
+            val views =
                 InMemoryAuthoringViewStore(
                     catalogs.captureCurrent(),
                     AuthoringSeed(emptyMap()),
@@ -103,7 +103,7 @@ val AuthoringRoutesTest by testSuite {
             try {
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), snapshots, { listOf(finding) }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { listOf(finding) }, contracts = contracts)
                             .register(this)
                     }
                 }.use { fixture ->
@@ -136,7 +136,7 @@ val AuthoringRoutesTest by testSuite {
                         )
                 }
             } finally {
-                snapshots.close()
+                views.close()
                 catalogs.close()
             }
         }
@@ -153,7 +153,7 @@ val AuthoringRoutesTest by testSuite {
                 )
             RouteFixture { contracts, _, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingSnapshotStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -221,7 +221,7 @@ val AuthoringRoutesTest by testSuite {
 
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(repository, MissingSnapshotStore, { emptyList() }, contracts = contracts).register(this)
+                        AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
                     }
                 }.use { fixture ->
                     val invalidResponse =
@@ -271,7 +271,7 @@ val AuthoringRoutesTest by testSuite {
 
             RouteFixture { contracts, _, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingSnapshotStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -305,7 +305,7 @@ val AuthoringRoutesTest by testSuite {
 
             RouteFixture { contracts, _, _ ->
                 communicatorRoutes {
-                    AuthoringRoutes(repository, MissingSnapshotStore, { emptyList() }, contracts = contracts).register(this)
+                    AuthoringRoutes(repository, MissingViewStore, { emptyList() }, contracts = contracts).register(this)
                 }
             }.use { fixture ->
                 val response =
@@ -327,7 +327,7 @@ val AuthoringRoutesTest by testSuite {
             val catalog = TestCatalogLease()
             val resource = ResourceId("resource")
             val authored = record(name = "kept")
-            val snapshots =
+            val views =
                 InMemoryAuthoringViewStore(
                     catalog,
                     AuthoringSeed(mapOf(resource to authored)),
@@ -343,7 +343,7 @@ val AuthoringRoutesTest by testSuite {
                     communicatorRoutes {
                         AuthoringRoutes(
                             RecordingAuthoringRepository(),
-                            snapshots,
+                            views,
                             { emptyList() },
                             typeArguments,
                             contracts,
@@ -369,7 +369,7 @@ val AuthoringRoutesTest by testSuite {
                     edit.intents shouldBe listOf(EditIntent.ConfigureResource(resource, requested))
                 }
             } finally {
-                snapshots.close()
+                views.close()
             }
         }
     }
@@ -386,7 +386,7 @@ val AuthoringRoutesTest by testSuite {
                     fields = mapOf("legacy" to DataValue.StringValue("preserved")),
                 )
             val resources = mapOf(unavailable to unavailableRecord, available to record(name = "book"))
-            val snapshots =
+            val views =
                 InMemoryAuthoringViewStore(
                     catalog,
                     AuthoringSeed(
@@ -400,7 +400,7 @@ val AuthoringRoutesTest by testSuite {
             try {
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes {
-                        AuthoringRoutes(RecordingAuthoringRepository(), snapshots, { emptyList() }, contracts = contracts)
+                        AuthoringRoutes(RecordingAuthoringRepository(), views, { emptyList() }, contracts = contracts)
                             .register(this)
                     }
                 }.use { fixture ->
@@ -422,7 +422,7 @@ val AuthoringRoutesTest by testSuite {
                     SkirAuthoringValueCodec.decode(unavailableWire.content).getOrThrow() shouldBe unavailableRecord
                 }
             } finally {
-                snapshots.close()
+                views.close()
             }
         }
     }
@@ -487,7 +487,7 @@ private class RecordingTypeArgumentOperations : TypeArgumentOperations {
     override suspend fun prepare(preview: TypeArgumentChangePreview): PreparedEditResult = PreparedEditResult.Prepared(preview.edit)
 }
 
-private data object MissingSnapshotStore : AuthoringViewStore {
+private data object MissingViewStore : AuthoringViewStore {
     override val changes = kotlinx.coroutines.flow.MutableStateFlow(0L)
 
     override fun <T> read(block: (com.typewritermc.realm.authoring.AuthoringView) -> T): T = error("Not used")

@@ -6,7 +6,7 @@ import com.typewritermc.authoring.ResourceDefinitionId
 import com.typewritermc.realm.authoring.AuthoringSeed
 import com.typewritermc.realm.authoring.authoredDatabaseValues
 import com.typewritermc.realm.repository.utils.inTransaction
-import com.typewritermc.realm.repository.utils.toUnifiedResourceId
+import com.typewritermc.realm.repository.utils.toResourceId
 
 /** Loads a coherent authored graph without operation history or revision counters. */
 internal class SurrealAuthoringSeedLoader(
@@ -18,7 +18,7 @@ internal class SurrealAuthoringSeedLoader(
             val definitions = linkedMapOf<com.typewritermc.types.ResourceId, ResourceDefinitionId>()
             transaction.query("SELECT id, definition, content FROM resource ORDER BY id;").take(0).getArray().forEach { rowValue ->
                 val row = rowValue.getObject()
-                val id = row.get("id").getRecordId().toUnifiedResourceId()
+                val id = row.get("id").getRecordId().toResourceId()
                 resources[id] = authoredDatabaseValues.decode(AuthoringRecord.serializer(), row.get("content"))
                 definitions[id] = ResourceDefinitionId(row.get("definition").getString())
             }

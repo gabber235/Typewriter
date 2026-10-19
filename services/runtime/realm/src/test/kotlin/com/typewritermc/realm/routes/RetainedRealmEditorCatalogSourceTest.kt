@@ -13,14 +13,14 @@ import skirout.editor.v1.catalog.EditorCatalogWireSnapshot
 import skirout.editor.v1.catalog.WatchEditorCatalogRequest
 import skirout.editor.v1.type_catalog.CatalogGeneration
 
-val SnapshotRealmEditorCatalogSourceTest by testSuite {
+val RetainedRealmEditorCatalogSourceTest by testSuite {
     test("fetch returns one coherent full catalog snapshot") {
         runTest {
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("catalog_a")
             try {
                 val transfer =
-                    SnapshotRealmEditorCatalogSource(
+                    RetainedRealmEditorCatalogSource(
                         catalogs,
                         chunkSize = 32,
                     ).fetch(CatalogFetchRequest(expectedGeneration = null, transferId = "catalog_a"))
@@ -62,7 +62,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
             catalogs.installTestCatalog("catalog_b")
             try {
                 val transfer =
-                    SnapshotRealmEditorCatalogSource(catalogs).fetch(
+                    RetainedRealmEditorCatalogSource(catalogs).fetch(
                         CatalogFetchRequest(
                             expectedGeneration = CatalogGeneration(value = "catalog_a"),
                             transferId = "catalog_b",
@@ -83,7 +83,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("catalog_overlap")
             try {
-                val source = SnapshotRealmEditorCatalogSource(catalogs, chunkSize = 32)
+                val source = RetainedRealmEditorCatalogSource(catalogs, chunkSize = 32)
 
                 val first = source.fetch(CatalogFetchRequest(expectedGeneration = null, transferId = "first"))
                 val second = source.fetch(CatalogFetchRequest(expectedGeneration = null, transferId = "second"))
@@ -105,7 +105,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
             catalogs.installTestCatalog("catalog_too_large")
             try {
                 val transfer =
-                    SnapshotRealmEditorCatalogSource(catalogs, chunkSize = 1, maxChunks = 1)
+                    RetainedRealmEditorCatalogSource(catalogs, chunkSize = 1, maxChunks = 1)
                         .fetch(CatalogFetchRequest(expectedGeneration = null, transferId = "too_large"))
 
                 val unavailable = (transfer.initial as CatalogFetchResult.UnavailableWrapper).value
@@ -126,7 +126,7 @@ val SnapshotRealmEditorCatalogSourceTest by testSuite {
             catalogs.installTestCatalog("catalog_watch")
             try {
                 val result =
-                    SnapshotRealmEditorCatalogSource(catalogs)
+                    RetainedRealmEditorCatalogSource(catalogs)
                         .initialGeneration(WatchEditorCatalogRequest())
 
                 result.generation.value shouldBe "catalog_watch"

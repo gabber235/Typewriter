@@ -81,11 +81,11 @@ internal class OperationResolutionFailure(
  * Resolves operation availability and prepares edits against the panel confirmed saved observation plus its overlay.
  *
  * The captured catalog and observation must still match before callbacks run. Preparation stages writes in
- * [SnapshotEditContext] and returns an expectation bearing preview, input request, or failure. It never persists
+ * [WorkingViewEditContext] and returns an expectation bearing preview, input request, or failure. It never persists
  * the panel overlay or preview; committing the resulting edit goes through the authoring repository.
  */
 internal class ResourceOperationRuntime(
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
 ) {
     fun resolve(
         invocation: OperationInvocation,
@@ -94,7 +94,7 @@ internal class ResourceOperationRuntime(
         upserts: Map<ResourceId, AuthoringRecord>,
         removals: Set<ResourceId>,
     ): ResolvedResourceOperations =
-        snapshots.capture().use { lease ->
+        views.capture().use { lease ->
             if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
             val baseline = lease.operationObservation(confirmedObservation, upserts, removals)
             resolve(invocation, baseline, CapturedAuthoringReads(AuthoredReadView.Original(baseline)))
@@ -110,10 +110,10 @@ internal class ResourceOperationRuntime(
         input: DataValue?,
         choices: PreparationChoices,
     ): OperationPreparationResult =
-        snapshots.capture().use { lease ->
+        views.capture().use { lease ->
             if (lease.root.catalog.generation != expectedCatalog) throw OperationCatalogChanged(lease.root.catalog.generation)
             val baseline = lease.operationObservation(confirmedObservation, upserts, removals)
-            val edit = SnapshotEditContext(baseline, invocation.invocationId)
+            val edit = WorkingViewEditContext(baseline, invocation.invocationId)
             val catalog = baseline.catalog.operations
             val operation = catalog.requireAuthoring(capability)
             val applicable = invocation.applicableIn(baseline, edit.capturedReads)
@@ -326,7 +326,7 @@ internal class ResourceOperationRuntime(
 internal class RuntimeOperationPreparation(
     override val invocation: OperationInvocation,
     override val choices: PreparationChoices,
-    private val edit: SnapshotEditContext,
+    private val edit: WorkingViewEditContext,
     baseline: AuthoringView,
 ) : OperationPreparation,
     EditContext by edit {

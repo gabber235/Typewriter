@@ -30,7 +30,7 @@ import com.typewritermc.types.TypeId
 
 /** Copies the ownership closure before reconnecting any of its references. */
 internal class OperationClonePreparation(
-    private val edit: SnapshotEditContext,
+    private val edit: WorkingViewEditContext,
     private val baseline: AuthoringView,
 ) : ResourceClonePreparation {
     context(operation: OperationPreparation)

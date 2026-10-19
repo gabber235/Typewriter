@@ -40,7 +40,7 @@ val AuthoringSearchRoutesTest by testSuite {
             val resource = ResourceId("book")
             val authored = record(name = "Readable Book")
             val catalog = TestCatalogLease()
-            val snapshots =
+            val views =
                 InMemoryAuthoringViewStore(
                     catalog,
                     AuthoringSeed(
@@ -53,7 +53,7 @@ val AuthoringSearchRoutesTest by testSuite {
             try {
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes {
-                        AuthoringSearchRoutes(repository, snapshots, contracts).register(this)
+                        AuthoringSearchRoutes(repository, views, contracts).register(this)
                     }
                 }.use { fixture ->
                     val response =
@@ -80,7 +80,7 @@ val AuthoringSearchRoutesTest by testSuite {
                         DataValue.StringValue("book Readable Book")
                 }
             } finally {
-                snapshots.close()
+                views.close()
             }
         }
     }
@@ -90,7 +90,7 @@ val AuthoringSearchRoutesTest by testSuite {
             val resource = ResourceId("book")
             val authored = record(name = "Readable Book")
             val catalog = TestCatalogLease()
-            val snapshots =
+            val views =
                 InMemoryAuthoringViewStore(
                     catalog,
                     AuthoringSeed(
@@ -102,7 +102,7 @@ val AuthoringSearchRoutesTest by testSuite {
             try {
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes {
-                        AuthoringSearchRoutes(RecordingSearchRepository(), snapshots, contracts).register(this)
+                        AuthoringSearchRoutes(RecordingSearchRepository(), views, contracts).register(this)
                     }
                 }.use { fixture ->
                     val response =
@@ -116,7 +116,7 @@ val AuthoringSearchRoutesTest by testSuite {
                     response.value.actualGeneration.value shouldBe catalog.generation.value
                 }
             } finally {
-                snapshots.close()
+                views.close()
             }
         }
     }

@@ -21,7 +21,7 @@ val EditorCatalogRoutesTest by testSuite {
             val catalogs = RealmCatalogStore()
             catalogs.installTestCatalog("route_catalog")
             try {
-                val source = SnapshotRealmEditorCatalogSource(catalogs, chunkSize = 32)
+                val source = RetainedRealmEditorCatalogSource(catalogs, chunkSize = 32)
                 RouteFixture { contracts, _, _ ->
                     communicatorRoutes { EditorCatalogRoutes(source, UnusedInitialization, contracts).register(this) }
                 }.use { fixture ->

@@ -88,7 +88,7 @@ internal interface TypeArgumentOperations {
  * authority. Persistence remains a separate authoring commit.
  */
 internal class DefaultTypeArgumentOperations(
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
 ) : TypeArgumentOperations {
     override fun preview(
         resource: ResourceId,
@@ -239,7 +239,7 @@ internal class DefaultTypeArgumentOperations(
         if (!preview.hasCoherentMetadata()) {
             return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "type_argument_preview_mismatch")))
         }
-        return snapshots.capture().use { snapshot ->
+        return views.capture().use { snapshot ->
             if (snapshot.root.catalog.generation != preview.edit.catalog) {
                 return PreparedEditResult.Rejected(listOf(ValueProblem(rootLocation, "catalog_changed")))
             }

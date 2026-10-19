@@ -38,7 +38,7 @@ import com.typewritermc.types.ownsResources
 
 /** Checks exact endpoints and prepares links through the same session used by menu and drag. */
 internal class OperationRelationPreparation(
-    private val edit: SnapshotEditContext,
+    private val edit: WorkingViewEditContext,
     private val baseline: AuthoringView,
 ) : ResourceRelationPreparation {
     context(operation: OperationPreparation)

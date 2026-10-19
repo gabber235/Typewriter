@@ -92,7 +92,7 @@ val ResourceOperationRoutesTest by testSuite {
     test("linked tag duplicate crosses wire preparation and replay without changing saved state") {
         runTest {
             CoreOperationsFixture().use { fixture ->
-                val before = fixture.snapshots.read { it.resources }
+                val before = fixture.views.read { it.resources }
                 val result =
                     fixture.routes.prepare(
                         fixture.prepare(BuiltinResourceOperation.LinkWithDuplicate, "tag"),
@@ -101,7 +101,7 @@ val ResourceOperationRoutesTest by testSuite {
                 val copy = ResourceId(selected.value.single().value)
                 val edit = SkirAuthoringOperationCodec.decode(result.value.edit).getOrThrow()
                 val replay =
-                    fixture.snapshots.capture().use { lease ->
+                    fixture.views.capture().use { lease ->
                         val catalog = lease.root.catalog
                         AuthoringMutationPlanner(
                             catalog.checked,
@@ -114,7 +114,7 @@ val ResourceOperationRoutesTest by testSuite {
                 links.any { it.source == ResourceId("tag") && it.target.resource == copy } shouldBe true
                 links.any { it.source == copy && it.target.resource == ResourceId("parent") } shouldBe true
                 links.any { it.source == ResourceId("tag") && it.target.resource == ResourceId("parent") } shouldBe true
-                fixture.snapshots.read { it.resources } shouldBe before
+                fixture.views.read { it.resources } shouldBe before
             }
         }
     }
@@ -122,7 +122,7 @@ val ResourceOperationRoutesTest by testSuite {
     test("moving pages appends within each chapter in selection order and preserves saved state") {
         runTest {
             CoreOperationsFixture(withPages = true).use { fixture ->
-                val before = fixture.snapshots.read { it.resources }
+                val before = fixture.views.read { it.resources }
                 val request =
                     fixture
                         .prepare(BuiltinResourceOperation.MoveToBook, "second", "first", "other", "resident")
@@ -137,7 +137,7 @@ val ResourceOperationRoutesTest by testSuite {
                 val result = response as? AuthoringActionResult.PreviewWrapper ?: error(response.toString())
                 val edit = SkirAuthoringOperationCodec.decode(result.value.edit).getOrThrow()
                 val replay =
-                    fixture.snapshots.capture().use { lease ->
+                    fixture.views.capture().use { lease ->
                         val catalog = lease.root.catalog
                         AuthoringMutationPlanner(
                             catalog.checked,
@@ -155,7 +155,7 @@ val ResourceOperationRoutesTest by testSuite {
                     val owner = (after.getValue(ResourceId(id)).fields.getValue("book") as DataValue.Named).payload as DataValue.Link
                     owner.target.resource shouldBe ResourceId("destination")
                 }
-                fixture.snapshots.read { it.resources } shouldBe before
+                fixture.views.read { it.resources } shouldBe before
             }
         }
     }
@@ -168,9 +168,9 @@ val ResourceOperationRoutesTest by testSuite {
                 val response = fixture.routes.prepare(fixture.prepare(BuiltinResourceOperation.Delete, "tag"))
                 val preview = response as? AuthoringActionResult.PreviewWrapper ?: error(response.toString())
                 val edit = SkirAuthoringOperationCodec.decode(preview.value.edit).getOrThrow()
-                val before = fixture.snapshots.read { it.resources }
+                val before = fixture.views.read { it.resources }
                 val replay =
-                    fixture.snapshots.capture().use { lease ->
+                    fixture.views.capture().use { lease ->
                         val catalog = lease.root.catalog
                         AuthoringMutationPlanner(
                             catalog.checked,
@@ -179,7 +179,7 @@ val ResourceOperationRoutesTest by testSuite {
                         ).plan(before, edit) as MutationPlanningResult.Accepted
                     }
                 replay.plan.removedResources shouldBe setOf(ResourceId("tag"))
-                fixture.snapshots.read { it.resources } shouldBe before
+                fixture.views.read { it.resources } shouldBe before
             }
         }
     }
@@ -235,7 +235,7 @@ private class CoreOperationsFixture(
     withFailingAvailability: Boolean = false,
 ) : AutoCloseable {
     private val catalogs = RealmCatalogStore()
-    val snapshots: InMemoryAuthoringViewStore
+    val views: InMemoryAuthoringViewStore
     val routes: ResourceOperationRoutes
     val brokenCapability: String
 
@@ -421,15 +421,15 @@ private class CoreOperationsFixture(
             resources[ResourceId("resident")] = page("destination", "intro", 9, 0)
             resources[ResourceId("peer")] = page("destination", "outro", 3, 1)
         }
-        snapshots = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources))
-        routes = ResourceOperationRoutes(ResourceOperationRuntime(snapshots), EditorContracts(RealmRouteScope("organization", "realm")))
+        views = InMemoryAuthoringViewStore(lease, AuthoringSeed(resources))
+        routes = ResourceOperationRoutes(ResourceOperationRuntime(views), EditorContracts(RealmRouteScope("organization", "realm")))
     }
 
     fun input(
         value: Any,
         type: TypeDefinitionId,
     ): skirout.editor.v1.type_catalog.DataValue =
-        snapshots.read { root ->
+        views.read { root ->
             val checked = (root.catalog.checked.resolve(TypeUse.Named(type)) as Resolution.Ready).value
             com.typewritermc.types.skir.SkirDataValueCodec
                 .encode(
@@ -442,7 +442,7 @@ private class CoreOperationsFixture(
     fun resolve(vararg ids: String) = routes.resolve(resolveRequest(*ids))
 
     fun resolveRequest(vararg ids: String): ResolveResourceOperationsRequest =
-        snapshots.read { root ->
+        views.read { root ->
             ResolveResourceOperationsRequest(
                 invocation =
                     OperationInvocation(
@@ -483,7 +483,7 @@ private class CoreOperationsFixture(
     }
 
     override fun close() {
-        snapshots.close()
+        views.close()
         catalogs.close()
     }
 }

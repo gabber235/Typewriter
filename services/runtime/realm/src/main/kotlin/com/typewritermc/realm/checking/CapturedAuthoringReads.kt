@@ -64,14 +64,14 @@ fun interface SelectionPredicateEvaluator {
     ): Availability<Boolean>
 }
 
-data class SnapshotReadLimits(
+data class ViewReadLimits(
     val maxReads: Long = 100_000,
     val maxSelectionCandidates: Long = 100_000,
     val maxOccurrenceValues: Long = 500_000,
     val maxCheckTuples: Long = 100_000,
 )
 
-data class SnapshotReadHealth(
+data class ViewReadHealth(
     val missing: List<ValueLocation>,
     val failures: List<EvaluationDiagnostic>,
     val incomplete: List<String>,
@@ -90,7 +90,7 @@ class CapturedAuthoringReads(
     internal val view: AuthoredReadView,
     private val recorder: ObservationRecorder = DefaultObservationRecorder(),
     private val predicates: SelectionPredicateEvaluator = MissingSelectionPredicateEvaluator,
-    private val limits: SnapshotReadLimits = SnapshotReadLimits(),
+    private val limits: ViewReadLimits = ViewReadLimits(),
     override val readContext: ReadContext = view.readContext,
 ) : AuthoredReads {
     override val catalog: CatalogGeneration = view.original.catalog.generation
@@ -578,7 +578,7 @@ class CapturedAuthoringReads(
         }
     }
 
-    fun health(): SnapshotReadHealth = SnapshotReadHealth(missing.toList(), failures.toList(), incomplete.toList())
+    fun health(): ViewReadHealth = ViewReadHealth(missing.toList(), failures.toList(), incomplete.toList())
 
     fun observations(): List<EditExpectation> = recorder.captured()
 

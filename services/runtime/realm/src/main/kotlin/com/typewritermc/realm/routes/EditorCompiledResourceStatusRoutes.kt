@@ -9,7 +9,7 @@ import com.typewritermc.services.libs.communicator.router.CommunicatorRoutesBuil
 
 /** Reports roots present in the Realm selected publication; it does not inspect engine application state. */
 internal class EditorCompiledResourceStatusRoutes(
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
     private val statuses: CompiledRootStatuses,
     private val contracts: EditorContracts,
 ) {
@@ -30,7 +30,7 @@ internal class EditorCompiledResourceStatusRoutes(
                             error("Unknown compilation status selection.")
                         }
                     }
-                snapshots.capture().use { capture ->
+                views.capture().use { capture ->
                     skirout.editor.v1.compiled_content.QueryCompiledResourceStatusResponse.createSuccess(
                         statuses =
                             statuses

@@ -43,17 +43,17 @@ import java.util.concurrent.ConcurrentHashMap
 /** Searches through the same pure preparation used by menus and drops. */
 internal class OperationRealmPresentationSearchSource(
     private val scope: CoroutineScope,
-    private val snapshots: AuthoringViewStore,
+    private val views: AuthoringViewStore,
 ) : RealmPresentationSearchSource {
     private val jobs = ConcurrentHashMap<String, Job>()
-    private val operations = ResourceOperationRuntime(snapshots)
+    private val operations = ResourceOperationRuntime(views)
 
     override suspend fun watch(
         request: RealmPresentationSearchRequest,
         updates: RealmPresentationSearchUpdatePublisher,
     ): RealmPresentationSearchUpdate {
         jobs.remove(request.subscriptionId)?.cancel()
-        val lease = snapshots.capture()
+        val lease = views.capture()
         val context =
             request.operationContext ?: run {
                 lease.close()
@@ -167,7 +167,7 @@ internal class OperationRealmPresentationSearchSource(
                             if (values.size == MAX_RESULTS) break
                         }
                     }
-                    val actual = snapshots.read { it.observationId }
+                    val actual = views.read { it.observationId }
                     if (actual != captured.confirmed) {
                         updates.publish(staleSearch(request.subscriptionId, actual))
                     } else {

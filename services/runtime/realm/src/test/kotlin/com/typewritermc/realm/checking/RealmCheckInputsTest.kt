@@ -179,7 +179,7 @@ val RealmCheckInputsTest by testSuite {
             )
         val store = store(catalog, resource, record)
         val lease = store.capture()
-        val reads = CapturedAuthoringReads(lease.originalView(), limits = SnapshotReadLimits(maxCheckTuples = 1))
+        val reads = CapturedAuthoringReads(lease.originalView(), limits = ViewReadLimits(maxCheckTuples = 1))
 
         with(reads) { RealmCheckInputs().evaluate(recipe, binding(catalog, resource)) }
 

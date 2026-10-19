@@ -32,7 +32,7 @@ import com.typewritermc.realm.routes.CapabilityRealmPresentationSearchSource
 import com.typewritermc.realm.routes.EditorUpdatePublisher
 import com.typewritermc.realm.routes.RealmCapabilityInvocationSource
 import com.typewritermc.realm.routes.RealmRouteFactory
-import com.typewritermc.realm.routes.SnapshotRealmEditorCatalogSource
+import com.typewritermc.realm.routes.RetainedRealmEditorCatalogSource
 import com.typewritermc.realm.schema.RealmDatabaseProvider
 import com.typewritermc.realm.search.SurrealAuthoringSearchRepository
 import com.typewritermc.services.libs.communicator.router.CommunicatorRouter
@@ -68,7 +68,7 @@ import kotlinx.coroutines.withContext
  * artifacts. Editor routes expose these services through the current host messaging session.
  *
  * Session replacement rebuilds routing while database, checks, and publication remain active. Shutdown retires
- * publishers and routes before closing their snapshots and database. The managed runtime serializes activation
+ * publishers and routes before closing their views and database. The managed runtime serializes activation
  * and shutdown; the local lifecycle mutex protects router replacement within an activation.
  */
 internal class Realm(
@@ -88,7 +88,7 @@ internal class Realm(
     private val lifecycle = Mutex()
     private val catalogInvalidations = RealmCatalogInvalidationProcess(catalogs, scope, telemetry, retryPolicy, delayScheduler)
     private var database: Surreal? = null
-    private var snapshots: AuthoringViewStore? = null
+    private var views: AuthoringViewStore? = null
     private var checks: RealmCheckRuntime? = null
     private var publication: RealmPublicationCoordinator? = null
     private var editorUpdates: EditorUpdatePublisher? = null
@@ -107,19 +107,19 @@ internal class Realm(
             val catalog = catalogs.captureCurrent()
             val storage = SurrealAuthoringStorage(connected)
             val seed = storage.readCoherent()
-            val snapshotStore = InMemoryAuthoringViewStore(catalog, seed)
-            snapshots = snapshotStore
-            val authoring = RealmAuthoringOwner(storage, snapshotStore)
+            val viewStore = InMemoryAuthoringViewStore(catalog, seed)
+            views = viewStore
+            val authoring = RealmAuthoringOwner(storage, viewStore)
             catalogs.captureCurrent().use { next ->
                 catalogActivator.activate(authoring, next)
             }
-            val checkRuntime = RealmCheckRuntime(snapshotStore)
+            val checkRuntime = RealmCheckRuntime(viewStore)
             checks = checkRuntime
             val compiledContent = SurrealRegisteredCompiledContentRepository(connected)
             val compilation = CompiledArtifactProducerRegistry(listOf(PageCompiledArtifactProducer()))
             val publisher =
                 RealmPublicationCoordinator(
-                    acceptance = AuthoringAcceptance(snapshotStore, checkRuntime),
+                    acceptance = AuthoringAcceptance(viewStore, checkRuntime),
                     attempts = SurrealPublicationAttemptStore(connected),
                     artifacts =
                         RegisteredCompiledArtifactStore(
@@ -132,12 +132,12 @@ internal class Realm(
                     findings = checkRuntime::findings,
                 )
             this.publication = publisher
-            val editorUpdates = EditorUpdatePublisher(snapshotStore, publisher, checkRuntime.findingChanges, telemetry, scope)
+            val editorUpdates = EditorUpdatePublisher(viewStore, publisher, checkRuntime.findingChanges, telemetry, scope)
             this.editorUpdates = editorUpdates
             checkRuntime.reloadCatalog()
             val routedAuthoring = CheckingAuthoringRepository(authoring, checkRuntime, editorUpdates)
             publisher.recoverInterrupted()
-            publisher.start(scope, snapshotStore.changes)
+            publisher.start(scope, viewStore.changes)
             val preparation =
                 PreparationCoordinator(
                     catalog = catalogs::captureCurrent,
@@ -152,14 +152,14 @@ internal class Realm(
                 RealmRouteFactory(
                     authoring = routedAuthoring,
                     authoringSearch = SurrealAuthoringSearchRepository(connected),
-                    snapshots = snapshotStore,
+                    views = viewStore,
                     checks = checkRuntime,
                     compiledContent = compiledContent,
                     compiledRootStatuses = CompiledRootStatuses(compilation, compiledContent),
                     publisher = publisher,
-                    editorCatalog = SnapshotRealmEditorCatalogSource(catalogs),
+                    editorCatalog = RetainedRealmEditorCatalogSource(catalogs),
                     preparation = preparation,
-                    presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs, snapshotStore),
+                    presentationSearch = CapabilityRealmPresentationSearchSource(scope, catalogs, viewStore),
                     capabilityInvocations = RealmCapabilityInvocationSource(catalogs),
                     editorUpdates = editorUpdates,
                 )
@@ -214,8 +214,8 @@ internal class Realm(
             editorUpdates = null
             attempt { registrarScope?.shutdown() }
             registrarScope = null
-            attempt { snapshots?.close() }
-            snapshots = null
+            attempt { views?.close() }
+            views = null
             val activeDatabase = database
             database = null
             attempt { activeDatabase?.let { databaseProvider.close(it) } }
