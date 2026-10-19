@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     api(project(":messaging"))
+    implementation(project(":protocol-transport"))
     api(project(":telemetry"))
     api(project(":internal-utils"))
     api(platform(libs.koin.bom))

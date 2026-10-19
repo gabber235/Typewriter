@@ -15,6 +15,7 @@ dependencies {
     implementation(project(":internal-utils"))
     implementation(project(":telemetry"))
     implementation(project(":messaging"))
+    implementation(project(":protocol-transport"))
     implementation(project(":file-transfer"))
     imprintHostApi(project(":loader-api"))
     imprintPlatformApi(project(":typewriter-api"))

@@ -21,7 +21,7 @@ generators:
       manifest: ./services/protocol/transport-routes.yaml
       target: kotlin
   - mod: typewriter-transport-skir-bridge/kotlin-loader
-    outDir: ./services/protocol/transport-adapters/kotlin-loader/skirout
+    outDir: ./services/runtime/loader/core/src/main/skirout
     config:
       executable: ./services/protocol/transport-generator/target/release/typewriter-transport-generator
       manifest: ./services/protocol/transport-routes.yaml

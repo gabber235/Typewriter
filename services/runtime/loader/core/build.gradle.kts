@@ -7,7 +7,7 @@ plugins {
 
 kotlin {
     sourceSets.named("main") {
-        kotlin.srcDir(rootProject.file("protocol/transport-adapters/kotlin-loader/skirout"))
+        kotlin.srcDir("src/main/skirout")
     }
 }
 
@@ -22,6 +22,7 @@ buildConfig {
 
 dependencies {
     api(project(":loader-api"))
+    implementation(project(":protocol-transport"))
     implementation("com.typewritermc:imprint-archive")
     api("com.typewritermc:imprint-model")
     implementation(project(":typewriter-api"))
